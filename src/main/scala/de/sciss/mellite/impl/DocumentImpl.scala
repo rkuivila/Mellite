@@ -1,7 +1,7 @@
 package de.sciss.mellite
 package impl
 
-import java.io.File
+import java.io.{IOException, FileNotFoundException, File}
 import de.sciss.lucre.stm.impl.BerkeleyDB
 import de.sciss.confluent.Confluent
 import de.sciss.lucre.stm.{Writer, TxnSerializer}
@@ -27,11 +27,22 @@ object DocumentImpl {
       }
    }
 
+   def read( dir: File ) : Document = {
+      if( !dir.isDirectory ) throw new FileNotFoundException( "Document " + dir.getPath + " does not exist" )
+      apply( dir, create = false )
+   }
+
    def empty( dir: File ) : Document = {
-      val fact    = BerkeleyDB.factory( dir, createIfNecessary = true )
+      if( dir.exists() ) throw new IOException( "Document " + dir.getPath + " already exists" )
+      apply( dir, create = true )
+   }
+
+   private def apply( dir: File, create: Boolean ) : Document = {
+      val fact    = BerkeleyDB.factory( dir, createIfNecessary = create )
       val system  = Confluent( fact )
       val access  = system.root[ Data ] { implicit tx =>
          new Data {
+            val groups = LinkedList.newVar[ Cf, Group, GroupUpdate ]( _.changed )( tx, groupSer )
          }
       }
       new Impl( dir, system, access )
