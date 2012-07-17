@@ -13,7 +13,8 @@ licenses := Seq( "GPL v2+" -> url( "http://www.gnu.org/licenses/gpl-2.0.txt" ))
 scalaVersion := "2.9.2"
 
 libraryDependencies ++= Seq(
-   "de.sciss" %% "soundprocesses" % "0.40-SNAPSHOT"
+   "de.sciss" %% "soundprocesses" % "0.40-SNAPSHOT",
+   "de.sciss" %% "scalaaudiowidgets" % "0.11"
 )
 
 retrieveManaged := true
@@ -22,3 +23,8 @@ scalacOptions ++= Seq( "-deprecation", "-unchecked", "-no-specialization" )   //
 
 fork in run := true  // required for shutdown hook, and also the scheduled thread pool, it seems
 
+// ---- packaging ----
+
+seq( appbundle.settings: _* )
+
+appbundle.icon := Some( file( "application.png" ))
