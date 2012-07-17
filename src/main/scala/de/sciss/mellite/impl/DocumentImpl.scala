@@ -1,3 +1,28 @@
+/*
+ *  DocumentImpl.scala
+ *  (Mellite)
+ *
+ *  Copyright (c) 2012 Hanns Holger Rutz. All rights reserved.
+ *
+ *  This software is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either
+ *  version 2, june 1991 of the License, or (at your option) any later version.
+ *
+ *  This software is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public
+ *  License (gpl.txt) along with this software; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ *  For further information, please contact Hanns Holger Rutz at
+ *  contact@sciss.de
+ */
+
 package de.sciss.mellite
 package impl
 
@@ -14,8 +39,8 @@ object DocumentImpl {
    import Document.{Group, GroupUpdate, Groups, GroupsUpdate}
 
    private def procSer[ S <: Sys[ S ]]    = Proc.serializer[ S ]
-   private def groupSer[ S <: Sys[ S ]]   = BiGroup.varSerializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )( procSer, SpanLikes )
-   private def groupsSer[ S <: Sys[ S ]]  = LinkedList.varSerializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( groupSer )
+   private def groupSer[ S <: Sys[ S ]]   = BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )( procSer, SpanLikes )
+   private def groupsSer[ S <: Sys[ S ]]  = LinkedList.Modifiable.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( groupSer )
 
    private implicit def serializer[ S <: Sys[ S ]] : TxnSerializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
 
@@ -45,7 +70,7 @@ object DocumentImpl {
       implicit val ser = serializer[ Cf ]
       val access  = system.root[ Data[ Cf ]] { implicit tx =>
          new Data[ Cf ] {
-            val groups = LinkedList.newVar[ Cf, Group[ Cf ], GroupUpdate[ Cf ]]( _.changed )( tx, groupSer[ Cf ])
+            val groups = LinkedList.Modifiable[ Cf, Group[ Cf ], GroupUpdate[ Cf ]]( _.changed )( tx, groupSer[ Cf ])
          }
       }
       new Impl( dir, system, system, access )
