@@ -4,6 +4,7 @@ package gui
 import swing.{Dialog, Action}
 import java.awt.event.KeyEvent
 import java.io.File
+import de.sciss.lucre.stm.Sys
 
 object ActionNewFile extends Action( "New...") {
    accelerator = Some( primaryMenuKey( KeyEvent.VK_N ))
@@ -28,32 +29,25 @@ object ActionNewFile extends Action( "New...") {
 
    private def fullTitle = "New Document"
 
-   private def formatException( e: Throwable ) : String = {
-      e.getClass.toString + " : " + e.getMessage + "\n" +
-      e.getStackTrace.take( 10 ).map( "   at " + _ ).mkString( "\n" )
-   }
-
-   private def initDoc( doc: Document ) {
-      Dialog.showMessage(
-         message = "Done.",
-         title = fullTitle,
-         messageType = Dialog.Message.Info
-      )
+   private def initDoc[ S <: Sys[ S ]]( doc: Document[ S ]) {
+      doc.cursor.step { implicit tx =>
+         DocumentFrame( doc )
+      }
    }
 
    def apply() {
-      FileDialog.save( title = "Location for New Document" ).foreach { f =>
-         if( f.exists() ) {
+      FileDialog.save( title = "Location for New Document" ).foreach { folder =>
+         if( folder.exists() ) {
             if( Dialog.showConfirmation(
-               message = "Document " + f.getPath + " already exists.\nAre you sure you want to overwrite it?",
+               message = "Document " + folder.getPath + " already exists.\nAre you sure you want to overwrite it?",
                title = fullTitle,
                optionType = Dialog.Options.OkCancel,
                messageType = Dialog.Message.Warning
             ) != Dialog.Result.Ok ) return
 
-            if( !deleteRecursive( f )) {
+            if( !deleteRecursive( folder )) {
                Dialog.showMessage(
-                  message = "Unable to delete existing document " + f.getPath,
+                  message = "Unable to delete existing document " + folder.getPath,
                   title = fullTitle,
                   messageType = Dialog.Message.Error
                )
@@ -62,12 +56,12 @@ object ActionNewFile extends Action( "New...") {
          }
 
          try {
-            val doc = Document.empty( f )
+            val doc = Document.empty( folder )
             initDoc( doc )
          } catch {
             case e: Exception =>
                Dialog.showMessage(
-                  message = "Unabled to create new document " + f.getPath + "\n\n" + formatException( e ),
+                  message = "Unabled to create new document " + folder.getPath + "\n\n" + formatException( e ),
                   title = fullTitle,
                   messageType = Dialog.Message.Error
                )
