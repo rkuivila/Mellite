@@ -29,17 +29,17 @@ package impl
 import java.io.{IOException, FileNotFoundException, File}
 import de.sciss.lucre.stm.impl.BerkeleyDB
 import de.sciss.confluent.Confluent
-import de.sciss.lucre.stm.{Cursor, Sys, Writer, TxnSerializer}
+import de.sciss.lucre.stm.{Cursor, Sys, TxnSerializer}
 import de.sciss.lucre.{DataOutput, DataInput}
 import de.sciss.synth.proc.Proc
 import de.sciss.lucre.expr.{LinkedList, BiGroup}
-import de.sciss.synth.expr.{SpanLikes, Spans}
+import de.sciss.synth.expr.SpanLikes
 
 object DocumentImpl {
-   import Document.{Group, GroupUpdate, Groups, GroupsUpdate}
+   import Document.{Group, GroupUpdate, Groups}
 
-   private def procSer[ S <: Sys[ S ]]    = Proc.serializer[ S ]
-   private def groupSer[ S <: Sys[ S ]]   = BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )( procSer, SpanLikes )
+   private def procSer[   S <: Sys[ S ]]  = Proc.serializer[ S ]
+   private def groupSer[  S <: Sys[ S ]]  = BiGroup.Modifiable.serializer[    S, Proc[ S ],  Proc.Update[ S ]]( _.changed )( procSer, SpanLikes )
    private def groupsSer[ S <: Sys[ S ]]  = LinkedList.Modifiable.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( groupSer )
 
    private implicit def serializer[ S <: Sys[ S ]] : TxnSerializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]

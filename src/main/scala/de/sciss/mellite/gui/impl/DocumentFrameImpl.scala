@@ -27,16 +27,16 @@ package de.sciss.mellite
 package gui
 package impl
 
-import swing.{Button, BorderPanel, Frame}
+import swing.{FlowPanel, Action, Button, BorderPanel, Frame}
 import de.sciss.lucre.stm.Sys
 import javax.swing.WindowConstants
 import de.sciss.lucre.expr.BiGroup
-import de.sciss.synth.proc.Proc
+import de.sciss.synth.proc.{ProcGroupX, Proc}
 import de.sciss.synth.expr.SpanLikes
 
 object DocumentFrameImpl {
    def apply[ S <: Sys[ S ]]( doc: Document[ S ])( implicit tx: S#Tx ) : DocumentFrame[ S ] = {
-      val groupsView = ListView( doc.groups )( _.toString )
+      val groupsView = ListView( doc.groups )( g => "Timeline " + g.id )
       val view = new Impl( doc, groupsView )
       guiFromTx {
          view.guiInit()
@@ -49,18 +49,44 @@ object DocumentFrameImpl {
       private var comp: Frame = _
 
       def component: Frame = {
+         requireEDT()
          val res = comp
          if( res == null ) sys.error( "Called component before GUI was initialized" )
          res
       }
 
       def guiInit() {
-         val testBut = Button( "Test Add" ) {
+         requireEDT()
+         require( comp == null, "Initialization called twice" )
+
+         val ggAdd = Button( "+" ) {
             document.cursor.step { implicit tx =>
                implicit val spans = SpanLikes
-               val group = BiGroup.Modifiable[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
+               val group = ProcGroupX.Modifiable[ S ]
                document.groups.addLast( group )
             }
+         }
+
+         val ggDel = new Button( Action( "\u2212" ) {
+
+         }) {
+            enabled = false
+         }
+
+         val ggView = new Button( Action( "View" ) {
+
+         }) {
+            enabled = false
+         }
+
+         val butPanel = new FlowPanel( ggAdd, ggDel, ggView )
+
+         groupsView.guiReact {
+            case ListView.SelectionChanged( indices ) =>
+//               println( "SELECTION " + indices )
+               val isSelected = indices.nonEmpty
+               ggDel.enabled  = isSelected
+               ggView.enabled = isSelected
          }
 
          comp = new Frame {
@@ -68,7 +94,7 @@ object DocumentFrameImpl {
             peer.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE )
             contents = new BorderPanel {
                add( groupsView.component, BorderPanel.Position.Center )
-               add( testBut, BorderPanel.Position.South )
+               add( butPanel, BorderPanel.Position.South )
             }
             pack()
             centerOnScreen()

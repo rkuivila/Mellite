@@ -27,14 +27,20 @@ package de.sciss.mellite
 package gui
 
 import swing.Component
-import de.sciss.lucre.stm.{Disposable, Sys}
+import de.sciss.lucre.stm.{Txn, Disposable, Sys}
 import de.sciss.lucre.expr.LinkedList
 import impl.{ListViewImpl => Impl}
+import collection.immutable.{IndexedSeq => IIdxSeq}
 
 object ListView {
    def apply[ S <: Sys[ S ], Elem ]( list: LinkedList[ S, Elem, _ ])( show: Elem => String )
                                    ( implicit tx: S#Tx ) : ListView[ S ] = Impl( list )( show )
+
+   sealed trait Update // [ S <: Sys[ S ], Elem ]
+   final case class SelectionChanged( current: IIdxSeq[ Int ]) extends Update
 }
 trait ListView[ S <: Sys[ S ]] extends Disposable[ S#Tx ] {
    def component: Component
+
+   def guiReact( pf: PartialFunction[ ListView.Update, Unit ]) : Removable
 }

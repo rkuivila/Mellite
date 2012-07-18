@@ -49,6 +49,10 @@ package object gui {
       if( EventQueue.isDispatchThread ) exec() else EventQueue.invokeLater( new Runnable { def run() { exec() }})
    }
 
+   def requireEDT() {
+      require( EventQueue.isDispatchThread, "Called outside event dispatch thread" )
+   }
+
    private def wordWrap( s: String, margin: Int = 80 ) : String = {
       val sz   = s.length
       if( sz <= margin ) return s

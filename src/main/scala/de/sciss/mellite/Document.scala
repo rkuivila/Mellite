@@ -32,10 +32,10 @@ import impl.{DocumentImpl => Impl}
 import de.sciss.lucre.stm.{Cursor, Sys}
 
 object Document {
-   type Group[ S <: Sys[ S ]]          = BiGroup.Modifiable[ S, Proc[ S ], Proc.Update[ S ]]
-   type GroupUpdate[ S <: Sys[ S ]]    = BiGroup.Update[ S, Proc[ S ], Proc.Update[ S ]]
-   type Groups[ S <: Sys[ S ]]         = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]
-   type GroupsUpdate[ S <: Sys[ S ]]   = LinkedList.Update[ S, Group[ S ], GroupUpdate[ S ]]
+   type Group[        S <: Sys[ S ]]   = BiGroup.Modifiable[    S, Proc[ S ],  Proc.Update[ S ]]
+   type GroupUpdate[  S <: Sys[ S ]]   = BiGroup.Update[        S, Proc[ S ],  Proc.Update[ S ]]
+   type Groups[       S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]
+   type GroupsUpdate[ S <: Sys[ S ]]   = LinkedList.Update[     S, Group[ S ], GroupUpdate[ S ]]
 
    def read(  dir: File ) : Document[ Cf ] = Impl.read( dir )
    def empty( dir: File ) : Document[ Cf ] = Impl.empty( dir )

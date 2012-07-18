@@ -27,11 +27,13 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.stm.{Disposable, Sys}
+import de.sciss.lucre.stm.{Txn, Disposable, Sys}
 import de.sciss.lucre.expr.LinkedList
 import swing.{ScrollPane, Component}
 import javax.swing.DefaultListModel
 import collection.immutable.{IndexedSeq => IIdxSeq}
+import concurrent.stm.{Ref => STMRef}
+import swing.event.ListSelectionChanged
 
 object ListViewImpl {
    def apply[ S <: Sys[ S ], Elem ]( list: LinkedList[ S, Elem, _ ])( show: Elem => String )
@@ -65,13 +67,46 @@ object ListViewImpl {
       private val mList  = new DefaultListModel
       var observer: Disposable[ S#Tx ] = _
 
+      private var viewObservers = IIdxSeq.empty[ Observer ]
+
+      private final class Observer( fun: PartialFunction[ ListView.Update, Unit ]) extends Removable {
+         obs =>
+
+         def remove() {
+            viewObservers = viewObservers.filterNot( _ == obs )
+         }
+
+         def tryApply( evt: ListView.Update ) {
+            try {
+               if( fun.isDefinedAt( evt )) fun( evt )
+            } catch {
+               case e: Exception => e.printStackTrace()
+            }
+         }
+      }
+
+      private def notifyViewObservers( current: IIdxSeq[ Int ]) {
+         val evt = ListView.SelectionChanged( current )
+         viewObservers.foreach( _.tryApply( evt ))
+      }
+
       def component: Component = {
+         requireEDT()
          val res = comp
          if( res == null ) sys.error( "Called component before GUI was initialized" )
          res
       }
 
+      def guiReact( fun: PartialFunction[ ListView.Update, Unit ]) : Removable = {
+         requireEDT()
+         val obs = new Observer( fun )
+         viewObservers :+= obs
+         obs
+      }
+
       def guiInit() {
+         requireEDT()
+         require( comp == null, "Initialization called twice" )
 //         val rend = new DefaultListCellRenderer {
 //            override def getListCellRendererComponent( c: JList, elem: Any, idx: Int, selected: Boolean, focused: Boolean ) : awt.Component = {
 //               super.getListCellRendererComponent( c, showFun( elem.asInstanceOf[ Elem ]), idx, selected, focused )
@@ -79,8 +114,12 @@ object ListViewImpl {
 //         }
          val ggList = new swing.ListView {
             peer.setModel( mList )
-//            peer.setCellRenderer( rend )
+            listenTo( selection )
+            reactions += {
+               case l: ListSelectionChanged[ _ ] => notifyViewObservers( l.range )
+            }
          }
+
          comp = new ScrollPane( ggList )
       }
 
@@ -102,7 +141,10 @@ object ListViewImpl {
 
       def dispose()( implicit tx: S#Tx ) {
          observer.dispose()
-         guiFromTx( mList.clear() )
+         guiFromTx {
+            mList.clear()
+            viewObservers = IIdxSeq.empty
+         }
       }
    }
 }
