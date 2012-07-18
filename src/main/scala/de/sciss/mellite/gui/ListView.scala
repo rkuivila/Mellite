@@ -43,4 +43,5 @@ trait ListView[ S <: Sys[ S ]] extends Disposable[ S#Tx ] {
    def component: Component
 
    def guiReact( pf: PartialFunction[ ListView.Update, Unit ]) : Removable
+   def guiSelection : IIdxSeq[ Int ]
 }

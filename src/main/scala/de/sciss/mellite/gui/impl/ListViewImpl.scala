@@ -64,6 +64,8 @@ object ListViewImpl {
 
    private final class Impl[ S <: Sys[ S ]] extends ListView[ S ] {
       @volatile private var comp: Component = _
+      @volatile private var ggList: swing.ListView[ _ ] = _
+
       private val mList  = new DefaultListModel
       var observer: Disposable[ S#Tx ] = _
 
@@ -104,6 +106,11 @@ object ListViewImpl {
          obs
       }
 
+      def guiSelection : IIdxSeq[ Int ] = {
+         requireEDT()
+         ggList.selection.indices.toIndexedSeq
+      }
+
       def guiInit() {
          requireEDT()
          require( comp == null, "Initialization called twice" )
@@ -112,7 +119,7 @@ object ListViewImpl {
 //               super.getListCellRendererComponent( c, showFun( elem.asInstanceOf[ Elem ]), idx, selected, focused )
 //            }
 //         }
-         val ggList = new swing.ListView {
+         ggList = new swing.ListView {
             peer.setModel( mList )
             listenTo( selection )
             reactions += {

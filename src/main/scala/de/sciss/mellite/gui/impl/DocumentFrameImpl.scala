@@ -68,7 +68,13 @@ object DocumentFrameImpl {
          }
 
          val ggDel = new Button( Action( "\u2212" ) {
-
+            val indices = groupsView.guiSelection
+            if( indices.nonEmpty ) document.cursor.step { implicit tx =>
+               val g    = document.groups
+               val sz   = g.size
+               val ind1 = indices.filter( _ < sz ).sortBy( -_ )
+               ind1.foreach( g.removeAt )
+            }
          }) {
             enabled = false
          }
