@@ -30,7 +30,7 @@ package impl
 import swing.{FlowPanel, Action, Button, BorderPanel, Frame}
 import de.sciss.lucre.stm.Sys
 import javax.swing.WindowConstants
-import de.sciss.lucre.expr.BiGroup
+import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.synth.proc.{ProcGroupX, Proc}
 import de.sciss.synth.expr.SpanLikes
 

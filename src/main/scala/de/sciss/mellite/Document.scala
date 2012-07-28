@@ -26,7 +26,8 @@
 package de.sciss.mellite
 
 import java.io.File
-import de.sciss.lucre.expr.{BiGroup, LinkedList}
+import de.sciss.lucre.expr.LinkedList
+import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.synth.proc.{Transport, Proc}
 import impl.{DocumentImpl => Impl}
 import de.sciss.lucre.stm.{SourceHook, Cursor, Sys}

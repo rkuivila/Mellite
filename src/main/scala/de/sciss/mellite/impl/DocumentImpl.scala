@@ -28,11 +28,11 @@ package impl
 
 import java.io.{IOException, FileNotFoundException, File}
 import de.sciss.confluent.Confluent
-import de.sciss.lucre.{DataOutput, DataInput}
-import de.sciss.lucre.{event => evt}
-import de.sciss.lucre.expr.{BiGroup, LinkedList}
-import de.sciss.lucre.stm.{SourceHook, IdentifierMap, Cursor, Sys, TxnSerializer}
-import de.sciss.lucre.stm.impl.BerkeleyDB
+import de.sciss.lucre.{event => evt, expr, bitemp, stm, DataOutput, DataInput}
+import expr.LinkedList
+import bitemp.BiGroup
+import stm.{SourceHook, IdentifierMap, Cursor, Sys, TxnSerializer}
+import stm.impl.BerkeleyDB
 import de.sciss.synth.expr.SpanLikes
 import de.sciss.synth.proc.{Transport, Proc}
 
