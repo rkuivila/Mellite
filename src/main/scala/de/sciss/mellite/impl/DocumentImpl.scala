@@ -67,7 +67,7 @@ object DocumentImpl {
    private def apply( dir: File, create: Boolean ) : Document[ Cf ] = {
       val fact    = BerkeleyDB.factory( dir, createIfNecessary = create )
       val system  = Confluent( fact )
-      implicit val ser = serializer[ Cf ]
+      implicit val serializer = DocumentImpl.serializer[ Cf ]  // please Scala 2.9.2 and 2.10.0-M6 :-////
       val access  = system.root[ Data[ Cf ]] { implicit tx =>
          new Data[ Cf ] {
             val groups = LinkedList.Modifiable[ Cf, Group[ Cf ], GroupUpdate[ Cf ]]( _.changed )( tx, groupSer[ Cf ])

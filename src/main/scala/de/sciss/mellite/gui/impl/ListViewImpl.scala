@@ -36,7 +36,7 @@ import concurrent.stm.{Ref => STMRef}
 import swing.event.ListSelectionChanged
 
 object ListViewImpl {
-   def apply[ S <: Sys[ S ], Elem ]( list: LinkedList[ S, Elem, _ ])( show: Elem => String )
+   def apply[ S <: Sys[ S ], Elem, ~ ]( list: LinkedList[ S, Elem, ~ ])( show: Elem => String )
                                    ( implicit tx: S#Tx ) : ListView[ S ] = {
       val view    = new Impl[ S ]
       val items   = list.iterator.toIndexedSeq

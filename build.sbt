@@ -12,6 +12,8 @@ licenses := Seq( "GPL v2+" -> url( "http://www.gnu.org/licenses/gpl-2.0.txt" ))
 
 scalaVersion := "2.9.2"
 
+crossScalaVersions in ThisBuild := Seq( "2.10.0-M6", "2.9.2" )
+
 libraryDependencies ++= Seq(
    "de.sciss" %% "soundprocesses" % "0.40-SNAPSHOT",
    "de.sciss" %% "scalaaudiowidgets" % "0.11"
