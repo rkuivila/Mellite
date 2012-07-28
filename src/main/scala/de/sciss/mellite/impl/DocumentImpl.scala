@@ -27,20 +27,23 @@ package de.sciss.mellite
 package impl
 
 import java.io.{IOException, FileNotFoundException, File}
-import de.sciss.lucre.stm.impl.BerkeleyDB
 import de.sciss.confluent.Confluent
-import de.sciss.lucre.stm.{Cursor, Sys, TxnSerializer}
 import de.sciss.lucre.{DataOutput, DataInput}
-import de.sciss.synth.proc.Proc
-import de.sciss.lucre.expr.{LinkedList, BiGroup}
+import de.sciss.lucre.{event => evt}
+import de.sciss.lucre.expr.{BiGroup, LinkedList}
+import de.sciss.lucre.stm.{SourceHook, IdentifierMap, Cursor, Sys, TxnSerializer}
+import de.sciss.lucre.stm.impl.BerkeleyDB
 import de.sciss.synth.expr.SpanLikes
+import de.sciss.synth.proc.{Transport, Proc}
 
 object DocumentImpl {
-   import Document.{Group, GroupUpdate, Groups}
+   import Document.{Group, GroupUpdate, Groups, Transports}
 
    private def procSer[   S <: Sys[ S ]]  = Proc.serializer[ S ]
    private def groupSer[  S <: Sys[ S ]]  = BiGroup.Modifiable.serializer[    S, Proc[ S ],  Proc.Update[ S ]]( _.changed )( procSer, SpanLikes )
    private def groupsSer[ S <: Sys[ S ]]  = LinkedList.Modifiable.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( groupSer )
+
+//   private def transportSer[ S <: Sys[ S ]] = Transport.serializer[ S, Group[ S ]]()
 
    private implicit def serializer[ S <: Sys[ S ]] : TxnSerializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
 
@@ -67,17 +70,23 @@ object DocumentImpl {
    private def apply( dir: File, create: Boolean ) : Document[ Cf ] = {
       val fact    = BerkeleyDB.factory( dir, createIfNecessary = create )
       val system  = Confluent( fact )
-      implicit val serializer = DocumentImpl.serializer[ Cf ]  // please Scala 2.9.2 and 2.10.0-M6 :-////
+      implicit val serializer    = DocumentImpl.serializer[ Cf ]  // please Scala 2.9.2 and 2.10.0-M6 :-////
+      val transportSer           = SourceHook.serializer[ Cf, Transport[ Cf, Proc[ Cf ]]]( Transport.serializer[ Cf ]( system ))
+      implicit val transportsSer = LinkedList.Modifiable.serializer[ Cf, SourceHook[ Cf#Tx, Transport[ Cf, Proc[ Cf ]]], Unit ]( _ => dummyEvent[ Cf ])
       val access  = system.root[ Data[ Cf ]] { implicit tx =>
          new Data[ Cf ] {
-            val groups = LinkedList.Modifiable[ Cf, Group[ Cf ], GroupUpdate[ Cf ]]( _.changed )( tx, groupSer[ Cf ])
+            val groups        = LinkedList.Modifiable[ Cf, Group[ Cf ], GroupUpdate[ Cf ]]( _.changed )( tx, groupSer[ Cf ])
+            val transportMap  = tx.newDurableIDMap[ Transports[ Cf ]]
          }
       }
       new Impl( dir, system, system, access )
    }
 
+   private def dummyEvent[ S <: Sys[ S ]] = evt.Dummy[ S, Unit, SourceHook[ S#Tx, Transport[ S, Proc[ S ]]]]
+
    private abstract class Data[ S <: Sys[ S ]] {
       def groups: Groups[ S ]
+      def transportMap: IdentifierMap[ S#Tx, S#ID, Transports[ S ]]
 
       final def write( out: DataOutput ) {
          groups.write( out )
@@ -93,5 +102,14 @@ object DocumentImpl {
       override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
       def groups( implicit tx: S#Tx ) : Groups[ S ] = access.get.groups
+      def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ] = {
+         val map  = access.get.transportMap
+         val id   = group.id
+         map.getOrElse( id, {
+            val empty = LinkedList.Modifiable[ S, SourceHook[ S#Tx, Transport[ S, Proc[ S ]]], Unit ]( _ => dummyEvent[ S ])
+            map.put( id, empty )
+            empty
+         })
+      }
    }
 }
