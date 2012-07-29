@@ -71,8 +71,8 @@ object DocumentImpl {
       val fact    = BerkeleyDB.factory( dir, createIfNecessary = create )
       val system  = Confluent( fact )
       implicit val serializer    = DocumentImpl.serializer[ Cf ]  // please Scala 2.9.2 and 2.10.0-M6 :-////
-      val transportSer           = SourceHook.serializer[ Cf, Transport[ Cf, Proc[ Cf ]]]( Transport.serializer[ Cf ]( system ))
-      implicit val transportsSer = LinkedList.Modifiable.serializer[ Cf, SourceHook[ Cf#Tx, Transport[ Cf, Proc[ Cf ]]], Unit ]( _ => dummyEvent[ Cf ])
+      implicit val transportSer  = Transport.serializer[ Cf ]( system )
+      implicit val transportsSer = LinkedList.Modifiable.serializer[ Cf, Transport[ Cf, Proc[ Cf ]]]
       val access  = system.root[ Data[ Cf ]] { implicit tx =>
          new Data[ Cf ] {
             val groups        = LinkedList.Modifiable[ Cf, Group[ Cf ], GroupUpdate[ Cf ]]( _.changed )( tx, groupSer[ Cf ])
@@ -82,7 +82,7 @@ object DocumentImpl {
       new Impl( dir, system, system, access )
    }
 
-   private def dummyEvent[ S <: Sys[ S ]] = evt.Dummy[ S, Unit, SourceHook[ S#Tx, Transport[ S, Proc[ S ]]]]
+//   private def dummyEvent[ S <: Sys[ S ]] = evt.Dummy[ S, Unit, SourceHook[ S#Tx, Transport[ S, Proc[ S ]]]]
 
    private abstract class Data[ S <: Sys[ S ]] {
       def groups: Groups[ S ]
@@ -106,7 +106,7 @@ object DocumentImpl {
          val map  = access.get.transportMap
          val id   = group.id
          map.getOrElse( id, {
-            val empty = LinkedList.Modifiable[ S, SourceHook[ S#Tx, Transport[ S, Proc[ S ]]], Unit ]( _ => dummyEvent[ S ])
+            val empty = LinkedList.Modifiable[ S, Transport[ S, Proc[ S ]]]
             map.put( id, empty )
             empty
          })

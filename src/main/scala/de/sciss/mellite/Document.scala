@@ -38,7 +38,7 @@ object Document {
    type Groups[       S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]
    type GroupsUpdate[ S <: Sys[ S ]]   = LinkedList.Update[     S, Group[ S ], GroupUpdate[ S ]]
 
-   type Transports[   S <: Sys[ S ]]   = LinkedList.Modifiable[ S, SourceHook[ S#Tx, Transport[ S, Proc[ S ]]], Transport.Update[ S, Proc[ S ]]]
+   type Transports[   S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Transport[ S, Proc[ S ]], Unit ] // Transport.Update[ S, Proc[ S ]]]
 
    def read(  dir: File ) : Document[ Cf ] = Impl.read( dir )
    def empty( dir: File ) : Document[ Cf ] = Impl.empty( dir )
