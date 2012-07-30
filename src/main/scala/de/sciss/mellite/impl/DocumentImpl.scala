@@ -28,10 +28,10 @@ package impl
 
 import java.io.{IOException, FileNotFoundException, File}
 import de.sciss.confluent.Confluent
-import de.sciss.lucre.{event => evt, expr, bitemp, stm, DataOutput, DataInput}
+import de.sciss.lucre.{expr, bitemp, stm, DataOutput, DataInput}
 import expr.LinkedList
 import bitemp.BiGroup
-import stm.{SourceHook, IdentifierMap, Cursor, Sys, TxnSerializer}
+import stm.{IdentifierMap, Cursor, Sys, TxnSerializer}
 import stm.impl.BerkeleyDB
 import de.sciss.synth.expr.SpanLikes
 import de.sciss.synth.proc.{Transport, Proc}
@@ -45,16 +45,18 @@ object DocumentImpl {
 
 //   private def transportSer[ S <: Sys[ S ]] = Transport.serializer[ S, Group[ S ]]()
 
-   private implicit def serializer[ S <: Sys[ S ]] : TxnSerializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
+   private implicit def serializer[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : TxnSerializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
 
-   private final class Ser[ S <: Sys[ S ]] extends TxnSerializer[ S#Tx, S#Acc, Data[ S ]] {
+   private final class Ser[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) extends TxnSerializer[ S#Tx, S#Acc, Data[ S ]] {
       def write( data: Data[ S ], out: DataOutput ) {
          data.write( out )
       }
 
       def read( in: DataInput, access: S#Acc )( implicit tx: S#Tx ) : Data[ S ] = new Data[ S ] {
-         val groups        = groupsSer.read( in, access )
-//         val transportMap  = sys.error( "TODO" )
+         val groups                 = groupsSer.read( in, access )
+         implicit val transSer      = Transport.serializer[ S ]  // why is this not found automatically??
+         implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
+         val transportMap           = tx.readDurableIDMap[ Transports[ S ]]( in )
       }
    }
 
@@ -69,21 +71,20 @@ object DocumentImpl {
    }
 
    private def apply( dir: File, create: Boolean ) : Document[ Cf ] = {
+      type S = Cf
       val fact                   = BerkeleyDB.factory( dir, createIfNecessary = create )
-      implicit val system: Cf    = Confluent( fact )
-      implicit val serializer    = DocumentImpl.serializer[ Cf ]  // please Scala 2.9.2 and 2.10.0-M6 :-////
-      implicit val transSer      = Transport.serializer[ Cf ]  // why is this not found automatically??
-      implicit val transportsSer = LinkedList.Modifiable.serializer[ Cf, Transport[ Cf, Proc[ Cf ]]]
-      val access  = system.root[ Data[ Cf ]] { implicit tx =>
-         new Data[ Cf ] {
-            val groups        = LinkedList.Modifiable[ Cf, Group[ Cf ], GroupUpdate[ Cf ]]( _.changed )( tx, groupSer[ Cf ])
-            val transportMap  = tx.newDurableIDMap[ Transports[ Cf ]]
+      implicit val system: S     = Confluent( fact )
+      implicit val serializer    = DocumentImpl.serializer[ S ]   // please Scala 2.9.2 and 2.10.0-M6 :-////
+      implicit val transSer      = Transport.serializer[ S ]      // why is this not found automatically??
+      implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
+      val access  = system.root[ Data[ S ]] { implicit tx =>
+         new Data[ S ] {
+            val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
+            val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
          }
       }
       new Impl( dir, system, access )
    }
-
-//   private def dummyEvent[ S <: Sys[ S ]] = evt.Dummy[ S, Unit, SourceHook[ S#Tx, Transport[ S, Proc[ S ]]]]
 
    private abstract class Data[ S <: Sys[ S ]] {
       def groups: Groups[ S ]
