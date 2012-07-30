@@ -54,6 +54,7 @@ package object gui {
    }
 
    private def wordWrap( s: String, margin: Int = 80 ) : String = {
+      if( s == null ) return ""  // fuck java
       val sz   = s.length
       if( sz <= margin ) return s
       var i    = 0

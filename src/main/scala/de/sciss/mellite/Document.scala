@@ -55,8 +55,6 @@ object Document {
 trait Document[ S <: Sys[ S ]] {
    import Document._
 
-//   def serializers : Document.Serializers[ S ]
-
    def system: S
    def cursor: Cursor[ S ]
    def folder: File

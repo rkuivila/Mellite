@@ -31,7 +31,7 @@ import de.sciss.confluent.Confluent
 import de.sciss.lucre.{expr, bitemp, stm, DataOutput, DataInput}
 import expr.LinkedList
 import bitemp.BiGroup
-import stm.{IdentifierMap, Cursor, Sys, TxnSerializer}
+import stm.{Writer, Disposable, IdentifierMap, Cursor, Sys, TxnSerializer}
 import stm.impl.BerkeleyDB
 import de.sciss.synth.expr.SpanLikes
 import de.sciss.synth.proc.{Transport, Proc}
@@ -77,7 +77,7 @@ object DocumentImpl {
       implicit val serializer    = DocumentImpl.serializer[ S ]   // please Scala 2.9.2 and 2.10.0-M6 :-////
       implicit val transSer      = Transport.serializer[ S ]      // why is this not found automatically??
       implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
-      val access  = system.root[ Data[ S ]] { implicit tx =>
+      val access = system.root[ Data[ S ]] { implicit tx =>
          new Data[ S ] {
             val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
             val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
@@ -88,14 +88,16 @@ object DocumentImpl {
 
    private abstract class Data[ S <: Sys[ S ]] {
       def groups: Groups[ S ]
-      def transportMap: IdentifierMap[ S#Tx, S#ID, Transports[ S ]]
+      def transportMap: IdentifierMap[ S#Tx, S#ID, Transports[ S ]] with Writer with Disposable[ S#Tx ]
 
       final def write( out: DataOutput ) {
          groups.write( out )
+         transportMap.write( out )
       }
 
       final def dispose()( implicit tx: S#Tx ) {
          groups.dispose()
+         transportMap.dispose()
       }
    }
 
