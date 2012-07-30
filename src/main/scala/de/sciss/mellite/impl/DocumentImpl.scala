@@ -53,7 +53,8 @@ object DocumentImpl {
       }
 
       def read( in: DataInput, access: S#Acc )( implicit tx: S#Tx ) : Data[ S ] = new Data[ S ] {
-         val groups = groupsSer.read( in, access )
+         val groups        = groupsSer.read( in, access )
+//         val transportMap  = sys.error( "TODO" )
       }
    }
 
@@ -68,10 +69,10 @@ object DocumentImpl {
    }
 
    private def apply( dir: File, create: Boolean ) : Document[ Cf ] = {
-      val fact    = BerkeleyDB.factory( dir, createIfNecessary = create )
-      val system  = Confluent( fact )
+      val fact                   = BerkeleyDB.factory( dir, createIfNecessary = create )
+      implicit val system: Cf    = Confluent( fact )
       implicit val serializer    = DocumentImpl.serializer[ Cf ]  // please Scala 2.9.2 and 2.10.0-M6 :-////
-      implicit val transportSer  = Transport.serializer[ Cf ]( system )
+      implicit val transSer      = Transport.serializer[ Cf ]  // why is this not found automatically??
       implicit val transportsSer = LinkedList.Modifiable.serializer[ Cf, Transport[ Cf, Proc[ Cf ]]]
       val access  = system.root[ Data[ Cf ]] { implicit tx =>
          new Data[ Cf ] {
@@ -79,7 +80,7 @@ object DocumentImpl {
             val transportMap  = tx.newDurableIDMap[ Transports[ Cf ]]
          }
       }
-      new Impl( dir, system, system, access )
+      new Impl( dir, system, access )
    }
 
 //   private def dummyEvent[ S <: Sys[ S ]] = evt.Dummy[ S, Unit, SourceHook[ S#Tx, Transport[ S, Proc[ S ]]]]
@@ -97,7 +98,8 @@ object DocumentImpl {
       }
    }
 
-   private final class Impl[ S <: Sys[ S ]]( val folder: File, val system: S, val cursor: Cursor[ S ], access: S#Entry[ Data[ S ]])
+   private final class Impl[ S <: Sys[ S ]]( val folder: File, val system: S, access: S#Entry[ Data[ S ]])
+                                           ( implicit val cursor: Cursor[ S ])
    extends Document[ S ] {
       override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
