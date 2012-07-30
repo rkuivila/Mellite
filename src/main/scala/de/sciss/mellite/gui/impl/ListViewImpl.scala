@@ -27,7 +27,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.stm.{Txn, Disposable, Sys}
+import de.sciss.lucre.stm.{TxnSerializer, Cursor, Txn, Disposable, Sys}
 import de.sciss.lucre.expr.LinkedList
 import swing.{ScrollPane, Component}
 import javax.swing.DefaultListModel
@@ -36,40 +36,52 @@ import concurrent.stm.{Ref => STMRef}
 import swing.event.ListSelectionChanged
 
 object ListViewImpl {
-   def apply[ S <: Sys[ S ], Elem, ~ ]( list: LinkedList[ S, Elem, ~ ])( show: Elem => String )
-                                   ( implicit tx: S#Tx ) : ListView[ S ] = {
-      val view    = new Impl[ S ]
-      val items   = list.iterator.toIndexedSeq
+   def empty[ S <: Sys[ S ], Elem, U ]( show: Elem => String )
+                                      ( implicit tx: S#Tx, cursor: Cursor[ S ],
+                                        serializer: TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Elem, U ]]) : ListView[ S, Elem, U ] = {
+      val view = new Impl[ S, Elem, U ]( show )
       guiFromTx {
          view.guiInit()
-         view.addAll( items.map( show ))
       }
-      val obs = list.changed.reactTx { implicit tx => {
-         case LinkedList.Added(   _, idx, elem )   => guiFromTx( view.add( idx, show( elem )))
-         case LinkedList.Removed( _, idx, elem )   => guiFromTx( view.remove( idx ))
-         case LinkedList.Element( li, upd )        =>
-            val ch = upd.foldLeft( Map.empty[ Int, String ]) { case (map0, (elem, _)) =>
-               val idx = li.indexOf( elem )
-               if( idx >= 0 ) {
-                  map0 + (idx -> show( elem ))
-               } else map0
-            }
-            guiFromTx {
-               ch.foreach { case (idx, str) => view.update( idx, str )}
-            }
-      }}
-      view.observer = obs
       view
    }
 
-   private final class Impl[ S <: Sys[ S ]] extends ListView[ S ] {
+   def apply[ S <: Sys[ S ], Elem, U ]( list: LinkedList[ S, Elem, U ])( show: Elem => String )
+                                      ( implicit tx: S#Tx, cursor: Cursor[ S ],
+                                        serializer: TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Elem, U ]]) : ListView[ S, Elem, U ] = {
+      val view = empty[ S, Elem, U ]( show )
+      view.list_=( Some( list ))
+      view
+   }
+
+   private final class Impl[ S <: Sys[ S ], Elem, U ]( show: Elem => String )
+                                                     ( implicit cursor: Cursor[ S ], listSer: TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Elem, U ]])
+   extends ListView[ S, Elem, U ] {
+      view =>
+
       @volatile private var comp: Component = _
       @volatile private var ggList: swing.ListView[ _ ] = _
 
       private val mList  = new DefaultListModel
-      var observer: Disposable[ S#Tx ] = _
 
       private var viewObservers = IIdxSeq.empty[ Observer ]
+
+      private val current = STMRef( Option.empty[ (S#Acc, LinkedList[ S, Elem, U ], Disposable[ S#Tx ])])
+
+      def list( implicit tx: S#Tx ) : Option[ LinkedList[ S, Elem, U ]] = {
+         current.get( tx.peer ).map { case (csr, stale, _) => tx.refresh( csr, stale )}
+      }
+
+      def list_=( newOption: Option[ LinkedList[ S, Elem, U ]])( implicit tx: S#Tx ) {
+         current.get( tx.peer ).foreach { case (csr, stale, obs) =>
+            disposeObserver( obs )
+         }
+         val newValue = newOption.map { case ll =>
+            val obs = createObserver( ll )
+            (cursor.position, ll, obs)
+         }
+         current.set( newValue )( tx.peer )
+      }
 
       private final class Observer( fun: PartialFunction[ ListView.Update, Unit ]) extends Removable {
          obs =>
@@ -85,6 +97,34 @@ object ListViewImpl {
                case e: Exception => e.printStackTrace()
             }
          }
+      }
+
+      private def disposeObserver( obs: Disposable[ S#Tx ])( implicit tx: S#Tx ) {
+         obs.dispose()
+         guiFromTx {
+            view.clear()
+         }
+      }
+
+      private def createObserver( ll: LinkedList[ S, Elem, U ])( implicit tx: S#Tx ) : Disposable[ S#Tx ] = {
+         val items   = ll.iterator.toIndexedSeq
+         guiFromTx {
+            view.addAll( items.map( show ))
+         }
+         ll.changed.reactTx { implicit tx => {
+            case LinkedList.Added(   _, idx, elem )   => guiFromTx( view.add( idx, show( elem )))
+            case LinkedList.Removed( _, idx, elem )   => guiFromTx( view.remove( idx ))
+            case LinkedList.Element( li, upd )        =>
+               val ch = upd.foldLeft( Map.empty[ Int, String ]) { case (map0, (elem, _)) =>
+                  val idx = li.indexOf( elem )
+                  if( idx >= 0 ) {
+                     map0 + (idx -> show( elem ))
+                  } else map0
+               }
+               guiFromTx {
+                  ch.foreach { case (idx, str) => view.update( idx, str )}
+               }
+         }}
       }
 
       private def notifyViewObservers( current: IIdxSeq[ Int ]) {
@@ -130,7 +170,12 @@ object ListViewImpl {
          comp = new ScrollPane( ggList )
       }
 
+      def clear() {
+         mList.clear()
+      }
+
       def addAll( items: IIdxSeq[ String ]) {
+         mList.clear()
          items.foreach( mList.addElement _ )
       }
 
@@ -147,9 +192,8 @@ object ListViewImpl {
       }
 
       def dispose()( implicit tx: S#Tx ) {
-         observer.dispose()
+         list_=( None )
          guiFromTx {
-            mList.clear()
             viewObservers = IIdxSeq.empty
          }
       }

@@ -30,12 +30,13 @@ package impl
 import swing.{FlowPanel, Action, Button, BorderPanel, Frame}
 import de.sciss.lucre.stm.Sys
 import javax.swing.WindowConstants
-import de.sciss.lucre.bitemp.BiGroup
-import de.sciss.synth.proc.{ProcGroupX, Proc}
+import de.sciss.synth.proc.ProcGroupX
 import de.sciss.synth.expr.SpanLikes
 
 object DocumentFrameImpl {
    def apply[ S <: Sys[ S ]]( doc: Document[ S ])( implicit tx: S#Tx ) : DocumentFrame[ S ] = {
+      implicit val csr = doc.cursor
+      implicit val groupsSer = Document.Serializers.groups[ S ]
       val groupsView = ListView( doc.groups )( g => "Timeline " + g.id )
       val view = new Impl( doc, groupsView )
       guiFromTx {
@@ -44,7 +45,8 @@ object DocumentFrameImpl {
       view
    }
 
-   private final class Impl[ S <: Sys[ S ]]( val document: Document[ S ], groupsView: ListView[ S ])
+   private final class Impl[ S <: Sys[ S ]]( val document: Document[ S ],
+                                             groupsView: ListView[ S, Document.Group[ S ], Document.GroupUpdate[ S ]])
    extends DocumentFrame[ S ] {
       private var comp: Frame = _
 

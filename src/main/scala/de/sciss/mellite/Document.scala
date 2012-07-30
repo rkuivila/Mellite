@@ -30,7 +30,8 @@ import de.sciss.lucre.expr.LinkedList
 import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.synth.proc.{Transport, Proc}
 import impl.{DocumentImpl => Impl}
-import de.sciss.lucre.stm.{SourceHook, Cursor, Sys}
+import de.sciss.lucre.stm.{TxnSerializer, SourceHook, Cursor, Sys}
+import de.sciss.synth.expr.{SpanLikes, Spans}
 
 object Document {
    type Group[        S <: Sys[ S ]]   = BiGroup.Modifiable[    S, Proc[ S ],  Proc.Update[ S ]]
@@ -42,9 +43,19 @@ object Document {
 
    def read(  dir: File ) : Document[ Cf ] = Impl.read( dir )
    def empty( dir: File ) : Document[ Cf ] = Impl.empty( dir )
+
+   object Serializers {
+      def groups[ S <: Sys[ S ]] : TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Group[ S ], GroupUpdate[ S ]]] = {
+         implicit val spanType   = SpanLikes
+         implicit val elem       = BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
+         LinkedList.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )
+      }
+   }
 }
 trait Document[ S <: Sys[ S ]] {
    import Document._
+
+//   def serializers : Document.Serializers[ S ]
 
    def system: S
    def cursor: Cursor[ S ]
