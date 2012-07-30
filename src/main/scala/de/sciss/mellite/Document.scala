@@ -50,6 +50,11 @@ object Document {
          implicit val elem       = BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
          LinkedList.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )
       }
+
+      def transports[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Transport[ S, Proc[ S ]], Unit ]] = {
+         implicit val elem = Transport.serializer[ S ]
+         LinkedList.serializer[ S, Transport[ S, Proc[ S ]]]
+      }
    }
 }
 trait Document[ S <: Sys[ S ]] {

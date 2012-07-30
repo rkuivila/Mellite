@@ -27,18 +27,20 @@ package de.sciss.mellite
 package gui
 package impl
 
-import swing.{FlowPanel, Action, Button, BorderPanel, Frame}
+import swing.{Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
 import de.sciss.lucre.stm.Sys
 import javax.swing.WindowConstants
-import de.sciss.synth.proc.ProcGroupX
+import de.sciss.synth.proc.{Transport, Proc, ProcGroupX}
 import de.sciss.synth.expr.SpanLikes
 
 object DocumentFrameImpl {
    def apply[ S <: Sys[ S ]]( doc: Document[ S ])( implicit tx: S#Tx ) : DocumentFrame[ S ] = {
       implicit val csr = doc.cursor
-      implicit val groupsSer = Document.Serializers.groups[ S ]
+      implicit val groupsSer  = Document.Serializers.groups[ S ]
+      implicit val transpSer  = Document.Serializers.transports[ S ]
       val groupsView = ListView( doc.groups )( g => "Timeline " + g.id )
-      val view = new Impl( doc, groupsView )
+      val transpView = ListView.empty[ S, Transport[ S, Proc[ S ]], Unit ]( _.toString() )
+      val view = new Impl( doc, groupsView, transpView )
       guiFromTx {
          view.guiInit()
       }
@@ -46,9 +48,12 @@ object DocumentFrameImpl {
    }
 
    private final class Impl[ S <: Sys[ S ]]( val document: Document[ S ],
-                                             groupsView: ListView[ S, Document.Group[ S ], Document.GroupUpdate[ S ]])
+                                             groupsView: ListView[ S, Document.Group[ S ], Document.GroupUpdate[ S ]],
+                                             transpView: ListView[ S, Transport[ S, Proc[ S ]], Unit ])
    extends DocumentFrame[ S ] {
       private var comp: Frame = _
+
+      private def atomic[ A ]( fun: S#Tx => A ) : A = document.cursor.step( fun )
 
       def component: Frame = {
          requireEDT()
@@ -61,49 +66,94 @@ object DocumentFrameImpl {
          requireEDT()
          require( comp == null, "Initialization called twice" )
 
-         val ggAdd = Button( "+" ) {
-            document.cursor.step { implicit tx =>
+         val ggAddGroup = Button( "+" ) {
+            atomic { implicit tx =>
                implicit val spans = SpanLikes
                val group = ProcGroupX.Modifiable[ S ]
                document.groups.addLast( group )
             }
          }
 
-         val ggDel = new Button( Action( "\u2212" ) {
+         val ggDelGroup = new Button( Action( "\u2212" ) {
             val indices = groupsView.guiSelection
-            if( indices.nonEmpty ) document.cursor.step { implicit tx =>
-               val g    = document.groups
-               val sz   = g.size
-               val ind1 = indices.filter( _ < sz ).sortBy( -_ )
-               ind1.foreach( g.removeAt )
+            if( indices.nonEmpty ) atomic { implicit tx =>
+               transpView.list.flatMap( _.modifiableOption ).foreach { ll =>
+                  val sz   = ll.size
+                  val ind1 = indices.filter( _ < sz ).sortBy( -_ )
+                  ind1.foreach { idx =>
+                     ll.removeAt( idx ).dispose()
+                  }
+               }
             }
          }) {
             enabled = false
          }
 
-         val ggView = new Button( Action( "View" ) {
+         val ggViewGroup = new Button( Action( "View" ) {
 
          }) {
             enabled = false
          }
 
-         val butPanel = new FlowPanel( ggAdd, ggDel, ggView )
+         val groupsButPanel = new FlowPanel( ggAddGroup, ggDelGroup, ggViewGroup )
+
+         val ggAddTransp = new Button( Action( "+" ) {
+            println( "Add Transport" )
+         }) {
+            enabled = false
+         }
+
+         val ggDelTransp = new Button( Action( "\u2212" ) {
+            val indices = transpView.guiSelection
+            if( indices.nonEmpty ) atomic { implicit tx =>
+               transpView.list.flatMap( _.modifiableOption ).foreach { ll =>
+                  val sz   = ll.size
+                  val ind1 = indices.filter( _ < sz ).sortBy( -_ )
+                  ind1.foreach { idx =>
+                     ll.removeAt( idx ).dispose()
+                  }
+               }
+            }
+         }) {
+            enabled = false
+         }
+
+         val transpButPanel = new FlowPanel( ggAddTransp, ggDelTransp )
+
+         val groupsPanel = new BorderPanel {
+            add( groupsView.component, BorderPanel.Position.Center )
+            add( groupsButPanel, BorderPanel.Position.South )
+         }
+
+         val transpPanel = new BorderPanel {
+            add( transpView.component, BorderPanel.Position.Center )
+            add( transpButPanel, BorderPanel.Position.South )
+         }
 
          groupsView.guiReact {
             case ListView.SelectionChanged( indices ) =>
 //               println( "SELECTION " + indices )
                val isSelected = indices.nonEmpty
-               ggDel.enabled  = isSelected
-               ggView.enabled = isSelected
+               ggDelGroup.enabled  = isSelected
+               ggViewGroup.enabled = isSelected
+               val isSingle = indices.size == 1
+               ggAddTransp.enabled = isSingle
+               ggDelTransp.enabled = false
+               atomic { implicit tx =>
+                  val transpList = if( isSingle ) {
+                     val groupOption = groupsView.list.flatMap( _.get( indices.head ))
+                     groupOption.map( group => document.transports( group ))
+                  } else {
+                     None
+                  }
+                  transpView.list_=( transpList )
+               }
          }
 
          comp = new Frame {
             title    = "Document : " + document.folder.getName
             peer.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE )
-            contents = new BorderPanel {
-               add( groupsView.component, BorderPanel.Position.Center )
-               add( butPanel, BorderPanel.Position.South )
-            }
+            contents = new SplitPane( Orientation.Horizontal, groupsPanel, transpPanel )
             pack()
             centerOnScreen()
             open()
