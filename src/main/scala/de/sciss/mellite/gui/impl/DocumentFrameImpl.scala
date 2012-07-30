@@ -28,7 +28,7 @@ package gui
 package impl
 
 import swing.{Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
-import de.sciss.lucre.stm.Sys
+import de.sciss.lucre.stm.{Disposable, Sys}
 import javax.swing.WindowConstants
 import de.sciss.synth.proc.{Transport, Proc, ProcGroupX}
 import de.sciss.synth.expr.SpanLikes
@@ -74,20 +74,23 @@ object DocumentFrameImpl {
             }
          }
 
-         val ggDelGroup = new Button( Action( "\u2212" ) {
-            val indices = groupsView.guiSelection
-            if( indices.nonEmpty ) atomic { implicit tx =>
-               transpView.list.flatMap( _.modifiableOption ).foreach { ll =>
-                  val sz   = ll.size
-                  val ind1 = indices.filter( _ < sz ).sortBy( -_ )
-                  ind1.foreach { idx =>
-                     ll.removeAt( idx ).dispose()
+         def mkDelButton[ Elem <: Disposable[ S#Tx ], U ]( view: ListView[ S, Elem, U ]): Button =
+            new Button( Action( "\u2212" ) {
+               val indices = view.guiSelection
+               if( indices.nonEmpty ) atomic { implicit tx =>
+                  view.list.flatMap( _.modifiableOption ).foreach { ll =>
+                     val sz   = ll.size
+                     val ind1 = indices.filter( _ < sz ).sortBy( -_ )
+                     ind1.foreach { idx =>
+                        ll.removeAt( idx ).dispose()
+                     }
                   }
                }
+            }) {
+               enabled = false
             }
-         }) {
-            enabled = false
-         }
+
+         val ggDelGroup = mkDelButton( groupsView )
 
          val ggViewGroup = new Button( Action( "View" ) {
 
@@ -103,20 +106,7 @@ object DocumentFrameImpl {
             enabled = false
          }
 
-         val ggDelTransp = new Button( Action( "\u2212" ) {
-            val indices = transpView.guiSelection
-            if( indices.nonEmpty ) atomic { implicit tx =>
-               transpView.list.flatMap( _.modifiableOption ).foreach { ll =>
-                  val sz   = ll.size
-                  val ind1 = indices.filter( _ < sz ).sortBy( -_ )
-                  ind1.foreach { idx =>
-                     ll.removeAt( idx ).dispose()
-                  }
-               }
-            }
-         }) {
-            enabled = false
-         }
+         val ggDelTransp = mkDelButton( transpView )
 
          val transpButPanel = new FlowPanel( ggAddTransp, ggDelTransp )
 
@@ -141,8 +131,10 @@ object DocumentFrameImpl {
                ggDelTransp.enabled = false
                atomic { implicit tx =>
                   val transpList = if( isSingle ) {
-                     val groupOption = groupsView.list.flatMap( _.get( indices.head ))
-                     groupOption.map( group => document.transports( group ))
+                     for( ll <- groupsView.list; idx <- indices.headOption; group <- ll.get( idx ))
+                        yield document.transports( group )
+//                     val groupOption = groupsView.list.flatMap( _.get( indices.head ))
+//                     groupOption.map( group => document.transports( group ))
                   } else {
                      None
                   }
