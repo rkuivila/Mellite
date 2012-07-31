@@ -26,12 +26,14 @@
 package de.sciss.mellite
 
 import java.io.File
-import de.sciss.lucre.expr.LinkedList
-import de.sciss.lucre.bitemp.BiGroup
-import de.sciss.synth.proc.{Transport, Proc}
+import de.sciss.lucre.{expr, event => evt, bitemp, stm}
+import expr.LinkedList
+import bitemp.BiGroup
+import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
-import de.sciss.lucre.stm.{TxnSerializer, SourceHook, Cursor, Sys}
-import de.sciss.synth.expr.{SpanLikes, Spans}
+import proc.Proc
+import stm.{TxnSerializer, Cursor, Sys}
+import de.sciss.synth.expr.SpanLikes
 
 object Document {
    type Group[        S <: Sys[ S ]]   = BiGroup.Modifiable[    S, Proc[ S ],  Proc.Update[ S ]]
@@ -39,21 +41,25 @@ object Document {
    type Groups[       S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]
    type GroupsUpdate[ S <: Sys[ S ]]   = LinkedList.Update[     S, Group[ S ], GroupUpdate[ S ]]
 
-   type Transports[   S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Transport[ S, Proc[ S ]], Unit ] // Transport.Update[ S, Proc[ S ]]]
+   type Transport[    S <: Sys[ S ]]   = proc.Transport[ S, Proc[ S ]]
+   type Transports[   S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Transport[ S ], Unit ] // Transport.Update[ S, Proc[ S ]]]
 
    def read(  dir: File ) : Document[ Cf ] = Impl.read( dir )
    def empty( dir: File ) : Document[ Cf ] = Impl.empty( dir )
 
    object Serializers {
-      def groups[ S <: Sys[ S ]] : TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Group[ S ], GroupUpdate[ S ]]] = {
+      implicit def group[ S <: Sys[ S ]] : TxnSerializer[ S#Tx, S#Acc, Group[ S ]] with evt.Reader[ S, Group[ S ]] = {
          implicit val spanType   = SpanLikes
-         implicit val elem       = BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
+         BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
+      }
+
+      implicit def groups[ S <: Sys[ S ]] : TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Group[ S ], GroupUpdate[ S ]]] = {
          LinkedList.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )
       }
 
-      def transports[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Transport[ S, Proc[ S ]], Unit ]] = {
-         implicit val elem = Transport.serializer[ S ]
-         LinkedList.serializer[ S, Transport[ S, Proc[ S ]]]
+      implicit def transports[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Transport[ S ], Unit ]] = {
+//         implicit val elem = proc.Transport.serializer[ S ]
+         LinkedList.serializer[ S, Transport[ S ]]
       }
    }
 }
