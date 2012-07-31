@@ -30,7 +30,7 @@ package impl
 import swing.{Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
 import de.sciss.lucre.stm.{Cursor, Disposable, Sys}
 import javax.swing.WindowConstants
-import de.sciss.synth.proc.{Transport, Proc, ProcGroupX}
+import de.sciss.synth.proc.{AuralPresentation, Transport, Proc, ProcGroupX}
 import de.sciss.synth.expr.SpanLikes
 
 object DocumentFrameImpl {
@@ -49,11 +49,15 @@ object DocumentFrameImpl {
 
    private final class Impl[ S <: Sys[ S ]]( val document: Document[ S ],
                                              groupsView: ListView[ S, Document.Group[ S ], Document.GroupUpdate[ S ]],
-                                             transpView: ListView[ S, Transport[ S, Proc[ S ]], Unit ])
-   extends DocumentFrame[ S ] with ComponentHolder[ Frame ] {
-      private def atomic[ A ]( fun: S#Tx => A ) : A = document.cursor.step( fun )
+                                             transpView: ListView[ S, Document.Transport[ S ], Unit ])
+   extends DocumentFrame[ S ] with ComponentHolder[ Frame ] with CursorHolder[ S ] {
+      protected implicit def cursor: Cursor[ S ] = document.cursor
 
-      private implicit def cursor: Cursor[ S ] = document.cursor
+      private def transport( implicit tx: S#Tx ) : Option[ Document.Transport[ S ]] = {
+         for( gl <- groupsView.list; gidx <- groupsView.guiSelection.headOption; group <- gl.get( gidx );
+              tl <- transpView.list; tidx <- transpView.guiSelection.headOption; transp <- document.transports( group ).get( tidx ))
+            yield transp
+      }
 
       def guiInit() {
          requireEDT()
@@ -158,10 +162,23 @@ object DocumentFrameImpl {
                ggViewInstant.enabled   = isSelected
          }
 
+         val splitPane = new SplitPane( Orientation.Horizontal, groupsPanel, transpPanel )
+
+         val ggAural = Button( "Aural" ) {
+            atomic { implicit tx =>
+               transport.foreach { t =>
+                  AuralPresentation.run( t )
+               }
+            }
+         }
+
          comp = new Frame {
             title    = "Document : " + document.folder.getName
             peer.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE )
-            contents = new SplitPane( Orientation.Horizontal, groupsPanel, transpPanel )
+            contents = new BorderPanel {
+               add( splitPane, BorderPanel.Position.Center )
+               add( ggAural, BorderPanel.Position.South )
+            }
             pack()
             centerOnScreen()
             open()

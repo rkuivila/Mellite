@@ -33,7 +33,7 @@ import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
 import proc.Proc
 import stm.{TxnSerializer, Cursor, Sys}
-import de.sciss.synth.expr.SpanLikes
+import de.sciss.synth.expr.{ExprImplicits, SpanLikes}
 
 object Document {
    type Group[        S <: Sys[ S ]]   = BiGroup.Modifiable[    S, Proc[ S ],  Proc.Update[ S ]]
@@ -49,7 +49,7 @@ object Document {
 
    object Serializers {
       implicit def group[ S <: Sys[ S ]] : TxnSerializer[ S#Tx, S#Acc, Group[ S ]] with evt.Reader[ S, Group[ S ]] = {
-         implicit val spanType   = SpanLikes
+         implicit val spanType = SpanLikes
          BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
       }
 
@@ -71,4 +71,6 @@ trait Document[ S <: Sys[ S ]] {
    def folder: File
    def groups( implicit tx: S#Tx ) : Groups[ S ]
    def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
+
+//   def exprImplicits: ExprImplicits[ S ]
 }

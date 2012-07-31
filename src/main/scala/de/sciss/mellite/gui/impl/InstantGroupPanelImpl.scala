@@ -57,14 +57,6 @@ object InstantGroupPanelImpl {
       val map     = tx.newInMemoryIDMap[ Map[ SpanLike, List[ VisualProc ]]]
       val all     = transport.iterator.toIndexedSeq
 
-      advance( transport.time, all, IIdxSeq.empty, IIdxSeq.empty )
-//         t.changed.react {
-//            case BiGroup.Added(   group, span, elem ) =>
-//            case BiGroup.Removed( group, span, elem ) =>
-//            case BiGroup.Moved(   group, changes ) =>
-//            case BiGroup.Element( group, changes ) =>
-//         }
-
       def playStop( b: Boolean )( implicit tx: S#Tx ) {
          guiFromTx( vis.playing = b )
       }
@@ -123,6 +115,7 @@ object InstantGroupPanelImpl {
       }}
 
       guiFromTx( vis.guiInit() )
+      advance( transport.time, all, IIdxSeq.empty, IIdxSeq.empty )   // after init!
       vis
    }
 
