@@ -6,13 +6,21 @@ import de.sciss.lucre.stm.{Sys, Cursor}
 import swing.{Action, Button, FlowPanel, Component}
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.gui.{Transport => GUITransport}
+import de.sciss.synth.proc.Transport
 
 object TransportPanelImpl {
    def apply[ S <: Sys[ S ]]( transport: Document.Transport[ S ])
                             ( implicit tx: S#Tx, cursor: Cursor[ S ]) : TransportPanel[ S ] = {
       val view    = new Impl( transport, cursor.position )
+      // XXX TODO should add a more specific event that doesn't carry all the details, but just play/stop
+      transport.changed.react {
+         case Transport.Play( _ ) => guiFromTx( view.playing = true  )
+         case Transport.Stop( _ ) => guiFromTx( view.playing = false )
+         case _ =>  // XXX TODO nasty
+      }
+      val wasPlaying = transport.playing.value
       guiFromTx {
-         view.guiInit()
+         view.guiInit( wasPlaying )
       }
       view
    }
@@ -23,9 +31,23 @@ object TransportPanelImpl {
       private val imp = ExprImplicits[ S ]
       import imp._
 
+      private var buttons: GUITransport.ButtonStrip = _
+
       def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
 
-      def guiInit() {
+      def playing : Boolean = {
+         requireEDT()
+         buttons.button( GUITransport.Play ).map( _.selected ).getOrElse( false )
+      }
+      def playing_=( value: Boolean ) {
+         requireEDT()
+         for( ggPlay <- buttons.button( GUITransport.Play ); ggStop <- buttons.button( GUITransport.Stop )) {
+            ggPlay.selected = value
+            ggStop.selected = !value
+         }
+      }
+
+      def guiInit( initPlaying: Boolean ) {
          requireEDT()
          require( comp == null, "Initialization called twice" )
 
@@ -58,7 +80,12 @@ object TransportPanelImpl {
          }
 
          val actions = Seq( actionRTZ, actionRewind, actionPlay, actionStop, actionFFwd )
-         comp = GUITransport.makeButtonStrip( actions )
+         val strip   = GUITransport.makeButtonStrip( actions )
+         buttons  = strip
+
+         playing = initPlaying
+
+         comp     = strip
       }
    }
 }
