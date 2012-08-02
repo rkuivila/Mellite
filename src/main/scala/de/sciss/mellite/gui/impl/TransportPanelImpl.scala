@@ -5,6 +5,7 @@ package impl
 import de.sciss.lucre.stm.{Sys, Cursor}
 import swing.{Action, Button, FlowPanel, Component}
 import de.sciss.synth.expr.ExprImplicits
+import de.sciss.gui.{Transport => GUITransport}
 
 object TransportPanelImpl {
    def apply[ S <: Sys[ S ]]( transport: Document.Transport[ S ])
@@ -22,41 +23,42 @@ object TransportPanelImpl {
       private val imp = ExprImplicits[ S ]
       import imp._
 
-      private val playStopIcon = new PlayStopIcon()
-
       def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
 
       def guiInit() {
          requireEDT()
          require( comp == null, "Initialization called twice" )
 
-         val ggRTZ = Button( "|<" ) {
+         val actionRTZ = GUITransport.GoToBegin {
             atomic { implicit tx =>
                val t = transport
                t.playing_=( false )
                t.seek( 0L )
             }
          }
-         val ggRewind = Button( "<<" ) {
+
+         val actionRewind = GUITransport.Rewind {
             println( "rewind" )
          }
-         lazy val ggPlayStop: Button = new Button( new Action( null ) {
-            icon = playStopIcon
-            def apply() {
-               val res = atomic { implicit tx =>
-                  val t       = transport
-                  val state   = !t.playing.value
-                  t.playing_=( state )
-                  state
-               }
-               playStopIcon.state = if( res ) PlayStopIcon.Stop else PlayStopIcon.Play
-               ggPlayStop.repaint()
+
+         val actionPlay = GUITransport.Play {
+            atomic { implicit tx =>
+               transport.playing_=( true )
             }
-         })
-         val ggForward = Button( ">>" ) {
+         }
+
+         val actionStop = GUITransport.Stop {
+            atomic { implicit tx =>
+               transport.playing_=( false )
+            }
+         }
+
+         val actionFFwd = GUITransport.FastForward {
             println( "fast forward" )
          }
-         comp = new FlowPanel( ggRTZ, ggRewind, ggPlayStop, ggForward )
+
+         val actions = Seq( actionRTZ, actionRewind, actionPlay, actionStop, actionFFwd )
+         comp = GUITransport.makeButtonStrip( actions )
       }
    }
 }
