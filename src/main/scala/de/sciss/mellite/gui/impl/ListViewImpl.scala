@@ -27,7 +27,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.stm.{TxnSerializer, Cursor, Txn, Disposable, Sys}
+import de.sciss.lucre.stm.{Serializer, Cursor, Disposable, Sys}
 import de.sciss.lucre.expr.LinkedList
 import swing.{ScrollPane, Component}
 import javax.swing.DefaultListModel
@@ -38,7 +38,7 @@ import swing.event.ListSelectionChanged
 object ListViewImpl {
    def empty[ S <: Sys[ S ], Elem, U ]( show: Elem => String )
                                       ( implicit tx: S#Tx, cursor: Cursor[ S ],
-                                        serializer: TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Elem, U ]]) : ListView[ S, Elem, U ] = {
+                                        serializer: Serializer[ S#Tx, S#Acc, LinkedList[ S, Elem, U ]]) : ListView[ S, Elem, U ] = {
       val view = new Impl[ S, Elem, U ]( show )
       guiFromTx {
          view.guiInit()
@@ -48,14 +48,14 @@ object ListViewImpl {
 
    def apply[ S <: Sys[ S ], Elem, U ]( list: LinkedList[ S, Elem, U ])( show: Elem => String )
                                       ( implicit tx: S#Tx, cursor: Cursor[ S ],
-                                        serializer: TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Elem, U ]]) : ListView[ S, Elem, U ] = {
+                                        serializer: Serializer[ S#Tx, S#Acc, LinkedList[ S, Elem, U ]]) : ListView[ S, Elem, U ] = {
       val view = empty[ S, Elem, U ]( show )
       view.list_=( Some( list ))
       view
    }
 
    private final class Impl[ S <: Sys[ S ], Elem, U ]( show: Elem => String )
-                                                     ( implicit cursor: Cursor[ S ], listSer: TxnSerializer[ S#Tx, S#Acc, LinkedList[ S, Elem, U ]])
+                                                     ( implicit cursor: Cursor[ S ], listSer: Serializer[ S#Tx, S#Acc, LinkedList[ S, Elem, U ]])
    extends ListView[ S, Elem, U ] {
       view =>
 

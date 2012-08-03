@@ -31,7 +31,7 @@ import de.sciss.confluent.Confluent
 import de.sciss.lucre.{expr, bitemp, stm, DataOutput, DataInput}
 import expr.LinkedList
 import bitemp.BiGroup
-import stm.{IdentifierMap, Cursor, Sys, TxnSerializer}
+import stm.{IdentifierMap, Cursor, Sys, Serializer}
 import stm.impl.BerkeleyDB
 import de.sciss.synth.expr.SpanLikes
 import de.sciss.synth.proc.{Transport, Proc}
@@ -45,9 +45,9 @@ object DocumentImpl {
 
 //   private def transportSer[ S <: Sys[ S ]] = Transport.serializer[ S, Group[ S ]]()
 
-   private implicit def serializer[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : TxnSerializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
+   private implicit def serializer[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : Serializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
 
-   private final class Ser[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) extends TxnSerializer[ S#Tx, S#Acc, Data[ S ]] {
+   private final class Ser[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) extends Serializer[ S#Tx, S#Acc, Data[ S ]] {
       def write( data: Data[ S ], out: DataOutput ) {
          data.write( out )
       }
