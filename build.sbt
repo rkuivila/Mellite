@@ -27,8 +27,8 @@ fork in run := true  // required for shutdown hook, and also the scheduled threa
 
 // ---- packaging ----
 
-seq( appbundle.settings: _* )
+// seq( appbundle.settings: _* )
 
-appbundle.icon := Some( file( "application.png" ))
+// appbundle.icon := Some( file( "application.png" ))
 
-appbundle.target <<= baseDirectory
+// appbundle.target <<= baseDirectory

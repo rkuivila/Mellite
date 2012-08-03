@@ -31,7 +31,7 @@ import de.sciss.confluent.Confluent
 import de.sciss.lucre.{expr, bitemp, stm, DataOutput, DataInput}
 import expr.LinkedList
 import bitemp.BiGroup
-import stm.{Writer, Disposable, IdentifierMap, Cursor, Sys, TxnSerializer}
+import stm.{IdentifierMap, Cursor, Sys, TxnSerializer}
 import stm.impl.BerkeleyDB
 import de.sciss.synth.expr.SpanLikes
 import de.sciss.synth.proc.{Transport, Proc}
@@ -88,7 +88,7 @@ object DocumentImpl {
 
    private abstract class Data[ S <: Sys[ S ]] {
       def groups: Groups[ S ]
-      def transportMap: IdentifierMap[ S#Tx, S#ID, Transports[ S ]] with Writer with Disposable[ S#Tx ]
+      def transportMap: IdentifierMap[ S#ID, S#Tx, Transports[ S ]]
 
       final def write( out: DataOutput ) {
          groups.write( out )
