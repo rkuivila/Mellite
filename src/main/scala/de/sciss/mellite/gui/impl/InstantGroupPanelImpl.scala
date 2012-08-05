@@ -127,8 +127,8 @@ object InstantGroupPanelImpl {
    private val GROUP_NODES    = "graph.nodes"
 //   private val GROUP_EDGES    = "graph.edges"
    private val LAYOUT_TIME    = 50
-   private val colrPlay       = new Color( 0, 0x80, 0 )
-   private val colrStop       = Color.black
+//   private val colrPlay       = new Color( 0, 0x80, 0 )
+//   private val colrStop       = Color.black
    private val COLUMN_DATA    = "nuages.data"
 
    private final class Impl[ S <: Sys[ S ]]( transport: Transport[ S, Proc[ S ]], cursor: Cursor[ S ])
@@ -162,6 +162,7 @@ object InstantGroupPanelImpl {
                g.setRenderingHint( RenderingHints.KEY_STROKE_CONTROL,    RenderingHints.VALUE_STROKE_PURE )
             }
          }
+         display.setBackground( Color.black )
 
          val lay = new ForceDirectedLayout( GROUP_GRAPH )
          val fs = lay.getForceSimulator
@@ -294,8 +295,8 @@ object InstantGroupPanelImpl {
       def playing_=( b: Boolean ) {
          if( playingVar != b ) {
             playingVar = b
-            display.setBackground( if( b ) colrPlay else colrStop )
-            display.repaint()
+//            display.setBackground( if( b ) colrPlay else colrStop )
+//            display.repaint()
          }
       }
 
