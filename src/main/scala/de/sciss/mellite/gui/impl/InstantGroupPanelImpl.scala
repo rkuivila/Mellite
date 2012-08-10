@@ -36,7 +36,7 @@ import prefuse.{Display, Visualization}
 import prefuse.action.layout.graph.ForceDirectedLayout
 import prefuse.action.{RepaintAction, ActionList}
 import prefuse.activity.Activity
-import prefuse.controls.{DragControl, ZoomToFitControl, PanControl, WheelZoomControl, ZoomControl}
+import prefuse.controls.{ZoomToFitControl, PanControl, WheelZoomControl, ZoomControl}
 import javax.swing.event.{AncestorEvent, AncestorListener}
 import prefuse.data
 import prefuse.visual.VisualItem
@@ -54,7 +54,7 @@ object InstantGroupPanelImpl {
 //      require( Txn.findCurrent.isEmpty, "VisualInstantPresentation.apply must be called outside transaction" )
 
       val vis     = new Impl( transport, cursor )
-      val map     = tx.newInMemoryIDMap[ Map[ SpanLike, List[ VisualProc ]]]
+      val map     = tx.newInMemoryIDMap[ Map[ SpanLike, List[ VisualProc[ S ]]]]
       val all     = transport.iterator.toIndexedSeq
 
       def playStop( b: Boolean )( implicit tx: S#Tx ) {
@@ -84,7 +84,7 @@ object InstantGroupPanelImpl {
             val proc = timed.value
             val n    = proc.name.value
             val par  = proc.par.entriesAt( time )
-            val vp   = new VisualProc( n, par )
+            val vp   = new VisualProc( n, par, cursor.position, proc )
             map.get( id ) match {
                case Some( vpm ) =>
                   map.remove( id )
@@ -134,12 +134,12 @@ object InstantGroupPanelImpl {
    extends InstantGroupPanel[ S ] with ComponentHolder[ Component ] {
       private var playingVar = false
 //      private var vps      = Set.empty[ VisualProc ]
-      private var nodeMap  = Map.empty[ VisualProc, data.Node ]
+      private var nodeMap  = Map.empty[ VisualProc[ S ], data.Node ]
 
       private val g        = {
          val res = new data.Graph
 //         res.addColumn( VisualItem.LABEL, classOf[ String ])
-         res.addColumn( VisualProc.COLUMN_DATA, classOf[ VisualProc ])
+         res.addColumn( VisualProc.COLUMN_DATA, classOf[ VisualProc[ S ]])
          res
       }
       private var pVis: Visualization = _
@@ -228,7 +228,7 @@ object InstantGroupPanelImpl {
          display.addControlListener( new ZoomToFitControl() )
          display.addControlListener( new PanControl() )
 //         display.addControlListener( new DragControl() )
-         display.addControlListener( new VisualProcControl() )
+         display.addControlListener( new VisualProcControl( cursor ))
          display.setHighQuality( true )
 
          display.setForeground( Color.WHITE )
@@ -249,21 +249,21 @@ object InstantGroupPanelImpl {
          comp = Component.wrap( display )
       }
 
-      def add( vps: VisualProc* ) {
+      def add( vps: VisualProc[ S ]* ) {
 //         vps ++= procs
          visDo {
             vps.foreach( add1 )
          }
       }
 
-      def remove( vps: VisualProc* ) {
+      def remove( vps: VisualProc[ S ]* ) {
 //         vps --= procs
          visDo {
             vps.foreach( rem1 )
          }
       }
 
-      def updated( pairs: (VisualProc, Map[ String, Param ])* ) {
+      def updated( pairs: (VisualProc[ S ], Map[ String, Param ])* ) {
          visDo {
             pairs.foreach { case (vp, map) =>
                vp.par ++= map
@@ -271,7 +271,7 @@ object InstantGroupPanelImpl {
          }
       }
 
-      private def add1( vp: VisualProc ) {
+      private def add1( vp: VisualProc[ S ]) {
          val pNode   = g.addNode()
 //         val vi      = pVis.getVisualItem( GROUP_GRAPH, pNode )
 //         vi.setString( VisualItem.LABEL, vp.name )
@@ -282,7 +282,7 @@ object InstantGroupPanelImpl {
          nodeMap    += vp -> pNode
       }
 
-      private def rem1( vp: VisualProc ) {
+      private def rem1( vp: VisualProc[ S ]) {
          nodeMap.get( vp ) match {
             case Some( n ) =>
                g.removeNode( n )

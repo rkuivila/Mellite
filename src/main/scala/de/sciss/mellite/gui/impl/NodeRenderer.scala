@@ -11,6 +11,7 @@ import prefuse.Constants
 import prefuse.util.ColorLib
 import java.text.{DecimalFormat, NumberFormat}
 import java.util.Locale
+import de.sciss.lucre.stm.Sys
 
 object NodeRenderer {
 //   val LABEL = "nuages.label"
@@ -51,7 +52,7 @@ object NodeRenderer {
        p.setLocation( x + xShift, y + yShift )
    }
 }
-final class NodeRenderer( val dataColumn: String ) extends AbstractShapeRenderer {
+final class NodeRenderer[ S <: Sys[ S ]]( val dataColumn: String ) extends AbstractShapeRenderer {
    import NodeRenderer._
 
    private val shape = new RoundRectangle2D.Double()
@@ -67,8 +68,10 @@ final class NodeRenderer( val dataColumn: String ) extends AbstractShapeRenderer
       shape
    }
 
-   private def getData( vi: VisualItem ) : Option[ VisualProc ] = {
-      if( vi.canGet( dataColumn, classOf[ VisualProc ])) Option( vi.get( dataColumn ).asInstanceOf[ VisualProc ]) else None
+   private def getData( vi: VisualItem ) : Option[ VisualProc[ S ]] = {
+      if( vi.canGet(     dataColumn, classOf[       VisualProc[ S ]])) {
+         Option( vi.get( dataColumn ).asInstanceOf[ VisualProc[ S ]])
+      } else None
    }
 
    override def render( g: Graphics2D, vi: VisualItem ) {
