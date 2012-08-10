@@ -129,7 +129,6 @@ object InstantGroupPanelImpl {
    private val LAYOUT_TIME    = 50
 //   private val colrPlay       = new Color( 0, 0x80, 0 )
 //   private val colrStop       = Color.black
-   private val COLUMN_DATA    = "nuages.data"
 
    private final class Impl[ S <: Sys[ S ]]( transport: Transport[ S, Proc[ S ]], cursor: Cursor[ S ])
    extends InstantGroupPanel[ S ] with ComponentHolder[ Component ] {
@@ -140,7 +139,7 @@ object InstantGroupPanelImpl {
       private val g        = {
          val res = new data.Graph
 //         res.addColumn( VisualItem.LABEL, classOf[ String ])
-         res.addColumn( COLUMN_DATA, classOf[ VisualProc ])
+         res.addColumn( VisualProc.COLUMN_DATA, classOf[ VisualProc ])
          res
       }
       private var pVis: Visualization = _
@@ -195,7 +194,7 @@ object InstantGroupPanelImpl {
          })
 
 //         val lbRend = new LabelRenderer( VisualItem.LABEL )
-         val lbRend = new NodeRenderer( COLUMN_DATA )
+         val lbRend = new NodeRenderer( VisualProc.COLUMN_DATA )
          val rf = new DefaultRendererFactory( lbRend )
          pVis.setRendererFactory( rf )
 
@@ -228,7 +227,8 @@ object InstantGroupPanelImpl {
          display.addControlListener( new WheelZoomControl() )
          display.addControlListener( new ZoomToFitControl() )
          display.addControlListener( new PanControl() )
-         display.addControlListener( new DragControl() )
+//         display.addControlListener( new DragControl() )
+         display.addControlListener( new VisualProcControl() )
          display.setHighQuality( true )
 
          display.setForeground( Color.WHITE )
@@ -278,7 +278,7 @@ object InstantGroupPanelImpl {
 //         pNode.setString( VisualItem.LABEL, vp.name )
 //         val vi = pVis.getVisualItem( GROUP_NODES, pNode )
 //         if( vi != null ) vi.set( COLUMN_DATA, vp )
-         pNode.set( COLUMN_DATA, vp )
+         pNode.set( VisualProc.COLUMN_DATA, vp )
          nodeMap    += vp -> pNode
       }
 
