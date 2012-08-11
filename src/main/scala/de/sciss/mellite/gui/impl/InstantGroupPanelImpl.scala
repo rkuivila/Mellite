@@ -102,8 +102,8 @@ object InstantGroupPanelImpl {
          val hasMod = vpMod.nonEmpty
 
          if( hasAdd || hasRem || hasMod ) guiFromTx {
-            if( hasAdd ) vis.add( vpAdd: _* )
-            if( hasRem ) vis.remove( vpRem: _* )
+            if( hasAdd ) vis.add(     vpAdd: _* )
+            if( hasRem ) vis.remove(  vpRem: _* )
             if( hasMod ) vis.updated( vpMod: _* )
          }
       }
@@ -200,8 +200,8 @@ object InstantGroupPanelImpl {
 
          // colors
          val actionNodeStroke = new ColorAction( GROUP_NODES, VisualItem.STROKECOLOR, ColorLib.rgb( 255, 255, 255 ))
-         val actionNodeFill   = new ColorAction( GROUP_NODES, VisualItem.FILLCOLOR, ColorLib.rgb( 0, 0, 0 ))
-         val actionTextColor  = new ColorAction( GROUP_NODES, VisualItem.TEXTCOLOR, ColorLib.rgb( 255, 255, 255 ))
+         val actionNodeFill   = new ColorAction( GROUP_NODES, VisualItem.FILLCOLOR,   ColorLib.rgb(   0,   0,   0 ))
+         val actionTextColor  = new ColorAction( GROUP_NODES, VisualItem.TEXTCOLOR,   ColorLib.rgb( 255, 255, 255 ))
 
          // quick repaint
          val actionColor = new ActionList()
