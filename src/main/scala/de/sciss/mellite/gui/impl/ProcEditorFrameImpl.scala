@@ -3,12 +3,15 @@ package gui
 package impl
 
 import de.sciss.lucre.stm.{Disposable, Cursor, Sys}
-import de.sciss.synth.proc.{AuralPresentation, ProcGroupX, Transport, Proc}
-import swing.{Label, TextField, Orientation, SplitPane, BorderPanel, FlowPanel, Action, Button, Frame}
-import de.sciss.synth.expr.{ExprImplicits, SpanLikes}
-import javax.swing.WindowConstants
+import de.sciss.synth.proc.{ProcGraph, Proc}
+import swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
+import de.sciss.synth.expr.ExprImplicits
+import javax.swing.{KeyStroke, WindowConstants}
 import de.sciss.lucre.event.Change
-import java.awt.event.{WindowEvent, WindowAdapter}
+import java.awt.event.{InputEvent, KeyEvent, WindowEvent, WindowAdapter}
+import de.sciss.scalainterpreter.{Interpreter, CodePane}
+import java.awt.Dimension
+import de.sciss.synth.SynthGraph
 
 object ProcEditorFrameImpl {
    def apply[ S <: Sys[ S ]]( proc: Proc[ S ])( implicit tx: S#Tx, cursor: Cursor[ S ]) : ProcEditorFrame[ S ] = {
@@ -20,9 +23,10 @@ object ProcEditorFrameImpl {
          }}
       }
 
-      val initName = proc.name.value
+      val initName         = proc.name.value
+      val initGraphSource  = proc.graph.sourceCode
       guiFromTx {
-         view.guiInit( initName )
+         view.guiInit( initName, initGraphSource )
       }
       view
    }
@@ -32,6 +36,8 @@ object ProcEditorFrameImpl {
       protected def observer: Disposable[ S#Tx ]
 
       private var ggName : TextField = _
+      private var ggSource : CodePane = _
+      private var intOpt = Option.empty[ Interpreter ]
 
       def name: String = {
          requireEDT()
@@ -50,9 +56,26 @@ object ProcEditorFrameImpl {
          guiFromTx( comp.dispose() )
       }
 
-      def guiInit( initName: String ) {
+      def guiInit( initName: String, initGraphSource: String ) {
          requireEDT()
          require( comp == null, "Initialization called twice" )
+
+         val cCfg     = CodePane.Config()
+         cCfg.text    = initGraphSource
+//         cCfg.keyMap += KeyStroke.getKeyStroke( KeyEvent.VK_ENTER, InputEvent.SHIFT_MASK ) -> { () =>
+//            intOpt.foreach { in =>
+//               println( in.interpret( ggSource.editor.getText ))
+//            }
+//         }
+         ggSource     = CodePane( cCfg )
+         ggSource.editor.setEnabled( false )
+         ggSource.editor.setPreferredSize( new Dimension( 300, 300 ))
+         InterpreterSingleton { in =>
+            execInGUI {
+               intOpt = Some( in )
+               ggSource.editor.setEnabled( true )
+            }
+         }
 
          val lbName  = new Label( "Name:" )
          ggName      = new TextField( initName, 16 ) {
@@ -66,6 +89,42 @@ object ProcEditorFrameImpl {
             }
          }
 
+         val lbStatus = new Label
+         lbStatus.preferredSize = new Dimension( 200, lbStatus.preferredSize.height )
+
+         val ggCommit = Button( "Commit" ) {
+            intOpt.foreach { in =>
+               val code = ggSource.editor.getText
+               if( code != "" ) {
+                  val wrapped = InterpreterSingleton.wrap( "SynthGraph {\n" + code + "\n}" )
+                  val intRes = in.interpret( wrapped )
+//println( "Interpreter done " + intRes )
+                  intRes match {
+                     case Interpreter.Success( name, _ ) =>
+                        val value = InterpreterSingleton.Result.value
+//println( "Success " + name + " value is " + value )
+                        value match {
+                           case sg: SynthGraph =>
+//println( "Success " + name + " is a graph" )
+                              lbStatus.text = "Ok."
+                              atomic { implicit tx =>
+                                 proc.graph_=( ProcGraph( sg, code ))
+                              }
+                           case _ =>
+                              lbStatus.text = "! Invalid result: " + value + " !"
+                        }
+                     case Interpreter.Error =>
+                        lbStatus.text = "! Error !"
+                     case Interpreter.Incomplete =>
+                        lbStatus.text = "! Code incomplete !"
+                  }
+               }
+            }
+         }
+
+         val topPanel   = new FlowPanel( lbName, ggName )
+         val botPanel   = new FlowPanel( ggCommit, lbStatus )
+
          comp = new Frame {
             title = "Process : " + staleProc
             // f*** scala swing... how should this be written?
@@ -77,8 +136,10 @@ object ProcEditorFrameImpl {
             })
 
             contents = new BorderPanel {
-               add( lbName, BorderPanel.Position.West )
-               add( ggName, BorderPanel.Position.East )
+               import BorderPanel.Position._
+               add( topPanel, North )
+               add( Component.wrap( ggSource.component ), Center )
+               add( botPanel, South )
             }
             pack()
             centerOnScreen()
