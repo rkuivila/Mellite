@@ -38,7 +38,8 @@ class TimeLabel extends JComponent {
    }
 
    private def recalcText() {
-      val millis0 = millisVar
+      val neg     = millisVar < 0
+      val millis0 = if( neg ) -millisVar else millisVar
       val millis  = millis0 % 1000
       val secs0   = millis0 / 1000
       val secs    = secs0 % 60
@@ -46,7 +47,7 @@ class TimeLabel extends JComponent {
       val mins    = mins0 % 60
       val hours   = math.min( 99, mins0 / 60 )
       val sb      = new StringBuilder( 12 )
-      sb.append( if( hours <= 9 ) ' ' else ((hours / 10) + 48).toChar )
+      sb.append( if( neg ) '-' else { if( hours <= 9 ) ' ' else ((hours / 10) + 48).toChar })
       sb.append( ((hours % 10) + 48).toChar )
       sb.append( ':' )
       sb.append( ((mins / 10) + 48).toChar )

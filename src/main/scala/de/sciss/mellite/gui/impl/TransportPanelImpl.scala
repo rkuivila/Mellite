@@ -37,6 +37,7 @@ import java.io.{FileOutputStream, File}
 import javax.swing.Box
 import concurrent.stm.Txn
 import java.awt.event.{ActionEvent, ActionListener}
+import javax.swing.event.{ChangeEvent, ChangeListener}
 
 object TransportPanelImpl {
    def apply[ S <: Sys[ S ]]( transport: Document.Transport[ S ])
@@ -93,13 +94,18 @@ object TransportPanelImpl {
    private final class Impl[ S <: Sys[ S ]]( staleTransport: Document.Transport[ S ],
                                              csrPos: S#Acc )( implicit protected val cursor: Cursor[ S ])
    extends TransportPanel[ S ] with ComponentHolder[ Component ] with CursorHolder[ S ] {
+      import GUITransport.{GoToBegin, Rewind, FastForward, Stop, Play}
+
       private val imp = ExprImplicits[ S ]
       import imp._
 
       private var buttons: GUITransport.ButtonStrip = _
       private var millisVar: Long = 0L
       private var lbTime: TimeLabel = _
-      private var timer: javax.swing.Timer = _
+      private var playTimer: javax.swing.Timer = _
+      private var cueTimer: javax.swing.Timer = _
+      private var playingVar = false
+      private var cueDirection = 1
 
       def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
 
@@ -111,18 +117,21 @@ object TransportPanelImpl {
       def play() {
          requireEDT()
          playing_=( value = true )
-         timer.restart()
+         playTimer.restart()
       }
 
       def stop( mils: Long ) {
          requireEDT()
-         timer.stop()
+         playTimer.stop()
          playing_=( value = false )
          millis_=( mils )
       }
 
+      private def playing : Boolean = playingVar
       private def playing_=( value: Boolean ) {
-         for( ggPlay <- buttons.button( GUITransport.Play ); ggStop <- buttons.button( GUITransport.Stop )) {
+         playingVar = value
+         cueTimer.stop()
+         for( ggPlay <- buttons.button( Play ); ggStop <- buttons.button( Stop )) {
             ggPlay.selected = value
             ggStop.selected = !value
          }
@@ -151,13 +160,22 @@ object TransportPanelImpl {
          require( comp == null, "Initialization called twice" )
 
          // use a prime number so that the visual milli update is nice
-         timer = new javax.swing.Timer( 47, new ActionListener {
+         playTimer = new javax.swing.Timer( 47, new ActionListener {
             def actionPerformed( e: ActionEvent ) {
                millis_=( millisVar + 47 )
             }
          })
 
-         val actionRTZ = GUITransport.GoToBegin {
+         cueTimer = new javax.swing.Timer( 63, new ActionListener {
+            def actionPerformed( e: ActionEvent ) {
+               if( !playing ) atomic { implicit tx =>
+                  val t = transport
+                  t.seek( t.time + (t.sampleRate * 0.25 * cueDirection).toLong )
+               }
+            }
+         })
+
+         val actionRTZ = GoToBegin {
             atomic { implicit tx =>
                val t = transport
                t.playing_=( false )
@@ -165,28 +183,46 @@ object TransportPanelImpl {
             }
          }
 
-         val actionRewind = GUITransport.Rewind {
-            println( "rewind" )
-         }
+         val actionRewind = Rewind()
 
-         val actionPlay = GUITransport.Play {
+         val actionPlay = Play {
             atomic { implicit tx =>
                transport.playing_=( true )
             }
          }
 
-         val actionStop = GUITransport.Stop {
+         val actionStop = Stop {
             atomic { implicit tx =>
                transport.playing_=( false )
             }
          }
 
-         val actionFFwd = GUITransport.FastForward {
-            println( "fast forward" )
-         }
+         val actionFFwd = FastForward()
 
          val actions = Seq( actionRTZ, actionRewind, actionPlay, actionStop, actionFFwd )
          val strip   = GUITransport.makeButtonStrip( actions )
+
+         Seq( Rewind -> -1, FastForward -> 1 ).foreach { case (act, dir) => strip.button( act ).foreach { b =>
+            val m = b.peer.getModel
+            m.addChangeListener( new ChangeListener {
+               var pressed = false
+               def stateChanged( e: ChangeEvent ) {
+                  val p = m.isPressed
+                  if( p != pressed ) {
+                     pressed = p
+                     if( p ) {
+//println( "-restart" )
+                        cueDirection = dir
+                        cueTimer.restart()
+                     } else {
+//println( "-stop" )
+                        cueTimer.stop()
+                     }
+                  }
+               }
+            })
+         }}
+
          buttons  = strip
 
 //         lbTime   = new Label {

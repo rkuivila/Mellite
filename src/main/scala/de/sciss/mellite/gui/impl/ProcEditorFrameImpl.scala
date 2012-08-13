@@ -6,9 +6,9 @@ import de.sciss.lucre.stm.{Disposable, Cursor, Sys}
 import de.sciss.synth.proc.{ProcGraph, Proc}
 import swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
 import de.sciss.synth.expr.ExprImplicits
-import javax.swing.{KeyStroke, WindowConstants}
+import javax.swing.WindowConstants
 import de.sciss.lucre.event.Change
-import java.awt.event.{InputEvent, KeyEvent, WindowEvent, WindowAdapter}
+import java.awt.event.{WindowEvent, WindowAdapter}
 import de.sciss.scalainterpreter.{Interpreter, CodePane}
 import java.awt.Dimension
 import de.sciss.synth.SynthGraph
