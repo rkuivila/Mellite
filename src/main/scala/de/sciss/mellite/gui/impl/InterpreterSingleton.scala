@@ -10,13 +10,13 @@ object InterpreterSingleton {
    private var funs        = IndexedSeq.empty[ Interpreter => Unit ]
    private var inOpt       = Option.empty[ Interpreter ]
 
-   object Result {
-      var value : Any = ()
-   }
-
-   def wrap( code: String ) : String = {
-      "de.sciss.mellite.gui.impl.InterpreterSingleton.Result.value = {" + code + "}"
-   }
+//   object Result {
+//      var value : Any = ()
+//   }
+//
+//   def wrap( code: String ) : String = {
+//      "de.sciss.mellite.gui.impl.InterpreterSingleton.Result.value = {" + code + "}"
+//   }
 
    def apply( fun: Interpreter => Unit ) {
       sync.synchronized {

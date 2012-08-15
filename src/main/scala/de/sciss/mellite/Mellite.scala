@@ -30,13 +30,13 @@ import java.awt.{Dimension, EventQueue}
 import javax.swing.WindowConstants
 import swing.Frame
 
-object Mellite extends App {
+object Mellite extends App with Runnable {
    val name = "Mellite"
 
-   EventQueue.invokeLater( new Runnable { def run() { go() }})
+   EventQueue.invokeLater( this )
 
-   private def go() {
-      val f = new Frame {
+   def run() {
+      new Frame {
          title = name
          peer.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE )
          menuBar = MenuBar()

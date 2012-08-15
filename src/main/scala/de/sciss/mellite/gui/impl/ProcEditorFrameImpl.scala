@@ -96,12 +96,12 @@ object ProcEditorFrameImpl {
             intOpt.foreach { in =>
                val code = ggSource.editor.getText
                if( code != "" ) {
-                  val wrapped = InterpreterSingleton.wrap( "SynthGraph {\n" + code + "\n}" )
+                  val wrapped = /* InterpreterSingleton.wrap( */ "SynthGraph {\n" + code + "\n}" /* ) */
                   val intRes = in.interpret( wrapped )
 //println( "Interpreter done " + intRes )
                   intRes match {
-                     case Interpreter.Success( name, _ ) =>
-                        val value = InterpreterSingleton.Result.value
+                     case Interpreter.Success( name, value ) =>
+//                        val value = InterpreterSingleton.Result.value
 //println( "Success " + name + " value is " + value )
                         value match {
                            case sg: SynthGraph =>
@@ -113,7 +113,7 @@ object ProcEditorFrameImpl {
                            case _ =>
                               lbStatus.text = "! Invalid result: " + value + " !"
                         }
-                     case Interpreter.Error =>
+                     case Interpreter.Error( _ ) =>
                         lbStatus.text = "! Error !"
                      case Interpreter.Incomplete =>
                         lbStatus.text = "! Code incomplete !"
