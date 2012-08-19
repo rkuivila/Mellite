@@ -1,16 +1,40 @@
+/*
+ *  InstantGroupFrameImpl.scala
+ *  (SoundProcesses)
+ *
+ *  Copyright (c) 2010-2012 Hanns Holger Rutz. All rights reserved.
+ *
+ *  This software is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either
+ *  version 2, june 1991 of the License, or (at your option) any later version.
+ *
+ *  This software is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public
+ *  License (gpl.txt) along with this software; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ *  For further information, please contact Hanns Holger Rutz at
+ *  contact@sciss.de
+ */
+
 package de.sciss.mellite
 package gui
 package impl
 
 import de.sciss.lucre.stm.{Cursor, Sys}
-import swing.{Action, Button, FlowPanel, BorderPanel, Frame}
-import javax.swing.{KeyStroke, JComponent, WindowConstants}
+import swing.{Dialog, Action, Button, FlowPanel, BorderPanel, Frame}
+import javax.swing.{JComponent, WindowConstants}
 import de.sciss.lucre.bitemp.Span
 import de.sciss.synth
 import synth.expr.ExprImplicits
 import synth.proc.Proc
-import java.awt.Toolkit
-import java.awt.event.{KeyEvent, InputEvent}
+import java.awt.event.KeyEvent
 
 object InstantGroupFrameImpl {
    def apply[ S <: Sys[ S ]]( group: Document.Group[ S ], transport: Document.Transport[ S ])
@@ -33,7 +57,12 @@ object InstantGroupFrameImpl {
       def group(     implicit tx: S#Tx ) : Document.Group[ S ]     = tx.refresh( csrPos, staleGroup )( Document.Serializers.group[ S ])
       def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
 
-      private def test() {
+      private def newProc() {
+         Dialog.showInput( parent = prefusePanel.component, message = "Name for new process:", title = "New Process",
+            messageType = Dialog.Message.Question, initial = "Unnamed" ).foreach( newProc( _ ))
+      }
+
+      private def newProc( name: String ) {
          atomic { implicit tx =>
             import synth._; import ugen._
             val imp  = ExprImplicits[ S ]
@@ -43,13 +72,14 @@ object InstantGroupFrameImpl {
             val pos  = t.time
             val span = Span( pos, pos + 44100 )
             val proc = Proc[ S ]
-            proc.graph_=({
-               Out.ar( 0, Pan2.ar( SinOsc.ar( "freq".kr ) * 0.2 ))
-            })
-            val freq = (util.Random.nextInt( 20 ) + 60).midicps
-            proc.par( "freq" ).modifiableOption.foreach { bi =>
-               bi.add( 0L, freq )
-            }
+            proc.name_=( name )
+//            proc.graph_=({
+//               Out.ar( 0, Pan2.ar( SinOsc.ar( "freq".kr ) * 0.2 ))
+//            })
+//            val freq = (util.Random.nextInt( 20 ) + 60).midicps
+//            proc.par( "freq" ).modifiableOption.foreach { bi =>
+//               bi.add( 0L, freq )
+//            }
             g.add( span, proc )
          }
       }
@@ -61,12 +91,11 @@ object InstantGroupFrameImpl {
          val ggTest = new Button {
             private val actionKey = "de.sciss.mellite.NewProc"
             peer.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put(
-               KeyStroke.getKeyStroke( KeyEvent.VK_1, Toolkit.getDefaultToolkit.getMenuShortcutKeyMask ),
-               actionKey )
+               primaryMenuKey( KeyEvent.VK_1 ), actionKey )
             peer.getActionMap.put( actionKey, DoClickAction( this ).peer )
-
+            focusable = false
             action = Action( "New Proc" ) {
-               test()
+               newProc()
             }
          }
 
