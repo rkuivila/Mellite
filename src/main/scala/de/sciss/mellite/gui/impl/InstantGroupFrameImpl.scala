@@ -3,12 +3,14 @@ package gui
 package impl
 
 import de.sciss.lucre.stm.{Cursor, Sys}
-import swing.{Button, FlowPanel, Component, BorderPanel, Frame}
-import javax.swing.WindowConstants
+import swing.{Action, Button, FlowPanel, BorderPanel, Frame}
+import javax.swing.{KeyStroke, JComponent, WindowConstants}
 import de.sciss.lucre.bitemp.Span
 import de.sciss.synth
 import synth.expr.ExprImplicits
 import synth.proc.Proc
+import java.awt.Toolkit
+import java.awt.event.{KeyEvent, InputEvent}
 
 object InstantGroupFrameImpl {
    def apply[ S <: Sys[ S ]]( group: Document.Group[ S ], transport: Document.Transport[ S ])
@@ -56,9 +58,18 @@ object InstantGroupFrameImpl {
          requireEDT()
          require( comp == null, "Initialization called twice" )
 
-         val ggTest = Button( "Test" ) {
-            test()
+         val ggTest = new Button {
+            private val actionKey = "de.sciss.mellite.NewProc"
+            peer.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put(
+               KeyStroke.getKeyStroke( KeyEvent.VK_1, Toolkit.getDefaultToolkit.getMenuShortcutKeyMask ),
+               actionKey )
+            peer.getActionMap.put( actionKey, DoClickAction( this ).peer )
+
+            action = Action( "New Proc" ) {
+               test()
+            }
          }
+
          val southPanel = new FlowPanel( transpPanel.component, ggTest )
 
          comp = new Frame {
