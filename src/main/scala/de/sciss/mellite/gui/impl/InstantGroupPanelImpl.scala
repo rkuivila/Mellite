@@ -27,8 +27,8 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.stm.{Sys, Cursor}
-import de.sciss.synth.proc.{Proc, Transport, Param}
+import de.sciss.lucre.stm.Cursor
+import de.sciss.synth.proc.{Sys, Proc, Transport, Param, ProcTransport}
 import de.sciss.lucre.bitemp.{BiGroup, SpanLike}
 import java.awt.{RenderingHints, Graphics2D, Color}
 import collection.immutable.{IndexedSeq => IIdxSeq}
@@ -47,7 +47,7 @@ import prefuse.util.force.{AbstractForce, ForceItem}
 import swing.Component
 
 object InstantGroupPanelImpl {
-   def apply[ S <: Sys[ S ]]( transport: Transport[ S, Proc[ S ]])
+   def apply[ S <: Sys[ S ]]( transport: ProcTransport[ S ])
                             ( implicit tx: S#Tx, cursor: Cursor[ S ]) : InstantGroupPanel[ S ] = {
 
 //      require( EventQueue.isDispatchThread, "VisualInstantPresentation.apply must be called on EDT" )
@@ -83,8 +83,9 @@ object InstantGroupPanelImpl {
             val id   = timed.id
             val proc = timed.value
             val n    = proc.name.value
-            val par  = proc.par.entriesAt( time )
-            val vp   = new VisualProc( n, par, cursor.position, proc )
+//            val par  = proc.par.entriesAt( time )
+val par = Map.empty[ String, Double ]
+            val vp   = new VisualProc( n, par, cursor.position, tx.newHandle( proc ))
             map.get( id ) match {
                case Some( vpm ) =>
                   map.remove( id )
@@ -108,11 +109,11 @@ object InstantGroupPanelImpl {
          }
       }
 
-      transport.changed.reactTx { implicit tx => {
-         case Transport.Advance( _, _, time, added, removed, params ) => advance( time, added, removed, params )
-         case Transport.Play( _ ) => playStop( b = true  )
-         case Transport.Stop( _ ) => playStop( b = false )
-      }}
+//      transport.reactTx { implicit tx => {
+//         case Transport.Advance( _, _, time, added, removed, params ) => advance( time, added, removed, params )
+//         case Transport.Play( _ ) => playStop( b = true  )
+//         case Transport.Stop( _ ) => playStop( b = false )
+//      }}
 
       guiFromTx( vis.guiInit() )
       advance( transport.time, all, IIdxSeq.empty, IIdxSeq.empty )   // after init!
@@ -130,7 +131,7 @@ object InstantGroupPanelImpl {
 //   private val colrPlay       = new Color( 0, 0x80, 0 )
 //   private val colrStop       = Color.black
 
-   private final class Impl[ S <: Sys[ S ]]( transport: Transport[ S, Proc[ S ]], cursor: Cursor[ S ])
+   private final class Impl[ S <: Sys[ S ]]( transport: ProcTransport[ S ], cursor: Cursor[ S ])
    extends InstantGroupPanel[ S ] with ComponentHolder[ Component ] {
       private var playingVar = false
 //      private var vps      = Set.empty[ VisualProc ]

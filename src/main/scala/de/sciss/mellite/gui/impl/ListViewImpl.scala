@@ -27,7 +27,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.stm.{Serializer, Cursor, Disposable, Sys}
+import de.sciss.lucre.stm.{Source, Serializer, Cursor, Disposable, Sys}
 import de.sciss.lucre.expr.LinkedList
 import swing.{ScrollPane, Component}
 import javax.swing.DefaultListModel
@@ -66,19 +66,20 @@ object ListViewImpl {
 
       private var viewObservers = IIdxSeq.empty[ Observer ]
 
-      private val current = STMRef( Option.empty[ (S#Acc, LinkedList[ S, Elem, U ], Disposable[ S#Tx ])])
+//      private val current = STMRef( Option.empty[ (S#Acc, LinkedList[ S, Elem, U ], Disposable[ S#Tx ])])
+      private val current = STMRef( Option.empty[ (Source[ S#Tx, LinkedList[ S, Elem, U ]], Disposable[ S#Tx ])])
 
       def list( implicit tx: S#Tx ) : Option[ LinkedList[ S, Elem, U ]] = {
-         current.get( tx.peer ).map { case (csr, stale, _) => tx.refresh( csr, stale )}
+         current.get( tx.peer ).map { case (h, _) => h.get }
       }
 
       def list_=( newOption: Option[ LinkedList[ S, Elem, U ]])( implicit tx: S#Tx ) {
-         current.get( tx.peer ).foreach { case (csr, stale, obs) =>
+         current.get( tx.peer ).foreach { case (_, obs) =>
             disposeObserver( obs )
          }
          val newValue = newOption.map { case ll =>
             val obs = createObserver( ll )
-            (cursor.position, ll, obs)
+            (tx.newHandle( ll ), obs)
          }
          current.set( newValue )( tx.peer )
       }
@@ -111,19 +112,19 @@ object ListViewImpl {
          guiFromTx {
             view.addAll( items.map( show ))
          }
-         ll.changed.reactTx { implicit tx => {
-            case LinkedList.Added(   _, idx, elem )   => guiFromTx( view.add( idx, show( elem )))
-            case LinkedList.Removed( _, idx, elem )   => guiFromTx( view.remove( idx ))
-            case LinkedList.Element( li, upd )        =>
-               val ch = upd.foldLeft( Map.empty[ Int, String ]) { case (map0, (elem, _)) =>
-                  val idx = li.indexOf( elem )
-                  if( idx >= 0 ) {
-                     map0 + (idx -> show( elem ))
-                  } else map0
-               }
-               guiFromTx {
-                  ch.foreach { case (idx, str) => view.update( idx, str )}
-               }
+         ll.changed.reactTx[ LinkedList.Update[ S, Elem, U ]] { implicit tx => { upd =>
+//            case LinkedList.Added(   _, idx, elem )   => guiFromTx( view.add( idx, show( elem )))
+//            case LinkedList.Removed( _, idx, elem )   => guiFromTx( view.remove( idx ))
+//            case LinkedList.Element( li, upd )        =>
+//               val ch = upd.foldLeft( Map.empty[ Int, String ]) { case (map0, (elem, _)) =>
+//                  val idx = li.indexOf( elem )
+//                  if( idx >= 0 ) {
+//                     map0 + (idx -> show( elem ))
+//                  } else map0
+//               }
+//               guiFromTx {
+//                  ch.foreach { case (idx, str) => view.update( idx, str )}
+//               }
          }}
       }
 

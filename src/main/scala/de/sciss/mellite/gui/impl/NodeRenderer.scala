@@ -11,7 +11,7 @@ import prefuse.Constants
 import prefuse.util.ColorLib
 import java.text.{DecimalFormat, NumberFormat}
 import java.util.Locale
-import de.sciss.lucre.stm.Sys
+import de.sciss.synth.proc.Sys
 
 object NodeRenderer {
 //   val LABEL = "nuages.label"

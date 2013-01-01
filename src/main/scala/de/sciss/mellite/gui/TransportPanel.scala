@@ -26,9 +26,10 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.lucre.stm.{Cursor, Sys}
+import de.sciss.lucre.stm.Cursor
 import impl.{TransportPanelImpl => Impl}
 import swing.Component
+import de.sciss.synth.proc.Sys
 
 object TransportPanel {
    def apply[ S <: Sys[ S ]]( transport: Document.Transport[ S ])
@@ -36,5 +37,5 @@ object TransportPanel {
 }
 trait TransportPanel[ S <: Sys[ S ]] {
    def component: Component
-   def transport( implicit tx: S#Tx ) : Document.Transport[ S ]
+   def transport /* ( implicit tx: S#Tx ) */ : Document.Transport[ S ]
 }

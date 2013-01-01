@@ -1,6 +1,6 @@
 name := "Mellite"
 
-version := "0.10-SNAPSHOT"
+version := "0.1.0-SNAPSHOT"
 
 organization := "de.sciss"
 
@@ -10,14 +10,15 @@ description := "An application based on SoundProcesses"
 
 licenses := Seq( "GPL v2+" -> url( "http://www.gnu.org/licenses/gpl-2.0.txt" ))
 
-scalaVersion := "2.9.2"
+scalaVersion := "2.10.0"
 
-crossScalaVersions in ThisBuild := Seq( "2.10.0-M6", "2.9.2" )
+crossScalaVersions in ThisBuild := Seq( "2.10.0", "2.9.2" )
 
 libraryDependencies ++= Seq(
-   "de.sciss" %% "soundprocesses" % "0.40-SNAPSHOT",
-   "de.sciss" %% "scalaaudiowidgets" % "0.13",
-   "de.sciss" %% "scalainterpreterpane" % "1.1.+"
+   "de.sciss" %% "soundprocesses" % "1.3.1+",
+   "de.sciss" %% "audiowidgets-swing" % "1.1.+",
+   "de.sciss" %% "scalainterpreterpane" % "1.3.+",
+   "de.sciss" %% "lucrestm-bdb" % "1.6.+"
 )
 
 retrieveManaged := true

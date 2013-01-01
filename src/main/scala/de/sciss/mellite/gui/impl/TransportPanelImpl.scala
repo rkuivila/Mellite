@@ -27,15 +27,11 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.stm.{Sys, Cursor}
-import swing.{BorderPanel, Orientation, BoxPanel, Label, Action, Button, FlowPanel, Component}
+import de.sciss.lucre.stm.Cursor
+import swing.{Orientation, BoxPanel, Component}
 import de.sciss.synth.expr.ExprImplicits
-import de.sciss.gui.{Transport => GUITransport, LCDPanel}
-import de.sciss.synth.proc.Transport
-import java.awt.Font
-import java.io.{FileOutputStream, File}
-import javax.swing.Box
-import concurrent.stm.Txn
+import de.sciss.audiowidgets.{Transport => GUITransport, LCDPanel}
+import de.sciss.synth.proc.{Sys, Transport}
 import java.awt.event.{ActionEvent, ActionListener}
 import javax.swing.event.{ChangeEvent, ChangeListener}
 
@@ -45,24 +41,24 @@ object TransportPanelImpl {
       val view    = new Impl( transport, cursor.position )
       val srk     = 1000 / transport.sampleRate
       // XXX TODO should add a more specific event that doesn't carry all the details, but just play/stop
-      transport.changed.reactTx { implicit tx => {
-         case Transport.Play( _ ) =>
-//            println( "---play" )
-//            Txn.afterCompletion( status => println( "COMPLETED WITH " + status ))( tx.peer )
-            guiFromTx( view.play() )
-         case Transport.Stop( tr ) =>
-//            println( "---stop" )
-            val mils = (tr.time * srk).toLong
-            guiFromTx( view.stop( mils ))
-         case Transport.Advance( _, false, time, _, _ , _ )  =>   // only needed when not playing
-//            println( "---advance " + time )
-            val mils = (time * srk).toLong
-            guiFromTx( view.cue( mils ))
-         case other =>
-//            println( "---other " + other )
-          // XXX TODO nasty
-      }}
-      val initPlaying   = transport.playing.value
+//      transport.reactTx { implicit tx => {
+//         case Transport.Play( _ ) =>
+////            println( "---play" )
+////            Txn.afterCompletion( status => println( "COMPLETED WITH " + status ))( tx.peer )
+//            guiFromTx( view.play() )
+//         case Transport.Stop( tr ) =>
+////            println( "---stop" )
+//            val mils = (tr.time * srk).toLong
+//            guiFromTx( view.stop( mils ))
+//         case Transport.Advance( _, false, time, _, _ , _ )  =>   // only needed when not playing
+////            println( "---advance " + time )
+//            val mils = (time * srk).toLong
+//            guiFromTx( view.cue( mils ))
+//         case other =>
+////            println( "---other " + other )
+//          // XXX TODO nasty
+//      }}
+      val initPlaying   = transport.isPlaying // .playing.value
       val initMillis    = (transport.time * srk).toLong
       guiFromTx {
          view.guiInit( initPlaying, initMillis )
@@ -91,7 +87,7 @@ object TransportPanelImpl {
 //      res
 //   }
 
-   private final class Impl[ S <: Sys[ S ]]( staleTransport: Document.Transport[ S ],
+   private final class Impl[ S <: Sys[ S ]]( val transport: Document.Transport[ S ],
                                              csrPos: S#Acc )( implicit protected val cursor: Cursor[ S ])
    extends TransportPanel[ S ] with ComponentHolder[ Component ] with CursorHolder[ S ] {
       import GUITransport.{GoToBegin, Rewind, FastForward, Stop, Play}
@@ -107,7 +103,7 @@ object TransportPanelImpl {
       private var playingVar = false
       private var cueDirection = 1
 
-      def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
+//      def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
 
 //      def playing : Boolean = {
 //         requireEDT()
@@ -178,7 +174,7 @@ object TransportPanelImpl {
          val actionRTZ = GoToBegin {
             atomic { implicit tx =>
                val t = transport
-               t.playing_=( false )
+               t.stop() // t.playing_=( false )
                t.seek( 0L )
             }
          }
@@ -187,13 +183,13 @@ object TransportPanelImpl {
 
          val actionPlay = Play {
             atomic { implicit tx =>
-               transport.playing_=( true )
+               transport.play() // .playing_=( true )
             }
          }
 
          val actionStop = Stop {
             atomic { implicit tx =>
-               transport.playing_=( false )
+               transport.stop() // .playing_=( false )
             }
          }
 

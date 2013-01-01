@@ -28,19 +28,19 @@ package gui
 package impl
 
 import swing.{Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
-import de.sciss.lucre.stm.{Cursor, Disposable, Sys}
+import de.sciss.lucre.stm.{Cursor, Disposable}
 import javax.swing.WindowConstants
-import de.sciss.synth.proc.{AuralPresentation, Transport, Proc, ProcGroupX}
+import de.sciss.synth.proc.{AuralSystem, Sys, AuralPresentation, Transport, ProcGroup_, ProcTransport}
 import de.sciss.synth.expr.SpanLikes
 
 object DocumentFrameImpl {
    def apply[ S <: Sys[ S ]]( doc: Document[ S ])( implicit tx: S#Tx ) : DocumentFrame[ S ] = {
       implicit val csr = doc.cursor
       implicit val groupsSer  = Document.Serializers.groups[ S ]
-      implicit val transpSer  = Document.Serializers.transports[ S ]
+//      implicit val transpSer  = Document.Serializers.transports[ S ]
       val groupsView = ListView( doc.groups )( g => "Group " + g.id )
-      val transpView = ListView.empty[ S, Transport[ S, Proc[ S ]], Unit ]( _.toString() )
-      val view = new Impl( doc, groupsView, transpView )
+//      val transpView = ListView.empty[ S, ProcTransport[ S ], Unit ]( _.toString() )
+      val view = new Impl( doc, groupsView /*, transpView */)
       guiFromTx {
          view.guiInit()
       }
@@ -48,15 +48,16 @@ object DocumentFrameImpl {
    }
 
    private final class Impl[ S <: Sys[ S ]]( val document: Document[ S ],
-                                             groupsView: ListView[ S, Document.Group[ S ], Document.GroupUpdate[ S ]],
-                                             transpView: ListView[ S, Document.Transport[ S ], Unit ])
+                                             groupsView: ListView[ S, Document.Group[ S ], Document.GroupUpdate[ S ]]
+                                             /* transpView: ListView[ S, Document.Transport[ S ], Unit ] */)
    extends DocumentFrame[ S ] with ComponentHolder[ Frame ] with CursorHolder[ S ] {
       protected implicit def cursor: Cursor[ S ] = document.cursor
 
       private def transport( implicit tx: S#Tx ) : Option[ Document.Transport[ S ]] = {
-         for( gl <- groupsView.list; gidx <- groupsView.guiSelection.headOption; group <- gl.get( gidx );
-              tl <- transpView.list; tidx <- transpView.guiSelection.headOption; transp <- document.transports( group ).get( tidx ))
-            yield transp
+None
+//         for( gl <- groupsView.list; gidx <- groupsView.guiSelection.headOption; group <- gl.get( gidx );
+//              tl <- transpView.list; tidx <- transpView.guiSelection.headOption; transp <- document.transports( group ).get( tidx ))
+//            yield transp
       }
 
       def guiInit() {
@@ -66,7 +67,7 @@ object DocumentFrameImpl {
          val ggAddGroup = Button( "+" ) {
             atomic { implicit tx =>
                implicit val spans = SpanLikes
-               val group = ProcGroupX.Modifiable[ S ]
+               val group = ProcGroup_.Modifiable[ S ]
                document.groups.addLast( group )
             }
          }
@@ -98,42 +99,42 @@ object DocumentFrameImpl {
          val groupsButPanel = new FlowPanel( ggAddGroup, ggDelGroup, ggViewTimeline )
 
          val ggAddTransp = new Button( Action( "+" ) {
-            atomic { implicit tx =>
-               for( ll <- groupsView.list; idx <- groupsView.guiSelection.headOption; group <- ll.get( idx )) {
-                  val transp = Transport( group )
-                  document.transports( group ).addLast( transp )
-               }
-            }
+//            atomic { implicit tx =>
+//               for( ll <- groupsView.list; idx <- groupsView.guiSelection.headOption; group <- ll.get( idx )) {
+//                  val transp = Transport( group )
+//                  document.transports( group ).addLast( transp )
+//               }
+//            }
          }) {
             enabled = false
          }
 
-         val ggDelTransp = mkDelButton( transpView )
-
-         val ggViewInstant = new Button( Action( "View Instant" ) {
-            atomic { implicit tx =>
-               for( gl <- groupsView.list; gidx <- groupsView.guiSelection.headOption; group <- gl.get( gidx );
-                    tidx <- transpView.guiSelection.headOption;
-                    transp <- document.transports( group ).get( tidx )) {
-
-                  InstantGroupFrame( group, transp )
-               }
-            }
-         }) {
-            enabled = false
-         }
-
-         val transpButPanel = new FlowPanel( ggAddTransp, ggDelTransp, ggViewInstant )
+//         val ggDelTransp = mkDelButton( transpView )
+//
+//         val ggViewInstant = new Button( Action( "View Instant" ) {
+//            atomic { implicit tx =>
+//               for( gl <- groupsView.list; gidx <- groupsView.guiSelection.headOption; group <- gl.get( gidx );
+//                    tidx <- transpView.guiSelection.headOption;
+//                    transp <- document.transports( group ).get( tidx )) {
+//
+//                  InstantGroupFrame( group, transp )
+//               }
+//            }
+//         }) {
+//            enabled = false
+//         }
+//
+//         val transpButPanel = new FlowPanel( ggAddTransp, ggDelTransp, ggViewInstant )
 
          val groupsPanel = new BorderPanel {
             add( groupsView.component, BorderPanel.Position.Center )
             add( groupsButPanel, BorderPanel.Position.South )
          }
 
-         val transpPanel = new BorderPanel {
-            add( transpView.component, BorderPanel.Position.Center )
-            add( transpButPanel, BorderPanel.Position.South )
-         }
+//         val transpPanel = new BorderPanel {
+//            add( transpView.component, BorderPanel.Position.Center )
+//            add( transpButPanel, BorderPanel.Position.South )
+//         }
 
          groupsView.guiReact {
             case ListView.SelectionChanged( indices ) =>
@@ -143,31 +144,33 @@ object DocumentFrameImpl {
                ggViewTimeline.enabled  = isSelected
                val isSingle = indices.size == 1
                ggAddTransp.enabled = isSingle
-               ggDelTransp.enabled = false
-               atomic { implicit tx =>
-                  val transpList = if( isSingle ) {
-                     for( ll <- groupsView.list; idx <- indices.headOption; group <- ll.get( idx ))
-                        yield document.transports( group )
-                  } else {
-                     None
-                  }
-                  transpView.list_=( transpList )
-               }
+//               ggDelTransp.enabled = false
+
+//               atomic { implicit tx =>
+//                  val transpList = if( isSingle ) {
+//                     for( ll <- groupsView.list; idx <- indices.headOption; group <- ll.get( idx ))
+//                        yield document.transports( group )
+//                  } else {
+//                     None
+//                  }
+//                  transpView.list_=( transpList )
+//               }
          }
 
-         transpView.guiReact {
-            case ListView.SelectionChanged( indices ) =>
-               val isSelected          = indices.nonEmpty
-               ggDelTransp.enabled     = isSelected
-               ggViewInstant.enabled   = isSelected
-         }
-
-         val splitPane = new SplitPane( Orientation.Horizontal, groupsPanel, transpPanel )
+//         transpView.guiReact {
+//            case ListView.SelectionChanged( indices ) =>
+//               val isSelected          = indices.nonEmpty
+//               ggDelTransp.enabled     = isSelected
+//               ggViewInstant.enabled   = isSelected
+//         }
+//
+//         val splitPane = new SplitPane( Orientation.Horizontal, groupsPanel, transpPanel )
 
          val ggAural = Button( "Aural" ) {
             atomic { implicit tx =>
                transport.foreach { t =>
-                  AuralPresentation.run( t )
+//                  val aural: AuralSystem[ S ] = ???
+//                  AuralPresentation.run( t, aural )
                }
             }
          }
@@ -176,7 +179,8 @@ object DocumentFrameImpl {
             title    = "Document : " + document.folder.getName
             peer.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE )
             contents = new BorderPanel {
-               add( splitPane, BorderPanel.Position.Center )
+//               add( splitPane, BorderPanel.Position.Center )
+add( groupsPanel, BorderPanel.Position.Center )
                add( ggAural, BorderPanel.Position.South )
             }
             pack()

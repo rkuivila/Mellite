@@ -28,7 +28,7 @@ package gui
 
 import swing.Frame
 import impl.{DocumentFrameImpl => Impl}
-import de.sciss.lucre.stm.Sys
+import de.sciss.synth.proc.Sys
 
 object DocumentFrame {
    def apply[ S <: Sys[ S ]]( doc: Document[ S ])( implicit tx: S#Tx ) : DocumentFrame[ S ] = Impl( doc )

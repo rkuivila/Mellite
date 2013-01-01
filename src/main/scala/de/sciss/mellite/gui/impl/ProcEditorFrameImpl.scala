@@ -2,8 +2,8 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.stm.{Disposable, Cursor, Sys}
-import de.sciss.synth.proc.{ProcGraph, Proc}
+import de.sciss.lucre.stm.{Source, Disposable, Cursor}
+import de.sciss.synth.proc.{Sys, Code, Proc}
 import swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
 import de.sciss.synth.expr.ExprImplicits
 import javax.swing.WindowConstants
@@ -15,23 +15,26 @@ import de.sciss.synth.SynthGraph
 
 object ProcEditorFrameImpl {
    def apply[ S <: Sys[ S ]]( proc: Proc[ S ])( implicit tx: S#Tx, cursor: Cursor[ S ]) : ProcEditorFrame[ S ] = {
-      val view = new Impl( cursor.position, proc ) {
-         protected val observer = proc.changed.reactTx { implicit tx => {
-            case Proc.Rename( _, Change( _, now )) =>
-               guiFromTx( name = now )
-            case _ =>
+      val view = new Impl( /* cursor.position, */ tx.newHandle( proc ), proc.toString() ) {
+         protected val observer = proc.changed.reactTx[ Proc.Update[ S ]] { implicit tx => { upd =>
+            upd.changes.foreach {
+               case Proc.Rename( Change( _, now )) =>
+                  guiFromTx( name = now )
+               case _ =>
+            }
          }}
       }
 
       val initName         = proc.name.value
-      val initGraphSource  = proc.graph.sourceCode
+      val initGraphSource  = proc.graph.source
       guiFromTx {
          view.guiInit( initName, initGraphSource )
       }
       view
    }
 
-   private abstract class Impl[ S <: Sys[ S ]]( csrPos: S#Acc, staleProc: Proc[ S ])( protected implicit val cursor: Cursor[ S ])
+   private abstract class Impl[ S <: Sys[ S ]]( /* csrPos: S#Acc, */ procH: Source[ S#Tx, Proc[ S ]], title: String )
+                                              ( protected implicit val cursor: Cursor[ S ])
    extends ProcEditorFrame[ S ] with ComponentHolder[ Frame ] with CursorHolder[ S ] {
       protected def observer: Disposable[ S#Tx ]
 
@@ -49,19 +52,19 @@ object ProcEditorFrameImpl {
          ggName.text = value
       }
 
-      def proc( implicit tx: S#Tx ) : Proc[ S ] = tx.refresh( csrPos, staleProc )
+      def proc( implicit tx: S#Tx ) : Proc[ S ] = procH.get // tx.refresh( csrPos, staleProc )
 
       def dispose()( implicit tx: S#Tx ) {
          observer.dispose()
          guiFromTx( comp.dispose() )
       }
 
-      def guiInit( initName: String, initGraphSource: String ) {
+      def guiInit( initName: String, initGraphSource: Option[ String ]) {
          requireEDT()
          require( comp == null, "Initialization called twice" )
 
          val cCfg     = CodePane.Config()
-         cCfg.text    = initGraphSource
+         initGraphSource.foreach( cCfg.text = _ )
 //         cCfg.keyMap += KeyStroke.getKeyStroke( KeyEvent.VK_ENTER, InputEvent.SHIFT_MASK ) -> { () =>
 //            intOpt.foreach { in =>
 //               println( in.interpret( ggSource.editor.getText ))
@@ -108,7 +111,7 @@ object ProcEditorFrameImpl {
 //println( "Success " + name + " is a graph" )
                               lbStatus.text = "Ok."
                               atomic { implicit tx =>
-                                 proc.graph_=( ProcGraph( sg, code ))
+                                 proc.graph_=( Code( sg, Some( code )))
                               }
                            case _ =>
                               lbStatus.text = "! Invalid result: " + value + " !"
@@ -126,7 +129,7 @@ object ProcEditorFrameImpl {
          val botPanel   = new FlowPanel( ggCommit, lbStatus )
 
          comp = new Frame {
-            title = "Process : " + staleProc
+            title = "Process : " + title // staleProc
             // f*** scala swing... how should this be written?
             peer.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE )
             peer.addWindowListener( new WindowAdapter {

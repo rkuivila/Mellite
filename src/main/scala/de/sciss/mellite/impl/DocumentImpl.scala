@@ -27,14 +27,13 @@ package de.sciss.mellite
 package impl
 
 import java.io.{IOException, FileNotFoundException, File}
-import de.sciss.confluent.Confluent
 import de.sciss.lucre.{expr, bitemp, stm, DataOutput, DataInput}
 import expr.LinkedList
 import bitemp.BiGroup
-import stm.{IdentifierMap, Cursor, Sys, Serializer}
-import stm.impl.BerkeleyDB
+import stm.store.BerkeleyDB
+import stm.{Cursor, Serializer}
 import de.sciss.synth.expr.SpanLikes
-import de.sciss.synth.proc.{Transport, Proc}
+import de.sciss.synth.proc.{Sys, Confluent, Transport, Proc}
 
 object DocumentImpl {
    import Document.{Group, GroupUpdate, Groups, Transports}
@@ -45,18 +44,18 @@ object DocumentImpl {
 
 //   private def transportSer[ S <: Sys[ S ]] = Transport.serializer[ S, Group[ S ]]()
 
-   private implicit def serializer[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : Serializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
+   private implicit def serializer[ S <: Sys[ S ]] /* ( implicit cursor: Cursor[ S ]) */ : Serializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
 
-   private final class Ser[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) extends Serializer[ S#Tx, S#Acc, Data[ S ]] {
+   private final class Ser[ S <: Sys[ S ]] /*( implicit cursor: Cursor[ S ]) */ extends Serializer[ S#Tx, S#Acc, Data[ S ]] {
       def write( data: Data[ S ], out: DataOutput ) {
          data.write( out )
       }
 
       def read( in: DataInput, access: S#Acc )( implicit tx: S#Tx ) : Data[ S ] = new Data[ S ] {
          val groups                 = groupsSer.read( in, access )
-         implicit val transSer      = Transport.serializer[ S ]  // why is this not found automatically??
-         implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
-         val transportMap           = tx.readDurableIDMap[ Transports[ S ]]( in )
+//         implicit val transSer      = Transport.serializer[ S ]  // why is this not found automatically??
+//         implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
+//         val transportMap           = tx.readDurableIDMap[ Transports[ S ]]( in )
       }
    }
 
@@ -75,29 +74,37 @@ object DocumentImpl {
       val fact                   = BerkeleyDB.factory( dir, createIfNecessary = create )
       implicit val system: S     = Confluent( fact )
       implicit val serializer    = DocumentImpl.serializer[ S ]   // please Scala 2.9.2 and 2.10.0-M6 :-////
-      implicit val transSer      = Transport.serializer[ S ]      // why is this not found automatically??
-      implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
-      val access = system.root[ Data[ S ]] { implicit tx =>
+//      implicit val transSer      = Transport.serializer[ S ]      // why is this not found automatically??
+//      implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
+//      val access = system.root[ Data[ S ]] { implicit tx =>
+//         new Data[ S ] {
+//            val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
+////            val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
+//         }
+//      }
+      val (_access, _cursor) = system.cursorRoot[ Data[ S ], Cursor[ S ]]( implicit tx =>
          new Data[ S ] {
             val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
-            val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
+//            val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
          }
-      }
-      new Impl( dir, system, access )
+      )( tx => _ => tx.newCursor() )
+      val access: S#Entry[ Data[ S ]] = _access
+      implicit val cursor: Cursor[ S ] = _cursor
+      new Impl[ S ]( dir, system, access )
    }
 
    private abstract class Data[ S <: Sys[ S ]] {
       def groups: Groups[ S ]
-      def transportMap: IdentifierMap[ S#ID, S#Tx, Transports[ S ]]
+//      def transportMap: IdentifierMap[ S#ID, S#Tx, Transports[ S ]]
 
       final def write( out: DataOutput ) {
          groups.write( out )
-         transportMap.write( out )
+//         transportMap.write( out )
       }
 
       final def dispose()( implicit tx: S#Tx ) {
          groups.dispose()
-         transportMap.dispose()
+//         transportMap.dispose()
       }
    }
 
@@ -107,14 +114,14 @@ object DocumentImpl {
       override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
       def groups( implicit tx: S#Tx ) : Groups[ S ] = access.get.groups
-      def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ] = {
-         val map  = access.get.transportMap
-         val id   = group.id
-         map.getOrElse( id, {
-            val empty = LinkedList.Modifiable[ S, Transport[ S, Proc[ S ]]]
-            map.put( id, empty )
-            empty
-         })
-      }
+//      def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ] = {
+//         val map  = access.get.transportMap
+//         val id   = group.id
+//         map.getOrElse( id, {
+//            val empty = LinkedList.Modifiable[ S, Transport[ S, Proc[ S ]]]
+//            map.put( id, empty )
+//            empty
+//         })
+//      }
    }
 }

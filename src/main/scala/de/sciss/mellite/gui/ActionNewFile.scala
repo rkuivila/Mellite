@@ -29,7 +29,7 @@ package gui
 import swing.{Dialog, Action}
 import java.awt.event.KeyEvent
 import java.io.File
-import de.sciss.lucre.stm.Sys
+import de.sciss.synth.proc.Sys
 
 object ActionNewFile extends Action( "New...") {
    accelerator = Some( primaryMenuKey( KeyEvent.VK_N ))

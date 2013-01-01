@@ -25,14 +25,14 @@
 
 package de.sciss.mellite.gui
 
-import de.sciss.lucre.stm.{Cursor, Sys}
-import de.sciss.synth.proc.Transport
-import de.sciss.synth.proc.Proc
+import de.sciss.lucre.stm.Cursor
+import de.sciss.synth.proc
+import proc.{Sys, ProcTransport}
 import impl.{InstantGroupPanelImpl => Impl}
 import swing.Component
 
 object InstantGroupPanel {
-   def apply[ S <: Sys[ S ]]( transport: Transport[ S, Proc[ S ]])
+   def apply[ S <: Sys[ S ]]( transport: ProcTransport[ S ])
                             ( implicit tx: S#Tx, cursor: Cursor[ S ]) : InstantGroupPanel[ S ] = Impl( transport )
 }
 trait InstantGroupPanel[ S <: Sys[ S ]] {

@@ -33,7 +33,8 @@ import java.awt.event.MouseEvent
 import java.awt.geom.Point2D
 import prefuse.Display
 import prefuse.visual.{EdgeItem, NodeItem, AggregateItem, VisualItem}
-import de.sciss.lucre.stm.{Cursor, Sys}
+import de.sciss.lucre.stm.Cursor
+import de.sciss.synth.proc.Sys
 
 object VisualProcControl {
 //   private val csrHand     = Cursor.getPredefinedCursor( Cursor.HAND_CURSOR )
@@ -109,7 +110,7 @@ class VisualProcControl[ S <: Sys[ S ]]( cursor: Cursor[ S ]) extends ControlAda
          if( e.getClickCount == 2 ) {
 //            println( "Jo chuck" )
             cursor.step { implicit tx =>
-               val proc = tx.refresh( vp.staleCursor, vp.proc )
+               val proc = vp.procH.get // tx.refresh( vp.staleCursor, vp.proc )
                ProcEditorFrame( proc )( tx, cursor )
             }
          }

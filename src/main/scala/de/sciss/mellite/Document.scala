@@ -31,17 +31,18 @@ import expr.LinkedList
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
-import proc.Proc
-import stm.{Serializer, Cursor, Sys}
+import proc.{Proc, Sys}
+import stm.{Serializer, Cursor}
 import de.sciss.synth.expr.SpanLikes
 
 object Document {
    type Group[        S <: Sys[ S ]]   = BiGroup.Modifiable[    S, Proc[ S ],  Proc.Update[ S ]]
+//   type GroupU[       S <: Sys[ S ]]   = BiGroup[    S, Proc[ S ],  Proc.Update[ S ]]
    type GroupUpdate[  S <: Sys[ S ]]   = BiGroup.Update[        S, Proc[ S ],  Proc.Update[ S ]]
    type Groups[       S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]
    type GroupsUpdate[ S <: Sys[ S ]]   = LinkedList.Update[     S, Group[ S ], GroupUpdate[ S ]]
 
-   type Transport[    S <: Sys[ S ]]   = proc.Transport[ S, Proc[ S ]]
+   type Transport[    S <: Sys[ S ]]   = proc.ProcTransport[ S ]
    type Transports[   S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Transport[ S ], Unit ] // Transport.Update[ S, Proc[ S ]]]
 
    def read(  dir: File ) : Document[ Cf ] = Impl.read( dir )
@@ -53,14 +54,23 @@ object Document {
          BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
       }
 
+//      implicit def groupU[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, GroupU[ S ]] with evt.Reader[ S, GroupU[ S ]] = {
+//         implicit val spanType = SpanLikes
+//         BiGroup.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
+//      }
+
       implicit def groups[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, LinkedList[ S, Group[ S ], GroupUpdate[ S ]]] = {
          LinkedList.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )
       }
 
-      implicit def transports[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : Serializer[ S#Tx, S#Acc, LinkedList[ S, Transport[ S ], Unit ]] = {
-//         implicit val elem = proc.Transport.serializer[ S ]
-         LinkedList.serializer[ S, Transport[ S ]]
-      }
+//      implicit def groups[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, LinkedList[ S, GroupU[ S ], GroupUpdate[ S ]]] = {
+//         LinkedList.serializer[ S, GroupU[ S ], GroupUpdate[ S ]]( _.changed )
+//      }
+
+//      implicit def transports[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : Serializer[ S#Tx, S#Acc, LinkedList[ S, Transport[ S ], Unit ]] = {
+////         implicit val elem = proc.Transport.serializer[ S ]
+//         LinkedList.serializer[ S, Transport[ S ]]
+//      }
    }
 }
 trait Document[ S <: Sys[ S ]] {
@@ -70,7 +80,7 @@ trait Document[ S <: Sys[ S ]] {
    def cursor: Cursor[ S ]
    def folder: File
    def groups( implicit tx: S#Tx ) : Groups[ S ]
-   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
+//   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
 
 //   def exprImplicits: ExprImplicits[ S ]
 }

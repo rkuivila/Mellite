@@ -1,9 +1,9 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.lucre.stm.{Disposable, Cursor, Sys}
-import swing.{Frame, Component}
-import de.sciss.synth.proc.Proc
+import de.sciss.lucre.stm.{Disposable, Cursor}
+import swing.Frame
+import de.sciss.synth.proc.{Sys, Proc}
 import impl.{ProcEditorFrameImpl => Impl}
 
 object ProcEditorFrame {

@@ -25,7 +25,7 @@
 
 package de.sciss
 
-import confluent.Confluent
+import synth.proc.Confluent
 
 package object mellite {
    type Cf = Confluent
