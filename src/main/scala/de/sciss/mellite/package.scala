@@ -25,8 +25,17 @@
 
 package de.sciss
 
-import synth.proc.Confluent
+import lucre.expr
+import expr.LinkedList
+import synth.proc.{Sys, Confluent}
 
 package object mellite {
-   type Cf = Confluent
+   type Cf           = Confluent
+//   type S            = Confluent
+//   type Ex[ A ]      = expr.Expr[ S, A ]
+//   object Ex {
+//      type Var[ A ] = expr.Expr.Var[ S, A ]
+//   }
+
+   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
 }

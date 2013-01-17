@@ -114,6 +114,9 @@ object DocumentImpl {
       override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
       def groups( implicit tx: S#Tx ) : Groups[ S ] = access.get.groups
+
+      def elements( implicit tx: S#Tx ) : Elements[ S ] = ???
+
 //      def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ] = {
 //         val map  = access.get.transportMap
 //         val id   = group.id

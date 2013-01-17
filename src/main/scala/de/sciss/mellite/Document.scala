@@ -74,13 +74,15 @@ object Document {
    }
 }
 trait Document[ S <: Sys[ S ]] {
-   import Document._
+   import Document.{Group => _, _}
 
    def system: S
    def cursor: Cursor[ S ]
    def folder: File
    def groups( implicit tx: S#Tx ) : Groups[ S ]
 //   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
+
+   def elements( implicit tx: S#Tx ) : Elements[ S ]
 
 //   def exprImplicits: ExprImplicits[ S ]
 }
