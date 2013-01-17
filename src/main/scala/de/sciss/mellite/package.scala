@@ -37,5 +37,6 @@ package object mellite {
 //      type Var[ A ] = expr.Expr.Var[ S, A ]
 //   }
 
-   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
+//   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
+   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Unit ]
 }

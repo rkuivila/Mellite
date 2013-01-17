@@ -5,6 +5,7 @@ import de.sciss.synth.proc.Sys
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm.{Disposable, Mutable}
 import de.sciss.synth.expr.{Doubles, Strings, Ints}
+import de.sciss.lucre.event.EventLike
 
 /*
  * Elements
@@ -62,6 +63,7 @@ object Element {
    }
 }
 trait Element[ S <: Sys[ S ], A ] extends Mutable[ S#ID, S#Tx ] {
+//   def changed: EventLike[ S, Any, A ]
    def name: Expr.Var[ S, Option[ String ]]
    def elem: A // Expr.Var[ S, A ]
 //   def attributes: Map[ String, Any ]

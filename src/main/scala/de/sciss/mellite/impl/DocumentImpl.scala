@@ -53,6 +53,7 @@ object DocumentImpl {
 
       def read( in: DataInput, access: S#Acc )( implicit tx: S#Tx ) : Data[ S ] = new Data[ S ] {
          val groups                 = groupsSer.read( in, access )
+         val elements               = ???
 //         implicit val transSer      = Transport.serializer[ S ]  // why is this not found automatically??
 //         implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
 //         val transportMap           = tx.readDurableIDMap[ Transports[ S ]]( in )
@@ -84,7 +85,9 @@ object DocumentImpl {
 //      }
       val (_access, _cursor) = system.cursorRoot[ Data[ S ], Cursor[ S ]]( implicit tx =>
          new Data[ S ] {
-            val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
+            val groups        = LinkedList.Modifiable[ S, Group[   S    ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
+//            val elements      = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]( _.changed )( tx, groupSer[ S ])
+            val elements      = LinkedList.Modifiable[ S, Element[ S, _ ]]( tx, ??? )
 //            val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
          }
       )( tx => _ => tx.newCursor() )
@@ -95,15 +98,18 @@ object DocumentImpl {
 
    private abstract class Data[ S <: Sys[ S ]] {
       def groups: Groups[ S ]
+      def elements: Elements[ S ]
 //      def transportMap: IdentifierMap[ S#ID, S#Tx, Transports[ S ]]
 
       final def write( out: DataOutput ) {
          groups.write( out )
+         elements.write( out )
 //         transportMap.write( out )
       }
 
       final def dispose()( implicit tx: S#Tx ) {
          groups.dispose()
+         elements.dispose()
 //         transportMap.dispose()
       }
    }
@@ -113,9 +119,8 @@ object DocumentImpl {
    extends Document[ S ] {
       override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
-      def groups( implicit tx: S#Tx ) : Groups[ S ] = access.get.groups
-
-      def elements( implicit tx: S#Tx ) : Elements[ S ] = ???
+      def groups(   implicit tx: S#Tx ) : Groups[   S ] = access.get.groups
+      def elements( implicit tx: S#Tx ) : Elements[ S ] = access.get.elements
 
 //      def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ] = {
 //         val map  = access.get.transportMap
