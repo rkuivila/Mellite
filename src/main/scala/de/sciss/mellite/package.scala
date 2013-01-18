@@ -38,5 +38,5 @@ package object mellite {
 //   }
 
 //   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
-   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Unit ]
+   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S ], Unit ]
 }

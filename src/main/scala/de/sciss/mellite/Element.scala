@@ -18,19 +18,19 @@ import annotation.switch
 
 object Element {
    def int[ S <: Sys[ S ]]( init: Expr[ S, Int ], name: Option[ String ] = None )
-                          ( implicit tx: S#Tx ) : Element[ S, Expr.Var[ S, Int ]] = {
+                          ( implicit tx: S#Tx ) : Element[ S ] { type A = Expr.Var[ S, Int ]} = {
 //      val expr = Ints.newVar[ S ]( init )
       mkExpr[ S, Int ]( Ints, init, name )
    }
 
    def double[ S <: Sys[ S ]]( init: Expr[ S, Double ], name: Option[ String ] = None )
-                             ( implicit tx: S#Tx ) : Element[ S, Expr.Var[ S, Double ]] = {
+                             ( implicit tx: S#Tx ) : Element[ S ] { type A = Expr.Var[ S, Double ]} = {
 //      val expr = Doubles.newVar( init )
       mkExpr[ S, Double ]( Doubles, init, name )
    }
 
    def string[ S <: Sys[ S ]]( init: Expr[ S, String ], name: Option[ String ] = None )
-                             ( implicit tx: S#Tx ) : Element[ S, Expr.Var[ S, String ]] = {
+                             ( implicit tx: S#Tx ) : Element[ S ] { type A = Expr.Var[ S, String ]} = {
 //      val expr = Strings.newVar(  init )
       mkExpr( Strings, init, name )
    }
@@ -41,12 +41,12 @@ object Element {
 //      mkElem( expr, name )
 //   }
 
-   def serializer[ S <: Sys[ S ]] : stm.Serializer[ S#Tx, S#Acc, Element[ S, _ ]] = anySer.asInstanceOf[ Ser[ S ]]
+   def serializer[ S <: Sys[ S ]] : stm.Serializer[ S#Tx, S#Acc, Element[ S ]] = anySer.asInstanceOf[ Ser[ S ]]
 
    private final val anySer = new Ser[ InMemory ]
 
-   private final class Ser[ S <: Sys[ S ]] extends stm.Serializer[ S#Tx, S#Acc, Element[ S, _ ]] {
-      def read( in: DataInput, access: S#Acc )( implicit tx: S#Tx ) : Element[ S, _ ] = {
+   private final class Ser[ S <: Sys[ S ]] extends stm.Serializer[ S#Tx, S#Acc, Element[ S ]] {
+      def read( in: DataInput, access: S#Acc )( implicit tx: S#Tx ) : Element[ S ] = {
          val id      = tx.readID( in, access )
          val typeID  = in.readInt()
          val nameEx  = StringOptions.readVar[ S ]( in, access )
@@ -58,23 +58,24 @@ object Element {
          new Impl( id, nameEx, typeID, expr )
       }
 
-      def write( elem: Element[ S, _ ], out: DataOutput) {
+      def write( elem: Element[ S ], out: DataOutput) {
          elem.write( out )
       }
    }
 
    // A[ ~ <: Sys[ ~ ] forSome { type ~ }]
-   private def mkExpr[ S <: Sys[ S ], A ]( biType: BiTypeImpl[ A ],
-      init: Expr[ S, A ], name: Option[ String ])( implicit tx: S#Tx ) : Element[ S, Expr.Var[ S, A ]] = {
+   private def mkExpr[ S <: Sys[ S ], A1 ]( biType: BiTypeImpl[ A1 ],
+      init: Expr[ S, A1 ], name: Option[ String ])( implicit tx: S#Tx ) : Element[ S ] { type A = Expr.Var[ S, A1 ]} = {
       val expr    = biType.newVar[ S ]( init )
       val id      = tx.newID()
       val nameEx  = StringOptions.newVar[ S ]( StringOptions.newConst( name ))
       new Impl( id, nameEx, biType.typeID, expr )
    }
 
-   private final class Impl[ S <: Sys[ S ], A ](
-      val id: S#ID, val name: Expr.Var[ S, Option[ String ]], typeID: Int, val elem: A with Writable with Disposable[ S#Tx ])
-   extends Element[ S, A ] with Mutable.Impl[ S ] {
+   private final class Impl[ S <: Sys[ S ], A1 ](
+      val id: S#ID, val name: Expr.Var[ S, Option[ String ]], typeID: Int, val elem: A1 with Writable with Disposable[ S#Tx ])
+   extends Element[ S ] with Mutable.Impl[ S ] {
+      type A = A1
       protected def writeData( out: DataOutput ) {
          out.writeInt( typeID )
          name.write( out )
@@ -87,7 +88,8 @@ object Element {
       }
    }
 }
-trait Element[ S <: Sys[ S ], A ] extends Mutable[ S#ID, S#Tx ] {
+trait Element[ S <: Sys[ S ]] extends Mutable[ S#ID, S#Tx ] {
+   type A
 //   def changed: EventLike[ S, Any, A ]
    def name: Expr.Var[ S, Option[ String ]]
    def elem: A // Expr.Var[ S, A ]

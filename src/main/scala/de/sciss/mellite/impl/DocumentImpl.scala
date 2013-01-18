@@ -41,7 +41,7 @@ object DocumentImpl {
    private def procSer[     S <: Sys[ S ]]  = Proc.serializer[ S ]
    private def groupSer[    S <: Sys[ S ]]  = BiGroup.Modifiable.serializer[    S, Proc[ S ],    Proc.Update[ S ]]( _.changed )( procSer, SpanLikes )
    private def groupsSer[   S <: Sys[ S ]]  = LinkedList.Modifiable.serializer[ S, Group[ S ],   GroupUpdate[ S ]]( _.changed )( groupSer )
-//   private def elementsSer[ S <: Sys[ S ]]  = LinkedList.Modifiable.serializer[ S, Element[ S, _ ]]( ??? )
+   private def elementsSer[ S <: Sys[ S ]]  = LinkedList.Modifiable.serializer[ S, Element[ S ]]( Element.serializer )
 
 //   private def transportSer[ S <: Sys[ S ]] = Transport.serializer[ S, Group[ S ]]()
 
@@ -53,8 +53,8 @@ object DocumentImpl {
       }
 
       def read( in: DataInput, access: S#Acc )( implicit tx: S#Tx ) : Data[ S ] = new Data[ S ] {
-         val groups                 = groupsSer.read( in, access )
-         val elements               = ???
+         val groups                 = groupsSer.read(   in, access )
+         val elements               = elementsSer.read( in, access )
 //         implicit val transSer      = Transport.serializer[ S ]  // why is this not found automatically??
 //         implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
 //         val transportMap           = tx.readDurableIDMap[ Transports[ S ]]( in )
@@ -86,9 +86,9 @@ object DocumentImpl {
 //      }
       val (_access, _cursor) = system.cursorRoot[ Data[ S ], Cursor[ S ]]( implicit tx =>
          new Data[ S ] {
-            val groups        = LinkedList.Modifiable[ S, Group[   S    ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
+            val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
 //            val elements      = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]( _.changed )( tx, groupSer[ S ])
-            val elements      = LinkedList.Modifiable[ S, Element[ S, _ ]]( tx, Element.serializer )
+            val elements      = LinkedList.Modifiable[ S, Element[ S ]]( tx, Element.serializer )
 //            val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
          }
       )( tx => _ => tx.newCursor() )
