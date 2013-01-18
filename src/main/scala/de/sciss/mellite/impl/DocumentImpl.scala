@@ -38,9 +38,10 @@ import de.sciss.synth.proc.{Sys, Confluent, Transport, Proc}
 object DocumentImpl {
    import Document.{Group, GroupUpdate, Groups, Transports}
 
-   private def procSer[   S <: Sys[ S ]]  = Proc.serializer[ S ]
-   private def groupSer[  S <: Sys[ S ]]  = BiGroup.Modifiable.serializer[    S, Proc[ S ],  Proc.Update[ S ]]( _.changed )( procSer, SpanLikes )
-   private def groupsSer[ S <: Sys[ S ]]  = LinkedList.Modifiable.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( groupSer )
+   private def procSer[     S <: Sys[ S ]]  = Proc.serializer[ S ]
+   private def groupSer[    S <: Sys[ S ]]  = BiGroup.Modifiable.serializer[    S, Proc[ S ],    Proc.Update[ S ]]( _.changed )( procSer, SpanLikes )
+   private def groupsSer[   S <: Sys[ S ]]  = LinkedList.Modifiable.serializer[ S, Group[ S ],   GroupUpdate[ S ]]( _.changed )( groupSer )
+//   private def elementsSer[ S <: Sys[ S ]]  = LinkedList.Modifiable.serializer[ S, Element[ S, _ ]]( ??? )
 
 //   private def transportSer[ S <: Sys[ S ]] = Transport.serializer[ S, Group[ S ]]()
 
@@ -87,7 +88,7 @@ object DocumentImpl {
          new Data[ S ] {
             val groups        = LinkedList.Modifiable[ S, Group[   S    ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
 //            val elements      = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]( _.changed )( tx, groupSer[ S ])
-            val elements      = LinkedList.Modifiable[ S, Element[ S, _ ]]( tx, ??? )
+            val elements      = LinkedList.Modifiable[ S, Element[ S, _ ]]( tx, Element.serializer )
 //            val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
          }
       )( tx => _ => tx.newCursor() )

@@ -2,13 +2,11 @@ package de.sciss.mellite
 
 import de.sciss.lucre.{stm, DataInput, DataOutput, event => evt}
 import evt.{Targets, Sys}
-import de.sciss.synth.expr.BiTypeImpl
+import de.sciss.synth.expr.{Strings, BiTypeImpl}
 import annotation.switch
 
-// typeIDs : 0 = byte, 1 = short, 2 = int, 3 = long, 4 = float, 5 = double, 6 = boolean, 7 = char,
-//           8 = string, 9 = spanlike
 object StringOptions extends BiTypeImpl[ Option[ String ]] {
-   private final val typeID = 0x1000 | 8
+   final val typeID = 0x1000 | Strings.typeID
 
    /* protected */ def readValue( in: DataInput ) : Option[ String ] = {
       (in.readUnsignedByte(): @switch) match {

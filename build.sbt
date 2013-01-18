@@ -15,7 +15,7 @@ scalaVersion := "2.10.0"
 crossScalaVersions in ThisBuild := Seq( "2.10.0", "2.9.2" )
 
 libraryDependencies ++= Seq(
-   "de.sciss" %% "soundprocesses" % "1.3.1+",
+   "de.sciss" %% "soundprocesses" % "1.4.+",
    "de.sciss" %% "audiowidgets-swing" % "1.1.+",
    "de.sciss" %% "scalainterpreterpane" % "1.3.+",
    "de.sciss" %% "lucrestm-bdb" % "1.6.+"
