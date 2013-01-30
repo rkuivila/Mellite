@@ -31,7 +31,7 @@ import expr.LinkedList
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
-import proc.{Proc, Sys}
+import de.sciss.synth.proc.{AuralSystem, Proc, Sys}
 import stm.{Serializer, Cursor}
 import de.sciss.synth.expr.SpanLikes
 
@@ -73,16 +73,17 @@ object Document {
 //      }
    }
 }
-trait Document[ S <: Sys[ S ]] {
-   import Document.{Group => _, _}
+trait Document[S <: Sys[S]] {
+  import Document.{Group => _, _}
 
-   def system: S
-   def cursor: Cursor[ S ]
-   def folder: File
-   def groups( implicit tx: S#Tx ) : Groups[ S ]
+  def system: S
+  def cursor: Cursor[S]
+  def aural: AuralSystem[S]
+  def folder: File
+  def groups( implicit tx: S#Tx ) : Groups[S]
 //   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
 
-   def elements( implicit tx: S#Tx ) : Elements[ S ]
+  def elements(implicit tx: S#Tx) : Elements[S]
 
 //   def exprImplicits: ExprImplicits[ S ]
 }

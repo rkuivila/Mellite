@@ -31,18 +31,18 @@ import javax.swing.WindowConstants
 import swing.Frame
 
 object Mellite extends App with Runnable {
-   val name = "Mellite"
+  final val name = "Mellite"
 
-   EventQueue.invokeLater( this )
+  EventQueue.invokeLater(this)
 
-   def run() {
-      new Frame {
-         title = name
-         peer.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE )
-         menuBar = MenuBar()
-         size = new Dimension( 256, 256 )
-         centerOnScreen()
-         open()
-      }
-   }
+  def run() {
+    val f = new Frame {
+      title   = name
+      peer.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
+      menuBar = MenuBar()
+      size    = new Dimension(256, 256)
+    }
+    f.centerOnScreen()
+    f.open()
+  }
 }

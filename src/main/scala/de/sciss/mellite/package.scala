@@ -25,12 +25,12 @@
 
 package de.sciss
 
-import lucre.expr
+import lucre.{DataInput, expr}
 import expr.LinkedList
 import synth.proc.{Sys, Confluent}
 
 package object mellite {
-   type Cf           = Confluent
+  type Cf           = Confluent
 //   type S            = Confluent
 //   type Ex[ A ]      = expr.Expr[ S, A ]
 //   object Ex {
@@ -38,5 +38,11 @@ package object mellite {
 //   }
 
 //   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
-   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S ], Unit ]
+  object Elements {
+    def apply[S <: Sys[S]](implicit tx: S#Tx): Elements[S] = LinkedList.Modifiable[S, Element[S]]
+
+    def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Elements[S] =
+      LinkedList.Modifiable.read[S, Element[S]](in, access)
+  }
+  type Elements[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Unit]
 }

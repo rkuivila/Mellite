@@ -76,20 +76,10 @@ object DocumentImpl {
       val fact                   = BerkeleyDB.factory( dir, createIfNecessary = create )
       implicit val system: S     = Confluent( fact )
       implicit val serializer    = DocumentImpl.serializer[ S ]   // please Scala 2.9.2 and 2.10.0-M6 :-////
-//      implicit val transSer      = Transport.serializer[ S ]      // why is this not found automatically??
-//      implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
-//      val access = system.root[ Data[ S ]] { implicit tx =>
-//         new Data[ S ] {
-//            val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
-////            val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
-//         }
-//      }
       val (_access, _cursor) = system.cursorRoot[ Data[ S ], Cursor[ S ]]( implicit tx =>
          new Data[ S ] {
             val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
-//            val elements      = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]( _.changed )( tx, groupSer[ S ])
             val elements      = LinkedList.Modifiable[ S, Element[ S ]]( tx, Element.serializer )
-//            val transportMap  = tx.newDurableIDMap[ Transports[ S ]]
          }
       )( tx => _ => tx.newCursor() )
       val access: S#Entry[ Data[ S ]] = _access

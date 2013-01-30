@@ -1,0 +1,23 @@
+:: expr (immutable values) ::
+
+::: primitives :::
+
+0   Byte
+1   Short
+2   Int
+3   Long
+4   Float
+5   Double
+6   Boolean
+7   Char
+8   String
+9   SpanLike
+10  Span
+11  Grapheme.Value
+
+0x1000 | A.typeID   Option[A]
+
+:: non-expr elements (mutables) ::
+
+0x10000     Group
+

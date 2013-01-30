@@ -34,6 +34,6 @@ object DocumentFrame {
    def apply[ S <: Sys[ S ]]( doc: Document[ S ])( implicit tx: S#Tx ) : DocumentFrame[ S ] = Impl( doc )
 }
 trait DocumentFrame[ S <: Sys[ S ]] {
-   def component : Frame
-   def document : Document[ S ]
+  def component : Frame
+  def document : Document[ S ]
 }

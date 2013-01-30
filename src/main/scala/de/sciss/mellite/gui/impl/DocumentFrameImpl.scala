@@ -27,11 +27,12 @@ package de.sciss.mellite
 package gui
 package impl
 
-import swing.{Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
+import swing.{Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
 import de.sciss.lucre.stm.{Cursor, Disposable}
 import javax.swing.WindowConstants
 import de.sciss.synth.proc.{AuralSystem, Sys, AuralPresentation, Transport, ProcGroup_, ProcTransport}
 import de.sciss.synth.expr.SpanLikes
+import de.sciss.scalainterpreter.{CodePane, Interpreter, InterpreterPane}
 
 object DocumentFrameImpl {
    def apply[ S <: Sys[ S ]]( doc: Document[ S ])( implicit tx: S#Tx ) : DocumentFrame[ S ] = {
@@ -164,7 +165,6 @@ None
 //               ggViewInstant.enabled   = isSelected
 //         }
 //
-//         val splitPane = new SplitPane( Orientation.Horizontal, groupsPanel, transpPanel )
 
          val ggAural = Button( "Aural" ) {
             atomic { implicit tx =>
@@ -175,13 +175,25 @@ None
             }
          }
 
+        val intp = {
+//          val config          = InterpreterPane.Config()
+          val intpConfig      = Interpreter.Config()
+          intpConfig.executor = "de.sciss.mellite.InterpreterContext"
+          intpConfig.imports  = Seq("de.sciss.mellite._", "de.sciss.synth._", "proc._", "ugen._")
+//          intpConfig.out      = ???
+//          val codeConfig      = CodePane.Config()
+          InterpreterPane(interpreterConfig = intpConfig)
+        }
+
+         val splitPane = new SplitPane(Orientation.Horizontal, groupsPanel, Component.wrap(intp.component))
+
          comp = new Frame {
             title    = "Document : " + document.folder.getName
             peer.setDefaultCloseOperation( WindowConstants.DO_NOTHING_ON_CLOSE )
             contents = new BorderPanel {
-//               add( splitPane, BorderPanel.Position.Center )
-add( groupsPanel, BorderPanel.Position.Center )
-               add( ggAural, BorderPanel.Position.South )
+               add( splitPane, BorderPanel.Position.Center )
+//add( groupsPanel, BorderPanel.Position.Center )
+//               add( ggAural, BorderPanel.Position.South )
             }
             pack()
             centerOnScreen()
