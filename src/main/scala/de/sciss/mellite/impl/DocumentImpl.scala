@@ -33,7 +33,7 @@ import bitemp.BiGroup
 import stm.store.BerkeleyDB
 import stm.{Cursor, Serializer}
 import de.sciss.synth.expr.SpanLikes
-import de.sciss.synth.proc.{Sys, Confluent, Transport, Proc}
+import de.sciss.synth.proc.{AuralSystem, Sys, Confluent, Transport, Proc}
 
 object DocumentImpl {
    import Document.{Group, GroupUpdate, Groups, Transports}
@@ -113,6 +113,8 @@ object DocumentImpl {
       def groups(   implicit tx: S#Tx ) : Groups[   S ] = access.get.groups
       def elements( implicit tx: S#Tx ) : Elements[ S ] = access.get.elements
 
+
+
 //      def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ] = {
 //         val map  = access.get.transportMap
 //         val id   = group.id
@@ -122,5 +124,7 @@ object DocumentImpl {
 //            empty
 //         })
 //      }
+
+     def aural: AuralSystem[S] = ???
    }
 }
