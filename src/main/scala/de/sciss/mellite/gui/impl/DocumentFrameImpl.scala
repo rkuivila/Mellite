@@ -87,7 +87,7 @@ None
         val value   = ggValue.text
         atomic { implicit tx =>
           val parent  = document.elements
-          parent.addLast(Element.String(init = Strings.newConst(value), name = if (name.isEmpty) None else Some(name)))
+          parent.addLast(Element.String(name = name, init = Strings.newConst(value)))
         }
       }
     }

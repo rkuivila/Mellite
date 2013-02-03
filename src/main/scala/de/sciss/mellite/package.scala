@@ -39,10 +39,10 @@ package object mellite {
 
 //   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
   object Elements {
-    def apply[S <: Sys[S]](implicit tx: S#Tx): Elements[S] = LinkedList.Modifiable[S, Element[S]]
+    def apply[S <: Sys[S]](implicit tx: S#Tx): Elements[S] = LinkedList.Modifiable[S, Element[S], Element.Update[S]](_.changed)
 
     def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Elements[S] =
-      LinkedList.Modifiable.read[S, Element[S]](in, access)
+      LinkedList.Modifiable.read[S, Element[S], Element.Update[S]](_.changed)(in, access)
   }
-  type Elements[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Unit]
+  type Elements[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Element.Update[S]]
 }

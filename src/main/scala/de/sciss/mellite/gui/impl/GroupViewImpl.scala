@@ -60,23 +60,23 @@ object GroupViewImpl {
     import java.lang.{String => _String}
 //    import mellite.{Group => _Group}
 
-    final class String[S <: Sys[S]](var name: Option[_String], var value: _String)
+    final class String[S <: Sys[S]](var name: _String, var value: _String)
       extends ElementView[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        cmpString.key.text    = name.getOrElse("<untitled>")
+        cmpString.key.text    = name
         cmpString.value.text  = value
         cmpString
       }
     }
 
-    final class Int[S <: Sys[S]](var name: Option[_String], var value: _Int)
+    final class Int[S <: Sys[S]](var name: _String, var value: _Int)
       extends ElementView[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank // XXX TODO
     }
 
-    final class Double[S <: Sys[S]](var name: Option[_String], var value: _Double)
+    final class Double[S <: Sys[S]](var name: _String, var value: _Double)
       extends ElementView[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank // XXX TODO
@@ -86,23 +86,23 @@ object GroupViewImpl {
       def children: IIdxSeq[ElementView[S]]
     }
 
-    final class Group[S <: Sys[S]](var name: Option[_String], var children: IIdxSeq[ElementView[S]])
+    final class Group[S <: Sys[S]](var name: _String, var children: IIdxSeq[ElementView[S]])
       extends GroupLike[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        cmpLabel.text = name.getOrElse("<untitled>")
+        cmpLabel.text = name
         cmpLabel
       }
     }
 
     final class Root[S <: Sys[S]](var children: IIdxSeq[ElementView[S]])
       extends GroupLike[S] {
-      def name = None
+      def name = "<root>"
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank
     }
   }
   private sealed trait ElementView[S <: Sys[S]] {
-    def name: Option[String]
+    def name: String
 //    def elem: stm.Source[S#Tx, Element[S]]
     def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component
   }
