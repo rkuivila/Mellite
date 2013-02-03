@@ -59,9 +59,9 @@ object Document {
 //         BiGroup.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
 //      }
 
-      implicit def groups[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, LinkedList[ S, Group[ S ], GroupUpdate[ S ]]] = {
-         LinkedList.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )
-      }
+//      implicit def groups[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, LinkedList[ S, Group[ S ], GroupUpdate[ S ]]] = {
+//         LinkedList.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )
+//      }
 
 //      implicit def groups[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, LinkedList[ S, GroupU[ S ], GroupUpdate[ S ]]] = {
 //         LinkedList.serializer[ S, GroupU[ S ], GroupUpdate[ S ]]( _.changed )
@@ -80,7 +80,11 @@ trait Document[S <: Sys[S]] {
   def cursor: Cursor[S]
   def aural: AuralSystem[S]
   def folder: File
-  def groups( implicit tx: S#Tx ) : Groups[S]
+
+//  def root(implicit tx: S#Tx): Group[S]
+
+//  def groups( implicit tx: S#Tx ) : Groups[S]
+
 //   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
 
   def elements(implicit tx: S#Tx) : Elements[S]

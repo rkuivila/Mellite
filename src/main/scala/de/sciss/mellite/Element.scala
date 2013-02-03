@@ -6,7 +6,7 @@ import de.sciss.lucre.expr.Expr
 import stm.{Disposable, Mutable}
 import de.sciss.synth.expr.{Doubles, Strings, Ints}
 import annotation.switch
-import de.sciss.lucre.bitemp.BiType
+import de.sciss.mellite
 
 /*
  * Elements
@@ -17,43 +17,89 @@ import de.sciss.lucre.bitemp.BiType
  */
 
 object Element {
-  import scala.{Int => SInt, Double => SDouble}
-  import java.lang.{String => SString}
+  import scala.{Int => _Int, Double => _Double}
+  import java.lang.{String => _String}
+  import mellite.{Elements => _Group}
 
-  type Name[S <: Sys[S]] = Expr.Var[S, Option[SString]]
+  private final val groupTypeID = 0x10000
+
+  type Name[S <: Sys[S]] = Expr.Var[S, Option[_String]]
 
   object Int {
-    def apply[S <: Sys[S]](init: Expr[S, SInt], name: Option[SString] = None)(implicit tx: S#Tx): Int[S] = {
+    def apply[S <: Sys[S]](init: Expr[S, _Int], name: Option[_String] = None)(implicit tx: S#Tx): Int[S] = {
       new Impl(tx.newID(), mkName(name), Ints.newVar(init))
     }
 
     // scalac fails with sucky type inference errors when using `int: Int[S]`, so have a fantastic extra match :-E
-//    def unapply[S <: Sys[S]](int: Int[S]): Option[Expr.Var[S, SInt]] = Some(int.elem)
+//    def unapply[S <: Sys[S]](int: Int[S]): Option[Expr.Var[S, _Int]] = Some(int.elem)
 
-    def unapply[S <: Sys[S]](elem: Element[S]): Option[Expr.Var[S, SInt]] = elem match {
-      case int: Int[S] => Some(int.elem)
+    def unapply[S <: Sys[S]](elem: Element[S]): Option[Expr.Var[S, _Int]] = elem match {
+      case i: Int[S] => Some(i.entity)
       case _ => None
     }
 
-    private final class Impl[S <: Sys[S]](val id: S#ID, val name: Name[S], val elem: Expr.Var[S, SInt])
+    private[Element] final class Impl[S <: Sys[S]](val id: S#ID, val name: Name[S], val entity: Expr.Var[S, _Int])
       extends Element.Impl[S] with Int[S] {
       def typeID = Ints.typeID
+      override def toString() = "Element.Int" + id
     }
   }
-  sealed trait Int[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, SInt] }
+  sealed trait Int[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _Int] }
 
-//  object Double {
-//    def double[S <: Sys[S]](init: Expr[S, Double], name: Option[String] = None)
-//                           (implicit tx: S#Tx): Element[S] {type A = Expr.Var[S, Double]} = {
-//      mkExpr[S, Double](Doubles, init, name)
-//    }
-//  }
-//  sealed trait Double[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, SDouble] }
-//
-//  def string[S <: Sys[S]](init: Expr[S, String], name: Option[String] = None)
-//                         (implicit tx: S#Tx): Element[S] {type A = Expr.Var[S, String]} = {
-//    mkExpr(Strings, init, name)
-//  }
+  object Double {
+    def apply[S <: Sys[S]](init: Expr[S, _Double], name: Option[_String] = None)(implicit tx: S#Tx): Double[S] = {
+      new Impl(tx.newID(), mkName(name), Doubles.newVar(init))
+    }
+
+    def unapply[S <: Sys[S]](elem: Element[S]): Option[Expr.Var[S, _Double]] = elem match {
+      case d: Double[S] => Some(d.entity)
+      case _ => None
+    }
+
+    private[Element] final class Impl[S <: Sys[S]](val id: S#ID, val name: Name[S], val entity: Expr.Var[S, _Double])
+      extends Element.Impl[S] with Double[S] {
+      def typeID = Doubles.typeID
+      override def toString() = "Element.Double" + id
+    }
+  }
+  sealed trait Double[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _Double] }
+
+  object String {
+    def apply[S <: Sys[S]](init: Expr[S, _String], name: Option[_String] = None)(implicit tx: S#Tx): String[S] = {
+      new Impl(tx.newID(), mkName(name), Strings.newVar(init))
+    }
+
+    def unapply[S <: Sys[S]](elem: Element[S]): Option[Expr.Var[S, _String]] = elem match {
+      case s: String[S] => Some(s.entity)
+      case _ => None
+    }
+
+    private[Element] final class Impl[S <: Sys[S]](val id: S#ID, val name: Name[S], val entity: Expr.Var[S, _String])
+      extends Element.Impl[S] with String[S] {
+      def typeID = Strings.typeID
+      override def toString() = "Element.String" + id
+    }
+  }
+  sealed trait String[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _String] }
+
+  object Group {
+    def apply[S <: Sys[S]](init: _Group[S], name: Option[_String] = None)(implicit tx: S#Tx): Group[S] = {
+      new Impl(tx.newID(), mkName(name), init)
+    }
+
+    def unapply[S <: Sys[S]](elem: Element[S]): Option[_Group[S]] = elem match {
+      case g: Group[S] => Some(g.entity)
+      case _ => None
+    }
+
+    private[Element] final class Impl[S <: Sys[S]](val id: S#ID, val name: Name[S], val entity: _Group[S])
+      extends Element.Impl[S] with Group[S] {
+      def typeID = groupTypeID // _Group.typeID
+      override def toString() = "Element.Group" + id
+    }
+  }
+  sealed trait Group[S <: Sys[S]] extends Element[S] { type A = _Group[S] }
+
 //
 //  def group[S <: Sys[S]](init: Group[S], name: Option[String] = None)
 //                        (implicit tx: S#Tx): Element[S] {type A = Group[S]} = {
@@ -68,15 +114,21 @@ object Element {
     def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): Element[S] = {
       val id      = tx.readID(in, access)
       val typeID  = in.readInt()
-      val nameEx  = StringOptions.readVar[S](in, access)
-      val elem    = (typeID: @switch) match {
-        case Ints.typeID    => Ints.readVar[   S](in, access)
-        case Doubles.typeID => Doubles.readVar[S](in, access)
-        case Strings.typeID => Strings.readVar[S](in, access)
-        case Group.typeID   => Group.read[     S](in, access)
+      val name    = StringOptions.readVar[S](in, access)
+      (typeID: @switch) match {
+        case Ints.typeID =>
+          val entity = Ints.readVar[S](in, access)
+          new Int.Impl(id, name, entity)
+        case Doubles.typeID =>
+          val entity = Doubles.readVar[S](in, access)
+          new Double.Impl(id, name, entity)
+        case Strings.typeID =>
+          val entity = Strings.readVar[S](in, access)
+          new String.Impl(id, name, entity)
+        case `groupTypeID` /* _Group.typeID */ =>
+          val entity = _Group.read[S](in, access)
+          new Group.Impl(id, name, entity)
       }
-//      new Impl(id, nameEx, typeID, elem)
-      ???
     }
 
     def write(elem: Element[S], out: DataOutput) {
@@ -84,12 +136,12 @@ object Element {
     }
   }
 
-  private def mkName[S <: Sys[S]](name: Option[String])(implicit tx: S#Tx): Expr.Var[S, Option[String]] =
+  private def mkName[S <: Sys[S]](name: Option[_String])(implicit tx: S#Tx): Expr.Var[S, Option[_String]] =
     StringOptions.newVar[S]( StringOptions.newConst(name))
 
 //  // A[ ~ <: Sys[ ~ ] forSome { type ~ }]
 //  private def mkExpr[S <: Sys[S], A1](biType: BiType[A1], init: Expr[S, A1], name: Option[String])
-//                                     (implicit tx: S#Tx) : (SInt, Expr.Var[S, Option[String]], Expr.Var[S, A1]) = {
+//                                     (implicit tx: S#Tx) : (_Int, Expr.Var[S, Option[String]], Expr.Var[S, A1]) = {
 //    val expr = biType.newVar[S](init)
 //    (biType.typeID, mkName(name), expr)
 //  }
@@ -111,17 +163,17 @@ object Element {
 
 //    /* final */ type A = A1
 
-    protected def typeID: SInt
+    protected def typeID: _Int
 
     final protected def writeData(out: DataOutput) {
       out.writeInt(typeID)
       name.write(out)
-      elem.write(out)
+      entity.write(out)
     }
 
     final protected def disposeData()(implicit tx: S#Tx) {
       name.dispose()
-      elem.dispose()
+      entity.dispose()
     }
   }
 }
@@ -130,5 +182,5 @@ sealed trait Element[S <: Sys[S]] extends Mutable[S#ID, S#Tx] {
   type A
 
   def name: Expr.Var[S, Option[String]]
-  def elem: A
+  def entity: A
 }
