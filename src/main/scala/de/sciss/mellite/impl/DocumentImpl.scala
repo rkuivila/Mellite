@@ -32,7 +32,7 @@ import expr.LinkedList
 import bitemp.BiGroup
 import stm.store.BerkeleyDB
 import stm.{Cursor, Serializer}
-import de.sciss.synth.expr.SpanLikes
+import de.sciss.synth.expr.{Strings, SpanLikes}
 import de.sciss.synth.proc.{AuralSystem, Sys, Confluent, Transport, Proc}
 
 object DocumentImpl {
@@ -81,9 +81,11 @@ object DocumentImpl {
           //            val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
           val elements: Elements[S] = LinkedList.Modifiable[S, Element[S]](tx, Element.serializer)
 
-          // XX TODO: test
-//          private val g1 = Group[S]
-//          elements.addLast(g1)
+//          // test
+//          private val g1: Elements[S] = LinkedList.Modifiable[S, Element[S]](tx, Element.serializer)
+//          g1.addLast(Element.String(Strings.newConst("string-value"), Some("s1")))
+//          private val eg1 = Element.Group(g1, Some("g1"))
+//          elements.addLast(eg1)
         }
       )(tx => _ => tx.newCursor())
     val access: S#Entry[Data[S]] = _access

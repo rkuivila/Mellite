@@ -5,8 +5,7 @@ package impl
 import de.sciss.synth.proc.Sys
 import swing.{Swing, Orientation, BoxPanel, Label, ScrollPane, Component}
 import collection.immutable.{IndexedSeq => IIdxSeq}
-import de.sciss.swingtree.tree.{ExternalTreeModel, Tree}
-import de.sciss.mellite
+import scalaswingcontrib.tree.{ExternalTreeModel, Tree}
 import Swing._
 
 object GroupViewImpl {
@@ -15,6 +14,8 @@ object GroupViewImpl {
     val rootIter  = root.iterator
     val rootView  = new ElementView.Root(rootIter.map(elemView(_)(tx)).toIndexedSeq)
 //    val elemViews = group.elements.iterator.map(elemView)
+
+//println(s"root view = '$rootView', with children ${rootView.children}")
 
     guiFromTx {
       view.guiInit(rootView)
@@ -135,12 +136,14 @@ object GroupViewImpl {
 //          }
 //       }
 
-      val m = ExternalTreeModel[ElementView[S]](root) {
+      val m = ExternalTreeModel[ElementView[S]](root.children: _*) {
         case g: ElementView.GroupLike[S] => g.children
         case _ => Nil
       }
       val t = new Tree(m)
+      t.showsRootHandles = true
       t.renderer = new Renderer[S]
+//      t.expandAll()
 
       comp = new ScrollPane(t)
     }

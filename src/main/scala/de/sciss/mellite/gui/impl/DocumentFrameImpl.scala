@@ -27,12 +27,14 @@ package de.sciss.mellite
 package gui
 package impl
 
-import swing.{Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
+import swing.{Swing, TextField, Alignment, Label, Dialog, MenuItem, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
 import de.sciss.lucre.stm.{Cursor, Disposable}
-import javax.swing.WindowConstants
-import de.sciss.synth.proc.{AuralSystem, Sys, AuralPresentation, Transport, ProcGroup_, ProcTransport}
-import de.sciss.synth.expr.SpanLikes
-import de.sciss.scalainterpreter.{CodePane, Interpreter, InterpreterPane}
+import javax.swing.{JPopupMenu, WindowConstants}
+import de.sciss.synth.proc.Sys
+import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
+import Swing._
+import scalaswingcontrib.group.GroupPanel
+import de.sciss.synth.expr.Strings
 
 object DocumentFrameImpl {
    def apply[ S <: Sys[ S ]]( doc: Document[ S ])( implicit tx: S#Tx ) : DocumentFrame[ S ] = {
@@ -60,16 +62,60 @@ None
 //            yield transp
       }
 
+    private def actionAddFolder() {
+      println("actionAddFolder")
+    }
+
+    private def actionAddString() {
+      val ggName  = new TextField(10)
+      val ggValue = new TextField(20)
+
+      import language.reflectiveCalls // why does GroupPanel need reflective calls?
+      val box = new GroupPanel {
+        val lbName  = new Label("Name:",  EmptyIcon, Alignment.Right)
+        val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
+        theHorizontalLayout is Sequential(Parallel(Trailing)(lbName, lbValue), Parallel(ggName, ggValue))
+        theVerticalLayout   is Sequential(Parallel(Baseline)(lbName, ggName), Parallel(Baseline)(lbValue, ggValue))
+      }
+
+      val res = Dialog.showConfirmation(groupView.component, box.peer, "New String", Dialog.Options.OkCancel,
+        Dialog.Message.Question)
+
+      if (res == Dialog.Result.Ok) {
+//        println(s"name = ${ggName.text} ; value = ${ggValue.text}")
+        val name    = ggName.text
+        val value   = ggValue.text
+        atomic { implicit tx =>
+          val parent  = document.elements
+          parent.addLast(Element.String(init = Strings.newConst(value), name = if (name.isEmpty) None else Some(name)))
+        }
+      }
+    }
+
+    private def actionAddTimeline() {
+      println("actionAddTimeline")
+    }
+
     def guiInit() {
       requireEDT()
       require(comp == null, "Initialization called twice")
 
-      val ggAddGroup = Button("+") {
-        atomic { implicit tx =>
-//          implicit val spans = SpanLikes
-//          val group = ProcGroup_.Modifiable[S]
-//          document.groups.addLast(group)
-        }
+      lazy val ggAddGroup: Button = Button("+") {
+        val m = Seq(
+          new MenuItem( Action("Folder")(actionAddFolder())),
+          new MenuItem( Action("String")(actionAddString())),
+          new MenuItem( Action("Timeline")(actionAddTimeline()))
+        )
+        val p = new JPopupMenu()
+        m.foreach(m => p.add(m.peer))
+        val bp = ggAddGroup.peer
+        p.show(bp, bp.getWidth, bp.getHeight)
+
+//        atomic { implicit tx =>
+////          implicit val spans = SpanLikes
+////          val group = ProcGroup_.Modifiable[S]
+////          document.groups.addLast(group)
+//        }
       }
 
       def mkDelButton[ Elem <: Disposable[ S#Tx ], U ](view: GroupView[S]): Button =
