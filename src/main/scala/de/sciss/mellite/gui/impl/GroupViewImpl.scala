@@ -20,6 +20,29 @@ object GroupViewImpl {
     guiFromTx {
       view.guiInit(rootView)
     }
+
+    def elemAdded(path: Tree.Path[ElementView.GroupLike[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+      val v = elemView(elem)
+      guiFromTx {
+        // parentView.children = parentView.children.patch(idx, IIdxSeq(elemView), 0)
+        view.model.insertUnder(path, v, idx)
+      }
+    }
+
+    root.changed.reactTx[Elements.Update[S]] { implicit tx => upd =>
+      upd.changes.foreach {
+        case Elements.Added(  idx, elem) => elemAdded(Tree.Path(rootView), idx, elem)
+        case Elements.Removed(idx, elem) =>
+
+//        case Elements.Element(elem, elemUpd) =>
+        case _ =>
+      }
+//      case Element.Update(elem, changes) =>
+//      case Elements.Update(root0, changes) =>
+//
+//      case _ =>
+    }
+
     view
   }
 
@@ -83,7 +106,7 @@ object GroupViewImpl {
     }
 
     sealed trait GroupLike[S <: Sys[S]] extends ElementView[S] {
-      def children: IIdxSeq[ElementView[S]]
+      var children: IIdxSeq[ElementView[S]]
     }
 
     final class Group[S <: Sys[S]](var name: _String, var children: IIdxSeq[ElementView[S]])
@@ -117,6 +140,8 @@ object GroupViewImpl {
     view =>
 
     @volatile private var comp: Component = _
+    private var _model: ExternalTreeModel[ElementView[S]] = _
+    def model = _model
 
     def component: Component = {
       requireEDT()
@@ -136,14 +161,23 @@ object GroupViewImpl {
 //          }
 //       }
 
-      val m = ExternalTreeModel[ElementView[S]](root.children: _*) {
+      _model = ExternalTreeModel[ElementView[S]](root.children: _*) {
         case g: ElementView.GroupLike[S] => g.children
         case _ => Nil
+      } makeInsertableWith { (path, elem, idx) =>
+        path.lastOption.getOrElse(root) match {
+          case g: ElementView.GroupLike[S] if g.children.size >= idx =>
+            println(s"Expanding ${g} at ${idx} with ${elem}")
+            g.children = g.children.patch(idx, IIdxSeq(elem), 0)
+            true
+          case _ => false
+        }
       }
-      val t = new Tree(m)
+
+      val t = new Tree(_model)
       t.showsRootHandles = true
       t.renderer = new Renderer[S]
-//      t.expandAll()
+      t.expandAll()
 
       comp = new ScrollPane(t)
     }

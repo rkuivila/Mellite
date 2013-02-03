@@ -37,19 +37,15 @@ import scalaswingcontrib.group.GroupPanel
 import de.sciss.synth.expr.Strings
 
 object DocumentFrameImpl {
-   def apply[ S <: Sys[ S ]]( doc: Document[ S ])( implicit tx: S#Tx ) : DocumentFrame[ S ] = {
-      implicit val csr = doc.cursor
-//      implicit val groupsSer  = Document.Serializers.groups[ S ]
-//      implicit val transpSer  = Document.Serializers.transports[ S ]
-//      val groupsView = ListView( doc.groups )( g => "Group " + g.id )
-//      val transpView = ListView.empty[ S, ProcTransport[ S ], Unit ]( _.toString() )
-     val groupView = GroupView(doc.elements)
-      val view = new Impl( doc, groupView /*, transpView */)
-      guiFromTx {
-         view.guiInit()
-      }
-      view
-   }
+  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
+    implicit val csr  = doc.cursor
+    val groupView     = GroupView(doc.elements)
+    val view          = new Impl(doc, groupView)
+    guiFromTx {
+      view.guiInit()
+    }
+    view
+  }
 
   private final class Impl[S <: Sys[S]](val document: Document[S], groupView: GroupView[S])
   extends DocumentFrame[ S ] with ComponentHolder[ Frame ] with CursorHolder[ S ] {

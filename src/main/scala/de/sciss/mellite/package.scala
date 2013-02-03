@@ -43,6 +43,26 @@ package object mellite {
 
     def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Elements[S] =
       LinkedList.Modifiable.read[S, Element[S], Element.Update[S]](_.changed)(in, access)
+
+    object Update {
+      def unapply[S <: Sys[S]](upd: LinkedList.Update[ S, Element[S], Element.Update[S]]) = Some((upd.list, upd.changes))
+    }
+
+    object Added {
+      def unapply[S <: Sys[S]](change: LinkedList.Change[S, Element[S], Element.Update[S]]) = change match {
+        case LinkedList.Added(idx, elem) => Some((idx, elem))
+        case _ => None
+      }
+//      def unapply[S <: Sys[S]](change: LinkedList.Added[S, Element[S]]) = Some(change.index, change.elem)
+    }
+    object Removed {
+      def unapply[S <: Sys[S]](change: LinkedList.Change[S, Element[S], Element.Update[S]]) = change match {
+        case LinkedList.Removed(idx, elem) => Some((idx, elem))
+        case _ => None
+      }
+    }
+
+    type Update[S <: Sys[S]] = LinkedList.Update[S, Element[S], Element.Update[S]]
   }
   type Elements[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Element.Update[S]]
 }
