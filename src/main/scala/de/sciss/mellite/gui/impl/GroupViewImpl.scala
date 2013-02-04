@@ -13,6 +13,7 @@ object GroupViewImpl {
     val view      = new Impl[S] // (group)
     val rootIter  = root.iterator
     val rootView  = new ElementView.Root(rootIter.map(elemView(_)(tx)).toIndexedSeq)
+//println(s"rootView.children = ${rootView.children}")
 //    val elemViews = group.elements.iterator.map(elemView)
 
 //println(s"root view = '$rootView', with children ${rootView.children}")
@@ -30,12 +31,13 @@ object GroupViewImpl {
     }
 
     root.changed.reactTx[Elements.Update[S]] { implicit tx => upd =>
+//println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
       upd.changes.foreach {
-        case Elements.Added(  idx, elem) => elemAdded(Tree.Path(rootView), idx, elem)
-        case Elements.Removed(idx, elem) =>
+        case Elements.Added(  idx, elem) => elemAdded(Tree.Path.empty, idx, elem)
+        case Elements.Removed(idx, elem) => ???
 
-//        case Elements.Element(elem, elemUpd) =>
-        case _ =>
+        case Elements.Element(elem, elemUpd) => ???
+//        case _ =>
       }
 //      case Element.Update(elem, changes) =>
 //      case Elements.Update(root0, changes) =>
@@ -91,18 +93,21 @@ object GroupViewImpl {
         cmpString.value.text  = value
         cmpString
       }
+      def prefix = "String"
     }
 
     final class Int[S <: Sys[S]](var name: _String, var value: _Int)
       extends ElementView[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank // XXX TODO
+      def prefix = "Int"
     }
 
     final class Double[S <: Sys[S]](var name: _String, var value: _Double)
       extends ElementView[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank // XXX TODO
+      def prefix = "Double"
     }
 
     sealed trait GroupLike[S <: Sys[S]] extends ElementView[S] {
@@ -116,18 +121,23 @@ object GroupViewImpl {
         cmpLabel.text = name
         cmpLabel
       }
+
+      def prefix = "Group"
     }
 
     final class Root[S <: Sys[S]](var children: IIdxSeq[ElementView[S]])
       extends GroupLike[S] {
       def name = "<root>"
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank
+      def prefix = "Root"
     }
   }
   private sealed trait ElementView[S <: Sys[S]] {
+    def prefix: String
     def name: String
 //    def elem: stm.Source[S#Tx, Element[S]]
     def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component
+    override def toString = s"ElementView.${prefix}(name = ${name})"
   }
 
   private final class Renderer[S <: Sys[S]] extends Tree.Renderer[ElementView[S]] {
@@ -167,14 +177,18 @@ object GroupViewImpl {
       } makeInsertableWith { (path, elem, idx) =>
         path.lastOption.getOrElse(root) match {
           case g: ElementView.GroupLike[S] if g.children.size >= idx =>
-            println(s"Expanding ${g} at ${idx} with ${elem}")
             g.children = g.children.patch(idx, IIdxSeq(elem), 0)
+//            println(s"Expanding ${g} at ${idx} with ${elem} - now children are ${g.children}")
             true
           case _ => false
         }
       }
 
       val t = new Tree(_model)
+//      t.listenTo(t)
+//      t.reactions += {
+//        case r => println(s"TREE OBSERVATION : ${r}")
+//      }
       t.showsRootHandles = true
       t.renderer = new Renderer[S]
       t.expandAll()

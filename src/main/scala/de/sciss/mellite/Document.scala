@@ -34,6 +34,7 @@ import impl.{DocumentImpl => Impl}
 import de.sciss.synth.proc.{AuralSystem, Proc, Sys}
 import stm.{Serializer, Cursor}
 import de.sciss.synth.expr.SpanLikes
+import reflect.ClassTag
 
 object Document {
    type Group[        S <: Sys[ S ]]   = BiGroup.Modifiable[    S, Proc[ S ],  Proc.Update[ S ]]
@@ -88,6 +89,9 @@ trait Document[S <: Sys[S]] {
 //   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
 
   def elements(implicit tx: S#Tx) : Elements[S]
+
+  // def manifest: reflect.runtime.universe.TypeTag[Document[S]]
+  implicit def systemType: reflect.runtime.universe.TypeTag[S]
 
 //   def exprImplicits: ExprImplicits[ S ]
 }

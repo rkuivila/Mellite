@@ -35,6 +35,7 @@ import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
 import de.sciss.synth.expr.Strings
+import tools.nsc.interpreter.NamedParam
 
 object DocumentFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
@@ -210,20 +211,28 @@ None
 //         }
 //
 
-         val ggAural = Button( "Aural" ) {
-            atomic { implicit tx =>
-               transport.foreach { t =>
-//                  val aural: AuralSystem[ S ] = ???
-//                  AuralPresentation.run( t, aural )
-               }
-            }
+//         val ggAural = Button( "Aural" ) {
+//            atomic { implicit tx =>
+//               transport.foreach { t =>
+////                  val aural: AuralSystem[ S ] = ???
+////                  AuralPresentation.run( t, aural )
+//               }
+//            }
+//         }
+
+      val ggTest = Button( "ELEMENTS" ) {
+         atomic { implicit tx =>
+            println("ELEMENTS : " + document.elements.iterator.toIndexedSeq)
          }
+      }
 
         val intp = {
 //          val config          = InterpreterPane.Config()
           val intpConfig      = Interpreter.Config()
-          intpConfig.executor = "de.sciss.mellite.InterpreterContext"
+//          intpConfig.executor = "de.sciss.mellite.InterpreterContext"
           intpConfig.imports  = Seq("de.sciss.mellite._", "de.sciss.synth._", "proc._", "ugen._")
+          import document.systemType
+          intpConfig.bindings = Seq(NamedParam[Document[S]]("doc", document))
 //          intpConfig.out      = ???
 //          val codeConfig      = CodePane.Config()
           InterpreterPane(interpreterConfig = intpConfig)
@@ -237,7 +246,7 @@ None
             contents = new BorderPanel {
                add( splitPane, BorderPanel.Position.Center )
 //add( groupsPanel, BorderPanel.Position.Center )
-//               add( ggAural, BorderPanel.Position.South )
+               add( ggTest, BorderPanel.Position.South )
             }
             pack()
             centerOnScreen()

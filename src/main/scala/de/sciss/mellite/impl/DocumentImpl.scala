@@ -27,13 +27,15 @@ package de.sciss.mellite
 package impl
 
 import java.io.{IOException, FileNotFoundException, File}
-import de.sciss.lucre.{expr, bitemp, stm, DataOutput, DataInput}
+import de.sciss.lucre.{confluent, expr, bitemp, stm, DataOutput, DataInput}
 import expr.LinkedList
 import bitemp.BiGroup
 import stm.store.BerkeleyDB
 import stm.{Cursor, Serializer}
 import de.sciss.synth.expr.{Strings, SpanLikes}
 import de.sciss.synth.proc.{AuralSystem, Sys, Confluent, Transport, Proc}
+import de.sciss.lucre.confluent.reactive.ConfluentReactiveLike
+import de.sciss.synth.proc
 
 object DocumentImpl {
 //   import Document.{Group, GroupUpdate, Groups, Transports}
@@ -45,23 +47,23 @@ object DocumentImpl {
 
 //   private def transportSer[ S <: Sys[ S ]] = Transport.serializer[ S, Group[ S ]]()
 
-   private implicit def serializer[ S <: Sys[ S ]] /* ( implicit cursor: Cursor[ S ]) */ : Serializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
+  private type S = Cf
 
-   private final class Ser[ S <: Sys[ S ]] /*( implicit cursor: Cursor[ S ]) */ extends Serializer[ S#Tx, S#Acc, Data[ S ]] {
-      def write( data: Data[ S ], out: DataOutput ) {
-         data.write( out )
-      }
+//  private implicit def serializer[ S <: Sys[ S ]] /* ( implicit cursor: Cursor[ S ]) */ : Serializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
 
-      def read( in: DataInput, access: S#Acc )( implicit tx: S#Tx ) : Data[ S ] = new Data[ S ] {
-//         val groups                 = groupsSer.read(   in, access )
-         val elements                = Elements.read[S](in, access) // elementsSer.read( in, access )
-//         implicit val transSer      = Transport.serializer[ S ]  // why is this not found automatically??
-//         implicit val transportsSer = LinkedList.Modifiable.serializer[ S, Transport[ S, Proc[ S ]]]
-//         val transportMap           = tx.readDurableIDMap[ Transports[ S ]]( in )
-      }
-   }
+  private implicit object serializer extends Serializer[S#Tx, S#Acc, Data /* [S] */] {
+    def write(data: Data /* [S] */, out: DataOutput) {
+      data.write(out)
+    }
 
-   def read( dir: File ) : Document[ Cf ] = {
+    def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): Data /* [S] */ = new Data /* [S] */ {
+      val elements = Elements.read[S](in, access)
+      // elementsSer.read( in, access )
+      val cursor = tx.readCursor(in, access)
+    }
+  }
+
+  def read( dir: File ) : Document[ Cf ] = {
       if( !dir.isDirectory ) throw new FileNotFoundException( "Document " + dir.getPath + " does not exist" )
       apply( dir, create = false )
    }
@@ -75,11 +77,13 @@ object DocumentImpl {
     type S    = Cf
     val fact  = BerkeleyDB.factory(dir, createIfNecessary = create)
     implicit val system: S = Confluent(fact)
-    implicit val serializer = DocumentImpl.serializer[S] // please Scala 2.9.2 and 2.10.0-M6 :-////
-    val (_access, _cursor) = system.cursorRoot[Data[S], Cursor[S]](implicit tx =>
-        new Data[S] {
+//    implicit val serializer = DocumentImpl.serializer[S] // please Scala 2.9.2 and 2.10.0-M6 :-////
+    val (_access, _cursor) = system.cursorRoot[Data /* [S] */, Cursor[S]](implicit tx =>
+        new Data /* [S] */ {
           //            val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
-          val elements = Elements[S](tx)
+          val elements  = Elements[S](tx)
+          val cursor    = tx.newCursor()
+//println("DOC.new")
 
 //          // test
 //          private val g1: Elements[S] = LinkedList.Modifiable[S, Element[S]](tx, Element.serializer)
@@ -87,39 +91,38 @@ object DocumentImpl {
 //          private val eg1 = Element.Group(g1, Some("g1"))
 //          elements.addLast(eg1)
         }
-      )(tx => _ => tx.newCursor())
-    val access: S#Entry[Data[S]] = _access
+      )(tx => _.cursor)
+    val access: S#Entry[Data /* [S] */] = _access
     implicit val cursor: Cursor[S] = _cursor
-    new Impl[S](dir, system, access)
+//println("CURSOR = " + cursor)
+    implicit val cfTpe = reflect.runtime.universe.typeOf[Cf /* S */]
+    new Impl /* [ Cf /* S */] */(dir, system, access)
   }
 
-  private abstract class Data[ S <: Sys[ S ]] {
-//      def groups: Groups[ S ]
-      def elements: Elements[ S ]
-//      def transportMap: IdentifierMap[ S#ID, S#Tx, Transports[ S ]]
+  private abstract class Data /*[S <: confluent.Sys[S]] */ {
+    def elements: Elements[S]
+    def cursor: confluent.Cursor[S]
 
-      final def write( out: DataOutput ) {
-//         groups.write( out )
-         elements.write( out )
-//         transportMap.write( out )
+    final def write(out: DataOutput) {
+      elements.write(out)
+      cursor.write(out)
       }
 
-      final def dispose()( implicit tx: S#Tx ) {
-//         groups.dispose()
-         elements.dispose()
-//         transportMap.dispose()
-      }
-   }
+    final def dispose()(implicit tx: S#Tx) {
+      elements.dispose()
+      cursor.dispose()
+    }
+  }
 
-   private final class Impl[ S <: Sys[ S ]]( val folder: File, val system: S, access: S#Entry[ Data[ S ]])
-                                           ( implicit val cursor: Cursor[ S ])
-   extends Document[ S ] {
-      override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
+  private final class Impl /* [S <: Sys[S]] */(val folder: File, val system: S, access: S#Entry[Data/* [S] */])
+                                       (implicit val cursor: Cursor[S], val systemType: reflect.runtime.universe.TypeTag[S])
+    extends Document[S] {
+    override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
-//      def groups(   implicit tx: S#Tx ) : Groups[   S ] = access.get.groups
-      def elements( implicit tx: S#Tx ) : Elements[ S ] = access.get.elements
+    //      def groups(   implicit tx: S#Tx ) : Groups[   S ] = access.get.groups
+    def elements(implicit tx: S#Tx): Elements[S] = access.get.elements
 
-
+//     def manifest = implicitly[Manifest[Document[S]]]
 
 //      def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ] = {
 //         val map  = access.get.transportMap
@@ -131,6 +134,6 @@ object DocumentImpl {
 //         })
 //      }
 
-     def aural: AuralSystem[S] = ???
-   }
+    def aural: AuralSystem[S] = ???
+  }
 }
