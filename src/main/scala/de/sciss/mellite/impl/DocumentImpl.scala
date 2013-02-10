@@ -27,15 +27,10 @@ package de.sciss.mellite
 package impl
 
 import java.io.{IOException, FileNotFoundException, File}
-import de.sciss.lucre.{confluent, expr, bitemp, stm, DataOutput, DataInput}
-import expr.LinkedList
-import bitemp.BiGroup
+import de.sciss.lucre.{confluent, stm, DataOutput, DataInput}
 import stm.store.BerkeleyDB
 import stm.{Cursor, Serializer}
-import de.sciss.synth.expr.{Strings, SpanLikes}
-import de.sciss.synth.proc.{AuralSystem, Sys, Confluent, Transport, Proc}
-import de.sciss.lucre.confluent.reactive.ConfluentReactiveLike
-import de.sciss.synth.proc
+import de.sciss.synth.proc.{AuralSystem, Confluent}
 
 object DocumentImpl {
 //   import Document.{Group, GroupUpdate, Groups, Transports}
@@ -120,7 +115,7 @@ object DocumentImpl {
     override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
     //      def groups(   implicit tx: S#Tx ) : Groups[   S ] = access.get.groups
-    def elements(implicit tx: S#Tx): Elements[S] = access.get.elements
+    def elements(implicit tx: S#Tx): Elements[S] = access().elements
 
 //     def manifest = implicitly[Manifest[Document[S]]]
 

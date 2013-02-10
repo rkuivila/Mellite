@@ -58,7 +58,7 @@ object InstantGroupFrameImpl {
                                              name:          String )
                                            ( implicit protected val cursor: Cursor[ S ])
    extends InstantGroupFrame[ S ] with ComponentHolder[ Frame ] with CursorHolder[ S ] {
-      def group(     implicit tx: S#Tx ) : Document.Group[ S ] = groupH.get // tx.refresh( csrPos, staleGroup )( Document.Serializers.group[ S ])
+      def group(     implicit tx: S#Tx ) : Document.Group[ S ] = groupH() // tx.refresh( csrPos, staleGroup )( Document.Serializers.group[ S ])
 //      def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
 
       private def newProc() {

@@ -52,7 +52,7 @@ object ProcEditorFrameImpl {
          ggName.text = value
       }
 
-      def proc( implicit tx: S#Tx ) : Proc[ S ] = procH.get // tx.refresh( csrPos, staleProc )
+      def proc( implicit tx: S#Tx ) : Proc[ S ] = procH() // tx.refresh( csrPos, staleProc )
 
       def dispose()( implicit tx: S#Tx ) {
          observer.dispose()

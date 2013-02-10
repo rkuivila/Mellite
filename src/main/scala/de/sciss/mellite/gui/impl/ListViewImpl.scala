@@ -70,7 +70,7 @@ object ListViewImpl {
       private val current = STMRef( Option.empty[ (Source[ S#Tx, LinkedList[ S, Elem, U ]], Disposable[ S#Tx ])])
 
       def list( implicit tx: S#Tx ) : Option[ LinkedList[ S, Elem, U ]] = {
-         current.get( tx.peer ).map { case (h, _) => h.get }
+         current.get( tx.peer ).map { case (h, _) => h() }
       }
 
       def list_=( newOption: Option[ LinkedList[ S, Elem, U ]])( implicit tx: S#Tx ) {

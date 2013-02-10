@@ -110,7 +110,7 @@ class VisualProcControl[ S <: Sys[ S ]]( cursor: Cursor[ S ]) extends ControlAda
          if( e.getClickCount == 2 ) {
 //            println( "Jo chuck" )
             cursor.step { implicit tx =>
-               val proc = vp.procH.get // tx.refresh( vp.staleCursor, vp.proc )
+               val proc = vp.procH() // tx.refresh( vp.staleCursor, vp.proc )
                ProcEditorFrame( proc )( tx, cursor )
             }
          }
