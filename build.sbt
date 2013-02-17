@@ -15,7 +15,7 @@ scalaVersion := "2.10.0"
 libraryDependencies ++= Seq(
    "de.sciss" %% "soundprocesses" % "1.4.+",
    "de.sciss" %% "scalacolliderswing" % "1.4.+",
-   "de.sciss" %% "scalainterpreterpane" % "1.4.+",
+//   "de.sciss" %% "scalainterpreterpane" % "1.4.+",
    "de.sciss" %% "lucrestm-bdb" % "1.7.+",
    "com.github.benhutchison" % "scalaswingcontrib" % "1.5-SNAPSHOT"
 )
