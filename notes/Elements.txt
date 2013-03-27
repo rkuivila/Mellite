@@ -1,0 +1,25 @@
+:::: Element ::::
+
+Int (Expr.Var[Int])
+Double (Expr.Var[Double])
+String (Expr.Var[String])
+Group (Elements = LinkedList[Element])
+
+...the following are candidates:
+
+SynthGraph
+Proc
+Grapheme
+AudioFile (Artefact)
+Proc.Group ('timeline')
+some sort of Transport proxies
+
+...the following would be Kontur specific:
+
+Diffusion
+(Tracks?)
+
+...in the future
+
+FScape processes
+Meloncillo configurations
