@@ -2,7 +2,7 @@
  *  MenuBar.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -26,19 +26,19 @@
 package de.sciss.mellite
 package gui
 
-import swing.{MenuItem, Menu}
+import de.sciss.desktop.Menu
 
 object MenuBar {
-   def apply() : swing.MenuBar = {
-      val mb = new swing.MenuBar {
-         contents += new Menu( "File" ) {
-            contents += new MenuItem( ActionNewFile )
-            contents += new MenuItem( ActionOpenFile )
-            contents += new Menu( "Open Recent" ) {
-               // ...
-            }
-         }
-      }
-      mb
-   }
+  def apply(): Menu.Root = {
+    import Menu._
+    Root().add(
+      Group("file", "File").add(
+        Item("new", ActionNewFile)
+      ).add(
+        Item("open", ActionOpenFile)
+      ).add(
+        Group("recent", "Open Recent")
+      )
+    )
+  }
 }

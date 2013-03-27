@@ -2,7 +2,7 @@
  *  package.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -25,8 +25,9 @@
 
 package de.sciss
 
-import lucre.{DataInput, expr}
+import lucre.{expr, io}
 import expr.LinkedList
+import io.DataInput
 import synth.proc.{Sys, Confluent}
 
 package object mellite {

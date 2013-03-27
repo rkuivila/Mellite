@@ -10,14 +10,15 @@ description := "An application based on SoundProcesses"
 
 licenses := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 
-scalaVersion := "2.10.0"
+scalaVersion := "2.10.1"
 
 libraryDependencies ++= Seq(
-   "de.sciss" %% "soundprocesses" % "1.4.+",
-   "de.sciss" %% "scalacolliderswing" % "1.4.+",
+   "de.sciss" %% "soundprocesses" % "1.5.+",
+   "de.sciss" %% "scalacolliderswing" % "1.5.+",
 //   "de.sciss" %% "scalainterpreterpane" % "1.4.+",
-   "de.sciss" %% "lucrestm-bdb" % "1.7.+",
-   "com.github.benhutchison" % "scalaswingcontrib" % "1.5-SNAPSHOT"
+   "de.sciss" %% "lucrestm-bdb" % "1.8.+",
+   "de.sciss" %% "desktop" % "0.1.+"
+//   "com.github.benhutchison" % "scalaswingcontrib" % "1.4"
 )
 
 retrieveManaged := true

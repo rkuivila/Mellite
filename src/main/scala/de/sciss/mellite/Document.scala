@@ -2,7 +2,7 @@
  *  Document.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -26,15 +26,14 @@
 package de.sciss.mellite
 
 import java.io.File
-import de.sciss.lucre.{expr, event => evt, bitemp, stm}
+import de.sciss.lucre.{expr, event => evt, bitemp, stm, io}
 import expr.LinkedList
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
 import de.sciss.synth.proc.{AuralSystem, Proc, Sys}
-import stm.{Serializer, Cursor}
+import stm.Cursor
 import de.sciss.synth.expr.SpanLikes
-import reflect.ClassTag
 
 object Document {
    type Group[        S <: Sys[ S ]]   = BiGroup.Modifiable[    S, Proc[ S ],  Proc.Update[ S ]]
@@ -50,7 +49,7 @@ object Document {
    def empty( dir: File ) : Document[ Cf ] = Impl.empty( dir )
 
    object Serializers {
-      implicit def group[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, Group[ S ]] with evt.Reader[ S, Group[ S ]] = {
+      implicit def group[ S <: Sys[ S ]] : io.Serializer[ S#Tx, S#Acc, Group[ S ]] with evt.Reader[ S, Group[ S ]] = {
          implicit val spanType = SpanLikes
          BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
       }

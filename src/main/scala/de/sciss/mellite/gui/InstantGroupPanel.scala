@@ -32,9 +32,10 @@ import impl.{InstantGroupPanelImpl => Impl}
 import swing.Component
 
 object InstantGroupPanel {
-   def apply[ S <: Sys[ S ]]( transport: ProcTransport[ S ])
-                            ( implicit tx: S#Tx, cursor: Cursor[ S ]) : InstantGroupPanel[ S ] = Impl( transport )
+  def apply[S <: Sys[S]](transport: ProcTransport[S])
+                        (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] = Impl(transport)
 }
-trait InstantGroupPanel[ S <: Sys[ S ]] {
-   def component: Component
+
+trait InstantGroupPanel[S <: Sys[S]] {
+  def component: Component
 }

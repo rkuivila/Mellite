@@ -1,5 +1,5 @@
 package de.sciss.mellite.gui
 
 trait Removable {
-   def remove()
+  def remove()
 }

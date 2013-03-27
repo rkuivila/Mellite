@@ -28,8 +28,8 @@ package gui
 package impl
 
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{Sys, Proc, Transport, Param, ProcTransport}
-import de.sciss.lucre.bitemp.{BiGroup, SpanLike}
+import de.sciss.synth.proc.{Sys, Proc, Param, ProcTransport}
+import de.sciss.lucre.bitemp.BiGroup
 import java.awt.{RenderingHints, Graphics2D, Color}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import prefuse.{Display, Visualization}
@@ -45,6 +45,7 @@ import prefuse.util.ColorLib
 import prefuse.render.DefaultRendererFactory
 import prefuse.util.force.{AbstractForce, ForceItem}
 import swing.Component
+import de.sciss.span.SpanLike
 
 object InstantGroupPanelImpl {
    def apply[ S <: Sys[ S ]]( transport: ProcTransport[ S ])

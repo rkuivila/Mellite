@@ -30,19 +30,19 @@ object GroupViewImpl {
       }
     }
 
-    root.changed.reactTx[Elements.Update[S]] { implicit tx => upd =>
-//println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
-      upd.changes.foreach {
-        case Elements.Added(  idx, elem) => elemAdded(Tree.Path.empty, idx, elem)
-        case Elements.Removed(idx, elem) => ???
-
-        case Elements.Element(elem, elemUpd) => ???
-//        case _ =>
-      }
-//      case Element.Update(elem, changes) =>
-//      case Elements.Update(root0, changes) =>
-//
-//      case _ =>
+    root.changed.reactTx[Elements.Update[S]] {
+      implicit tx => upd =>
+      //println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
+        upd.changes.foreach {
+          case Elements.Added(idx, elem) => elemAdded(Tree.Path.empty, idx, elem)
+          case Elements.Removed(idx, elem) => ???
+          case Elements.Element(elem, elemUpd) => ???
+          //        case _ =>
+        }
+      //      case Element.Update(elem, changes) =>
+      //      case Elements.Update(root0, changes) =>
+      //
+      //      case _ =>
     }
 
     view

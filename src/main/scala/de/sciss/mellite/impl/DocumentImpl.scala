@@ -2,7 +2,7 @@
  *  DocumentImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -27,9 +27,10 @@ package de.sciss.mellite
 package impl
 
 import java.io.{IOException, FileNotFoundException, File}
-import de.sciss.lucre.{confluent, stm, DataOutput, DataInput}
+import de.sciss.lucre.{confluent, stm, io}
+import io.{DataInput, DataOutput}
 import stm.store.BerkeleyDB
-import stm.{Cursor, Serializer}
+import stm.Cursor
 import de.sciss.synth.proc.{AuralSystem, Confluent}
 
 object DocumentImpl {
@@ -46,7 +47,7 @@ object DocumentImpl {
 
 //  private implicit def serializer[ S <: Sys[ S ]] /* ( implicit cursor: Cursor[ S ]) */ : Serializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
 
-  private implicit object serializer extends Serializer[S#Tx, S#Acc, Data /* [S] */] {
+  private implicit object serializer extends io.Serializer[S#Tx, S#Acc, Data /* [S] */] {
     def write(data: Data /* [S] */, out: DataOutput) {
       data.write(out)
     }

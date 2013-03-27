@@ -1,8 +1,9 @@
 package de.sciss.mellite
 
-import de.sciss.lucre.{DataInput, stm, DataOutput, Writable, event => evt}
+import de.sciss.lucre.{stm, io, event => evt}
 import de.sciss.synth.proc.{InMemory, Sys}
 import de.sciss.lucre.expr.Expr
+import io.{DataOutput, Writable, DataInput}
 import stm.{Disposable, Mutable}
 import de.sciss.synth.expr.{Doubles, Strings, Ints}
 import annotation.switch
@@ -229,7 +230,7 @@ object Element {
 
     protected def prefix: _String
 
-    override def toString() = s"Element.${prefix}${id}"
+    override def toString() = s"Element.${prefix}$id"
 
 //    final def changed: EventLike[S, Element.Update[S], Element[S]] = this
 

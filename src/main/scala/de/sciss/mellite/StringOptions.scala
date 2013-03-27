@@ -1,31 +1,33 @@
 package de.sciss.mellite
 
-import de.sciss.lucre.{stm, DataInput, DataOutput, event => evt}
+import de.sciss.lucre.{io, event => evt}
 import evt.{Targets, Sys}
 import de.sciss.synth.expr.{Strings, BiTypeImpl}
 import annotation.switch
+import io.{DataOutput, DataInput}
 
-object StringOptions extends BiTypeImpl[ Option[ String ]] {
-   final val typeID = 0x1000 | Strings.typeID
+object StringOptions extends BiTypeImpl[Option[String]] {
+  final val typeID = 0x1000 | Strings.typeID
 
-   /* protected */ def readValue( in: DataInput ) : Option[ String ] = {
-      (in.readUnsignedByte(): @switch) match {
-         case 0 => None
-         case 1 => Some( in.readString() )
-         case other => sys.error( "Unknown cookie " + other )
-      }
+  /* protected */ def readValue(in: DataInput): Option[String] = {
+    (in.readUnsignedByte(): @switch) match {
+      case 0      => None
+      case 1      => Some(in.readUTF())
+      case other  => sys.error("Unknown cookie " + other)
+    }
 
-   }
-   /* protected */ def writeValue( value: Option[ String ], out: DataOutput ) {
-      if( value.isDefined ) {
-         out.writeUnsignedByte( 1 )
-         out.writeString( value.get )
-      } else {
-         out.writeUnsignedByte( 0 )
-      }
-   }
+  }
 
-//   final class Ops[ S <: Sys[ S ]]( ex: Ex[ S ])( implicit tx: S#Tx ) {
+  /* protected */ def writeValue(value: Option[String], out: DataOutput) {
+    if (value.isDefined) {
+      out.writeByte(1)
+      out.writeUTF(value.get)
+    } else {
+      out.writeByte(0)
+    }
+  }
+
+  //   final class Ops[ S <: Sys[ S ]]( ex: Ex[ S ])( implicit tx: S#Tx ) {
 //      private type E = Ex[ S ]
 //      import BinaryOp._
 //

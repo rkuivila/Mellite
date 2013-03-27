@@ -2,7 +2,7 @@
  *  package.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -33,7 +33,7 @@ import javax.swing.KeyStroke
 
 package object gui {
    private val guiCode           = TxnLocal( init = IIdxSeq.empty[ () => Unit ], afterCommit = handleGUI )
-   private lazy val primaryMod   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
+//   private lazy val primaryMod   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
 
    private def handleGUI( seq: IIdxSeq[ () => Unit ]) {
       def exec() {
@@ -89,5 +89,5 @@ package object gui {
 
 
 //   def primaryMenuKey( ch: Char )  : KeyStroke = KeyStroke.getKeyStroke( ch, primaryMod )
-   def primaryMenuKey( code: Int ) : KeyStroke = KeyStroke.getKeyStroke( code, primaryMod )
+//   def primaryMenuKey( code: Int ) : KeyStroke = KeyStroke.getKeyStroke( code, primaryMod )
 }

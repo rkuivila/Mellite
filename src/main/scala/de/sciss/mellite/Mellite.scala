@@ -2,7 +2,7 @@
  *  Mellite.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -29,20 +29,15 @@ import gui.MenuBar
 import java.awt.{Dimension, EventQueue}
 import javax.swing.WindowConstants
 import swing.Frame
+import de.sciss.desktop.impl.SwingApplicationImpl
+import de.sciss.desktop.Menu
 
-object Mellite extends App with Runnable {
-  final val name = "Mellite"
+object Mellite extends SwingApplicationImpl("Mellite") {
+  type Document = Unit
 
-  EventQueue.invokeLater(this)
-
-  def run() {
-    val f = new Frame {
-      title   = name
-      peer.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
-      menuBar = MenuBar()
-      size    = new Dimension(256, 256)
-    }
-    f.centerOnScreen()
-    f.open()
+  def quit() {
+    sys.exit()
   }
+
+  protected lazy val menuFactory: Menu.Root = MenuBar()
 }

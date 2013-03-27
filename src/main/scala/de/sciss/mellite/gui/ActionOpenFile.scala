@@ -2,7 +2,7 @@
  *  ActionOpenFile.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -29,32 +29,36 @@ package gui
 import swing.{Dialog, Action}
 import java.awt.event.KeyEvent
 import de.sciss.synth.proc.Sys
+import de.sciss.desktop.KeyStrokes
+import util.control.NonFatal
 
 object ActionOpenFile extends Action( "Open...") {
-   accelerator = Some( primaryMenuKey( KeyEvent.VK_O ))
+  import KeyStrokes._
 
-   private def fullTitle = "Open Document"
+  accelerator = Some(menu1 + KeyEvent.VK_O)
 
-   private def initDoc[ S <: Sys[ S ]]( doc: Document[ S ]) {
-      doc.cursor.step { implicit tx =>
-         DocumentFrame( doc )
+  private def fullTitle = "Open Document"
+
+  private def initDoc[S <: Sys[S]](doc: Document[S]) {
+    doc.cursor.step { implicit tx =>
+      DocumentFrame(doc)
+    }
+  }
+
+  def apply() {
+    FileDialog.open(title = fullTitle).foreach { f =>
+      val folder = f.getParentFile
+      try {
+        val doc = Document.read(folder)
+        initDoc(doc)
+      } catch {
+        case NonFatal(e) =>
+          Dialog.showMessage(
+            message = "Unabled to create new document " + folder.getPath + "\n\n" + formatException(e),
+            title = fullTitle,
+            messageType = Dialog.Message.Error
+          )
       }
-   }
-
-   def apply() {
-      FileDialog.open( title = fullTitle ).foreach { f =>
-         val folder  = f.getParentFile
-         try {
-            val doc     = Document.read( folder )
-            initDoc( doc )
-         } catch {
-            case e: Exception =>
-               Dialog.showMessage(
-                  message = "Unabled to create new document " + folder.getPath + "\n\n" + formatException( e ),
-                  title = fullTitle,
-                  messageType = Dialog.Message.Error
-               )
-         }
-      }
-   }
+    }
+  }
 }
