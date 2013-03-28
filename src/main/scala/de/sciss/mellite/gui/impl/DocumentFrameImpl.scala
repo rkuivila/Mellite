@@ -35,7 +35,8 @@ import Swing._
 import scalaswingcontrib.group.GroupPanel
 import de.sciss.synth.expr.Strings
 import tools.nsc.interpreter.NamedParam
-import de.sciss.desktop.{Window, Menu}
+import de.sciss.desktop
+import desktop.{Window, Menu}
 import scalaswingcontrib.PopupMenu
 import de.sciss.desktop.impl.WindowImpl
 
@@ -65,7 +66,10 @@ object DocumentFrameImpl {
     private def actionAddFolder() {
       val res = Dialog.showInput[String](groupView.component, "Enter initial folder name:", "New Folder", Dialog.Message.Question, initial = "Folder")
       res.foreach { name =>
-        println(name)
+        atomic { implicit tx =>
+          val parent  = document.elements
+          parent.addLast(Element.Group(name, Elements[S]))
+        }
       }
     }
 
@@ -80,11 +84,14 @@ object DocumentFrameImpl {
     private def actionAddString() {
       val ggName  = new TextField(10)
       val ggValue = new TextField(20)
+      ggName.text   = "String"
+      ggValue.text  = "Value"
 
       import language.reflectiveCalls // why does GroupPanel need reflective calls?
+      import desktop.Implicits._
       val box = new GroupPanel {
         val lbName  = new Label("Name:",  EmptyIcon, Alignment.Right)
-        val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
+        val lbValue = new Label("Value:", EmptyIcon, Alignment.Right).initialDialogFocus()
         theHorizontalLayout is Sequential(Parallel(Trailing)(lbName, lbValue), Parallel(ggName, ggValue))
         theVerticalLayout   is Sequential(Parallel(Baseline)(lbName, ggName), Parallel(Baseline)(lbValue, ggValue))
       }
