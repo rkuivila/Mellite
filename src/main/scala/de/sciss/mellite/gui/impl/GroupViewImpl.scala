@@ -7,7 +7,6 @@ import swing.{Swing, Orientation, BoxPanel, Label, ScrollPane, Component}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import scalaswingcontrib.tree.{ExternalTreeModel, Tree}
 import Swing._
-import java.awt.{Dimension, Color}
 import javax.swing.tree.DefaultTreeCellRenderer
 
 object GroupViewImpl {
@@ -66,11 +65,12 @@ object GroupViewImpl {
       case Element.Group(g) =>
         val children = g.iterator.map(elemView(_)(tx)).toIndexedSeq
         new ElementView.Group(name, children)
+      case Element.ProcGroup(g) => ???
     }
   }
 
   private final val cmpBlank  = new Label
-  private final val cmpLabel  = new Label
+//  private final val cmpLabel  = new Label
   private final val cmpGroupJ = new DefaultTreeCellRenderer
   private final val cmpGroup  = Component.wrap(cmpGroupJ)
 
@@ -104,7 +104,7 @@ object GroupViewImpl {
     import java.lang.{String => _String}
     //    import mellite.{Group => _Group}
 
-    private val colrSelection = new Color(0xD0, 0xD0, 0xFF, 0xFF)
+//    private val colrSelection = new Color(0xD0, 0xD0, 0xFF, 0xFF)
 
     final class String[S <: Sys[S]](var name: _String, var value: _String)
       extends ElementView[S] {

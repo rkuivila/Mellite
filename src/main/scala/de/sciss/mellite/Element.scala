@@ -1,7 +1,7 @@
 package de.sciss.mellite
 
 import de.sciss.lucre.{stm, io, event => evt}
-import de.sciss.synth.proc.{InMemory, Sys}
+import de.sciss.synth.proc.{InMemory, Sys, ProcGroup => _ProcGroup}
 import de.sciss.lucre.expr.Expr
 import io.{DataOutput, Writable, DataInput}
 import stm.{Disposable, Mutable}
@@ -10,6 +10,7 @@ import annotation.switch
 import de.sciss.mellite
 import evt.{EventLike, EventLikeSerializer}
 import collection.immutable.{IndexedSeq => IIdxSeq}
+
 
 /*
  * Elements
@@ -24,7 +25,8 @@ object Element {
   import java.lang.{String => _String}
   import mellite.{Elements => _Group}
 
-  private final val groupTypeID = 0x10000
+  private final val groupTypeID     = 0x10000
+  private final val procGroupTypeID = 0x10001
 
   type Name[S <: Sys[S]] = Expr.Var[S, _String]
 
@@ -107,30 +109,35 @@ object Element {
       def typeID = groupTypeID // _Group.typeID
       def prefix = "Group"
 
-      protected def events = IIdxSeq(NameChange, GroupChange)
-
-      protected object GroupChange extends EventImpl {
-        final val slot = 2
-        def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Update[S]] = {
-          entity.changed.pullUpdate(pull).map(ch => Update(self, IIdxSeq(Entity(ch))))
-        }
-
-        def connect()(implicit tx: S#Tx) {
-          entity.changed ---> this
-        }
-
-        def disconnect()(implicit tx: S#Tx) {
-          entity.changed -/-> this
-        }
-      }
+      protected def entityEvent = entity.changed
     }
   }
   sealed trait Group[S <: Sys[S]] extends Element[S] { type A = _Group[S] }
 
-//  object Canvas
-//  sealed trait Canvas[S <: Sys[S]] extends Element[S] { type A = }
+  object ProcGroup {
+    def apply[S <: Sys[S]](name: _String, init: _ProcGroup[S])(implicit tx: S#Tx): ProcGroup[S] = {
+      new Impl(evt.Targets[S], mkName(name), init)
+    }
 
-//
+    def unapply[S <: Sys[S]](elem: Element[S]): Option[_ProcGroup[S]] = elem match {
+      case g: ProcGroup[S] => Some(g.entity)
+      case _ => None
+    }
+
+    private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S],
+                                                   val entity: _ProcGroup[S])
+      extends Element.Impl[S] with ProcGroup[S] {
+      self =>
+
+      def typeID = procGroupTypeID
+      def prefix = "ProcGroup"
+
+      protected def entityEvent = entity.changed
+    }
+  }
+  sealed trait ProcGroup[S <: Sys[S]] extends Element[S] { type A = _ProcGroup[S] }
+
+
 //  def group[S <: Sys[S]](init: Group[S], name: Option[String] = None)
 //                        (implicit tx: S#Tx): Element[S] {type A = Group[S]} = {
 //    mkImpl[S, Group[S]](Group.typeID, name, init)
@@ -191,23 +198,7 @@ object Element {
   private sealed trait ExprImpl[S <: Sys[S], A1] extends Impl[S] {
     self =>
     type A <: Expr[S, A1]
-
-    final protected def events = IIdxSeq(NameChange, ValueChange)
-
-    protected object ValueChange extends EventImpl {
-      final val slot = 2
-      def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Update[S]] = {
-        entity.changed.pullUpdate(pull).map(ch => Update(self, IIdxSeq(Entity(ch))))
-      }
-
-      def connect()(implicit tx: S#Tx) {
-        entity.changed ---> this
-      }
-
-      def disconnect()(implicit tx: S#Tx) {
-        entity.changed -/-> this
-      }
-    }
+    final protected def entityEvent = entity.changed
   }
 
   private sealed trait Impl[S <: Sys[S]]
@@ -238,6 +229,25 @@ object Element {
 //    final def changed: EventLike[S, Element.Update[S], Element[S]] = this
 
     // ---- events ----
+
+    protected def entityEvent: evt.EventLike[S, Any, _]
+
+    final protected def events = IIdxSeq(NameChange, EntityChange)
+
+    private object EntityChange extends EventImpl {
+      final val slot = 2
+      def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Update[S]] = {
+        entityEvent.pullUpdate(pull).map(ch => Update(self, IIdxSeq(Entity(ch))))
+      }
+
+      def connect()(implicit tx: S#Tx) {
+        entityEvent ---> this
+      }
+
+      def disconnect()(implicit tx: S#Tx) {
+        entityEvent -/-> this
+      }
+    }
 
     final protected def reader: evt.Reader[S, Element[S]] = serializer
 
