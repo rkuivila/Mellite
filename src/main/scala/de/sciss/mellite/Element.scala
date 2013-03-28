@@ -127,6 +127,9 @@ object Element {
   }
   sealed trait Group[S <: Sys[S]] extends Element[S] { type A = _Group[S] }
 
+//  object Canvas
+//  sealed trait Canvas[S <: Sys[S]] extends Element[S] { type A = }
+
 //
 //  def group[S <: Sys[S]](init: Group[S], name: Option[String] = None)
 //                        (implicit tx: S#Tx): Element[S] {type A = Group[S]} = {

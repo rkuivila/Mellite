@@ -36,7 +36,7 @@ import scalaswingcontrib.group.GroupPanel
 import de.sciss.synth.expr.Strings
 import tools.nsc.interpreter.NamedParam
 import de.sciss.desktop
-import desktop.{Window, Menu}
+import desktop.{DialogSource, OptionPane, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import de.sciss.desktop.impl.WindowImpl
 
@@ -91,13 +91,14 @@ object DocumentFrameImpl {
       import desktop.Implicits._
       val box = new GroupPanel {
         val lbName  = new Label("Name:",  EmptyIcon, Alignment.Right)
-        val lbValue = new Label("Value:", EmptyIcon, Alignment.Right).initialDialogFocus()
+        val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
         theHorizontalLayout is Sequential(Parallel(Trailing)(lbName, lbValue), Parallel(ggName, ggValue))
         theVerticalLayout   is Sequential(Parallel(Baseline)(lbName, ggName), Parallel(Baseline)(lbValue, ggValue))
       }
 
-      val res = Dialog.showConfirmation(groupView.component, box.peer, "New String", Dialog.Options.OkCancel,
-        Dialog.Message.Question)
+      val pane = OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,
+        messageType = Dialog.Message.Question, focus = Some(ggValue))
+      val res = frame.show(pane -> "New String")
 
       if (res == Dialog.Result.Ok) {
         // println(s"name = ${ggName.text} ; value = ${ggValue.text}")
@@ -113,6 +114,8 @@ object DocumentFrameImpl {
     private def actionAddTimeline() {
       println("actionAddTimeline")
     }
+
+    var frame: Frame[S] = null
 
     def guiInit() {
       requireEDT()
@@ -267,22 +270,26 @@ object DocumentFrameImpl {
 
       lazy val splitPane = new SplitPane(Orientation.Horizontal, groupsPanel, Component.wrap(intp.component))
 
-      lazy val frame: Window = new WindowImpl {
-        def style = Window.Regular
-        def handler = Mellite.windowHandler
-        title = "Document : " + document.folder.getName
-        closeOperation = Window.CloseIgnore
-        contents = new BorderPanel {
-          add(splitPane, BorderPanel.Position.Center)
-          //add( groupsPanel, BorderPanel.Position.Center )
-          add(ggTest, BorderPanel.Position.South)
-        }
-        pack()
-        // centerOnScreen()
-        front()
-      }
+      frame = new Frame(document, new BorderPanel {
+        add(splitPane, BorderPanel.Position.Center)
+        //add( groupsPanel, BorderPanel.Position.Center )
+        add(ggTest, BorderPanel.Position.South)
+      })
 
       comp = frame
     }
+  }
+
+  private final class Frame[S <: Sys[S]](document: Document[S], _contents: Component) extends WindowImpl {
+    def style = Window.Regular
+    def handler = Mellite.windowHandler
+    title = "Document : " + document.folder.getName
+    closeOperation = Window.CloseIgnore
+    contents = _contents
+    pack()
+    // centerOnScreen()
+    front()
+
+    def show[A](source: DialogSource[A]): A = showDialog(source)
   }
 }
