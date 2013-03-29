@@ -29,7 +29,7 @@ package gui
 import de.sciss.synth.proc.Sys
 import de.sciss.lucre.stm
 import scalaswingcontrib.tree.Tree
-import swing.{Swing, BoxPanel, Orientation, Component}
+import swing.{Label, Swing, BoxPanel, Orientation, Component}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import javax.swing.tree.DefaultTreeCellRenderer
 import Swing._
@@ -44,17 +44,17 @@ object ElementView {
       case e: Element.Int[S] =>
         val value = e.entity.value
         new Int.Impl(tx.newHandle(e), name, value)
-//      case e @ Element.Double(ex) =>
-//        val value = ex.value
-//        new Double.Impl(tx.newHandle(e), name, value)
-//      case e @ Element.String(ex) =>
-//        val value = ex.value
-//        new String.Impl(tx.newHandle(e), name, value)
-//      case e @ Element.Group(g) =>
-//        val children = g.iterator.map(apply(_)(tx)).toIndexedSeq
-//        new Group.Impl(tx.newHandle(e), name, children)
-//      case e @ Element.ProcGroup(_) =>
-//        new ProcGroup.Impl(tx.newHandle(e), name)
+      case e: Element.Double[S] =>
+        val value = e.entity.value
+        new Double.Impl(tx.newHandle(e), name, value)
+      case e: Element.String[S] =>
+        val value = e.entity.value
+        new String.Impl(tx.newHandle(e), name, value)
+      case e: Element.Group[S] =>
+        val value = e.entity.iterator.map(apply(_)(tx)).toIndexedSeq
+        new Group.Impl(tx.newHandle(e), name, value)
+      case e: Element.ProcGroup[S] =>
+        new ProcGroup.Impl(tx.newHandle(e), name)
     }
   }
 
@@ -117,16 +117,18 @@ object ElementView {
   }
 
   object Group {
+    private final val cmpGroupJ = new DefaultTreeCellRenderer
+    private final val cmpGroup  = Component.wrap(cmpGroupJ)
+
     private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Group[S]],
                                                        var name: _String, var children: IIdxSeq[ElementView[S]])
       extends Group[S] with ElementView.Impl[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        ???
-  //      // never show the leaf icon, always a folder icon. for empty folders, show the icon as if the folder is open
-  //      cmpGroupJ.getTreeCellRendererComponent(tree.peer, name, info.isSelected, info.isExpanded || info.isLeaf,
-  //        false /* info.isLeaf */, info.row, info.hasFocus)
-  //      cmpGroup
+        // never show the leaf icon, always a folder icon. for empty folders, show the icon as if the folder is open
+        cmpGroupJ.getTreeCellRendererComponent(tree.peer, name, info.isSelected, info.isExpanded || info.isLeaf,
+          false /* info.isLeaf */, info.row, info.hasFocus)
+        cmpGroup
       }
 
       def prefix = "Group"
@@ -137,14 +139,17 @@ object ElementView {
   }
 
   object ProcGroup {
+    private final val cmpLabelJ = new DefaultTreeCellRenderer
+    cmpLabelJ.setLeafIcon(null)
+    private final val cmpLabel  = Component.wrap(cmpLabelJ)
+
     private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.ProcGroup[S]],
                                                        var name: _String)
       extends ProcGroup[S] with ElementView.Impl[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        ???
-  //      cmpLabelJ.getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
-  //      cmpLabel
+        cmpLabelJ.getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
+        cmpLabel
       }
       def prefix = "ProcGroup"
     }
@@ -154,6 +159,8 @@ object ElementView {
   }
 
   object Root {
+    private final val cmpBlank = new Label
+
     private[gui] def apply[S <: Sys[S]](group: Elements[S])(implicit tx: S#Tx): Root[S] = {
       val children = group.iterator.map(ElementView(_)(tx)).toIndexedSeq
       new Impl(children)
@@ -161,7 +168,7 @@ object ElementView {
 
     private final class Impl[S <: Sys[S]](var children: IIdxSeq[ElementView[S]])
       extends Root[S] {
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = ??? // cmpBlank
+      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank
     }
   }
   sealed trait Root[S <: Sys[S]] extends GroupLike[S]

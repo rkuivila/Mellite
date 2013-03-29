@@ -128,7 +128,7 @@ object GroupViewImpl {
       t.listenTo(t.selection)
       t.reactions += {
         case TreePathSelected(_, pathsAdded, pathsRemoved,_, _) =>
-          ???
+          println(s"pathsAdded = $pathsAdded\npathsRemoved = $pathsRemoved")
 //          dispatch(GroupView.SelectionChanged(view, allPaths))
       }
       t.showsRootHandles = true

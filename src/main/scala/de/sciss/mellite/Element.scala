@@ -35,15 +35,7 @@ import annotation.switch
 import de.sciss.mellite
 import evt.{EventLike, EventLikeSerializer}
 import collection.immutable.{IndexedSeq => IIdxSeq}
-
-
-/*
- * Elements
- * - Proc
- * - ProcGroup
- * - primitive expressions
- * -
- */
+import language.higherKinds
 
 object Element {
   import scala.{Int => _Int, Double => _Double}
@@ -56,44 +48,49 @@ object Element {
   type Name[S <: Sys[S]] = Expr.Var[S, _String]
 
   sealed trait Change[S <: Sys[S]]
-  final case class Update[S <: Sys[S]](element: Element[S], changes: IIdxSeq[Change[S]])
+  final case class Update [S <: Sys[S]](element: Element[S], changes: IIdxSeq[Change[S]])
   final case class Renamed[S <: Sys[S]](change: evt.Change[_String]) extends Change[S]
-  final case class Entity[S <: Sys[S]](change: Any) extends Change[S]
+  final case class Entity [S <: Sys[S]](change: Any) extends Change[S]
 
-  object Int {
-    private[Element] def readIdentified[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S])
-                                                    (implicit tx: S#Tx): Impl[S] = {
-      val name    = Strings.readVar[S](in, access)
-      val entity = Ints.readVar[S](in, access)
-      new Int.Impl(targets, name, entity)
+  sealed trait Companion[E[S <: Sys[S]] <: Writable ] {
+    final private[Element] def readIdentified[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S])
+                                                    (implicit tx: S#Tx): E[S] with evt.Node[S] = {
+      val name = Strings.readVar(in, access)
+      read(in, access, targets, name)
     }
 
-    def apply[S <: Sys[S]](name: _String, init: Expr[S, _Int])(implicit tx: S#Tx): Int[S] = {
-      new Impl(evt.Targets[S], mkName(name), Ints.newVar(init))
-    }
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): E[S] with evt.Node[S]
 
-    // scalac fails with sucky type inference errors when using `int: Int[S]`, so have a fantastic extra match :-E
-//    def unapply[S <: Sys[S]](int: Int[S]): Option[Expr.Var[S, _Int]] = Some(int.elem)
-
-    def unapply[S <: Sys[S]](elem: Element.Int[S]): Option[Expr.Var[S, _Int]] = Some(elem.entity)
-
-    implicit def serializer[S <: Sys[S]]: io.Serializer[S#Tx, S#Acc, Int[S]] = anySer.asInstanceOf[Serializer[S]]
+    implicit final def serializer[S <: Sys[S]]: io.Serializer[S#Tx, S#Acc, E[S]] = anySer.asInstanceOf[Serializer[S]]
 
     private val anySer = new Serializer[InMemory]
-    private final class Serializer[S <: Sys[S]] extends io.Serializer[S#Tx, S#Acc, Int[S]] {
-      def write(v: Int[S], out: DataOutput) {
+    private final class Serializer[S <: Sys[S]] extends io.Serializer[S#Tx, S#Acc, E[S]] {
+      def write(v: E[S], out: DataOutput) {
         v.write(out)
       }
 
-      def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): Int[S] = {
+      def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): E[S] = {
         val targets = evt.Targets.read[S](in, access)
         val cookie  = in.readByte()
         require(cookie == Ints.typeID, s"Cookie $cookie does not match expected value ${Ints.typeID}")
         readIdentified(in, access, targets)
       }
     }
+  }
 
-    private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Int])
+  object Int extends Companion[Int] {
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): Int[S] with evt.Node[S] = {
+      val entity = Ints.readVar(in, access)
+      new Impl(targets, name, entity)
+    }
+
+    def apply[S <: Sys[S]](name: _String, init: Expr[S, _Int])(implicit tx: S#Tx): Int[S] = {
+      new Impl(evt.Targets[S], mkName(name), Ints.newVar(init))
+    }
+
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Int])
       extends ExprImpl[S, _Int] with Int[S] {
       def prefix = "Int"
       def typeID = Ints.typeID
@@ -101,14 +98,18 @@ object Element {
   }
   sealed trait Int[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _Int] }
 
-  object Double {
+  object Double extends Companion[Double] {
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): Double[S] with evt.Node[S] = {
+      val entity = Doubles.readVar(in, access)
+      new Impl(targets, name, entity)
+    }
+
     def apply[S <: Sys[S]](name: _String, init: Expr[S, _Double])(implicit tx: S#Tx): Double[S] = {
       new Impl(evt.Targets[S], mkName(name), Doubles.newVar(init))
     }
 
-    def unapply[S <: Sys[S]](elem: Element.Double[S]): Option[Expr.Var[S, _Double]] = Some(elem.entity)
-
-    private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Double])
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Double])
       extends ExprImpl[S, _Double] with Double[S] {
       def typeID = Doubles.typeID
       def prefix = "Double"
@@ -116,14 +117,18 @@ object Element {
   }
   sealed trait Double[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _Double] }
 
-  object String {
+  object String extends Companion[String] {
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): String[S] with evt.Node[S] = {
+      val entity = Strings.readVar(in, access)
+      new Impl(targets, name, entity)
+    }
+
     def apply[S <: Sys[S]](name: _String, init: Expr[S, _String])(implicit tx: S#Tx): String[S] = {
       new Impl(evt.Targets[S], mkName(name), Strings.newVar(init))
     }
 
-    def unapply[S <: Sys[S]](elem: Element.String[S]): Option[Expr.Var[S, _String]] = Some(elem.entity)
-
-    private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _String])
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _String])
       extends ExprImpl[S, _String] with String[S] {
       def typeID = Strings.typeID
       def prefix = "String"
@@ -131,14 +136,18 @@ object Element {
   }
   sealed trait String[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _String] }
 
-  object Group {
+  object Group extends Companion[Group] {
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): Group[S] with evt.Node[S] = {
+      val entity = _Group.read(in, access)
+      new Impl(targets, name, entity)
+    }
+
     def apply[S <: Sys[S]](name: _String, init: _Group[S])(implicit tx: S#Tx): Group[S] = {
       new Impl(evt.Targets[S], mkName(name), init)
     }
 
-    def unapply[S <: Sys[S]](elem: Element.Group[S]): Option[_Group[S]] = Some(elem.entity)
-
-    private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _Group[S])
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _Group[S])
       extends Element.Impl[S] with Group[S] {
       self =>
 
@@ -150,14 +159,18 @@ object Element {
   }
   sealed trait Group[S <: Sys[S]] extends Element[S] { type A = _Group[S] }
 
-  object ProcGroup {
+  object ProcGroup extends Companion[ProcGroup] {
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): ProcGroup[S] with evt.Node[S] = {
+      val entity = _ProcGroup.read(in, access)
+      new Impl(targets, name, entity)
+    }
+
     def apply[S <: Sys[S]](name: _String, init: _ProcGroup[S])(implicit tx: S#Tx): ProcGroup[S] = {
       new Impl(evt.Targets[S], mkName(name), init)
     }
 
-    def unapply[S <: Sys[S]](elem: Element.ProcGroup[S]): Option[_ProcGroup[S]] = Some(elem.entity)
-
-    private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S],
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S],
                                                    val entity: _ProcGroup[S])
       extends Element.Impl[S] with ProcGroup[S] {
       self =>
@@ -170,13 +183,6 @@ object Element {
   }
   sealed trait ProcGroup[S <: Sys[S]] extends Element[S] { type A = _ProcGroup[S] }
 
-
-//  def group[S <: Sys[S]](init: Group[S], name: Option[String] = None)
-//                        (implicit tx: S#Tx): Element[S] {type A = Group[S]} = {
-//    mkImpl[S, Group[S]](Group.typeID, name, init)
-//  }
-
-//  implicit def serializer[S <: Sys[S]]: stm.Serializer[S#Tx, S#Acc, Element[S]] = anySer.asInstanceOf[Ser[S]]
   implicit def serializer[S <: Sys[S]]: evt.Serializer[S, Element[S]] = anySer.asInstanceOf[Ser[S]]
 
   private final val anySer = new Ser[InMemory]
@@ -187,25 +193,14 @@ object Element {
     }
 
     def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Element[S] with evt.Node[S] = {
-      val typeID  = in.readInt()
+      val typeID = in.readInt()
       (typeID: @switch) match {
-        case Ints.typeID => Int.readIdentified[S](in, access, targets)
-        case Doubles.typeID =>
-          val name    = Strings.readVar[S](in, access)
-          val entity = Doubles.readVar[S](in, access)
-          new Double.Impl(targets, name, entity)
-        case Strings.typeID =>
-          val name    = Strings.readVar[S](in, access)
-          val entity = Strings.readVar[S](in, access)
-          new String.Impl(targets, name, entity)
-        case `groupTypeID` /* _Group.typeID */ =>
-          val name    = Strings.readVar[S](in, access)
-          val entity = _Group.read[S](in, access)
-          new Group.Impl(targets, name, entity)
-        case `procGroupTypeID` =>
-          val name    = Strings.readVar[S](in, access)
-          val entity = _ProcGroup.read[S](in, access)
-          new ProcGroup.Impl(targets, name, entity)
+        case Ints   .typeID     => Int      .readIdentified(in, access, targets)
+        case Doubles.typeID     => Double   .readIdentified(in, access, targets)
+        case Strings.typeID     => String   .readIdentified(in, access, targets)
+        case `groupTypeID`      => Group    .readIdentified(in, access, targets)
+        case `procGroupTypeID`  => ProcGroup.readIdentified(in, access, targets)
+        case _                  => sys.error(s"Unexpected element type cookie $typeID")
       }
     }
 
@@ -316,11 +311,20 @@ object Element {
     }
   }
 }
-
+/** Elements are what a document is made from. They comprise heterogenous objects from expressions (integer, double,
+  * string etc. expressions), processes and groups of processes, as well as `Element.Group` which is a container
+  * for nested elements.
+ */
 sealed trait Element[S <: Sys[S]] extends Mutable[S#ID, S#Tx] {
   type A
 
+  /** An element always has a variable name attached to it. */
   def name: Expr.Var[S, String]
+  /** The actual object wrapped by the element. */
   def entity: A
+
+  /** An event for tracking element changes, which can be renaming
+    * the element or forwarding changes from the underlying entity.
+    */
   def changed: EventLike[S, Element.Update[S], Element[S]]
 }
