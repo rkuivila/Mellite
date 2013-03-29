@@ -68,9 +68,14 @@ object Element {
     // scalac fails with sucky type inference errors when using `int: Int[S]`, so have a fantastic extra match :-E
 //    def unapply[S <: Sys[S]](int: Int[S]): Option[Expr.Var[S, _Int]] = Some(int.elem)
 
-    def unapply[S <: Sys[S]](elem: Element[S]): Option[Expr.Var[S, _Int]] = elem match {
-      case i: Int[S] => Some(i.entity)
-      case _ => None
+    def unapply[S <: Sys[S]](elem: Element.Int[S]): Option[Expr.Var[S, _Int]] = Some(elem.entity)
+
+    private final class Serializer[S <: Sys[S]] extends io.Serializer[S#Tx, S#Acc, Int[S]] {
+      def write(v: Int[S], out: DataOutput) {
+        v.write(out)
+      }
+
+      def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx) = sys.error("TODO"): Int[S]
     }
 
     private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Int])
@@ -86,10 +91,7 @@ object Element {
       new Impl(evt.Targets[S], mkName(name), Doubles.newVar(init))
     }
 
-    def unapply[S <: Sys[S]](elem: Element[S]): Option[Expr.Var[S, _Double]] = elem match {
-      case d: Double[S] => Some(d.entity)
-      case _ => None
-    }
+    def unapply[S <: Sys[S]](elem: Element.Double[S]): Option[Expr.Var[S, _Double]] = Some(elem.entity)
 
     private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Double])
       extends ExprImpl[S, _Double] with Double[S] {
@@ -104,10 +106,7 @@ object Element {
       new Impl(evt.Targets[S], mkName(name), Strings.newVar(init))
     }
 
-    def unapply[S <: Sys[S]](elem: Element[S]): Option[Expr.Var[S, _String]] = elem match {
-      case s: String[S] => Some(s.entity)
-      case _ => None
-    }
+    def unapply[S <: Sys[S]](elem: Element.String[S]): Option[Expr.Var[S, _String]] = Some(elem.entity)
 
     private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _String])
       extends ExprImpl[S, _String] with String[S] {
@@ -122,10 +121,7 @@ object Element {
       new Impl(evt.Targets[S], mkName(name), init)
     }
 
-    def unapply[S <: Sys[S]](elem: Element[S]): Option[_Group[S]] = elem match {
-      case g: Group[S] => Some(g.entity)
-      case _ => None
-    }
+    def unapply[S <: Sys[S]](elem: Element.Group[S]): Option[_Group[S]] = Some(elem.entity)
 
     private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _Group[S])
       extends Element.Impl[S] with Group[S] {
@@ -144,10 +140,7 @@ object Element {
       new Impl(evt.Targets[S], mkName(name), init)
     }
 
-    def unapply[S <: Sys[S]](elem: Element[S]): Option[_ProcGroup[S]] = elem match {
-      case g: ProcGroup[S] => Some(g.entity)
-      case _ => None
-    }
+    def unapply[S <: Sys[S]](elem: Element.ProcGroup[S]): Option[_ProcGroup[S]] = Some(elem.entity)
 
     private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S],
                                                    val entity: _ProcGroup[S])
@@ -180,21 +173,25 @@ object Element {
 
     def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Element[S] with evt.Node[S] = {
       val typeID  = in.readInt()
-      val name    = Strings.readVar[S](in, access)
       (typeID: @switch) match {
         case Ints.typeID =>
+          val name    = Strings.readVar[S](in, access)
           val entity = Ints.readVar[S](in, access)
           new Int.Impl(targets, name, entity)
         case Doubles.typeID =>
+          val name    = Strings.readVar[S](in, access)
           val entity = Doubles.readVar[S](in, access)
           new Double.Impl(targets, name, entity)
         case Strings.typeID =>
+          val name    = Strings.readVar[S](in, access)
           val entity = Strings.readVar[S](in, access)
           new String.Impl(targets, name, entity)
         case `groupTypeID` /* _Group.typeID */ =>
+          val name    = Strings.readVar[S](in, access)
           val entity = _Group.read[S](in, access)
           new Group.Impl(targets, name, entity)
         case `procGroupTypeID` =>
+          val name    = Strings.readVar[S](in, access)
           val entity = _ProcGroup.read[S](in, access)
           new ProcGroup.Impl(targets, name, entity)
       }

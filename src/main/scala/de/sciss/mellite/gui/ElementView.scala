@@ -41,20 +41,21 @@ object ElementView {
   private[gui] def apply[S <: Sys[S]](element: Element[S])(implicit tx: S#Tx): ElementView[S] = {
     val name = element.name.value
     element match {
-      case elem @ Element.Int(ex) =>
-        val value = ex.value
-        new Int.Impl(tx.newHandle(elem), name, value)
-      case elem @ Element.Double(ex) =>
-        val value = ex.value
-        new Double.Impl(tx.newHandle(elem), name, value)
-      case elem @ Element.String(ex) =>
-        val value = ex.value
-        new String.Impl(tx.newHandle(elem), name, value)
-      case elem @ Element.Group(g) =>
-        val children = g.iterator.map(apply(_)(tx)).toIndexedSeq
-        new Group.Impl(tx.newHandle(elem), name, children)
-      case elem @ Element.ProcGroup(_) =>
-        new ProcGroup.Impl(tx.newHandle(elem), name)
+      case e: Element.Int[S] =>
+        val value = e.entity.value
+        ???
+//        new Int.Impl(tx.newHandle(e), name, value)
+//      case e @ Element.Double(ex) =>
+//        val value = ex.value
+//        new Double.Impl(tx.newHandle(e), name, value)
+//      case e @ Element.String(ex) =>
+//        val value = ex.value
+//        new String.Impl(tx.newHandle(e), name, value)
+//      case e @ Element.Group(g) =>
+//        val children = g.iterator.map(apply(_)(tx)).toIndexedSeq
+//        new Group.Impl(tx.newHandle(e), name, children)
+//      case e @ Element.ProcGroup(_) =>
+//        new ProcGroup.Impl(tx.newHandle(e), name)
     }
   }
 
@@ -160,7 +161,7 @@ object ElementView {
     }
 
     private final class Impl[S <: Sys[S]](var children: IIdxSeq[ElementView[S]])
-      extends Renderer {
+      extends Root[S] {
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = ??? // cmpBlank
     }
   }
