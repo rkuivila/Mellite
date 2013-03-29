@@ -29,7 +29,7 @@ package impl
 
 import swing.{Swing, TextField, Alignment, Label, Dialog, MenuItem, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
 import de.sciss.lucre.stm.{Cursor, Disposable}
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{ProcGroup, Sys}
 import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
@@ -64,11 +64,23 @@ object DocumentFrameImpl {
     }
 
     private def actionAddFolder() {
-      val res = Dialog.showInput[String](groupView.component, "Enter initial folder name:", "New Folder", Dialog.Message.Question, initial = "Folder")
+      val res = Dialog.showInput[String](groupView.component, "Enter initial folder name:", "New Folder",
+        Dialog.Message.Question, initial = "Folder")
       res.foreach { name =>
         atomic { implicit tx =>
-          val parent  = document.elements
+          val parent = document.elements
           parent.addLast(Element.Group(name, Elements[S]))
+        }
+      }
+    }
+
+    private def actionAddProcGroup() {
+      val res = Dialog.showInput[String](groupView.component, "Enter initial group name:", "New Proc Group",
+        Dialog.Message.Question, initial = "Timeline")
+      res.foreach { name =>
+        atomic { implicit tx =>
+          val parent = document.elements
+          parent.addLast(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
         }
       }
     }
@@ -90,10 +102,10 @@ object DocumentFrameImpl {
       import language.reflectiveCalls // why does GroupPanel need reflective calls?
       import desktop.Implicits._
       val box = new GroupPanel {
-        val lbName  = new Label("Name:",  EmptyIcon, Alignment.Right)
+        val lbName  = new Label( "Name:", EmptyIcon, Alignment.Right)
         val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
         theHorizontalLayout is Sequential(Parallel(Trailing)(lbName, lbValue), Parallel(ggName, ggValue))
-        theVerticalLayout   is Sequential(Parallel(Baseline)(lbName, ggName), Parallel(Baseline)(lbValue, ggValue))
+        theVerticalLayout   is Sequential(Parallel(Baseline)(lbName, ggName ), Parallel(Baseline)(lbValue, ggValue))
       }
 
       val pane = OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,
@@ -111,10 +123,6 @@ object DocumentFrameImpl {
       }
     }
 
-    private def actionAddTimeline() {
-      println("actionAddTimeline")
-    }
-
     var frame: Frame[S] = null
 
     def guiInit() {
@@ -124,10 +132,11 @@ object DocumentFrameImpl {
       lazy val addPopup: PopupMenu = {
         import Menu._
         val pop = Popup()
-          .add(Item("folder", Action("Folder")(actionAddFolder())))
-          .add(Item("string", Action("String")(actionAddString())))
-          .add(Item("int",    Action("Int"   )(actionAddInt   ())))
-          .add(Item("double", Action("Double")(actionAddDouble())))
+          .add(Item("folder",     Action("Folder"    )(actionAddFolder())))
+          .add(Item("procgroup",  Action("Proc Group")(actionAddProcGroup())))
+          .add(Item("string",     Action("String"    )(actionAddString())))
+          .add(Item("int",        Action("Int"       )(actionAddInt   ())))
+          .add(Item("double",     Action("Double"    )(actionAddDouble())))
         pop.create(frame)
       }
 

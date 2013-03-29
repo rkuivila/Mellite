@@ -1,3 +1,28 @@
+/*
+ *  GroupViewImpl.scala
+ *  (Mellite)
+ *
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
+ *
+ *  This software is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either
+ *  version 2, june 1991 of the License, or (at your option) any later version.
+ *
+ *  This software is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public
+ *  License (gpl.txt) along with this software; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ *  For further information, please contact Hanns Holger Rutz at
+ *  contact@sciss.de
+ */
+
 package de.sciss.mellite
 package gui
 package impl
@@ -8,24 +33,22 @@ import collection.immutable.{IndexedSeq => IIdxSeq}
 import scalaswingcontrib.tree.{ExternalTreeModel, Tree}
 import Swing._
 import javax.swing.tree.DefaultTreeCellRenderer
+import de.sciss.desktop.impl.ModelImpl
+import scalaswingcontrib.event.TreePathSelected
+import de.sciss.lucre.stm
 
 object GroupViewImpl {
   def apply[S <: Sys[S]](root: Elements[S])(implicit tx: S#Tx): GroupView[S] = {
-    val view      = new Impl[S] // (group)
-    val rootIter  = root.iterator
-    val rootView  = new ElementView.Root(rootIter.map(elemView(_)(tx)).toIndexedSeq)
-    //println(s"rootView.children = ${rootView.children}")
-    //    val elemViews = group.elements.iterator.map(elemView)
-
-    //println(s"root view = '$rootView', with children ${rootView.children}")
+    val view      = new Impl[S]
+    val rootView  = ElementView.Root(root)
 
     guiFromTx {
       view.guiInit(rootView)
     }
 
-    def elemAdded(path: Tree.Path[ElementView.GroupLike[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+    def elemAdded(path: Tree.Path[ElementView.Group[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
       println(s"elemAdded = $path $idx $elem")
-      val v = elemView(elem)
+      val v = ElementView(elem)
       guiFromTx {
         // parentView.children = paren  tView.children.patch(idx, IIdxSeq(elemView), 0)
         view.model.insertUnder(path, v, idx)
@@ -50,124 +73,12 @@ object GroupViewImpl {
     view
   }
 
-  private def elemView[S <: Sys[S]](elem: Element[S])(implicit tx: S#Tx): ElementView[S] = {
-    val name = elem.name.value
-    elem match {
-      case Element.Int(ex) =>
-        val value = ex.value
-        new ElementView.Int(name, value)
-      case Element.Double(ex) =>
-        val value = ex.value
-        new ElementView.Double(name, value)
-      case Element.String(ex) =>
-        val value = ex.value
-        new ElementView.String(name, value)
-      case Element.Group(g) =>
-        val children = g.iterator.map(elemView(_)(tx)).toIndexedSeq
-        new ElementView.Group(name, children)
-      case Element.ProcGroup(g) => ???
-    }
-  }
-
-  private final val cmpBlank  = new Label
-//  private final val cmpLabel  = new Label
-  private final val cmpGroupJ = new DefaultTreeCellRenderer
-  private final val cmpGroup  = Component.wrap(cmpGroupJ)
-
-  private object cmpString extends BoxPanel(Orientation.Horizontal) {
-//    val sz: Dimension = (100, 24)
-    val key = new DefaultTreeCellRenderer
-//    {
-//      override def getPreferredSize: Dimension = {
-//        val d = super.getPreferredSize
-//        if (d != null) d.width = 100
-//println(s"Aqui $d")
-//        d
-//      }
-//    }
-    key.setLeafIcon(null)
-    val value = new DefaultTreeCellRenderer
-//    {
-//      override def getPreferredSize = sz
-//    }
-//    value.setPreferredSize(sz)
-//    value.setMinimumSize  (sz)
-    value.setLeafIcon(null)
-    background = null
-    contents += Component.wrap(key)
-    contents += HStrut(8)
-    contents += Component.wrap(value)
-  }
-
-  private object ElementView {
-    import scala.{Int => _Int, Double => _Double}
-    import java.lang.{String => _String}
-    //    import mellite.{Group => _Group}
-
-//    private val colrSelection = new Color(0xD0, 0xD0, 0xFF, 0xFF)
-
-    final class String[S <: Sys[S]](var name: _String, var value: _String)
-      extends ElementView[S] {
-
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        cmpString.key.getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
-//        cmpString.key.text    = name
-        cmpString.value.getTreeCellRendererComponent(tree.peer, value, info.isSelected, false, true, info.row, info.hasFocus)
-//        if (info.isSelected) {
-//          cmpString.background = colrSelection
-//        } else {
-//          cmpString.background = null
-//        }
-        cmpString
-      }
-      def prefix = "String"
-    }
-
-    final class Int[S <: Sys[S]](var name: _String, var value: _Int)
-      extends ElementView[S] {
-
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank // XXX TODO
-      def prefix = "Int"
-    }
-
-    final class Double[S <: Sys[S]](var name: _String, var value: _Double)
-      extends ElementView[S] {
-
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank // XXX TODO
-      def prefix = "Double"
-    }
-
-    sealed trait GroupLike[S <: Sys[S]] extends ElementView[S] {
-      var children: IIdxSeq[ElementView[S]]
-    }
-
-    final class Group[S <: Sys[S]](var name: _String, var children: IIdxSeq[ElementView[S]])
-      extends GroupLike[S] {
-
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        // never show the leaf icon, always a folder icon. for empty folders, show the icon as if the folder is open
-        cmpGroupJ.getTreeCellRendererComponent(tree.peer, name, info.isSelected, info.isExpanded || info.isLeaf,
-          false /* info.isLeaf */, info.row, info.hasFocus)
-        cmpGroup
-      }
-
-      def prefix = "Group"
-    }
-
-    final class Root[S <: Sys[S]](var children: IIdxSeq[ElementView[S]])
-      extends GroupLike[S] {
-      def name = "<root>"
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank
-      def prefix = "Root"
-    }
-  }
-  private sealed trait ElementView[S <: Sys[S]] {
-    def prefix: String
-    def name: String
-//    def elem: stm.Source[S#Tx, Element[S]]
-    def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component
-    override def toString = s"ElementView.$prefix(name = $name)"
-  }
+//  private final val cmpBlank  = new Label
+//  private final val cmpLabelJ = new DefaultTreeCellRenderer
+//  cmpLabelJ.setLeafIcon(null)
+//  private final val cmpLabel  = Component.wrap(cmpLabelJ)
+//  private final val cmpGroupJ = new DefaultTreeCellRenderer
+//  private final val cmpGroup  = Component.wrap(cmpGroupJ)
 
   private final class Renderer[S <: Sys[S]] extends Tree.Renderer[ElementView[S]] {
     def componentFor(owner: Tree[_], value: ElementView[S], cellInfo: Tree.Renderer.CellInfo): Component = {
@@ -175,7 +86,7 @@ object GroupViewImpl {
     }
   }
 
-  private final class Impl[S <: Sys[S]] extends GroupView[S] {
+  private final class Impl[S <: Sys[S]] extends GroupView[S] with ModelImpl[GroupView.Update[S]] {
     view =>
 
     @volatile private var comp: Component = _
@@ -214,10 +125,12 @@ object GroupViewImpl {
       }
 
       val t = new Tree(_model)
-      //      t.listenTo(t)
-      //      t.reactions += {
-      //        case r => println(s"TREE OBSERVATION : ${r}")
-      //      }
+      t.listenTo(t.selection)
+      t.reactions += {
+        case TreePathSelected(_, pathsAdded, pathsRemoved,_, _) =>
+          ???
+//          dispatch(GroupView.SelectionChanged(view, allPaths))
+      }
       t.showsRootHandles = true
       t.renderer = new Renderer[S]
       t.expandAll()
