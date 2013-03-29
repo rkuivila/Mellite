@@ -35,11 +35,16 @@ import collection.immutable.{IndexedSeq => IIdxSeq}
 object GroupView {
   def apply[S <: Sys[S]](root: Elements[S])(implicit tx: S#Tx): GroupView[S] = Impl(root)
 
+  /** A selection is a sequence of paths, where a path is a prefix of groups and a trailing element.
+    * The prefix is guaranteed to be non-empty.
+    */
+  type Selection[S <: Sys[S]] = IIdxSeq[(IIdxSeq[ElementView.GroupLike[S]], ElementView[S])]
+
   sealed trait Update[S <: Sys[S]] { def view: GroupView[S] }
-  final case class SelectionChanged[S <: Sys[S]](view: GroupView[S],
-                                                 paths: IIdxSeq[(IIdxSeq[ElementView.Group[S]], ElementView[S])])
+  final case class SelectionChanged[S <: Sys[S]](view: GroupView[S], selection: Selection[S])
     extends Update[S]
 }
 trait GroupView[S <: Sys[S]] extends Model[GroupView.Update[S]] {
   def component: Component
+  def selection: GroupView.Selection[S]
 }

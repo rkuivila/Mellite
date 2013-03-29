@@ -140,8 +140,8 @@ object DocumentFrameImpl {
         pop.create(frame)
       }
 
-      lazy val ggAddGroup: Button = Button("+") {
-        val bp = ggAddGroup
+      lazy val ggAdd: Button = Button("+") {
+        val bp = ggAdd
         addPopup.show(bp, bp.size.width, bp.size.height)
 
         //        atomic { implicit tx =>
@@ -150,50 +150,38 @@ object DocumentFrameImpl {
         ////          document.groups.addLast(group)
         //        }
       }
-      ggAddGroup.peer.putClientProperty("JButton.buttonType", "roundRect")
+      ggAdd.enabled = false
+      ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
 
-      def mkDelButton[Elem <: Disposable[S#Tx], U](view: GroupView[S]): Button =
-        new Button(Action("\u2212") {
-          //          val indices = view.guiSelection
-          //          if (indices.nonEmpty) atomic {
-          //            implicit tx =>
-          //              view.list.flatMap(_.modifiableOption).foreach {
-          //                ll =>
-          //                  val sz = ll.size
-          //                  val ind1 = indices.filter(_ < sz).sortBy(-_)
-          //                  ind1.foreach {
-          //                    idx =>
-          //                      ll.removeAt(idx).dispose()
-          //                  }
-          //              }
-          //          }
-        }) {
-          enabled = false
-          peer.putClientProperty("JButton.buttonType", "roundRect")
+      lazy val ggDelete: Button = Button("\u2212") {
+        val views = groupView.selection.map { case (p, view) => (p.last, view) }
+        if (views.nonEmpty) atomic { implicit tx =>
+//          views.foreach { case (parent, child) =>
+//            parent.
+//          }
+//          view.list.flatMap(_.modifiableOption).foreach {
+//            ll =>
+//              val sz = ll.size
+//              val ind1 = indices.filter(_ < sz).sortBy(-_)
+//              ind1.foreach {
+//                idx =>
+//                  ll.removeAt(idx).dispose()
+//              }
+//          }
         }
-
-      lazy val ggDelGroup = mkDelButton(groupView)
-
-      lazy val ggViewTimeline = new Button(Action("View Timeline") {
-
-      }) {
-        enabled = false
       }
+      ggDelete.enabled = false
+      ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
 
-      lazy val groupsButPanel = new FlowPanel( ggAddGroup, ggDelGroup, ggViewTimeline )
+//      lazy val ggViewTimeline = Button("View Timeline") {
+//
+//      }
+//      ggViewTimeline.enabled = false
 
-      lazy val ggAddTransp = new Button(Action("+") {
-        //            atomic { implicit tx =>
-        //               for( ll <- groupsView.list; idx <- groupsView.guiSelection.headOption; group <- ll.get( idx )) {
-        //                  val transp = Transport( group )
-        //                  document.transports( group ).addLast( transp )
-        //               }
-        //            }
-      }) {
-        enabled = false
-      }
+      lazy val groupsButPanel = new FlowPanel(ggAdd, ggDelete) //, ggViewTimeline
 
-      //         val ggDelTransp = mkDelButton( transpView )
+
+      //         val ggDeleteTransp = mkDelButton( transpView )
       //
       //         val ggViewInstant = new Button( Action( "View Instant" ) {
       //            atomic { implicit tx =>
@@ -208,7 +196,7 @@ object DocumentFrameImpl {
       //            enabled = false
       //         }
       //
-      //         val transpButPanel = new FlowPanel( ggAddTransp, ggDelTransp, ggViewInstant )
+      //         val transpButPanel = new FlowPanel( ggAddTransp, ggDeleteTransp, ggViewInstant )
 
       lazy val groupsPanel = new BorderPanel {
         add(groupView.component, BorderPanel.Position.Center)
@@ -224,11 +212,11 @@ object DocumentFrameImpl {
       //            case ListView.SelectionChanged( indices ) =>
       ////               println( "SELECTION " + indices )
       //               val isSelected = indices.nonEmpty
-      //               ggDelGroup.enabled      = isSelected
+      //               ggDelete.enabled      = isSelected
       //               ggViewTimeline.enabled  = isSelected
       //               val isSingle = indices.size == 1
       //               ggAddTransp.enabled = isSingle
-      ////               ggDelTransp.enabled = false
+      ////               ggDeleteTransp.enabled = false
       //
       ////               atomic { implicit tx =>
       ////                  val transpList = if( isSingle ) {
@@ -244,7 +232,7 @@ object DocumentFrameImpl {
       //         transpView.guiReact {
       //            case ListView.SelectionChanged( indices ) =>
       //               val isSelected          = indices.nonEmpty
-      //               ggDelTransp.enabled     = isSelected
+      //               ggDeleteTransp.enabled     = isSelected
       //               ggViewInstant.enabled   = isSelected
       //         }
       //
