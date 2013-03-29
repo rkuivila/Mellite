@@ -43,8 +43,7 @@ object ElementView {
     element match {
       case e: Element.Int[S] =>
         val value = e.entity.value
-        ???
-//        new Int.Impl(tx.newHandle(e), name, value)
+        new Int.Impl(tx.newHandle(e), name, value)
 //      case e @ Element.Double(ex) =>
 //        val value = ex.value
 //        new Double.Impl(tx.newHandle(e), name, value)

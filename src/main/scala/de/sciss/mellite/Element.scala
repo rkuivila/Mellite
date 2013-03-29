@@ -61,6 +61,13 @@ object Element {
   final case class Entity[S <: Sys[S]](change: Any) extends Change[S]
 
   object Int {
+    private[Element] def readIdentified[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S])
+                                                    (implicit tx: S#Tx): Impl[S] = {
+      val name    = Strings.readVar[S](in, access)
+      val entity = Ints.readVar[S](in, access)
+      new Int.Impl(targets, name, entity)
+    }
+
     def apply[S <: Sys[S]](name: _String, init: Expr[S, _Int])(implicit tx: S#Tx): Int[S] = {
       new Impl(evt.Targets[S], mkName(name), Ints.newVar(init))
     }
@@ -70,12 +77,20 @@ object Element {
 
     def unapply[S <: Sys[S]](elem: Element.Int[S]): Option[Expr.Var[S, _Int]] = Some(elem.entity)
 
+    implicit def serializer[S <: Sys[S]]: io.Serializer[S#Tx, S#Acc, Int[S]] = anySer.asInstanceOf[Serializer[S]]
+
+    private val anySer = new Serializer[InMemory]
     private final class Serializer[S <: Sys[S]] extends io.Serializer[S#Tx, S#Acc, Int[S]] {
       def write(v: Int[S], out: DataOutput) {
         v.write(out)
       }
 
-      def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx) = sys.error("TODO"): Int[S]
+      def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): Int[S] = {
+        val targets = evt.Targets.read[S](in, access)
+        val cookie  = in.readByte()
+        require(cookie == Ints.typeID, s"Cookie $cookie does not match expected value ${Ints.typeID}")
+        readIdentified(in, access, targets)
+      }
     }
 
     private[Element] final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Int])
@@ -174,10 +189,7 @@ object Element {
     def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Element[S] with evt.Node[S] = {
       val typeID  = in.readInt()
       (typeID: @switch) match {
-        case Ints.typeID =>
-          val name    = Strings.readVar[S](in, access)
-          val entity = Ints.readVar[S](in, access)
-          new Int.Impl(targets, name, entity)
+        case Ints.typeID => Int.readIdentified[S](in, access, targets)
         case Doubles.typeID =>
           val name    = Strings.readVar[S](in, access)
           val entity = Doubles.readVar[S](in, access)
