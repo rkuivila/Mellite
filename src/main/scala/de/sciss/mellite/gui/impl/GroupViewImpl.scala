@@ -28,14 +28,11 @@ package gui
 package impl
 
 import de.sciss.synth.proc.Sys
-import swing.{Swing, Orientation, BoxPanel, Label, ScrollPane, Component}
+import swing.{ScrollPane, Component}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import scalaswingcontrib.tree.{ExternalTreeModel, Tree}
-import Swing._
-import javax.swing.tree.DefaultTreeCellRenderer
 import de.sciss.desktop.impl.ModelImpl
 import scalaswingcontrib.event.TreePathSelected
-import de.sciss.lucre.stm
 
 object GroupViewImpl {
   def apply[S <: Sys[S]](root: Elements[S])(implicit tx: S#Tx): GroupView[S] = {
@@ -72,13 +69,6 @@ object GroupViewImpl {
 
     view
   }
-
-//  private final val cmpBlank  = new Label
-//  private final val cmpLabelJ = new DefaultTreeCellRenderer
-//  cmpLabelJ.setLeafIcon(null)
-//  private final val cmpLabel  = Component.wrap(cmpLabelJ)
-//  private final val cmpGroupJ = new DefaultTreeCellRenderer
-//  private final val cmpGroup  = Component.wrap(cmpGroupJ)
 
   private final class Renderer[S <: Sys[S]] extends Tree.Renderer[ElementView[S]] {
     def componentFor(owner: Tree[_], value: ElementView[S], cellInfo: Tree.Renderer.CellInfo): Component = {
