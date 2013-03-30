@@ -46,8 +46,9 @@ object ActionOpenFile extends Action( "Open...") {
   }
 
   def apply() {
-    FileDialog.open(title = fullTitle).foreach { f =>
-      val folder = f.getParentFile
+    FileDialog.open(title = fullTitle, filter = {
+      f => f.isDirectory && f.getName.endsWith(".mllt")
+    }).foreach { folder =>
       try {
         val doc = Document.read(folder)
         initDoc(doc)

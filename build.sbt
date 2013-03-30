@@ -38,3 +38,13 @@ seq(appbundle.settings: _*)
 appbundle.icon := Some(file("application.png"))
 
 appbundle.target <<= baseDirectory
+
+appbundle.signature := "Ttm "
+
+appbundle.documents += appbundle.Document(
+  name       = "Mellite Document",
+  role       = appbundle.Document.Editor,
+  icon       = Some(file("document.png")),
+  extensions = Seq("mllt"),
+  isPackage  = true
+)

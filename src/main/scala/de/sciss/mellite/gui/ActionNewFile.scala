@@ -39,9 +39,8 @@ object ActionNewFile extends Action( "New...") {
 
   private def deleteRecursive(f: File): Boolean = {
     if (f.isDirectory) {
-      f.listFiles().foreach {
-        f1 =>
-          if (!deleteRecursive(f1)) return false
+      f.listFiles().foreach { f1 =>
+        if (!deleteRecursive(f1)) return false
       }
     }
     f.delete()
@@ -56,19 +55,21 @@ object ActionNewFile extends Action( "New...") {
   }
 
   def apply() {
-    FileDialog.save(title = "Location for New Document").foreach { folder =>
+    FileDialog.save(title = "Location for New Document").foreach { folder0 =>
+      val name    = folder0.getName
+      val folder  = if (name.endsWith(".mllt")) folder0 else new File(folder0.getParentFile, name + ".mllt")
       if (folder.exists()) {
         if (Dialog.showConfirmation(
-          message = "Document " + folder.getPath + " already exists.\nAre you sure you want to overwrite it?",
-          title = fullTitle,
-          optionType = Dialog.Options.OkCancel,
+          message     = s"Document ${folder.getPath} already exists.\nAre you sure you want to overwrite it?",
+          title       = fullTitle,
+          optionType  = Dialog.Options.OkCancel,
           messageType = Dialog.Message.Warning
         ) != Dialog.Result.Ok) return
 
         if (!deleteRecursive(folder)) {
           Dialog.showMessage(
-            message = "Unable to delete existing document " + folder.getPath,
-            title = fullTitle,
+            message     = s"Unable to delete existing document ${folder.getPath}",
+            title       = fullTitle,
             messageType = Dialog.Message.Error
           )
           return
@@ -77,12 +78,13 @@ object ActionNewFile extends Action( "New...") {
 
       try {
         val doc = Document.empty(folder)
+        // XXX TODO: SetFile -a E <folder>
         initDoc(doc)
       } catch {
         case NonFatal(e) =>
           Dialog.showMessage(
-            message = "Unabled to create new document " + folder.getPath + "\n\n" + formatException(e),
-            title = fullTitle,
+            message     = s"Unabled to create new document ${folder.getPath} \n\n${formatException(e)}",
+            title       = fullTitle,
             messageType = Dialog.Message.Error
           )
       }
