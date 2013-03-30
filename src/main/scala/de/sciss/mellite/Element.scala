@@ -42,9 +42,6 @@ object Element {
   import java.lang.{String => _String}
   import mellite.{Elements => _Group}
 
-  private final val groupTypeID     = 0x10000
-  private final val procGroupTypeID = 0x10001
-
   type Name[S <: Sys[S]] = Expr.Var[S, _String]
 
   sealed trait Change[S <: Sys[S]]
@@ -61,6 +58,7 @@ object Element {
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): E[S] with evt.Node[S]
+    protected def typeID: _Int
 
     implicit final def serializer[S <: Sys[S]]: io.Serializer[S#Tx, S#Acc, E[S]] = anySer.asInstanceOf[Serializer[S]]
 
@@ -72,14 +70,16 @@ object Element {
 
       def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): E[S] = {
         val targets = evt.Targets.read[S](in, access)
-        val cookie  = in.readByte()
-        require(cookie == Ints.typeID, s"Cookie $cookie does not match expected value ${Ints.typeID}")
+        val cookie  = in.readInt()
+        require(cookie == typeID, s"Cookie $cookie does not match expected value ${Ints.typeID}")
         readIdentified(in, access, targets)
       }
     }
   }
 
   object Int extends Companion[Int] {
+    protected[Element] final val typeID = Ints.typeID
+
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): Int[S] with evt.Node[S] = {
       val entity = Ints.readVar(in, access)
@@ -93,12 +93,14 @@ object Element {
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Int])
       extends ExprImpl[S, _Int] with Int[S] {
       def prefix = "Int"
-      def typeID = Ints.typeID
+      def typeID = Int.typeID
     }
   }
   sealed trait Int[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _Int] }
 
   object Double extends Companion[Double] {
+    protected[Element] final val typeID = Doubles.typeID
+
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): Double[S] with evt.Node[S] = {
       val entity = Doubles.readVar(in, access)
@@ -111,13 +113,15 @@ object Element {
 
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Double])
       extends ExprImpl[S, _Double] with Double[S] {
-      def typeID = Doubles.typeID
+      def typeID = Double.typeID
       def prefix = "Double"
     }
   }
   sealed trait Double[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _Double] }
 
   object String extends Companion[String] {
+    protected[Element] final val typeID = Strings.typeID
+
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): String[S] with evt.Node[S] = {
       val entity = Strings.readVar(in, access)
@@ -130,13 +134,15 @@ object Element {
 
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _String])
       extends ExprImpl[S, _String] with String[S] {
-      def typeID = Strings.typeID
+      def typeID = String.typeID
       def prefix = "String"
     }
   }
   sealed trait String[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _String] }
 
   object Group extends Companion[Group] {
+    protected[Element] final val typeID = 0x10000
+
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): Group[S] with evt.Node[S] = {
       val entity = _Group.read(in, access)
@@ -151,7 +157,7 @@ object Element {
       extends Element.Impl[S] with Group[S] {
       self =>
 
-      def typeID = groupTypeID // _Group.typeID
+      def typeID = Group.typeID
       def prefix = "Group"
 
       protected def entityEvent = entity.changed
@@ -160,6 +166,8 @@ object Element {
   sealed trait Group[S <: Sys[S]] extends Element[S] { type A = _Group[S] }
 
   object ProcGroup extends Companion[ProcGroup] {
+    protected[Element] final val typeID = 0x10001
+
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): ProcGroup[S] with evt.Node[S] = {
       val entity = _ProcGroup.read(in, access)
@@ -170,12 +178,11 @@ object Element {
       new Impl(evt.Targets[S], mkName(name), init)
     }
 
-    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S],
-                                                   val entity: _ProcGroup[S])
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _ProcGroup[S])
       extends Element.Impl[S] with ProcGroup[S] {
       self =>
 
-      def typeID = procGroupTypeID
+      def typeID = ProcGroup.typeID
       def prefix = "ProcGroup"
 
       protected def entityEvent = entity.changed
@@ -195,12 +202,12 @@ object Element {
     def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Element[S] with evt.Node[S] = {
       val typeID = in.readInt()
       (typeID: @switch) match {
-        case Ints   .typeID     => Int      .readIdentified(in, access, targets)
-        case Doubles.typeID     => Double   .readIdentified(in, access, targets)
-        case Strings.typeID     => String   .readIdentified(in, access, targets)
-        case `groupTypeID`      => Group    .readIdentified(in, access, targets)
-        case `procGroupTypeID`  => ProcGroup.readIdentified(in, access, targets)
-        case _                  => sys.error(s"Unexpected element type cookie $typeID")
+        case Int   .typeID    => Int      .readIdentified(in, access, targets)
+        case Double.typeID    => Double   .readIdentified(in, access, targets)
+        case String.typeID    => String   .readIdentified(in, access, targets)
+        case Group .typeID    => Group    .readIdentified(in, access, targets)
+        case ProcGroup.typeID => ProcGroup.readIdentified(in, access, targets)
+        case _                => sys.error(s"Unexpected element type cookie $typeID")
       }
     }
 

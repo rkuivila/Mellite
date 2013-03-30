@@ -26,7 +26,7 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{Sys, ProcGroup => _ProcGroup}
 import de.sciss.lucre.stm
 import scalaswingcontrib.tree.Tree
 import swing.{Label, Swing, BoxPanel, Orientation, Component}
@@ -113,6 +113,7 @@ object ElementView {
   }
 
   sealed trait GroupLike[S <: Sys[S]] extends Renderer {
+    def group(implicit tx: S#Tx): Elements[S]
     var children: IIdxSeq[ElementView[S]]
   }
 
@@ -130,6 +131,8 @@ object ElementView {
           false /* info.isLeaf */, info.row, info.hasFocus)
         cmpGroup
       }
+
+      def group(implicit tx: S#Tx): Elements[S] = element().entity
 
       def prefix = "Group"
     }
@@ -163,12 +166,15 @@ object ElementView {
 
     private[gui] def apply[S <: Sys[S]](group: Elements[S])(implicit tx: S#Tx): Root[S] = {
       val children = group.iterator.map(ElementView(_)(tx)).toIndexedSeq
-      new Impl(children)
+      import Elements.serializer
+      new Impl(tx.newHandle(group), children)
     }
 
-    private final class Impl[S <: Sys[S]](var children: IIdxSeq[ElementView[S]])
+    private final class Impl[S <: Sys[S]](handle: stm.Source[S#Tx, Elements[S]],
+                                          var children: IIdxSeq[ElementView[S]])
       extends Root[S] {
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank
+      def group(implicit tx: S#Tx): Elements[S] = handle()
     }
   }
   sealed trait Root[S <: Sys[S]] extends GroupLike[S]

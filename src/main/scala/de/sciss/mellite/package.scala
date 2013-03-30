@@ -25,10 +25,10 @@
 
 package de.sciss
 
-import lucre.{expr, io}
+import lucre.{stm, expr, io}
 import expr.LinkedList
 import io.DataInput
-import synth.proc.{Sys, Confluent}
+import synth.proc.{InMemory, Sys, Confluent}
 
 package object mellite {
   type Cf           = Confluent
@@ -72,6 +72,12 @@ package object mellite {
     }
 
     type Update[S <: Sys[S]] = LinkedList.Update[S, _Element[S], _Element.Update[S]]
+
+    implicit def serializer[S <: Sys[S]]: io.Serializer[S#Tx, S#Acc, Elements[S]] =
+      anySer.asInstanceOf[io.Serializer[S#Tx, S#Acc, Elements[S]]]
+
+    private val anySer: io.Serializer[InMemory#Tx, InMemory#Acc, Elements[InMemory]] =
+      LinkedList.Modifiable.serializer[InMemory, Element[InMemory], mellite.Element.Update[InMemory]](_.changed)
   }
   type Elements[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Element.Update[S]]
 }

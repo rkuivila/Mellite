@@ -39,33 +39,44 @@ object GroupViewImpl {
   def apply[S <: Sys[S]](root: Elements[S])(implicit tx: S#Tx): GroupView[S] = {
     val rootView  = ElementView.Root(root)
     val view      = new Impl[S](rootView)
+    val map       = tx.newInMemoryIDMap[ElementView[S]]
 
     guiFromTx {
       view.guiInit()
     }
 
-    def elemAdded(path: Tree.Path[ElementView.Group[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
-      println(s"elemAdded = $path $idx $elem")
+    def elemAdded(parent: Tree.Path[ElementView.Group[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+      // println(s"elemAdded = $path $idx $elem")
       val v = ElementView(elem)
+      map.put(elem.id, v)
       guiFromTx {
         // parentView.children = paren  tView.children.patch(idx, IIdxSeq(elemView), 0)
-        view.model.insertUnder(path, v, idx)
+        view.model.insertUnder(parent, v, idx)
       }
     }
 
-    root.changed.reactTx[Elements.Update[S]] {
-      implicit tx => upd =>
-        println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
-        upd.changes.foreach {
-          case Elements.Added  (idx, elem)      => elemAdded(Tree.Path.empty, idx, elem)
-          case Elements.Removed(idx, elem)      => ???
-          case Elements.Element(elem, elemUpd)  => ???
-          //        case _ =>
-        }
-      //      case Element.Update(elem, changes) =>
-      //      case Elements.Update(root0, changes) =>
-      //
-      //      case _ =>
+    def elemRemoved(parent: Tree.Path[ElementView.Group[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+      val viewOpt = map.get(elem.id)
+      val v       = viewOpt.getOrElse {
+        val p = parent.lastOption.getOrElse(rootView)
+        p.children(idx)
+      }
+      if (viewOpt.isDefined) map.remove(elem.id)
+      val path = parent :+ v
+      guiFromTx {
+        // parentView.children = paren  tView.children.patch(idx, IIdxSeq(elemView), 0)
+        view.model.remove(path)
+      }
+    }
+
+    root.changed.reactTx[Elements.Update[S]] { implicit tx => upd =>
+      // println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
+      upd.changes.foreach {
+        case Elements.Added  (idx, elem)      => elemAdded  (Tree.Path.empty, idx, elem)
+        case Elements.Removed(idx, elem)      => elemRemoved(Tree.Path.empty, idx, elem)
+        case Elements.Element(elem, elemUpd)  => println(s"Warning: GroupView unhandled $upd")
+        //        case _ =>
+      }
     }
 
     view
@@ -111,9 +122,21 @@ object GroupViewImpl {
         path.lastOption.getOrElse(root) match {
           case g: ElementView.GroupLike[S] if g.children.size >= idx =>
             g.children = g.children.patch(idx, IIdxSeq(elem), 0)
-            //            println(s"Expanding ${g} at ${idx} with ${elem} - now children are ${g.children}")
+            // println(s"Expanding ${g} at ${idx} with ${elem} - now children are ${g.children}")
             true
           case _ => false
+        }
+      } makeRemovableWith { path =>
+        if (path.isEmpty) false else {
+          path.init.lastOption.getOrElse(root) match {
+            case g: ElementView.GroupLike[S] =>
+              val idx = g.children.indexOf(path.last)
+              if (idx < 0) false else {
+                g.children = g.children.patch(idx, IIdxSeq.empty, 1)
+                true
+              }
+            case _ => false
+          }
         }
       }
 
@@ -136,6 +159,7 @@ object GroupViewImpl {
     }
 
     def selection: GroupView.Selection[S] =
+      if (t.selection.empty) IIdxSeq.empty else // WARNING: currently we get a NPE if accessing `paths` on an empty selection
       t.selection.paths.collect({
         case PathExtrator(path, child) => (path, child)
       })(breakOut)

@@ -27,8 +27,8 @@ package de.sciss.mellite
 package gui
 package impl
 
-import swing.{Swing, TextField, Alignment, Label, Dialog, MenuItem, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel, Frame}
-import de.sciss.lucre.stm.{Cursor, Disposable}
+import swing.{Swing, TextField, Alignment, Label, Dialog, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel}
+import de.sciss.lucre.stm.Cursor
 import de.sciss.synth.proc.{ProcGroup, Sys}
 import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
 import Swing._
@@ -38,7 +38,7 @@ import tools.nsc.interpreter.NamedParam
 import de.sciss.desktop
 import desktop.{DialogSource, OptionPane, Window, Menu}
 import scalaswingcontrib.PopupMenu
-import de.sciss.desktop.impl.WindowImpl
+import desktop.impl.WindowImpl
 
 object DocumentFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
@@ -55,13 +55,6 @@ object DocumentFrameImpl {
     extends DocumentFrame[S] with ComponentHolder[Window] with CursorHolder[S] {
 
     protected implicit def cursor: Cursor[S] = document.cursor
-
-    private def transport(implicit tx: S#Tx): Option[Document.Transport[S]] = {
-      None
-      //         for( gl <- groupsView.list; gidx <- groupsView.guiSelection.headOption; group <- gl.get( gidx );
-      //              tl <- transpView.list; tidx <- transpView.guiSelection.headOption; transp <- document.transports( group ).get( tidx ))
-      //            yield transp
-    }
 
     private def actionAddFolder() {
       val res = Dialog.showInput[String](groupView.component, "Enter initial folder name:", "New Folder",
@@ -100,7 +93,7 @@ object DocumentFrameImpl {
       ggValue.text  = "Value"
 
       import language.reflectiveCalls // why does GroupPanel need reflective calls?
-      import desktop.Implicits._
+//      import desktop.Implicits._
       val box = new GroupPanel {
         val lbName  = new Label( "Name:", EmptyIcon, Alignment.Right)
         val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
@@ -137,131 +130,40 @@ object DocumentFrameImpl {
           .add(Item("string",     Action("String"    )(actionAddString())))
           .add(Item("int",        Action("Int"       )(actionAddInt   ())))
           .add(Item("double",     Action("Double"    )(actionAddDouble())))
-        pop.create(frame)
+        val res = pop.create(frame)
+        res.peer.pack() // so we can read `size` correctly
+        res
       }
 
       lazy val ggAdd: Button = Button("+") {
         val bp = ggAdd
-        addPopup.show(bp, bp.size.width, bp.size.height)
-
-        //        atomic { implicit tx =>
-        ////          implicit val spans = SpanLikes
-        ////          val group = ProcGroup_.Modifiable[S]
-        ////          document.groups.addLast(group)
-        //        }
+        addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
       }
-      ggAdd.enabled = false
       ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
 
       lazy val ggDelete: Button = Button("\u2212") {
         val views = groupView.selection.map { case (p, view) => (p.last, view) }
         if (views.nonEmpty) atomic { implicit tx =>
-//          views.foreach { case (parent, child) =>
-//            parent.
-//          }
-//          view.list.flatMap(_.modifiableOption).foreach {
-//            ll =>
-//              val sz = ll.size
-//              val ind1 = indices.filter(_ < sz).sortBy(-_)
-//              ind1.foreach {
-//                idx =>
-//                  ll.removeAt(idx).dispose()
-//              }
-//          }
+          views.foreach { case (parent, child) =>
+            parent.group.remove(child.element())
+          }
         }
       }
       ggDelete.enabled = false
       ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
 
-//      lazy val ggViewTimeline = Button("View Timeline") {
-//
-//      }
-//      ggViewTimeline.enabled = false
-
       lazy val groupsButPanel = new FlowPanel(ggAdd, ggDelete) //, ggViewTimeline
-
-
-      //         val ggDeleteTransp = mkDelButton( transpView )
-      //
-      //         val ggViewInstant = new Button( Action( "View Instant" ) {
-      //            atomic { implicit tx =>
-      //               for( gl <- groupsView.list; gidx <- groupsView.guiSelection.headOption; group <- gl.get( gidx );
-      //                    tidx <- transpView.guiSelection.headOption;
-      //                    transp <- document.transports( group ).get( tidx )) {
-      //
-      //                  InstantGroupFrame( group, transp )
-      //               }
-      //            }
-      //         }) {
-      //            enabled = false
-      //         }
-      //
-      //         val transpButPanel = new FlowPanel( ggAddTransp, ggDeleteTransp, ggViewInstant )
 
       lazy val groupsPanel = new BorderPanel {
         add(groupView.component, BorderPanel.Position.Center)
         add(groupsButPanel, BorderPanel.Position.South)
       }
 
-      //         val transpPanel = new BorderPanel {
-      //            add( transpView.component, BorderPanel.Position.Center )
-      //            add( transpButPanel, BorderPanel.Position.South )
-      //         }
-
-      //         groupView.guiReact {
-      //            case ListView.SelectionChanged( indices ) =>
-      ////               println( "SELECTION " + indices )
-      //               val isSelected = indices.nonEmpty
-      //               ggDelete.enabled      = isSelected
-      //               ggViewTimeline.enabled  = isSelected
-      //               val isSingle = indices.size == 1
-      //               ggAddTransp.enabled = isSingle
-      ////               ggDeleteTransp.enabled = false
-      //
-      ////               atomic { implicit tx =>
-      ////                  val transpList = if( isSingle ) {
-      ////                     for( ll <- groupsView.list; idx <- indices.headOption; group <- ll.get( idx ))
-      ////                        yield document.transports( group )
-      ////                  } else {
-      ////                     None
-      ////                  }
-      ////                  transpView.list_=( transpList )
-      ////               }
-      //         }
-
-      //         transpView.guiReact {
-      //            case ListView.SelectionChanged( indices ) =>
-      //               val isSelected          = indices.nonEmpty
-      //               ggDeleteTransp.enabled     = isSelected
-      //               ggViewInstant.enabled   = isSelected
-      //         }
-      //
-
-      //         val ggAural = Button( "Aural" ) {
-      //            atomic { implicit tx =>
-      //               transport.foreach { t =>
-      ////                  val aural: AuralSystem[ S ] = ???
-      ////                  AuralPresentation.run( t, aural )
-      //               }
-      //            }
-      //         }
-
-      lazy val ggTest = Button("ELEMENTS") {
-        atomic {
-          implicit tx =>
-            println("ELEMENTS : " + document.elements.iterator.toIndexedSeq)
-        }
-      }
-
       lazy val intp = {
-        //          val config          = InterpreterPane.Config()
         val intpConfig = Interpreter.Config()
-        //          intpConfig.executor = "de.sciss.mellite.InterpreterContext"
         intpConfig.imports = Seq("de.sciss.mellite._", "de.sciss.synth._", "proc._", "ugen._")
         import document.systemType
         intpConfig.bindings = Seq(NamedParam[Document[S]]("doc", document))
-        //          intpConfig.out      = ???
-        //          val codeConfig      = CodePane.Config()
         InterpreterPane(interpreterConfig = intpConfig)
       }
 
@@ -269,9 +171,12 @@ object DocumentFrameImpl {
 
       frame = new Frame(document, new BorderPanel {
         add(splitPane, BorderPanel.Position.Center)
-        //add( groupsPanel, BorderPanel.Position.Center )
-        add(ggTest, BorderPanel.Position.South)
       })
+
+      groupView.addListener {
+        case GroupView.SelectionChanged(_, sel) =>
+          ggDelete.enabled = sel.nonEmpty
+      }
 
       comp = frame
     }
