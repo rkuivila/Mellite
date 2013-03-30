@@ -51,8 +51,8 @@ object ElementView {
         val value = e.entity.value
         new String.Impl(tx.newHandle(e), name, value)
       case e: Element.Group[S] =>
-        val value = e.entity.iterator.map(apply(_)(tx)).toIndexedSeq
-        new Group.Impl(tx.newHandle(e), name, value)
+        val children = e.entity.iterator.map(apply(_)(tx)).toIndexedSeq
+        new Group.Impl(tx.newHandle(e), name, children)
       case e: Element.ProcGroup[S] =>
         new ProcGroup.Impl(tx.newHandle(e), name)
     }
@@ -114,6 +114,7 @@ object ElementView {
 
   sealed trait GroupLike[S <: Sys[S]] extends Renderer {
     def group(implicit tx: S#Tx): Elements[S]
+    /** The children of the group. This varible _must only be accessed or updated_ on the event thread. */
     var children: IIdxSeq[ElementView[S]]
   }
 
