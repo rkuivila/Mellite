@@ -56,13 +56,22 @@ object DocumentFrameImpl {
 
     protected implicit def cursor: Cursor[S] = document.cursor
 
+    private def addElement(elem: Element[S])(implicit tx: S#Tx) {
+      val sel = groupView.selection
+      val parent = if (sel.isEmpty) document.elements else sel.head match {
+        case (_, _parent: ElementView.Group[S]) => _parent.group
+        case (_ :+ _parent, _)                  => _parent.group
+        case _                                  => document.elements
+      }
+      parent.addLast(elem)
+    }
+
     private def actionAddFolder() {
       val res = Dialog.showInput[String](groupView.component, "Enter initial folder name:", "New Folder",
         Dialog.Message.Question, initial = "Folder")
       res.foreach { name =>
         atomic { implicit tx =>
-          val parent = document.elements
-          parent.addLast(Element.Group(name, Elements[S]))
+          addElement(Element.Group(name, Elements[S]))
         }
       }
     }
@@ -72,8 +81,7 @@ object DocumentFrameImpl {
         Dialog.Message.Question, initial = "Timeline")
       res.foreach { name =>
         atomic { implicit tx =>
-          val parent = document.elements
-          parent.addLast(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
+          addElement(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
         }
       }
     }
@@ -110,8 +118,7 @@ object DocumentFrameImpl {
         val name    = ggName.text
         val value   = ggValue.text
         atomic { implicit tx =>
-          val parent  = document.elements
-          parent.addLast(Element.String(name = name, init = Strings.newConst(value)))
+          addElement(Element.String(name = name, init = Strings.newConst(value)))
         }
       }
     }
@@ -175,7 +182,8 @@ object DocumentFrameImpl {
 
       groupView.addListener {
         case GroupView.SelectionChanged(_, sel) =>
-          ggDelete.enabled = sel.nonEmpty
+          ggAdd.enabled     = sel.size < 2
+          ggDelete.enabled  = sel.nonEmpty
       }
 
       comp = frame

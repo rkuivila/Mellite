@@ -34,49 +34,27 @@ import collection.immutable.{IndexedSeq => IIdxSeq}
 import scalaswingcontrib.tree.{ExternalTreeModel, Tree}
 import de.sciss.desktop.impl.ModelImpl
 import scalaswingcontrib.event.TreePathSelected
+import de.sciss.lucre.{event => evt}
+import de.sciss.lucre.stm.{IdentifierMap, Disposable}
 
 object GroupViewImpl {
   def apply[S <: Sys[S]](root: Elements[S])(implicit tx: S#Tx): GroupView[S] = {
     val rootView  = ElementView.Root(root)
-    val view      = new Impl[S](rootView)
-    val map       = tx.newInMemoryIDMap[ElementView[S]]
+    val map       = tx.newInMemoryIDMap[Disposable[S#Tx]] // groups to observers
+    val view      = new Impl[S](rootView, map)
+
+    def loop(path: Tree.Path[ElementView.Group[S]], gl: ElementView.GroupLike[S]) {
+      val g   = gl.group
+      view.groupAdded(path, g)
+      gl.children.foreach {
+        case c: ElementView.Group[S] => loop(path :+ c, c)
+        case _ =>
+      }
+    }
+    loop(Tree.Path.empty, rootView)
 
     guiFromTx {
       view.guiInit()
-    }
-
-    def elemAdded(parent: Tree.Path[ElementView.Group[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
-      // println(s"elemAdded = $path $idx $elem")
-      val v = ElementView(elem)
-      map.put(elem.id, v)
-      guiFromTx {
-        // parentView.children = paren  tView.children.patch(idx, IIdxSeq(elemView), 0)
-        view.model.insertUnder(parent, v, idx)
-      }
-    }
-
-    def elemRemoved(parent: Tree.Path[ElementView.Group[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
-      val viewOpt = map.get(elem.id)
-      val v       = viewOpt.getOrElse {
-        val p = parent.lastOption.getOrElse(rootView)
-        p.children(idx)
-      }
-      if (viewOpt.isDefined) map.remove(elem.id)
-      val path = parent :+ v
-      guiFromTx {
-        // parentView.children = paren  tView.children.patch(idx, IIdxSeq(elemView), 0)
-        view.model.remove(path)
-      }
-    }
-
-    root.changed.reactTx[Elements.Update[S]] { implicit tx => upd =>
-      // println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
-      upd.changes.foreach {
-        case Elements.Added  (idx, elem)      => elemAdded  (Tree.Path.empty, idx, elem)
-        case Elements.Removed(idx, elem)      => elemRemoved(Tree.Path.empty, idx, elem)
-        case Elements.Element(elem, elemUpd)  => println(s"Warning: GroupView unhandled $upd")
-        //        case _ =>
-      }
     }
 
     view
@@ -88,7 +66,8 @@ object GroupViewImpl {
     }
   }
 
-  private final class Impl[S <: Sys[S]](root: ElementView.Root[S])
+  private final class Impl[S <: Sys[S]](root: ElementView.Root[S],
+                                        mapObserver: IdentifierMap[S#ID, S#Tx, Disposable[S#Tx]])
     extends GroupView[S] with ModelImpl[GroupView.Update[S]] {
     view =>
 
@@ -96,6 +75,79 @@ object GroupViewImpl {
     private var _model: ExternalTreeModel[ElementView[S]] = _
     def model = _model
     private var t: Tree[ElementView[S]] = _
+
+    def elemAdded(parent: Tree.Path[ElementView.Group[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+      // println(s"elemAdded = $path $idx $elem")
+      val v = ElementView(elem)
+
+      guiFromTx {
+        view.model.insertUnder(parent, v, idx)
+      }
+
+      v match {
+        case g: ElementView.Group[S] =>
+          val cg    = g.element().entity
+          val path  = parent :+ g
+          groupAdded(path, cg)
+          if (!cg.isEmpty) {
+            cg.iterator.toList.zipWithIndex.foreach { case (c, ci) =>
+              elemAdded(path, ci, c)
+            }
+          }
+
+        case _ =>
+      }
+    }
+
+    def elemRemoved(parent: Tree.Path[ElementView.Group[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+      val v = parent.lastOption.getOrElse(root).children(idx)
+      elemViewRemoved(parent, v, elem)
+    }
+
+    private def elemViewRemoved(parent: Tree.Path[ElementView.Group[S]], v: ElementView[S],
+                                elem: Element[S])(implicit tx: S#Tx) {
+      v match {
+        case g: ElementView.Group[S] =>
+          mapObserver.get(elem.id).foreach(_.dispose()) // child observer
+          mapObserver.remove(elem.id)
+          val path = parent :+ g
+          g.children.zipWithIndex.reverse.foreach { case (c, ci) => elemRemoved(path, ci, c.element()) }
+        case _ =>
+      }
+      // println(s"elemRemoved = $path $idx $elem")
+//      val viewOpt = map.get(elem.id)
+//      if (viewOpt.isDefined) map.remove(elem.id)
+      guiFromTx {
+        view.model.remove(parent :+ v)
+      }
+    }
+
+    def dispose()(implicit tx: S#Tx) {
+      val emptyPath = Tree.Path.empty
+      root.children.foreach { v => elemViewRemoved(emptyPath, v, v.element()) }
+      val r = root.group
+      mapObserver.get(r.id).foreach(_.dispose())
+      mapObserver.remove(r.id)
+      mapObserver.dispose()
+    }
+
+    /** Register a new sub group for observation.
+      *
+      * @param path     the path up to and including the group (exception: root is not included)
+      * @param group    the group to observe
+      */
+    def groupAdded(path: Tree.Path[ElementView.Group[S]], group: Elements[S])(implicit tx: S#Tx) {
+      val obs = group.changed.reactTx[Elements.Update[S]] { implicit tx => upd =>
+        // println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
+        upd.changes.foreach {
+          case Elements.Added  (idx, elem)      => elemAdded  (path, idx, elem)
+          case Elements.Removed(idx, elem)      => elemRemoved(path, idx, elem)
+          case Elements.Element(elem, elemUpd)  => println(s"Warning: GroupView unhandled $upd")
+          // case _ =>
+        }
+      }
+      mapObserver.put(group.id, obs)
+    }
 
     def component: Component = {
       requireEDT()
@@ -107,13 +159,6 @@ object GroupViewImpl {
     def guiInit() {
       requireEDT()
       require(comp == null, "Initialization called twice")
-      //       ggList = new swing.ListView {
-      //          peer.setModel( mList )
-      //          listenTo( selection )
-      //          reactions += {
-      //             case l: ListSelectionChanged[ _ ] => notifyViewObservers( l.range )
-      //          }
-      //       }
 
       _model = ExternalTreeModel[ElementView[S]](root.children: _*) {
         case g: ElementView.GroupLike[S] => g.children
@@ -140,20 +185,16 @@ object GroupViewImpl {
         }
       }
 
-//      var sel = Set.empty[Tree.Path[ElementView[S]]]
       t = new Tree(_model)
       t.listenTo(t.selection)
       t.reactions += {
         case TreePathSelected(_, _, _,_, _) =>  // this crappy untyped event doesn't help us at all
-//          println(s"pathsAdded = $pathsAdded\npathsRemoved = $pathsRemoved")
-//          sel --= pathsRemoved
-//          sel ++= pathsAdded
-
           dispatch(GroupView.SelectionChanged(view, selection))
       }
       t.showsRootHandles = true
       t.renderer = new Renderer[S]
-      t.expandAll()
+      // t.expandAll()
+      t.expandPath(Tree.Path.empty)
 
       comp = new ScrollPane(t)
     }

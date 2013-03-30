@@ -31,6 +31,7 @@ import swing.Component
 import impl.{GroupViewImpl => Impl}
 import de.sciss.desktop.Model
 import collection.immutable.{IndexedSeq => IIdxSeq}
+import de.sciss.lucre.stm.Disposable
 
 object GroupView {
   def apply[S <: Sys[S]](root: Elements[S])(implicit tx: S#Tx): GroupView[S] = Impl(root)
@@ -44,7 +45,7 @@ object GroupView {
   final case class SelectionChanged[S <: Sys[S]](view: GroupView[S], selection: Selection[S])
     extends Update[S]
 }
-trait GroupView[S <: Sys[S]] extends Model[GroupView.Update[S]] {
+trait GroupView[S <: Sys[S]] extends Model[GroupView.Update[S]] with Disposable[S#Tx] {
   def component: Component
   def selection: GroupView.Selection[S]
 }
