@@ -26,7 +26,7 @@
 package de.sciss.mellite
 
 import de.sciss.lucre.{stm, io, event => evt}
-import de.sciss.synth.proc.{InMemory, Sys, ProcGroup => _ProcGroup}
+import de.sciss.synth.proc.{ProcGroup => _ProcGroup, Grapheme, InMemory, Sys}
 import de.sciss.lucre.expr.Expr
 import io.{DataOutput, Writable, DataInput}
 import stm.{Disposable, Mutable}
@@ -43,6 +43,8 @@ object Element {
   import mellite.{Elements => _Group}
 
   type Name[S <: Sys[S]] = Expr.Var[S, _String]
+
+  // ----------------- Updates -----------------
 
   sealed trait Change[S <: Sys[S]]
   final case class Update [S <: Sys[S]](element: Element[S], changes: IIdxSeq[Change[S]])
@@ -77,6 +79,8 @@ object Element {
     }
   }
 
+  // ----------------- Int -----------------
+
   object Int extends Companion[Int] {
     protected[Element] final val typeID = Ints.typeID
 
@@ -97,6 +101,8 @@ object Element {
     }
   }
   sealed trait Int[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _Int] }
+
+  // ----------------- Double -----------------
 
   object Double extends Companion[Double] {
     protected[Element] final val typeID = Doubles.typeID
@@ -119,6 +125,8 @@ object Element {
   }
   sealed trait Double[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _Double] }
 
+  // ----------------- String -----------------
+
   object String extends Companion[String] {
     protected[Element] final val typeID = Strings.typeID
 
@@ -139,6 +147,8 @@ object Element {
     }
   }
   sealed trait String[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _String] }
+
+  // ----------------- (Element) Group -----------------
 
   object Group extends Companion[Group] {
     protected[Element] final val typeID = 0x10000
@@ -165,6 +175,8 @@ object Element {
   }
   sealed trait Group[S <: Sys[S]] extends Element[S] { type A = _Group[S] }
 
+  // ----------------- ProcGroup -----------------
+
   object ProcGroup extends Companion[ProcGroup] {
     protected[Element] final val typeID = 0x10001
 
@@ -190,6 +202,36 @@ object Element {
   }
   sealed trait ProcGroup[S <: Sys[S]] extends Element[S] { type A = _ProcGroup[S] }
 
+  // ----------------- AudioGrapheme -----------------
+
+  object AudioGrapheme extends Companion[AudioGrapheme] {
+    protected[Element] final val typeID = 0x10002 // Grapheme.Elem.Audio.typeID
+
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): AudioGrapheme[S] with evt.Node[S] = {
+      val entity = Grapheme.Elem.Audio.readExpr(in, access)
+      new Impl(targets, name, entity)
+    }
+
+    def apply[S <: Sys[S]](name: _String, init: Grapheme.Elem.Audio[S])(implicit tx: S#Tx): AudioGrapheme[S] = {
+      new Impl(evt.Targets[S], mkName(name), init)
+    }
+
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S],
+                                          val entity: Expr[S, Grapheme.Value.Audio])
+      extends Element.Impl[S] with AudioGrapheme[S] {
+      self =>
+
+      def typeID = AudioGrapheme.typeID
+      def prefix = "AudioGrapheme"
+
+      protected def entityEvent = entity.changed
+    }
+  }
+  sealed trait AudioGrapheme[S <: Sys[S]] extends Element[S] { type A = Expr[S, Grapheme.Value.Audio] }
+
+  // ----------------- Serializer -----------------
+
   implicit def serializer[S <: Sys[S]]: evt.Serializer[S, Element[S]] = anySer.asInstanceOf[Ser[S]]
 
   private final val anySer = new Ser[InMemory]
@@ -202,12 +244,13 @@ object Element {
     def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Element[S] with evt.Node[S] = {
       val typeID = in.readInt()
       (typeID: @switch) match {
-        case Int   .typeID    => Int      .readIdentified(in, access, targets)
-        case Double.typeID    => Double   .readIdentified(in, access, targets)
-        case String.typeID    => String   .readIdentified(in, access, targets)
-        case Group .typeID    => Group    .readIdentified(in, access, targets)
-        case ProcGroup.typeID => ProcGroup.readIdentified(in, access, targets)
-        case _                => sys.error(s"Unexpected element type cookie $typeID")
+        case Int          .typeID => Int          .readIdentified(in, access, targets)
+        case Double       .typeID => Double       .readIdentified(in, access, targets)
+        case String       .typeID => String       .readIdentified(in, access, targets)
+        case Group        .typeID => Group        .readIdentified(in, access, targets)
+        case ProcGroup    .typeID => ProcGroup    .readIdentified(in, access, targets)
+        case AudioGrapheme.typeID => AudioGrapheme.readIdentified(in, access, targets)
+        case _                    => sys.error(s"Unexpected element type cookie $typeID")
       }
     }
 

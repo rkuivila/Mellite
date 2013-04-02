@@ -26,7 +26,7 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.{Sys, ProcGroup => _ProcGroup}
+import de.sciss.synth.proc.{ProcGroup => _ProcGroup, Grapheme, Sys}
 import de.sciss.lucre.stm
 import scalaswingcontrib.tree.Tree
 import swing.{Label, Swing, BoxPanel, Orientation, Component}
@@ -55,6 +55,9 @@ object ElementView {
         new Group.Impl(tx.newHandle(e), name, children)
       case e: Element.ProcGroup[S] =>
         new ProcGroup.Impl(tx.newHandle(e), name)
+      case e: Element.AudioGrapheme[S] =>
+        val value = e.entity.value
+        new AudioGrapheme.Impl(tx.newHandle(e), name, value)
     }
   }
 
@@ -160,6 +163,35 @@ object ElementView {
   }
   sealed trait ProcGroup[S <: Sys[S]] extends ElementView[S] {
     def element: stm.Source[S#Tx, Element.ProcGroup[S]]
+  }
+
+  object AudioGrapheme {
+    private object Comp extends BoxPanel(Orientation.Horizontal) {
+      val key = new DefaultTreeCellRenderer
+      key.setLeafIcon(null)
+      val value = new DefaultTreeCellRenderer
+      value.setLeafIcon(null)
+      background = null
+      contents += Component.wrap(key)
+      contents += HStrut(8)
+      contents += Component.wrap(value)
+    }
+
+    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.AudioGrapheme[S]],
+                                                       var name: _String, var value: Grapheme.Value.Audio)
+      extends AudioGrapheme[S] with ElementView.Impl[S] {
+
+      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
+        Comp.key  .getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
+        val spec = value.spec.toString
+        Comp.value.getTreeCellRendererComponent(tree.peer, spec, info.isSelected, false, true, info.row, info.hasFocus)
+        Comp
+      }
+      def prefix = "String"
+    }
+  }
+  sealed trait AudioGrapheme[S <: Sys[S]] extends ElementView[S] {
+    def element: stm.Source[S#Tx, Element.AudioGrapheme[S]]
   }
 
   object Root {

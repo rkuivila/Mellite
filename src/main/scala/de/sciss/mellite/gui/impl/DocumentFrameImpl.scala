@@ -29,16 +29,18 @@ package impl
 
 import swing.{Swing, TextField, Alignment, Label, Dialog, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{ProcGroup, Sys}
+import de.sciss.synth.proc.{Artifact, Grapheme, ProcGroup, Sys}
 import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
-import de.sciss.synth.expr.Strings
+import de.sciss.synth.expr.{Doubles, Longs, Strings}
 import tools.nsc.interpreter.NamedParam
 import de.sciss.desktop
+import desktop.Window.Style
 import desktop.{DialogSource, OptionPane, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
+import de.sciss.synth.io.AudioFile
 
 object DocumentFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
@@ -86,6 +88,30 @@ object DocumentFrameImpl {
       }
     }
 
+    private def actionAddAudioFile() {
+//      val res = Dialog.showInput[String](groupView.component, "Enter initial group name:", "New Proc Group",
+//        Dialog.Message.Question, initial = "Timeline")
+//      res.foreach { name =>
+//        atomic { implicit tx =>
+//          addElement(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
+//        }
+//      }
+      val res = FileDialog.open(None/* Some(frame) */, None, None, "Add Audio File", AudioFile.identify(_).isDefined)
+      res.foreach { f =>
+        val spec      = AudioFile.readSpec(f)
+        val name0     = f.getName
+        val i         = name0.lastIndexOf('.')
+        val name      = if (i < 0) name0 else name0.substring(0, i)
+        val offset    = Longs.newConst[S](0L)
+        val gain      = Doubles.newConst[S](1.0)
+        val artifact  = Artifact(f.getAbsolutePath)
+        atomic { implicit tx =>
+          val audio = Grapheme.Elem.Audio(artifact, spec, offset, gain)
+          addElement(Element.AudioGrapheme(name, audio))
+        }
+      }
+    }
+
     private def actionAddInt() {
       println("actionAddInt")
     }
@@ -101,7 +127,7 @@ object DocumentFrameImpl {
       ggValue.text  = "Value"
 
       import language.reflectiveCalls // why does GroupPanel need reflective calls?
-//      import desktop.Implicits._
+      // import desktop.Implicits._
       val box = new GroupPanel {
         val lbName  = new Label( "Name:", EmptyIcon, Alignment.Right)
         val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
@@ -132,11 +158,12 @@ object DocumentFrameImpl {
       lazy val addPopup: PopupMenu = {
         import Menu._
         val pop = Popup()
-          .add(Item("folder",     Action("Folder"    )(actionAddFolder())))
-          .add(Item("procgroup",  Action("Proc Group")(actionAddProcGroup())))
-          .add(Item("string",     Action("String"    )(actionAddString())))
-          .add(Item("int",        Action("Int"       )(actionAddInt   ())))
-          .add(Item("double",     Action("Double"    )(actionAddDouble())))
+          .add(Item("folder",     Action("Folder"    )(actionAddFolder   ())))
+          .add(Item("timeline",   Action("Timeline"  )(actionAddProcGroup())))
+          .add(Item("audiofile",  Action("Audio File")(actionAddAudioFile())))
+          .add(Item("string",     Action("String"    )(actionAddString   ())))
+          .add(Item("int",        Action("Int"       )(actionAddInt      ())))
+          .add(Item("double",     Action("Double"    )(actionAddDouble   ())))
         val res = pop.create(frame)
         res.peer.pack() // so we can read `size` correctly
         res
@@ -159,11 +186,34 @@ object DocumentFrameImpl {
       ggDelete.enabled = false
       ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
 
-      lazy val groupsButPanel = new FlowPanel(ggAdd, ggDelete) //, ggViewTimeline
+      lazy val ggView: Button = Button("View") {
+        val views = groupView.selection.map { case (_, view) => view }
+        if (views.nonEmpty) atomic { implicit tx =>
+          views.foreach { view =>
+            view.element() match {
+              case e: Element.ProcGroup[S] =>
+                val tlv = TimelineView(e)
+                new WindowImpl {
+                  def handler = Mellite.windowHandler
+                  def style   = Window.Regular
+                  contents    = tlv.component
+                  pack()
+                  // centerOnScreen()
+                  front()
+                }
+              case _ => // ...
+            }
+          }
+        }
+      }
+      ggView.enabled = false
+      ggView.peer.putClientProperty("JButton.buttonType", "roundRect")
+
+      lazy val groupsButPanel = new FlowPanel(ggAdd, ggDelete, ggView)
 
       lazy val groupsPanel = new BorderPanel {
         add(groupView.component, BorderPanel.Position.Center)
-        add(groupsButPanel, BorderPanel.Position.South)
+        add(groupsButPanel,      BorderPanel.Position.South )
       }
 
       lazy val intp = {
@@ -182,8 +232,9 @@ object DocumentFrameImpl {
 
       groupView.addListener {
         case GroupView.SelectionChanged(_, sel) =>
-          ggAdd.enabled     = sel.size < 2
+          ggAdd   .enabled  = sel.size < 2
           ggDelete.enabled  = sel.nonEmpty
+          ggView  .enabled  = sel.nonEmpty
       }
 
       comp = frame

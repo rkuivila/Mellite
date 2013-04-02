@@ -1,8 +1,8 @@
 /*
  *  InstantGroupFrameImpl.scala
- *  (SoundProcesses)
+ *  (Mellite)
  *
- *  Copyright (c) 2010-2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -40,23 +40,23 @@ import de.sciss.desktop.KeyStrokes
 object InstantGroupFrameImpl {
   def apply[S <: Sys[S]](group: Document.Group[S], transport: Document.Transport[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupFrame[S] = {
-    val prefusePanel = InstantGroupPanel(transport)
-    val transpPanel = TransportPanel(transport)
+    val prefusePanel      = InstantGroupPanel(transport)
+    val transpPanel       = TransportPanel   (transport)
     implicit val groupSer = Document.Serializers.group[S]
-    val groupH = tx.newHandle(group)
-    val view = new Impl(prefusePanel, transpPanel, groupH, transport, cursor.position, group.id.toString)
+    val groupH            = tx.newHandle(group)
+    val view              = new Impl(prefusePanel, transpPanel, groupH, transport, cursor.position, group.id.toString)
     guiFromTx {
       view.guiInit()
     }
     view
   }
 
-  private final class Impl[S <: Sys[S]](prefusePanel: InstantGroupPanel[S],
-                                        transpPanel: TransportPanel[S],
-                                        groupH: Source[S#Tx, Document.Group[S]],
-                                        val transport: Document.Transport[S],
-                                        csrPos: S#Acc,
-                                        name: String)
+  private final class Impl[S <: Sys[S]](prefusePanel:   InstantGroupPanel[S],
+                                        transpPanel:    TransportPanel[S],
+                                        groupH:         Source[S#Tx, Document.Group[S]],
+                                        val transport:  Document.Transport[S],
+                                        csrPos:         S#Acc,
+                                        name:           String)
                                        (implicit protected val cursor: Cursor[S])
     extends InstantGroupFrame[S] with ComponentHolder[Frame] with CursorHolder[S] {
     def group(implicit tx: S#Tx): Document.Group[S] = groupH() // tx.refresh( csrPos, staleGroup )( Document.Serializers.group[ S ])

@@ -1,5 +1,5 @@
 /*
- *  VisualInstantPresentation.scala
+ *  TimelineView.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -23,19 +23,16 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite.gui
+package de.sciss.mellite
+package gui
 
-import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc
-import proc.{Sys, ProcTransport}
-import impl.{InstantGroupPanelImpl => Impl}
+import de.sciss.synth.proc.Sys
 import swing.Component
+import impl.{TimelineViewImpl => Impl}
 
-object InstantGroupPanel {
-  def apply[S <: Sys[S]](transport: ProcTransport[S])
-                        (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] = Impl(transport)
+object TimelineView {
+  def apply[S <: Sys[S]](group: Element.ProcGroup[S])(implicit tx: S#Tx): TimelineView[S] = Impl(group)
 }
-
-trait InstantGroupPanel[S <: Sys[S]] {
+trait TimelineView[S <: Sys[S]] {
   def component: Component
 }

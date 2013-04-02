@@ -1,5 +1,5 @@
 /*
- *  VisualInstantPresentation.scala
+ *  TimelineViewImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -23,19 +23,34 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite.gui
+package de.sciss.mellite
+package gui
+package impl
 
-import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc
-import proc.{Sys, ProcTransport}
-import impl.{InstantGroupPanelImpl => Impl}
-import swing.Component
+import de.sciss.synth.proc.Sys
+import de.sciss.audiowidgets.Axis
+import swing.{Orientation, BoxPanel}
 
-object InstantGroupPanel {
-  def apply[S <: Sys[S]](transport: ProcTransport[S])
-                        (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] = Impl(transport)
-}
+object TimelineViewImpl {
+  def apply[S <: Sys[S]](group: Element.ProcGroup[S])(implicit tx: S#Tx): TimelineView[S] = {
+    val res = new Impl[S]
+    guiFromTx(res.guiInit())
+    res
+  }
 
-trait InstantGroupPanel[S <: Sys[S]] {
-  def component: Component
+  private final class Impl[S <: Sys[S]] extends TimelineView[S] {
+    def guiInit() {
+      component
+    }
+
+    lazy val timelineAxis = new Axis {
+      format  = Axis.Format.Time(hours = true, millis = true)
+      minimum = 0.0
+      maximum = 60.0
+    }
+
+    lazy val component = new BoxPanel(Orientation.Vertical) {
+      contents += timelineAxis
+    }
+  }
 }

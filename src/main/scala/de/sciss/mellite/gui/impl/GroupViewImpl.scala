@@ -185,36 +185,6 @@ object GroupViewImpl {
         case _ => Vector.empty
       })
 
-//        makeInsertableWith { (path, elem, idx) =>
-//        if (DEBUG) println(s"model.insertion $path $elem $idx")
-//        path.lastOption.getOrElse(root) match {
-//          case g: ElementView.GroupLike[S] if g.children.size >= idx =>
-//            g.children = g.children.patch(idx, Vector(elem), 0)
-//            // println(s"Expanding ${g} at ${idx} with ${elem} - now children are ${g.children}")
-//            if (DEBUG) println(s"INSERT: children = ${g.children.mkString(", ")}")
-//            true
-//          case _ =>
-//            println("INSERT: woops")
-//            false
-//        }
-//      } makeRemovableWith { path =>
-//        if (DEBUG) println(s"model.removal $path")
-//        if (path.isEmpty) false else {
-//          path.init.lastOption.getOrElse(root) match {
-//            case g: ElementView.GroupLike[S] =>
-//              val idx = g.children.indexOf(path.last)
-//              if (idx < 0) false else {
-//                g.children = g.children.patch(idx, Vector.empty, 1)
-//                if (DEBUG) println(s"REMOVE: children = ${g.children.mkString(", ")}")
-//                true
-//              }
-//            case _ =>
-//              println("REMOVE: woops")
-//              false
-//          }
-//        }
-//      }
-
       t = new Tree(_model)
       t.listenTo(t.selection)
       t.reactions += {
