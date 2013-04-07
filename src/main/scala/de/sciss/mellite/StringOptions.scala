@@ -1,10 +1,10 @@
 package de.sciss.mellite
 
-import de.sciss.lucre.{io, event => evt}
+import de.sciss.lucre.{event => evt}
 import evt.{Targets, Sys}
 import de.sciss.synth.expr.{Strings, BiTypeImpl}
 import annotation.switch
-import io.{DataOutput, DataInput}
+import de.sciss.serial.{DataOutput, DataInput}
 
 object StringOptions extends BiTypeImpl[Option[String]] {
   final val typeID = 0x1000 | Strings.typeID

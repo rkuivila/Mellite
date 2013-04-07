@@ -27,21 +27,22 @@ package de.sciss.mellite
 package gui
 
 import swing.Component
-import de.sciss.lucre.{stm, expr, io}
+import de.sciss.lucre.{stm, expr}
 import stm.{Cursor, Disposable, Sys}
 import expr.LinkedList
 import impl.{ListViewImpl => Impl}
 import collection.immutable.{IndexedSeq => IIdxSeq}
+import de.sciss.serial.Serializer
 
 object ListView {
   def apply[S <: Sys[S], Elem, U](list: LinkedList[S, Elem, U])(show: Elem => String)
                                  (implicit tx: S#Tx, cursor: Cursor[S],
-                                  serializer: io.Serializer[S#Tx, S#Acc, LinkedList[S, Elem, U]])
+                                  serializer: Serializer[S#Tx, S#Acc, LinkedList[S, Elem, U]])
   : ListView[S, Elem, U] = Impl(list)(show)
 
   def empty[S <: Sys[S], Elem, U](show: Elem => String)
                                  (implicit tx: S#Tx, cursor: Cursor[S],
-                                  serializer: io.Serializer[S#Tx, S#Acc, LinkedList[S, Elem, U]])
+                                  serializer: Serializer[S#Tx, S#Acc, LinkedList[S, Elem, U]])
   : ListView[S, Elem, U] = Impl.empty(show)
 
   sealed trait Update

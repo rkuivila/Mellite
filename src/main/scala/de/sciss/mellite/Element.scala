@@ -25,17 +25,17 @@
 
 package de.sciss.mellite
 
-import de.sciss.lucre.{stm, io, event => evt}
+import de.sciss.lucre.{stm, event => evt}
 import de.sciss.synth.proc.{ProcGroup => _ProcGroup, Grapheme, InMemory, Sys}
 import de.sciss.lucre.expr.Expr
-import io.{DataOutput, Writable, DataInput}
 import stm.{Disposable, Mutable}
 import de.sciss.synth.expr.{Doubles, Strings, Ints}
 import annotation.switch
-import de.sciss.mellite
+import de.sciss.{serial, mellite}
 import evt.{EventLike, EventLikeSerializer}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import language.higherKinds
+import de.sciss.serial.{DataOutput, DataInput, Writable}
 
 object Element {
   import scala.{Int => _Int, Double => _Double}
@@ -62,10 +62,10 @@ object Element {
                                    (implicit tx: S#Tx): E[S] with evt.Node[S]
     protected def typeID: _Int
 
-    implicit final def serializer[S <: Sys[S]]: io.Serializer[S#Tx, S#Acc, E[S]] = anySer.asInstanceOf[Serializer[S]]
+    implicit final def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, E[S]] = anySer.asInstanceOf[Serializer[S]]
 
     private val anySer = new Serializer[InMemory]
-    private final class Serializer[S <: Sys[S]] extends io.Serializer[S#Tx, S#Acc, E[S]] {
+    private final class Serializer[S <: Sys[S]] extends serial.Serializer[S#Tx, S#Acc, E[S]] {
       def write(v: E[S], out: DataOutput) {
         v.write(out)
       }

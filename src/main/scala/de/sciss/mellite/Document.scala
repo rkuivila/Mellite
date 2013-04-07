@@ -26,7 +26,7 @@
 package de.sciss.mellite
 
 import java.io.File
-import de.sciss.lucre.{expr, event => evt, bitemp, stm, io}
+import de.sciss.lucre.{expr, event => evt, bitemp, stm}
 import expr.LinkedList
 import bitemp.BiGroup
 import de.sciss.synth.proc
@@ -34,6 +34,7 @@ import impl.{DocumentImpl => Impl}
 import de.sciss.synth.proc.{AuralSystem, Proc, Sys}
 import stm.Cursor
 import de.sciss.synth.expr.SpanLikes
+import de.sciss.serial.Serializer
 
 object Document {
    type Group[        S <: Sys[ S ]]   = BiGroup.Modifiable[    S, Proc[ S ],  Proc.Update[ S ]]
@@ -49,7 +50,7 @@ object Document {
    def empty( dir: File ) : Document[ Cf ] = Impl.empty( dir )
 
    object Serializers {
-      implicit def group[ S <: Sys[ S ]] : io.Serializer[ S#Tx, S#Acc, Group[ S ]] with evt.Reader[ S, Group[ S ]] = {
+      implicit def group[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, Group[ S ]] with evt.Reader[ S, Group[ S ]] = {
          implicit val spanType = SpanLikes
          BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
       }
@@ -73,7 +74,9 @@ object Document {
 //      }
    }
 }
+
 trait Document[S <: Sys[S]] {
+
   import Document.{Group => _, _}
 
   def system: S
@@ -81,16 +84,14 @@ trait Document[S <: Sys[S]] {
   def aural: AuralSystem[S]
   def folder: File
 
-//  def root(implicit tx: S#Tx): Group[S]
+  //  def root(implicit tx: S#Tx): Group[S]
+  //  def groups( implicit tx: S#Tx ) : Groups[S]
+  //   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
 
-//  def groups( implicit tx: S#Tx ) : Groups[S]
-
-//   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
-
-  def elements(implicit tx: S#Tx) : Elements[S]
+  def elements(implicit tx: S#Tx): Elements[S]
 
   // def manifest: reflect.runtime.universe.TypeTag[Document[S]]
   implicit def systemType: reflect.runtime.universe.TypeTag[S]
 
-//   def exprImplicits: ExprImplicits[ S ]
+  //   def exprImplicits: ExprImplicits[ S ]
 }

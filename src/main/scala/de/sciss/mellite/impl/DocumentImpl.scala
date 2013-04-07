@@ -27,11 +27,11 @@ package de.sciss.mellite
 package impl
 
 import java.io.{IOException, FileNotFoundException, File}
-import de.sciss.lucre.{confluent, stm, io}
-import io.{DataInput, DataOutput}
+import de.sciss.lucre.{confluent, stm}
 import stm.store.BerkeleyDB
 import stm.Cursor
 import de.sciss.synth.proc.{AuralSystem, Confluent}
+import de.sciss.serial.{DataInput, Serializer, DataOutput}
 
 object DocumentImpl {
 //   import Document.{Group, GroupUpdate, Groups, Transports}
@@ -47,7 +47,7 @@ object DocumentImpl {
 
 //  private implicit def serializer[ S <: Sys[ S ]] /* ( implicit cursor: Cursor[ S ]) */ : Serializer[ S#Tx, S#Acc, Data[ S ]] = new Ser[ S ]
 
-  private implicit object serializer extends io.Serializer[S#Tx, S#Acc, Data /* [S] */] {
+  private implicit object serializer extends Serializer[S#Tx, S#Acc, Data /* [S] */] {
     def write(data: Data /* [S] */, out: DataOutput) {
       data.write(out)
     }
