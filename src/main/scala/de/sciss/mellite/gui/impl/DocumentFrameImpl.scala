@@ -89,26 +89,27 @@ object DocumentFrameImpl {
     }
 
     private def actionAddAudioFile() {
-//      val res = Dialog.showInput[String](groupView.component, "Enter initial group name:", "New Proc Group",
-//        Dialog.Message.Question, initial = "Timeline")
-//      res.foreach { name =>
-//        atomic { implicit tx =>
-//          addElement(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
-//        }
-//      }
+      //      val res = Dialog.showInput[String](groupView.component, "Enter initial group name:", "New Proc Group",
+      //        Dialog.Message.Question, initial = "Timeline")
+      //      res.foreach { name =>
+      //        atomic { implicit tx =>
+      //          addElement(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
+      //        }
+      //      }
       val res = FileDialog.open(None/* Some(frame) */, None, None, "Add Audio File", AudioFile.identify(_).isDefined)
       res.foreach { f =>
-        val spec      = AudioFile.readSpec(f)
-        val name0     = f.getName
-        val i         = name0.lastIndexOf('.')
-        val name      = if (i < 0) name0 else name0.substring(0, i)
-        val offset    = Longs.newConst[S](0L)
-        val gain      = Doubles.newConst[S](1.0)
-        val artifact  = Artifact(f.getAbsolutePath)
-        atomic { implicit tx =>
-          val audio = Grapheme.Elem.Audio(artifact, spec, offset, gain)
-          addElement(Element.AudioGrapheme(name, audio))
-        }
+        ???
+        //        val spec      = AudioFile.readSpec(f)
+        //        val name0     = f.getName
+        //        val i         = name0.lastIndexOf('.')
+        //        val name      = if (i < 0) name0 else name0.substring(0, i)
+        //        val offset    = Longs.newConst[S](0L)
+        //        val gain      = Doubles.newConst[S](1.0)
+        //        val artifact  = Artifact(f.getAbsolutePath)
+        //        atomic { implicit tx =>
+        //          val audio = Grapheme.Elem.Audio(artifact, spec, offset, gain)
+        //          addElement(Element.AudioGrapheme(name, audio))
+        //        }
       }
     }
 
@@ -201,6 +202,19 @@ object DocumentFrameImpl {
                   // centerOnScreen()
                   front()
                 }
+
+              //              case e: Element.AudioGrapheme[S] =>
+              //                document
+              //                val afv = AudioFileView(e)
+              //                new WindowImpl {
+              //                  def handler = Mellite.windowHandler
+              //                  def style   = Window.Regular
+              //                  contents    = afv.component
+              //                  pack()
+              //                  // centerOnScreen()
+              //                  front()
+              //                }
+
               case _ => // ...
             }
           }
