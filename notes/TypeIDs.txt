@@ -21,6 +21,7 @@
 
 :: non-expr elements (mutables) ::
 
-0x10000     Group
+0x10000     Folder
 0x10001     ProcGroup
 0x10002	    AudioGrapheme
+0x10003     ArtifactStore

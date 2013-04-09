@@ -1,5 +1,5 @@
 /*
- *  GroupView.scala
+ *  FolderView.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -28,24 +28,24 @@ package gui
 
 import de.sciss.synth.proc.Sys
 import swing.Component
-import impl.{GroupViewImpl => Impl}
+import impl.{FolderViewImpl => Impl}
 import de.sciss.desktop.Model
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import de.sciss.lucre.stm.Disposable
 
-object GroupView {
-  def apply[S <: Sys[S]](root: Elements[S])(implicit tx: S#Tx): GroupView[S] = Impl(root)
+object FolderView {
+  def apply[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx): FolderView[S] = Impl(root)
 
-  /** A selection is a sequence of paths, where a path is a prefix of groups and a trailing element.
+  /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
     */
-  type Selection[S <: Sys[S]] = IIdxSeq[(IIdxSeq[ElementView.GroupLike[S]], ElementView[S])]
+  type Selection[S <: Sys[S]] = IIdxSeq[(IIdxSeq[ElementView.FolderLike[S]], ElementView[S])]
 
-  sealed trait Update[S <: Sys[S]] { def view: GroupView[S] }
-  final case class SelectionChanged[S <: Sys[S]](view: GroupView[S], selection: Selection[S])
+  sealed trait Update[S <: Sys[S]] { def view: FolderView[S] }
+  final case class SelectionChanged[S <: Sys[S]](view: FolderView[S], selection: Selection[S])
     extends Update[S]
 }
-trait GroupView[S <: Sys[S]] extends Model[GroupView.Update[S]] with Disposable[S#Tx] {
+trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with Disposable[S#Tx] {
   def component: Component
-  def selection: GroupView.Selection[S]
+  def selection: FolderView.Selection[S]
 }

@@ -23,11 +23,12 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
+package de.sciss
+package mellite
 package gui
 
-import de.sciss.synth.proc.{ProcGroup => _ProcGroup, Grapheme, Sys}
-import de.sciss.lucre.stm
+import synth.proc.{Grapheme, Sys}
+import lucre.stm
 import scalaswingcontrib.tree.Tree
 import swing.{Label, Swing, BoxPanel, Orientation, Component}
 import collection.immutable.{IndexedSeq => IIdxSeq}
@@ -37,6 +38,7 @@ import Swing._
 object ElementView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double}
+  import mellite.{Folder => _Folder}
 
   private[gui] def apply[S <: Sys[S]](element: Element[S])(implicit tx: S#Tx): ElementView[S] = {
     val name = element.name.value
@@ -50,16 +52,21 @@ object ElementView {
       case e: Element.String[S] =>
         val value = e.entity.value
         new String.Impl(tx.newHandle(e), name, value)
-      case e: Element.Group[S] =>
+      case e: Element.Folder[S] =>
         val children = e.entity.iterator.map(apply(_)(tx)).toIndexedSeq
-        new Group.Impl(tx.newHandle(e), name, children)
+        new Folder.Impl(tx.newHandle(e), name, children)
       case e: Element.ProcGroup[S] =>
         new ProcGroup.Impl(tx.newHandle(e), name)
       case e: Element.AudioGrapheme[S] =>
         val value = e.entity.value
         new AudioGrapheme.Impl(tx.newHandle(e), name, value)
+      case e: Element.ArtifactStore[S] =>
+        // val value = e.entity.value
+        new ArtifactStore.Impl(tx.newHandle(e), name)
     }
   }
+
+  // -------- String --------
 
   object String {
     private object Comp extends BoxPanel(Orientation.Horizontal) {
@@ -89,6 +96,8 @@ object ElementView {
     def element: stm.Source[S#Tx, Element.String[S]]
   }
 
+  // -------- Int --------
+
   object Int {
     private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Int[S]],
                                                       var name: _String, var value: _Int)
@@ -101,6 +110,8 @@ object ElementView {
   sealed trait Int[S <: Sys[S]] extends ElementView[S] {
     def element: stm.Source[S#Tx, Element.Int[S]]
   }
+
+  // -------- Double --------
 
   object Double {
     private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Double[S]],
@@ -115,19 +126,23 @@ object ElementView {
     def element: stm.Source[S#Tx, Element.Double[S]]
   }
 
-  sealed trait GroupLike[S <: Sys[S]] extends Renderer {
-    def group(implicit tx: S#Tx): Elements[S]
-    /** The children of the group. This varible _must only be accessed or updated_ on the event thread. */
+  // -------- FolderLike --------
+
+  sealed trait FolderLike[S <: Sys[S]] extends Renderer {
+    def folder(implicit tx: S#Tx): _Folder[S]
+    /** The children of the folder. This varible _must only be accessed or updated_ on the event thread. */
     var children: IIdxSeq[ElementView[S]]
   }
 
-  object Group {
+  // -------- Group --------
+
+  object Folder {
     private final val cmpGroupJ = new DefaultTreeCellRenderer
     private final val cmpGroup  = Component.wrap(cmpGroupJ)
 
-    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Group[S]],
+    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Folder[S]],
                                                        var name: _String, var children: IIdxSeq[ElementView[S]])
-      extends Group[S] with ElementView.Impl[S] {
+      extends Folder[S] with ElementView.Impl[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
         // never show the leaf icon, always a folder icon. for empty folders, show the icon as if the folder is open
@@ -136,14 +151,16 @@ object ElementView {
         cmpGroup
       }
 
-      def group(implicit tx: S#Tx): Elements[S] = element().entity
+      def folder(implicit tx: S#Tx): _Folder[S] = element().entity
 
       def prefix = "Group"
     }
   }
-  sealed trait Group[S <: Sys[S]] extends ElementView[S] with GroupLike[S] {
-    def element: stm.Source[S#Tx, Element.Group[S]]
+  sealed trait Folder[S <: Sys[S]] extends ElementView[S] with FolderLike[S] {
+    def element: stm.Source[S#Tx, Element.Folder[S]]
   }
+
+  // -------- ProcGroup --------
 
   object ProcGroup {
     private final val cmpLabelJ = new DefaultTreeCellRenderer
@@ -164,6 +181,8 @@ object ElementView {
   sealed trait ProcGroup[S <: Sys[S]] extends ElementView[S] {
     def element: stm.Source[S#Tx, Element.ProcGroup[S]]
   }
+
+  // -------- AudioGrapheme --------
 
   object AudioGrapheme {
     private object Comp extends BoxPanel(Orientation.Horizontal) {
@@ -194,23 +213,47 @@ object ElementView {
     def element: stm.Source[S#Tx, Element.AudioGrapheme[S]]
   }
 
+  // -------- ArtifactStore --------
+
+  object ArtifactStore {
+    private val key = new DefaultTreeCellRenderer
+    key.setLeafIcon(null)
+    private val comp = Component.wrap(key)
+
+    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.ArtifactStore[S]],
+                                                       var name: _String)
+      extends ArtifactStore[S] with ElementView.Impl[S] {
+
+      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
+        key.getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
+        comp
+      }
+      def prefix = "ArtifactStore"
+    }
+  }
+  sealed trait ArtifactStore[S <: Sys[S]] extends ElementView[S] {
+    def element: stm.Source[S#Tx, Element.ArtifactStore[S]]
+  }
+
+  // -------- Root --------
+
   object Root {
     private final val cmpBlank = new Label
 
-    private[gui] def apply[S <: Sys[S]](group: Elements[S])(implicit tx: S#Tx): Root[S] = {
-      val children = group.iterator.map(ElementView(_)(tx)).toIndexedSeq
-      import Elements.serializer
-      new Impl(tx.newHandle(group), children)
+    private[gui] def apply[S <: Sys[S]](folder: _Folder[S])(implicit tx: S#Tx): Root[S] = {
+      val children = folder.iterator.map(ElementView(_)(tx)).toIndexedSeq
+      import _Folder.serializer
+      new Impl(tx.newHandle(folder), children)
     }
 
-    private final class Impl[S <: Sys[S]](handle: stm.Source[S#Tx, Elements[S]],
+    private final class Impl[S <: Sys[S]](handle: stm.Source[S#Tx, _Folder[S]],
                                           var children: IIdxSeq[ElementView[S]])
       extends Root[S] {
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank
-      def group(implicit tx: S#Tx): Elements[S] = handle()
+      def folder(implicit tx: S#Tx): _Folder[S] = handle()
     }
   }
-  sealed trait Root[S <: Sys[S]] extends GroupLike[S]
+  sealed trait Root[S <: Sys[S]] extends FolderLike[S]
 
   private sealed trait Impl[S <: Sys[S]] extends ElementView[S] {
     protected def prefix: _String

@@ -88,7 +88,7 @@ trait Document[S <: Sys[S]] {
   //  def groups( implicit tx: S#Tx ) : Groups[S]
   //   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
 
-  def elements(implicit tx: S#Tx): Elements[S]
+  def elements(implicit tx: S#Tx): Folder[S]
 
   // def manifest: reflect.runtime.universe.TypeTag[Document[S]]
   implicit def systemType: reflect.runtime.universe.TypeTag[S]

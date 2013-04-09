@@ -38,13 +38,13 @@ package object mellite {
 //      type Var[ A ] = expr.Expr.Var[ S, A ]
 //   }
 
-//   type Elements[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
-  object Elements {
+//   type Folder[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
+  object Folder {
     import mellite.{Element => _Element}
 
-    def apply[S <: Sys[S]](implicit tx: S#Tx): Elements[S] = LinkedList.Modifiable[S, _Element[S], _Element.Update[S]](_.changed)
+    def apply[S <: Sys[S]](implicit tx: S#Tx): Folder[S] = LinkedList.Modifiable[S, _Element[S], _Element.Update[S]](_.changed)
 
-    def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Elements[S] =
+    def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Folder[S] =
       LinkedList.Modifiable.read[S, _Element[S], _Element.Update[S]](_.changed)(in, access)
 
     object Update {
@@ -73,11 +73,11 @@ package object mellite {
 
     type Update[S <: Sys[S]] = LinkedList.Update[S, _Element[S], _Element.Update[S]]
 
-    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Elements[S]] =
-      anySer.asInstanceOf[Serializer[S#Tx, S#Acc, Elements[S]]]
+    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Folder[S]] =
+      anySer.asInstanceOf[Serializer[S#Tx, S#Acc, Folder[S]]]
 
-    private val anySer: Serializer[InMemory#Tx, InMemory#Acc, Elements[InMemory]] =
+    private val anySer: Serializer[InMemory#Tx, InMemory#Acc, Folder[InMemory]] =
       LinkedList.Modifiable.serializer[InMemory, Element[InMemory], mellite.Element.Update[InMemory]](_.changed)
   }
-  type Elements[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Element.Update[S]]
+  type Folder[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Element.Update[S]]
 }

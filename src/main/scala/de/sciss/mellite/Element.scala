@@ -26,7 +26,7 @@
 package de.sciss.mellite
 
 import de.sciss.lucre.{stm, event => evt}
-import de.sciss.synth.proc.{ProcGroup => _ProcGroup, Grapheme, InMemory, Sys}
+import de.sciss.synth.proc.{ProcGroup => _ProcGroup, ArtifactStore => _ArtifactStore, Grapheme, InMemory, Sys}
 import de.sciss.lucre.expr.Expr
 import stm.{Disposable, Mutable}
 import de.sciss.synth.expr.{Doubles, Strings, Ints}
@@ -40,7 +40,7 @@ import de.sciss.serial.{DataOutput, DataInput, Writable}
 object Element {
   import scala.{Int => _Int, Double => _Double}
   import java.lang.{String => _String}
-  import mellite.{Elements => _Group}
+  import mellite.{Folder => _Folder}
 
   type Name[S <: Sys[S]] = Expr.Var[S, _String]
 
@@ -148,32 +148,32 @@ object Element {
   }
   sealed trait String[S <: Sys[S]] extends Element[S] { type A = Expr.Var[S, _String] }
 
-  // ----------------- (Element) Group -----------------
+  // ----------------- (Element) Folder -----------------
 
-  object Group extends Companion[Group] {
+  object Folder extends Companion[Folder] {
     protected[Element] final val typeID = 0x10000
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
-                                   (implicit tx: S#Tx): Group[S] with evt.Node[S] = {
-      val entity = _Group.read(in, access)
+                                   (implicit tx: S#Tx): Folder[S] with evt.Node[S] = {
+      val entity = _Folder.read(in, access)
       new Impl(targets, name, entity)
     }
 
-    def apply[S <: Sys[S]](name: _String, init: _Group[S])(implicit tx: S#Tx): Group[S] = {
+    def apply[S <: Sys[S]](name: _String, init: _Folder[S])(implicit tx: S#Tx): Folder[S] = {
       new Impl(evt.Targets[S], mkName(name), init)
     }
 
-    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _Group[S])
-      extends Element.Impl[S] with Group[S] {
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _Folder[S])
+      extends Element.Impl[S] with Folder[S] {
       self =>
 
-      def typeID = Group.typeID
-      def prefix = "Group"
+      def typeID = Folder.typeID
+      def prefix = "Folder"
 
       protected def entityEvent = entity.changed
     }
   }
-  sealed trait Group[S <: Sys[S]] extends Element[S] { type A = _Group[S] }
+  sealed trait Folder[S <: Sys[S]] extends Element[S] { type A = _Folder[S] }
 
   // ----------------- ProcGroup -----------------
 
@@ -230,6 +230,33 @@ object Element {
   }
   sealed trait AudioGrapheme[S <: Sys[S]] extends Element[S] { type A = Expr[S, Grapheme.Value.Audio] }
 
+  // ----------------- ArtifactStore -----------------
+
+  object ArtifactStore extends Companion[ArtifactStore] {
+    protected[Element] final val typeID = 0x10003
+
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): ArtifactStore[S] with evt.Node[S] = {
+      val entity = _ArtifactStore.read(in, access)
+      new Impl(targets, name, entity)
+    }
+
+    def apply[S <: Sys[S]](name: _String, init: _ArtifactStore[S])(implicit tx: S#Tx): ArtifactStore[S] = {
+      new Impl(evt.Targets[S], mkName(name), init)
+    }
+
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _ArtifactStore[S])
+      extends Element.Impl[S] with ArtifactStore[S] {
+      self =>
+
+      def typeID = ArtifactStore.typeID
+      def prefix = "ArtifactStore"
+
+      protected def entityEvent = entity.changed
+    }
+  }
+  sealed trait ArtifactStore[S <: Sys[S]] extends Element[S] { type A = _ArtifactStore[S] }
+
   // ----------------- Serializer -----------------
 
   implicit def serializer[S <: Sys[S]]: evt.Serializer[S, Element[S]] = anySer.asInstanceOf[Ser[S]]
@@ -247,35 +274,36 @@ object Element {
         case Int          .typeID => Int          .readIdentified(in, access, targets)
         case Double       .typeID => Double       .readIdentified(in, access, targets)
         case String       .typeID => String       .readIdentified(in, access, targets)
-        case Group        .typeID => Group        .readIdentified(in, access, targets)
+        case Folder       .typeID => Folder       .readIdentified(in, access, targets)
         case ProcGroup    .typeID => ProcGroup    .readIdentified(in, access, targets)
         case AudioGrapheme.typeID => AudioGrapheme.readIdentified(in, access, targets)
+        case ArtifactStore.typeID => ArtifactStore.readIdentified(in, access, targets)
         case _                    => sys.error(s"Unexpected element type cookie $typeID")
       }
     }
 
-//    def write(elem: Element[S], out: DataOutput) {
-//      elem.write(out)
-//    }
+    //    def write(elem: Element[S], out: DataOutput) {
+    //      elem.write(out)
+    //    }
   }
 
   private def mkName[S <: Sys[S]](name: _String)(implicit tx: S#Tx): Name[S] =
     Strings.newVar[S](Strings.newConst(name))
 
-//  // A[ ~ <: Sys[ ~ ] forSome { type ~ }]
-//  private def mkExpr[S <: Sys[S], A1](biType: BiType[A1], init: Expr[S, A1], name: Option[String])
-//                                     (implicit tx: S#Tx) : (_Int, Expr.Var[S, Option[String]], Expr.Var[S, A1]) = {
-//    val expr = biType.newVar[S](init)
-//    (biType.typeID, mkName(name), expr)
-//  }
+  //  // A[ ~ <: Sys[ ~ ] forSome { type ~ }]
+  //  private def mkExpr[S <: Sys[S], A1](biType: BiType[A1], init: Expr[S, A1], name: Option[String])
+  //                                     (implicit tx: S#Tx) : (_Int, Expr.Var[S, Option[String]], Expr.Var[S, A1]) = {
+  //    val expr = biType.newVar[S](init)
+  //    (biType.typeID, mkName(name), expr)
+  //  }
 
-//  private def mkImpl[S <: Sys[S], A1](typeID: Int, name: Option[String],
-//                                      elem: A1 with Writable with Disposable[S#Tx])
-//                                     (implicit tx: S#Tx): Element[S] { type A = A1 } = {
-//    val id      = tx.newID()
-//    val nameEx  = mkName(name)
-//    new Impl(id, nameEx, typeID, elem)
-//  }
+  //  private def mkImpl[S <: Sys[S], A1](typeID: Int, name: Option[String],
+  //                                      elem: A1 with Writable with Disposable[S#Tx])
+  //                                     (implicit tx: S#Tx): Element[S] { type A = A1 } = {
+  //    val id      = tx.newID()
+  //    val nameEx  = mkName(name)
+  //    new Impl(id, nameEx, typeID, elem)
+  //  }
 
   private sealed trait ExprImpl[S <: Sys[S], A1] extends Impl[S] {
     self =>
@@ -289,7 +317,7 @@ object Element {
 
     type A <: Writable with Disposable[S#Tx]
 
-//    /* final */ type A = A1
+    //    /* final */ type A = A1
 
     protected def typeID: _Int
 
@@ -308,7 +336,7 @@ object Element {
 
     override def toString() = s"Element.${prefix}$id"
 
-//    final def changed: EventLike[S, Element.Update[S], Element[S]] = this
+    //    final def changed: EventLike[S, Element.Update[S], Element[S]] = this
 
     // ---- events ----
 

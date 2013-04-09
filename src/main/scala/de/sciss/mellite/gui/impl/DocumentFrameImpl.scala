@@ -29,7 +29,7 @@ package impl
 
 import swing.{Swing, TextField, Alignment, Label, Dialog, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{Artifact, Grapheme, ProcGroup, Sys}
+import de.sciss.synth.proc.{ArtifactStore, Artifact, Grapheme, ProcGroup, Sys}
 import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
@@ -45,45 +45,55 @@ import de.sciss.synth.io.AudioFile
 object DocumentFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
     implicit val csr  = doc.cursor
-    val groupView     = GroupView(doc.elements)
-    val view          = new Impl(doc, groupView)
+    val folderView    = FolderView(doc.elements)
+    val view          = new Impl(doc, folderView)
     guiFromTx {
       view.guiInit()
     }
     view
   }
 
-  private final class Impl[S <: Sys[S]](val document: Document[S], groupView: GroupView[S])
+  private final class Impl[S <: Sys[S]](val document: Document[S], folderView: FolderView[S])
     extends DocumentFrame[S] with ComponentHolder[Window] with CursorHolder[S] {
 
     protected implicit def cursor: Cursor[S] = document.cursor
 
     private def addElement(elem: Element[S])(implicit tx: S#Tx) {
-      val sel = groupView.selection
+      val sel = folderView.selection
       val parent = if (sel.isEmpty) document.elements else sel.head match {
-        case (_, _parent: ElementView.Group[S]) => _parent.group
-        case (_ :+ _parent, _)                  => _parent.group
-        case _                                  => document.elements
+        case (_, _parent: ElementView.Folder[S])  => _parent.folder
+        case (_ :+ _parent, _)                    => _parent.folder
+        case _                                    => document.elements
       }
       parent.addLast(elem)
     }
 
     private def actionAddFolder() {
-      val res = Dialog.showInput[String](groupView.component, "Enter initial folder name:", "New Folder",
+      val res = Dialog.showInput[String](folderView.component, "Enter initial folder name:", "New Folder",
         Dialog.Message.Question, initial = "Folder")
       res.foreach { name =>
         atomic { implicit tx =>
-          addElement(Element.Group(name, Elements[S]))
+          addElement(Element.Folder(name, Folder[S]))
         }
       }
     }
 
     private def actionAddProcGroup() {
-      val res = Dialog.showInput[String](groupView.component, "Enter initial group name:", "New Proc Group",
+      val res = Dialog.showInput[String](folderView.component, "Enter initial group name:", "New ProcGroup",
         Dialog.Message.Question, initial = "Timeline")
       res.foreach { name =>
         atomic { implicit tx =>
           addElement(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
+        }
+      }
+    }
+
+    private def actionAddArtifactStore() {
+      val res = Dialog.showInput[String](folderView.component, "Enter initial store name:", "New ArtifactStore",
+        Dialog.Message.Question, initial = "Artifacts")
+      res.foreach { name =>
+        atomic { implicit tx =>
+          addElement(Element.ArtifactStore(name, ArtifactStore.empty[S]))
         }
       }
     }
@@ -159,12 +169,13 @@ object DocumentFrameImpl {
       lazy val addPopup: PopupMenu = {
         import Menu._
         val pop = Popup()
-          .add(Item("folder",     Action("Folder"    )(actionAddFolder   ())))
-          .add(Item("timeline",   Action("Timeline"  )(actionAddProcGroup())))
-          .add(Item("audiofile",  Action("Audio File")(actionAddAudioFile())))
-          .add(Item("string",     Action("String"    )(actionAddString   ())))
-          .add(Item("int",        Action("Int"       )(actionAddInt      ())))
-          .add(Item("double",     Action("Double"    )(actionAddDouble   ())))
+          .add(Item("folder",       Action("Folder"       )(actionAddFolder       ())))
+          .add(Item("procgroup",    Action("ProcGroup"    )(actionAddProcGroup    ())))
+          .add(Item("artifactstore",Action("ArtifactStore")(actionAddArtifactStore())))
+       // .add(Item("audiofile",    Action("Audio File"   )(actionAddAudioFile    ())))
+          .add(Item("string",       Action("String"    )(actionAddString          ())))
+          .add(Item("int",          Action("Int"       )(actionAddInt             ())))
+          .add(Item("double",       Action("Double"    )(actionAddDouble          ())))
         val res = pop.create(frame)
         res.peer.pack() // so we can read `size` correctly
         res
@@ -177,10 +188,10 @@ object DocumentFrameImpl {
       ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
 
       lazy val ggDelete: Button = Button("\u2212") {
-        val views = groupView.selection.map { case (p, view) => (p.last, view) }
+        val views = folderView.selection.map { case (p, view) => (p.last, view) }
         if (views.nonEmpty) atomic { implicit tx =>
           views.foreach { case (parent, child) =>
-            parent.group.remove(child.element())
+            parent.folder.remove(child.element())
           }
         }
       }
@@ -188,7 +199,7 @@ object DocumentFrameImpl {
       ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
 
       lazy val ggView: Button = Button("View") {
-        val views = groupView.selection.map { case (_, view) => view }
+        val views = folderView.selection.map { case (_, view) => view }
         if (views.nonEmpty) atomic { implicit tx =>
           views.foreach { view =>
             view.element() match {
@@ -223,11 +234,11 @@ object DocumentFrameImpl {
       ggView.enabled = false
       ggView.peer.putClientProperty("JButton.buttonType", "roundRect")
 
-      lazy val groupsButPanel = new FlowPanel(ggAdd, ggDelete, ggView)
+      lazy val folderButPanel = new FlowPanel(ggAdd, ggDelete, ggView)
 
-      lazy val groupsPanel = new BorderPanel {
-        add(groupView.component, BorderPanel.Position.Center)
-        add(groupsButPanel,      BorderPanel.Position.South )
+      lazy val folderPanel = new BorderPanel {
+        add(folderView.component, BorderPanel.Position.Center)
+        add(folderButPanel,       BorderPanel.Position.South )
       }
 
       lazy val intp = {
@@ -238,14 +249,14 @@ object DocumentFrameImpl {
         InterpreterPane(interpreterConfig = intpConfig)
       }
 
-      lazy val splitPane = new SplitPane(Orientation.Horizontal, groupsPanel, Component.wrap(intp.component))
+      lazy val splitPane = new SplitPane(Orientation.Horizontal, folderPanel, Component.wrap(intp.component))
 
       frame = new Frame(document, new BorderPanel {
         add(splitPane, BorderPanel.Position.Center)
       })
 
-      groupView.addListener {
-        case GroupView.SelectionChanged(_, sel) =>
+      folderView.addListener {
+        case FolderView.SelectionChanged(_, sel) =>
           ggAdd   .enabled  = sel.size < 2
           ggDelete.enabled  = sel.nonEmpty
           ggView  .enabled  = sel.nonEmpty
