@@ -29,9 +29,9 @@ package gui
 import de.sciss.synth.proc.Sys
 import swing.Component
 import impl.{FolderViewImpl => Impl}
-import de.sciss.desktop.Model
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import de.sciss.lucre.stm.Disposable
+import de.sciss.model.Model
 
 object FolderView {
   def apply[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx): FolderView[S] = Impl(root)

@@ -14,10 +14,10 @@ scalaVersion := "2.10.1"
 
 libraryDependencies ++= Seq(
    "de.sciss" %% "soundprocesses"     % "1.6.+",
-   "de.sciss" %% "scalacolliderswing" % "1.6.+",
+   "de.sciss" %% "scalacolliderswing" % "1.7.+",
    "de.sciss" %% "lucrestm-bdb"       % "2.0.+",
-   "de.sciss" %% "desktop"            % "0.2.+",
-   "de.sciss" %% "sonogramoverview"   % "1.5.+"
+   "de.sciss" %% "desktop"            % "0.3.+",
+   "de.sciss" %% "sonogramoverview"   % "1.6.+"
 )
 
 retrieveManaged := true

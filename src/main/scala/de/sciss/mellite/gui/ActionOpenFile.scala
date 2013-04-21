@@ -29,11 +29,16 @@ package gui
 import swing.{Dialog, Action}
 import java.awt.event.KeyEvent
 import de.sciss.synth.proc.Sys
-import de.sciss.desktop.KeyStrokes
+import de.sciss.desktop.{Menu, RecentFiles, FileDialog, KeyStrokes}
 import util.control.NonFatal
+import java.io.File
 
 object ActionOpenFile extends Action( "Open...") {
   import KeyStrokes._
+
+  private val _recent = RecentFiles(Mellite.userPrefs("recent-docs")) { folder =>
+    perform(folder)
+  }
 
   accelerator = Some(menu1 + KeyEvent.VK_O)
 
@@ -45,21 +50,26 @@ object ActionOpenFile extends Action( "Open...") {
     }
   }
 
+  def recentMenu: Menu.Group = _recent.menu
+
   def apply() {
-    FileDialog.open(title = fullTitle, filter = {
-      f => f.isDirectory && f.getName.endsWith(".mllt")
-    }).foreach { folder =>
-      try {
-        val doc = Document.read(folder)
-        initDoc(doc)
-      } catch {
-        case NonFatal(e) =>
-          Dialog.showMessage(
-            message = "Unabled to create new document " + folder.getPath + "\n\n" + formatException(e),
-            title = fullTitle,
-            messageType = Dialog.Message.Error
-          )
-      }
+    val dlg = FileDialog.open(title = fullTitle)
+    dlg.setFilter { f => f.isDirectory && f.getName.endsWith(".mllt") }
+    dlg.show(None).foreach(perform _)
+  }
+
+  def perform(folder: File) {
+    try {
+      val doc = Document.read(folder)
+      _recent.add(folder)
+      initDoc(doc)
+    } catch {
+      case NonFatal(e) =>
+        Dialog.showMessage(
+          message = "Unabled to create new document " + folder.getPath + "\n\n" + formatException(e),
+          title = fullTitle,
+          messageType = Dialog.Message.Error
+        )
     }
   }
 }

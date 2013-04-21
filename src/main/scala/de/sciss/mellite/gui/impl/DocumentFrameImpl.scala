@@ -29,15 +29,14 @@ package impl
 
 import swing.{Swing, TextField, Alignment, Label, Dialog, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{Artifact, Grapheme, ProcGroup, Sys}
+import de.sciss.synth.proc.{Artifact, ProcGroup, Sys}
 import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
-import de.sciss.synth.expr.{Doubles, Longs, Strings}
+import de.sciss.synth.expr.Strings
 import tools.nsc.interpreter.NamedParam
 import de.sciss.desktop
-import desktop.Window.Style
-import desktop.{DialogSource, OptionPane, Window, Menu}
+import de.sciss.desktop.{FileDialog, DialogSource, OptionPane, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
 import de.sciss.synth.io.AudioFile
@@ -88,15 +87,17 @@ object DocumentFrameImpl {
       }
     }
 
-    private def actionAddArtifactStore() {
-      // XXX TODO
-//      val res = Dialog.showInput[String](folderView.component, "Enter initial store name:", "New ArtifactStore",
-//        Dialog.Message.Question, initial = "Artifacts")
-//      res.foreach { name =>
-//        atomic { implicit tx =>
-//          addElement(Element.ArtifactLocation(name, Artifact.Location.Modifiable(init)))
-//        }
-//      }
+    private def actionAddArtifactLocation() {
+      val dlg  = FileDialog.folder(title = "Choose Artifact Base Location")
+      dlg.show(None).foreach { folder =>
+        val res = Dialog.showInput[String](folderView.component, "Enter initial store name:", "New Artifact Location",
+          Dialog.Message.Question, initial = folder.getName)
+        res.foreach { name =>
+          atomic { implicit tx =>
+            addElement(Element.ArtifactLocation(name, Artifact.Location.Modifiable(folder)))
+          }
+        }
+      }
     }
 
     private def actionAddAudioFile() {
@@ -107,8 +108,9 @@ object DocumentFrameImpl {
       //          addElement(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
       //        }
       //      }
-      val res = FileDialog.open(None/* Some(frame) */, None, None, "Add Audio File", AudioFile.identify(_).isDefined)
-      res.foreach { f =>
+      val dlg = FileDialog.open(title = "Add Audio File")
+      dlg.setFilter(AudioFile.identify(_).isDefined)
+      dlg.show(None).foreach { f =>
         ???
         //        val spec      = AudioFile.readSpec(f)
         //        val name0     = f.getName
@@ -149,7 +151,8 @@ object DocumentFrameImpl {
 
       val pane = OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,
         messageType = Dialog.Message.Question, focus = Some(ggValue))
-      val res = frame.show(pane -> "New String")
+      pane.title  = "New String"
+      val res = frame.show(pane)
 
       if (res == Dialog.Result.Ok) {
         // println(s"name = ${ggName.text} ; value = ${ggValue.text}")
@@ -172,7 +175,7 @@ object DocumentFrameImpl {
         val pop = Popup()
           .add(Item("folder",       Action("Folder"       )(actionAddFolder       ())))
           .add(Item("procgroup",    Action("ProcGroup"    )(actionAddProcGroup    ())))
-          .add(Item("artifactstore",Action("ArtifactStore")(actionAddArtifactStore())))
+          .add(Item("artifactstore",Action("ArtifactStore")(actionAddArtifactLocation())))
        // .add(Item("audiofile",    Action("Audio File"   )(actionAddAudioFile    ())))
           .add(Item("string",       Action("String"    )(actionAddString          ())))
           .add(Item("int",          Action("Int"       )(actionAddInt             ())))

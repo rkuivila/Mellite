@@ -32,9 +32,9 @@ import swing.{ScrollPane, Component}
 import collection.breakOut
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import scalaswingcontrib.tree.{TreeModel, Tree}
-import de.sciss.desktop.impl.ModelImpl
 import scalaswingcontrib.event.TreePathSelected
 import de.sciss.lucre.stm.{IdentifierMap, Disposable}
+import de.sciss.model.impl.ModelImpl
 
 object FolderViewImpl {
   private final val DEBUG = false
@@ -200,7 +200,7 @@ object FolderViewImpl {
     }
 
     def selection: FolderView.Selection[S] =
-      if (t.selection.empty) IIdxSeq.empty else // WARNING: currently we get a NPE if accessing `paths` on an empty selection
+      if (t.selection.isEmpty) Vector.empty else // WARNING: currently we get a NPE if accessing `paths` on an empty selection
       t.selection.paths.collect({
         case PathExtrator(path, child) => (path, child)
       })(breakOut)

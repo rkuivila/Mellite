@@ -30,7 +30,7 @@ import swing.{Dialog, Action}
 import java.awt.event.KeyEvent
 import java.io.File
 import de.sciss.synth.proc.Sys
-import de.sciss.desktop.KeyStrokes
+import de.sciss.desktop.{FileDialog, KeyStrokes}
 import util.control.NonFatal
 
 object ActionNewFile extends Action( "New...") {
@@ -55,7 +55,7 @@ object ActionNewFile extends Action( "New...") {
   }
 
   def apply() {
-    FileDialog.save(title = "Location for New Document").foreach { folder0 =>
+    FileDialog.save(title = "Location for New Document").show(None).foreach { folder0 =>
       val name    = folder0.getName
       val folder  = if (name.endsWith(".mllt")) folder0 else new File(folder0.getParentFile, name + ".mllt")
       if (folder.exists()) {

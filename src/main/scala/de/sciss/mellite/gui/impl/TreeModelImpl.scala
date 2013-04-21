@@ -5,6 +5,7 @@ package impl
 import scalaswingcontrib.tree.{Tree, TreeModel}
 import javax.swing.{tree => jst}
 import javax.swing.{event => jse}
+import collection.breakOut
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import reflect.ClassTag
 import Tree.Path
@@ -115,7 +116,7 @@ final class TreeModelImpl[A](rootItems: => IIdxSeq[A], children: A => IIdxSeq[A]
   def treePathToPath(tp: jst.TreePath): Path[A] = {
     if (tp == null) null
     else {
-      (tp.getPath.map(_.asInstanceOf[A]): Path[A]).tail
+      (tp.getPath.map(_.asInstanceOf[A])(breakOut): Path[A]).tail
     }
   }
 

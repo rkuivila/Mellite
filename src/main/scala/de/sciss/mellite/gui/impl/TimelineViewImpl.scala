@@ -28,7 +28,7 @@ package gui
 package impl
 
 import de.sciss.synth.proc.Sys
-import de.sciss.audiowidgets.Axis
+import de.sciss.audiowidgets.{AxisFormat, Axis}
 import swing.{Orientation, BoxPanel}
 
 object TimelineViewImpl {
@@ -44,7 +44,7 @@ object TimelineViewImpl {
     }
 
     lazy val timelineAxis = new Axis {
-      format  = Axis.Format.Time(hours = true, millis = true)
+      format  = AxisFormat.Time(hours = true, millis = true)
       minimum = 0.0
       maximum = 60.0
     }

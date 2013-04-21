@@ -26,7 +26,7 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.desktop.Menu
+import de.sciss.desktop.{RecentFiles, Menu}
 
 object MenuBar {
   def apply(): Menu.Root = {
@@ -37,7 +37,7 @@ object MenuBar {
       ).add(
         Item("open", ActionOpenFile)
       ).add(
-        Group("recent", "Open Recent")
+        ActionOpenFile.recentMenu
       )
     )
   }

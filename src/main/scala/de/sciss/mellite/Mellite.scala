@@ -26,18 +26,11 @@
 package de.sciss.mellite
 
 import gui.MenuBar
-import java.awt.{Dimension, EventQueue}
-import javax.swing.WindowConstants
-import swing.Frame
 import de.sciss.desktop.impl.SwingApplicationImpl
 import de.sciss.desktop.Menu
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = Unit
-
-  def quit() {
-    sys.exit()
-  }
 
   protected lazy val menuFactory: Menu.Root = MenuBar()
 }
