@@ -202,8 +202,8 @@ object FolderViewImpl {
     }
 
     def selection: FolderView.Selection[S] =
-      if (t.selection.isEmpty) Vector.empty else // WARNING: currently we get a NPE if accessing `paths` on an empty selection
-      t.selection.paths.collect({
+      if (t.selection.isEmpty) Vector.empty   // WARNING: currently we get a NPE if accessing `paths` on an empty selection
+      else t.selection.paths.collect({
         case PathExtrator(path, child) => (path, child)
       })(breakOut)
 

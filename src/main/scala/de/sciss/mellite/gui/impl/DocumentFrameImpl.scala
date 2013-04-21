@@ -29,17 +29,20 @@ package impl
 
 import swing.{Swing, TextField, Alignment, Label, Dialog, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{Artifact, ProcGroup, Sys}
+import de.sciss.synth.proc.{Grapheme, Artifact, ProcGroup, Sys}
 import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
-import de.sciss.synth.expr.Strings
+import de.sciss.synth.expr.{Doubles, Longs, Strings}
 import tools.nsc.interpreter.NamedParam
 import de.sciss.desktop
 import de.sciss.desktop.{FileDialog, DialogSource, OptionPane, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
 import de.sciss.synth.io.AudioFile
+import scala.util.Try
+import scala.util.control.NonFatal
+import java.io.File
 
 object DocumentFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
@@ -87,20 +90,36 @@ object DocumentFrameImpl {
       }
     }
 
-    private def actionAddArtifactLocation() {
+    private def queryArtifactLocation(): Option[(File, String)] = {
       val dlg  = FileDialog.folder(title = "Choose Artifact Base Location")
-      dlg.show(None).foreach { folder =>
+      dlg.show(None).flatMap { folder =>
         val res = Dialog.showInput[String](folderView.component, "Enter initial store name:", "New Artifact Location",
           Dialog.Message.Question, initial = folder.getName)
-        res.foreach { name =>
-          atomic { implicit tx =>
-            addElement(Element.ArtifactLocation(name, Artifact.Location.Modifiable(folder)))
-          }
+        res.map(folder -> _)
+      }
+    }
+
+    private def createArtifactLocation(folder: File, name: String)(implicit tx: S#Tx): Element.ArtifactLocation[S] = {
+      val res = Element.ArtifactLocation(name, Artifact.Location.Modifiable(folder))
+      addElement(res)
+      res
+    }
+
+    private def actionAddArtifactLocation() {
+      queryArtifactLocation().foreach { case (folder, name) =>
+        atomic { implicit tx =>
+          createArtifactLocation(folder, name)
         }
       }
     }
 
     private def actionAddAudioFile() {
+      val locs = folderView.selection.collect {
+        case (_, loc: ElementView.ArtifactLocation[S]) => loc
+      }
+
+      // val loc = locOpt.getOrElse(return)  // oppa goto style
+
       //      val res = Dialog.showInput[String](groupView.component, "Enter initial group name:", "New Proc Group",
       //        Dialog.Message.Question, initial = "Timeline")
       //      res.foreach { name =>
@@ -108,21 +127,43 @@ object DocumentFrameImpl {
       //          addElement(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
       //        }
       //      }
-      val dlg = FileDialog.open(title = "Add Audio File")
+      val dlg = FileDialog.open(init = locs.headOption.map(_.directory), title = "Add Audio File")
       dlg.setFilter(AudioFile.identify(_).isDefined)
       dlg.show(None).foreach { f =>
-        ???
-        //        val spec      = AudioFile.readSpec(f)
-        //        val name0     = f.getName
-        //        val i         = name0.lastIndexOf('.')
-        //        val name      = if (i < 0) name0 else name0.substring(0, i)
-        //        val offset    = Longs.newConst[S](0L)
-        //        val gain      = Doubles.newConst[S](1.0)
-        //        val artifact  = Artifact(f.getAbsolutePath)
-        //        atomic { implicit tx =>
-        //          val audio = Grapheme.Elem.Audio(artifact, spec, offset, gain)
-        //          addElement(Element.AudioGrapheme(name, audio))
-        //        }
+        val spec      = AudioFile.readSpec(f)
+        val name0     = f.getName
+        val i         = name0.lastIndexOf('.')
+        val name      = if (i < 0) name0 else name0.substring(0, i)
+
+        val locsOk = locs.flatMap { view =>
+          try {
+            Artifact.relativize(view.directory, f)
+            Some(view)
+          } catch {
+            case NonFatal(_) => None
+          }
+        } .headOption
+
+        val locSource = locsOk match {
+          case Some(loc)  => Some(Right(loc))
+          case _          => queryArtifactLocation().map(tup => Left(tup))
+        }
+
+        locSource.foreach { either =>
+          atomic { implicit tx =>
+            val loc       = either match {
+              case Left((folder, locName)) => createArtifactLocation(folder, locName)
+              case Right(view) => view.element()
+            }
+            loc.entity.modifiableOption.foreach { locM =>
+              val offset    = Longs  .newVar[S](Longs  .newConst(0L))
+              val gain      = Doubles.newVar[S](Doubles.newConst(1.0))
+              val artifact  = locM.add(f)
+              val audio     = Grapheme.Elem.Audio(artifact, spec, offset, gain)
+              addElement(Element.AudioGrapheme(name, audio))
+            }
+          }
+        }
       }
     }
 
@@ -173,13 +214,13 @@ object DocumentFrameImpl {
       lazy val addPopup: PopupMenu = {
         import Menu._
         val pop = Popup()
-          .add(Item("folder",       Action("Folder"       )(actionAddFolder       ())))
-          .add(Item("procgroup",    Action("ProcGroup"    )(actionAddProcGroup    ())))
+          .add(Item("folder",       Action("Folder"       )(actionAddFolder          ())))
+          .add(Item("procgroup",    Action("ProcGroup"    )(actionAddProcGroup       ())))
           .add(Item("artifactstore",Action("ArtifactStore")(actionAddArtifactLocation())))
-       // .add(Item("audiofile",    Action("Audio File"   )(actionAddAudioFile    ())))
-          .add(Item("string",       Action("String"    )(actionAddString          ())))
-          .add(Item("int",          Action("Int"       )(actionAddInt             ())))
-          .add(Item("double",       Action("Double"    )(actionAddDouble          ())))
+          .add(Item("audiofile",    Action("Audio File"   )(actionAddAudioFile       ())))
+          .add(Item("string",       Action("String"       )(actionAddString          ())))
+          .add(Item("int",          Action("Int"          )(actionAddInt             ())))
+          .add(Item("double",       Action("Double"       )(actionAddDouble          ())))
         val res = pop.create(frame)
         res.peer.pack() // so we can read `size` correctly
         res
@@ -211,26 +252,30 @@ object DocumentFrameImpl {
             view.element() match {
               case e: Element.ProcGroup[S] =>
                 val tlv = TimelineView(e)
-                new WindowImpl {
-                  def handler = Mellite.windowHandler
-                  def style   = Window.Regular
-                  contents    = tlv.component
-                  pack()
-                  // centerOnScreen()
-                  front()
+                guiFromTx {
+                  new WindowImpl {
+                    def handler = Mellite.windowHandler
+                    def style   = Window.Regular
+                    contents    = tlv.component
+                    pack()
+                    // centerOnScreen()
+                    front()
+                  }
                 }
 
-              //              case e: Element.AudioGrapheme[S] =>
-              //                document
-              //                val afv = AudioFileView(e)
-              //                new WindowImpl {
-              //                  def handler = Mellite.windowHandler
-              //                  def style   = Window.Regular
-              //                  contents    = afv.component
-              //                  pack()
-              //                  // centerOnScreen()
-              //                  front()
-              //                }
+              case e: Element.AudioGrapheme[S] =>
+                // document
+                val afv = AudioFileView(e)
+                guiFromTx {
+                  new WindowImpl {
+                    def handler = Mellite.windowHandler
+                    def style   = Window.Regular
+                    contents    = afv.component
+                    pack()
+                    // centerOnScreen()
+                    front()
+                  }
+                }
 
               case _ => // ...
             }
