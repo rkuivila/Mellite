@@ -29,16 +29,19 @@ import lucre.expr
 import expr.LinkedList
 import synth.proc.{InMemory, Sys, Confluent}
 import de.sciss.serial.{Serializer, DataInput}
+import scala.collection.immutable.{IndexedSeq => IIdxSeq}
 
 package object mellite {
   type Cf           = Confluent
-//   type S            = Confluent
-//   type Ex[ A ]      = expr.Expr[ S, A ]
-//   object Ex {
-//      type Var[ A ] = expr.Expr.Var[ S, A ]
-//   }
 
-//   type Folder[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
+  //   type S            = Confluent
+  //   type Ex[ A ]      = expr.Expr[ S, A ]
+  //   object Ex {
+  //      type Var[ A ] = expr.Expr.Var[ S, A ]
+  //   }
+
+  //   type Folder[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
+
   object Folder {
     import mellite.{Element => _Element}
 
@@ -47,37 +50,42 @@ package object mellite {
     def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Folder[S] =
       LinkedList.Modifiable.read[S, _Element[S], _Element.Update[S]](_.changed)(in, access)
 
-    object Update {
-      def unapply[S <: Sys[S]](upd: LinkedList.Update[ S, _Element[S], _Element.Update[S]]) = Some((upd.list, upd.changes))
-    }
+    //    object Update {
+    //      def unapply[S <: Sys[S]](upd: LinkedList.Update[ S, _Element[S], _Element.Update[S]]) = Some((upd.list, upd.changes))
+    //    }
+    //
+    //    object Added {
+    //      def unapply[S <: Sys[S]](change: LinkedList.Change[S, _Element[S], _Element.Update[S]]) = change match {
+    //        case LinkedList.Added(idx, elem) => Some((idx, elem))
+    //        case _ => None
+    //      }
+    ////      def unapply[S <: Sys[S]](change: LinkedList.Added[S, Element[S]]) = Some(change.index, change.elem)
+    //    }
+    //    object Removed {
+    //      def unapply[S <: Sys[S]](change: LinkedList.Change[S, _Element[S], _Element.Update[S]]) = change match {
+    //        case LinkedList.Removed(idx, elem) => Some((idx, elem))
+    //        case _ => None
+    //      }
+    //    }
+    //    object Element {
+    //      def unapply[S <: Sys[S]](change: LinkedList.Change[S, _Element[S], _Element.Update[S]]) = change match {
+    //        case LinkedList.Element(elem, elemUpd) => Some((elem, elemUpd))
+    //        case _ => None
+    //      }
+    //    }
 
-    object Added {
-      def unapply[S <: Sys[S]](change: LinkedList.Change[S, _Element[S], _Element.Update[S]]) = change match {
-        case LinkedList.Added(idx, elem) => Some((idx, elem))
-        case _ => None
-      }
-//      def unapply[S <: Sys[S]](change: LinkedList.Added[S, Element[S]]) = Some(change.index, change.elem)
-    }
-    object Removed {
-      def unapply[S <: Sys[S]](change: LinkedList.Change[S, _Element[S], _Element.Update[S]]) = change match {
-        case LinkedList.Removed(idx, elem) => Some((idx, elem))
-        case _ => None
-      }
-    }
-    object Element {
-      def unapply[S <: Sys[S]](change: LinkedList.Change[S, _Element[S], _Element.Update[S]]) = change match {
-        case LinkedList.Element(elem, elemUpd) => Some((elem, elemUpd))
-        case _ => None
-      }
-    }
-
-    type Update[S <: Sys[S]] = LinkedList.Update[S, _Element[S], _Element.Update[S]]
+    // private[Folder] type _Update[S <: Sys[S]] = LinkedList.Update[S, _Element[S], _Element.Update[S]]
+    type Update[S <: Sys[S]] = IIdxSeq[Change[S]]
+    sealed trait Change[S <: Sys[S]] { def elem: _Element[S] }
+    final case class Added  [S <: Sys[S]](idx: Int, elem: _Element[S]) extends Change[S]
+    final case class Removed[S <: Sys[S]](idx: Int, elem: _Element[S]) extends Change[S]
+    final case class Element[S <: Sys[S]](elem: _Element[S], update: _Element.Update[S]) extends Change[S]
 
     implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Folder[S]] =
       anySer.asInstanceOf[Serializer[S#Tx, S#Acc, Folder[S]]]
 
     private val anySer: Serializer[InMemory#Tx, InMemory#Acc, Folder[InMemory]] =
-      LinkedList.Modifiable.serializer[InMemory, Element[InMemory], mellite.Element.Update[InMemory]](_.changed)
+      LinkedList.Modifiable.serializer[InMemory, _Element[InMemory], _Element.Update[InMemory]](_.changed)
   }
   type Folder[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Element.Update[S]]
 }

@@ -26,7 +26,7 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.desktop.{RecentFiles, Menu}
+import de.sciss.desktop.Menu
 
 object MenuBar {
   def apply(): Menu.Root = {

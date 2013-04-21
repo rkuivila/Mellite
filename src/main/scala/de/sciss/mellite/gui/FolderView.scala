@@ -39,7 +39,7 @@ object FolderView {
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
     */
-  type Selection[S <: Sys[S]] = IIdxSeq[(IIdxSeq[ElementView.FolderLike[S]], ElementView[S])]
+  type Selection[S <: Sys[S]] = IIdxSeq[(IIdxSeq[ElementView.BranchLike[S]], ElementView[S])]
 
   sealed trait Update[S <: Sys[S]] { def view: FolderView[S] }
   final case class SelectionChanged[S <: Sys[S]](view: FolderView[S], selection: Selection[S])

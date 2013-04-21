@@ -34,6 +34,8 @@ import swing.{Label, Swing, BoxPanel, Orientation, Component}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import javax.swing.tree.DefaultTreeCellRenderer
 import Swing._
+import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.expr.LinkedList
 
 object ElementView {
   import java.lang.{String => _String}
@@ -128,10 +130,31 @@ object ElementView {
 
   // -------- FolderLike --------
 
-  sealed trait FolderLike[S <: Sys[S]] extends Renderer {
-    def folder(implicit tx: S#Tx): _Folder[S]
+  sealed trait BranchLike[S <: Sys[S]] extends Renderer {
+    def branchID(implicit tx: S#Tx): S#ID
+
+    def reactTx(fun: S#Tx => _Folder.Update[S] => Unit)(implicit tx: S#Tx): Disposable[S#Tx]
+
     /** The children of the folder. This varible _must only be accessed or updated_ on the event thread. */
     var children: IIdxSeq[ElementView[S]]
+  }
+
+  sealed trait Branch[S <: Sys[S]] extends BranchLike[S] with ElementView[S]
+
+  sealed trait FolderLike[S <: Sys[S]] extends BranchLike[S] {
+    def branchID(implicit tx: S#Tx) = folder.id
+
+    def folder(implicit tx: S#Tx): _Folder[S]
+
+    def reactTx(fun: S#Tx => _Folder.Update[S] => Unit)(implicit tx: S#Tx): Disposable[S#Tx] =
+      folder.changed.reactTx[LinkedList.Update[S, Element[S], Element.Update[S]]] { implicit tx => upd => {
+        val fu = upd.changes.map {
+          case LinkedList.Added  (idx, elem)  => _Folder.Added  (idx, elem)
+          case LinkedList.Removed(idx, elem)  => _Folder.Removed(idx, elem)
+          case LinkedList.Element(elem, eu)   => _Folder.Element(elem, eu)
+        }
+        fun(tx)(fu)
+      }}
   }
 
   // -------- Group --------
@@ -156,7 +179,7 @@ object ElementView {
       def prefix = "Group"
     }
   }
-  sealed trait Folder[S <: Sys[S]] extends ElementView[S] with FolderLike[S] {
+  sealed trait Folder[S <: Sys[S]] extends FolderLike[S] with Branch[S] {
     def element: stm.Source[S#Tx, Element.Folder[S]]
   }
 

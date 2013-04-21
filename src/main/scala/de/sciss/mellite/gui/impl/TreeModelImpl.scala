@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import scalaswingcontrib.tree.{Tree, TreeModel}
+import scalaswingcontrib.tree.{NowYouSeeMe, Tree, TreeModel}
 import javax.swing.{tree => jst}
 import javax.swing.{event => jse}
 import collection.breakOut
@@ -12,7 +12,7 @@ import Tree.Path
 import collection.mutable
 
 object TreeModelImpl {
-  private case object hiddenRoot
+  private final val hiddenRoot = NowYouSeeMe.hiddenRoot
 }
 
 /** A simple tree model like `ExternalTreeModel` but assuming that the caller takes care of updating the

@@ -60,9 +60,9 @@ object DocumentFrameImpl {
     private def addElement(elem: Element[S])(implicit tx: S#Tx) {
       val sel = folderView.selection
       val parent = if (sel.isEmpty) document.elements else sel.head match {
-        case (_, _parent: ElementView.Folder[S])  => _parent.folder
-        case (_ :+ _parent, _)                    => _parent.folder
-        case _                                    => document.elements
+        case (_, _parent: ElementView.Folder[S])        => _parent.folder
+        case (_ :+ (_parent: ElementView.Folder[S]), _) => _parent.folder
+        case _                                          => document.elements
       }
       parent.addLast(elem)
     }
@@ -194,8 +194,10 @@ object DocumentFrameImpl {
       lazy val ggDelete: Button = Button("\u2212") {
         val views = folderView.selection.map { case (p, view) => (p.last, view) }
         if (views.nonEmpty) atomic { implicit tx =>
-          views.foreach { case (parent, child) =>
-            parent.folder.remove(child.element())
+          views.foreach {
+            case (parent: ElementView.FolderLike[S], child) =>
+              parent.folder.remove(child.element())
+            case _ =>
           }
         }
       }

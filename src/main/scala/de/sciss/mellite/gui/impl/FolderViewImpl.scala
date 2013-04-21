@@ -39,14 +39,16 @@ import de.sciss.model.impl.ModelImpl
 object FolderViewImpl {
   private final val DEBUG = false
 
+  private type Path[S <: Sys[S]] = Tree.Path[ElementView.Branch[S]]
+
   def apply[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx): FolderView[S] = {
     val rootView  = ElementView.Root(root)
     val map       = tx.newInMemoryIDMap[Disposable[S#Tx]] // folders to observers
     val view      = new Impl[S](rootView, map)
 
-    def loop(path: Tree.Path[ElementView.Folder[S]], gl: ElementView.FolderLike[S]) {
-      val g = gl.folder
-      view.folderAdded(path, g)
+    def loop(path: Tree.Path[ElementView.Folder[S]], gl: ElementView.BranchLike[S]) {
+      // val g = gl.folder
+      view.branchAdded(path, gl)
       gl.children.foreach {
         case c: ElementView.Folder[S] => loop(path :+ c, c)
         case _ =>
@@ -68,7 +70,7 @@ object FolderViewImpl {
   }
 
   private final class Impl[S <: Sys[S]](root: ElementView.Root[S],
-                                        mapFolders: IdentifierMap[S#ID, S#Tx, Disposable[S#Tx]])
+                                        mapBranches: IdentifierMap[S#ID, S#Tx, Disposable[S#Tx]])
     extends FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
@@ -95,7 +97,7 @@ object FolderViewImpl {
         case (g: Element.Folder[S], gv: ElementView.Folder[S]) =>
           val cg    = g.entity
           val path  = parent :+ gv
-          folderAdded(path, cg)
+          branchAdded(path, gv)
           if (!cg.isEmpty) {
             cg.iterator.toList.zipWithIndex.foreach { case (c, ci) =>
               elemAdded(path, ci, c)
@@ -117,8 +119,8 @@ object FolderViewImpl {
       if (DEBUG) println(s"elemViewRemoved = $parent $v $elem")
       (elem, v) match {
         case (g: Element.Folder[S], gl: ElementView.Folder[S]) =>
-          mapFolders.get(elem.id).foreach(_.dispose()) // child observer
-          mapFolders.remove(elem.id)
+          mapBranches.get(elem.id).foreach(_.dispose()) // child observer
+          mapBranches.remove(elem.id)
           val path = parent :+ gl
           g.entity.iterator.toList.zipWithIndex.reverse.foreach { case (c, ci) =>
             elemRemoved(path, ci, c)
@@ -145,28 +147,28 @@ object FolderViewImpl {
       val emptyPath = Tree.Path.empty
       root.children.foreach { v => elemViewRemoved(emptyPath, v, v.element()) }
       val r = root.folder
-      mapFolders.get(r.id).foreach(_.dispose())
-      mapFolders.remove(r.id)
-      mapFolders.dispose()
+      mapBranches.get(r.id).foreach(_.dispose())
+      mapBranches.remove(r.id)
+      mapBranches.dispose()
     }
 
     /** Register a new sub folder for observation.
       *
       * @param path     the path up to and including the folder (exception: root is not included)
-      * @param folder   the folder to observe
+      * @param branch   the folder to observe
       */
-    def folderAdded(path: Tree.Path[ElementView.Folder[S]], folder: Folder[S])(implicit tx: S#Tx) {
-      if (DEBUG) println(s"folderAdded: $path $folder")
-      val obs = folder.changed.reactTx[Folder.Update[S]] { implicit tx => upd =>
+    def branchAdded(path: Tree.Path[ElementView.Folder[S]], branch: ElementView.BranchLike[S])(implicit tx: S#Tx) {
+      if (DEBUG) println(s"branchAdded: $path $branch")
+      val obs = branch.reactTx { implicit tx => upd =>
         // println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
-        upd.changes.foreach {
+        upd.foreach {
           case Folder.Added  (idx, elem)      => elemAdded  (path, idx, elem)
           case Folder.Removed(idx, elem)      => elemRemoved(path, idx, elem)
           case Folder.Element(elem, elemUpd)  => println(s"Warning: FolderView unhandled $upd")
           // case _ =>
         }
       }
-      mapFolders.put(folder.id, obs)
+      mapBranches.put(branch.branchID, obs)
     }
 
     def component: Component = {
@@ -181,7 +183,7 @@ object FolderViewImpl {
       require(comp == null, "Initialization called twice")
 
       _model = new TreeModelImpl[ElementView[S]](root.children, {
-        case g: ElementView.FolderLike[S] => g.children
+        case g: ElementView.BranchLike[S] => g.children
         case _ => Vector.empty
       })
 
@@ -206,11 +208,11 @@ object FolderViewImpl {
       })(breakOut)
 
     object PathExtrator {
-      def unapply(path: Seq[ElementView[S]]): Option[(IIdxSeq[ElementView.FolderLike[S]], ElementView[S])] =
+      def unapply(path: Seq[ElementView[S]]): Option[(IIdxSeq[ElementView.BranchLike[S]], ElementView[S])] =
         path match {
           case init :+ last =>
-            val pre: IIdxSeq[ElementView.FolderLike[S]] = init.map({
-              case g: ElementView.FolderLike[S] => g
+            val pre: IIdxSeq[ElementView.BranchLike[S]] = init.map({
+              case g: ElementView.BranchLike[S] => g
               case _ => return None
             })(breakOut)
             Some((root +: pre, last))
