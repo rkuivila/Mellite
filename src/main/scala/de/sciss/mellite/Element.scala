@@ -26,7 +26,7 @@
 package de.sciss.mellite
 
 import de.sciss.lucre.{stm, event => evt}
-import de.sciss.synth.proc.{ProcGroup => _ProcGroup, ArtifactStore => _ArtifactStore, Grapheme, InMemory, Sys}
+import de.sciss.synth.proc.{ProcGroup => _ProcGroup, Artifact => _Artifact, Grapheme, InMemory, Sys}
 import de.sciss.lucre.expr.Expr
 import stm.{Disposable, Mutable}
 import de.sciss.synth.expr.{Doubles, Strings, Ints}
@@ -164,7 +164,7 @@ object Element {
     }
 
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _Folder[S])
-      extends Element.Impl[S] with Folder[S] {
+      extends Element.ActiveImpl[S] with Folder[S] {
       self =>
 
       def typeID = Folder.typeID
@@ -191,7 +191,7 @@ object Element {
     }
 
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _ProcGroup[S])
-      extends Element.Impl[S] with ProcGroup[S] {
+      extends Element.ActiveImpl[S] with ProcGroup[S] {
       self =>
 
       def typeID = ProcGroup.typeID
@@ -219,7 +219,7 @@ object Element {
 
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S],
                                           val entity: Expr[S, Grapheme.Value.Audio])
-      extends Element.Impl[S] with AudioGrapheme[S] {
+      extends Element.ActiveImpl[S] with AudioGrapheme[S] {
       self =>
 
       def typeID = AudioGrapheme.typeID
@@ -230,32 +230,32 @@ object Element {
   }
   sealed trait AudioGrapheme[S <: Sys[S]] extends Element[S] { type A = Expr[S, Grapheme.Value.Audio] }
 
-  // ----------------- ArtifactStore -----------------
+  // ----------------- ArtifactLocation -----------------
 
-  object ArtifactStore extends Companion[ArtifactStore] {
+  object ArtifactLocation extends Companion[ArtifactLocation] {
     protected[Element] final val typeID = 0x10003
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
-                                   (implicit tx: S#Tx): ArtifactStore[S] with evt.Node[S] = {
-      val entity = _ArtifactStore.read(in, access)
+                                   (implicit tx: S#Tx): ArtifactLocation[S] with evt.Node[S] = {
+      val entity = _Artifact.Location.read(in, access)
       new Impl(targets, name, entity)
     }
 
-    def apply[S <: Sys[S]](name: _String, init: _ArtifactStore[S])(implicit tx: S#Tx): ArtifactStore[S] = {
+    def apply[S <: Sys[S]](name: _String, init: _Artifact.Location[S])(implicit tx: S#Tx): ArtifactLocation[S] = {
       new Impl(evt.Targets[S], mkName(name), init)
     }
 
-    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _ArtifactStore[S])
-      extends Element.Impl[S] with ArtifactStore[S] {
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _Artifact.Location[S])
+      extends Element.ActiveImpl[S] with ArtifactLocation[S] {
       self =>
 
-      def typeID = ArtifactStore.typeID
-      def prefix = "ArtifactStore"
+      def typeID = ArtifactLocation.typeID
+      def prefix = "ArtifactLocation"
 
       protected def entityEvent = entity.changed
     }
   }
-  sealed trait ArtifactStore[S <: Sys[S]] extends Element[S] { type A = _ArtifactStore[S] }
+  sealed trait ArtifactLocation[S <: Sys[S]] extends Element[S] { type A = _Artifact.Location[S] }
 
   // ----------------- Serializer -----------------
 
@@ -271,14 +271,14 @@ object Element {
     def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Element[S] with evt.Node[S] = {
       val typeID = in.readInt()
       (typeID: @switch) match {
-        case Int          .typeID => Int          .readIdentified(in, access, targets)
-        case Double       .typeID => Double       .readIdentified(in, access, targets)
-        case String       .typeID => String       .readIdentified(in, access, targets)
-        case Folder       .typeID => Folder       .readIdentified(in, access, targets)
-        case ProcGroup    .typeID => ProcGroup    .readIdentified(in, access, targets)
-        case AudioGrapheme.typeID => AudioGrapheme.readIdentified(in, access, targets)
-        case ArtifactStore.typeID => ArtifactStore.readIdentified(in, access, targets)
-        case _                    => sys.error(s"Unexpected element type cookie $typeID")
+        case Int             .typeID => Int             .readIdentified(in, access, targets)
+        case Double          .typeID => Double          .readIdentified(in, access, targets)
+        case String          .typeID => String          .readIdentified(in, access, targets)
+        case Folder          .typeID => Folder          .readIdentified(in, access, targets)
+        case ProcGroup       .typeID => ProcGroup       .readIdentified(in, access, targets)
+        case AudioGrapheme   .typeID => AudioGrapheme   .readIdentified(in, access, targets)
+        case ArtifactLocation.typeID => ArtifactLocation.readIdentified(in, access, targets)
+        case _                       => sys.error(s"Unexpected element type cookie $typeID")
       }
     }
 
@@ -302,22 +302,20 @@ object Element {
   //                                     (implicit tx: S#Tx): Element[S] { type A = A1 } = {
   //    val id      = tx.newID()
   //    val nameEx  = mkName(name)
-  //    new Impl(id, nameEx, typeID, elem)
+  //    new ActiveImpl(id, nameEx, typeID, elem)
   //  }
 
-  private sealed trait ExprImpl[S <: Sys[S], A1] extends Impl[S] {
+  private sealed trait ExprImpl[S <: Sys[S], A1] extends ActiveImpl[S] {
     self =>
     type A <: Expr[S, A1]
     final protected def entityEvent = entity.changed
   }
 
   private sealed trait Impl[S <: Sys[S]]
-    extends Element[S] with evt.Node[S] with evt.impl.MultiEventImpl[S, Update[S], Update[S], Element[S]] {
+    extends Element[S] with evt.Node[S] {
     self =>
 
     type A <: Writable with Disposable[S#Tx]
-
-    //    /* final */ type A = A1
 
     protected def typeID: _Int
 
@@ -336,28 +334,7 @@ object Element {
 
     override def toString() = s"Element.${prefix}$id"
 
-    //    final def changed: EventLike[S, Element.Update[S], Element[S]] = this
-
     // ---- events ----
-
-    protected def entityEvent: evt.EventLike[S, Any, _]
-
-    final protected def events = IIdxSeq(NameChange, EntityChange)
-
-    private object EntityChange extends EventImpl {
-      final val slot = 2
-      def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Update[S]] = {
-        entityEvent.pullUpdate(pull).map(ch => Update(self, IIdxSeq(Entity(ch))))
-      }
-
-      def connect()(implicit tx: S#Tx) {
-        entityEvent ---> this
-      }
-
-      def disconnect()(implicit tx: S#Tx) {
-        entityEvent -/-> this
-      }
-    }
 
     final protected def reader: evt.Reader[S, Element[S]] = serializer
 
@@ -385,6 +362,38 @@ object Element {
 
       def disconnect()(implicit tx: S#Tx) {
         name.changed -/-> this
+      }
+    }
+  }
+
+  private sealed trait PassiveImpl[S <: Sys[S]]
+    extends Impl[S] {
+
+    def changed: EventLike[S, Element.Update[S], Element[S]] = NameChange
+  }
+
+  private sealed trait ActiveImpl[S <: Sys[S]]
+    extends Impl[S] with evt.impl.MultiEventImpl[S, Update[S], Update[S], Element[S]] {
+    self =>
+
+    // ---- events ----
+
+    protected def entityEvent: evt.EventLike[S, Any, _]
+
+    final protected def events = IIdxSeq(NameChange, EntityChange)
+
+    private object EntityChange extends EventImpl {
+      final val slot = 2
+      def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Update[S]] = {
+        entityEvent.pullUpdate(pull).map(ch => Update(self, IIdxSeq(Entity(ch))))
+      }
+
+      def connect()(implicit tx: S#Tx) {
+        entityEvent ---> this
+      }
+
+      def disconnect()(implicit tx: S#Tx) {
+        entityEvent -/-> this
       }
     }
   }

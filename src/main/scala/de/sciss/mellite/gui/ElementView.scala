@@ -60,9 +60,9 @@ object ElementView {
       case e: Element.AudioGrapheme[S] =>
         val value = e.entity.value
         new AudioGrapheme.Impl(tx.newHandle(e), name, value)
-      case e: Element.ArtifactStore[S] =>
+      case e: Element.ArtifactLocation[S] =>
         // val value = e.entity.value
-        new ArtifactStore.Impl(tx.newHandle(e), name)
+        new ArtifactLocation.Impl(tx.newHandle(e), name)
     }
   }
 
@@ -215,14 +215,14 @@ object ElementView {
 
   // -------- ArtifactStore --------
 
-  object ArtifactStore {
+  object ArtifactLocation {
     private val key = new DefaultTreeCellRenderer
     key.setLeafIcon(null)
     private val comp = Component.wrap(key)
 
-    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.ArtifactStore[S]],
+    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.ArtifactLocation[S]],
                                                        var name: _String)
-      extends ArtifactStore[S] with ElementView.Impl[S] {
+      extends ArtifactLocation[S] with ElementView.Impl[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
         key.getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
@@ -231,8 +231,8 @@ object ElementView {
       def prefix = "ArtifactStore"
     }
   }
-  sealed trait ArtifactStore[S <: Sys[S]] extends ElementView[S] {
-    def element: stm.Source[S#Tx, Element.ArtifactStore[S]]
+  sealed trait ArtifactLocation[S <: Sys[S]] extends ElementView[S] {
+    def element: stm.Source[S#Tx, Element.ArtifactLocation[S]]
   }
 
   // -------- Root --------

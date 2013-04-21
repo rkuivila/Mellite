@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{ArtifactStore, Sys}
+import de.sciss.synth.proc.Sys
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
 import swing.Component
@@ -14,9 +14,9 @@ import java.awt.{Graphics2D, Graphics}
 object AudioFileViewImpl {
   private lazy val manager = sonogram.OverviewManager()
 
-  def apply[S <: Sys[S]](element: AudioGrapheme[S])(implicit tx: S#Tx, store: ArtifactStore[S]): AudioFileView[S] = {
+  def apply[S <: Sys[S]](element: AudioGrapheme[S])(implicit tx: S#Tx): AudioFileView[S] = {
     val res = new Impl(tx.newHandle(element))
-    val f   = store.resolve(element.entity.value.artifact)
+    val f   = element.entity.value.artifact // store.resolve(element.entity.value.artifact)
     guiFromTx(res.guiInit(f))
     res
   }

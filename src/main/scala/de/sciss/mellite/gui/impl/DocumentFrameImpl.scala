@@ -29,7 +29,7 @@ package impl
 
 import swing.{Swing, TextField, Alignment, Label, Dialog, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{ArtifactStore, Artifact, Grapheme, ProcGroup, Sys}
+import de.sciss.synth.proc.{Artifact, Grapheme, ProcGroup, Sys}
 import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
@@ -89,13 +89,14 @@ object DocumentFrameImpl {
     }
 
     private def actionAddArtifactStore() {
-      val res = Dialog.showInput[String](folderView.component, "Enter initial store name:", "New ArtifactStore",
-        Dialog.Message.Question, initial = "Artifacts")
-      res.foreach { name =>
-        atomic { implicit tx =>
-          addElement(Element.ArtifactStore(name, ArtifactStore.empty[S]))
-        }
-      }
+      // XXX TODO
+//      val res = Dialog.showInput[String](folderView.component, "Enter initial store name:", "New ArtifactStore",
+//        Dialog.Message.Question, initial = "Artifacts")
+//      res.foreach { name =>
+//        atomic { implicit tx =>
+//          addElement(Element.ArtifactLocation(name, Artifact.Location.Modifiable(init)))
+//        }
+//      }
     }
 
     private def actionAddAudioFile() {
