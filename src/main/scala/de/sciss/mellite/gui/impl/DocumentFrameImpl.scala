@@ -248,37 +248,41 @@ object DocumentFrameImpl {
       lazy val ggView: Button = Button("View") {
         val views = folderView.selection.map { case (_, view) => view }
         if (views.nonEmpty) atomic { implicit tx =>
-          views.foreach { view =>
-            view.element() match {
-              case e: Element.ProcGroup[S] =>
-                val tlv = TimelineView(e)
-                guiFromTx {
-                  new WindowImpl {
-                    def handler = Mellite.windowHandler
-                    def style   = Window.Regular
-                    contents    = tlv.component
-                    pack()
-                    // centerOnScreen()
-                    front()
-                  }
+          views.foreach {
+            case view: ElementView.ProcGroup[S] =>
+              val e   = view.element()
+              val tlv = TimelineView(e)
+              guiFromTx {
+                new WindowImpl {
+                  def handler = Mellite.windowHandler
+                  def style   = Window.Regular
+                  title       = view.name
+                  contents    = tlv.component
+                  pack()
+                  // centerOnScreen()
+                  front()
                 }
+              }
 
-              case e: Element.AudioGrapheme[S] =>
-                // document
-                val afv = AudioFileView(e)
-                guiFromTx {
-                  new WindowImpl {
-                    def handler = Mellite.windowHandler
-                    def style   = Window.Regular
-                    contents    = afv.component
-                    pack()
-                    // centerOnScreen()
-                    front()
-                  }
+            case view: ElementView.AudioGrapheme[S] =>
+              val e         = view.element()
+              val afv       = AudioFileView(e)
+              val name      = view.name
+              val fileName  = view.value.artifact.getName
+              guiFromTx {
+                new WindowImpl {
+                  def handler = Mellite.windowHandler
+                  def style   = Window.Regular
+                  title       = if (name == fileName) name else s"$name - $fileName"
+                  file        = Some(view.value.artifact)
+                  contents    = afv.component
+                  pack()
+                  // centerOnScreen()
+                  front()
                 }
+              }
 
-              case _ => // ...
-            }
+            case _ => // ...
           }
         }
       }

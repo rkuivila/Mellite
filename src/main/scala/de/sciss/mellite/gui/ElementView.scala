@@ -245,6 +245,7 @@ object ElementView {
   }
   sealed trait AudioGrapheme[S <: Sys[S]] extends ElementView[S] {
     def element: stm.Source[S#Tx, Element.AudioGrapheme[S]]
+    var value: Grapheme.Value.Audio
   }
 
   // -------- ArtifactStore --------
