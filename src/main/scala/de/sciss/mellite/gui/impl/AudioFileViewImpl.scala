@@ -5,13 +5,14 @@ package impl
 import de.sciss.synth.proc.Sys
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
-import swing.Component
+import scala.swing.{Label, BoxPanel, Orientation, Swing, BorderPanel, Component}
 import de.sciss.sonogram
 import java.io.File
-import de.sciss.audiowidgets.j.{Transport, LCDPanel}
-import java.awt.{Dimension, Graphics2D, Graphics, BorderLayout}
-import javax.swing.{JLabel, Box, JPanel}
-import de.sciss.audiowidgets.{LCDColors, LCDFont, AxisFormat}
+import java.awt.Graphics2D
+import de.sciss.audiowidgets.{LCDColors, LCDFont, AxisFormat, Transport, LCDPanel}
+import Swing._
+import de.sciss.span.Span
+import de.sciss.mellite.impl.TimelineModelImpl
 
 object AudioFileViewImpl {
   private lazy val manager = {
@@ -38,18 +39,16 @@ object AudioFileViewImpl {
     def guiInit(f: File) {
       // println("AudioFileView guiInit")
       val sono      = manager.acquire(sonogram.OverviewManager.Job(f))
-      val sonoView  = new AudioFileViewJ(sono)
+      implicit val exec = manager.config.executionContext
+      //      sono.onComplete {
+      //        case x => println(s"<view> $x")
+      //      }
+      val tlm       = new TimelineModelImpl(Span(0L, sono.inputSpec.numFrames), sono.inputSpec.sampleRate)
+      val sonoView  = new AudioFileViewJ(sono, tlm)
 
-      val lcdFrame  = new LCDPanel {
-        override def getMaximumSize = getPreferredSize
-        override def getMinimumSize = getPreferredSize
-      }
-      val lcd       = new JLabel {
-        override def getMaximumSize = getPreferredSize
-        override def getMinimumSize = getPreferredSize
-
-        override protected def paintComponent(g: Graphics) {
-          val g2      = g.asInstanceOf[Graphics2D]
+      val lcdFormat = AxisFormat.Time(hours = true, millis = true)
+      val lcd       = new Label {
+        override protected def paintComponent(g2: Graphics2D) {
           val atOrig  = g2.getTransform
           try {
             // stupid lcd font has wrong ascent
@@ -61,18 +60,26 @@ object AudioFileViewImpl {
             g2.setTransform(atOrig)
           }
         }
+
+        font        = LCDFont().deriveFont(11f)
+        foreground  = LCDColors.defaultFg
+        text        = lcdFormat.format(0.0, decimals = 3, pad = 12)
+
+        maximumSize = preferredSize
+        minimumSize = preferredSize
       }
-      val lcdFormat = AxisFormat.Time(hours = true, millis = true)
-      lcd.setFont(LCDFont().deriveFont(11f))
-      lcd.setForeground(LCDColors.defaultFg)
-      lcd.setText(lcdFormat.format(0.0, decimals = 3, pad = 12))
       //      lcd.setMinimumSize(lcd.getPreferredSize)
       //      lcd.setMaximumSize(lcd.getPreferredSize)
-      lcdFrame.add(lcd, BorderLayout.CENTER)
-      val lcdPane   = Box.createVerticalBox()
-      lcdPane.add(Box.createVerticalGlue())
-      lcdPane.add(lcdFrame)
-      lcdPane.add(Box.createVerticalGlue())
+      val lcdFrame  = new LCDPanel {
+        maximumSize = preferredSize
+        minimumSize = preferredSize
+        contents += lcd
+      }
+      val lcdPane = new BoxPanel(Orientation.Vertical) {
+        contents += VGlue
+        contents += lcdFrame
+        contents += VGlue
+      }
 
       import Transport._
       val transport = Transport.makeButtonStrip(Seq(
@@ -83,21 +90,26 @@ object AudioFileViewImpl {
         FastForward {},
         Loop        {}
       ))
-      transport.button(Stop).foreach(_.setSelected(true))
+      transport.button(Stop).foreach(_.selected = true)
 
-      val transportPane = Box.createHorizontalBox()
-      transportPane.add(Box.createHorizontalGlue())
-      transportPane.add(Box.createHorizontalStrut(4))
-      transportPane.add(lcdPane)
-      transportPane.add(Box.createHorizontalStrut(8))
-      transportPane.add(transport)
-      transportPane.add(Box.createHorizontalStrut(4))
+      val transportPane = new BoxPanel(Orientation.Horizontal) {
+        contents ++= Seq(
+          HGlue,
+          HStrut(4),
+          lcdPane,
+          HStrut(8),
+          transport,
+          HStrut(4)
+        )
+      }
 
-      val pane = new JPanel(new BorderLayout(0, 2))
-      pane.add(transportPane, BorderLayout.NORTH )
-      pane.add(sonoView     , BorderLayout.CENTER)
+      val pane = new BorderPanel {
+        layoutManager.setVgap(2)
+        add(transportPane, BorderPanel.Position.North )
+        add(sonoView     , BorderPanel.Position.Center)
+      }
 
-      component = Component.wrap(pane)
+      component = pane
     }
 
     def element(implicit tx: S#Tx): AudioGrapheme[S] = holder()
