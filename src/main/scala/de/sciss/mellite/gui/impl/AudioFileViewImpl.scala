@@ -13,6 +13,7 @@ import de.sciss.audiowidgets.{LCDColors, LCDFont, AxisFormat, Transport, LCDPane
 import Swing._
 import de.sciss.span.Span
 import de.sciss.mellite.impl.TimelineModelImpl
+import de.sciss.lucre.event.Change
 
 object AudioFileViewImpl {
   private lazy val manager = {
@@ -47,12 +48,33 @@ object AudioFileViewImpl {
       val sonoView  = new AudioFileViewJ(sono, tlm)
 
       val lcdFormat = AxisFormat.Time(hours = true, millis = true)
-      val lcd       = new Label {
+      val lcd       = new Label with DynamicComponentImpl {
+        protected def component: Component = this
+
+        private def updateText(frame: Long) {
+          val secs = frame / tlm.sampleRate
+          text = lcdFormat.format(secs, decimals = 3, pad = 12)
+        }
+
+        private val tlmListener: TimelineModel.Listener = {
+          case TimelineModel.Position(_, Change(_, frame)) =>
+            updateText(frame)
+        }
+
+        protected def componentShown() {
+          tlm.addListener(tlmListener)
+          updateText(tlm.position)
+        }
+
+        protected def componentHidden() {
+          tlm.removeListener(tlmListener)
+        }
+
         override protected def paintComponent(g2: Graphics2D) {
           val atOrig  = g2.getTransform
           try {
             // stupid lcd font has wrong ascent
-            g2.translate(0, 4)
+            g2.translate(0, 3)
             // g2.setColor(java.awt.Color.red)
             // g2.fillRect(0, 0, 100, 100)
             super.paintComponent(g2)
@@ -71,9 +93,9 @@ object AudioFileViewImpl {
       //      lcd.setMinimumSize(lcd.getPreferredSize)
       //      lcd.setMaximumSize(lcd.getPreferredSize)
       val lcdFrame  = new LCDPanel {
+        contents   += lcd
         maximumSize = preferredSize
         minimumSize = preferredSize
-        contents += lcd
       }
       val lcdPane = new BoxPanel(Orientation.Vertical) {
         contents += VGlue

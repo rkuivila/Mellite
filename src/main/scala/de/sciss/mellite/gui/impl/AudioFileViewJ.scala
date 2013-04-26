@@ -12,18 +12,60 @@ import scala.util.Failure
 import scala.util.Success
 import scala.swing.{Reactions, BoxPanel, Orientation, Component, Swing, BorderPanel}
 import Swing._
-import scala.swing.event.{ValueChanged, UIElementResized}
+import scala.swing.event.{Key, MouseDragged, MousePressed, ValueChanged, UIElementResized}
 import de.sciss.span.Span
 
+object AudioFileViewJ {
+  private sealed trait AxisMouseAction
+  private case object AxisPosition extends AxisMouseAction
+  private final case class AxisSelection(fix: Long) extends AxisMouseAction
+
+  private val colrSelection     = new Color(0x00, 0x00, 0xFF, 0x4F)
+  private val colrPosition      = Color.white // new Color(0x00, 0x00, 0xFF, 0x7F)
+  // private val colrSelection2    = new Color(0x00, 0x00, 0x00, 0x40)
+  // private val colrPlayHead      = new Color(0x00, 0xD0, 0x00, 0xC0)
+}
 final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel: TimelineModel)
   extends BorderPanel with TimelineNavigation with DynamicComponentImpl {
+
+  import AudioFileViewJ._
 
   private val numChannels = sono.inputSpec.numChannels
   // private val minFreq     = sono.config.sonogram.minFreq
   // private val maxFreq     = sono.config.sonogram.maxFreq
 
-  private val timeAxis  = {
-    val res       = new Axis
+  private val r = new Rectangle
+
+  private def paintPosAndSelection(g: Graphics2D, h: Int) {
+    val pos = frameToScreen(timelineModel.position).toInt
+    g.getClipBounds(r)
+    val rr  = r.x + r.width
+    timelineModel.selection match {
+      case Span(start, stop) =>
+        val selx1 = frameToScreen(start).toInt
+        val selx2 = frameToScreen(stop ).toInt
+        if (selx1 < rr && selx2 > r.x) {
+          g.setColor(colrSelection)
+          g.fillRect(selx1, 0, selx2 - selx1, h)
+          if (r.x <= selx1) g.drawLine(selx1, 0, selx1, h)
+          if (selx2 > selx1 && rr >= selx2) g.drawLine(selx2 - 1, 0, selx2 - 1, h)
+        }
+      case _ =>
+    }
+    if (r.x <= pos && rr > pos) {
+      g.setXORMode(colrPosition)
+      g.drawLine(pos, 0, pos, h)
+      g.setPaintMode()
+    }
+  }
+
+  private val timeAxis = {
+    val res       = new Axis {
+      override protected def paintComponent(g: Graphics2D) {
+        super.paintComponent(g)
+        paintPosAndSelection(g, peer.getHeight)
+      }
+    }
     val maxSecs   = timelineModel.span.stop  / timelineModel.sampleRate
     res.format    = AxisFormat.Time(hours = maxSecs >= 3600.0, millis = true)
     res
@@ -68,8 +110,9 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
 
     private var paintFun: Graphics2D => Unit = paintChecker("Calculating...") _
 
-    override def paintComponent(g2: Graphics2D) {
-      paintFun(g2)
+    override def paintComponent(g: Graphics2D) {
+      paintFun(g)
+      paintPosAndSelection(g, height)
     }
 
     @inline def width   = peer.getWidth
@@ -125,6 +168,21 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
   private val scroll      = new ScrollBarImpl {
     orientation   = Orientation.Horizontal
     unitIncrement = 4
+  }
+
+  private def frameToScreen(frame: Long): Double = {
+    val visi = timelineModel.visible
+    (frame - visi.start).toDouble / visi.length * SonoView.width
+  }
+
+  private def screenToFrame(screen: Int): Double = {
+    val visi = timelineModel.visible
+    screen.toDouble / SonoView.width * visi.length + visi.start
+  }
+
+  private def clipVisible(frame: Double): Long = {
+    val visi = timelineModel.visible
+    visi.clip(frame.toLong)
   }
 
   private def updateScroll() {
@@ -185,19 +243,27 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
   protected def component = this
 
   private val timelineListener: TimelineModel.Listener = {
-    case TimelineModel.Update(_, visible, position) =>
-      if (visible.isSignificant) {
-        updateAxis()
-        updateScroll()
-        SonoView.repaint()
-      }
+    case TimelineModel.Visible(_, span) =>
+      updateAxis()
+      updateScroll()
+      SonoView.repaint()  // XXX TODO: optimize dirty region / copy double buffer
+
+    case TimelineModel.Position(_, frame) =>
+      // XXX TODO: optimize dirty region
+      timeAxis.repaint()
+      SonoView.repaint()
+
+    case TimelineModel.Selection(_, span) =>
+      // XXX TODO: optimize dirty region
+      timeAxis.repaint()
+      SonoView.repaint()
   }
 
   private val scrollListener: Reactions.Reaction = {
-    case UIElementResized(_) =>
+    case UIElementResized(`scroll`) =>
       updateScroll()
 
-    case ValueChanged(_) =>
+    case ValueChanged(`scroll`) =>
       // println(s"ScrollBar Value ${scroll.value}")
       updateFromScroll()
   }
@@ -213,15 +279,41 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
     reactions -= scrollListener
   }
 
+  private var axisMouseAction: AxisMouseAction = AxisPosition
+
+  private def processAxisMouse(frame: Long) {
+    axisMouseAction match {
+      case AxisPosition =>
+        timelineModel.position = frame
+      case AxisSelection(fix) =>
+        val span = Span(math.min(frame, fix), math.max(frame, fix))
+        timelineModel.selection = if (span.isEmpty) Span.Void else span
+    }
+  }
+
   listenTo(scroll)
-  //  reactions += {
-  //    case UIElementResized(_) =>
-  //      // this sucky sh*** produces spurious stack overflows (probably event feedback...) - why?
-  //      updateScroll()
-  //      // Swing.onEDT(updateScroll())
-  //
-  //    case ValueChanged(_) =>
-  //      // println(s"ScrollBar Value ${scroll.value}")
-  //      updateFromScroll()
-  //  }
+  listenTo(timeAxis.mouse.clicks)
+  listenTo(timeAxis.mouse.moves)
+  reactions += {
+    case MousePressed(`timeAxis`, point, mod, _, _) =>
+      // no mods: move position; shift: extend selection; alt: clear selection
+      val frame = clipVisible(screenToFrame(point.x))
+      if ((mod & Key.Modifier.Alt) != 0) {
+        timelineModel.selection = Span.Void
+      }
+      if ((mod & Key.Modifier.Shift) != 0) {
+        val otra = timelineModel.selection match {
+          case Span.Void          => timelineModel.position
+          case Span(start, stop)  => if (math.abs(frame - start) > math.abs(frame - stop)) start else stop
+        }
+        axisMouseAction = AxisSelection(otra)
+      } else {
+        axisMouseAction = AxisPosition
+      }
+      processAxisMouse(frame)
+
+    case MouseDragged(`timeAxis`, point, _) =>
+      val frame = clipVisible(screenToFrame(point.x))
+      processAxisMouse(frame)
+  }
 }
