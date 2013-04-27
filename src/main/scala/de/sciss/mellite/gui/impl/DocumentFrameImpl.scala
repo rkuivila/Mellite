@@ -40,7 +40,6 @@ import de.sciss.desktop.{FileDialog, DialogSource, OptionPane, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
 import de.sciss.synth.io.AudioFile
-import scala.util.Try
 import scala.util.control.NonFatal
 import java.io.File
 
@@ -296,18 +295,19 @@ object DocumentFrameImpl {
         add(folderButPanel,       BorderPanel.Position.South )
       }
 
-      lazy val intp = {
-        val intpConfig = Interpreter.Config()
-        intpConfig.imports = Seq("de.sciss.mellite._", "de.sciss.synth._", "proc._", "ugen._")
-        import document.systemType
-        intpConfig.bindings = Seq(NamedParam[Document[S]]("doc", document))
-        InterpreterPane(interpreterConfig = intpConfig)
-      }
+      //      lazy val intp = {
+      //        val intpConfig = Interpreter.Config()
+      //        intpConfig.imports = Seq("de.sciss.mellite._", "de.sciss.synth._", "proc._", "ugen._")
+      //        import document.systemType
+      //        intpConfig.bindings = Seq(NamedParam[Document[S]]("doc", document))
+      //        InterpreterPane(interpreterConfig = intpConfig)
+      //      }
 
-      lazy val splitPane = new SplitPane(Orientation.Horizontal, folderPanel, Component.wrap(intp.component))
+      // lazy val splitPane = new SplitPane(Orientation.Horizontal, folderPanel, Component.wrap(intp.component))
 
       frame = new Frame(document, new BorderPanel {
-        add(splitPane, BorderPanel.Position.Center)
+        //        add(splitPane, BorderPanel.Position.Center)
+        add(folderPanel, BorderPanel.Position.Center)
       })
 
       folderView.addListener {
@@ -322,11 +322,14 @@ object DocumentFrameImpl {
   }
 
   private final class Frame[S <: Sys[S]](document: Document[S], _contents: Component) extends WindowImpl {
-    def style = Window.Regular
-    def handler = Mellite.windowHandler
-    title = "Document : " + document.folder.getName
-    closeOperation = Window.CloseIgnore
-    contents = _contents
+    def style       = Window.Regular
+    def handler     = Mellite.windowHandler
+
+    title           = /* "Document : " + */ document.folder.getName
+    file            = Some(document.folder)
+    closeOperation  = Window.CloseIgnore
+    contents        = _contents
+
     pack()
     // centerOnScreen()
     front()

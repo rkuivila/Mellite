@@ -198,7 +198,9 @@ object FolderViewImpl {
       // t.expandAll()
       t.expandPath(Tree.Path.empty)
 
-      comp = new ScrollPane(t)
+      val scroll    = new ScrollPane(t)
+      scroll.border = null
+      comp = scroll
     }
 
     def selection: FolderView.Selection[S] =
