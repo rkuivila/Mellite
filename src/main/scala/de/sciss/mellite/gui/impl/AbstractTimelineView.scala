@@ -61,18 +61,14 @@ object AbstractTimelineView {
 
   final val pntChecker: TexturePaint = new TexturePaint(imgChecker, new Rectangle(0, 0, 64, 64))
 }
-trait AbstractTimelineView // (sono: sonogram.Overview)
-  extends /* BorderPanel with */ TimelineNavigation with DynamicComponentImpl {
+trait AbstractTimelineView {
+  view =>
 
   import AbstractTimelineView._
 
   protected def timelineModel: TimelineModel
 
   private var axisMouseAction: AxisMouseAction = AxisPosition
-
-  // private val numChannels = sono.inputSpec.numChannels
-  // private val minFreq     = sono.config.sonogram.minFreq
-  // private val maxFreq     = sono.config.sonogram.maxFreq
 
   private val r = new Rectangle
 
@@ -140,19 +136,6 @@ trait AbstractTimelineView // (sono: sonogram.Overview)
     timeAxis.maximum   = visi.stop  / sr
   }
 
-  // XXX TODO: Axis lost its logarithmic scale a while back. Need to reimplement
-  //  private val freqAxes  = Vector.fill(numChannels) {
-  //    val res       = new Axis(SwingConstants.VERTICAL)
-  //    res.minimum   = minFreq
-  //    res.maximum   = maxFreq
-  //  }
-
-  //  private val meters  = Vector.fill(numChannels) {
-  //    val res   = new PeakMeterBar(javax.swing.SwingConstants.VERTICAL)
-  //    res.ticks = 50
-  //    res
-  //  }
-
   protected def mainView: Component
 
   private val scroll = new ScrollBarImpl {
@@ -189,7 +172,7 @@ trait AbstractTimelineView // (sono: sonogram.Overview)
     // __DO NOT USE deafTo and listenTo__ there must be a bug in scala-swing,
     // because that quickly overloads the AWT event multicaster with stack overflows.
     //    deafTo(scroll)
-    val l = isListening
+    val l = pane.isListening
     if (l) scroll.reactions -= scrollListener
     scroll.maximum        = max
     scroll.visibleAmount  = visiAmt
@@ -204,7 +187,7 @@ trait AbstractTimelineView // (sono: sonogram.Overview)
     val total             = timelineModel.bounds
     val pos               = math.min(total.stop - visi.length,
       ((scroll.value.toDouble / scroll.maximum) * total.length + 0.5).toLong)
-    val l = isListening
+    val l = pane.isListening
     if (l) timelineModel.removeListener(timelineListener)
     val newVisi = Span(pos, pos + visi.length)
     // println(s"updateFromScroll : $newVisi")
@@ -214,9 +197,6 @@ trait AbstractTimelineView // (sono: sonogram.Overview)
     if (l) timelineModel.addListener(timelineListener)
   }
 
-  //  private val meterPane   = new BoxPanel(Orientation.Vertical) {
-  //    meters.foreach(m => contents += Component.wrap(m))
-  //  }
   private val timePane    = new BoxPanel(Orientation.Horizontal) {
     // contents += HStrut(meterPane.preferredSize.width)
     contents += timeAxis
@@ -227,11 +207,24 @@ trait AbstractTimelineView // (sono: sonogram.Overview)
     listenTo(this)
   }
 
-  private val pane = new BorderPanel {
+  private lazy val pane = new BorderPanel with DynamicComponentImpl with TimelineNavigation {
+    protected val timelineModel = view.timelineModel
+
     // add(meterPane,  BorderPanel.Position.West  )
     add(timePane,   BorderPanel.Position.North )
     add(mainView,   BorderPanel.Position.Center)
     add(scrollPane, BorderPanel.Position.South )
+
+    protected def componentShown() {
+      timelineModel.addListener(timelineListener)
+      updateAxis()
+      updateScroll()  // this adds scrollListener in the end
+    }
+
+    protected def componentHidden() {
+      timelineModel.removeListener(timelineListener)
+      scroll.reactions -= scrollListener
+    }
   }
 
   final def component: Component = pane
@@ -260,17 +253,6 @@ trait AbstractTimelineView // (sono: sonogram.Overview)
     case ValueChanged(_) =>
       // println(s"ScrollBar Value ${scroll.value}")
       updateFromScroll()
-  }
-
-  protected def componentShown() {
-    timelineModel.addListener(timelineListener)
-    updateAxis()
-    updateScroll()  // this adds scrollListener in the end
-  }
-
-  protected def componentHidden() {
-    timelineModel.removeListener(timelineListener)
-    scroll.reactions -= scrollListener
   }
 
   private def processAxisMouse(frame: Long) {

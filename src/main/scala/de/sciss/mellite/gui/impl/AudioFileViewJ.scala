@@ -60,17 +60,17 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
     @inline def width   = peer.getWidth
     @inline def height  = peer.getHeight
 
-    private def paintChecker(message: String)(g2: Graphics2D) {
-      g2.setPaint(pntChecker)
+    private def paintChecker(message: String)(g: Graphics2D) {
+      g.setPaint(pntChecker)
 
-      g2.fillRect(0, 0, width, height)
-      g2.setColor(Color.white)
-      g2.drawString(message, 10, 20)
+      g.fillRect(0, 0, width, height)
+      g.setColor(Color.white)
+      g.drawString(message, 10, 20)
     }
 
-    private def paintReady(g2: Graphics2D) {
+    private def paintReady(g: Graphics2D) {
       val visi = timelineModel.visible
-      sono.paint(spanStart = visi.start, spanStop = visi.stop, g2, 0, 0, width, height, this)
+      sono.paint(spanStart = visi.start, spanStop = visi.stop, g, 0, 0, width, height, this)
     }
 
     def adjustGain(amp: Float, pos: Double) = amp

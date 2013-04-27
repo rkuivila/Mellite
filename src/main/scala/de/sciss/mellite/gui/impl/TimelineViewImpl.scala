@@ -29,28 +29,45 @@ package impl
 
 import de.sciss.synth.proc.Sys
 import de.sciss.audiowidgets.{AxisFormat, Axis}
-import swing.{Orientation, BoxPanel}
+import scala.swing.{Component, Orientation, BoxPanel}
+import de.sciss.span.Span
+import de.sciss.mellite.impl.TimelineModelImpl
+import java.awt.Graphics2D
 
 object TimelineViewImpl {
-  def apply[S <: Sys[S]](group: Element.ProcGroup[S])(implicit tx: S#Tx): TimelineView[S] = {
-    val res = new Impl[S]
+  def apply[S <: Sys[S]](element: Element.ProcGroup[S])(implicit tx: S#Tx): TimelineView[S] = {
+    val sampleRate  = 44100.0 // XXX TODO
+    val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 600).toLong), sampleRate)
+    val res   = new Impl[S](tlm)
+    val group = element.entity
+    //    group.nearestEventBefore(Long.MaxValue) match {
+    //      case Some(stop) => Span(0L, stop)
+    //      case _          => Span.from(0L)
+    //    }
+
     guiFromTx(res.guiInit())
     res
   }
 
-  private final class Impl[S <: Sys[S]] extends TimelineView[S] {
+  private final class View(protected val timelineModel: TimelineModel) extends AbstractTimelineView {
+    import AbstractTimelineView._
+
+    protected object mainView extends Component {
+      override protected def paintComponent(g: Graphics2D) {
+        super.paintComponent(g)
+        g.setPaint(pntChecker)
+        g.fillRect(0, 0, peer.getWidth, peer.getHeight)
+      }
+    }
+  }
+
+  private final class Impl[S <: Sys[S]](timelineModel: TimelineModel) extends TimelineView[S] {
     def guiInit() {
       component
     }
 
-    lazy val timelineAxis = new Axis {
-      format  = AxisFormat.Time(hours = true, millis = true)
-      minimum = 0.0
-      maximum = 60.0
-    }
+    private lazy val view = new View(timelineModel)
 
-    lazy val component = new BoxPanel(Orientation.Vertical) {
-      contents += timelineAxis
-    }
+    lazy val component: Component = view.component
   }
 }

@@ -10,17 +10,18 @@ import de.sciss.span.Span
 import java.awt.event.KeyEvent
 
 trait TimelineNavigation {
-  protected def component: Component
+  _: Component =>
+
   protected def timelineModel: TimelineModel
 
   import KeyStrokes._
   import KeyEvent._
   import desktop.Implicits._
 
-  component.addAction("timeline-inch1", new ActionSpanWidth(2.0, ctrl  + VK_LEFT         ))
-  component.addAction("timeline-inch2", new ActionSpanWidth(2.0, menu1 + VK_OPEN_BRACKET ))
-  component.addAction("timeline-dech1", new ActionSpanWidth(0.5, ctrl  + VK_RIGHT        ))
-  component.addAction("timeline-dech2", new ActionSpanWidth(0.5, menu1 + VK_CLOSE_BRACKET))
+  this.addAction("timeline-inch1", new ActionSpanWidth(2.0, ctrl  + VK_LEFT         ))
+  this.addAction("timeline-inch2", new ActionSpanWidth(2.0, menu1 + VK_OPEN_BRACKET ))
+  this.addAction("timeline-dech1", new ActionSpanWidth(0.5, ctrl  + VK_RIGHT        ))
+  this.addAction("timeline-dech2", new ActionSpanWidth(0.5, menu1 + VK_CLOSE_BRACKET))
 
   //  import ActionScroll._
   //  addAction("retn",     new ActionScroll(SCROLL_SESSION_START,    stroke(VK_ENTER,  0       )))

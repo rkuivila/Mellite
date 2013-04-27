@@ -8,18 +8,18 @@ import java.awt
 import scala.swing.Component
 
 trait DynamicComponentImpl {
+  _: Component =>
+
   private var listening   = false
   private var win         = Option.empty[awt.Window]
 
-  protected def component: Component
   protected def componentShown (): Unit
   protected def componentHidden(): Unit
 
-  final protected def isListening = listening
+  final def isListening = listening
 
-  // ---- constructor ----
-  component.peer.addAncestorListener(listener)
-  learnWindow(Option(component.peer.getTopLevelAncestor))
+  peer.addAncestorListener(listener)
+  learnWindow(Option(peer.getTopLevelAncestor))
 
   private def startListening() {
     if (!listening) {
