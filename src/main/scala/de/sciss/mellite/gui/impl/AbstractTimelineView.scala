@@ -41,6 +41,7 @@ object AbstractTimelineView {
   private final case class AxisSelection(fix: Long) extends AxisMouseAction
 
   private val colrSelection     = new Color(0x00, 0x00, 0xFF, 0x4F)
+  private val colrPositionXor   = Color.black // new Color(0x00, 0x00, 0xFF, 0x7F)
   private val colrPosition      = Color.white // new Color(0x00, 0x00, 0xFF, 0x7F)
   // private val colrSelection2    = new Color(0x00, 0x00, 0x00, 0x40)
   // private val colrPlayHead      = new Color(0x00, 0xD0, 0x00, 0xC0)
@@ -89,7 +90,8 @@ trait AbstractTimelineView {
       case _ =>
     }
     if (r.x <= pos && rr > pos) {
-      g.setXORMode(colrPosition)
+      g.setXORMode(colrPositionXor)
+      g.setColor(colrPosition)
       g.drawLine(pos, 0, pos, h)
       g.setPaintMode()
     }

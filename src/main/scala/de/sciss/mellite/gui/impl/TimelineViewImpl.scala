@@ -30,16 +30,22 @@ package impl
 import scala.swing.Component
 import de.sciss.span.Span
 import de.sciss.mellite.impl.TimelineModelImpl
-import java.awt.{BasicStroke, Color, Graphics2D}
+import java.awt.{Font, RenderingHints, BasicStroke, Color, Graphics2D}
 import de.sciss.synth.proc.{Proc, ProcGroup, Sys}
 import de.sciss.lucre.stm.Cursor
 import de.sciss.lucre.stm
 import de.sciss.synth.proc
 import de.sciss.synth.expr.Spans
+import de.sciss.fingertree.RangedSeq
+import javax.swing.UIManager
+import java.util.Locale
 
 object TimelineViewImpl {
-  private val colrDropRegionBg  = new Color(0xFF, 0xFF, 0xFF, 0x7F)
-  private val strkDropRegion    = new BasicStroke(3f)
+  private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
+  private val strkDropRegion      = new BasicStroke(3f)
+  private val colrRegionBg        = new Color(0x68, 0x68, 0x68)
+  private val colrRegionBgSel     = Color.blue
+  private final val hndlBaseline  = 12
 
   def apply[S <: Sys[S]](element: Element.ProcGroup[S])(implicit tx: S#Tx, cursor: Cursor[S]): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
@@ -47,25 +53,31 @@ object TimelineViewImpl {
     val group       = element.entity
     import ProcGroup.serializer
     val groupH      = tx.newHandle[proc.ProcGroup[S]](group)
-    val res         = new Impl[S](groupH, tlm, cursor)
     //    group.nearestEventBefore(Long.MaxValue) match {
     //      case Some(stop) => Span(0L, stop)
     //      case _          => Span.from(0L)
     //    }
 
+    val procMap   = tx.newInMemoryIDMap[TimelineProcView[S]]
+    var rangedSeq = RangedSeq.empty[TimelineProcView[S], Long]
+
     group.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>
         // timed.span
-        val proc = timed.value
-
+        // val proc = timed.value
+        val view = TimelineProcView(timed)
+        procMap.put(timed.id, view)
+        rangedSeq += view
       }
     }
 
+    val res = new Impl[S](groupH, rangedSeq, tlm, cursor)
     guiFromTx(res.guiInit())
     res
   }
 
   private final class Impl[S <: Sys[S]](groupH: stm.Source[S#Tx, proc.ProcGroup[S]],
+                                        procViews: RangedSeq[TimelineProcView[S], Long],
                                         timelineModel: TimelineModel, cursor: Cursor[S]) extends TimelineView[S] {
     impl =>
 
@@ -104,6 +116,12 @@ object TimelineViewImpl {
 
         private var audioDnD = Option.empty[AudioFileDnD.Drop]
 
+        font = {
+          val f = UIManager.getFont("Slider.font", Locale.US)
+          if (f != null) f.deriveFont(math.min(f.getSize2D, 9.5f)) else new Font("SansSerif", Font.PLAIN, 9)
+        }
+        // setOpaque(true)
+
         protected def updateDnD(drop: Option[AudioFileDnD.Drop]) {
           audioDnD = drop
           repaint()
@@ -118,9 +136,58 @@ object TimelineViewImpl {
           val h = peer.getHeight
           g.setColor(Color.darkGray) // g.setPaint(pntChecker)
           g.fillRect(0, 0, w, h)
+
+          val visi      = timelineModel.visible
+          val clipOrig  = g.getClip
+
+          procViews.filterOverlaps((visi.start, visi.stop)).foreach { pv =>
+            val selected  = false
+            val muted     = false
+
+            def drawProc(x1: Int, x2: Int) {
+              val py    = 0
+              val px    = x1
+              val pw    = x2 - x1
+              val ph    = 64
+              g.setColor(if (selected) colrRegionBgSel else colrRegionBg)
+              g.fillRoundRect(px, py, pw, ph, 5, 5)
+
+              g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
+              g.setColor(Color.white)
+              // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
+              g.drawString(if (muted) "\u23DB " + pv.name else pv.name, px + 4, py + hndlBaseline)
+              //              stakeInfo(ar).foreach(info => {
+              //                g2.setColor(Color.yellow)
+              //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
+              //              })
+              g.setClip(clipOrig)
+            }
+
+            pv.span match {
+              case Span(start, stop) =>
+                val x1 = frameToScreen(start).toInt
+                val x2 = frameToScreen(stop ).toInt
+                drawProc(x1, x2)
+
+              case Span.From(start) =>
+                val x1 = frameToScreen(start).toInt
+                drawProc(x1, w + 5)
+
+              case Span.Until(stop) =>
+                val x2 = frameToScreen(stop).toInt
+                drawProc(-5, x2)
+
+              case Span.All =>
+                drawProc(-5, w + 5)
+
+              case _ => // don't draw Span.Void
+            }
+          }
+
           paintPosAndSelection(g, h)
 
           if (audioDnD.isDefined) audioDnD.foreach { drop =>
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
             val x1 = frameToScreen(drop.frame).toInt
             val x2 = frameToScreen(drop.frame + drop.drag.selection.length).toInt
             g.setColor(colrDropRegionBg)
