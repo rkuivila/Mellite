@@ -6,14 +6,15 @@ import de.sciss.span.Span
 import de.sciss.lucre.event.Change
 import de.sciss.span.Span.SpanOrVoid
 
-final class TimelineModelImpl(val span: Span, val sampleRate: Double)
+final class TimelineModelImpl(bounds0: Span, val sampleRate: Double)
   extends TimelineModel with ModelImpl[TimelineModel.Update] {
 
   import TimelineModel._
 
-  private var _visi = span
-  private var _pos  = span.start
-  private var _sel  = Span.Void: SpanOrVoid
+  private var _total  = bounds0
+  private var _visi   = bounds0
+  private var _pos    = bounds0.start
+  private var _sel    = Span.Void: SpanOrVoid
 
   def visible = _visi
   def visible_=(value: Span) {
@@ -46,6 +47,16 @@ final class TimelineModelImpl(val span: Span, val sampleRate: Double)
       _sel  = value
       val selCh = Change(oldSel, value)
       dispatch(Selection(this, selCh))
+    }
+  }
+
+  def bounds = _total
+  def bounds_=(value: Span) {
+    val oldTot = _total
+    if (oldTot != value) {
+      _total = value
+      val totCh = Change(oldTot, value)
+      dispatch(Bounds(this, totCh))
     }
   }
 }

@@ -66,7 +66,7 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
         paintPosAndSelection(g, peer.getHeight)
       }
     }
-    val maxSecs   = timelineModel.span.stop  / timelineModel.sampleRate
+    val maxSecs   = timelineModel.bounds.stop  / timelineModel.sampleRate
     res.format    = AxisFormat.Time(hours = maxSecs >= 3600.0, millis = true)
     res
   }
@@ -188,7 +188,7 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
   private def updateScroll() {
     val trackWidth      = math.max(1, scroll.peer.getWidth - 32)  // TODO XXX stupid hard coded value. but how to read it?
     val visi            = timelineModel.visible
-    val total           = timelineModel.span
+    val total           = timelineModel.bounds
     val framesPerPixel  = math.max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
     val max             = math.min(0x3FFFFFFFL, (total.length / framesPerPixel)).toInt
     val pos             = math.min(max - 1, (visi.start - total.start) / framesPerPixel).toInt
@@ -211,7 +211,7 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
 
   private def updateFromScroll() {
     val visi              = timelineModel.visible
-    val total             = timelineModel.span
+    val total             = timelineModel.bounds
     val pos               = math.min(total.stop - visi.length,
       ((scroll.value.toDouble / scroll.maximum) * total.length + 0.5).toLong)
     val l = isListening

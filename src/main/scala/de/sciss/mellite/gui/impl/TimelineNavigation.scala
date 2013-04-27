@@ -47,7 +47,6 @@ trait TimelineNavigation {
       val visiSpan    = timelineModel.visible
       val visiLen     = visiSpan.length
       val pos         = timelineModel.position
-      val timelineLen = timelineModel.span.length
 
       val newVisiSpan = if (factor < 1.0) {
         // zoom in
@@ -72,8 +71,9 @@ trait TimelineNavigation {
         }
       } else {
         // zoom out
-        val start = math.max(0, visiSpan.start - (visiLen * factor / 4 + 0.5).toLong)
-        val stop  = math.min(timelineLen, start + (visiLen * factor + 0.5).toLong)
+        val total = timelineModel.bounds
+        val start = math.max(total.start, visiSpan.start - (visiLen * factor / 4 + 0.5).toLong)
+        val stop  = math.min(total.stop,  start + (visiLen * factor + 0.5).toLong)
         Span(start, stop)
       }
       newVisiSpan match {
