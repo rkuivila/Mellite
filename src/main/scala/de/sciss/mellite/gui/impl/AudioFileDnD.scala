@@ -4,7 +4,7 @@ package impl
 
 import java.awt.dnd.{DropTarget, DropTargetEvent, DropTargetDropEvent, DropTargetDragEvent, DropTargetAdapter}
 import de.sciss.span.Span
-import java.awt.datatransfer
+import java.awt.{Point, datatransfer}
 import datatransfer.DataFlavor
 import de.sciss.synth.proc.{Grapheme, Sys}
 import de.sciss.lucre.stm
@@ -95,7 +95,7 @@ trait AudioFileDnD[S <: Sys[S]] {
   protected def timelineModel: TimelineModel
   
   protected def updateDnD(drop: Option[Drop]): Unit
-  protected def acceptDnD(data: Data[S]): Boolean
+  protected def acceptDnD(drop: Drop, data: Data[S]): Boolean
 
   private object Adaptor extends DropTargetAdapter {
     override def dragEnter(e: DropTargetDragEvent) {
@@ -114,6 +114,14 @@ trait AudioFileDnD[S <: Sys[S]] {
       updateDnD(None)
       e.rejectDrag()
     }
+
+    private def mkDrop(d: AudioFileDnD.Data[_], loc: Point): Drop = {
+      val visi  = timelineModel.visible
+      val w     = peer.getWidth
+      val frame = (loc.x.toDouble / w * visi.length + visi.start).toLong
+      val y     = loc.y
+      Drop(frame = frame, y = y, drag = d.drag)
+    }
   
     private def process(e: DropTargetDragEvent) {
       val t = e.getTransferable
@@ -123,11 +131,7 @@ trait AudioFileDnD[S <: Sys[S]] {
       } else t.getTransferData(AudioFileDnD.flavor) match {
         case d: AudioFileDnD.Data[_] =>
           val loc   = e.getLocation
-          val visi  = timelineModel.visible
-          val w     = peer.getWidth
-          val frame = (loc.x.toDouble / w * visi.length + visi.start).toLong
-          val y     = loc.y
-          val drop  = Drop(frame = frame, y = y, drag = d.drag)
+          val drop  = mkDrop(d, loc)
           updateDnD(Some(drop))
           e.acceptDrag(COPY)
 
@@ -145,9 +149,11 @@ trait AudioFileDnD[S <: Sys[S]] {
   
       } else t.getTransferData(AudioFileDnD.flavor) match {
         case d: AudioFileDnD.Data[_] =>
-          val data = d.asInstanceOf[AudioFileDnD.Data[S]]
+          val data    = d.asInstanceOf[AudioFileDnD.Data[S]]
           e.acceptDrop(COPY)
-          val success = acceptDnD(data)
+          val loc     = e.getLocation
+          val drop    = mkDrop(d, loc)
+          val success = acceptDnD(drop, data)
           e.dropComplete(success)
 
         case _ =>

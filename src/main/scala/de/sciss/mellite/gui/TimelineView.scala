@@ -29,9 +29,11 @@ package gui
 import de.sciss.synth.proc.Sys
 import swing.Component
 import impl.{TimelineViewImpl => Impl}
+import de.sciss.lucre.stm.Cursor
 
 object TimelineView {
-  def apply[S <: Sys[S]](group: Element.ProcGroup[S])(implicit tx: S#Tx): TimelineView[S] = Impl(group)
+  def apply[S <: Sys[S]](group: Element.ProcGroup[S])(implicit tx: S#Tx, cursor: Cursor[S]): TimelineView[S] =
+    Impl(group)
 }
 trait TimelineView[S <: Sys[S]] {
   def component: Component

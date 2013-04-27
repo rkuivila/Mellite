@@ -143,17 +143,17 @@ trait AbstractTimelineView {
     unitIncrement = 4
   }
 
-  private def frameToScreen(frame: Long): Double = {
+  final protected def frameToScreen(frame: Long): Double = {
     val visi = timelineModel.visible
     (frame - visi.start).toDouble / visi.length * mainView.peer.getWidth
   }
 
-  private def screenToFrame(screen: Int): Double = {
+  final protected def screenToFrame(screen: Int): Double = {
     val visi = timelineModel.visible
     screen.toDouble / mainView.peer.getWidth * visi.length + visi.start
   }
 
-  private def clipVisible(frame: Double): Long = {
+  final protected def clipVisible(frame: Double): Long = {
     val visi = timelineModel.visible
     visi.clip(frame.toLong)
   }
