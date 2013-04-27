@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{Grapheme, Sys}
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
 import scala.swing.{Label, BoxPanel, Orientation, Swing, BorderPanel, Component}
@@ -27,7 +27,7 @@ object AudioFileViewImpl {
 
   def apply[S <: Sys[S]](element: AudioGrapheme[S])(implicit tx: S#Tx): AudioFileView[S] = {
     val res = new Impl(tx.newHandle(element))
-    val f   = element.entity.value.artifact // store.resolve(element.entity.value.artifact)
+    val f   = element.entity.value // .artifact // store.resolve(element.entity.value.artifact)
     guiFromTx(res.guiInit(f))
     res
   }
@@ -37,9 +37,9 @@ object AudioFileViewImpl {
 
     var component: Component = _
 
-    def guiInit(f: File) {
+    def guiInit(snapshot: Grapheme.Value.Audio) {
       // println("AudioFileView guiInit")
-      val sono      = manager.acquire(sonogram.OverviewManager.Job(f))
+      val sono      = manager.acquire(sonogram.OverviewManager.Job(snapshot.artifact))
       implicit val exec = manager.config.executionContext
       //      sono.onComplete {
       //        case x => println(s"<view> $x")
@@ -116,6 +116,8 @@ object AudioFileViewImpl {
 
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
+          HStrut(4),
+          new AudioFileDnD.Button(holder, snapshot, tlm),
           HGlue,
           HStrut(4),
           lcdPane,

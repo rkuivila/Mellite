@@ -27,19 +27,18 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.Sys
-import de.sciss.audiowidgets.{AxisFormat, Axis}
-import scala.swing.{Component, Orientation, BoxPanel}
+import scala.swing.Component
 import de.sciss.span.Span
 import de.sciss.mellite.impl.TimelineModelImpl
-import java.awt.Graphics2D
+import java.awt.{Color, Graphics2D}
+import de.sciss.synth.proc.Sys
 
 object TimelineViewImpl {
   def apply[S <: Sys[S]](element: Element.ProcGroup[S])(implicit tx: S#Tx): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 600).toLong), sampleRate)
-    val res   = new Impl[S](tlm)
-    val group = element.entity
+    val res         = new Impl[S](tlm)
+    val group       = element.entity
     //    group.nearestEventBefore(Long.MaxValue) match {
     //      case Some(stop) => Span(0L, stop)
     //      case _          => Span.from(0L)
@@ -49,14 +48,29 @@ object TimelineViewImpl {
     res
   }
 
-  private final class View(protected val timelineModel: TimelineModel) extends AbstractTimelineView {
-    import AbstractTimelineView._
+  private final class View[S <: Sys[S]](protected val timelineModel: TimelineModel) extends AbstractTimelineView {
+    view =>
+    // import AbstractTimelineView._
 
-    protected object mainView extends Component {
+    protected object mainView extends Component with AudioFileDnD[S] {
+      protected def timelineModel = view.timelineModel
+
+      protected def updateDnD(drop: Option[AudioFileDnD.Drop]) {
+        println(s"Drop = $drop")
+      }
+
+      protected def acceptDnD(data: AudioFileDnD.Data[S]): Boolean = {
+        println("Accept")
+        true
+      }
+
       override protected def paintComponent(g: Graphics2D) {
         super.paintComponent(g)
-        g.setPaint(pntChecker)
-        g.fillRect(0, 0, peer.getWidth, peer.getHeight)
+        val w = peer.getWidth
+        val h = peer.getHeight
+        g.setColor(Color.darkGray) // g.setPaint(pntChecker)
+        g.fillRect(0, 0, w, h)
+        paintPosAndSelection(g, h)
       }
     }
   }
@@ -66,7 +80,7 @@ object TimelineViewImpl {
       component
     }
 
-    private lazy val view = new View(timelineModel)
+    private lazy val view = new View[S](timelineModel)
 
     lazy val component: Component = view.component
   }

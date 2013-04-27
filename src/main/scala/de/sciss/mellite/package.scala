@@ -30,6 +30,7 @@ import expr.LinkedList
 import synth.proc.{InMemory, Sys, Confluent}
 import de.sciss.serial.{Serializer, DataInput}
 import scala.collection.immutable.{IndexedSeq => IIdxSeq}
+import java.io.File
 
 package object mellite {
   type Cf           = Confluent
@@ -88,4 +89,16 @@ package object mellite {
       LinkedList.Modifiable.serializer[InMemory, _Element[InMemory], _Element.Update[InMemory]](_.changed)
   }
   type Folder[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Element.Update[S]]
+
+  implicit class RichFile(f: File) {
+    def /(child: String): File = new File(f, child)
+    def path: String  = f.getPath
+    def name: String  = f.getName
+    def parent: File  = f.getParentFile
+    def nameWithoutExtension: String = {
+      val n = f.getName
+      val i = n.lastIndexOf('.')
+      if (i < 0) n else n.substring(0, i)
+    }
+  }
 }

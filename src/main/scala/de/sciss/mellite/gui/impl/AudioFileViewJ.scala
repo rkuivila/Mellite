@@ -77,13 +77,6 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
 
     def imageObserver = peer
 
-    import ExecutionContext.Implicits.global
-
-    sono.onComplete {
-      case Success(_) => /* println("SUCCESS"); */ execInGUI(ready())
-      case Failure(e) => /* println("FAILURE"); */ execInGUI(failed(e))
-    }
-
     private def ready() {
       paintFun    = paintReady _
       repaint()
@@ -93,6 +86,14 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
       val message = s"${exception.getClass.getName} - ${exception.getMessage}"
       paintFun    = paintChecker(message)
       repaint()
+    }
+
+    // ---- constructor ----
+
+    import ExecutionContext.Implicits.global
+    sono.onComplete {
+      case Success(_) => /* println("SUCCESS"); */ execInGUI(ready())
+      case Failure(e) => /* println("FAILURE"); */ execInGUI(failed(e))
     }
   }
 

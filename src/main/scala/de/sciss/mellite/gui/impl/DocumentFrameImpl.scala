@@ -268,7 +268,7 @@ object DocumentFrameImpl {
               val e         = view.element()
               val afv       = AudioFileView(e)
               val name      = view.name
-              val fileName  = view.value.artifact.getName
+              val fileName  = view.value.artifact.nameWithoutExtension
               guiFromTx {
                 new WindowImpl {
                   def handler = Mellite.windowHandler
