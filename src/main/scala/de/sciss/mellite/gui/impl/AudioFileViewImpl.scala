@@ -127,8 +127,8 @@ object AudioFileViewImpl {
 
       val pane = new BorderPanel {
         layoutManager.setVgap(2)
-        add(transportPane, BorderPanel.Position.North )
-        add(sonoView     , BorderPanel.Position.Center)
+        add(transportPane,      BorderPanel.Position.North )
+        add(sonoView.component, BorderPanel.Position.Center)
       }
 
       component = pane
