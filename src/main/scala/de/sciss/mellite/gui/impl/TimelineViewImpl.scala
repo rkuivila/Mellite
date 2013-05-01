@@ -35,12 +35,13 @@ import de.sciss.synth.proc.{Scan, Grapheme, Proc, ProcGroup, Sys}
 import de.sciss.lucre.stm.Cursor
 import de.sciss.lucre.stm
 import de.sciss.synth.{SynthGraph, proc}
-import de.sciss.synth.expr.Spans
+import de.sciss.synth.expr.{Longs, Spans}
 import de.sciss.fingertree.RangedSeq
 import javax.swing.UIManager
 import java.util.Locale
 import de.sciss.synth.proc.graph.scan
 import de.sciss.synth
+import de.sciss.lucre.bitemp.BiExpr
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -103,7 +104,8 @@ object TimelineViewImpl {
             // val scand   = proc.scans.add("dur")
             val grw     = Grapheme.Modifiable[S]
             // val grd     = Grapheme.Modifiable[S]
-            grw.add(???) // time -> segm.value)
+            val bi: Grapheme.TimedElem[S] = BiExpr(Longs.newVar(Longs.newConst(time)), data.source().entity)
+            grw.add(bi)
             // val gv = Grapheme.Value.Curve
             // val crv = gv(dur -> stepShape)
             // grd.add(time -> crv)
@@ -113,9 +115,8 @@ object TimelineViewImpl {
               import synth._
               import ugen._
               val sig   = scan("sig").ar(0)
-              val duri  = A2K.kr(scan("dur").ar(1))
-              val env   = EnvGen.ar(Env.linen(0.2, (duri - 0.4).max(0), 0.2))
-              Out.ar(0, sig * env)
+              // val env   = EnvGen.ar(Env.linen(0.2, (duri - 0.4).max(0), 0.2))
+              Out.ar(0, sig /* * env */)
             }
             proc.graph_=(sg)
             groupM.add(span, proc)
