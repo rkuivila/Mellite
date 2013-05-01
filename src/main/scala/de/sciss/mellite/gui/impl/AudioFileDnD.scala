@@ -24,7 +24,7 @@ object AudioFileDnD {
     // println(s"New Transferable. Data = $data")
 
     def getTransferDataFlavors: Array[DataFlavor] = Array(AudioFileDnD.flavor)
-    def isDataFlavorSupported(flavor: DataFlavor): Boolean  = {
+    def isDataFlavorSupported(flavor: DataFlavor): Boolean = {
       val res = flavor == AudioFileDnD.flavor
       // println(s"isDataFlavorSupported($flavor) == $res")
       res

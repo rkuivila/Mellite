@@ -23,31 +23,32 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
+package de.sciss
+package mellite
 package gui
 package impl
 
 import scala.swing.Component
-import de.sciss.span.Span
-import de.sciss.mellite.impl.TimelineModelImpl
+import span.Span
+import mellite.impl.TimelineModelImpl
 import java.awt.{Font, RenderingHints, BasicStroke, Color, Graphics2D}
-import de.sciss.synth.proc.{Scan, Grapheme, Proc, ProcGroup, Sys}
-import de.sciss.lucre.stm.Cursor
-import de.sciss.lucre.stm
-import de.sciss.synth.{SynthGraph, proc}
-import de.sciss.synth.expr.{Longs, Spans}
-import de.sciss.fingertree.RangedSeq
+import synth.proc.{Scan, Grapheme, Proc, ProcGroup, Sys}
+import lucre.{bitemp, stm}
+import stm.Cursor
+import synth.{SynthGraph, proc}
+import synth.expr.{Longs, Spans}
+import fingertree.RangedSeq
 import javax.swing.UIManager
 import java.util.Locale
-import de.sciss.synth.proc.graph.scan
-import de.sciss.synth
-import de.sciss.lucre.bitemp.BiExpr
+import proc.graph
+import bitemp.BiExpr
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
   private val strkDropRegion      = new BasicStroke(3f)
   private val colrRegionBg        = new Color(0x68, 0x68, 0x68)
   private val colrRegionBgSel     = Color.blue
+  private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
 
   def apply[S <: Sys[S]](element: Element.ProcGroup[S])(implicit tx: S#Tx, cursor: Cursor[S]): TimelineView[S] = {
@@ -96,15 +97,22 @@ object TimelineViewImpl {
             val elem    = data.source()
             // val elemG = elem.entity
             val time    = drop.frame
-            val spanV   = Span(time, time + data.drag.selection.length)
+            val sel     = data.drag.selection
+            val spanV   = Span(time, time + sel.length)
             val span    = Spans.newVar[S](Spans.newConst(spanV))
             val proc    = Proc[S]
             proc.name_=(elem.name)
-            val scanw   = proc.scans.add("sig")
+            val scanw   = proc.scans.add(TimelineView.AudioGraphemeKey)
             // val scand   = proc.scans.add("dur")
             val grw     = Grapheme.Modifiable[S]
             // val grd     = Grapheme.Modifiable[S]
-            val bi: Grapheme.TimedElem[S] = BiExpr(Longs.newVar(Longs.newConst(time)), data.source().entity)
+
+            // we preserve data.source(), i.e. the original audio file offset
+            // ; therefore the grapheme element must start `selection.start` frames
+            // before the insertion position `drop.frame`
+            val gStart  = Longs.newVar(Longs.newConst(time - sel.start))  // wooopa, could even be a bin op at some point
+            val gElem   = data.source().entity  // could there be a Grapheme.Element.Var?
+            val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
             grw.add(bi)
             // val gv = Grapheme.Value.Curve
             // val crv = gv(dur -> stepShape)
@@ -114,7 +122,7 @@ object TimelineViewImpl {
             val sg = SynthGraph {
               import synth._
               import ugen._
-              val sig   = scan("sig").ar(0)
+              val sig   = graph.scan("sig").ar(0)
               // val env   = EnvGen.ar(Env.linen(0.2, (duri - 0.4).max(0), 0.2))
               Out.ar(0, sig /* * env */)
             }
@@ -132,10 +140,13 @@ object TimelineViewImpl {
       // import AbstractTimelineView._
       protected def timelineModel = impl.timelineModel
 
-      protected object mainView extends Component with AudioFileDnD[S] {
+      protected object mainView extends Component with AudioFileDnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
 
         private var audioDnD = Option.empty[AudioFileDnD.Drop]
+
+        var visualBoost = 1f
+        private var sonoBoost = 1f
 
         font = {
           val f = UIManager.getFont("Slider.font", Locale.US)
@@ -151,6 +162,10 @@ object TimelineViewImpl {
         protected def acceptDnD(drop: AudioFileDnD.Drop, data: AudioFileDnD.Data[S]): Boolean =
           dropAudioRegion(drop, data)
 
+        def imageObserver = peer
+
+        def adjustGain(amp: Float, pos: Double) = amp * sonoBoost
+
         override protected def paintComponent(g: Graphics2D) {
           super.paintComponent(g)
           val w = peer.getWidth
@@ -160,52 +175,80 @@ object TimelineViewImpl {
 
           val visi      = timelineModel.visible
           val clipOrig  = g.getClip
+          val cr        = clipOrig.getBounds
+
+          val hndl = hndlExtent
+          // stakeBorderViewMode match {
+          //   case StakeBorderViewMode.None       => 0
+          //   case StakeBorderViewMode.Box        => 1
+          //   case StakeBorderViewMode.TitledBox  => hndlExtent
+          // }
 
           procViews.filterOverlaps((visi.start, visi.stop)).foreach { pv =>
             val selected  = false
             val muted     = false
 
-            def drawProc(x1: Int, x2: Int) {
+            def drawProc(start: Long, x1: Int, x2: Int) {
               val py    = 0
               val px    = x1
               val pw    = x2 - x1
               val ph    = 64
-              // if (stakeBorderViewMode != StakeBorderViewMode.None) {
-              g.setColor(if (selected) colrRegionBgSel else colrRegionBg)
-              g.fillRoundRect(px, py, pw, ph, 5, 5)
-              // }
 
+              val px1C    = math.max(px + 1, cr.x - 2)
+              val px2C    = math.min(px + pw, cr.x + cr.width + 3)
+              if (px1C < px2C) {  // skip this if we are not overlapping with clip
 
+                // if (stakeBorderViewMode != StakeBorderViewMode.None) {
+                g.setColor(if (selected) colrRegionBgSel else colrRegionBg)
+                g.fillRoundRect(px, py, pw, ph, 5, 5)
+                // }
 
-              // if (stakeBorderViewMode == StakeBorderViewMode.TitledBox) {
-              g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
-              g.setColor(Color.white)
-              // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
-              g.drawString(if (muted) "\u23DB " + pv.name else pv.name, px + 4, py + hndlBaseline)
-              //              stakeInfo(ar).foreach(info => {
-              //                g2.setColor(Color.yellow)
-              //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
-              //              })
-              g.setClip(clipOrig)
-              // }
+                pv.audio.foreach { segm =>
+                  val innerH  = ph - (hndl + 1)
+
+                  val sono = pv.sono.getOrElse {
+                    val res = SonogramManager.acquire(segm.value.artifact)
+                    pv.sono = Some(res)
+                    res
+                  }
+                  val audio   = segm.value
+                  val dStart  = audio.offset /* - start */ + (/* start */ - segm.span.start)
+                  val startC  = math.max(0.0, screenToFrame(px1C))
+                  val stopC   = screenToFrame(px2C)
+                  sonoBoost   = audio.gain.toFloat * visualBoost
+                  sono.paint(startC + dStart, stopC + dStart, g, px1C, py + hndl, px2C - px1C, innerH, this)
+                }
+
+                // if (stakeBorderViewMode == StakeBorderViewMode.TitledBox) {
+                g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
+                g.setColor(Color.white)
+                // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
+                g.drawString(if (muted) "\u23DB " + pv.name else pv.name, px + 4, py + hndlBaseline)
+                //              stakeInfo(ar).foreach { info =>
+                //                g2.setColor(Color.yellow)
+                //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
+                //              }
+                g.setClip(clipOrig)
+                // }
+              }
             }
 
             pv.span match {
               case Span(start, stop) =>
                 val x1 = frameToScreen(start).toInt
                 val x2 = frameToScreen(stop ).toInt
-                drawProc(x1, x2)
+                drawProc(start, x1, x2)
 
               case Span.From(start) =>
                 val x1 = frameToScreen(start).toInt
-                drawProc(x1, w + 5)
+                drawProc(start, x1, w + 5)
 
               case Span.Until(stop) =>
                 val x2 = frameToScreen(stop).toInt
-                drawProc(-5, x2)
+                drawProc(Long.MinValue, -5, x2)
 
               case Span.All =>
-                drawProc(-5, w + 5)
+                drawProc(Long.MinValue, -5, w + 5)
 
               case _ => // don't draw Span.Void
             }

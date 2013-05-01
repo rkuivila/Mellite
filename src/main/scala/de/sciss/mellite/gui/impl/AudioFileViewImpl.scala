@@ -6,8 +6,6 @@ import de.sciss.synth.proc.{Grapheme, Sys}
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
 import scala.swing.{Label, BoxPanel, Orientation, Swing, BorderPanel, Component}
-import de.sciss.sonogram
-import java.io.File
 import java.awt.Graphics2D
 import de.sciss.audiowidgets.{LCDColors, LCDFont, AxisFormat, Transport, LCDPanel}
 import Swing._
