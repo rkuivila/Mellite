@@ -29,19 +29,18 @@ package gui
 package impl
 
 import scala.swing.Component
-import span.Span
+import span.{Span, SpanLike}
 import mellite.impl.TimelineModelImpl
 import java.awt.{Font, RenderingHints, BasicStroke, Color, Graphics2D}
-import synth.proc.{Scan, Grapheme, Proc, ProcGroup, Sys}
+import synth.proc.{Scan, Grapheme, Proc, ProcGroup, Sys, graph, TimedProc}
 import lucre.{bitemp, stm}
-import stm.Cursor
+import de.sciss.lucre.stm.{IdentifierMap, Cursor}
 import synth.{SynthGraph, proc}
 import synth.expr.{Longs, Spans}
 import fingertree.RangedSeq
 import javax.swing.UIManager
 import java.util.Locale
-import proc.graph
-import bitemp.BiExpr
+import bitemp.{BiExpr, BiGroup}
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -63,30 +62,51 @@ object TimelineViewImpl {
     //    }
 
     val procMap   = tx.newInMemoryIDMap[TimelineProcView[S]]
-    var rangedSeq = RangedSeq.empty[TimelineProcView[S], Long]
+
+    val impl = new Impl[S](groupH, procMap, tlm, cursor)
 
     group.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>
-        // timed.span
-        // val proc = timed.value
-        val view = TimelineProcView(timed)
-        procMap.put(timed.id, view)
-        rangedSeq += view
+        impl.addProc(span, timed)
       }
     }
 
-    val res = new Impl[S](groupH, rangedSeq, tlm, cursor)
-    guiFromTx(res.guiInit())
-    res
+    val obs = group.changed.reactTx { implicit tx => (upd: ProcGroup.Update[S]) => {
+      val _group = upd.group
+      upd.changes.foreach {
+        case BiGroup.Added  (span, timed) =>
+          // println(s"Added   $span, $timed")
+          impl.addProc(span, timed)
+          guiFromTx(impl.component.repaint())  // XXX TODO: optimize dirty rectangle
+
+        case BiGroup.Removed(span, timed) => println(s"Removed $span, $timed")
+        case BiGroup.ElementMoved  (timed, spanCh ) => println(s"Moved   $timed, $spanCh")
+        case BiGroup.ElementMutated(timed, procUpd) => println(s"Mutated $timed, $procUpd")
+      }
+    }}
+    // XXX TODO: dispose observer eventually
+
+    guiFromTx(impl.guiInit())
+    impl
   }
 
-  private final class Impl[S <: Sys[S]](groupH: stm.Source[S#Tx, proc.ProcGroup[S]],
-                                        procViews: RangedSeq[TimelineProcView[S], Long],
+  private final class Impl[S <: Sys[S]](groupH: stm.Source[S#Tx, ProcGroup[S]],
+                                        procMap: IdentifierMap[S#ID, S#Tx, TimelineProcView[S]],
                                         timelineModel: TimelineModel, cursor: Cursor[S]) extends TimelineView[S] {
     impl =>
 
+    private var procViews = RangedSeq.empty[TimelineProcView[S], Long]
+
     def guiInit() {
       component
+    }
+
+    def addProc(span: SpanLike, timed: TimedProc[S])(implicit tx: S#Tx) {
+      // timed.span
+      // val proc = timed.value
+      val view = TimelineProcView(timed)
+      procMap.put(timed.id, view)
+      procViews += view
     }
 
     private def dropAudioRegion(drop: AudioFileDnD.Drop, data: AudioFileDnD.Data[S]): Boolean = {
