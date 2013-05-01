@@ -1,12 +1,13 @@
-package de.sciss.mellite
+package de.sciss
+package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Proc, TimedProc, Sys}
-import de.sciss.lucre.stm
-import de.sciss.span.{Span, SpanLike}
-import de.sciss.lucre.expr.Expr
-import de.sciss.synth.expr.SpanLikes
+import synth.proc.{Proc, TimedProc, Sys}
+import lucre.{stm, expr}
+import span.{Span, SpanLike}
+import expr.Expr
+import synth.expr.SpanLikes
 import language.implicitConversions
 
 object TimelineProcView {
@@ -14,12 +15,12 @@ object TimelineProcView {
     val span  = timed.span
     val proc  = timed.value
     import SpanLikes._
-    new Impl(tx.newHandle(span), tx.newHandle(proc), span.value, proc.name.value)
+    new Impl(tx.newHandle(span), tx.newHandle(proc), span.value, proc.name.value, None)
   }
 
   private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val procSource: stm.Source[S#Tx, Proc[S]],
-                                        var span: SpanLike, var name: String)
+                                        var span: SpanLike, var name: String, var sono: Option[sonogram.Overview])
     extends TimelineProcView[S]
 
   implicit def span[S <: Sys[S]](view: TimelineProcView[S]): (Long, Long) = {
@@ -35,6 +36,8 @@ object TimelineProcView {
 sealed trait TimelineProcView[S <: Sys[S]] {
   def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
   def procSource: stm.Source[S#Tx, Proc[S]]
+
   var span: SpanLike
   var name: String
+  var sono: Option[sonogram.Overview]
 }

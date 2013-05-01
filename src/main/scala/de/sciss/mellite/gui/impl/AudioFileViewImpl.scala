@@ -16,15 +16,6 @@ import de.sciss.mellite.impl.TimelineModelImpl
 import de.sciss.lucre.event.Change
 
 object AudioFileViewImpl {
-  private lazy val manager = {
-    val cfg       = sonogram.OverviewManager.Config()
-    val folder    = new File(new File(sys.props("user.home"), "mellite"), "cache")
-    folder.mkdirs()
-    val sizeLimit = 2L << 10 << 10 << 10  // 2 GB
-    cfg.caching = Some(sonogram.OverviewManager.Caching(folder, sizeLimit))
-    sonogram.OverviewManager(cfg)
-  }
-
   def apply[S <: Sys[S]](element: AudioGrapheme[S])(implicit tx: S#Tx): AudioFileView[S] = {
     val res = new Impl(tx.newHandle(element))
     val f   = element.entity.value // .artifact // store.resolve(element.entity.value.artifact)
@@ -39,8 +30,8 @@ object AudioFileViewImpl {
 
     def guiInit(snapshot: Grapheme.Value.Audio) {
       // println("AudioFileView guiInit")
-      val sono      = manager.acquire(sonogram.OverviewManager.Job(snapshot.artifact))
-      implicit val exec = manager.config.executionContext
+      val sono = SonogramManager.acquire(snapshot.artifact)  // XXX TODO disposal
+      import SonogramManager.executionContext
       //      sono.onComplete {
       //        case x => println(s"<view> $x")
       //      }

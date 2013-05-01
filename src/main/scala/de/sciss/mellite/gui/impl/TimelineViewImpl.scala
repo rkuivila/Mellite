@@ -170,9 +170,14 @@ object TimelineViewImpl {
               val px    = x1
               val pw    = x2 - x1
               val ph    = 64
+              // if (stakeBorderViewMode != StakeBorderViewMode.None) {
               g.setColor(if (selected) colrRegionBgSel else colrRegionBg)
               g.fillRoundRect(px, py, pw, ph, 5, 5)
+              // }
 
+
+
+              // if (stakeBorderViewMode == StakeBorderViewMode.TitledBox) {
               g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
               g.setColor(Color.white)
               // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
@@ -182,6 +187,7 @@ object TimelineViewImpl {
               //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
               //              })
               g.setClip(clipOrig)
+              // }
             }
 
             pv.span match {
