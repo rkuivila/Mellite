@@ -84,6 +84,9 @@ trait Document[S <: Sys[S]] {
   def aural: AuralSystem[S]
   def folder: File
 
+  type I <: stm.Sys[I]
+  implicit def inMemory: S#Tx => I#Tx
+
   //  def root(implicit tx: S#Tx): Group[S]
   //  def groups( implicit tx: S#Tx ) : Groups[S]
   //   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]

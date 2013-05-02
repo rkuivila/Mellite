@@ -30,10 +30,12 @@ import de.sciss.synth.proc.Sys
 import swing.Component
 import impl.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm.Cursor
+import de.sciss.lucre.stm
 
 object TimelineView {
-  def apply[S <: Sys[S]](group: Element.ProcGroup[S])(implicit tx: S#Tx, cursor: Cursor[S]): TimelineView[S] =
-    Impl(group)
+  def apply[S <: Sys[S], I <: stm.Sys[I]](group: Element.ProcGroup[S])
+                                         (implicit tx: S#Tx, cursor: Cursor[S], bridge: S#Tx => I#Tx): TimelineView[S] =
+    Impl[S, I](group)
 
   final val AudioGraphemeKey = "sig"
 }

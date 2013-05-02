@@ -28,19 +28,21 @@ package mellite
 package gui
 package impl
 
-import scala.swing.Component
+import scala.swing.{BorderPanel, Orientation, BoxPanel, Component}
 import span.{Span, SpanLike}
 import mellite.impl.TimelineModelImpl
 import java.awt.{Font, RenderingHints, BasicStroke, Color, Graphics2D}
-import synth.proc.{Scan, Grapheme, Proc, ProcGroup, Sys, graph, TimedProc}
+import synth.proc.{Scan, Grapheme, Proc, ProcGroup, ProcTransport, Sys, graph, TimedProc}
 import lucre.{bitemp, stm}
-import de.sciss.lucre.stm.{IdentifierMap, Cursor}
+import lucre.stm.{IdentifierMap, Cursor}
 import synth.{SynthGraph, proc}
 import synth.expr.{Longs, Spans}
 import fingertree.RangedSeq
 import javax.swing.UIManager
 import java.util.Locale
 import bitemp.{BiExpr, BiGroup}
+import audiowidgets.Transport
+import scala.swing.Swing._
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -50,7 +52,8 @@ object TimelineViewImpl {
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
 
-  def apply[S <: Sys[S]](element: Element.ProcGroup[S])(implicit tx: S#Tx, cursor: Cursor[S]): TimelineView[S] = {
+  def apply[S <: Sys[S], I <: stm.Sys[I]](element: Element.ProcGroup[S])
+                                         (implicit tx: S#Tx, cursor: Cursor[S], bridge: S#Tx => I#Tx): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 600).toLong), sampleRate)
     val group       = element.entity
@@ -61,9 +64,11 @@ object TimelineViewImpl {
     //      case _          => Span.from(0L)
     //    }
 
-    val procMap   = tx.newInMemoryIDMap[TimelineProcView[S]]
+    val procMap = tx.newInMemoryIDMap[TimelineProcView[S]]
+    val transp  = proc.Transport[S, I](group, sampleRate = sampleRate)
+    // transp.react(upd => println(s"<transport> $upd"))
 
-    val impl = new Impl[S](groupH, procMap, tlm, cursor)
+    val impl    = new Impl[S](groupH, transp, procMap, tlm, cursor)
 
     group.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>
@@ -91,14 +96,76 @@ object TimelineViewImpl {
   }
 
   private final class Impl[S <: Sys[S]](groupH: stm.Source[S#Tx, ProcGroup[S]],
+                                        transp: ProcTransport[S],
                                         procMap: IdentifierMap[S#ID, S#Tx, TimelineProcView[S]],
                                         timelineModel: TimelineModel, cursor: Cursor[S]) extends TimelineView[S] {
     impl =>
 
+    import cursor.step
+
     private var procViews = RangedSeq.empty[TimelineProcView[S], Long]
 
+    var component: Component = _
+
+    private def rtz() {
+      stop()
+      timelineModel.position = timelineModel.bounds.start
+    }
+
+    private def rewind() {
+
+    }
+
+    private def stop() {
+      step { implicit tx => transp.stop() }
+    }
+
+    private def play() {
+      step { implicit tx =>
+        transp.stop()
+        transp.seek(timelineModel.position)
+        transp.play()
+      }
+    }
+
+    private def ffwd() {
+
+    }
+
     def guiInit() {
-      component
+      val timeDisp  = TimeDisplay(timelineModel)
+
+      import Transport._
+      val transport = Transport.makeButtonStrip(Seq(
+        GoToBegin   { rtz()    },
+        Rewind      { rewind() },
+        Stop        { stop()   },
+        Play        { play()   },
+        FastForward { ffwd()   },
+        Loop        {}
+      ))
+      transport.button(Stop).foreach(_.selected = true)
+
+      val transportPane = new BoxPanel(Orientation.Horizontal) {
+        contents ++= Seq(
+          HGlue,
+          HStrut(4),
+          timeDisp.component,
+          HStrut(8),
+          transport,
+          HStrut(4)
+        )
+      }
+
+      val view  = new View
+
+      val pane  = new BorderPanel {
+        layoutManager.setVgap(2)
+        add(transportPane,  BorderPanel.Position.North )
+        add(view.component, BorderPanel.Position.Center)
+      }
+
+      component = pane
     }
 
     def addProc(span: SpanLike, timed: TimedProc[S])(implicit tx: S#Tx) {
@@ -110,7 +177,7 @@ object TimelineViewImpl {
     }
 
     private def dropAudioRegion(drop: AudioFileDnD.Drop, data: AudioFileDnD.Data[S]): Boolean = {
-      cursor.step { implicit tx =>
+      step { implicit tx =>
         val group = groupH()
         group.modifiableOption match {
           case Some(groupM) =>
@@ -292,9 +359,5 @@ object TimelineViewImpl {
         }
       }
     }
-
-    private lazy val view = new View
-
-    lazy val component: Component = view.component
   }
 }

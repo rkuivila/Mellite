@@ -36,55 +36,47 @@ import de.sciss.serial.{DataInput, Serializer, DataOutput}
 object DocumentImpl {
   private type S = Cf
 
-  private implicit object serializer extends Serializer[S#Tx, S#Acc, Data /* [S] */] {
-    def write(data: Data /* [S] */, out: DataOutput) {
+  private implicit object serializer extends Serializer[S#Tx, S#Acc, Data] {
+    def write(data: Data, out: DataOutput) {
       data.write(out)
     }
 
-    def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): Data /* [S] */ = new Data /* [S] */ {
-      val elements = Folder.read[S](in, access)
-      // elementsSer.read( in, access )
-      val cursor = tx.readCursor(in, access)
+    def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): Data = new Data {
+      val elements  = Folder.read[S](in, access)
+      val cursor    = tx.readCursor(in, access)
     }
   }
 
-  def read( dir: File ) : Document[ Cf ] = {
-      if( !dir.isDirectory ) throw new FileNotFoundException( "Document " + dir.getPath + " does not exist" )
-      apply( dir, create = false )
-   }
+  def read(dir: File): Document[Cf] = {
+    if (!dir.isDirectory) throw new FileNotFoundException("Document " + dir.getPath + " does not exist")
+    apply(dir, create = false)
+  }
 
-   def empty( dir: File ) : Document[ Cf ] = {
-      if( dir.exists() ) throw new IOException( "Document " + dir.getPath + " already exists" )
-      apply( dir, create = true )
-   }
+  def empty(dir: File): Document[Cf] = {
+    if (dir.exists()) throw new IOException("Document " + dir.getPath + " already exists")
+    apply(dir, create = true)
+  }
 
   private def apply(dir: File, create: Boolean): Document[Cf] = {
     type S    = Cf
     val fact  = BerkeleyDB.factory(dir, createIfNecessary = create)
     implicit val system: S = Confluent(fact)
-    //    implicit val serializer = DocumentImpl.serializer[S] // please Scala 2.9.2 and 2.10.0-M6 :-////
-    val (_access, _cursor) = system.cursorRoot[Data /* [S] */, Cursor[S]](implicit tx =>
-        new Data /* [S] */ {
-          //            val groups        = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )( tx, groupSer[ S ])
-          val elements  = Folder[S](tx)
-          val cursor    = tx.newCursor()
-          //println("DOC.new")
+    val (access, (_cursor, aural)) = system.cursorRoot[Data, (Cursor[S], AuralSystem[S])](implicit tx =>
+      new Data {
+        val elements  = Folder[S](tx)
+        val cursor    = tx.newCursor()
+      }
+    )(implicit tx => data => {
+      implicit val cursor = data.cursor
+      cursor -> AuralSystem[S]
+    })
 
-          //          // test
-          //          private val g1: Elements[S] = LinkedList.Modifiable[S, Element[S]](tx, Element.serializer)
-          //          g1.addLast(Element.String(Strings.newConst("string-value"), Some("s1")))
-          //          private val eg1 = Element.Group(g1, Some("g1"))
-          //          elements.addLast(eg1)
-        }
-      )(tx => _.cursor)
-    val access: S#Entry[Data /* [S] */] = _access
-    implicit val cursor: Cursor[S] = _cursor
-    //println("CURSOR = " + cursor)
-    implicit val cfTpe = reflect.runtime.universe.typeOf[Cf /* S */]
-    new Impl /* [ Cf /* S */] */(dir, system, access)
+    implicit val cursor = _cursor
+    implicit val cfTpe  = reflect.runtime.universe.typeOf[Cf]
+    new Impl(dir, system, access, aural)
   }
 
-  private abstract class Data /*[S <: confluent.Sys[S]] */ {
+  private abstract class Data {
     def elements: Folder[S]
     def cursor: confluent.Cursor[S]
 
@@ -99,13 +91,14 @@ object DocumentImpl {
     }
   }
 
-  private final class Impl /* [S <: Sys[S]] */(val folder: File, val system: S, access: S#Entry[Data/* [S] */])
-                                       (implicit val cursor: Cursor[S], val systemType: reflect.runtime.universe.TypeTag[S])
+  private final class Impl(val folder: File, val system: S, access: S#Entry[Data], val aural: AuralSystem[S])
+                          (implicit val cursor: Cursor[S], val systemType: reflect.runtime.universe.TypeTag[S])
     extends Document[S] {
     override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
     def elements(implicit tx: S#Tx): Folder[S] = access().elements
 
-    def aural: AuralSystem[S] = ???
+    type I = system.I
+    val inMemory = (tx: S#Tx) => Confluent.inMemory(tx)
   }
 }

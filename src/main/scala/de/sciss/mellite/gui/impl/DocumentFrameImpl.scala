@@ -42,6 +42,7 @@ import desktop.impl.WindowImpl
 import de.sciss.synth.io.AudioFile
 import scala.util.control.NonFatal
 import java.io.File
+import de.sciss.lucre.stm
 
 object DocumentFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
@@ -250,7 +251,8 @@ object DocumentFrameImpl {
           views.foreach {
             case view: ElementView.ProcGroup[S] =>
               val e   = view.element()
-              val tlv = TimelineView(e)
+              import document.inMemory
+              val tlv = TimelineView[S, document.I](e)
               guiFromTx {
                 new WindowImpl {
                   def handler = Mellite.windowHandler
