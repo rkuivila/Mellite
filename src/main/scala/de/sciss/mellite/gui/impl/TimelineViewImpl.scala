@@ -52,8 +52,8 @@ object TimelineViewImpl {
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
 
-  def apply[S <: Sys[S], I <: stm.Sys[I]](element: Element.ProcGroup[S])
-                                         (implicit tx: S#Tx, cursor: Cursor[S], bridge: S#Tx => I#Tx): TimelineView[S] = {
+  def apply[S <: Sys[S]](document: Document[S], element: Element.ProcGroup[S])
+                        (implicit tx: S#Tx): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 600).toLong), sampleRate)
     val group       = element.entity
@@ -64,11 +64,14 @@ object TimelineViewImpl {
     //      case _          => Span.from(0L)
     //    }
 
+    import document.{cursor, inMemory}
     val procMap = tx.newInMemoryIDMap[TimelineProcView[S]]
-    val transp  = proc.Transport[S, I](group, sampleRate = sampleRate)
+    val transp  = proc.Transport[S, document.I](group, sampleRate = sampleRate)
     // transp.react(upd => println(s"<transport> $upd"))
+    val aural   = proc.AuralPresentation.run[S, document.I](transp, document.aural)
+    // XXX TODO dispose transp and aural
 
-    val impl    = new Impl[S](groupH, transp, procMap, tlm, cursor)
+    val impl    = new Impl[S](groupH, transp, procMap, tlm, document.cursor)
 
     group.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>

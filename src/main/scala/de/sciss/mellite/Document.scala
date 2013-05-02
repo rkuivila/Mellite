@@ -80,7 +80,7 @@ trait Document[S <: Sys[S]] {
   import Document.{Group => _, _}
 
   def system: S
-  def cursor: Cursor[S]
+  implicit def cursor: Cursor[S]
   def aural: AuralSystem[S]
   def folder: File
 

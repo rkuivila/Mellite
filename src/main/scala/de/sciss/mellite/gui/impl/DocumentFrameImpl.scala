@@ -23,32 +23,41 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
+package de.sciss
+package mellite
 package gui
 package impl
 
-import swing.{Swing, TextField, Alignment, Label, Dialog, Component, Orientation, SplitPane, FlowPanel, Action, Button, BorderPanel}
-import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{Grapheme, Artifact, ProcGroup, Sys}
-import de.sciss.scalainterpreter.{Interpreter, InterpreterPane}
+import swing.{Swing, TextField, Alignment, Label, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
+import lucre.stm.Cursor
+import synth.proc.{Server, AuralSystem, Grapheme, Artifact, ProcGroup, Sys}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
 import de.sciss.synth.expr.{Doubles, Longs, Strings}
-import tools.nsc.interpreter.NamedParam
-import de.sciss.desktop
-import de.sciss.desktop.{FileDialog, DialogSource, OptionPane, Window, Menu}
+import desktop.{FileDialog, DialogSource, OptionPane, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
-import de.sciss.synth.io.AudioFile
+import synth.io.AudioFile
 import scala.util.control.NonFatal
 import java.io.File
-import de.sciss.lucre.stm
+import synth.swing.j.JServerStatusPanel
 
 object DocumentFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
     implicit val csr  = doc.cursor
     val folderView    = FolderView(doc.elements)
     val view          = new Impl(doc, folderView)
+    doc.aural.addClient(new AuralSystem.Client[S] {
+      def started(s: Server)(implicit tx: S#Tx) {
+        view.setServer(Some(s))
+      }
+
+      def stopped()(implicit tx: S#Tx) {
+        view.setServer(None)
+      }
+    })
+    // XXX TODO: removeClient
+
     guiFromTx {
       view.guiInit()
     }
@@ -205,7 +214,14 @@ object DocumentFrameImpl {
       }
     }
 
-    var frame: Frame[S] = null
+    var frame: Frame[S] = _
+    private var serverPane: JServerStatusPanel = _
+
+    def setServer(s: Option[Server])(implicit tx: S#Tx) {
+      guiFromTx {
+        serverPane.server = s.map(_.peer)
+      }
+    }
 
     def guiInit() {
       requireEDT()
@@ -252,7 +268,7 @@ object DocumentFrameImpl {
             case view: ElementView.ProcGroup[S] =>
               val e   = view.element()
               import document.inMemory
-              val tlv = TimelineView[S, document.I](e)
+              val tlv = TimelineView(document, e)
               guiFromTx {
                 new WindowImpl {
                   def handler = Mellite.windowHandler
@@ -307,9 +323,13 @@ object DocumentFrameImpl {
 
       // lazy val splitPane = new SplitPane(Orientation.Horizontal, folderPanel, Component.wrap(intp.component))
 
+      serverPane = new JServerStatusPanel()
+      serverPane.bootAction = Some(() => atomic { implicit tx => document.aural.start() })
+
       frame = new Frame(document, new BorderPanel {
         //        add(splitPane, BorderPanel.Position.Center)
-        add(folderPanel, BorderPanel.Position.Center)
+        add(folderPanel,                BorderPanel.Position.Center)
+        add(Component.wrap(serverPane), BorderPanel.Position.South )
       })
 
       folderView.addListener {

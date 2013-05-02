@@ -33,9 +33,8 @@ import de.sciss.lucre.stm.Cursor
 import de.sciss.lucre.stm
 
 object TimelineView {
-  def apply[S <: Sys[S], I <: stm.Sys[I]](group: Element.ProcGroup[S])
-                                         (implicit tx: S#Tx, cursor: Cursor[S], bridge: S#Tx => I#Tx): TimelineView[S] =
-    Impl[S, I](group)
+  def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])(implicit tx: S#Tx): TimelineView[S] =
+    Impl(document, group)
 
   final val AudioGraphemeKey = "sig"
 }
