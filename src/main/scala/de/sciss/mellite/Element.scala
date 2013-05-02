@@ -46,8 +46,9 @@ object Element {
 
   // ----------------- Updates -----------------
 
-  sealed trait Change[S <: Sys[S]]
   final case class Update [S <: Sys[S]](element: Element[S], changes: IIdxSeq[Change[S]])
+
+  sealed trait Change[S <: Sys[S]]
   final case class Renamed[S <: Sys[S]](change: evt.Change[_String]) extends Change[S]
   final case class Entity [S <: Sys[S]](change: Any) extends Change[S]
 
@@ -73,7 +74,7 @@ object Element {
       def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): E[S] = {
         val targets = evt.Targets.read[S](in, access)
         val cookie  = in.readInt()
-        require(cookie == typeID, s"Cookie $cookie does not match expected value ${Ints.typeID}")
+        require(cookie == typeID, s"Cookie $cookie does not match expected value $typeID")
         readIdentified(in, access, targets)
       }
     }

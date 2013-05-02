@@ -3,7 +3,7 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Grapheme, Scan, Proc, TimedProc, Sys}
+import de.sciss.synth.proc.{Attribute, Grapheme, Scan, Proc, TimedProc, Sys}
 import lucre.{stm, expr}
 import span.{Span, SpanLike}
 import expr.Expr
@@ -39,13 +39,19 @@ object TimelineProcView {
         case _ => None
       }
     }
+
+    val name = proc.attributes.get("name") match {
+      case Some(str: Attribute.String[S]) => Some(str.peer.value)
+      case _ => None
+    }
+
     new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
-      span = spanV, name = proc.name.value, audio = audio)
+      span = spanV, name = name, audio = audio)
   }
 
   private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val procSource: stm.Source[S#Tx, Proc[S]],
-                                        var span: SpanLike, var name: String,
+                                        var span: SpanLike, var name: Option[String],
                                         var audio: Option[Grapheme.Segment.Audio])
     extends TimelineProcView[S] {
 
@@ -67,7 +73,7 @@ sealed trait TimelineProcView[S <: Sys[S]] {
   def procSource: stm.Source[S#Tx, Proc[S]]
 
   var span: SpanLike
-  var name: String
+  var name: Option[String]
   // var audio: Option[Grapheme.Value.Audio]
   var audio: Option[Grapheme.Segment.Audio]
 

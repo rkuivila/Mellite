@@ -77,7 +77,7 @@ object InstantGroupFrameImpl {
         val pos = t.time
         val span = Span(pos, pos + 44100)
         val proc = Proc[S]
-        proc.name_=(name)
+        // proc.name_=(name)
         //            proc.graph_=({
         //               Out.ar( 0, Pan2.ar( SinOsc.ar( "freq".kr ) * 0.2 ))
         //            })

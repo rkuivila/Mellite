@@ -43,6 +43,7 @@ import java.util.Locale
 import bitemp.{BiExpr, BiGroup}
 import audiowidgets.Transport
 import scala.swing.Swing._
+import java.awt.event.{ActionEvent, ActionListener}
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -65,17 +66,22 @@ object TimelineViewImpl {
     //    }
 
     import document.{cursor, inMemory}
-    val procMap = tx.newInMemoryIDMap[TimelineProcView[S]]
-    val transp  = proc.Transport[S, document.I](group, sampleRate = sampleRate)
-    // transp.react(upd => println(s"<transport> $upd"))
+    val procMap     = tx.newInMemoryIDMap[TimelineProcView[S]]
+    val transp      = proc.Transport[S, document.I](group, sampleRate = sampleRate)
     val aural   = proc.AuralPresentation.run[S, document.I](transp, document.aural)
     // XXX TODO dispose transp and aural
 
-    val impl    = new Impl[S](groupH, transp, procMap, tlm, document.cursor)
+    val view    = new Impl[S](groupH, transp, procMap, tlm, document.cursor)
+
+    transp.reactTx { implicit tx => {
+      case proc.Transport.Play(t, time) => view.startedPlaying(time)
+      case proc.Transport.Stop(t, time) => view.stoppedPlaying(time)
+      case _ => // proc.Transport.Advance(t, time, isSeek, isPlaying, _, _, _) =>
+    }}
 
     group.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>
-        impl.addProc(span, timed)
+        view.addProc(span, timed)
       }
     }
 
@@ -84,8 +90,8 @@ object TimelineViewImpl {
       upd.changes.foreach {
         case BiGroup.Added  (span, timed) =>
           // println(s"Added   $span, $timed")
-          impl.addProc(span, timed)
-          guiFromTx(impl.component.repaint())  // XXX TODO: optimize dirty rectangle
+          view.addProc(span, timed)
+          guiFromTx(view.component.repaint())  // XXX TODO: optimize dirty rectangle
 
         case BiGroup.Removed(span, timed) => println(s"Removed $span, $timed")
         case BiGroup.ElementMoved  (timed, spanCh ) => println(s"Moved   $timed, $spanCh")
@@ -94,8 +100,8 @@ object TimelineViewImpl {
     }}
     // XXX TODO: dispose observer eventually
 
-    guiFromTx(impl.guiInit())
-    impl
+    guiFromTx(view.guiInit())
+    view
   }
 
   private final class Impl[S <: Sys[S]](groupH: stm.Source[S#Tx, ProcGroup[S]],
@@ -108,7 +114,35 @@ object TimelineViewImpl {
 
     private var procViews = RangedSeq.empty[TimelineProcView[S], Long]
 
+    private var timerFrame  = 0L
+    private var timerSys    = 0L
+    private val srm         = 0.001 * transp.sampleRate
+    private val timer       = new javax.swing.Timer(31, new ActionListener {
+      def actionPerformed(e: ActionEvent) {
+        val elapsed             = ((System.currentTimeMillis() - timerSys) * srm).toLong
+        timelineModel.position  = timerFrame + elapsed
+      }
+    })
+
+    private var transportStrip: Component with Transport.ButtonStrip = _
+
     var component: Component = _
+
+    def startedPlaying(time: Long)(implicit tx: S#Tx) {
+      guiFromTx {
+        timer.stop()
+        timerFrame  = time
+        timerSys    = System.currentTimeMillis()
+        timer.start()
+      }
+    }
+
+    def stoppedPlaying(time: Long)(implicit tx: S#Tx) {
+      guiFromTx {
+        timer.stop()
+        timelineModel.position = time
+      }
+    }
 
     private def rtz() {
       stop()
@@ -139,7 +173,7 @@ object TimelineViewImpl {
       val timeDisp  = TimeDisplay(timelineModel)
 
       import Transport._
-      val transport = Transport.makeButtonStrip(Seq(
+      transportStrip = Transport.makeButtonStrip(Seq(
         GoToBegin   { rtz()    },
         Rewind      { rewind() },
         Stop        { stop()   },
@@ -147,7 +181,7 @@ object TimelineViewImpl {
         FastForward { ffwd()   },
         Loop        {}
       ))
-      transport.button(Stop).foreach(_.selected = true)
+      transportStrip.button(Stop).foreach(_.selected = true)
 
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
@@ -155,7 +189,7 @@ object TimelineViewImpl {
           HStrut(4),
           timeDisp.component,
           HStrut(8),
-          transport,
+          transportStrip,
           HStrut(4)
         )
       }
@@ -184,14 +218,14 @@ object TimelineViewImpl {
         val group = groupH()
         group.modifiableOption match {
           case Some(groupM) =>
-            val elem    = data.source()
+            // val elem    = data.source()
             // val elemG = elem.entity
             val time    = drop.frame
             val sel     = data.drag.selection
             val spanV   = Span(time, time + sel.length)
             val span    = Spans.newVar[S](Spans.newConst(spanV))
             val proc    = Proc[S]
-            proc.name_=(elem.name)
+            // proc.name_=(elem.name)
             val scanw   = proc.scans.add(TimelineView.AudioGraphemeKey)
             // val scand   = proc.scans.add("dur")
             val grw     = Grapheme.Modifiable[S]
@@ -310,16 +344,18 @@ object TimelineViewImpl {
                 }
 
                 // if (stakeBorderViewMode == StakeBorderViewMode.TitledBox) {
-                g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
-                g.setColor(Color.white)
-                // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
-                g.drawString(if (muted) "\u23DB " + pv.name else pv.name, px + 4, py + hndlBaseline)
+                val nameOpt = pv.name.orElse(pv.audio.map(_.value.artifact.nameWithoutExtension))
+                nameOpt.foreach { name =>
+                  g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
+                  g.setColor(Color.white)
+                  // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
+                  g.drawString(if (muted) "\u23DB " + name else name, px + 4, py + hndlBaseline)
                 //              stakeInfo(ar).foreach { info =>
                 //                g2.setColor(Color.yellow)
                 //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
                 //              }
-                g.setClip(clipOrig)
-                // }
+                  g.setClip(clipOrig)
+                }
               }
             }
 

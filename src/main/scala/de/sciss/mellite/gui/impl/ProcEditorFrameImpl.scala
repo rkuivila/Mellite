@@ -3,7 +3,7 @@ package gui
 package impl
 
 import de.sciss.lucre.stm.{Source, Disposable, Cursor}
-import de.sciss.synth.proc.{Sys, Code, Proc}
+import de.sciss.synth.proc.{Attribute, Sys, Code, Proc}
 import swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
 import de.sciss.synth.expr.ExprImplicits
 import javax.swing.WindowConstants
@@ -18,14 +18,17 @@ object ProcEditorFrameImpl {
       val view = new Impl( /* cursor.position, */ tx.newHandle( proc ), proc.toString() ) {
          protected val observer = proc.changed.reactTx[ Proc.Update[ S ]] { implicit tx => { upd =>
             upd.changes.foreach {
-               case Proc.Rename( Change( _, now )) =>
-                  guiFromTx( name = now )
+//               case Proc.Rename( Change( _, now )) =>
+//                  guiFromTx( name = now )
                case _ =>
             }
          }}
       }
 
-      val initName         = proc.name.value
+      val initName         = proc.attributes.get("name") match {
+        case Some(str: Attribute.String[S]) => str.peer.value
+        case _ => "<unnamed>"
+      }
       val initGraphSource  = proc.graph.source
       guiFromTx {
          view.guiInit( initName, initGraphSource )
@@ -84,11 +87,12 @@ object ProcEditorFrameImpl {
          ggName      = new TextField( initName, 16 ) {
             action = Action( "" ) {
                val newName = text
-               atomic { implicit tx =>
-                  val imp  = ExprImplicits[ S ]
-                  import imp._
-                  proc.name_=( newName )
-               }
+              println("NOT YET IMPLEMENTED")
+              //               atomic { implicit tx =>
+              //                  val imp  = ExprImplicits[ S ]
+              //                  import imp._
+              //                  proc.name_=( newName )
+              //               }
             }
          }
 
