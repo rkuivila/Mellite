@@ -6,11 +6,11 @@ package impl
 import de.sciss.span.Span
 import de.sciss.synth.expr.{Longs, Ints, Spans}
 import de.sciss.synth.proc.{ProcGroup, Sys, graph, Scan, Grapheme, Attribute, Proc}
-import de.sciss.lucre.bitemp.BiExpr
+import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.synth.SynthGraph
 
 object DropAudioRegionAction {
-  def apply[S <: Sys[S]](group: ProcGroup.Modifiable[S], drop: AudioFileDnD.Drop,
+  def apply[S <: Sys[S]](group: BiGroup.Modifiable[S, Proc[S], Proc.Update[S]], drop: AudioFileDnD.Drop,
                          data: AudioFileDnD.Data[S])(implicit tx: S#Tx) {
     // val elem    = data.source()
     // val elemG = elem.entity

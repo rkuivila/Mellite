@@ -170,7 +170,8 @@ object TimelineViewImpl {
     }
 
     def guiInit() {
-      val timeDisp  = TimeDisplay(timelineModel)
+      val timeDisp    = TimeDisplay(timelineModel)
+      val trackTools  = TrackTools[S](timelineModel)
 
       import Transport._
       transportStrip = Transport.makeButtonStrip(Seq(
@@ -185,6 +186,8 @@ object TimelineViewImpl {
 
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
+          HStrut(4),
+          TrackTools.palette(trackTools),
           HGlue,
           HStrut(4),
           timeDisp.component,
@@ -194,7 +197,7 @@ object TimelineViewImpl {
         )
       }
 
-      val view  = new View
+      val view  = new View(trackTools)
 
       val pane  = new BorderPanel {
         layoutManager.setVgap(2)
@@ -223,7 +226,7 @@ object TimelineViewImpl {
       }
     }
 
-    private final class View extends AbstractTimelineView {
+    private final class View(trackTools: TrackTools[S]) extends AbstractTimelineView {
       view =>
       // import AbstractTimelineView._
       protected def timelineModel   = impl.timelineModel
@@ -237,7 +240,6 @@ object TimelineViewImpl {
         // var visualBoost = 1f
         private var sonoBoost = 1f
         // private var regionViewMode: RegionViewMode = RegionViewMode.TitledBox
-        private var trackTools = TrackTools[S](timelineModel)
 
         font = {
           val f = UIManager.getFont("Slider.font", Locale.US)
