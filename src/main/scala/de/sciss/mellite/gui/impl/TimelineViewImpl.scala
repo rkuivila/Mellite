@@ -213,69 +213,31 @@ object TimelineViewImpl {
       procViews += view
     }
 
-    private def dropAudioRegion(drop: AudioFileDnD.Drop, data: AudioFileDnD.Data[S]): Boolean = {
-      step { implicit tx =>
-        val group = groupH()
-        group.modifiableOption match {
-          case Some(groupM) =>
-            // val elem    = data.source()
-            // val elemG = elem.entity
-            val time    = drop.frame
-            val sel     = data.drag.selection
-            val spanV   = Span(time, time + sel.length)
-            val span    = Spans.newVar[S](Spans.newConst(spanV))
-            val proc    = Proc[S]
-            // proc.name_=(elem.name)
-            val attr    = proc.attributes
-            val track   = drop.y / 32
-            attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(track)))
-            val scanw   = proc.scans.add(TimelineView.AudioGraphemeKey)
-            // val scand   = proc.scans.add("dur")
-            val grw     = Grapheme.Modifiable[S]
-            // val grd     = Grapheme.Modifiable[S]
-
-            // we preserve data.source(), i.e. the original audio file offset
-            // ; therefore the grapheme element must start `selection.start` frames
-            // before the insertion position `drop.frame`
-            val gStart  = Longs.newVar(Longs.newConst(time - sel.start))  // wooopa, could even be a bin op at some point
-            val gElem   = data.source().entity  // could there be a Grapheme.Element.Var?
-            val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
-            grw.add(bi)
-            // val gv = Grapheme.Value.Curve
-            // val crv = gv(dur -> stepShape)
-            // grd.add(time -> crv)
-            scanw.source_=(Some(Scan.Link.Grapheme(grw)))
-            // scand.source_=(Some(Scan.Link.Grapheme(grd)))
-            val sg = SynthGraph {
-              import synth._
-              import ugen._
-              val sig   = graph.scan("sig").ar(0)
-              // val env   = EnvGen.ar(Env.linen(0.2, (duri - 0.4).max(0), 0.2))
-              Out.ar(0, sig /* * env */)
-            }
-            proc.graph_=(sg)
-            groupM.add(span, proc)
-            true
-
-          case _ => false
-        }
+    private def dropAudioRegion(drop: AudioFileDnD.Drop, data: AudioFileDnD.Data[S]): Boolean = step { implicit tx =>
+      val group = groupH()
+      group.modifiableOption match {
+        case Some(groupM) =>
+          DropAudioRegionAction(groupM, drop, data)
+          true
+        case _ => false
       }
     }
 
     private final class View extends AbstractTimelineView {
       view =>
       // import AbstractTimelineView._
-      protected def timelineModel = impl.timelineModel
-      protected def selectionModel: ProcSelectionModel[S] = ???
+      protected def timelineModel   = impl.timelineModel
+      protected def selectionModel  = ProcSelectionModel[S]
 
       protected object mainView extends Component with AudioFileDnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
 
         private var audioDnD = Option.empty[AudioFileDnD.Drop]
 
-        var visualBoost = 1f
+        // var visualBoost = 1f
         private var sonoBoost = 1f
-        private var regionViewMode: RegionViewMode = RegionViewMode.TitledBox
+        // private var regionViewMode: RegionViewMode = RegionViewMode.TitledBox
+        private var trackTools = TrackTools[S](timelineModel)
 
         font = {
           val f = UIManager.getFont("Slider.font", Locale.US)
@@ -305,6 +267,9 @@ object TimelineViewImpl {
           val visi      = timelineModel.visible
           val clipOrig  = g.getClip
           val cr        = clipOrig.getBounds
+
+          val regionViewMode  = trackTools.regionViewMode
+          val visualBoost     = trackTools.visualBoost
 
           val hndl = regionViewMode match {
              case RegionViewMode.None       => 0
