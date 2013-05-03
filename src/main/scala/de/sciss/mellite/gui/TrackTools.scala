@@ -7,7 +7,7 @@ import javax.swing.event.MouseInputAdapter
 import java.awt.event.{KeyEvent, KeyListener, MouseEvent}
 import annotation.switch
 import model.Model
-import mellite.gui.impl.TimelineProcView
+import de.sciss.mellite.gui.impl.{TrackToolsImpl, TimelineProcView}
 import de.sciss.lucre.event.Change
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.proc.Sys
@@ -18,6 +18,8 @@ object TrackTools {
   final case class VisualBoostChanged[S <: Sys[S]]   (change: Change[Float         ]) extends Update[S]
   final case class FadeViewModeChanged[S <: Sys[S]]  (change: Change[FadeViewMode  ]) extends Update[S]
   final case class RegionViewModeChanged[S <: Sys[S]](change: Change[RegionViewMode]) extends Update[S]
+
+  def apply[S <: Sys[S]](timelineModel: TimelineModel): TrackTools[S] = new TrackToolsImpl[S](timelineModel)
 }
 
 object RegionViewMode {
@@ -55,10 +57,10 @@ sealed trait FadeViewMode {
 }
 
 trait TrackTools[S <: Sys[S]] extends Model[TrackTools.Update[S]] {
-  def currentTool: TrackTool[S]
-  def visualBoost: Float
-  def fadeViewMode: FadeViewMode
-  def regionBorderViewMode: RegionViewMode
+  var currentTool: TrackTool[S]
+  var visualBoost: Float
+  var fadeViewMode: FadeViewMode
+  var regionViewMode: RegionViewMode
 }
 
 trait TrackTool[S <: Sys[S]] /* extends Model */ {

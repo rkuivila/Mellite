@@ -266,6 +266,7 @@ object TimelineViewImpl {
       view =>
       // import AbstractTimelineView._
       protected def timelineModel = impl.timelineModel
+      protected def selectionModel: ProcSelectionModel[S] = ???
 
       protected object mainView extends Component with AudioFileDnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
@@ -274,6 +275,7 @@ object TimelineViewImpl {
 
         var visualBoost = 1f
         private var sonoBoost = 1f
+        private var regionViewMode: RegionViewMode = RegionViewMode.TitledBox
 
         font = {
           val f = UIManager.getFont("Slider.font", Locale.US)
@@ -304,15 +306,14 @@ object TimelineViewImpl {
           val clipOrig  = g.getClip
           val cr        = clipOrig.getBounds
 
-          val hndl = hndlExtent
-          // stakeBorderViewMode match {
-          //   case StakeBorderViewMode.None       => 0
-          //   case StakeBorderViewMode.Box        => 1
-          //   case StakeBorderViewMode.TitledBox  => hndlExtent
-          // }
+          val hndl = regionViewMode match {
+             case RegionViewMode.None       => 0
+             case RegionViewMode.Box        => 1
+             case RegionViewMode.TitledBox  => hndlExtent
+          }
 
           procViews.filterOverlaps((visi.start, visi.stop)).foreach { pv =>
-            val selected  = false
+            val selected  = selectionModel.contains(pv)
             val muted     = false
 
             def drawProc(start: Long, x1: Int, x2: Int) {
@@ -325,10 +326,10 @@ object TimelineViewImpl {
               val px2C    = math.min(px + pw, cr.x + cr.width + 3)
               if (px1C < px2C) {  // skip this if we are not overlapping with clip
 
-                // if (stakeBorderViewMode != StakeBorderViewMode.None) {
-                g.setColor(if (selected) colrRegionBgSel else colrRegionBg)
-                g.fillRoundRect(px, py, pw, ph, 5, 5)
-                // }
+                if (regionViewMode != RegionViewMode.None) {
+                  g.setColor(if (selected) colrRegionBgSel else colrRegionBg)
+                  g.fillRoundRect(px, py, pw, ph, 5, 5)
+                }
 
                 pv.audio.foreach { segm =>
                   val innerH  = ph - (hndl + 1)
@@ -346,19 +347,18 @@ object TimelineViewImpl {
                   sono.paint(startC + dStart, stopC + dStart, g, px1C, py + hndl, px2C - px1C, innerH, this)
                 }
 
-                // if (stakeBorderViewMode == StakeBorderViewMode.TitledBox) {
-                val name = pv.name // .orElse(pv.audio.map(_.value.artifact.nameWithoutExtension))
-                // nameOpt.foreach { name =>
+                if (regionViewMode == RegionViewMode.TitledBox) {
+                  val name = pv.name // .orElse(pv.audio.map(_.value.artifact.nameWithoutExtension))
                   g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
                   g.setColor(Color.white)
                   // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
                   g.drawString(if (muted) "\u23DB " + name else name, px + 4, py + hndlBaseline)
-                //              stakeInfo(ar).foreach { info =>
-                //                g2.setColor(Color.yellow)
-                //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
-                //              }
+                  //              stakeInfo(ar).foreach { info =>
+                  //                g2.setColor(Color.yellow)
+                  //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
+                  //              }
                   g.setClip(clipOrig)
-                // }
+                }
               }
             }
 
