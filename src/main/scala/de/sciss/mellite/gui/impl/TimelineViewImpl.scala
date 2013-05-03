@@ -32,11 +32,11 @@ import scala.swing.{BorderPanel, Orientation, BoxPanel, Component}
 import span.{Span, SpanLike}
 import mellite.impl.TimelineModelImpl
 import java.awt.{Font, RenderingHints, BasicStroke, Color, Graphics2D}
-import synth.proc.{Scan, Grapheme, Proc, ProcGroup, ProcTransport, Sys, graph, TimedProc}
+import de.sciss.synth.proc.{Attribute, Scan, Grapheme, Proc, ProcGroup, ProcTransport, Sys, graph, TimedProc}
 import lucre.{bitemp, stm}
 import lucre.stm.{IdentifierMap, Cursor}
 import synth.{SynthGraph, proc}
-import synth.expr.{Longs, Spans}
+import de.sciss.synth.expr.{Ints, Longs, Spans}
 import fingertree.RangedSeq
 import javax.swing.UIManager
 import java.util.Locale
@@ -226,6 +226,9 @@ object TimelineViewImpl {
             val span    = Spans.newVar[S](Spans.newConst(spanV))
             val proc    = Proc[S]
             // proc.name_=(elem.name)
+            val attr    = proc.attributes
+            val track   = drop.y / 32
+            attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(track)))
             val scanw   = proc.scans.add(TimelineView.AudioGraphemeKey)
             // val scand   = proc.scans.add("dur")
             val grw     = Grapheme.Modifiable[S]
@@ -313,7 +316,7 @@ object TimelineViewImpl {
             val muted     = false
 
             def drawProc(start: Long, x1: Int, x2: Int) {
-              val py    = 0
+              val py    = pv.track * 32
               val px    = x1
               val pw    = x2 - x1
               val ph    = 64
@@ -344,8 +347,8 @@ object TimelineViewImpl {
                 }
 
                 // if (stakeBorderViewMode == StakeBorderViewMode.TitledBox) {
-                val nameOpt = pv.name.orElse(pv.audio.map(_.value.artifact.nameWithoutExtension))
-                nameOpt.foreach { name =>
+                val name = pv.name // .orElse(pv.audio.map(_.value.artifact.nameWithoutExtension))
+                // nameOpt.foreach { name =>
                   g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
                   g.setColor(Color.white)
                   // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
@@ -355,7 +358,7 @@ object TimelineViewImpl {
                 //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
                 //              }
                   g.setClip(clipOrig)
-                }
+                // }
               }
             }
 
