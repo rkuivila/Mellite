@@ -6,18 +6,25 @@ package impl
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.proc.Sys
 import de.sciss.lucre.event.Change
+import javax.swing.ImageIcon
+import scala.swing.Component
 
-final class TrackToolsImpl[S <: Sys[S]](timelineModel: TimelineModel)
+object TrackToolsImpl {
+  def getIcon(name: String) = new ImageIcon(Mellite.getClass.getResource(s"icon-$name.png"))
+}
+final class TrackToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
   extends TrackTools[S] with ModelImpl[TrackTools.Update[S]] {
 
   import TrackTools._
 
-  private var _currentTool: TrackTool[S, _] = TrackTool.cursor(timelineModel)
+  private var _currentTool: TrackTool[_] = TrackTool.cursor(canvas)
   def currentTool = _currentTool
-  def currentTool_=(value: TrackTool[S, _]) {
+  def currentTool_=(value: TrackTool[_]) {
     if (_currentTool != value) {
       val oldTool   = _currentTool
       _currentTool  = value
+      oldTool.uninstall(canvas.canvasComponent)
+      value    .install(canvas.canvasComponent)
       dispatch(ToolChanged(Change(oldTool, value)))
     }
   }

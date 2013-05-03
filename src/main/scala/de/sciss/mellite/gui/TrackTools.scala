@@ -11,16 +11,18 @@ import de.sciss.lucre.event.Change
 import de.sciss.synth.proc.Sys
 import scala.swing.Component
 import javax.swing.Icon
+import collection.immutable.{IndexedSeq => IIdxSeq}
 
 object TrackTools {
   sealed trait Update[S <: Sys[S]]
-  final case class ToolChanged[S <: Sys[S]]          (change: Change[TrackTool[S, _]]) extends Update[S]
-  final case class VisualBoostChanged[S <: Sys[S]]   (change: Change[Float          ]) extends Update[S]
-  final case class FadeViewModeChanged[S <: Sys[S]]  (change: Change[FadeViewMode   ]) extends Update[S]
-  final case class RegionViewModeChanged[S <: Sys[S]](change: Change[RegionViewMode ]) extends Update[S]
+  final case class ToolChanged[S <: Sys[S]]          (change: Change[TrackTool[_]  ]) extends Update[S]
+  final case class VisualBoostChanged[S <: Sys[S]]   (change: Change[Float         ]) extends Update[S]
+  final case class FadeViewModeChanged[S <: Sys[S]]  (change: Change[FadeViewMode  ]) extends Update[S]
+  final case class RegionViewModeChanged[S <: Sys[S]](change: Change[RegionViewMode]) extends Update[S]
 
-  def apply[S <: Sys[S]](timelineModel: TimelineModel): TrackTools[S] = new TrackToolsImpl[S](timelineModel)
-  def palette[S <: Sys[S]](tools: TrackTools[S]): Component = new TrackToolsPaletteImpl[S](tools)
+  def apply[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTools[S] = new TrackToolsImpl(canvas)
+  def palette[S <: Sys[S]](control: TrackTools[S], tools: IIdxSeq[TrackTool[_]]): Component =
+    new TrackToolsPaletteImpl[S](control, tools)
 }
 
 object RegionViewMode {
@@ -58,7 +60,7 @@ sealed trait FadeViewMode {
 }
 
 trait TrackTools[S <: Sys[S]] extends Model[TrackTools.Update[S]] {
-  var currentTool: TrackTool[S, _]
+  var currentTool: TrackTool[_]
   var visualBoost: Float
   var fadeViewMode: FadeViewMode
   var regionViewMode: RegionViewMode
@@ -73,16 +75,18 @@ object TrackTool {
 
   final case class Move(deltaTime: Long, deltaTrack: Int, copy: Boolean)
 
-  def cursor[S <: Sys[S]](timelineModel: TimelineModel): TrackTool[S, Unit] = new TrackCursorToolImpl(timelineModel)
-  def move[S <: Sys[S]](timelineModel: TimelineModel, selectionModel: ProcSelectionModel[S]): TrackTool[S, Move] =
-    new TrackMoveToolImpl(timelineModel, selectionModel)
+  def cursor[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[Unit] = new TrackCursorToolImpl(canvas)
+  def move[S <: Sys[S]]  (canvas: TimelineProcCanvas[S]): TrackTool[Move] = new TrackMoveToolImpl(canvas)
 }
 
-trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
+trait TrackTool[A] extends Model[TrackTool.Update[A]] {
   def defaultCursor: Cursor
-  def icon: Icon  = ???
+  def icon: Icon
   def name: String
-  def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineProcView[S]]): Unit
+
+  def install  (component: Component): Unit
+  def uninstall(component: Component): Unit
+  // def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineProcView[S]]): Unit
 }
 
 //object TrackResizeTool {

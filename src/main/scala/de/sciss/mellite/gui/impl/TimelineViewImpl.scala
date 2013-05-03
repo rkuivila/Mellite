@@ -28,22 +28,22 @@ package mellite
 package gui
 package impl
 
-import scala.swing.{BorderPanel, Orientation, BoxPanel, Component}
+import scala.swing.{Action, BorderPanel, Orientation, BoxPanel, Component}
 import span.{Span, SpanLike}
 import mellite.impl.TimelineModelImpl
 import java.awt.{Font, RenderingHints, BasicStroke, Color, Graphics2D}
-import de.sciss.synth.proc.{Attribute, Scan, Grapheme, Proc, ProcGroup, ProcTransport, Sys, graph, TimedProc}
+import de.sciss.synth.proc.{ProcGroup, ProcTransport, Sys, TimedProc}
 import lucre.{bitemp, stm}
 import lucre.stm.{IdentifierMap, Cursor}
-import synth.{SynthGraph, proc}
-import de.sciss.synth.expr.{Ints, Longs, Spans}
+import synth.proc
 import fingertree.RangedSeq
-import javax.swing.UIManager
+import javax.swing.{KeyStroke, UIManager}
 import java.util.Locale
-import bitemp.{BiExpr, BiGroup}
+import bitemp.BiGroup
 import audiowidgets.Transport
 import scala.swing.Swing._
-import java.awt.event.{ActionEvent, ActionListener}
+import java.awt.event.{KeyEvent, ActionEvent, ActionListener}
+import de.sciss.desktop.FocusType
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -86,7 +86,7 @@ object TimelineViewImpl {
     }
 
     val obs = group.changed.reactTx { implicit tx => (upd: ProcGroup.Update[S]) => {
-      val _group = upd.group
+      // val _group = upd.group
       upd.changes.foreach {
         case BiGroup.Added  (span, timed) =>
           // println(s"Added   $span, $timed")
@@ -125,6 +125,7 @@ object TimelineViewImpl {
     })
 
     private var transportStrip: Component with Transport.ButtonStrip = _
+    private val selectionModel = ProcSelectionModel[S]
 
     var component: Component = _
 
@@ -134,6 +135,8 @@ object TimelineViewImpl {
         timerFrame  = time
         timerSys    = System.currentTimeMillis()
         timer.start()
+        transportStrip.button(Transport.Play).foreach(_.selected = true )
+        transportStrip.button(Transport.Stop).foreach(_.selected = false)
       }
     }
 
@@ -141,6 +144,8 @@ object TimelineViewImpl {
       guiFromTx {
         timer.stop()
         timelineModel.position = time
+        transportStrip.button(Transport.Play).foreach(_.selected = false)
+        transportStrip.button(Transport.Stop).foreach(_.selected = true )
       }
     }
 
@@ -151,6 +156,15 @@ object TimelineViewImpl {
 
     private def rewind() {
 
+    }
+
+    private def playOrStop() {
+      step { implicit tx =>
+        if (transp.isPlaying) transp.stop() else {
+          transp.seek(timelineModel.position)
+          transp.play()
+        }
+      }
     }
 
     private def stop() {
@@ -171,9 +185,9 @@ object TimelineViewImpl {
 
     def guiInit() {
       val timeDisp    = TimeDisplay(timelineModel)
-      val trackTools  = TrackTools[S](timelineModel)
+      val view        = new View
 
-      import Transport._
+      import Transport.{Action => _, _}
       transportStrip = Transport.makeButtonStrip(Seq(
         GoToBegin   { rtz()    },
         Rewind      { rewind() },
@@ -184,10 +198,13 @@ object TimelineViewImpl {
       ))
       transportStrip.button(Stop).foreach(_.selected = true)
 
+      val toolCursor  = TrackTool.cursor[S](view)
+      val toolMove    = TrackTool.move  [S](view)
+
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
           HStrut(4),
-          TrackTools.palette(trackTools),
+          TrackTools.palette(view.trackTools, Vector(toolCursor, toolMove)),
           HGlue,
           HStrut(4),
           timeDisp.component,
@@ -196,8 +213,19 @@ object TimelineViewImpl {
           HStrut(4)
         )
       }
-
-      val view  = new View(trackTools)
+      import desktop.Implicits._
+      transportPane.addAction("playstop", focus = FocusType.Window, action = new Action("playstop") {
+        accelerator = Some(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0))
+        def apply() {
+          playOrStop()
+        }
+      })
+      transportPane.addAction("rtz", focus = FocusType.Window, action = new Action("rtz") {
+        accelerator = Some(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0))
+        def apply() {
+          transportStrip.button(GoToBegin).foreach(_.doClick())
+        }
+      })
 
       val pane  = new BorderPanel {
         layoutManager.setVgap(2)
@@ -226,13 +254,15 @@ object TimelineViewImpl {
       }
     }
 
-    private final class View(trackTools: TrackTools[S]) extends AbstractTimelineView {
+    private final class View extends TimelineProcCanvasImpl[S] {
       view =>
       // import AbstractTimelineView._
-      protected def timelineModel   = impl.timelineModel
-      protected def selectionModel  = ProcSelectionModel[S]
+      def timelineModel   = impl.timelineModel
+      def selectionModel  = impl.selectionModel
 
-      protected object mainView extends Component with AudioFileDnD[S] with sonogram.PaintController {
+      def intersect(span: Span): Iterator[TimelineProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
+
+      object canvasComponent extends Component with AudioFileDnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
 
         private var audioDnD = Option.empty[AudioFileDnD.Drop]
@@ -279,8 +309,10 @@ object TimelineViewImpl {
              case RegionViewMode.TitledBox  => hndlExtent
           }
 
+          val sel = selectionModel
+
           procViews.filterOverlaps((visi.start, visi.stop)).foreach { pv =>
-            val selected  = selectionModel.contains(pv)
+            val selected  = sel.contains(pv)
             val muted     = false
 
             def drawProc(start: Long, x1: Int, x2: Int) {

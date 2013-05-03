@@ -34,10 +34,10 @@ import scala.util.Failure
 import scala.util.Success
 import scala.swing.Component
 
-final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel: TimelineModel)
-  extends AbstractTimelineView {
+final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
+  extends TimelineCanvasImpl {
 
-  import AbstractTimelineView._
+  import TimelineCanvasImpl._
 
   // private val numChannels = sono.inputSpec.numChannels
   // private val minFreq     = sono.config.sonogram.minFreq
@@ -49,7 +49,7 @@ final class AudioFileViewJ(sono: sonogram.Overview, protected val timelineModel:
   //    res
   //  }
 
-  protected object mainView extends Component with sonogram.PaintController {
+  object canvasComponent extends Component with sonogram.PaintController {
     private var paintFun: Graphics2D => Unit = paintChecker("Calculating...") _
 
     override def paintComponent(g: Graphics2D) {

@@ -1,5 +1,5 @@
 /*
- *  AbstractTimelineView.scala
+ *  TimelineCanvasImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -34,8 +34,9 @@ import de.sciss.audiowidgets.{AxisFormat, Axis}
 import java.awt.image.BufferedImage
 import scala.swing.Swing._
 import scala.swing.event.{MouseDragged, Key, MousePressed, ValueChanged, UIElementResized}
+import de.sciss.synth.proc.Sys
 
-object AbstractTimelineView {
+object TimelineCanvasImpl {
   private sealed trait AxisMouseAction
   private case object AxisPosition extends AxisMouseAction
   private final case class AxisSelection(fix: Long) extends AxisMouseAction
@@ -62,12 +63,10 @@ object AbstractTimelineView {
 
   final val pntChecker: TexturePaint = new TexturePaint(imgChecker, new Rectangle(0, 0, 64, 64))
 }
-trait AbstractTimelineView {
+trait TimelineCanvasImpl extends TimelineCanvas {
   view =>
 
-  import AbstractTimelineView._
-
-  protected def timelineModel: TimelineModel
+  import TimelineCanvasImpl._
 
   private var axisMouseAction: AxisMouseAction = AxisPosition
 
@@ -138,24 +137,24 @@ trait AbstractTimelineView {
     timeAxis.maximum   = visi.stop  / sr
   }
 
-  protected def mainView: Component
+  // final def canvasComponent: Component
 
   private val scroll = new ScrollBarImpl {
     orientation   = Orientation.Horizontal
     unitIncrement = 4
   }
 
-  final protected def frameToScreen(frame: Long): Double = {
+  final def frameToScreen(frame: Long): Double = {
     val visi = timelineModel.visible
-    (frame - visi.start).toDouble / visi.length * mainView.peer.getWidth
+    (frame - visi.start).toDouble / visi.length * canvasComponent.peer.getWidth
   }
 
-  final protected def screenToFrame(screen: Int): Double = {
+  final def screenToFrame(screen: Int): Double = {
     val visi = timelineModel.visible
-    screen.toDouble / mainView.peer.getWidth * visi.length + visi.start
+    screen.toDouble / canvasComponent.peer.getWidth * visi.length + visi.start
   }
 
-  final protected def clipVisible(frame: Double): Long = {
+  final def clipVisible(frame: Double): Long = {
     val visi = timelineModel.visible
     visi.clip(frame.toLong)
   }
@@ -195,7 +194,7 @@ trait AbstractTimelineView {
     // println(s"updateFromScroll : $newVisi")
     timelineModel.visible = newVisi
     updateAxis()
-    mainView.repaint()
+    canvasComponent.repaint()
     if (l) timelineModel.addListener(timelineListener)
   }
 
@@ -209,24 +208,26 @@ trait AbstractTimelineView {
     listenTo(this)
   }
 
+  protected def componentShown() {
+    timelineModel.addListener(timelineListener)
+    updateAxis()
+    updateScroll()  // this adds scrollListener in the end
+  }
+  protected def componentHidden() {
+    timelineModel.removeListener(timelineListener)
+    scroll.reactions -= scrollListener
+  }
+
   private lazy val pane = new BorderPanel with DynamicComponentImpl with TimelineNavigation {
     protected val timelineModel = view.timelineModel
 
     // add(meterPane,  BorderPanel.Position.West  )
-    add(timePane,   BorderPanel.Position.North )
-    add(mainView,   BorderPanel.Position.Center)
-    add(scrollPane, BorderPanel.Position.South )
+    add(timePane,         BorderPanel.Position.North )
+    add(canvasComponent,  BorderPanel.Position.Center)
+    add(scrollPane,       BorderPanel.Position.South )
 
-    protected def componentShown() {
-      timelineModel.addListener(timelineListener)
-      updateAxis()
-      updateScroll()  // this adds scrollListener in the end
-    }
-
-    protected def componentHidden() {
-      timelineModel.removeListener(timelineListener)
-      scroll.reactions -= scrollListener
-    }
+    protected def componentShown () { view.componentShown () }
+    protected def componentHidden() { view.componentHidden() }
   }
 
   final def component: Component = pane
@@ -235,17 +236,17 @@ trait AbstractTimelineView {
     case TimelineModel.Visible(_, span) =>
       updateAxis()
       updateScroll()
-      mainView.repaint()  // XXX TODO: optimize dirty region / copy double buffer
+      canvasComponent.repaint()  // XXX TODO: optimize dirty region / copy double buffer
 
     case TimelineModel.Position(_, frame) =>
       // XXX TODO: optimize dirty region
       timeAxis.repaint()
-      mainView.repaint()
+      canvasComponent.repaint()
 
     case TimelineModel.Selection(_, span) =>
       // XXX TODO: optimize dirty region
       timeAxis.repaint()
-      mainView.repaint()
+      canvasComponent.repaint()
   }
 
   private val scrollListener: Reactions.Reaction = {
@@ -265,5 +266,24 @@ trait AbstractTimelineView {
         val span = Span(math.min(frame, fix), math.max(frame, fix))
         timelineModel.selection = if (span.isEmpty) Span.Void else span
     }
+  }
+}
+
+trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCanvas[S] {
+  final val trackTools = TrackTools[S](this)
+
+  private val selectionListener: ProcSelectionModel.Listener[S] = {
+    case ProcSelectionModel.Update(added, removed) =>
+      canvasComponent.repaint() // XXX TODO: dirty rectangle optimization
+  }
+
+  override protected def componentShown() {
+    super.componentShown()
+    selectionModel.addListener(selectionListener)
+  }
+
+  override protected def componentHidden() {
+    super.componentHidden()
+    selectionModel.removeListener(selectionListener)
   }
 }

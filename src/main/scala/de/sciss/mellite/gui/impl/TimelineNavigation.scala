@@ -3,7 +3,7 @@ package gui
 package impl
 
 import scala.swing.{Action, Component}
-import de.sciss.desktop.KeyStrokes
+import de.sciss.desktop.{FocusType, KeyStrokes}
 import de.sciss.desktop
 import javax.swing.KeyStroke
 import de.sciss.span.Span
@@ -18,10 +18,10 @@ trait TimelineNavigation {
   import KeyEvent._
   import desktop.Implicits._
 
-  this.addAction("timeline-inch1", new ActionSpanWidth(2.0, ctrl  + VK_LEFT         ))
-  this.addAction("timeline-inch2", new ActionSpanWidth(2.0, menu1 + VK_OPEN_BRACKET ))
-  this.addAction("timeline-dech1", new ActionSpanWidth(0.5, ctrl  + VK_RIGHT        ))
-  this.addAction("timeline-dech2", new ActionSpanWidth(0.5, menu1 + VK_CLOSE_BRACKET))
+  this.addAction("timeline-inch1", new ActionSpanWidth(2.0, ctrl  + VK_LEFT         ), FocusType.Window)
+  this.addAction("timeline-inch2", new ActionSpanWidth(2.0, menu1 + VK_OPEN_BRACKET ), FocusType.Window)
+  this.addAction("timeline-dech1", new ActionSpanWidth(0.5, ctrl  + VK_RIGHT        ), FocusType.Window)
+  this.addAction("timeline-dech2", new ActionSpanWidth(0.5, menu1 + VK_CLOSE_BRACKET), FocusType.Window)
 
   //  import ActionScroll._
   //  addAction("retn",     new ActionScroll(SCROLL_SESSION_START,    stroke(VK_ENTER,  0       )))

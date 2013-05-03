@@ -6,14 +6,14 @@ package impl
 import synth.proc.Sys
 import java.awt.Cursor
 
-final class TrackMoveToolImpl[S <: Sys[S]](protected val timelineModel: TimelineModel,
-                                           protected val selectionModel: ProcSelectionModel[S])
+final class TrackMoveToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicTrackRegionTool[S, TrackTool.Move] {
 
   import TrackTool._
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
   val name          = "Move"
+  val icon          = TrackToolsImpl.getIcon("openhand")
 
   protected def dragToParam(d: Drag): Move = {
     Move(deltaTime = d.currentPos - d.firstPos, deltaTrack = d.currentTrack - d.firstTrack,

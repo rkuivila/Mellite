@@ -273,6 +273,7 @@ object DocumentFrameImpl {
                 new WindowImpl {
                   def handler = Mellite.windowHandler
                   def style   = Window.Regular
+                  component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
                   title       = view.name
                   contents    = tlv.component
                   pack()

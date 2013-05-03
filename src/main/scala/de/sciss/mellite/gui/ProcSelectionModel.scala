@@ -9,6 +9,7 @@ import de.sciss.model.Model
 object ProcSelectionModel {
   def apply[S <: Sys[S]]: ProcSelectionModel[S] = new ProcSelectionModelImpl[S]
 
+  type Listener[S <: Sys[S]] = Model.Listener[Update[S]]
   final case class Update[S <: Sys[S]](added: Set[TimelineProcView[S]], removed: Set[TimelineProcView[S]])
 }
 trait ProcSelectionModel[S <: Sys[S]] extends Model[ProcSelectionModel.Update[S]] {

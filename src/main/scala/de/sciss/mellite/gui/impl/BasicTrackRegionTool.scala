@@ -116,7 +116,7 @@ trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
       //        }
       //      }
       //      val convE     = SwingUtilities.convertMouseEvent(comp, e, _currentTrack.renderer.trackComponent)
-      _currentPos   = screenToVirtual(e)
+      _currentPos   = canvas.screenToFrame(e.getX).toLong
       _currentTrack = (e.getY - firstEvent.getY) / 32 + firstEvent.getY / 32
     }
 
