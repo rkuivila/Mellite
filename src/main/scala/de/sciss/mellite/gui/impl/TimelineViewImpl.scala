@@ -32,7 +32,7 @@ import scala.swing.{Action, BorderPanel, Orientation, BoxPanel, Component}
 import span.{Span, SpanLike}
 import mellite.impl.TimelineModelImpl
 import java.awt.{Font, RenderingHints, BasicStroke, Color, Graphics2D}
-import de.sciss.synth.proc.{ProcGroup, ProcTransport, Sys, TimedProc}
+import de.sciss.synth.proc.{Attribute, ProcGroup, ProcTransport, Sys, TimedProc}
 import lucre.{bitemp, stm}
 import lucre.stm.{IdentifierMap, Cursor}
 import synth.proc
@@ -44,6 +44,8 @@ import audiowidgets.Transport
 import scala.swing.Swing._
 import java.awt.event.{KeyEvent, ActionEvent, ActionListener}
 import de.sciss.desktop.FocusType
+import de.sciss.synth.expr.{ExprImplicits, SpanLikes, Ints}
+import de.sciss.lucre.expr.Expr
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -52,6 +54,9 @@ object TimelineViewImpl {
   private val colrRegionBgSel     = Color.blue
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
+
+  private val NoMove  = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
+  private val MinDur  = 32
 
   def apply[S <: Sys[S]](document: Document[S], element: Element.ProcGroup[S])
                         (implicit tx: S#Tx): TimelineView[S] = {
@@ -151,7 +156,9 @@ object TimelineViewImpl {
 
     private def rtz() {
       stop()
-      timelineModel.position = timelineModel.bounds.start
+      val start = timelineModel.bounds.start
+      timelineModel.position  = start
+      timelineModel.visible   = Span(start, start + timelineModel.visible.length)
     }
 
     private def rewind() {
@@ -262,6 +269,54 @@ object TimelineViewImpl {
 
       def intersect(span: Span): Iterator[TimelineProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
 
+      protected def commitToolChanges(value: Any) {
+        step { implicit tx =>
+          selectionModel.iterator.foreach { pv =>
+            val span  = pv.spanSource()
+            val proc  = pv.procSource()
+            value match {
+              case TrackTool.Move(deltaTime, deltaTrack, copy) =>
+                if (deltaTrack != 0) {
+                   // XXX TODO: could check for Expr.Const here and Expr.Var.
+                  // in the case of const, just overwrite, in the case of
+                  // var, check the value stored in the var, and update the var
+                  // instead (recursion). otherwise, it will be some combinatory
+                  // expression, and we could decide to construct a binary op instead!
+                  val attr      = proc.attributes
+                  val trackOld  = attr.get(ProcKeys.track) match {
+                    case Some(i: Attribute.Int[S]) => i.peer.value
+                    case _ => 0
+                  }
+                  val trackNew = math.max(0, trackOld + deltaTrack)
+                  attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(trackNew)))
+                }
+
+                val oldSpan   = span.value
+                val minStart  = timelineModel.bounds.start
+                val deltaC    = if (deltaTime >= 0) deltaTime else oldSpan match {
+                  case Span.HasStart(oldStart) => math.max(-(oldStart - minStart), deltaTime)
+                  case Span.HasStop (oldStop)  => math.max(-(oldStop  - minStart + MinDur), deltaTime)
+                }
+                if (deltaC != 0L) {
+                  val imp = ExprImplicits[S]
+                  import imp._
+                  span match {
+                    // case Expr.Const(vl) =>
+                    case Expr.Var(vr) =>
+                      vr.transform {
+                        case Expr.Const(vl) => vl.shift(deltaC) // fold constant
+                        // case SpanLikes.BinaryOp.Shift(a, b) => ...
+                        case ex             => ex.shift(deltaC) // compose binary op. XXX TODO: should fold bin ops
+                      }
+                    case _ => // span.shift(deltaC)
+                  }
+                }
+              case _ =>
+            }
+          }
+        }
+      }
+
       object canvasComponent extends Component with AudioFileDnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
 
@@ -296,6 +351,7 @@ object TimelineViewImpl {
           g.setColor(Color.darkGray) // g.setPaint(pntChecker)
           g.fillRect(0, 0, w, h)
 
+          val total     = timelineModel.bounds
           val visi      = timelineModel.visible
           val clipOrig  = g.getClip
           val cr        = clipOrig.getBounds
@@ -309,14 +365,19 @@ object TimelineViewImpl {
              case RegionViewMode.TitledBox  => hndlExtent
           }
 
-          val sel = selectionModel
+          val sel       = selectionModel
+          val tState    = toolState
+          val moveState = tState match {
+            case Some(mv: TrackTool.Move) => mv
+            case _ => NoMove
+          }
 
           procViews.filterOverlaps((visi.start, visi.stop)).foreach { pv =>
             val selected  = sel.contains(pv)
             val muted     = false
 
             def drawProc(start: Long, x1: Int, x2: Int) {
-              val py    = pv.track * 32
+              val py    = (if (selected) math.max(0, pv.track + moveState.deltaTrack) else pv.track) * 32
               val px    = x1
               val pw    = x2 - x1
               val ph    = 64
@@ -361,18 +422,34 @@ object TimelineViewImpl {
               }
             }
 
+            def deltaTimeWithStart(start: Long): Long =
+              if (selected) {
+                val dt0 = moveState.deltaTime
+                if (dt0 >= 0) dt0 else {
+                  math.max(-(start - total.start), dt0)
+                }
+              } else 0L
+
             pv.span match {
               case Span(start, stop) =>
-                val x1 = frameToScreen(start).toInt
-                val x2 = frameToScreen(stop ).toInt
+                val dt = deltaTimeWithStart(start)
+                val x1 = frameToScreen(start + dt).toInt
+                val x2 = frameToScreen(stop  + dt).toInt
                 drawProc(start, x1, x2)
 
               case Span.From(start) =>
-                val x1 = frameToScreen(start).toInt
+                val dt = deltaTimeWithStart(start)
+                val x1 = frameToScreen(start + dt).toInt
                 drawProc(start, x1, w + 5)
 
               case Span.Until(stop) =>
-                val x2 = frameToScreen(stop).toInt
+                val dt = if (selected) {
+                  val dt0 = moveState.deltaTime
+                  if (dt0 >= 0) dt0 else {
+                    math.max(-(stop - total.start + MinDur), dt0)
+                  }
+                } else 0L
+                val x2 = frameToScreen(stop + dt).toInt
                 drawProc(Long.MinValue, -5, x2)
 
               case Span.All =>

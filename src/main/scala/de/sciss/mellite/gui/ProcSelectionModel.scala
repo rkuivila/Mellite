@@ -17,4 +17,5 @@ trait ProcSelectionModel[S <: Sys[S]] extends Model[ProcSelectionModel.Update[S]
   def +=(view: TimelineProcView[S]): Unit
   def -=(view: TimelineProcView[S]): Unit
   def clear(): Unit
+  def iterator: Iterator[TimelineProcView[S]]
 }

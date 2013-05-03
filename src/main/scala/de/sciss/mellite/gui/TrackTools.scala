@@ -75,6 +75,8 @@ object TrackTool {
 
   final case class Move(deltaTime: Long, deltaTrack: Int, copy: Boolean)
 
+  type Listener = Model.Listener[Update[Any]]
+
   def cursor[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[Unit] = new TrackCursorToolImpl(canvas)
   def move[S <: Sys[S]]  (canvas: TimelineProcCanvas[S]): TrackTool[Move] = new TrackMoveToolImpl(canvas)
 }

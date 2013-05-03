@@ -131,10 +131,10 @@ trait TimelineCanvasImpl extends TimelineCanvas {
   }
 
   private def updateAxis() {
-    val visi  = timelineModel.visible
-    val sr    = timelineModel.sampleRate
-    timeAxis.minimum   = visi.start / sr
-    timeAxis.maximum   = visi.stop  / sr
+    val visi          = timelineModel.visible
+    val sr            = timelineModel.sampleRate
+    timeAxis.minimum  = visi.start / sr
+    timeAxis.maximum  = visi.stop  / sr
   }
 
   // final def canvasComponent: Component
@@ -194,7 +194,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     // println(s"updateFromScroll : $newVisi")
     timelineModel.visible = newVisi
     updateAxis()
-    canvasComponent.repaint()
+    repaint()
     if (l) timelineModel.addListener(timelineListener)
   }
 
@@ -236,17 +236,17 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     case TimelineModel.Visible(_, span) =>
       updateAxis()
       updateScroll()
-      canvasComponent.repaint()  // XXX TODO: optimize dirty region / copy double buffer
+      repaint()  // XXX TODO: optimize dirty region / copy double buffer
 
     case TimelineModel.Position(_, frame) =>
       // XXX TODO: optimize dirty region
       timeAxis.repaint()
-      canvasComponent.repaint()
+      repaint()
 
     case TimelineModel.Selection(_, span) =>
       // XXX TODO: optimize dirty region
       timeAxis.repaint()
-      canvasComponent.repaint()
+      repaint()
   }
 
   private val scrollListener: Reactions.Reaction = {
@@ -256,6 +256,10 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     case ValueChanged(_) =>
       // println(s"ScrollBar Value ${scroll.value}")
       updateFromScroll()
+  }
+
+  @inline final protected def repaint() {
+    canvasComponent.repaint()
   }
 
   private def processAxisMouse(frame: Long) {
@@ -272,6 +276,42 @@ trait TimelineCanvasImpl extends TimelineCanvas {
 trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCanvas[S] {
   final val trackTools = TrackTools[S](this)
 
+  import TrackTools._
+
+  private var _toolState = Option.empty[Any]
+  final protected def toolState = _toolState
+
+  private val toolListener: TrackTool.Listener = {
+    // case TrackTool.DragBegin =>
+    case TrackTool.DragCancel =>
+      if (_toolState.isDefined) {
+        _toolState = None
+        repaint()
+      }
+    case TrackTool.DragEnd =>
+      _toolState.foreach { state =>
+        _toolState = None
+        commitToolChanges(state)
+        repaint()
+      }
+
+    case TrackTool.DragAdjust(value) =>
+      val some = Some(value)
+      if (_toolState != some) {
+        _toolState = some
+        repaint()
+      }
+  }
+
+  trackTools.addListener {
+    case ToolChanged          (change) =>
+      change.before.removeListener(toolListener)
+      change.now   .addListener   (toolListener)
+    case VisualBoostChanged   (change) => repaint()
+    case FadeViewModeChanged  (change) => repaint()
+    case RegionViewModeChanged(change) => repaint()
+  }
+
   private val selectionListener: ProcSelectionModel.Listener[S] = {
     case ProcSelectionModel.Update(added, removed) =>
       canvasComponent.repaint() // XXX TODO: dirty rectangle optimization
@@ -286,4 +326,6 @@ trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with Timeli
     super.componentHidden()
     selectionModel.removeListener(selectionListener)
   }
+
+  protected def commitToolChanges(value: Any): Unit
 }

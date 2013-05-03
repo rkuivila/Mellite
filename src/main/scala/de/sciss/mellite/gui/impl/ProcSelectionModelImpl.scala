@@ -16,6 +16,8 @@ final class ProcSelectionModelImpl[S <: Sys[S]]
 
   def contains(view: TimelineProcView[S]): Boolean = set.contains(view)
 
+  def iterator: Iterator[TimelineProcView[S]] = set.iterator
+
   def +=(view: TimelineProcView[S]) {
     if (!set.contains(view)) {
       set += view
