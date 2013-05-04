@@ -88,4 +88,6 @@ sealed trait TimelineProcView[S <: Sys[S]] {
 
   // EDT access only
   var sono: Option[sonogram.Overview]
+
+  // def updateSpan(span: Expr[S, SpanLike])(implicit tx: S#Tx): Unit
 }
