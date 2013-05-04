@@ -291,6 +291,7 @@ object DocumentFrameImpl {
                 new WindowImpl {
                   def handler = Mellite.windowHandler
                   def style   = Window.Regular
+                  component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
                   title       = if (name == fileName) name else s"$name - $fileName"
                   file        = Some(view.value.artifact)
                   contents    = afv.component

@@ -47,6 +47,7 @@ import de.sciss.desktop.FocusType
 import de.sciss.synth.expr.{ExprImplicits, SpanLikes, Ints}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.event.Change
+import Predef.{any2stringadd => _, _}
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -58,6 +59,12 @@ object TimelineViewImpl {
 
   private val NoMove  = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
   private val MinDur  = 32
+
+  private val logEnabled  = true
+
+  private def log(what: => String) {
+    if (logEnabled) println(s"<timeline> $what")
+  }
 
   def apply[S <: Sys[S]](document: Document[S], element: Element.ProcGroup[S])
                         (implicit tx: S#Tx): TimelineView[S] = {
@@ -248,6 +255,7 @@ object TimelineViewImpl {
     }
 
     def addProc(span: SpanLike, timed: TimedProc[S], repaint: Boolean)(implicit tx: S#Tx) {
+      log(s"addProc($span, $timed)")
       // timed.span
       // val proc = timed.value
       val pv = TimelineProcView(timed)
@@ -297,12 +305,17 @@ object TimelineViewImpl {
                   // instead (recursion). otherwise, it will be some combinatory
                   // expression, and we could decide to construct a binary op instead!
                   val attr      = proc.attributes
-                  val trackOld  = attr.get(ProcKeys.track) match {
-                    case Some(i: Attribute.Int[S]) => i.peer.value
-                    case _ => 0
-                  }
-                  val trackNew = math.max(0, trackOld + deltaTrack)
-                  attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(trackNew)))
+                  val expr      = ExprImplicits[S]
+                  import expr._
+                  // attr[Attribute.Int[S]](ProcKeys.track).foreach {
+                  //   case Expr.Var(vr) => vr.transform(_ + deltaTrack)
+                  //   case _ =>
+                  // }
+
+                  for (Expr.Var(t) <- attr[Attribute.Int[S]](ProcKeys.track)) t.transform(_ + deltaTrack)
+
+                  // val trackNew  = math.max(0, trackOld + deltaTrack)
+                  // attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(trackNew)))
                 }
 
                 val oldSpan   = span.value
@@ -315,14 +328,8 @@ object TimelineViewImpl {
                   val imp = ExprImplicits[S]
                   import imp._
                   span match {
-                    // case Expr.Const(vl) =>
-                    case Expr.Var(vr) =>
-                      vr.transform {
-                        case Expr.Const(vl) => vl.shift(deltaC) // fold constant
-                        // case SpanLikes.BinaryOp.Shift(a, b) => ...
-                        case ex             => ex.shift(deltaC) // compose binary op. XXX TODO: should fold bin ops
-                      }
-                    case _ => // span.shift(deltaC)
+                    case Expr.Var(s) => s.transform(_ shift deltaC)
+                    case _ =>
                   }
                 }
               case _ =>

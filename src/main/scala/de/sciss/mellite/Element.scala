@@ -339,10 +339,11 @@ object Element {
 
     final protected def reader: evt.Reader[S, Element[S]] = serializer
 
-    final protected def foldUpdate(sum: Option[Update[S]], inc: Update[S]): Option[Update[S]] = sum match {
-      case Some(prev) => Some(prev.copy(changes = prev.changes ++ inc.changes))
-      case _          => Some(inc)
-    }
+    final protected def foldUpdate(sum: Option[Update[S]], inc: Update[S])(implicit tx: S#Tx): Option[Update[S]] =
+      sum match {
+        case Some(prev) => Some(prev.copy(changes = prev.changes ++ inc.changes))
+        case _          => Some(inc)
+      }
 
     trait EventImpl
       extends evt.impl.EventImpl[S, Update[S], Element[S]] with evt.InvariantEvent[S, Update[S], Element[S]] {
@@ -352,9 +353,9 @@ object Element {
     }
 
     protected object NameChange extends EventImpl {
-      final val slot = 1
+      final val slot = 0
       def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Update[S]] = {
-        name.changed.pullUpdate(pull).map(ch => Update(self, IIdxSeq(Renamed(ch))))
+        pull(name.changed).map(ch => Update(self, IIdxSeq(Renamed(ch))))
       }
 
       def connect()(implicit tx: S#Tx) {
@@ -374,7 +375,7 @@ object Element {
   }
 
   private sealed trait ActiveImpl[S <: Sys[S]]
-    extends Impl[S] with evt.impl.MultiEventImpl[S, Update[S], Update[S], Element[S]] {
+    extends Impl[S] with evt.impl.Reducer[S, Update[S], Update[S], Element[S]] {
     self =>
 
     // ---- events ----
@@ -382,11 +383,12 @@ object Element {
     protected def entityEvent: evt.EventLike[S, Any, _]
 
     final protected def events = IIdxSeq(NameChange, EntityChange)
+    final protected def changedSlot = 2
 
     private object EntityChange extends EventImpl {
-      final val slot = 2
+      final val slot = 1
       def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Update[S]] = {
-        entityEvent.pullUpdate(pull).map(ch => Update(self, IIdxSeq(Entity(ch))))
+        pull(entityEvent).map(ch => Update(self, IIdxSeq(Entity(ch))))
       }
 
       def connect()(implicit tx: S#Tx) {
