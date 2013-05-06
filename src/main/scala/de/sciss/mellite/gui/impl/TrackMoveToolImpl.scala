@@ -16,11 +16,25 @@ final class TrackMoveToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
   val icon          = TrackToolsImpl.getIcon("openhand")
 
   protected def dragToParam(d: Drag): Move = {
-    Move(deltaTime = d.currentPos - d.firstPos, deltaTrack = d.currentTrack - d.firstTrack,
-      copy = d.currentEvent.isAltDown)
+    val eNow  = d.currentEvent
+    val dtim0 = d.currentPos - d.firstPos
+    val dtrk0 = d.currentTrack - d.firstTrack
+    val (dtim, dtrk) = if (eNow.isShiftDown) { // constrain movement to either horizontal or vertical
+      val eBefore = d.firstEvent
+      if (math.abs(eNow.getX - eBefore.getX) > math.abs(eNow.getY - eBefore.getY)) {  // horizontal
+        (dtim0, 0)
+      } else {  // vertical
+        (0L, dtrk0)
+      }
+    } else {  // unconstrained
+      (dtim0, dtrk0)
+    }
+
+    Move(deltaTime = dtim, deltaTrack = dtrk, copy = d.currentEvent.isAltDown)
   }
 
   protected def dialog(): Option[Move] = {
+    println("Not yet implemented - movement dialog")
     //    val box             = Box.createHorizontalBox
     //    val timeTrans       = new DefaultUnitTranslator()
     //    val ggTime          = new BasicParamField(timeTrans)

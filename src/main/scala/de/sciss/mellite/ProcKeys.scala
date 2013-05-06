@@ -1,6 +1,10 @@
 package de.sciss.mellite
 
 object ProcKeys {
-  final val name  = "name"
-  final val track = "track"
+  /** Name attribute. Type `String` */
+  final val attrName    = "name"
+  /** Track attribute. Type `Int` */
+  final val attrTrack   = "track"
+  /** Audio input file (tape) grapheme. */
+  final val graphAudio  = "sig"
 }

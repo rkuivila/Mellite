@@ -1,0 +1,25 @@
+      case BiGroup.Added  (span, timed) =>
+      case BiGroup.Removed(span, timed) =>
+      case BiGroup.ElementMoved  (timed, spanCh ) =>
+      case BiGroup.ElementMutated(timed, procUpd) =>
+        procUpd.changes.foreach {
+          case Proc.AssociationAdded  (key) =>
+            key match {
+              case Proc.AttributeKey(name) =>
+              case Proc.ScanKey     (name) =>
+            }
+          case Proc.AssociationRemoved(key) =>
+            key match {
+              case Proc.AttributeKey(name) =>
+              case Proc.ScanKey     (name) =>
+            }
+          case Proc.AttributeChange(name, Attribute.Update(attr, ach)) =>            
+          case Proc.ScanChange     (name, scanUpd) =>
+            scanUpd match {
+              case Scan.SinkAdded  (scan, sink) =>
+              case Scan.SinkRemoved(scan, sink) =>
+              case Scan.SourceChanged(scan, sourceOpt) =>
+              case Scan.SourceUpdate(scan, Grapheme.Update(grapheme, segms)) =>
+            }
+        }
+      case Proc.GraphChange(ch) =>

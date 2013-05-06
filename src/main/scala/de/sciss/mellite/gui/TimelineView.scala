@@ -35,8 +35,6 @@ import de.sciss.lucre.stm
 object TimelineView {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])(implicit tx: S#Tx): TimelineView[S] =
     Impl(document, group)
-
-  final val AudioGraphemeKey = "sig"
 }
 trait TimelineView[S <: Sys[S]] {
   def component: Component

@@ -164,7 +164,7 @@ object FolderViewImpl {
         upd.foreach {
           case Folder.Added  (idx, elem)      => elemAdded  (path, idx, elem)
           case Folder.Removed(idx, elem)      => elemRemoved(path, idx, elem)
-          case Folder.Element(elem, elemUpd)  => println(s"Warning: FolderView unhandled $upd")
+          case Folder.Element(elem, elemUpd)  => // println(s"Warning: FolderView unhandled $upd")
           // case _ =>
         }
       }

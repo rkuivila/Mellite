@@ -62,7 +62,7 @@ object TimelineViewImpl {
   private val NoMove  = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
   private val MinDur  = 32
 
-  private val logEnabled  = true
+  private val logEnabled  = false // true
 
   private def log(what: => String) {
     if (logEnabled) println(s"<timeline> $what")
@@ -108,9 +108,51 @@ object TimelineViewImpl {
       case BiGroup.Removed(span, timed) => println(s"Removed $span, $timed")
       case BiGroup.ElementMoved  (timed, spanCh ) =>
         // println(s"Moved   $timed, $spanCh")
-        view.procMoved(timed, spanCh)
+        view.procMoved(timed, spanCh = spanCh, trackCh = Change(0, 0))
 
-      case BiGroup.ElementMutated(timed, procUpd) => println(s"Mutated $timed, $procUpd")
+      case BiGroup.ElementMutated(timed, procUpd) =>
+        // println(s"Mutated $timed, $procUpd")
+        procUpd.changes.foreach {
+          case Proc.AssociationAdded  (key) =>
+            key match {
+              case Proc.AttributeKey(name) =>
+              case Proc.ScanKey     (name) =>
+            }
+          case Proc.AssociationRemoved(key) =>
+            key match {
+              case Proc.AttributeKey(name) =>
+              case Proc.ScanKey     (name) =>
+            }
+          case Proc.AttributeChange(name, Attribute.Update(attr, ach)) =>
+            if (name == ProcKeys.attrTrack) {
+              ach match {
+                case Change(before: Int, now: Int) =>
+                  view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
+                case _ =>
+              }
+            }
+
+          case Proc.ScanChange     (name, scanUpd) =>
+            scanUpd match {
+              case Scan.SinkAdded  (scan, sink) =>
+              case Scan.SinkRemoved(scan, sink) =>
+              case Scan.SourceChanged(scan, sourceOpt) =>
+              case Scan.SourceUpdate(scan, Grapheme.Update(grapheme, segms)) =>
+                if (name == ProcKeys.graphAudio) {
+                  timed.span.value match {
+                    case Span.HasStart(startFrame) =>
+                      val segmOpt = segms.find(_.span.contains(startFrame)) match {
+                        case Some(segm: Grapheme.Segment.Audio) => Some(segm)
+                        case _ => None
+                      }
+                      view.procAudioChanged(timed, segmOpt)
+                    case _ =>
+                  }
+                }
+            }
+
+          case Proc.GraphChange(ch) =>
+        }
     }}
     // XXX TODO: dispose observer eventually
 
@@ -259,16 +301,34 @@ object TimelineViewImpl {
       // val proc = timed.value
       val pv = TimelineProcView(timed)
       procMap.put(timed.id, pv)
-      procViews += pv
-      if (repaint) guiFromTx(view.canvasComponent.repaint())  // XXX TODO: optimize dirty rectangle
+      if (repaint) {
+        procViews += pv
+        guiFromTx(view.canvasComponent.repaint()) // XXX TODO: optimize dirty rectangle
+      }  else {
+        procViews += pv // not necessary to defer this to GUI because non-repainting happens in init!
+      }
     }
 
-    def procMoved(timed: TimedProc[S], spanCh: Change[SpanLike])(implicit tx: S#Tx) {
+    // insignificant changes are ignored, therefore one can just move the span without the track
+    // by using trackCh = Change(0,0), and vice versa
+    def procMoved(timed: TimedProc[S], spanCh: Change[SpanLike], trackCh: Change[Int])(implicit tx: S#Tx) {
       procMap.get(timed.id).foreach { pv =>
-        procViews -= pv
-        pv.span    = spanCh.now
-        procViews += pv
-        view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+        guiFromTx {
+          procViews  -= pv
+          if (spanCh .isSignificant) pv.span  = spanCh .now
+          if (trackCh.isSignificant) pv.track = trackCh.now
+          procViews  += pv
+          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+        }
+      }
+    }
+
+    def procAudioChanged(timed: TimedProc[S], newAudio: Option[Grapheme.Segment.Audio])(implicit tx: S#Tx) {
+      procMap.get(timed.id).foreach { pv =>
+        guiFromTx {
+          pv.audio = newAudio
+          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+        }
       }
     }
 
@@ -314,7 +374,7 @@ object TimelineViewImpl {
                   // lucre.event.showLog = true
                   // lucre.bitemp.impl.BiGroupImpl.showLog = true
 
-                  for (Expr.Var(t) <- attr[Attribute.Int[S]](ProcKeys.track)) t.transform(_ + deltaTrack)
+                  for (Expr.Var(t) <- attr[Attribute.Int[S]](ProcKeys.attrTrack)) t.transform(_ + deltaTrack)
 
                   // lucre.event.showLog = false
                   // lucre.bitemp.impl.BiGroupImpl.showLog = false

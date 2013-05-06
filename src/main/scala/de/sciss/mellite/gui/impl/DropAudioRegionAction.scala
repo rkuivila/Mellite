@@ -25,8 +25,8 @@ object DropAudioRegionAction {
     // proc.name_=(elem.name)
     val attr    = proc.attributes
     val track   = drop.y / 32
-    attr.put(ProcKeys.track, Attribute.Int(Ints.newVar(track)))
-    val scanw   = proc.scans.add(TimelineView.AudioGraphemeKey)
+    attr.put(ProcKeys.attrTrack, Attribute.Int(Ints.newVar(track)))
+    val scanw   = proc.scans.add(ProcKeys.graphAudio)
     // val scand   = proc.scans.add("dur")
     val grw     = Grapheme.Modifiable[S]
     // val grd     = Grapheme.Modifiable[S]
@@ -46,7 +46,7 @@ object DropAudioRegionAction {
     val sg = SynthGraph {
       import synth._
       import ugen._
-      val sig   = graph.scan("sig").ar(0)
+      val sig   = graph.scan(ProcKeys.graphAudio).ar(0)
       // val env   = EnvGen.ar(Env.linen(0.2, (duri - 0.4).max(0), 0.2))
       Out.ar(0, sig /* * env */)
     }

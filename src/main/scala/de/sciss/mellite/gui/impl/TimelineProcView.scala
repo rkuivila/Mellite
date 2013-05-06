@@ -17,7 +17,7 @@ object TimelineProcView {
     span.value match {
       case Span.HasStart(frame) =>
         for {
-          scan <- proc.scans.get(TimelineView.AudioGraphemeKey)
+          scan <- proc.scans.get(ProcKeys.graphAudio)
           Scan.Link.Grapheme(g) <- scan.source
           BiExpr(time, audio: Grapheme.Elem.Audio[S]) <- g.at(frame)
         } yield (time, audio)
@@ -35,7 +35,7 @@ object TimelineProcView {
     // proc.scans.keys.foreach(println)
 
     // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
-    val audio = proc.scans.get(TimelineView.AudioGraphemeKey).flatMap { scanw =>
+    val audio = proc.scans.get(ProcKeys.graphAudio).flatMap { scanw =>
       // println("--- has scan")
       scanw.source.flatMap {
         case Scan.Link.Grapheme(g) =>
@@ -59,12 +59,12 @@ object TimelineProcView {
 
     val attr  = proc.attributes
 
-    val track = attr.get(ProcKeys.track) match {
+    val track = attr.get(ProcKeys.attrTrack) match {
       case Some(i: Attribute.Int[S]) => i.peer.value
       case _ => 0
     }
 
-    val name = attr.get(ProcKeys.name) match {
+    val name = attr.get(ProcKeys.attrName) match {
       case Some(str: Attribute.String[S]) => str.peer.value
       case _ =>
         audio.map(_.value.artifact.nameWithoutExtension).getOrElse("<unnamed>")

@@ -23,7 +23,7 @@ trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[A] with ModelImpl[Tr
       val span      = Span(pos, pos + 1)
       val regions   = canvas.intersect(span)
       val hitTrack  = e.getY / 32
-      val regionOpt = if (regions.hasNext) Some(regions.next()) else None // XXX TODO: need to scan vertical coordinate
+      val regionOpt = regions.find(pv => pv.track == hitTrack || (pv.track + 1) == hitTrack)  // procs span "two tracks". ouchilah...
       handleSelect(e, hitTrack, pos, regionOpt)
       // if ((e.getClickCount == 2) && !regions.isEmpty) showObserverPage()
     }
