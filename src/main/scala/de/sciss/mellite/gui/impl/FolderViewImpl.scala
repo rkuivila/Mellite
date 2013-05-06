@@ -159,7 +159,7 @@ object FolderViewImpl {
       */
     def branchAdded(path: Tree.Path[ElementView.Folder[S]], branch: ElementView.BranchLike[S])(implicit tx: S#Tx) {
       if (DEBUG) println(s"branchAdded: $path $branch")
-      val obs = branch.reactTx { implicit tx => upd =>
+      val obs = branch.react { implicit tx => upd =>
         // println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
         upd.foreach {
           case Folder.Added  (idx, elem)      => elemAdded  (path, idx, elem)

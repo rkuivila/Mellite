@@ -88,7 +88,7 @@ object TimelineViewImpl {
 
     val view    = new Impl[S](groupH, transp, procMap, tlm, document.cursor)
 
-    transp.reactTx { implicit tx => {
+    transp.react { implicit tx => {
       case proc.Transport.Play(t, time) => view.startedPlaying(time)
       case proc.Transport.Stop(t, time) => view.stoppedPlaying(time)
       case _ => // proc.Transport.Advance(t, time, isSeek, isPlaying, _, _, _) =>
@@ -100,20 +100,17 @@ object TimelineViewImpl {
       }
     }
 
-    val obs = group.changed.reactTx { implicit tx => (upd: ProcGroup.Update[S]) => {
-      // val _group = upd.group
-      upd.changes.foreach {
-        case BiGroup.Added  (span, timed) =>
-          // println(s"Added   $span, $timed")
-          view.addProc(span, timed, repaint = true)
+    val obs = group.changed.react { implicit tx => _.changes.foreach {
+      case BiGroup.Added  (span, timed) =>
+        // println(s"Added   $span, $timed")
+        view.addProc(span, timed, repaint = true)
 
-        case BiGroup.Removed(span, timed) => println(s"Removed $span, $timed")
-        case BiGroup.ElementMoved  (timed, spanCh ) =>
-          // println(s"Moved   $timed, $spanCh")
-          view.procMoved(timed, spanCh)
+      case BiGroup.Removed(span, timed) => println(s"Removed $span, $timed")
+      case BiGroup.ElementMoved  (timed, spanCh ) =>
+        // println(s"Moved   $timed, $spanCh")
+        view.procMoved(timed, spanCh)
 
-        case BiGroup.ElementMutated(timed, procUpd) => println(s"Mutated $timed, $procUpd")
-      }
+      case BiGroup.ElementMutated(timed, procUpd) => println(s"Mutated $timed, $procUpd")
     }}
     // XXX TODO: dispose observer eventually
 

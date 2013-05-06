@@ -16,13 +16,13 @@ import de.sciss.synth.SynthGraph
 object ProcEditorFrameImpl {
    def apply[ S <: Sys[ S ]]( proc: Proc[ S ])( implicit tx: S#Tx, cursor: Cursor[ S ]) : ProcEditorFrame[ S ] = {
       val view = new Impl( /* cursor.position, */ tx.newHandle( proc ), proc.toString() ) {
-         protected val observer = proc.changed.reactTx[ Proc.Update[ S ]] { implicit tx => { upd =>
+         protected val observer = proc.changed.react { implicit tx => upd =>
             upd.changes.foreach {
 //               case Proc.Rename( Change( _, now )) =>
 //                  guiFromTx( name = now )
                case _ =>
             }
-         }}
+         }
       }
 
       val initName         = proc.attributes.get("name") match {

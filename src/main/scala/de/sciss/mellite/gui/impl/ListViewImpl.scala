@@ -118,7 +118,7 @@ object ListViewImpl {
       guiFromTx {
         view.addAll(items.map(show))
       }
-      ll.changed.reactTx[LinkedList.Update[S, Elem, U]] {
+      ll.changed.react {
         implicit tx => {
           upd =>
           //            case LinkedList.Added(   _, idx, elem )   => guiFromTx( view.add( idx, show( elem )))
