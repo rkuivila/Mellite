@@ -9,8 +9,23 @@ import span.{Span, SpanLike}
 import expr.Expr
 import synth.expr.SpanLikes
 import language.implicitConversions
+import de.sciss.lucre.bitemp.BiExpr
 
 object TimelineProcView {
+  def getAudioRegion[S <: Sys[S]](span: Expr[S, SpanLike], proc: Proc[S])
+                                 (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme.Elem.Audio[S])] = {
+    span.value match {
+      case Span.HasStart(frame) =>
+        for {
+          scan <- proc.scans.get(TimelineView.AudioGraphemeKey)
+          Scan.Link.Grapheme(g) <- scan.source
+          BiExpr(time, audio: Grapheme.Elem.Audio[S]) <- g.at(frame)
+        } yield (time, audio)
+
+      case _ => None
+    }
+  }
+
   def apply[S <: Sys[S]](timed: TimedProc[S])(implicit tx: S#Tx): TimelineProcView[S] = {
     val span  = timed.span
     val proc  = timed.value
@@ -18,6 +33,8 @@ object TimelineProcView {
     import SpanLikes._
     // println("--- scan keys:")
     // proc.scans.keys.foreach(println)
+
+    // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
     val audio = proc.scans.get(TimelineView.AudioGraphemeKey).flatMap { scanw =>
       // println("--- has scan")
       scanw.source.flatMap {

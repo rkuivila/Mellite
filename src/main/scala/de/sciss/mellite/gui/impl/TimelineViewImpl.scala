@@ -32,7 +32,7 @@ import scala.swing.{Action, BorderPanel, Orientation, BoxPanel, Component}
 import span.{Span, SpanLike}
 import mellite.impl.TimelineModelImpl
 import java.awt.{Font, RenderingHints, BasicStroke, Color, Graphics2D}
-import de.sciss.synth.proc.{Attribute, ProcGroup, ProcTransport, Sys, TimedProc}
+import de.sciss.synth.proc._
 import lucre.{bitemp, stm}
 import lucre.stm.{IdentifierMap, Cursor}
 import synth.proc
@@ -48,6 +48,8 @@ import de.sciss.synth.expr.{ExprImplicits, SpanLikes, Ints}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.event.Change
 import Predef.{any2stringadd => _, _}
+import scala.Some
+import de.sciss.lucre.event.Change
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -312,7 +314,13 @@ object TimelineViewImpl {
                   //   case _ =>
                   // }
 
+                  // lucre.event.showLog = true
+                  // lucre.bitemp.impl.BiGroupImpl.showLog = true
+
                   for (Expr.Var(t) <- attr[Attribute.Int[S]](ProcKeys.track)) t.transform(_ + deltaTrack)
+
+                  // lucre.event.showLog = false
+                  // lucre.bitemp.impl.BiGroupImpl.showLog = false
 
                   // val trackNew  = math.max(0, trackOld + deltaTrack)
                   // attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(trackNew)))
@@ -327,9 +335,21 @@ object TimelineViewImpl {
                 if (deltaC != 0L) {
                   val imp = ExprImplicits[S]
                   import imp._
-                  span match {
-                    case Expr.Var(s) => s.transform(_ shift deltaC)
-                    case _ =>
+
+                  TimelineProcView.getAudioRegion(span, proc) match {
+                    case Some((gtime, audio)) =>  // audio region
+                      (span, gtime) match {
+                        case (Expr.Var(t1), Expr.Var(t2)) =>
+                          t1.transform(_ shift deltaC)
+                          t2.transform(_ +     deltaC)  // XXX TODO: actually should shift the segment as well, i.e. the ceil time?
+
+                        case _ =>
+                      }
+                    case _ =>                     // other proc
+                      span match {
+                        case Expr.Var(s) => s.transform(_ shift deltaC)
+                        case _ =>
+                      }
                   }
                 }
               case _ =>
