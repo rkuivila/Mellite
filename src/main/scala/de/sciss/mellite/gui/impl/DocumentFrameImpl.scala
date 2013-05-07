@@ -266,21 +266,9 @@ object DocumentFrameImpl {
         if (views.nonEmpty) atomic { implicit tx =>
           views.foreach {
             case view: ElementView.ProcGroup[S] =>
-              val e   = view.element()
-              import document.inMemory
-              val tlv = TimelineView(document, e)
-              guiFromTx {
-                new WindowImpl {
-                  def handler = Mellite.windowHandler
-                  def style   = Window.Regular
-                  component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
-                  title       = view.name
-                  contents    = tlv.component
-                  pack()
-                  // centerOnScreen()
-                  front()
-                }
-              }
+              // val e   = view.element()
+              // import document.inMemory
+              TimelineFrame(document, view.name, view.element())
 
             case view: ElementView.AudioGrapheme[S] =>
               val e         = view.element()

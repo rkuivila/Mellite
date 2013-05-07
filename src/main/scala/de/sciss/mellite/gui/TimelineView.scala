@@ -27,7 +27,7 @@ package de.sciss.mellite
 package gui
 
 import de.sciss.synth.proc.Sys
-import swing.Component
+import scala.swing.{Action, Component}
 import impl.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm.Cursor
 import de.sciss.lucre.stm
@@ -38,4 +38,9 @@ object TimelineView {
 }
 trait TimelineView[S <: Sys[S]] {
   def component: Component
+  def timelineModel: TimelineModel
+
+  // ---- actions ----
+  def deleteAction      : Action
+  def splitObjectsAction: Action
 }

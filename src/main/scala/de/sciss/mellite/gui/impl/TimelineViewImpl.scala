@@ -105,7 +105,10 @@ object TimelineViewImpl {
         // println(s"Added   $span, $timed")
         view.addProc(span, timed, repaint = true)
 
-      case BiGroup.Removed(span, timed) => println(s"Removed $span, $timed")
+      case BiGroup.Removed(span, timed) =>
+        // println(s"Removed $span, $timed")
+        view.removeProc(span, timed)
+
       case BiGroup.ElementMoved  (timed, spanCh ) =>
         // println(s"Moved   $timed, $spanCh")
         view.procMoved(timed, spanCh = spanCh, trackCh = Change(0, 0))
@@ -163,7 +166,7 @@ object TimelineViewImpl {
   private final class Impl[S <: Sys[S]](groupH: stm.Source[S#Tx, ProcGroup[S]],
                                         transp: ProcTransport[S],
                                         procMap: IdentifierMap[S#ID, S#Tx, TimelineProcView[S]],
-                                        timelineModel: TimelineModel, cursor: Cursor[S]) extends TimelineView[S] {
+                                        val timelineModel: TimelineModel, cursor: Cursor[S]) extends TimelineView[S] {
     impl =>
 
     import cursor.step
@@ -186,6 +189,51 @@ object TimelineViewImpl {
     var component: Component  = _
     private var view: View    = _
 
+    // ---- actions ----
+
+    object deleteAction extends Action("Delete") {
+      def apply() {
+        withSelection(implicit tx => deleteObjects _)
+      }
+    }
+
+    object splitObjectsAction extends Action("Split Selected Objects") {
+      def apply() {
+        val pos     = timelineModel.position
+        val pos1    = pos - MinDur
+        val pos2    = pos + MinDur
+        withFilteredSelection(pv => pv.span.contains(pos1) && pv.span.contains(pos2)) { implicit tx =>
+          splitObjects(pos) _
+        }
+      }
+    }
+
+    private def withSelection(fun: S#Tx => TraversableOnce[TimelineProcView[S]] => Unit) {
+      val sel = selectionModel.iterator
+      if (sel.hasNext) step { implicit tx => fun(tx)(sel) }
+    }
+
+    private def withFilteredSelection(p: TimelineProcView[S] => Boolean)
+                                     (fun: S#Tx => TraversableOnce[TimelineProcView[S]] => Unit) {
+      val sel = selectionModel.iterator
+      val flt = sel.filter(p)
+      if (flt.hasNext) step { implicit tx => fun(tx)(flt) }
+    }
+
+    def deleteObjects(views: TraversableOnce[TimelineProcView[S]])(implicit tx: S#Tx) {
+      for (group <- groupH().modifiableOption; pv <- views) {
+        val span  = pv.spanSource()
+        val proc  = pv.procSource()
+        group.remove(span, proc)
+      }
+    }
+
+    def splitObjects(time: Long)(views: TraversableOnce[TimelineProcView[S]])(implicit tx: S#Tx) {
+      ???
+    }
+
+    // ---- transport ----
+
     def startedPlaying(time: Long)(implicit tx: S#Tx) {
       guiFromTx {
         timer.stop()
@@ -200,7 +248,7 @@ object TimelineViewImpl {
     def stoppedPlaying(time: Long)(implicit tx: S#Tx) {
       guiFromTx {
         timer.stop()
-        timelineModel.position = time
+        timelineModel.position = time // XXX TODO if Cursor follows Playhead
         transportStrip.button(Transport.Play).foreach(_.selected = false)
         transportStrip.button(Transport.Stop).foreach(_.selected = true )
       }
@@ -243,6 +291,8 @@ object TimelineViewImpl {
     }
 
     def guiInit() {
+      import desktop.Implicits._
+
       val timeDisp    = TimeDisplay(timelineModel)
       view            = new View
 
@@ -272,7 +322,6 @@ object TimelineViewImpl {
           HStrut(4)
         )
       }
-      import desktop.Implicits._
       transportPane.addAction("playstop", focus = FocusType.Window, action = new Action("playstop") {
         accelerator = Some(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0))
         def apply() {
@@ -306,6 +355,17 @@ object TimelineViewImpl {
         guiFromTx(view.canvasComponent.repaint()) // XXX TODO: optimize dirty rectangle
       }  else {
         procViews += pv // not necessary to defer this to GUI because non-repainting happens in init!
+      }
+    }
+
+    def removeProc(span: SpanLike, timed: TimedProc[S])(implicit tx: S#Tx) {
+      log(s"removeProcProc($span, $timed)")
+      procMap.get(timed.id).foreach { pv =>
+        procMap.remove(timed.id)
+        guiFromTx {
+          procViews -= pv
+          view.canvasComponent.repaint() // XXX TODO: optimize dirty rectangle
+        }
       }
     }
 
