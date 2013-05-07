@@ -7,4 +7,6 @@ object ProcKeys {
   final val attrTrack   = "track"
   /** Audio input file (tape) grapheme. */
   final val graphAudio  = "sig"
+  /** Source code of the graph function. */
+  final val attrGraphSource = "graph-source"
 }

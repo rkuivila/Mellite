@@ -74,9 +74,13 @@ object ElementView {
   // -------- String --------
 
   object String {
+    private val icon = new ImageIcon(
+      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_string16.png"))
+    )
+
     private object Comp extends BoxPanel(Orientation.Horizontal) {
       val key = new DefaultTreeCellRenderer
-      key.setLeafIcon(null)
+      key.setLeafIcon(icon)
       val value = new DefaultTreeCellRenderer
       value.setLeafIcon(null)
       background = null
@@ -104,11 +108,31 @@ object ElementView {
   // -------- Int --------
 
   object Int {
+    private val icon = new ImageIcon(
+      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_integer16.png"))
+    )
+
+    // XXX TODO: DRY
+    private object Comp extends BoxPanel(Orientation.Horizontal) {
+      val key = new DefaultTreeCellRenderer
+      key.setLeafIcon(icon)
+      val value = new DefaultTreeCellRenderer
+      value.setLeafIcon(null)
+      background = null
+      contents += Component.wrap(key)
+      contents += HStrut(8)
+      contents += Component.wrap(value)
+    }
+
     private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Int[S]],
                                                       var name: _String, var value: _Int)
       extends Int[S] with ElementView.Impl[S] {
 
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = ??? // cmpBlank // XXX TODO
+      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
+        Comp.key  .getTreeCellRendererComponent(tree.peer, name,  info.isSelected, false, true, info.row, info.hasFocus)
+        Comp.value.getTreeCellRendererComponent(tree.peer, value, info.isSelected, false, true, info.row, info.hasFocus)
+        Comp
+      }
       def prefix = "Int"
     }
   }
@@ -119,11 +143,31 @@ object ElementView {
   // -------- Double --------
 
   object Double {
+    private val icon = new ImageIcon(
+      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_float16.png"))
+    )
+
+    // XXX TODO: DRY
+    private object Comp extends BoxPanel(Orientation.Horizontal) {
+      val key = new DefaultTreeCellRenderer
+      key.setLeafIcon(icon)
+      val value = new DefaultTreeCellRenderer
+      value.setLeafIcon(null)
+      background = null
+      contents += Component.wrap(key)
+      contents += HStrut(8)
+      contents += Component.wrap(value)
+    }
+
     private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Double[S]],
                                                        var name: _String, var value: _Double)
       extends Double[S] with ElementView.Impl[S] {
 
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = ??? // cmpBlank // XXX TODO
+      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
+        Comp.key  .getTreeCellRendererComponent(tree.peer, name,  info.isSelected, false, true, info.row, info.hasFocus)
+        Comp.value.getTreeCellRendererComponent(tree.peer, value, info.isSelected, false, true, info.row, info.hasFocus)
+        Comp
+      }
       def prefix = "Double"
     }
   }

@@ -5,7 +5,7 @@ package impl
 
 import de.sciss.span.Span
 import de.sciss.synth.expr.{ExprImplicits, Longs, Ints, Spans}
-import de.sciss.synth.proc.{ProcGroup, Sys, graph, Scan, Grapheme, Attribute, Proc}
+import de.sciss.synth.proc.{Sys, graph, Scan, Grapheme, Attribute, Proc}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.synth.SynthGraph
 

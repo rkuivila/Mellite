@@ -33,7 +33,7 @@ import lucre.stm.Cursor
 import synth.proc.{Server, AuralSystem, Grapheme, Artifact, ProcGroup, Sys}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
-import de.sciss.synth.expr.{Doubles, Longs, Strings}
+import de.sciss.synth.expr._
 import desktop.{FileDialog, DialogSource, OptionPane, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
@@ -41,6 +41,8 @@ import synth.io.AudioFile
 import scala.util.control.NonFatal
 import java.io.File
 import synth.swing.j.JServerStatusPanel
+import javax.swing.{JSpinner, SpinnerNumberModel}
+import scala.Some
 
 object DocumentFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
@@ -177,18 +179,46 @@ object DocumentFrameImpl {
     }
 
     private def actionAddInt() {
-      println("actionAddInt")
+      val expr      = ExprImplicits[S]
+      import expr._
+      val ggValueJ  = new JSpinner(new SpinnerNumberModel(0, Int.MinValue, Int.MaxValue, 1))
+      val ggValue   = Component.wrap(ggValueJ)
+      actionAddPrimitive(tpe = "Integer", ggValue = ggValue, prepare = ggValueJ.getValue match {
+        case n: java.lang.Number => Some(n.intValue())
+        case _  => None
+      }) { implicit tx =>
+        (name, value) => Element.Int(name, Ints.newVar(value))
+      }
     }
 
     private def actionAddDouble() {
-      println("actionAddDouble")
+      val expr      = ExprImplicits[S]
+      import expr._
+      val ggValueJ  = new JSpinner(new SpinnerNumberModel(0.0, Double.NegativeInfinity, Double.PositiveInfinity, 1.0))
+      val ggValue   = Component.wrap(ggValueJ)
+      actionAddPrimitive(tpe = "Double", ggValue = ggValue, prepare = ggValueJ.getValue match {
+        case n: java.lang.Number => Some(n.doubleValue())
+        case _  => None
+      }) { implicit tx =>
+        (name, value) => Element.Double(name, Doubles.newVar(value))
+      }
     }
 
     private def actionAddString() {
-      val ggName  = new TextField(10)
-      val ggValue = new TextField(20)
-      ggName.text   = "String"
+      val expr      = ExprImplicits[S]
+      import expr._
+      val ggValue   = new TextField(20)
       ggValue.text  = "Value"
+      actionAddPrimitive(tpe = "String", ggValue = ggValue, prepare = Some(ggValue.text)){ implicit tx =>
+        (name, value) => Element.String(name, Strings.newVar(value))
+      }
+    }
+
+    private def actionAddPrimitive[A](tpe: String, ggValue: Component, prepare: => Option[A])
+                                     (create: S#Tx => (String, A) => Element[S]) {
+      // XXX TODO: DRY
+      val ggName  = new TextField(10)
+      ggName.text = tpe
 
       import language.reflectiveCalls // why does GroupPanel need reflective calls?
       // import desktop.Implicits._
@@ -201,15 +231,16 @@ object DocumentFrameImpl {
 
       val pane = OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,
         messageType = Dialog.Message.Question, focus = Some(ggValue))
-      pane.title  = "New String"
+      pane.title  = s"New $tpe"
       val res = frame.show(pane)
 
       if (res == Dialog.Result.Ok) {
         // println(s"name = ${ggName.text} ; value = ${ggValue.text}")
         val name    = ggName.text
-        val value   = ggValue.text
-        atomic { implicit tx =>
-          addElement(Element.String(name = name, init = Strings.newConst(value)))
+        prepare.foreach { value =>
+          atomic { implicit tx =>
+            addElement(create(tx)(name, value))
+          }
         }
       }
     }
