@@ -69,6 +69,15 @@ object FolderViewImpl {
     }
   }
 
+  private final class Editor[S <: Sys[S]] extends Tree.Editor[ElementView[S]] {
+    def componentFor(owner: Tree[_], value: ElementView[S], cellInfo: Tree.Editor.CellInfo): Component = {
+      println("---editor---")
+      null
+    }
+
+    def value: ElementView[S] = null
+  }
+
   private final class Impl[S <: Sys[S]](root: ElementView.Root[S],
                                         mapBranches: IdentifierMap[S#ID, S#Tx, Disposable[S#Tx]])
     extends FolderView[S] with ModelImpl[FolderView.Update[S]] {
@@ -194,13 +203,14 @@ object FolderViewImpl {
           dispatch(FolderView.SelectionChanged(view, selection))
       }
       t.showsRootHandles = true
-      t.renderer = new Renderer[S]
+      t.renderer  = new Renderer[S]
+      // t.editor    = new Editor[S]
       // t.expandAll()
       t.expandPath(Tree.Path.empty)
 
       val scroll    = new ScrollPane(t)
       scroll.border = null
-      comp = scroll
+      comp          = scroll
     }
 
     def selection: FolderView.Selection[S] =
