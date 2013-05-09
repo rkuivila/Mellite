@@ -48,26 +48,28 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
   private var _treeModel        = treeModel0
   private var _treeColumnModel  = treeColumnModel0
   private var _tableColumnModel = tableColumnModel0
-  private var _renderer: TreeTableCellRenderer[A] = _
+  private var _renderer: TreeTableCellRenderer = _
 
   def treeModel: TreeModel[A]                 = _treeModel
   def treeColumnModel: Col                    = _treeColumnModel
   def tableColumnModel: jtab.TableColumnModel = _tableColumnModel
 
   def renderer = _renderer
-  def renderer_=(r: TreeTableCellRenderer[A]) {
+  def renderer_=(r: TreeTableCellRenderer) {
     val rp = r match {
-      case w: TreeTableCellRenderer.Wrapped[_] => w.peer
+      case w: TreeTableCellRenderer.Wrapped => w.peer
       case _ => new j.TreeTableCellRenderer {
         def getTreeTableCellRendererComponent(treeTable: j.TreeTable, value: Any, selected: Boolean, hasFocus: Boolean,
-                                              row: Int, column: Int): awt.Component =
-          getTreeTableCellRendererComponent(treeTable, value, selected = selected, hasFocus = hasFocus,
-            row = row, column = column, expanded = false, leaf = false)
+                                              row: Int, column: Int): awt.Component = {
+          val state = TreeTableCellRenderer.State(selected = selected, focused = hasFocus, tree = None)
+          r.getRendererComponent(me, value, row = row, column = column, state).peer
+        }
 
         def getTreeTableCellRendererComponent(treeTable: j.TreeTable, value: Any, selected: Boolean, hasFocus: Boolean,
                                               row: Int, column: Int, expanded: Boolean, leaf: Boolean): awt.Component = {
-          val state = TreeTableCellRenderer.State(selected = selected, focused = hasFocus, expanded = expanded, leaf = leaf)
-          r.getRendererComponent(me, value.asInstanceOf[A], row = row, column = column, state).peer
+          val state = TreeTableCellRenderer.State(selected = selected, focused = hasFocus,
+            tree = Some(TreeTableCellRenderer.TreeState(expanded = expanded, leaf = leaf)))
+          r.getRendererComponent(me, value, row = row, column = column, state).peer
         }
       }
     }
@@ -75,8 +77,8 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
     peer.setDefaultRenderer(classOf[AnyRef], rp)
   }
 
-  def editable   = ??? : Boolean      // crap
-  def cellValues = ??? : Iterator[A]  // crap
+  def editable: Boolean = ??? : Boolean   // crap
+  def cellValues: Iterator[A] = ???       // crap
 
   private def wrapTreeModel(_peer: TreeModel[A]): jtree.TreeModel = new {
     val peer = _peer
@@ -197,9 +199,14 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
   def showsRootHandles        : Boolean =  peer.getShowsRootHandles
   def showsRootHandles_=(value: Boolean) { peer.setShowsRootHandles(value) }
 
+  def rootVisible             : Boolean =  peer.isRootVisible
+  def rootVisible_=     (value: Boolean) { peer.setRootVisible(value) }
+
   def expandPath(path: Path[A]) { peer.expandPath(path) }
 
   def hierarchicalColumn: Int = peer.getHierarchicalColumn
+
+  def getNode(row: Int): A = peer.getNode(row).asInstanceOf[A]
 
   object selection extends CellSelection {
     object paths extends SelectionSet[Path[A]]({
@@ -213,7 +220,7 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
       def leadSelection: Option[Path[A]] = Option(peer.getLeadSelectionPath)
     }
 
-    def cellValues = ??? : Iterator[A]
+    def cellValues: Iterator[A] = ???
 
     def isEmpty = size == 0
     def size = peer.getSelectionCount

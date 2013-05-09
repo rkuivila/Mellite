@@ -185,20 +185,20 @@ object ElementView {
 
   // -------- FolderLike --------
 
-  sealed trait BranchLike[S <: Sys[S]] extends Renderer[S] {
-    def branchID(implicit tx: S#Tx): S#ID
-
-    def react(fun: S#Tx => _Folder.Update[S] => Unit)(implicit tx: S#Tx): Disposable[S#Tx]
-
-    /** The children of the folder. This variable _must only be accessed or updated_ on the event thread. */
-    var children: IIdxSeq[ElementView[S]]
-
-    def value {}
-  }
+  //  sealed trait BranchLike[S <: Sys[S]] extends Renderer[S] {
+  //    def branchID(implicit tx: S#Tx): S#ID
+  //
+  //    def react(fun: S#Tx => _Folder.Update[S] => Unit)(implicit tx: S#Tx): Disposable[S#Tx]
+  //
+  //    /** The children of the folder. This variable _must only be accessed or updated_ on the event thread. */
+  //    var children: IIdxSeq[ElementView[S]]
+  //
+  //    def value {}
+  //  }
 
   // sealed trait Branch[S <: Sys[S]] extends BranchLike[S] with ElementView[S]
 
-  sealed trait FolderLike[S <: Sys[S]] extends BranchLike[S] {
+  sealed trait FolderLike[S <: Sys[S]] extends Renderer[S] {
     def branchID(implicit tx: S#Tx) = folder.id
 
     def folder(implicit tx: S#Tx): _Folder[S]
@@ -212,6 +212,11 @@ object ElementView {
         }
         fun(tx)(fu)
       }}
+
+    /** The children of the folder. This variable _must only be accessed or updated_ on the event thread. */
+    var children: IIdxSeq[ElementView[S]]
+
+    def value {}
   }
 
   // -------- Group --------
