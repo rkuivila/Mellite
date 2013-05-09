@@ -12,6 +12,7 @@ import scalaswingcontrib.CellView
 import javax.swing.{event => jse}
 import javax.swing.tree.TreePath
 import de.sciss.treetable.j.event.TreeColumnModelListener
+import java.awt
 
 object TreeTable {
   private trait JTreeTableMixin { def tableWrapper: TreeTable[_, _] }
@@ -36,6 +37,8 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
                                               tableColumnModel0: jtab.TableColumnModel)
   extends Component /* with Scrollable.Wrapper */ with CellView[A] {
 
+  me =>
+
   import TreeTable.{Path, pathToTreePath, treePathToPath}
 
   def this(treeModel0: TreeModel[A], treeColumnModel0: Col) {
@@ -45,10 +48,32 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
   private var _treeModel        = treeModel0
   private var _treeColumnModel  = treeColumnModel0
   private var _tableColumnModel = tableColumnModel0
+  private var _renderer: TreeTableCellRenderer[A] = _
 
   def treeModel: TreeModel[A]                 = _treeModel
   def treeColumnModel: Col                    = _treeColumnModel
   def tableColumnModel: jtab.TableColumnModel = _tableColumnModel
+
+  def renderer = _renderer
+  def renderer_=(r: TreeTableCellRenderer[A]) {
+    val rp = r match {
+      case w: TreeTableCellRenderer.Wrapped[_] => w.peer
+      case _ => new j.TreeTableCellRenderer {
+        def getTreeTableCellRendererComponent(treeTable: j.TreeTable, value: Any, selected: Boolean, hasFocus: Boolean,
+                                              row: Int, column: Int): awt.Component =
+          getTreeTableCellRendererComponent(treeTable, value, selected = selected, hasFocus = hasFocus,
+            row = row, column = column, expanded = false, leaf = false)
+
+        def getTreeTableCellRendererComponent(treeTable: j.TreeTable, value: Any, selected: Boolean, hasFocus: Boolean,
+                                              row: Int, column: Int, expanded: Boolean, leaf: Boolean): awt.Component = {
+          val state = TreeTableCellRenderer.State(selected = selected, focused = hasFocus, expanded = expanded, leaf = leaf)
+          r.getRendererComponent(me, value.asInstanceOf[A], row = row, column = column, state).peer
+        }
+      }
+    }
+    _renderer = r
+    peer.setDefaultRenderer(classOf[AnyRef], rp)
+  }
 
   def editable   = ??? : Boolean      // crap
   def cellValues = ??? : Iterator[A]  // crap
@@ -173,6 +198,8 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
   def showsRootHandles_=(value: Boolean) { peer.setShowsRootHandles(value) }
 
   def expandPath(path: Path[A]) { peer.expandPath(path) }
+
+  def hierarchicalColumn: Int = peer.getHierarchicalColumn
 
   object selection extends CellSelection {
     object paths extends SelectionSet[Path[A]]({

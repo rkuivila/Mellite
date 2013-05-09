@@ -36,6 +36,7 @@ import scalaswingcontrib.event.TreePathSelected
 import de.sciss.lucre.stm.{Cursor, IdentifierMap, Disposable}
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.expr.ExprImplicits
+import de.sciss.mellite.gui.TreeTableCellRenderer.State
 
 object FolderViewImpl {
   private final val DEBUG = false
@@ -267,12 +268,26 @@ object FolderViewImpl {
       }
 
       t = new TreeTable(tm, tcm)
+      t.renderer = new TreeTableCellRenderer[Node] {
+        private val component = TreeTableCellRenderer.Default
+        def getRendererComponent(treeTable: TreeTable[_, _], value: Any, row: Int, column: Int,
+                                 state: State): Component = {
+          component.getRendererComponent(treeTable, value, row = row, column = column, state = state)
+          if (column == 0 && state.leaf) {
+            component.icon = node.icon
+          }
+          component
+        }
+      }
       t.listenTo(t.selection)
       t.reactions += {
         case TreePathSelected(_, _, _,_, _) =>  // this crappy untyped event doesn't help us at all
           dispatch(FolderView.SelectionChanged(view, selection))
       }
       t.showsRootHandles = true
+      //      t.peer.setDefaultRenderer(classOf[String], new TreeTableCellRenderer {
+      //
+      //      })
       // t.renderer  = new Renderer[S]
       // t.editor    = new Editor[S]
       // t.expandAll()
@@ -289,9 +304,9 @@ object FolderViewImpl {
       })(breakOut)
 
     object PathExtrator {
-      def unapply(path: Seq[ElementView[S]]): Option[(IIdxSeq[ElementView.BranchLike[S]], ElementView[S])] =
+      def unapply(path: Seq[Node]): Option[(IIdxSeq[ElementView.BranchLike[S]], ElementView[S])] =
         path match {
-          case init :+ last =>
+          case init :+ (last: ElementView[S]) =>
             val pre: IIdxSeq[ElementView.BranchLike[S]] = init.map({
               case g: ElementView.BranchLike[S] => g
               case _ => return None

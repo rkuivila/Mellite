@@ -38,7 +38,7 @@ import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.expr.LinkedList
 import java.io.File
 import java.awt.Toolkit
-import javax.swing.ImageIcon
+import javax.swing.{Icon, ImageIcon}
 
 object ElementView {
   import java.lang.{String => _String}
@@ -102,6 +102,7 @@ object ElementView {
         Comp
       }
       def prefix = "String"
+      def icon = String.icon
     }
   }
   sealed trait String[S <: Sys[S]] extends ElementView[S] {
@@ -138,6 +139,7 @@ object ElementView {
         Comp
       }
       def prefix = "Int"
+      def icon = Int.icon
     }
   }
   sealed trait Int[S <: Sys[S]] extends ElementView[S] {
@@ -174,6 +176,7 @@ object ElementView {
         Comp
       }
       def prefix = "Double"
+      def icon = Double.icon
     }
   }
   sealed trait Double[S <: Sys[S]] extends ElementView[S] {
@@ -234,6 +237,7 @@ object ElementView {
       def folder(implicit tx: S#Tx): _Folder[S] = element().entity
 
       def prefix = "Group"
+      def icon = Swing.EmptyIcon
     }
   }
   sealed trait Folder[S <: Sys[S]] extends FolderLike[S] with ElementView[S] /* Branch[S] */ {
@@ -262,6 +266,7 @@ object ElementView {
       }
       def prefix = "ProcGroup"
       def value {}
+      def icon = Swing.EmptyIcon
     }
   }
   sealed trait ProcGroup[S <: Sys[S]] extends ElementView[S] {
@@ -298,6 +303,7 @@ object ElementView {
         Comp
       }
       def prefix = "String"
+      def icon = AudioGrapheme.icon
     }
   }
   sealed trait AudioGrapheme[S <: Sys[S]] extends ElementView[S] {
@@ -336,6 +342,7 @@ object ElementView {
       }
       def prefix = "ArtifactStore"
       def value = directory
+      def icon = ArtifactLocation.icon
     }
   }
   sealed trait ArtifactLocation[S <: Sys[S]] extends ElementView[S] {
@@ -363,6 +370,7 @@ object ElementView {
       def folder(implicit tx: S#Tx): _Folder[S] = handle()
       def name = "root"
       def parent: Option[FolderLike[S]] = None
+      def icon = Swing.EmptyIcon
     }
   }
   sealed trait Root[S <: Sys[S]] extends FolderLike[S]
@@ -380,6 +388,7 @@ object ElementView {
     def name: _String
     def parent: Option[ElementView.FolderLike[S]]
     def value: Any
+    def icon: Icon
   }
 }
 sealed trait ElementView[S <: Sys[S]] extends ElementView.Renderer[S] {
