@@ -30,11 +30,11 @@ import de.sciss.synth.proc.Sys
 import swing.Component
 import impl.{FolderViewImpl => Impl}
 import collection.immutable.{IndexedSeq => IIdxSeq}
-import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.stm.{Cursor, Disposable}
 import de.sciss.model.Model
 
 object FolderView {
-  def apply[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx): FolderView[S] = Impl(root)
+  def apply[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = Impl(root)
 
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.

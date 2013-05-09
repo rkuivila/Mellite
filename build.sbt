@@ -17,7 +17,8 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "scalacolliderswing" % "1.7.+",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.+",
   "de.sciss" %% "desktop"            % "0.3.+",
-  "de.sciss" %% "sonogramoverview"   % "1.6.1+"
+  "de.sciss" %% "sonogramoverview"   % "1.6.1+",
+  "de.sciss" %  "jtreetable"         % "1.1.+"
 )
 
 retrieveManaged := true

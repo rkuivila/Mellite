@@ -45,29 +45,31 @@ object ElementView {
   import scala.{Int => _Int, Double => _Double}
   import mellite.{Folder => _Folder}
 
-  private[gui] def apply[S <: Sys[S]](element: Element[S])(implicit tx: S#Tx): ElementView[S] = {
+  private[gui] def apply[S <: Sys[S]](parent: FolderLike[S], element: Element[S])
+                                     (implicit tx: S#Tx): ElementView[S] = {
     val name = element.name.value
     element match {
       case e: Element.Int[S] =>
         val value = e.entity.value
-        new Int.Impl(tx.newHandle(e), name, value)
+        new Int.Impl(parent, tx.newHandle(e), name, value)
       case e: Element.Double[S] =>
         val value = e.entity.value
-        new Double.Impl(tx.newHandle(e), name, value)
+        new Double.Impl(parent, tx.newHandle(e), name, value)
       case e: Element.String[S] =>
         val value = e.entity.value
-        new String.Impl(tx.newHandle(e), name, value)
+        new String.Impl(parent, tx.newHandle(e), name, value)
       case e: Element.Folder[S] =>
-        val children = e.entity.iterator.map(apply(_)(tx)).toIndexedSeq
-        new Folder.Impl(tx.newHandle(e), name, children)
+        val res = new Folder.Impl(parent, tx.newHandle(e), name)
+        res.children = e.entity.iterator.map(apply(res, _)(tx)).toIndexedSeq
+        res
       case e: Element.ProcGroup[S] =>
-        new ProcGroup.Impl(tx.newHandle(e), name)
+        new ProcGroup.Impl(parent, tx.newHandle(e), name)
       case e: Element.AudioGrapheme[S] =>
         val value = e.entity.value
-        new AudioGrapheme.Impl(tx.newHandle(e), name, value)
+        new AudioGrapheme.Impl(parent, tx.newHandle(e), name, value)
       case e: Element.ArtifactLocation[S] =>
         val value = e.entity.directory
-        new ArtifactLocation.Impl(tx.newHandle(e), name, value)
+        new ArtifactLocation.Impl(parent, tx.newHandle(e), name, value)
     }
   }
 
@@ -89,7 +91,8 @@ object ElementView {
       contents += Component.wrap(value)
     }
 
-    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.String[S]],
+    private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
+                                                       val element: stm.Source[S#Tx, Element.String[S]],
                                                        var name: _String, var value: _String)
       extends String[S] with ElementView.Impl[S] {
 
@@ -124,8 +127,9 @@ object ElementView {
       contents += Component.wrap(value)
     }
 
-    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Int[S]],
-                                                      var name: _String, var value: _Int)
+    private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
+                                                       val element: stm.Source[S#Tx, Element.Int[S]],
+                                                       var name: _String, var value: _Int)
       extends Int[S] with ElementView.Impl[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
@@ -159,7 +163,8 @@ object ElementView {
       contents += Component.wrap(value)
     }
 
-    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Double[S]],
+    private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
+                                                       val element: stm.Source[S#Tx, Element.Double[S]],
                                                        var name: _String, var value: _Double)
       extends Double[S] with ElementView.Impl[S] {
 
@@ -177,16 +182,18 @@ object ElementView {
 
   // -------- FolderLike --------
 
-  sealed trait BranchLike[S <: Sys[S]] extends Renderer {
+  sealed trait BranchLike[S <: Sys[S]] extends Renderer[S] {
     def branchID(implicit tx: S#Tx): S#ID
 
     def react(fun: S#Tx => _Folder.Update[S] => Unit)(implicit tx: S#Tx): Disposable[S#Tx]
 
     /** The children of the folder. This variable _must only be accessed or updated_ on the event thread. */
     var children: IIdxSeq[ElementView[S]]
+
+    def value {}
   }
 
-  sealed trait Branch[S <: Sys[S]] extends BranchLike[S] with ElementView[S]
+  // sealed trait Branch[S <: Sys[S]] extends BranchLike[S] with ElementView[S]
 
   sealed trait FolderLike[S <: Sys[S]] extends BranchLike[S] {
     def branchID(implicit tx: S#Tx) = folder.id
@@ -210,9 +217,12 @@ object ElementView {
     private final val cmpGroupJ = new DefaultTreeCellRenderer
     private final val cmpGroup  = Component.wrap(cmpGroupJ)
 
-    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.Folder[S]],
-                                                       var name: _String, var children: IIdxSeq[ElementView[S]])
+    private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
+                                                       val element: stm.Source[S#Tx, Element.Folder[S]],
+                                                       var name: _String)
       extends Folder[S] with ElementView.Impl[S] {
+
+      var children = IIdxSeq.empty[ElementView[S]]
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
         // never show the leaf icon, always a folder icon. for empty folders, show the icon as if the folder is open
@@ -226,7 +236,7 @@ object ElementView {
       def prefix = "Group"
     }
   }
-  sealed trait Folder[S <: Sys[S]] extends FolderLike[S] with Branch[S] {
+  sealed trait Folder[S <: Sys[S]] extends FolderLike[S] with ElementView[S] /* Branch[S] */ {
     def element: stm.Source[S#Tx, Element.Folder[S]]
   }
 
@@ -241,7 +251,8 @@ object ElementView {
     cmpLabelJ.setLeafIcon(icon)
     private final val cmpLabel  = Component.wrap(cmpLabelJ)
 
-    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.ProcGroup[S]],
+    private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
+                                                       val element: stm.Source[S#Tx, Element.ProcGroup[S]],
                                                        var name: _String)
       extends ProcGroup[S] with ElementView.Impl[S] {
 
@@ -250,6 +261,7 @@ object ElementView {
         cmpLabel
       }
       def prefix = "ProcGroup"
+      def value {}
     }
   }
   sealed trait ProcGroup[S <: Sys[S]] extends ElementView[S] {
@@ -274,7 +286,8 @@ object ElementView {
       contents += Component.wrap(value)
     }
 
-    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.AudioGrapheme[S]],
+    private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
+                                                       val element: stm.Source[S#Tx, Element.AudioGrapheme[S]],
                                                        var name: _String, var value: Grapheme.Value.Audio)
       extends AudioGrapheme[S] with ElementView.Impl[S] {
 
@@ -310,17 +323,19 @@ object ElementView {
       contents += Component.wrap(value)
     }
 
-    private[ElementView] final class Impl[S <: Sys[S]](val element: stm.Source[S#Tx, Element.ArtifactLocation[S]],
+    private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
+                                                       val element: stm.Source[S#Tx, Element.ArtifactLocation[S]],
                                                        var name: _String, var directory: File)
       extends ArtifactLocation[S] with ElementView.Impl[S] {
 
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
         Comp.key.getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
-        val spec = directory.toString
-        Comp.value.getTreeCellRendererComponent(tree.peer, spec, info.isSelected, false, true, info.row, info.hasFocus)
+        val value = directory.toString
+        Comp.value.getTreeCellRendererComponent(tree.peer, value, info.isSelected, false, true, info.row, info.hasFocus)
         Comp
       }
       def prefix = "ArtifactStore"
+      def value = directory
     }
   }
   sealed trait ArtifactLocation[S <: Sys[S]] extends ElementView[S] {
@@ -334,16 +349,20 @@ object ElementView {
     private final val cmpBlank = new Label
 
     private[gui] def apply[S <: Sys[S]](folder: _Folder[S])(implicit tx: S#Tx): Root[S] = {
-      val children = folder.iterator.map(ElementView(_)(tx)).toIndexedSeq
       import _Folder.serializer
-      new Impl(tx.newHandle(folder), children)
+      val res = new Impl(tx.newHandle(folder))
+      res.children = folder.iterator.map(ElementView(res, _)(tx)).toIndexedSeq
+      res
     }
 
-    private final class Impl[S <: Sys[S]](handle: stm.Source[S#Tx, _Folder[S]],
-                                          var children: IIdxSeq[ElementView[S]])
+    private final class Impl[S <: Sys[S]](handle: stm.Source[S#Tx, _Folder[S]])
       extends Root[S] {
+
+      var children = IIdxSeq.empty[ElementView[S]]
       def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank
       def folder(implicit tx: S#Tx): _Folder[S] = handle()
+      def name = "root"
+      def parent: Option[FolderLike[S]] = None
     }
   }
   sealed trait Root[S <: Sys[S]] extends FolderLike[S]
@@ -351,13 +370,20 @@ object ElementView {
   private sealed trait Impl[S <: Sys[S]] extends ElementView[S] {
     protected def prefix: _String
     override def toString = s"ElementView.$prefix(name = $name)"
+    protected def _parent: FolderLike[S]
+
+    def parent: Option[FolderLike[S]] = Some(_parent)
   }
 
-  sealed trait Renderer {
+  sealed trait Renderer[S <: Sys[S]] {
     private[gui] def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component
+    def name: _String
+    def parent: Option[ElementView.FolderLike[S]]
+    def value: Any
   }
 }
-sealed trait ElementView[S <: Sys[S]] extends ElementView.Renderer {
+sealed trait ElementView[S <: Sys[S]] extends ElementView.Renderer[S] {
   def element: stm.Source[S#Tx, Element[S]]
-  def name: String
+  // def name: String
+  // def parent: Option[ElementView.FolderLike[S]]
 }
