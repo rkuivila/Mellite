@@ -32,7 +32,7 @@ import swing.{ScrollPane, Component}
 import collection.breakOut
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import scalaswingcontrib.tree.Tree
-import de.sciss.lucre.stm.{Cursor, IdentifierMap, Disposable}
+import de.sciss.lucre.stm.{Cursor, IdentifierMap}
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.mellite.gui.TreeTableCellRenderer.{State, TreeState}

@@ -1,5 +1,5 @@
 /*
- *  DocumentFrameImpl.scala
+ *  DocumentElementsFrameImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -44,8 +44,8 @@ import synth.swing.j.JServerStatusPanel
 import javax.swing.{JSpinner, SpinnerNumberModel}
 import scala.Some
 
-object DocumentFrameImpl {
-  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = {
+object DocumentElementsFrameImpl {
+  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentElementsFrame[S] = {
     implicit val csr  = doc.cursor
     val folderView    = FolderView(doc.elements)
     val view          = new Impl(doc, folderView)
@@ -67,7 +67,7 @@ object DocumentFrameImpl {
   }
 
   private final class Impl[S <: Sys[S]](val document: Document[S], folderView: FolderView[S])
-    extends DocumentFrame[S] with ComponentHolder[Window] with CursorHolder[S] {
+    extends DocumentElementsFrame[S] with ComponentHolder[Window] with CursorHolder[S] {
 
     protected implicit def cursor: Cursor[S] = document.cursor
 

@@ -46,11 +46,12 @@ object ActionOpenFile extends Action( "Open...") {
 
   private def initDoc[S <: Sys[S]](doc: Document[S]) {
     doc.cursor.step { implicit tx =>
-      DocumentFrame(doc)
+      DocumentElementsFrame(doc)
     }
   }
 
-  def recentMenu: Menu.Group = _recent.menu
+  def recentFiles: RecentFiles  = _recent
+  def recentMenu : Menu.Group   = _recent.menu
 
   def apply() {
     val dlg = FileDialog.open(title = fullTitle)
@@ -61,13 +62,13 @@ object ActionOpenFile extends Action( "Open...") {
   def perform(folder: File) {
     try {
       val doc = Document.read(folder)
-      _recent.add(folder)
+      recentFiles.add(folder)
       initDoc(doc)
     } catch {
       case NonFatal(e) =>
         Dialog.showMessage(
-          message = "Unabled to create new document " + folder.getPath + "\n\n" + formatException(e),
-          title = fullTitle,
+          message     = "Unabled to create new document " + folder.getPath + "\n\n" + formatException(e),
+          title       = fullTitle,
           messageType = Dialog.Message.Error
         )
     }

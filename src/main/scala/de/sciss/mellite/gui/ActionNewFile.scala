@@ -50,7 +50,7 @@ object ActionNewFile extends Action( "New...") {
 
   private def initDoc[S <: Sys[S]](doc: Document[S]) {
     doc.cursor.step { implicit tx =>
-      DocumentFrame(doc)
+      DocumentElementsFrame(doc)
     }
   }
 
@@ -79,6 +79,7 @@ object ActionNewFile extends Action( "New...") {
       try {
         val doc = Document.empty(folder)
         // XXX TODO: SetFile -a E <folder>
+        ActionOpenFile.recentFiles.add(folder)
         initDoc(doc)
       } catch {
         case NonFatal(e) =>

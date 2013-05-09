@@ -1,5 +1,5 @@
 /*
- *  DocumentFrame.scala
+ *  DocumentElementsFrame.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -26,15 +26,15 @@
 package de.sciss.mellite
 package gui
 
-import impl.{DocumentFrameImpl => Impl}
+import impl.{DocumentElementsFrameImpl => Impl}
 import de.sciss.synth.proc.Sys
 import de.sciss.desktop.Window
 
-object DocumentFrame {
-  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentFrame[S] = Impl(doc)
+object DocumentElementsFrame {
+  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentElementsFrame[S] = Impl(doc)
 }
 
-trait DocumentFrame[S <: Sys[S]] {
+trait DocumentElementsFrame[S <: Sys[S]] {
   def component: Window
   def document : Document[S]
 }

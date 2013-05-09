@@ -28,12 +28,13 @@ package gui
 package impl
 
 import de.sciss.lucre.stm.Cursor
-import swing.{Orientation, BoxPanel, Component}
+import scala.swing.{Swing, Orientation, BoxPanel, Component}
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.audiowidgets.{Transport => GUITransport, LCDPanel}
-import de.sciss.synth.proc.{Sys, Transport}
+import de.sciss.synth.proc.Sys
 import java.awt.event.{ActionEvent, ActionListener}
 import javax.swing.event.{ChangeEvent, ChangeListener}
+import Swing._
 
 object TransportPanelImpl {
    def apply[ S <: Sys[ S ]]( transport: Document.Transport[ S ])
@@ -236,7 +237,7 @@ object TransportPanelImpl {
 
          val pAll = new BoxPanel( Orientation.Horizontal ) {
             contents += strip
-            contents += Strut.horizontal( 8 )
+            contents += HStrut(8)
             contents += pTime
 //            contents += new BorderPanel {
 ////               contents += Component.wrap( Box.createVerticalGlue() )
