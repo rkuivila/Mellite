@@ -133,8 +133,11 @@ object FolderViewImpl {
         if (DEBUG) println(s"model.remove($parent, $idx)")
         require(idx >= 0 && idx < g.children.size)
         val v       = g.children(idx)
-        g.children  = g.children.patch(idx, Vector.empty, 1)
+        // this is frickin insane. the tree UI still accesses the model based on the previous assumption
+        // about the number of children, it seems. therefore, we must not update children before
+        // returning from fireNodesRemoved.
         fireNodesRemoved(v)
+        g.children  = g.children.patch(idx, Vector.empty, 1)
       }
     }
 
@@ -265,7 +268,10 @@ object FolderViewImpl {
 
       val colValue = new TreeColumnModel.Column[Node, Any]("Value") {
         def apply(node: Node): Any = node.value
-        def update(node: Node, value: Any) {}
+        def update(node: Node, value: Any) {
+          // println(s"update $node with $value of class ${value.getClass}")
+          cursor.step { implicit tx => node.tryUpdate(value) }
+        }
         def isEditable(node: Node) = node match {
           case b: ElementView.FolderLike[S] => false
           case _ => true
@@ -300,8 +306,10 @@ object FolderViewImpl {
       }
       t.listenTo(t.selection)
       t.reactions += {
-        case TreePathSelected(_, _, _,_, _) =>  // this crappy untyped event doesn't help us at all
+        case e: TreeTableSelectionChanged[_, _] =>  // this crappy untyped event doesn't help us at all
+          // println(s"selection: $e")
           dispatch(FolderView.SelectionChanged(view, selection))
+        // case e => println(s"other: $e")
       }
       t.showsRootHandles = true
       //      t.peer.setDefaultRenderer(classOf[String], new TreeTableCellRenderer {

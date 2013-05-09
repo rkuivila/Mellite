@@ -35,7 +35,7 @@ trait AbstractTreeModel[A] extends TreeModel[A] {
     fire(nodes)(TreeStructureChanged[A])
   }
 
-  private def fire(nodes: Seq[A])(fun: (TreeModel[A], Path[A], Seq[(Int, A)]) => TreeEvent[A]) {
+  private def fire(nodes: Seq[A])(fun: (TreeModel[A], Path[A], Seq[(Int, A)]) => TreeModelEvent[A]) {
     var pred  = Map.empty[A, Path[A]]
     var paths = Map.empty[Path[A], IIdxSeq[(Int, A)]] withDefaultValue Vector.empty
     nodes.foreach { n =>

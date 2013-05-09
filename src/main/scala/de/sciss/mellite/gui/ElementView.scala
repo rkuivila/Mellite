@@ -39,6 +39,8 @@ import de.sciss.lucre.expr.LinkedList
 import java.io.File
 import java.awt.Toolkit
 import javax.swing.{Icon, ImageIcon}
+import de.sciss.synth.expr.ExprImplicits
+import scala.util.Try
 
 object ElementView {
   import java.lang.{String => _String}
@@ -103,6 +105,15 @@ object ElementView {
       }
       def prefix = "String"
       def icon = String.icon
+
+      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = value match {
+        case s: _String =>
+          val imp = ExprImplicits[S]
+          import imp._
+          element().entity() = s
+          true
+        case _ => false
+      }
     }
   }
   sealed trait String[S <: Sys[S]] extends ElementView[S] {
@@ -140,6 +151,23 @@ object ElementView {
       }
       def prefix = "Int"
       def icon = Int.icon
+
+      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = {
+        val numOpt = value match {
+          case num: _Int  => Some(num)
+          case s: _String => Try(s.toInt).toOption
+        }
+        numOpt.map { num =>
+          val expr    = element().entity
+          val changed = expr.value != num
+          if (changed) {
+            val imp = ExprImplicits[S]
+            import imp._
+            expr() = num
+          }
+          changed
+        } .getOrElse(false)
+      }
     }
   }
   sealed trait Int[S <: Sys[S]] extends ElementView[S] {
@@ -177,6 +205,23 @@ object ElementView {
       }
       def prefix = "Double"
       def icon = Double.icon
+
+      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = {
+        val numOpt = value match {
+          case num: _Double => Some(num)
+          case s: _String => Try(s.toDouble).toOption
+        }
+        numOpt.map { num =>
+          val expr = element().entity
+          val changed = expr.value != num
+          if (changed) {
+            val imp = ExprImplicits[S]
+            import imp._
+            expr() = num
+          }
+          changed
+        } .getOrElse(false)
+      }
     }
   }
   sealed trait Double[S <: Sys[S]] extends ElementView[S] {
@@ -243,6 +288,8 @@ object ElementView {
 
       def prefix = "Group"
       def icon = Swing.EmptyIcon
+
+      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = false
     }
   }
   sealed trait Folder[S <: Sys[S]] extends FolderLike[S] with ElementView[S] /* Branch[S] */ {
@@ -271,7 +318,9 @@ object ElementView {
       }
       def prefix = "ProcGroup"
       def value {}
-      def icon = Swing.EmptyIcon
+      def icon = ProcGroup.icon
+
+      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = false
     }
   }
   sealed trait ProcGroup[S <: Sys[S]] extends ElementView[S] {
@@ -309,6 +358,8 @@ object ElementView {
       }
       def prefix = "String"
       def icon = AudioGrapheme.icon
+
+      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = false
     }
   }
   sealed trait AudioGrapheme[S <: Sys[S]] extends ElementView[S] {
@@ -348,6 +399,8 @@ object ElementView {
       def prefix = "ArtifactStore"
       def value = directory
       def icon = ArtifactLocation.icon
+
+      def tryUpdate(value: Any)(implicit tx: S#Tx) = false
     }
   }
   sealed trait ArtifactLocation[S <: Sys[S]] extends ElementView[S] {
@@ -376,6 +429,8 @@ object ElementView {
       def name = "root"
       def parent: Option[FolderLike[S]] = None
       def icon = Swing.EmptyIcon
+
+      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = false
     }
   }
   sealed trait Root[S <: Sys[S]] extends FolderLike[S]
@@ -393,6 +448,7 @@ object ElementView {
     def name: _String
     def parent: Option[ElementView.FolderLike[S]]
     def value: Any
+    def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean
     def icon: Icon
   }
 }

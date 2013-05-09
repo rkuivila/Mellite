@@ -4,7 +4,7 @@ import javax.swing.{event => jse}
 import scala.swing.event.Event
 import collection.breakOut
 
-sealed trait TreeEvent[A] extends Event {
+sealed trait TreeModelEvent[A] extends Event {
   def model: TreeModel[A]
   def parentPath: TreeTable.Path[A]
   def children: Seq[(Int, A)]
@@ -19,13 +19,13 @@ sealed trait TreeEvent[A] extends Event {
 }
 
 final case class TreeNodesChanged[A](model: TreeModel[A], parentPath: TreeTable.Path[A], children: (Int, A)*)
-  extends TreeEvent[A]
+  extends TreeModelEvent[A]
 
 final case class TreeNodesInserted[A](model: TreeModel[A], parentPath: TreeTable.Path[A], children: (Int, A)*)
-  extends TreeEvent[A]
+  extends TreeModelEvent[A]
 
 final case class TreeNodesRemoved[A](model: TreeModel[A], parentPath: TreeTable.Path[A], children: (Int, A)*)
-  extends TreeEvent[A]
+  extends TreeModelEvent[A]
 
 final case class TreeStructureChanged[A](model: TreeModel[A], parentPath: TreeTable.Path[A], children: (Int, A)*)
-  extends TreeEvent[A]
+  extends TreeModelEvent[A]

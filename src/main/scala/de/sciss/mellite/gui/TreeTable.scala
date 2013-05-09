@@ -2,17 +2,18 @@ package de.sciss
 package mellite
 package gui
 
-import scala.swing.{Reactions, Component}
+import scala.swing.{Publisher, Reactions, Component}
 import de.sciss.treetable.j
 import javax.swing.{table => jtab}
 import javax.swing.{tree => jtree}
 import collection.breakOut
 import language.implicitConversions
-import scalaswingcontrib.CellView
 import javax.swing.{event => jse}
 import javax.swing.tree.TreePath
 import de.sciss.treetable.j.event.TreeColumnModelListener
 import java.awt
+import scala.collection.mutable
+import javax.swing.event.{TreeSelectionEvent, ListSelectionListener}
 
 object TreeTable {
   private trait JTreeTableMixin { def tableWrapper: TreeTable[_, _] }
@@ -35,7 +36,7 @@ object TreeTable {
 }
 class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColumnModel0: Col,
                                               tableColumnModel0: jtab.TableColumnModel)
-  extends Component /* with Scrollable.Wrapper */ with CellView[A] {
+  extends Component /* with Scrollable.Wrapper */ {
 
   me =>
 
@@ -77,8 +78,8 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
     peer.setDefaultRenderer(classOf[AnyRef], rp)
   }
 
-  def editable: Boolean = ??? : Boolean   // crap
-  def cellValues: Iterator[A] = ???       // crap
+  // def editable: Boolean = ...
+  // def cellValues: Iterator[A] = ...
 
   private def wrapTreeModel(_peer: TreeModel[A]): jtree.TreeModel = new {
     val peer = _peer
@@ -206,9 +207,18 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
 
   def hierarchicalColumn: Int = peer.getHierarchicalColumn
 
+  // def apply(row: Int, column: Int): Any = peer.getValueAt(row, column)
   def getNode(row: Int): A = peer.getNode(row).asInstanceOf[A]
 
-  object selection extends CellSelection {
+  object selection extends Publisher {
+    protected abstract class SelectionSet[B](a: => Seq[B]) extends mutable.Set[B] {
+      def -=(n: B): this.type
+      def +=(n: B): this.type
+      def contains(n: B) = a.contains(n)
+      override def size = a.length
+      def iterator = a.iterator
+    }
+
     object paths extends SelectionSet[Path[A]]({
       val p = peer.getSelectionPaths
       if (p == null) Seq.empty else p.map(treePathToPath)(breakOut)
@@ -218,11 +228,24 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
       def --=(ps: Seq[Path[A]]) = { peer.removeSelectionPaths(ps.map(pathToTreePath).toArray); this }
       def ++=(ps: Seq[Path[A]]) = { peer.addSelectionPaths(ps.map(pathToTreePath).toArray); this }
       def leadSelection: Option[Path[A]] = Option(peer.getLeadSelectionPath)
+
+      override def size = peer.getSelectionCount
     }
 
-    def cellValues: Iterator[A] = ???
+    peer.getSelectionModel.addTreeSelectionListener(new jse.TreeSelectionListener {
+      def valueChanged(e: jse.TreeSelectionEvent) {
+        val (pathsAdded, pathsRemoved) = e.getPaths.toVector.partition(e.isAddedPath)
 
-    def isEmpty = size == 0
-    def size = peer.getSelectionCount
+        publish(new TreeTableSelectionChanged(me,
+                pathsAdded   map treePathToPath,
+                pathsRemoved map treePathToPath,
+                Option(e.getNewLeadSelectionPath: Path[A]),
+                Option(e.getOldLeadSelectionPath: Path[A])))
+      }
+    })
+
+    // def cellValues: Iterator[A] = ...
+
+    // def isEmpty = size == 0
   }
 }
