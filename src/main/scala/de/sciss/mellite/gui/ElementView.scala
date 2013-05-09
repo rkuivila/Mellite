@@ -27,7 +27,7 @@ package de.sciss
 package mellite
 package gui
 
-import synth.proc.{Grapheme, Sys}
+import de.sciss.synth.proc.{Artifact, Grapheme, Sys}
 import lucre.stm
 import scalaswingcontrib.tree.Tree
 import swing.{Label, Swing, BoxPanel, Orientation, Component}
@@ -41,6 +41,7 @@ import java.awt.Toolkit
 import javax.swing.{Icon, ImageIcon}
 import de.sciss.synth.expr.ExprImplicits
 import scala.util.Try
+import de.sciss.lucre.event.Change
 
 object ElementView {
   import java.lang.{String => _String}
@@ -62,7 +63,7 @@ object ElementView {
         new String.Impl(parent, tx.newHandle(e), name, value)
       case e: Element.Folder[S] =>
         val res = new Folder.Impl(parent, tx.newHandle(e), name)
-        res.children = e.entity.iterator.map(apply(res, _)(tx)).toIndexedSeq
+        // res.children = e.entity.iterator.map(apply(res, _)(tx)).toIndexedSeq
         res
       case e: Element.ProcGroup[S] =>
         new ProcGroup.Impl(parent, tx.newHandle(e), name)
@@ -111,6 +112,13 @@ object ElementView {
           val imp = ExprImplicits[S]
           import imp._
           element().entity() = s
+          true
+        case _ => false
+      }
+
+      def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
+        case Change(_, now: _String) =>
+          guiFromTx(value = now)
           true
         case _ => false
       }
@@ -168,6 +176,13 @@ object ElementView {
           changed
         } .getOrElse(false)
       }
+
+      def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
+        case Change(_, now: _Int) =>
+          guiFromTx(value = now)
+          true
+        case _ => false
+      }
     }
   }
   sealed trait Int[S <: Sys[S]] extends ElementView[S] {
@@ -222,6 +237,13 @@ object ElementView {
           changed
         } .getOrElse(false)
       }
+
+      def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
+        case Change(_, now: _Double) =>
+          guiFromTx(value = now)
+          true
+        case _ => false
+      }
     }
   }
   sealed trait Double[S <: Sys[S]] extends ElementView[S] {
@@ -248,15 +270,24 @@ object ElementView {
 
     def folder(implicit tx: S#Tx): _Folder[S]
 
-    def react(fun: S#Tx => _Folder.Update[S] => Unit)(implicit tx: S#Tx): Disposable[S#Tx] =
-      folder.changed.react { implicit tx => upd => {
-        val fu = upd.changes.map {
-          case LinkedList.Added  (idx, elem)  => _Folder.Added  (idx, elem)
-          case LinkedList.Removed(idx, elem)  => _Folder.Removed(idx, elem)
-          case LinkedList.Element(elem, eu)   => _Folder.Element(elem, eu)
-        }
-        fun(tx)(fu)
-      }}
+    def tryConvert(upd: Any): _Folder.Update[S] = upd match {
+      case ll: LinkedList.Update[_, _, _] =>
+        convert(ll.asInstanceOf[LinkedList.Update[S, Element[S], Element.Update[S]]])
+      case _ => Vector.empty
+    }
+
+    def convert(upd: LinkedList.Update[S, Element[S], Element.Update[S]]): _Folder.Update[S] =
+      upd.changes.map {
+        case LinkedList.Added  (idx, elem)  => _Folder.Added  (idx, elem)
+        case LinkedList.Removed(idx, elem)  => _Folder.Removed(idx, elem)
+        case LinkedList.Element(elem, eu)   => _Folder.Element(elem, eu)
+      }
+
+    //    def react(fun: S#Tx => _Folder.Update[S] => Unit)(implicit tx: S#Tx): Disposable[S#Tx] =
+    //      folder.changed.react { implicit tx => upd => {
+    //        val fu = convert(upd)
+    //        fun(tx)(fu)
+    //      }}
 
     /** The children of the folder. This variable _must only be accessed or updated_ on the event thread. */
     var children: IIdxSeq[ElementView[S]]
@@ -289,7 +320,8 @@ object ElementView {
       def prefix = "Group"
       def icon = Swing.EmptyIcon
 
-      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): Boolean = false
+      def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = false  // element addition and removal is handled by folder view
     }
   }
   sealed trait Folder[S <: Sys[S]] extends FolderLike[S] with ElementView[S] /* Branch[S] */ {
@@ -320,7 +352,8 @@ object ElementView {
       def value {}
       def icon = ProcGroup.icon
 
-      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): Boolean = false
+      def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = false
     }
   }
   sealed trait ProcGroup[S <: Sys[S]] extends ElementView[S] {
@@ -359,7 +392,14 @@ object ElementView {
       def prefix = "String"
       def icon = AudioGrapheme.icon
 
-      def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): Boolean = false
+
+      def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
+        case Change(_, now: Grapheme.Value.Audio) =>
+          guiFromTx(value = now)
+          true
+        case _ => false
+      }
     }
   }
   sealed trait AudioGrapheme[S <: Sys[S]] extends ElementView[S] {
@@ -396,11 +436,18 @@ object ElementView {
         Comp.value.getTreeCellRendererComponent(tree.peer, value, info.isSelected, false, true, info.row, info.hasFocus)
         Comp
       }
-      def prefix = "ArtifactStore"
-      def value = directory
-      def icon = ArtifactLocation.icon
+      def prefix  = "ArtifactStore"
+      def value   = directory
+      def icon    = ArtifactLocation.icon
 
-      def tryUpdate(value: Any)(implicit tx: S#Tx) = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): Boolean = false
+
+      def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
+        case Artifact.Location.Moved(_, Change(_, now)) =>
+          guiFromTx(directory = now)
+          true
+        case _ => false
+      }
     }
   }
   sealed trait ArtifactLocation[S <: Sys[S]] extends ElementView[S] {
@@ -416,7 +463,7 @@ object ElementView {
     private[gui] def apply[S <: Sys[S]](folder: _Folder[S])(implicit tx: S#Tx): Root[S] = {
       import _Folder.serializer
       val res = new Impl(tx.newHandle(folder))
-      res.children = folder.iterator.map(ElementView(res, _)(tx)).toIndexedSeq
+      // res.children = folder.iterator.map(ElementView(res, _)(tx)).toIndexedSeq
       res
     }
 
@@ -454,6 +501,7 @@ object ElementView {
 }
 sealed trait ElementView[S <: Sys[S]] extends ElementView.Renderer[S] {
   def element: stm.Source[S#Tx, Element[S]]
-  // def name: String
+  var name: String
+  def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean
   // def parent: Option[ElementView.FolderLike[S]]
 }

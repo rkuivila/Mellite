@@ -31,34 +31,45 @@ import de.sciss.synth.proc.Sys
 import swing.{ScrollPane, Component}
 import collection.breakOut
 import collection.immutable.{IndexedSeq => IIdxSeq}
-import scalaswingcontrib.tree.{TreeModel, Tree}
-import scalaswingcontrib.event.TreePathSelected
+import scalaswingcontrib.tree.Tree
 import de.sciss.lucre.stm.{Cursor, IdentifierMap, Disposable}
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.mellite.gui.TreeTableCellRenderer.{State, TreeState}
 import scala.util.control.NonFatal
+import de.sciss.lucre.event.Change
 
 object FolderViewImpl {
   private final val DEBUG = false
 
-  private type Path[S <: Sys[S]] = Tree.Path[ElementView.Folder[S]]
-
   def apply[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = {
+    val mapViews  = tx.newInMemoryIDMap[ElementView[S]]  // folder IDs to renderers
     val rootView  = ElementView.Root(root)
-    val map       = tx.newInMemoryIDMap[Disposable[S#Tx]] // folders to observers
-    val view      = new Impl[S](rootView, map)
+    val view      = new Impl[S](rootView, mapViews)
 
-    def loop(parentPath: Tree.Path[ElementView.FolderLike[S]], gl: ElementView.FolderLike[S]) {
-      // val g = gl.folder
-      val path = parentPath :+ gl
-      view.branchAdded(path, gl)
-      gl.children.foreach {
-        case c: ElementView.Folder[S] => loop(path, c)
-        case _ =>
+    type Path     = TreeTable.Path[ElementView.FolderLike[S]]
+
+    def loop(f: Folder[S], fv: ElementView.FolderLike[S]) {
+      val tup = f.iterator.map(c => c -> ElementView(fv, c)(tx)).toIndexedSeq
+      fv.children = tup.map(_._2)
+      tup.foreach { case (c, cv) =>
+        mapViews.put(c.id, cv)
+        (c, cv) match {
+          case (cf: Element.Folder[S], cfv: ElementView.Folder[S]) =>
+            loop(cf.entity, cfv)
+          case _ =>
+        }
       }
     }
-    loop(Tree.Path.empty, rootView)
+    loop(root, rootView)
+
+    // map += root.id ->
+
+    val obs = root.changed.react { implicit tx => upd =>
+      val c = rootView.convert(upd)
+      view.folderUpdated(rootView, c)
+    }
+    // XXX TODO: remember obs for disposal
 
     guiFromTx {
       view.guiInit()
@@ -67,29 +78,30 @@ object FolderViewImpl {
     view
   }
 
-  private final class Renderer[S <: Sys[S]] extends Tree.Renderer[ElementView[S]] {
-    def componentFor(owner: Tree[_], value: ElementView[S], cellInfo: Tree.Renderer.CellInfo): Component = {
-      value.componentFor(owner, cellInfo)
-    }
-  }
-
-  private final class Editor[S <: Sys[S]] extends Tree.Editor[ElementView[S]] {
-    def componentFor(owner: Tree[_], value: ElementView[S], cellInfo: Tree.Editor.CellInfo): Component = {
-      println("---editor---")
-      null
-    }
-
-    def value: ElementView[S] = null
-  }
+  //  private final class Renderer[S <: Sys[S]] extends Tree.Renderer[ElementView[S]] {
+  //    def componentFor(owner: Tree[_], value: ElementView[S], cellInfo: Tree.Renderer.CellInfo): Component = {
+  //      value.componentFor(owner, cellInfo)
+  //    }
+  //  }
+  //
+  //  private final class Editor[S <: Sys[S]] extends Tree.Editor[ElementView[S]] {
+  //    def componentFor(owner: Tree[_], value: ElementView[S], cellInfo: Tree.Editor.CellInfo): Component = {
+  //      println("---editor---")
+  //      null
+  //    }
+  //
+  //    def value: ElementView[S] = null
+  //  }
 
   private final class Impl[S <: Sys[S]](_root: ElementView.Root[S],
-                                        mapBranches: IdentifierMap[S#ID, S#Tx, Disposable[S#Tx]])
+                                        mapViews: IdentifierMap[S#ID, S#Tx, ElementView[S]])
                                        (implicit cursor: Cursor[S])
     extends FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
     type Node   = ElementView.Renderer[S]
     type Branch = ElementView.FolderLike[S]
+    type Path   = TreeTable.Path[Branch]
 
     private class ElementTreeModel extends AbstractTreeModel[Node] {
       lazy val root: Node = _root // ! must be lazy. suckers....
@@ -120,24 +132,28 @@ object FolderViewImpl {
         println(s"valueForPathChanged($path, $newValue)")
       }
 
-      def elemAdded(parent: Tree.Path[ElementView.FolderLike[S]], idx: Int, view: ElementView[S]) {
-        if (DEBUG) println(s"model.insertUnder($parent, $idx, $view)")
-        val g       = parent.last // Option.getOrElse(_root)
+      def elemAdded(parent: ElementView.FolderLike[S], idx: Int, view: ElementView[S]) {
+        if (DEBUG) println(s"model.elemAdded($parent, $idx, $view)")
+        val g       = parent  // Option.getOrElse(_root)
         require(idx >= 0 && idx <= g.children.size)
         g.children  = g.children.patch(idx, Vector(view), 0)
         fireNodesInserted(view)
       }
 
-      def elemRemoved(parent: Tree.Path[ElementView.FolderLike[S]], idx: Int) {
-        val g = parent.last // Option.getOrElse(_root)
-        if (DEBUG) println(s"model.remove($parent, $idx)")
-        require(idx >= 0 && idx < g.children.size)
-        val v       = g.children(idx)
+      def elemRemoved(parent: ElementView.FolderLike[S], idx: Int) {
+        if (DEBUG) println(s"model.elemRemoved($parent, $idx)")
+        require(idx >= 0 && idx < parent.children.size)
+        val v       = parent.children(idx)
         // this is frickin insane. the tree UI still accesses the model based on the previous assumption
         // about the number of children, it seems. therefore, we must not update children before
         // returning from fireNodesRemoved.
         fireNodesRemoved(v)
-        g.children  = g.children.patch(idx, Vector.empty, 1)
+        parent.children  = parent.children.patch(idx, Vector.empty, 1)
+      }
+
+      def elemUpdated(view: ElementView[S]) {
+        if (DEBUG) println(s"model.elemUpdated($view)")
+        fireNodesChanged(view)
       }
     }
 
@@ -147,22 +163,23 @@ object FolderViewImpl {
     // private var t: Tree[ElementView[S]] = _
     private var t: TreeTable[Node, TreeColumnModel[Node]] = _
 
-    def elemAdded(parent: Tree.Path[ElementView.FolderLike[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
-      if (DEBUG) println(s"elemAdded = $parent $idx $elem")
-      val v = ElementView(parent.last, elem)
+    def elemAdded(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+      if (DEBUG) println(s"elemAdded($parent, $idx $elem)")
+      val v = ElementView(parent, elem)
+      mapViews.put(elem.id, v)
 
       guiFromTx {
         _model.elemAdded(parent, idx, v)
       }
 
       (elem, v) match {
-        case (g: Element.Folder[S], gv: ElementView.Folder[S]) =>
-          val cg    = g.entity
-          val path  = parent :+ gv
-          branchAdded(path, gv)
-          if (!cg.isEmpty) {
-            cg.iterator.toList.zipWithIndex.foreach { case (c, ci) =>
-              elemAdded(path, ci, c)
+        case (f: Element.Folder[S], fv: ElementView.Folder[S]) =>
+          val fe    = f.entity
+          // val path  = parent :+ gv
+          // branchAdded(path, gv)
+          if (!fe.isEmpty) {
+            fe.iterator.toList.zipWithIndex.foreach { case (c, ci) =>
+              elemAdded(fv, ci, c)
             }
           }
 
@@ -176,56 +193,92 @@ object FolderViewImpl {
     //      elemViewRemoved(parent, v, elem)
     //    }
 
-    def elemRemoved(parent: Tree.Path[ElementView.FolderLike[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
-      if (DEBUG) println(s"elemViewRemoved = $parent $elem")
-      val v = parent.last.children(idx) // XXX TODO: not good, shouldn't access this potentially outside GUI thread
-      (elem, v) match {
-        case (g: Element.Folder[S], gl: ElementView.Folder[S]) =>
-          mapBranches.get(elem.id).foreach(_.dispose()) // child observer
-          mapBranches.remove(elem.id)
-          val path = parent :+ gl
-          g.entity.iterator.toList.zipWithIndex.reverse.foreach { case (c, ci) =>
-            elemRemoved(path, ci, c)
-          }
+    def elemRemoved(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+      if (DEBUG) println(s"elemRemoved($parent, $idx, $elem)")
+      mapViews.get(elem.id).foreach { v =>
+        (elem, v) match {
+          case (f: Element.Folder[S], fv: ElementView.Folder[S]) =>
+            // val path = parent :+ gl
+            val fe = f.entity
+            if (fe.nonEmpty) fe.iterator.toList.zipWithIndex.reverse.foreach { case (c, ci) =>
+              elemRemoved(fv, ci, c)
+            }
 
-        case _ =>
+          case _ =>
+        }
+
+        mapViews.remove(elem.id)
+
+        guiFromTx {
+          _model.elemRemoved(parent, idx)
+        }
       }
-      // println(s"elemRemoved = $path $idx $elem")
-//      val viewOpt = map.get(elem.id)
-//      if (viewOpt.isDefined) map.remove(elem.id)
-      guiFromTx {
-        _model.elemRemoved(parent, idx)
+    }
+
+    def elemUpdated(elem: Element[S], changes: IIdxSeq[Element.Change[S]])(implicit tx: S#Tx) {
+      val viewOpt = mapViews.get(elem.id)
+      if (viewOpt.isEmpty) {
+        println(s"WARNING: No view for elem $elem")
+      }
+      viewOpt.foreach { v =>
+        changes.foreach {
+          case Element.Renamed(Change(_, newName)) =>
+            guiFromTx {
+              v.name = newName
+              _model.elemUpdated(v)
+            }
+
+          case Element.Entity(ch) =>
+            v match {
+              case fv: ElementView.Folder[S] =>
+                val upd = fv.tryConvert(ch)
+                if (upd.isEmpty) println(s"WARNING: unhandled $elem -> $ch")
+                folderUpdated(fv, upd)
+
+              case _ =>
+                if (v.checkUpdate(ch)) guiFromTx(_model.elemUpdated(v))
+            }
+        }
+      }
+    }
+
+    def folderUpdated(fv: ElementView.FolderLike[S], upd: Folder.Update[S])(implicit tx: S#Tx) {
+      upd.foreach {
+        case Folder.Added  (idx, elem)      => elemAdded  (fv, idx, elem)
+        case Folder.Removed(idx, elem)      => elemRemoved(fv, idx, elem)
+        case Folder.Element(elem, elemUpd)  => elemUpdated(elem, elemUpd.changes)
       }
     }
 
     def dispose()(implicit tx: S#Tx) {
-      val rootPath = Tree.Path(_root)
+      println("WARNING: FolderViewImpl.dispose() - leaving stuff dirty")
+      // val rootPath = Tree.Path(_root)
       // XXX TODO: should not access children potentially outside GUI thread. Use linked list instead
-      _root.children.zipWithIndex.reverse.foreach { case (v, idx) => elemRemoved(rootPath, idx, v.element()) }
-      val r = _root.folder
-      mapBranches.get(r.id).foreach(_.dispose())
-      mapBranches.remove(r.id)
-      mapBranches.dispose()
+      // _root.children.zipWithIndex.reverse.foreach { case (v, idx) => elemRemoved(rootPath, idx, v.element()) }
+      // val r = _root.folder
+      // mapViews.get(r.id).foreach(_.dispose())
+      // mapViews.remove(r.id)
+      mapViews.dispose()
     }
 
-    /** Register a new sub folder for observation.
-      *
-      * @param path     the path up to and including the folder (exception: root is not included)
-      * @param branch   the folder to observe
-      */
-    def branchAdded(path: Tree.Path[ElementView.FolderLike[S]], branch: ElementView.FolderLike[S])(implicit tx: S#Tx) {
-      if (DEBUG) println(s"branchAdded: $path $branch")
-      val obs = branch.react { implicit tx => upd =>
-        // println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
-        upd.foreach {
-          case Folder.Added  (idx, elem)      => elemAdded  (path, idx, elem)
-          case Folder.Removed(idx, elem)      => elemRemoved(path, idx, elem)
-          case Folder.Element(elem, elemUpd)  => // println(s"Warning: FolderView unhandled $upd")
-          // case _ =>
-        }
-      }
-      mapBranches.put(branch.branchID, obs)
-    }
+    //    /** Register a new sub folder for observation.
+    //      *
+    //      * @param path     the path up to and including the folder (exception: root is not included)
+    //      * @param branch   the folder to observe
+    //      */
+    //    def branchAdded(path: Tree.Path[ElementView.FolderLike[S]], branch: ElementView.FolderLike[S])(implicit tx: S#Tx) {
+    //      if (DEBUG) println(s"branchAdded: $path $branch")
+    //      val obs = branch.react { implicit tx => upd =>
+    //        // println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
+    //        upd.foreach {
+    //          case Folder.Added  (idx, elem)      => elemAdded  (path, idx, elem)
+    //          case Folder.Removed(idx, elem)      => elemRemoved(path, idx, elem)
+    //          case Folder.Element(elem, elemUpd)  => // println(s"Warning: FolderView unhandled $upd")
+    //          // case _ =>
+    //        }
+    //      }
+    //      mapBranches.put(branch.branchID, obs)
+    //    }
 
     def component: Component = {
       requireEDT()
