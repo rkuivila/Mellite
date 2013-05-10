@@ -68,7 +68,7 @@ object DocumentElementsFrameImpl {
 
   private final class Impl[S <: Sys[S]](val document: Document[S], folderView: FolderView[S])
                                        (implicit val cursor: stm.Cursor[S], aural: AuralSystem[S])
-    extends DocumentElementsFrame[S] with ComponentHolder[Window] with CursorHolder[S] {
+    extends DocumentElementsFrame[S] with ComponentHolder[Frame[S]] with CursorHolder[S] {
 
     // protected implicit def cursor: Cursor[S] = document.cursor
 
@@ -130,15 +130,6 @@ object DocumentElementsFrameImpl {
         case (_, loc: ElementView.ArtifactLocation[S]) => loc
       }
 
-      // val loc = locOpt.getOrElse(return)  // oppa goto style
-
-      //      val res = Dialog.showInput[String](groupView.component, "Enter initial group name:", "New Proc Group",
-      //        Dialog.Message.Question, initial = "Timeline")
-      //      res.foreach { name =>
-      //        atomic { implicit tx =>
-      //          addElement(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
-      //        }
-      //      }
       val dlg = FileDialog.open(init = locs.headOption.map(_.directory), title = "Add Audio File")
       dlg.setFilter(AudioFile.identify(_).isDefined)
       dlg.show(None).foreach { f =>
@@ -233,7 +224,7 @@ object DocumentElementsFrameImpl {
       val pane = OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,
         messageType = Dialog.Message.Question, focus = Some(ggValue))
       pane.title  = s"New $tpe"
-      val res = frame.show(pane)
+      val res = comp.show(pane)
 
       if (res == Dialog.Result.Ok) {
         // println(s"name = ${ggName.text} ; value = ${ggValue.text}")
@@ -246,7 +237,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    var frame: Frame[S] = _
+    // var frame: Frame[S] = _
     private var serverPane: JServerStatusPanel = _
 
     def setServer(s: Option[Server])(implicit tx: S#Tx) {
@@ -269,7 +260,7 @@ object DocumentElementsFrameImpl {
           .add(Item("string",       Action("String"       )(actionAddString          ())))
           .add(Item("int",          Action("Int"          )(actionAddInt             ())))
           .add(Item("double",       Action("Double"       )(actionAddDouble          ())))
-        val res = pop.create(frame)
+        val res = pop.create(comp)
         res.peer.pack() // so we can read `size` correctly
         res
       }
@@ -348,7 +339,7 @@ object DocumentElementsFrameImpl {
       serverPane = new JServerStatusPanel()
       serverPane.bootAction = Some(() => atomic { implicit tx => aural.start() })
 
-      frame = new Frame(document, new BorderPanel {
+      comp = new Frame(document, new BorderPanel {
         //        add(splitPane, BorderPanel.Position.Center)
         add(folderPanel,                BorderPanel.Position.Center)
         add(Component.wrap(serverPane), BorderPanel.Position.South )
@@ -360,8 +351,6 @@ object DocumentElementsFrameImpl {
           ggDelete.enabled  = sel.nonEmpty
           ggView  .enabled  = sel.nonEmpty
       }
-
-      comp = frame
     }
   }
 
@@ -369,7 +358,7 @@ object DocumentElementsFrameImpl {
     def style       = Window.Regular
     def handler     = Mellite.windowHandler
 
-    title           = /* "Document : " + */ document.folder.getName
+    title           = document.folder.nameWithoutExtension
     file            = Some(document.folder)
     closeOperation  = Window.CloseIgnore
     contents        = _contents

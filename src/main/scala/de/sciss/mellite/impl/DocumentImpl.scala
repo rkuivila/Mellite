@@ -32,6 +32,7 @@ import stm.store.BerkeleyDB
 import stm.Cursor
 import de.sciss.synth.proc.{AuralSystem, Confluent}
 import de.sciss.serial.{DataInput, Serializer, DataOutput}
+import de.sciss.synth.expr.ExprImplicits
 
 object DocumentImpl {
   private type S = Cf
@@ -74,7 +75,11 @@ object DocumentImpl {
       data
 
     } { implicit tx =>
-      Cursors[S, S#D](confluent.Sys.Acc.root[S])
+      val c   = Cursors[S, S#D](confluent.Sys.Acc.root[S])
+      val imp = ExprImplicits[S#D]
+      import imp._
+      c.name_=("master")
+      c
     }
 
     implicit val cfTpe  = reflect.runtime.universe.typeOf[Cf]

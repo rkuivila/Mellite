@@ -78,21 +78,6 @@ object FolderViewImpl {
     view
   }
 
-  //  private final class Renderer[S <: Sys[S]] extends Tree.Renderer[ElementView[S]] {
-  //    def componentFor(owner: Tree[_], value: ElementView[S], cellInfo: Tree.Renderer.CellInfo): Component = {
-  //      value.componentFor(owner, cellInfo)
-  //    }
-  //  }
-  //
-  //  private final class Editor[S <: Sys[S]] extends Tree.Editor[ElementView[S]] {
-  //    def componentFor(owner: Tree[_], value: ElementView[S], cellInfo: Tree.Editor.CellInfo): Component = {
-  //      println("---editor---")
-  //      null
-  //    }
-  //
-  //    def value: ElementView[S] = null
-  //  }
-
   private final class Impl[S <: Sys[S]](_root: ElementView.Root[S],
                                         mapViews: IdentifierMap[S#ID, S#Tx, ElementView[S]])
                                        (implicit cursor: Cursor[S])
@@ -159,8 +144,6 @@ object FolderViewImpl {
 
     @volatile private var comp: Component = _
     private var _model: ElementTreeModel  = _
-    // def model = _model
-    // private var t: Tree[ElementView[S]] = _
     private var t: TreeTable[Node, TreeColumnModel[Node]] = _
 
     def elemAdded(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
@@ -186,12 +169,6 @@ object FolderViewImpl {
         case _ =>
       }
     }
-
-    //    def elemRemoved(parent: Tree.Path[ElementView.FolderLike[S]], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
-    //      if (DEBUG) println(s"elemRemoved = $parent $idx $elem")
-    //      val v = parent.last // Option.getOrElse(_root).children(idx)
-    //      elemViewRemoved(parent, v, elem)
-    //    }
 
     def elemRemoved(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
       if (DEBUG) println(s"elemRemoved($parent, $idx, $elem)")
@@ -261,25 +238,6 @@ object FolderViewImpl {
       mapViews.dispose()
     }
 
-    //    /** Register a new sub folder for observation.
-    //      *
-    //      * @param path     the path up to and including the folder (exception: root is not included)
-    //      * @param branch   the folder to observe
-    //      */
-    //    def branchAdded(path: Tree.Path[ElementView.FolderLike[S]], branch: ElementView.FolderLike[S])(implicit tx: S#Tx) {
-    //      if (DEBUG) println(s"branchAdded: $path $branch")
-    //      val obs = branch.react { implicit tx => upd =>
-    //        // println(s"List update. toSeq = ${upd.list.iterator.toIndexedSeq}")
-    //        upd.foreach {
-    //          case Folder.Added  (idx, elem)      => elemAdded  (path, idx, elem)
-    //          case Folder.Removed(idx, elem)      => elemRemoved(path, idx, elem)
-    //          case Folder.Element(elem, elemUpd)  => // println(s"Warning: FolderView unhandled $upd")
-    //          // case _ =>
-    //        }
-    //      }
-    //      mapBranches.put(branch.branchID, obs)
-    //    }
-
     def component: Component = {
       requireEDT()
       val res = comp
@@ -290,11 +248,6 @@ object FolderViewImpl {
     def guiInit() {
       requireEDT()
       require(comp == null, "Initialization called twice")
-
-      //      _model = new TreeModelImpl[ElementView[S]](root.children, {
-      //        case g: ElementView.FolderLike[S] => g.children
-      //        case _ => Vector.empty
-      //      })
 
       _model = new ElementTreeModel
 
@@ -365,12 +318,6 @@ object FolderViewImpl {
         // case e => println(s"other: $e")
       }
       t.showsRootHandles = true
-      //      t.peer.setDefaultRenderer(classOf[String], new TreeTableCellRenderer {
-      //
-      //      })
-      // t.renderer  = new Renderer[S]
-      // t.editor    = new Editor[S]
-      // t.expandAll()
       t.expandPath(Tree.Path.empty)
 
       val scroll    = new ScrollPane(t)
