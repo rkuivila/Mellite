@@ -49,9 +49,10 @@ object ActionNewFile extends Action( "New...") {
   private def fullTitle = "New Document"
 
   private def initDoc[S <: Sys[S]](doc: Document[S]) {
-    doc.cursor.step { implicit tx =>
-      DocumentElementsFrame(doc)
-    }
+    ???
+    //    doc.masterCursor.step { implicit tx =>
+    //      DocumentElementsFrame(doc)
+    //    }
   }
 
   def apply() {

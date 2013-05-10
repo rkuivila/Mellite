@@ -45,9 +45,10 @@ object ActionOpenFile extends Action( "Open...") {
   private def fullTitle = "Open Document"
 
   private def initDoc[S <: Sys[S]](doc: Document[S]) {
-    doc.cursor.step { implicit tx =>
-      DocumentElementsFrame(doc)
-    }
+    ???
+    //    doc.masterCursor.step { implicit tx =>
+    //      DocumentElementsFrame(doc)
+    //    }
   }
 
   def recentFiles: RecentFiles  = _recent

@@ -29,7 +29,7 @@ package gui
 package impl
 
 import swing.{Swing, TextField, Alignment, Label, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
-import lucre.stm.Cursor
+import lucre.stm
 import synth.proc.{Server, AuralSystem, Grapheme, Artifact, ProcGroup, Sys}
 import Swing._
 import scalaswingcontrib.group.GroupPanel
@@ -42,11 +42,10 @@ import scala.util.control.NonFatal
 import java.io.File
 import synth.swing.j.JServerStatusPanel
 import javax.swing.{JSpinner, SpinnerNumberModel}
-import scala.Some
 
 object DocumentElementsFrameImpl {
-  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentElementsFrame[S] = {
-    implicit val csr  = doc.cursor
+  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): DocumentElementsFrame[S] = {
+    // implicit val csr  = doc.cursor
     val folderView    = FolderView(doc.elements)
     val view          = new Impl(doc, folderView)
     doc.aural.addClient(new AuralSystem.Client[S] {
@@ -67,9 +66,10 @@ object DocumentElementsFrameImpl {
   }
 
   private final class Impl[S <: Sys[S]](val document: Document[S], folderView: FolderView[S])
+                                       (implicit val cursor: stm.Cursor[S])
     extends DocumentElementsFrame[S] with ComponentHolder[Window] with CursorHolder[S] {
 
-    protected implicit def cursor: Cursor[S] = document.cursor
+    // protected implicit def cursor: Cursor[S] = document.cursor
 
     private def addElement(elem: Element[S])(implicit tx: S#Tx) {
       val sel = folderView.selection

@@ -43,7 +43,7 @@ object DocumentImpl {
 
     def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): Data = new Data {
       val elements  = Folder.read[S](in, access)
-      val cursor    = tx.readCursor(in, access)
+      val cursor    = ??? // tx.readCursor(in, access)
     }
   }
 
@@ -61,24 +61,24 @@ object DocumentImpl {
     type S    = Cf
     val fact  = BerkeleyDB.factory(dir, createIfNecessary = create)
     implicit val system: S = Confluent(fact)
-    val (access, (_cursor, aural)) = system.cursorRoot[Data, (Cursor[S], AuralSystem[S])](implicit tx =>
-      new Data {
-        val elements  = Folder[S](tx)
-        val cursor    = tx.newCursor()
-      }
-    )(implicit tx => data => {
-      implicit val cursor = data.cursor
-      cursor -> AuralSystem[S]
-    })
-
-    implicit val cursor = _cursor
-    implicit val cfTpe  = reflect.runtime.universe.typeOf[Cf]
-    new Impl(dir, system, access, aural)
+    //    val (access, (_cursor, aural)) = system.rootWithDurable[Data, (Cursor[S], AuralSystem[S])](implicit tx =>
+    //      new Data {
+    //        val elements  = Folder[S](tx)
+    //        val cursor    = system.newCursor()
+    //      }
+    //    )(implicit tx => data => {
+    //      implicit val cursor = data.cursor
+    //      cursor -> AuralSystem[S]
+    //    })
+    //
+    // implicit val cursor = _cursor
+    // implicit val cfTpe  = reflect.runtime.universe.typeOf[Cf]
+    ??? // new Impl(dir, system, access, aural)
   }
 
   private abstract class Data {
     def elements: Folder[S]
-    def cursor: confluent.Cursor[S]
+    def cursor: confluent.Cursor[S, S#D]
 
     final def write(out: DataOutput) {
       elements.write(out)
@@ -87,7 +87,7 @@ object DocumentImpl {
 
     final def dispose()(implicit tx: S#Tx) {
       elements.dispose()
-      cursor  .dispose()
+      ??? // cursor  .dispose()
     }
   }
 

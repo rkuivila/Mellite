@@ -23,18 +23,19 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
+package de.sciss
+package mellite
 package gui
 
 import impl.{DocumentElementsFrameImpl => Impl}
-import de.sciss.synth.proc.Sys
-import de.sciss.desktop.Window
+import synth.proc.Sys
+import lucre.stm
 
 object DocumentElementsFrame {
-  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx): DocumentElementsFrame[S] = Impl(doc)
+  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): DocumentElementsFrame[S] = Impl(doc)
 }
 
 trait DocumentElementsFrame[S <: Sys[S]] {
-  def component: Window
+  def component: desktop.Window
   def document : Document[S]
 }

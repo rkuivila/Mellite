@@ -69,7 +69,7 @@ object TimelineViewImpl {
   }
 
   def apply[S <: Sys[S]](document: Document[S], element: Element.ProcGroup[S])
-                        (implicit tx: S#Tx): TimelineView[S] = {
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 600).toLong), sampleRate)
     val group       = element.entity
@@ -80,13 +80,13 @@ object TimelineViewImpl {
     //      case _          => Span.from(0L)
     //    }
 
-    import document.{cursor, inMemory}
+    import document.inMemory // {cursor, inMemory}
     val procMap = tx.newInMemoryIDMap[TimelineProcView[S]]
     val transp  = proc.Transport[S, document.I](group, sampleRate = sampleRate)
     val aural   = proc.AuralPresentation.run[S, document.I](transp, document.aural)
     // XXX TODO dispose transp and aural
 
-    val view    = new Impl[S](groupH, transp, procMap, tlm, document.cursor)
+    val view    = new Impl[S](groupH, transp, procMap, tlm, /* document.*/ cursor)
 
     transp.react { implicit tx => {
       case proc.Transport.Play(t, time) => view.startedPlaying(time)

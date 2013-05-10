@@ -32,69 +32,50 @@ import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
 import de.sciss.synth.proc.{AuralSystem, Proc, Sys}
-import stm.Cursor
 import de.sciss.synth.expr.SpanLikes
 import de.sciss.serial.Serializer
 
 object Document {
-   type Group[        S <: Sys[ S ]]   = BiGroup.Modifiable[    S, Proc[ S ],  Proc.Update[ S ]]
-//   type GroupU[       S <: Sys[ S ]]   = BiGroup[    S, Proc[ S ],  Proc.Update[ S ]]
-   type GroupUpdate[  S <: Sys[ S ]]   = BiGroup.Update[        S, Proc[ S ],  Proc.Update[ S ]]
-   type Groups[       S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Group[ S ], GroupUpdate[ S ]]
-   type GroupsUpdate[ S <: Sys[ S ]]   = LinkedList.Update[     S, Group[ S ], GroupUpdate[ S ]]
+  type Group       [S <: Sys[S]] = BiGroup.Modifiable   [S, Proc[S], Proc.Update[S]]
+  type GroupUpdate [S <: Sys[S]] = BiGroup.Update       [S, Proc[S], Proc.Update[S]]
 
-   type Transport[    S <: Sys[ S ]]   = proc.ProcTransport[ S ]
-   type Transports[   S <: Sys[ S ]]   = LinkedList.Modifiable[ S, Transport[ S ], Unit ] // Transport.Update[ S, Proc[ S ]]]
+  type Groups      [S <: Sys[S]] = LinkedList.Modifiable[S, Group[S], GroupUpdate[S]]
+  type GroupsUpdate[S <: Sys[S]] = LinkedList.Update    [S, Group[S], GroupUpdate[S]]
 
-   def read(  dir: File ) : Document[ Cf ] = Impl.read( dir )
-   def empty( dir: File ) : Document[ Cf ] = Impl.empty( dir )
+  type Transport   [S <: Sys[S]] = proc.ProcTransport[S]
+  type Transports  [S <: Sys[S]] = LinkedList.Modifiable[S, Transport[S], Unit] // Transport.Update[ S, Proc[ S ]]]
 
-   object Serializers {
-      implicit def group[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, Group[ S ]] with evt.Reader[ S, Group[ S ]] = {
-         implicit val spanType = SpanLikes
-         BiGroup.Modifiable.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
-      }
+  def read (dir: File): Document[Cf] = Impl.read (dir)
+  def empty(dir: File): Document[Cf] = Impl.empty(dir)
 
-//      implicit def groupU[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, GroupU[ S ]] with evt.Reader[ S, GroupU[ S ]] = {
-//         implicit val spanType = SpanLikes
-//         BiGroup.serializer[ S, Proc[ S ], Proc.Update[ S ]]( _.changed )
-//      }
-
-//      implicit def groups[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, LinkedList[ S, Group[ S ], GroupUpdate[ S ]]] = {
-//         LinkedList.serializer[ S, Group[ S ], GroupUpdate[ S ]]( _.changed )
-//      }
-
-//      implicit def groups[ S <: Sys[ S ]] : Serializer[ S#Tx, S#Acc, LinkedList[ S, GroupU[ S ], GroupUpdate[ S ]]] = {
-//         LinkedList.serializer[ S, GroupU[ S ], GroupUpdate[ S ]]( _.changed )
-//      }
-
-//      implicit def transports[ S <: Sys[ S ]]( implicit cursor: Cursor[ S ]) : Serializer[ S#Tx, S#Acc, LinkedList[ S, Transport[ S ], Unit ]] = {
-////         implicit val elem = proc.Transport.serializer[ S ]
-//         LinkedList.serializer[ S, Transport[ S ]]
-//      }
-   }
+  object Serializers {
+    implicit def group[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Group[S]] with evt.Reader[S, Group[S]] = {
+      implicit val spanType = SpanLikes
+      BiGroup.Modifiable.serializer[S, Proc[S], Proc.Update[S]](_.changed)
+    }
+  }
 }
 
 trait Document[S <: Sys[S]] {
-
   import Document.{Group => _, _}
 
   def system: S
-  implicit def cursor: Cursor[S]
+  // implicit def cursor: Cursor[S]
   def aural: AuralSystem[S]
   def folder: File
+  // def cursors: Cursors[S, S#D]
 
-  type I <: stm.Sys[I]
+  // def masterCursor: stm.Cursor[S]
+
+  type I <: evt.Sys[I]
   implicit def inMemory: S#Tx => I#Tx
-
-  //  def root(implicit tx: S#Tx): Group[S]
-  //  def groups( implicit tx: S#Tx ) : Groups[S]
-  //   def transports( group: Group[ S ])( implicit tx: S#Tx ) : Transports[ S ]
 
   def elements(implicit tx: S#Tx): Folder[S]
 
-  // def manifest: reflect.runtime.universe.TypeTag[Document[S]]
   implicit def systemType: reflect.runtime.universe.TypeTag[S]
+}
 
-  //   def exprImplicits: ExprImplicits[ S ]
+trait ConfluentDocument extends Document[proc.Confluent] {
+  type S = proc.Confluent
+  def cursors: Cursors[S, S#D]
 }
