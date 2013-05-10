@@ -26,7 +26,7 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{AuralSystem, Sys}
 import scala.swing.{Action, Component}
 import impl.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm.Cursor
@@ -34,7 +34,7 @@ import de.sciss.lucre.stm
 
 object TimelineView {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineView[S] =
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem[S]): TimelineView[S] =
     Impl(document, group)
 }
 trait TimelineView[S <: Sys[S]] {

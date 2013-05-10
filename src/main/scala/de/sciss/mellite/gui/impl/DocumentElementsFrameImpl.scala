@@ -46,9 +46,10 @@ import javax.swing.{JSpinner, SpinnerNumberModel}
 object DocumentElementsFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): DocumentElementsFrame[S] = {
     // implicit val csr  = doc.cursor
-    val folderView    = FolderView(doc.elements)
-    val view          = new Impl(doc, folderView)
-    doc.aural.addClient(new AuralSystem.Client[S] {
+    val folderView      = FolderView(doc.elements)
+    implicit val aural  = AuralSystem[S]
+    val view            = new Impl(doc, folderView)
+    aural.addClient(new AuralSystem.Client[S] {
       def started(s: Server)(implicit tx: S#Tx) {
         view.setServer(Some(s))
       }
@@ -66,7 +67,7 @@ object DocumentElementsFrameImpl {
   }
 
   private final class Impl[S <: Sys[S]](val document: Document[S], folderView: FolderView[S])
-                                       (implicit val cursor: stm.Cursor[S])
+                                       (implicit val cursor: stm.Cursor[S], aural: AuralSystem[S])
     extends DocumentElementsFrame[S] with ComponentHolder[Window] with CursorHolder[S] {
 
     // protected implicit def cursor: Cursor[S] = document.cursor
@@ -345,7 +346,7 @@ object DocumentElementsFrameImpl {
       // lazy val splitPane = new SplitPane(Orientation.Horizontal, folderPanel, Component.wrap(intp.component))
 
       serverPane = new JServerStatusPanel()
-      serverPane.bootAction = Some(() => atomic { implicit tx => document.aural.start() })
+      serverPane.bootAction = Some(() => atomic { implicit tx => aural.start() })
 
       frame = new Frame(document, new BorderPanel {
         //        add(splitPane, BorderPanel.Position.Center)

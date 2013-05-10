@@ -44,6 +44,18 @@ object ActionOpenFile extends Action( "Open...") {
 
   private def fullTitle = "Open Document"
 
+  // XXX TODO: should be in another place
+  def openGUI[S <: Sys[S]](doc: Document[S]) {
+    doc match {
+      case cf: ConfluentDocument  =>
+      case eph: EphemeralDocument =>
+        implicit val csr = eph.cursor
+        csr.step { implicit tx =>
+          DocumentElementsFrame(eph)
+        }
+    }
+  }
+
   private def initDoc[S <: Sys[S]](doc: Document[S]) {
     ???
     //    doc.masterCursor.step { implicit tx =>

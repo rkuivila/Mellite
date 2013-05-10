@@ -3,14 +3,14 @@ package mellite
 package gui
 package impl
 
-import synth.proc.Sys
+import de.sciss.synth.proc.{AuralSystem, Sys}
 import desktop.impl.WindowImpl
 import desktop.Window
 import lucre.stm
 
 object TimelineFrameImpl {
   def apply[S <: Sys[S]](document: Document[S], name: String, group: Element.ProcGroup[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineFrame[S] = {
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem[S]): TimelineFrame[S] = {
     val tlv   = TimelineView(document, group)
     val res   = new Impl(tlv, name)
     guiFromTx {

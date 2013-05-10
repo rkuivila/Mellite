@@ -45,8 +45,8 @@ object Document {
   type Transport   [S <: Sys[S]] = proc.ProcTransport[S]
   type Transports  [S <: Sys[S]] = LinkedList.Modifiable[S, Transport[S], Unit] // Transport.Update[ S, Proc[ S ]]]
 
-  def read (dir: File): Document[Cf] = Impl.read (dir)
-  def empty(dir: File): Document[Cf] = Impl.empty(dir)
+  def read (dir: File): ConfluentDocument = Impl.read (dir)
+  def empty(dir: File): ConfluentDocument = Impl.empty(dir)
 
   object Serializers {
     implicit def group[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Group[S]] with evt.Reader[S, Group[S]] = {
@@ -56,12 +56,12 @@ object Document {
   }
 }
 
-trait Document[S <: Sys[S]] {
+sealed trait Document[S <: Sys[S]] {
   import Document.{Group => _, _}
 
   def system: S
   // implicit def cursor: Cursor[S]
-  def aural: AuralSystem[S]
+  // def aural: AuralSystem[S]
   def folder: File
   // def cursors: Cursors[S, S#D]
 
@@ -78,4 +78,9 @@ trait Document[S <: Sys[S]] {
 trait ConfluentDocument extends Document[proc.Confluent] {
   type S = proc.Confluent
   def cursors: Cursors[S, S#D]
+}
+
+trait EphemeralDocument extends Document[proc.Durable] {
+  type S = proc.Durable
+  def cursor: stm.Cursor[S] = system
 }

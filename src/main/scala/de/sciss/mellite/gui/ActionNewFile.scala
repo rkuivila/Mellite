@@ -48,13 +48,6 @@ object ActionNewFile extends Action( "New...") {
 
   private def fullTitle = "New Document"
 
-  private def initDoc[S <: Sys[S]](doc: Document[S]) {
-    ???
-    //    doc.masterCursor.step { implicit tx =>
-    //      DocumentElementsFrame(doc)
-    //    }
-  }
-
   def apply() {
     FileDialog.save(title = "Location for New Document").show(None).foreach { folder0 =>
       val name    = folder0.getName
@@ -81,7 +74,7 @@ object ActionNewFile extends Action( "New...") {
         val doc = Document.empty(folder)
         // XXX TODO: SetFile -a E <folder>
         ActionOpenFile.recentFiles.add(folder)
-        initDoc(doc)
+        ActionOpenFile.openGUI(doc)
       } catch {
         case NonFatal(e) =>
           Dialog.showMessage(
