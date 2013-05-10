@@ -82,12 +82,12 @@ object DocumentImpl {
 
     final def write(out: DataOutput) {
       elements.write(out)
-      cursor.write(out)
-      }
+      cursor  .write(out)
+    }
 
     final def dispose()(implicit tx: S#Tx) {
       elements.dispose()
-      cursor.dispose()
+      cursor  .dispose()
     }
   }
 
