@@ -146,7 +146,7 @@ object CursorsImpl {
       }
     }
 
-    def select(slot: Int, invariant: Boolean): evt.Event[D1, Any, Any] = (slot: @switch) match {
+    def select(slot: Int /*, invariant: Boolean */): evt.Event[D1, Any, Any] = (slot: @switch) match {
       // case GeneratorEvent.slot  => GeneratorEvent
       case changed.slot         => changed
     }

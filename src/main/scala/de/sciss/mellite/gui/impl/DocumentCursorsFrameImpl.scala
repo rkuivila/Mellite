@@ -107,7 +107,9 @@ object DocumentCursorsFrameImpl {
           parentElem.cursor.step { implicit tx =>
             implicit val dtx = proc.Confluent.durable(tx)
             val seminal = tx.inputAccess.takeUntil(seminalDate.getTime)
+            // lucre.event.showLog = true
             parentElem.addChild(seminal)
+            // lucre.event.showLog = false
           }
         case _ =>
       }
@@ -207,8 +209,8 @@ object DocumentCursorsFrameImpl {
       }
       val tabCM = t.peer.getColumnModel
       tabCM.getColumn(0).setPreferredWidth(128)
-      tabCM.getColumn(1).setPreferredWidth(176)
-      tabCM.getColumn(2).setPreferredWidth(176)
+      tabCM.getColumn(1).setPreferredWidth(184)
+      tabCM.getColumn(2).setPreferredWidth(184)
 
       val ggAdd = Button("+") {
         t.selection.paths.headOption.foreach { path =>
