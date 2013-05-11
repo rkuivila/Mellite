@@ -48,12 +48,13 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
 
   private var _treeModel        = treeModel0
   private var _treeColumnModel  = treeColumnModel0
-  private var _tableColumnModel = tableColumnModel0
+  // private var _tableColumnModel = tableColumnModel0
   private var _renderer: TreeTableCellRenderer = _
 
   def treeModel: TreeModel[A]                 = _treeModel
   def treeColumnModel: Col                    = _treeColumnModel
-  def tableColumnModel: jtab.TableColumnModel = _tableColumnModel
+  // def tableColumnModel: jtab.TableColumnModel = _tableColumnModel
+  // def tableModel: jtab.TableModel
 
   def renderer = _renderer
   def renderer_=(r: TreeTableCellRenderer) {
@@ -184,7 +185,7 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
   }
 
   override lazy val peer: j.TreeTable =
-    new j.TreeTable(wrapTreeModel(treeModel0), wrapTreeColumnModel(treeColumnModel0), _tableColumnModel)
+    new j.TreeTable(wrapTreeModel(treeModel0), wrapTreeColumnModel(treeColumnModel0), tableColumnModel0)
       with TreeTable.JTreeTableMixin with SuperMixin {
 
       def tableWrapper = TreeTable.this

@@ -302,6 +302,10 @@ object FolderViewImpl {
           res // component
         }
       }
+      val tabCM = t.peer.getColumnModel
+      tabCM.getColumn(0).setPreferredWidth(176)
+      tabCM.getColumn(1).setPreferredWidth(256)
+
       t.listenTo(t.selection)
       t.reactions += {
         case e: TreeTableSelectionChanged[_, _] =>  // this crappy untyped event doesn't help us at all

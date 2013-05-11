@@ -3,12 +3,15 @@ package mellite
 package gui
 package impl
 
-import scala.swing.{ScrollPane, FlowPanel, Button, BorderPanel}
+import scala.swing._
 import synth.proc
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.lucre.{confluent, stm}
-import java.util.Date
+import java.util.{Locale, Date}
+import de.sciss.mellite.gui.TreeTableSelectionChanged
+import scala.Some
+import java.text.SimpleDateFormat
 
 object DocumentCursorsFrameImpl {
   type S = proc.Confluent
@@ -121,12 +124,31 @@ object DocumentCursorsFrameImpl {
 
       t = new TreeTable(_model, tcm)
       t.showsRootHandles    = true
-      t.autoCreateRowSorter = true
+      t.autoCreateRowSorter = true  // XXX TODO: hmmm, not sufficient for sorters. what to do?
+      t.renderer = new TreeTableCellRenderer {
+        private val dateFormat = new SimpleDateFormat("E d MMM yy | HH:mm:ss", Locale.US)
+
+        private val component = TreeTableCellRenderer.Default
+        def getRendererComponent(treeTable: TreeTable[_, _], value: Any, row: Int, column: Int,
+                                 state: TreeTableCellRenderer.State): Component = {
+          val value1 = value match {
+            case d: Date  => dateFormat.format(d)
+            case _        => value
+          }
+          val res = component.getRendererComponent(treeTable, value1, row = row, column = column, state = state)
+          res // component
+        }
+      }
+      val tabCM = t.peer.getColumnModel
+      tabCM.getColumn(0).setPreferredWidth(128)
+      tabCM.getColumn(1).setPreferredWidth(176)
+      tabCM.getColumn(2).setPreferredWidth(176)
 
       val ggAdd = Button("+") {
         println("Add")
       }
       ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
+      ggAdd.enabled = false
 
       val ggDelete: Button = Button("\u2212") {
         println("Delete")
@@ -135,10 +157,25 @@ object DocumentCursorsFrameImpl {
       ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
 
       lazy val ggView: Button = Button("View") {
-        println("View")
+        t.selection.paths.headOption.foreach { path =>
+          val elem = path.last.elem
+          implicit val cursor = elem.cursor
+          cursor.step { implicit tx =>
+            DocumentElementsFrame(document)
+          }
+        }
       }
       ggView.enabled = false
       ggView.peer.putClientProperty("JButton.buttonType", "roundRect")
+
+      t.listenTo(t.selection)
+      t.reactions += {
+        case e: TreeTableSelectionChanged[_, _] =>  // this crappy untyped event doesn't help us at all
+          val selSize = t.selection.paths.size
+          ggAdd   .enabled  = selSize == 1
+          ggDelete.enabled  = selSize > 0
+          ggView  .enabled  = selSize > 0
+      }
 
       lazy val folderButPanel = new FlowPanel(ggAdd, ggDelete, ggView)
 
