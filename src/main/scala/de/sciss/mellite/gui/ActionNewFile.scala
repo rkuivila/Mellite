@@ -73,8 +73,8 @@ object ActionNewFile extends Action( "New...") {
       try {
         val doc = Document.empty(folder)
         // XXX TODO: SetFile -a E <folder>
-        ActionOpenFile.recentFiles.add(folder)
         ActionOpenFile.openGUI(doc)
+
       } catch {
         case NonFatal(e) =>
           Dialog.showMessage(

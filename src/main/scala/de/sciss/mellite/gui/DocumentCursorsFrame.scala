@@ -7,7 +7,8 @@ import synth.proc
 
 object DocumentCursorsFrame {
   type S = proc.Confluent
-  def apply(document: ConfluentDocument)(implicit tx: S#Tx): DocumentCursorsFrame = Impl(document)
+  type D = S#D
+  def apply(document: ConfluentDocument)(implicit tx: D#Tx): DocumentCursorsFrame = Impl(document)
 }
 trait DocumentCursorsFrame /* [S <: Sys[S]] */ {
   def component: desktop.Window

@@ -10,7 +10,7 @@ object DocumentCursorsFrameImpl {
   type S = proc.Confluent
   type D = S#D
 
-  def apply(document: ConfluentDocument)(implicit tx: S#Tx): DocumentCursorsFrame = {
+  def apply(document: ConfluentDocument)(implicit tx: D#Tx): DocumentCursorsFrame = {
     val view = new Impl(document)
     guiFromTx {
       view.guiInit()

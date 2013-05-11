@@ -32,6 +32,7 @@ import de.sciss.synth.proc.Sys
 import de.sciss.desktop.{Menu, RecentFiles, FileDialog, KeyStrokes}
 import util.control.NonFatal
 import java.io.File
+import de.sciss.synth.proc
 
 object ActionOpenFile extends Action( "Open...") {
   import KeyStrokes._
@@ -46,21 +47,19 @@ object ActionOpenFile extends Action( "Open...") {
 
   // XXX TODO: should be in another place
   def openGUI[S <: Sys[S]](doc: Document[S]) {
+    recentFiles.add(doc.folder)
     doc match {
-      case cf: ConfluentDocument  =>
+      case cf: ConfluentDocument =>
+        val cs: proc.Confluent = cf.system
+        cs.durable.step { implicit tx =>
+          DocumentCursorsFrame(cf)
+        }
       case eph: EphemeralDocument =>
         implicit val csr = eph.cursor
         csr.step { implicit tx =>
           DocumentElementsFrame(eph)
         }
     }
-  }
-
-  private def initDoc[S <: Sys[S]](doc: Document[S]) {
-    ???
-    //    doc.masterCursor.step { implicit tx =>
-    //      DocumentElementsFrame(doc)
-    //    }
   }
 
   def recentFiles: RecentFiles  = _recent
@@ -75,8 +74,8 @@ object ActionOpenFile extends Action( "Open...") {
   def perform(folder: File) {
     try {
       val doc = Document.read(folder)
-      recentFiles.add(folder)
-      initDoc(doc)
+      openGUI(doc)
+
     } catch {
       case NonFatal(e) =>
         Dialog.showMessage(

@@ -77,10 +77,18 @@ sealed trait Document[S <: Sys[S]] {
 
 trait ConfluentDocument extends Document[proc.Confluent] {
   type S = proc.Confluent
+
+  // have to restate this for some reason?
+  // cf. http://stackoverflow.com/questions/16495522/pattern-matching-refuses-to-recognize-member-type-value-x-is-not-a-member-of-2
+  def system: S
+
   def cursors: Cursors[S, S#D]
 }
 
 trait EphemeralDocument extends Document[proc.Durable] {
   type S = proc.Durable
+
+  def system: S
+
   def cursor: stm.Cursor[S] = system
 }
