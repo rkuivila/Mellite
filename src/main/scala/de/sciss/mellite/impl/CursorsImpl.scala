@@ -47,7 +47,7 @@ object CursorsImpl {
 
   private final class Impl[S <: KSys[S], D1 <: DSys[D1]](
       protected val targets: evt.Targets[D1], val seminal: S#Acc with serial.Writable,
-      val cursor: stm.Cursor[S] with stm.Disposable[D1#Tx] with serial.Writable,
+      val cursor: confluent.Cursor[S, D1] with stm.Disposable[D1#Tx] with serial.Writable,
       nameVar: Expr.Var[D1, String],
       list: expr.LinkedList.Modifiable[D1, Cursors[S, D1], Cursors.Update[S, D1]]
     )(implicit tx: D1#Tx, system: S { type D = D1 })

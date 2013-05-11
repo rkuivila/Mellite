@@ -197,11 +197,26 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
       //    override def getValueAt(r: Int, c: Int) = Table.this.apply(r,c).asInstanceOf[AnyRef]
     }
 
-  def showsRootHandles        : Boolean =  peer.getShowsRootHandles
-  def showsRootHandles_=(value: Boolean) { peer.setShowsRootHandles(value) }
+  def showsRootHandles                 : Boolean =  peer.getShowsRootHandles
+  def showsRootHandles_=      (value   : Boolean) { peer.setShowsRootHandles(value) }
 
-  def rootVisible             : Boolean =  peer.isRootVisible
-  def rootVisible_=     (value: Boolean) { peer.setRootVisible(value) }
+  def rootVisible                      : Boolean =  peer.isRootVisible
+  def rootVisible_=           (value   : Boolean) { peer.setRootVisible(value) }
+
+  def autoCreateColumnHeader           : Boolean =  peer.getAutoCreateColumnHeader
+  def autoCreateColumnHeader_=(value   : Boolean) { peer.setAutoCreateColumnHeader(value) }
+
+  def autoCreateColumnsFromModel       : Boolean =  peer.getAutoCreateColumnsFromModel
+  def autoCreateColumnsFromModel_(value: Boolean) = { peer.getAutoCreateColumnsFromModel }
+
+  def autoCreateRowHeader              : Boolean =  peer.getAutoCreateRowHeader
+  def autoCreateRowHeader_=(value      : Boolean) { peer.getAutoCreateRowHeader }
+
+  def autoCreateRowSorter              : Boolean =  peer.getAutoCreateRowSorter
+  def autoCreateRowSorter_=(value      : Boolean) { peer.getAutoCreateRowSorter }
+
+  // def autoscrolls                      : Boolean =  peer.getAutoscrolls
+  // def autoscrolls_=(value              : Boolean) { peer.getAutoscrolls }
 
   def expandPath(path: Path[A]) { peer.expandPath(path) }
 

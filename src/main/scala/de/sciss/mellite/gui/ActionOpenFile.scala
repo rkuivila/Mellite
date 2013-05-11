@@ -50,8 +50,7 @@ object ActionOpenFile extends Action( "Open...") {
     recentFiles.add(doc.folder)
     doc match {
       case cf: ConfluentDocument =>
-        val cs: proc.Confluent = cf.system
-        cs.durable.step { implicit tx =>
+        (cf: ConfluentDocument).system.durable.step { implicit tx =>
           DocumentCursorsFrame(cf)
         }
       case eph: EphemeralDocument =>

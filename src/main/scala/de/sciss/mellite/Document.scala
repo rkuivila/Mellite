@@ -59,7 +59,7 @@ object Document {
 sealed trait Document[S <: Sys[S]] {
   import Document.{Group => _, _}
 
-  def system: S
+  implicit def system: S
   // implicit def cursor: Cursor[S]
   // def aural: AuralSystem[S]
   def folder: File
@@ -80,7 +80,7 @@ trait ConfluentDocument extends Document[proc.Confluent] {
 
   // have to restate this for some reason?
   // cf. http://stackoverflow.com/questions/16495522/pattern-matching-refuses-to-recognize-member-type-value-x-is-not-a-member-of-2
-  def system: S
+  // def system: S
 
   def cursors: Cursors[S, S#D]
 }
@@ -88,7 +88,7 @@ trait ConfluentDocument extends Document[proc.Confluent] {
 trait EphemeralDocument extends Document[proc.Durable] {
   type S = proc.Durable
 
-  def system: S
+  // def system: S
 
   def cursor: stm.Cursor[S] = system
 }

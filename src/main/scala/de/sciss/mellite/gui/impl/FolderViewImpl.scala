@@ -81,7 +81,7 @@ object FolderViewImpl {
   private final class Impl[S <: Sys[S]](_root: ElementView.Root[S],
                                         mapViews: IdentifierMap[S#ID, S#Tx, ElementView[S]])
                                        (implicit cursor: Cursor[S])
-    extends FolderView[S] with ModelImpl[FolderView.Update[S]] {
+    extends ComponentHolder[Component] with FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
     type Node   = ElementView.Renderer[S]
@@ -142,7 +142,6 @@ object FolderViewImpl {
       }
     }
 
-    @volatile private var comp: Component = _
     private var _model: ElementTreeModel  = _
     private var t: TreeTable[Node, TreeColumnModel[Node]] = _
 
@@ -236,13 +235,6 @@ object FolderViewImpl {
       // mapViews.get(r.id).foreach(_.dispose())
       // mapViews.remove(r.id)
       mapViews.dispose()
-    }
-
-    def component: Component = {
-      requireEDT()
-      val res = comp
-      if (res == null) sys.error("Called component before GUI was initialized")
-      res
     }
 
     def guiInit() {

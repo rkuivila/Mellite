@@ -6,6 +6,7 @@ import scala.reflect.ClassTag
 import scala.swing.Publisher
 import TreeTable.Path
 import scala.annotation.tailrec
+import collection.immutable.{IndexedSeq => IIdxSeq}
 
 object TreeColumnModel {
   abstract class Column[A, T](val name: String)(implicit val ct: ClassTag[T]) {
@@ -14,10 +15,8 @@ object TreeColumnModel {
     def isEditable(node: A): Boolean
   }
 
-  abstract class Tuple2[A, T1, T2](val _1: Column[A, T1], val _2: Column[A, T2])
-    extends TreeColumnModel[A] {
-
-    private val columns = Array(_1, _2)
+  trait TupleLike[A] extends TreeColumnModel[A] {
+    protected def columns: IIdxSeq[Column[A, _]]
 
     def getParent(node: A): Option[A]
 
@@ -48,6 +47,18 @@ object TreeColumnModel {
    	def isCellEditable(node: A, column: Int): Boolean = columns(column).isEditable(node)
 
     def hierarchicalColumn = 0
+  }
+
+  abstract class Tuple2[A, T1, T2](val _1: Column[A, T1], val _2: Column[A, T2])
+    extends TupleLike[A] {
+
+    protected val columns = IIdxSeq(_1, _2)
+  }
+
+  abstract class Tuple3[A, T1, T2, T3](val _1: Column[A, T1], val _2: Column[A, T2], val _3: Column[A, T3])
+    extends TupleLike[A] {
+
+    protected val columns = IIdxSeq(_1, _2, _3)
   }
 }
 trait TreeColumnModel[A] extends Publisher {
