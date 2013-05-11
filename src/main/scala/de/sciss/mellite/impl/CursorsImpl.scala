@@ -124,7 +124,7 @@ object CursorsImpl {
       }
 
       def pullUpdate(pull: evt.Pull[D1])(implicit tx: D1#Tx): Option[Cursors.Update[S, D1]] = {
-        val listEvt = list.changed
+        val listEvt = list   .changed
         val nameEvt = nameVar.changed
         // val genOpt  = if (pull.contains(GeneratorEvent)) pull(GeneratorEvent) else None
         val nameOpt = if (pull.contains(nameEvt)) pull(nameEvt) else None

@@ -12,27 +12,36 @@ import java.util.{Locale, Date}
 import de.sciss.mellite.gui.TreeTableSelectionChanged
 import scala.Some
 import java.text.SimpleDateFormat
+import de.sciss.lucre.event.Change
 
 object DocumentCursorsFrameImpl {
   type S = proc.Confluent
   type D = S#D
 
   def apply(document: ConfluentDocument)(implicit tx: D#Tx): DocumentCursorsFrame = {
-    def createView(parent: Option[CursorView], elem: Cursors[S, D])(implicit tx: D#Tx): CursorView = {
-      import document._
-      val name    = elem.name.value
-      val created = confluent.Sys.Acc.info(elem.seminal        ).timeStamp
-      val updated = confluent.Sys.Acc.info(elem.cursor.position).timeStamp
-      new CursorView(elem = elem, parent = parent, children = Vector.empty,
-        name = name, created = created, updated = updated)
-    }
+    val root      = document.cursors
+    val rootView  = createView(document, parent = None, elem = root)
+    val view      = new Impl(document, rootView)(tx.system)
 
-    val rootView  = createView(parent = None, elem = document.cursors)
-    val view = new Impl(document, rootView)(tx.system)
+    val obs = root.changed.react { implicit tx => upd =>
+      view.elemUpdated(rootView, upd.changes)
+    }
+    // XXX TODO: remember obs for disposal
+
     guiFromTx {
       view.guiInit()
     }
     view
+  }
+
+  private def createView(document: ConfluentDocument, parent: Option[CursorView], elem: Cursors[S, D])
+                        (implicit tx: D#Tx): CursorView = {
+    import document._
+    val name    = elem.name.value
+    val created = confluent.Sys.Acc.info(elem.seminal        ).timeStamp
+    val updated = confluent.Sys.Acc.info(elem.cursor.position).timeStamp
+    new CursorView(elem = elem, parent = parent, children = Vector.empty,
+      name = name, created = created, updated = updated)
   }
 
   private final class CursorView(val elem: Cursors[S, D], val parent: Option[CursorView],
@@ -43,6 +52,8 @@ object DocumentCursorsFrameImpl {
     extends DocumentCursorsFrame with ComponentHolder[desktop.Window] {
 
     type Node = CursorView
+
+    private var mapViews = Map.empty[Cursors[S, D], Node]
 
     private class ElementTreeModel extends AbstractTreeModel[Node] {
       lazy val root: Node = _root // ! must be lazy. suckers....
@@ -83,6 +94,61 @@ object DocumentCursorsFrameImpl {
 
     private var _model: ElementTreeModel  = _
     private var t: TreeTable[Node, TreeColumnModel[Node]] = _
+
+    private def actionAdd(parent: Node) {
+      val format  = new SimpleDateFormat("yyyy MM dd MM | HH:mm:ss", Locale.US) // don't bother user with alpha characters
+      val ggValue = new FormattedTextField(format)
+      ggValue.peer.setValue(new Date(parent.updated))
+      val nameOpt = GUIUtil.keyValueDialog(value = ggValue, title = "Add New Cursor",
+        defaultName = "branch", window = Some(comp))
+      (nameOpt, ggValue.peer.getValue) match {
+        case (Some(name), seminalDate: Date) =>
+          val parentElem = parent.elem
+          parentElem.cursor.step { implicit tx =>
+            implicit val dtx = proc.Confluent.durable(tx)
+            val seminal = tx.inputAccess.takeUntil(seminalDate.getTime)
+            parentElem.addChild(seminal)
+          }
+        case _ =>
+      }
+    }
+
+    private def elemRemoved(parent: Node, child: Cursors[S, D])(implicit tx: D#Tx) {
+      mapViews.get(child).foreach { cv =>
+        val idx = parent.children.indexOf(cv)
+        cv.children.reverse.foreach { cc =>
+          elemRemoved(cv, cc.elem)
+        }
+        mapViews -= child
+        guiFromTx {
+          _model.elemRemoved(parent, idx)
+        }
+      }
+    }
+
+    private def elemAdded(parent: Node, child: Cursors[S, D])(implicit tx: D#Tx) {
+      val cv  = createView(document, parent = Some(parent), elem = child)
+      val idx = parent.children.size
+      mapViews += child -> cv
+      guiFromTx {
+        _model.elemAdded(parent, idx, cv)
+      }
+    }
+
+    def elemUpdated(v: Node, upd: IIdxSeq[Cursors.Change[S, D]])(implicit tx: D#Tx) {
+      upd.foreach {
+        case Cursors.ChildAdded  (child) => elemAdded  (v, child)
+        case Cursors.ChildRemoved(child) => elemRemoved(v, child)
+        case Cursors.Renamed(Change(_, newName))  => guiFromTx {
+          v.name = newName
+          _model.elemUpdated(v)
+        }
+        case Cursors.ChildUpdate(Cursors.Update(source, childUpd)) => // recursion
+          mapViews.get(source).foreach { cv =>
+            elemUpdated(cv, childUpd)
+          }
+      }
+    }
 
     def guiInit() {
       requireEDT()
@@ -145,7 +211,10 @@ object DocumentCursorsFrameImpl {
       tabCM.getColumn(2).setPreferredWidth(176)
 
       val ggAdd = Button("+") {
-        println("Add")
+        t.selection.paths.headOption.foreach { path =>
+          val v = path.last
+          actionAdd(parent = v)
+        }
       }
       ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
       ggAdd.enabled = false
@@ -157,7 +226,7 @@ object DocumentCursorsFrameImpl {
       ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
 
       lazy val ggView: Button = Button("View") {
-        t.selection.paths.headOption.foreach { path =>
+        t.selection.paths.foreach { path =>
           val elem = path.last.elem
           implicit val cursor = elem.cursor
           cursor.step { implicit tx =>
@@ -173,8 +242,8 @@ object DocumentCursorsFrameImpl {
         case e: TreeTableSelectionChanged[_, _] =>  // this crappy untyped event doesn't help us at all
           val selSize = t.selection.paths.size
           ggAdd   .enabled  = selSize == 1
-          ggDelete.enabled  = selSize > 0
-          ggView  .enabled  = selSize > 0
+          // ggDelete.enabled  = selSize > 0
+          ggView  .enabled  = selSize == 1 // > 0
       }
 
       lazy val folderButPanel = new FlowPanel(ggAdd, ggDelete, ggView)

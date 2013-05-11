@@ -208,27 +208,8 @@ object DocumentElementsFrameImpl {
 
     private def actionAddPrimitive[A](tpe: String, ggValue: Component, prepare: => Option[A])
                                      (create: S#Tx => (String, A) => Element[S]) {
-      // XXX TODO: DRY
-      val ggName  = new TextField(10)
-      ggName.text = tpe
-
-      import language.reflectiveCalls // why does GroupPanel need reflective calls?
-      // import desktop.Implicits._
-      val box = new GroupPanel {
-        val lbName  = new Label( "Name:", EmptyIcon, Alignment.Right)
-        val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
-        theHorizontalLayout is Sequential(Parallel(Trailing)(lbName, lbValue), Parallel(ggName, ggValue))
-        theVerticalLayout   is Sequential(Parallel(Baseline)(lbName, ggName ), Parallel(Baseline)(lbValue, ggValue))
-      }
-
-      val pane = OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,
-        messageType = Dialog.Message.Question, focus = Some(ggValue))
-      pane.title  = s"New $tpe"
-      val res = comp.show(pane)
-
-      if (res == Dialog.Result.Ok) {
-        // println(s"name = ${ggName.text} ; value = ${ggValue.text}")
-        val name    = ggName.text
+      val nameOpt = GUIUtil.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe, window = Some(comp))
+      nameOpt.foreach { name =>
         prepare.foreach { value =>
           atomic { implicit tx =>
             addElement(create(tx)(name, value))
