@@ -59,15 +59,9 @@ object TimelineProcView {
 
     val attr  = proc.attributes
 
-    val track = attr.get(ProcKeys.attrTrack) match {
-      case Some(i: Attribute.Int[S]) => i.peer.value
-      case _ => 0
-    }
-
-    val name = attr.get(ProcKeys.attrName) match {
-      case Some(str: Attribute.String[S]) => str.peer.value
-      case _ =>
-        audio.map(_.value.artifact.nameWithoutExtension).getOrElse("<unnamed>")
+    val track = attr[Attribute.Int]   (ProcKeys.attrTrack).map(_.value).getOrElse(0)
+    val name  = attr[Attribute.String](ProcKeys.attrName ).map(_.value).getOrElse {
+      audio.map(_.value.artifact.nameWithoutExtension).getOrElse("<unnamed>")
     }
 
     new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),

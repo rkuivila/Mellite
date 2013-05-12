@@ -83,12 +83,9 @@ object InstantGroupPanelImpl {
       val hasRem  = vpRem.nonEmpty
       val vpAdd   = added.map {
         case (span, timed) =>
-          val id = timed.id
-          val proc = timed.value
-          val n = proc.attributes.get("name") match {
-            case Some(str: Attribute.String[S]) => str.peer.value
-            case _ => "<unnamed>"
-          }
+          val id    = timed.id
+          val proc  = timed.value
+          val n     = proc.attributes[Attribute.String](ProcKeys.attrName).map(_.value).getOrElse("<unnamed>")
           // val n = proc.name.value
           //            val par  = proc.par.entriesAt( time )
           val par = Map.empty[String, Double]

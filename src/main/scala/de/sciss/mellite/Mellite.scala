@@ -33,8 +33,8 @@ import desktop.Menu
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = Unit
 
-  lucre.event    .showLog = true
-  lucre.confluent.showLog = true
+  // lucre.event    .showLog = true
+  // lucre.confluent.showLog = true
 
   protected lazy val menuFactory: Menu.Root = MenuBar()
 }

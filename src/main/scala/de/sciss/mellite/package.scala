@@ -40,7 +40,7 @@ package object mellite {
   type Cf           = Confluent
 
   private lazy val logHeader = new SimpleDateFormat("[d MMM yyyy, HH:mm''ss.SSS] 'Mellite' - ", Locale.US)
-  var showLog = true
+  var showLog = false
 
   @elidable(CONFIG) private[mellite] def log(what: => String) {
     if (showLog) {

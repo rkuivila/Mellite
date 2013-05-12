@@ -64,7 +64,7 @@ object DocumentCursorsFrameImpl {
 
       def getChildCount(parent: Node): Int = parent.children.size
       def getChild(parent: Node, index: Int): Node = parent.children(index)
-      def isLeaf(node: Node): Boolean = false
+      def isLeaf(node: Node): Boolean = node.children.isEmpty
       def getIndexOfChild(parent: Node, child: Node): Int = parent.children.indexOf(child)
       def getParent(node: Node): Option[Node] = node.parent
 
@@ -121,8 +121,11 @@ object DocumentCursorsFrameImpl {
 
     private def elemRemoved(parent: Node, idx: Int, child: Cursors[S, D])(implicit tx: D#Tx) {
       mapViews.get(child).foreach { cv =>
-        val idx1 = parent.children.indexOf(cv)
-        require(idx == idx1)
+        // NOTE: parent.children is only updated on the GUI thread through the model.
+        // no way we could verify the index here!!
+        //
+        // val idx1 = parent.children.indexOf(cv)
+        // require(idx == idx1, s"elemRemoved: given idx is $idx, but should be $idx1")
         cv.children.zipWithIndex.reverse.foreach { case (cc, cci) =>
           elemRemoved(cv, cci, cc.elem)
         }
@@ -141,8 +144,11 @@ object DocumentCursorsFrameImpl {
 
     private def elemAdded(parent: Node, idx: Int, child: Cursors[S, D])(implicit tx: D#Tx) {
       val cv   = createView(document, parent = Some(parent), elem = child)
-      val idx1 = parent.children.size
-      require(idx == idx1)
+      // NOTE: parent.children is only updated on the GUI thread through the model.
+      // no way we could verify the index here!!
+      //
+      // val idx1 = parent.children.size
+      // require(idx == idx1, s"elemAdded: given idx is $idx, but should be $idx1")
       mapViews += child -> cv
       guiFromTx {
         _model.elemAdded(parent, idx, cv)
@@ -187,7 +193,7 @@ object DocumentCursorsFrameImpl {
         def isEditable(node: Node) = true
       }
 
-      val colCreated = new TreeColumnModel.Column[Node, Date]("Created") {
+      val colCreated = new TreeColumnModel.Column[Node, Date]("Origin") {
         def apply(node: Node): Date = new Date(node.created)
         def update(node: Node, value: Date) {}
         def isEditable(node: Node) = false

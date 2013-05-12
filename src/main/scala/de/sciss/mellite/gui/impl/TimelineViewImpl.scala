@@ -434,7 +434,7 @@ object TimelineViewImpl {
                   // lucre.event.showLog = true
                   // lucre.bitemp.impl.BiGroupImpl.showLog = true
 
-                  for (Expr.Var(t) <- attr[Attribute.Int[S]](ProcKeys.attrTrack)) t.transform(_ + deltaTrack)
+                  for (Expr.Var(t) <- attr[Attribute.Int](ProcKeys.attrTrack)) t.transform(_ + deltaTrack)
 
                   // lucre.event.showLog = false
                   // lucre.bitemp.impl.BiGroupImpl.showLog = false

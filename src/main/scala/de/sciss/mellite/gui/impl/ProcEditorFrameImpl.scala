@@ -24,16 +24,15 @@ object ProcEditorFrameImpl {
       }
     }
 
-    val initName = proc.attributes.get("name") match {
-      case Some(str: Attribute.String[S]) => str.peer.value
-      case _ => "<unnamed>"
+    val attr            = proc.attributes
+    val initName        = attr[Attribute.String](ProcKeys.attrName       ).map(_.value).getOrElse("<unnamed>")
+    val initGraphSource = attr[Attribute.String](ProcKeys.attrGraphSource).map(_.value) // graph.source
+
+    guiFromTx {
+      view.guiInit(initName, initGraphSource)
     }
-    val initGraphSource = proc.attributes[Attribute.String[S]](ProcKeys.attrGraphSource).map(_.value) // graph.source
-     guiFromTx {
-       view.guiInit(initName, initGraphSource)
-     }
-     view
-   }
+    view
+  }
 
   private abstract class Impl[S <: Sys[S]](/* csrPos: S#Acc, */ procH: Source[S#Tx, Proc[S]], title: String)
                                           (protected implicit val cursor: Cursor[S])
