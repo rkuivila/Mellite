@@ -102,6 +102,8 @@ object DocumentImpl {
       elements.dispose()
       // cursor  .dispose()
     }
+
+    override def toString = s"Data ($elements)"
   }
 
   private final class Impl(val folder: File, val system: S, access: stm.Source[S#Tx, Data],

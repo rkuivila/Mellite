@@ -24,6 +24,7 @@ object DocumentCursorsFrameImpl {
     val view      = new Impl(document, rootView)(tx.system)
 
     val obs = root.changed.react { implicit tx => upd =>
+      log(s"DocumentCursorsFrame update $upd")
       view.elemUpdated(rootView, upd.changes)
     }
     // XXX TODO: remember obs for disposal
@@ -31,6 +32,9 @@ object DocumentCursorsFrameImpl {
     guiFromTx {
       view.guiInit()
     }
+
+    view.addChildren(rootView, root)
+
     view
   }
 
@@ -115,11 +119,12 @@ object DocumentCursorsFrameImpl {
       }
     }
 
-    private def elemRemoved(parent: Node, child: Cursors[S, D])(implicit tx: D#Tx) {
+    private def elemRemoved(parent: Node, idx: Int, child: Cursors[S, D])(implicit tx: D#Tx) {
       mapViews.get(child).foreach { cv =>
-        val idx = parent.children.indexOf(cv)
-        cv.children.reverse.foreach { cc =>
-          elemRemoved(cv, cc.elem)
+        val idx1 = parent.children.indexOf(cv)
+        require(idx == idx1)
+        cv.children.zipWithIndex.reverse.foreach { case (cc, cci) =>
+          elemRemoved(cv, cci, cc.elem)
         }
         mapViews -= child
         guiFromTx {
@@ -128,19 +133,27 @@ object DocumentCursorsFrameImpl {
       }
     }
 
-    private def elemAdded(parent: Node, child: Cursors[S, D])(implicit tx: D#Tx) {
-      val cv  = createView(document, parent = Some(parent), elem = child)
-      val idx = parent.children.size
+    def addChildren(parentView: Node, parent: Cursors[S, D])(implicit tx: D#Tx) {
+      parent.descendants.toList.zipWithIndex.foreach { case (c, ci) =>
+        elemAdded(parent = parentView, idx = ci, child = c)
+      }
+    }
+
+    private def elemAdded(parent: Node, idx: Int, child: Cursors[S, D])(implicit tx: D#Tx) {
+      val cv   = createView(document, parent = Some(parent), elem = child)
+      val idx1 = parent.children.size
+      require(idx == idx1)
       mapViews += child -> cv
       guiFromTx {
         _model.elemAdded(parent, idx, cv)
       }
+      addChildren(cv, child)
     }
 
     def elemUpdated(v: Node, upd: IIdxSeq[Cursors.Change[S, D]])(implicit tx: D#Tx) {
       upd.foreach {
-        case Cursors.ChildAdded  (child) => elemAdded  (v, child)
-        case Cursors.ChildRemoved(child) => elemRemoved(v, child)
+        case Cursors.ChildAdded  (idx, child) => elemAdded  (v, idx, child)
+        case Cursors.ChildRemoved(idx, child) => elemRemoved(v, idx, child)
         case Cursors.Renamed(Change(_, newName))  => guiFromTx {
           v.name = newName
           _model.elemUpdated(v)

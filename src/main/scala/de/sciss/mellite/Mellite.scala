@@ -23,14 +23,18 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
+package de.sciss
+package mellite
 
 import gui.MenuBar
-import de.sciss.desktop.impl.SwingApplicationImpl
-import de.sciss.desktop.Menu
+import desktop.impl.SwingApplicationImpl
+import desktop.Menu
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = Unit
+
+  lucre.event    .showLog = true
+  lucre.confluent.showLog = true
 
   protected lazy val menuFactory: Menu.Root = MenuBar()
 }

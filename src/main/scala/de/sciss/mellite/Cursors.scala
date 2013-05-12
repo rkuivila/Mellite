@@ -24,10 +24,10 @@ object Cursors {
 
   sealed trait Change[S <: KSys[S], D <: DSys[D]]
 
-  final case class Renamed     [S <: KSys[S], D <: DSys[D]](change: evt.Change[String]) extends Change[S, D]
-  final case class ChildAdded  [S <: KSys[S], D <: DSys[D]](child: Cursors[S, D])       extends Change[S, D]
-  final case class ChildRemoved[S <: KSys[S], D <: DSys[D]](child: Cursors[S, D])       extends Change[S, D]
-  final case class ChildUpdate [S <: KSys[S], D <: DSys[D]](change: Update[S, D])       extends Change[S, D]
+  final case class Renamed     [S <: KSys[S], D <: DSys[D]](change: evt.Change[String])     extends Change[S, D]
+  final case class ChildAdded  [S <: KSys[S], D <: DSys[D]](idx: Int, child: Cursors[S, D]) extends Change[S, D]
+  final case class ChildRemoved[S <: KSys[S], D <: DSys[D]](idx: Int, child: Cursors[S, D]) extends Change[S, D]
+  final case class ChildUpdate [S <: KSys[S], D <: DSys[D]](change: Update[S, D])           extends Change[S, D]
 }
 trait Cursors[S <: KSys[S], D <: DSys[D]] extends serial.Writable {
   def seminal: S#Acc

@@ -21,6 +21,7 @@ object CursorsImpl {
     val cursor  = confluent.Cursor[S, D1](seminal)
     val name    = Strings.newVar("branch")
     val list    = expr.LinkedList.Modifiable[D1, Cursors[S, D1], Cursors.Update[S, D1]](_.changed)
+    log(s"Cursors.apply targets = $targets, list = $list")
     new Impl(targets, seminal, cursor, name, list)
   }
 
@@ -41,6 +42,7 @@ object CursorsImpl {
       val cursor  = confluent.Cursor.read[S, D1](in)
       val name    = Strings.readVar[D1](in, access)
       val list    = expr.LinkedList.Modifiable.read[D1, Cursors[S, D1], Cursors.Update[S, D1]](_.changed)(in, access)
+      log(s"Cursors.read targets = $targets, list = $list")
       new Impl(targets, seminal, cursor, name, list)
     }
   }
@@ -63,6 +65,7 @@ object CursorsImpl {
 
     def addChild(seminal: S#Acc)(implicit tx: D1#Tx): Cursors[S, D1] = {
       val child = CursorsImpl[S, D1](seminal)
+      log(s"$this.addChild($child)")
       list.addLast(child)
       child
     }
@@ -105,7 +108,7 @@ object CursorsImpl {
       protected def reader: evt.Reader[D1, Cursors[S, D1]] = serializer
 
       override def toString() = node.toString + ".changed"
-      final val slot = 2
+      final val slot = 2  // XXX TODO: should be zero, as its the only slot
 
       def node = impl
 
@@ -127,20 +130,28 @@ object CursorsImpl {
         val listEvt = list   .changed
         val nameEvt = nameVar.changed
         // val genOpt  = if (pull.contains(GeneratorEvent)) pull(GeneratorEvent) else None
+
         val nameOpt = if (pull.contains(nameEvt)) pull(nameEvt) else None
+        Thread.sleep(50)
         val listOpt = if (pull.contains(listEvt)) pull(listEvt) else None
+
+        // println(s"---- enter pull : list = $listOpt")
 
         // val flat1   = genOpt.toIndexedSeq
         val flat1   = nameOpt.map(Cursors.Renamed[S, D1](_)).toIndexedSeq
         val changes = listOpt match {
           case Some(listUpd) =>
             val childUpdates = listUpd.changes.collect {
-              case expr.LinkedList.Element(child, childUpd) => Cursors.ChildUpdate(childUpd)
+              case expr.LinkedList.Element(child, childUpd) => Cursors.ChildUpdate (childUpd)
+              case expr.LinkedList.Added  (idx, child)      => Cursors.ChildAdded  (idx, child)
+              case expr.LinkedList.Removed(idx, child)      => Cursors.ChildRemoved(idx, child)
             }
             flat1 ++ childUpdates
 
           case _ => flat1
         }
+
+        // println(s"---- exit pull : changes = $changes")
 
         if (changes.isEmpty) None else Some(Cursors.Update(impl, changes))
       }

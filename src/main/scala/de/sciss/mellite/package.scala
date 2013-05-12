@@ -31,17 +31,22 @@ import synth.proc.{InMemory, Sys, Confluent}
 import de.sciss.serial.{Serializer, DataInput}
 import scala.collection.immutable.{IndexedSeq => IIdxSeq}
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.{Date, Locale}
+import scala.annotation.elidable
+import scala.annotation.elidable.CONFIG
 
 package object mellite {
   type Cf           = Confluent
 
-  //   type S            = Confluent
-  //   type Ex[ A ]      = expr.Expr[ S, A ]
-  //   object Ex {
-  //      type Var[ A ] = expr.Expr.Var[ S, A ]
-  //   }
+  private lazy val logHeader = new SimpleDateFormat("[d MMM yyyy, HH:mm''ss.SSS] 'Mellite' - ", Locale.US)
+  var showLog = true
 
-  //   type Folder[ S <: Sys[ S ]] = LinkedList.Modifiable[ S, Element[ S, _ ], Any ]
+  @elidable(CONFIG) private[mellite] def log(what: => String) {
+    if (showLog) {
+      println(logHeader.format(new Date()) + what)
+    }
+  }
 
   object Folder {
     import mellite.{Element => _Element}
