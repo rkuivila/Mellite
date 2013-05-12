@@ -51,6 +51,7 @@ object DocumentElementsFrameImpl {
     val view            = new Impl(doc, folderView)
     aural.addClient(new AuralSystem.Client[S] {
       def started(s: Server)(implicit tx: S#Tx) {
+        // s.peer.dumpOSC()
         view.setServer(Some(s))
       }
 

@@ -108,7 +108,7 @@ object CursorsImpl {
       protected def reader: evt.Reader[D1, Cursors[S, D1]] = serializer
 
       override def toString() = node.toString + ".changed"
-      final val slot = 2  // XXX TODO: should be zero, as its the only slot
+      final val slot = 0
 
       def node = impl
 
