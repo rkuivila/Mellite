@@ -50,18 +50,6 @@ object DocumentElementsFrameImpl {
     val view            = new Impl(doc, folderView)
 
     guiFromTx {
-      implicit val aural  = AuralSystem()
-      aural.addClient(new AuralSystem.Client {
-        def started(s: Server) {
-          // s.peer.dumpOSC()
-          view.setServer(Some(s))
-        }
-
-        def stopped() {
-          view.setServer(None)
-        }
-      })
-      // XXX TODO: removeClient
       view.guiInit()
     }
     view
@@ -209,7 +197,7 @@ object DocumentElementsFrameImpl {
 
     private def actionAddPrimitive[A](tpe: String, ggValue: Component, prepare: => Option[A])
                                      (create: S#Tx => (String, A) => Element[S]) {
-      val nameOpt = GUIUtil.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe, window = Some(comp))
+      val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe, window = Some(comp))
       nameOpt.foreach { name =>
         prepare.foreach { value =>
           atomic { implicit tx =>
@@ -219,14 +207,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    // var frame: Frame[S] = _
-    private var serverPane: JServerStatusPanel = _
-
-    def setServer(s: Option[Server]) {
-      serverPane.server = s.map(_.peer)
-    }
-
-    def guiInit()(implicit aural: AuralSystem) {
+    def guiInit() {
       requireEDT()
       require(comp == null, "Initialization called twice")
 
@@ -271,6 +252,7 @@ object DocumentElementsFrameImpl {
             case view: ElementView.ProcGroup[S] =>
               // val e   = view.element()
               // import document.inMemory
+              import Mellite.auralSystem
               TimelineFrame(document, view.name, view.element())
 
             case view: ElementView.AudioGrapheme[S] =>
@@ -288,6 +270,7 @@ object DocumentElementsFrameImpl {
                   contents    = afv.component
                   pack()
                   // centerOnScreen()
+                  GUI.placeWindow(this, 1f, 0.75f, 24)
                   front()
                 }
               }
@@ -316,14 +299,14 @@ object DocumentElementsFrameImpl {
 
       // lazy val splitPane = new SplitPane(Orientation.Horizontal, folderPanel, Component.wrap(intp.component))
 
-      serverPane = new JServerStatusPanel()
-      serverPane.bootAction = Some(() => atomic { implicit tx => aural.start() })
-
-      comp = new Frame(document, new BorderPanel {
-        //        add(splitPane, BorderPanel.Position.Center)
-        add(folderPanel,                BorderPanel.Position.Center)
-        add(Component.wrap(serverPane), BorderPanel.Position.South )
-      })
+      comp = new Frame(document,
+        folderPanel
+        //        new BorderPanel {
+        //        //        add(splitPane, BorderPanel.Position.Center)
+        //        add(folderPanel,                BorderPanel.Position.Center)
+        //        add(Component.wrap(serverPane), BorderPanel.Position.South )
+        //        }
+      )
 
       folderView.addListener {
         case FolderView.SelectionChanged(_, sel) =>
@@ -338,13 +321,14 @@ object DocumentElementsFrameImpl {
     def style       = Window.Regular
     def handler     = Mellite.windowHandler
 
-    title           = document.folder.nameWithoutExtension
+    title           = s"${document.folder.nameWithoutExtension} : Elements"
     file            = Some(document.folder)
     closeOperation  = Window.CloseIgnore
     contents        = _contents
 
     pack()
     // centerOnScreen()
+    GUI.placeWindow(this, 0.5f, 0f, 24)
     front()
 
     def show[A](source: DialogSource[A]): A = showDialog(source)

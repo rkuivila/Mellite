@@ -32,7 +32,8 @@ import java.awt.{Color, Graphics2D}
 import scala.concurrent.ExecutionContext
 import scala.util.Failure
 import scala.util.Success
-import scala.swing.Component
+import scala.swing.{Swing, Component}
+import Swing._
 
 final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
   extends TimelineCanvasImpl {
@@ -59,6 +60,11 @@ final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineM
 
     @inline def width   = peer.getWidth
     @inline def height  = peer.getHeight
+
+    preferredSize = {
+      val b = GUI.maximumWindowBounds
+      (b.width >> 1, b.height >> 1)
+    }
 
     private def paintChecker(message: String)(g: Graphics2D) {
       g.setPaint(pntChecker)

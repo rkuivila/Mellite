@@ -46,7 +46,6 @@ import java.awt.event.{KeyEvent, ActionEvent, ActionListener}
 import de.sciss.desktop.FocusType
 import de.sciss.synth.expr.{ExprImplicits, SpanLikes, Ints}
 import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.event.Change
 import Predef.{any2stringadd => _, _}
 import scala.Some
 import de.sciss.lucre.event.Change
@@ -489,6 +488,11 @@ object TimelineViewImpl {
           if (f != null) f.deriveFont(math.min(f.getSize2D, 9.5f)) else new Font("SansSerif", Font.PLAIN, 9)
         }
         // setOpaque(true)
+
+        preferredSize = {
+          val b = GUI.maximumWindowBounds
+          (b.width >> 1, b.height >> 1)
+        }
 
         protected def updateDnD(drop: Option[AudioFileDnD.Drop]) {
           audioDnD = drop

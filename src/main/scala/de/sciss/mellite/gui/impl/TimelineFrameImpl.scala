@@ -41,6 +41,7 @@ object TimelineFrameImpl {
 
         pack()
         // centerOnScreen()
+        GUI.placeWindow(this, 0f, 0.25f, 24)
         front()
       }
     }

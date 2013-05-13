@@ -103,7 +103,7 @@ object DocumentCursorsFrameImpl {
       val format  = new SimpleDateFormat("yyyy MM dd MM | HH:mm:ss", Locale.US) // don't bother user with alpha characters
       val ggValue = new FormattedTextField(format)
       ggValue.peer.setValue(new Date(parent.updated))
-      val nameOpt = GUIUtil.keyValueDialog(value = ggValue, title = "Add New Cursor",
+      val nameOpt = GUI.keyValueDialog(value = ggValue, title = "Add New Cursor",
         defaultName = "branch", window = Some(comp))
       (nameOpt, ggValue.peer.getValue) match {
         case (Some(name), seminalDate: Date) =>
@@ -276,7 +276,7 @@ object DocumentCursorsFrameImpl {
         def style       = desktop.Window.Regular
         def handler     = Mellite.windowHandler
 
-        title           = document.folder.nameWithoutExtension
+        title           = s"${document.folder.nameWithoutExtension} : Cursors"
         file            = Some(document.folder)
         closeOperation  = desktop.Window.CloseIgnore
         contents        = new BorderPanel {
@@ -286,6 +286,7 @@ object DocumentCursorsFrameImpl {
 
         pack()
         // centerOnScreen()
+        GUI.placeWindow(this, 1f, 0f, 24)
         front()
         // add(folderPanel, BorderPanel.Position.Center)
       }

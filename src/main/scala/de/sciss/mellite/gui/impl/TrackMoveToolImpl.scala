@@ -43,7 +43,7 @@ final class TrackMoveToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
     //    ggTime.addSpace(spcTimeHHMMSSD)
     //    ggTime.addSpace(ParamSpace.spcTimeSmpsD)
     //    ggTime.addSpace(ParamSpace.spcTimeMillisD)
-    //    GUIUtil.setInitialDialogFocus(ggTime)
+    //    GUI.setInitialDialogFocus(ggTime)
     //    box.add(new JLabel("Move by:"))
     //    box.add(Box.createHorizontalStrut(8))
     //    box.add(ggTime)

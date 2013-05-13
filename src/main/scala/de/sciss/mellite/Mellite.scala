@@ -26,9 +26,10 @@
 package de.sciss
 package mellite
 
-import gui.MenuBar
+import gui.{MainFrame, MenuBar}
 import desktop.impl.SwingApplicationImpl
 import desktop.Menu
+import synth.proc.AuralSystem
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = Unit
@@ -37,4 +38,12 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   // lucre.confluent.showLog = true
 
   protected lazy val menuFactory: Menu.Root = MenuBar()
+
+  private lazy val _aural = AuralSystem()
+
+  implicit def auralSystem: AuralSystem = _aural
+
+  override protected def init() {
+    new MainFrame
+  }
 }
