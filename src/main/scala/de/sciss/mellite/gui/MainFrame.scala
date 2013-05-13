@@ -9,12 +9,14 @@ import scala.swing.{Swing, Component}
 import de.sciss.synth.proc.{Server, AuralSystem}
 
 final class MainFrame extends WindowImpl {
+  import Mellite.auralSystem
+
   def handler: WindowHandler = Mellite.windowHandler
 
   protected def style: Window.Style = Window.Regular
 
   private val serverPane = new JServerStatusPanel()
-  serverPane.bootAction = Some(() => Mellite.auralSystem.start())
+  serverPane.bootAction = Some(boot _)
 
   //  def setServer(s: Option[Server]) {
   //    serverPane.server = s.map(_.peer)
@@ -25,11 +27,18 @@ final class MainFrame extends WindowImpl {
   resizable = false
   contents  = Component.wrap(serverPane)
 
+  private def boot() {
+    val config        = Server.Config()
+    val audioDevice   = Prefs.audioDevice.getOrElse(Prefs.defaultAudioDevice)
+    if (audioDevice != Prefs.defaultAudioDevice) config.deviceName = Some(audioDevice)
+    auralSystem.start(config)
+  }
+
   private def setServer(s: Option[Server]) {
     Swing.onEDT(serverPane.server = s.map(_.peer))
   }
 
-  Mellite.auralSystem.addClient(new AuralSystem.Client {
+  auralSystem.addClient(new AuralSystem.Client {
     def started(s: Server) {
       setServer(Some(s))
     }

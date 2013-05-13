@@ -23,21 +23,38 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
+package de.sciss
+package mellite
 package gui
 
-import swing.{Dialog, Action}
+import scala.swing.{TextField, Alignment, Label, Action}
 import java.awt.event.KeyEvent
-import java.io.File
-import de.sciss.synth.proc.Sys
-import de.sciss.desktop.{FileDialog, KeyStrokes}
-import util.control.NonFatal
+import de.sciss.desktop.{OptionPane, KeyStrokes}
+import scalaswingcontrib.group.GroupPanel
+import scala.swing.Swing.EmptyIcon
+import scala.swing.event.ValueChanged
 
-object ActionPreferences extends Action( "Preferences...") {
+object ActionPreferences extends Action("Preferences...") {
   import KeyStrokes._
-   accelerator = Some(menu1 + KeyEvent.VK_COMMA)
+  accelerator = Some(menu1 + KeyEvent.VK_COMMA)
 
   def apply() {
+    import language.reflectiveCalls
+    val box = new GroupPanel {
+      val lbAudioDevice = new Label( "Audio Device:", EmptyIcon, Alignment.Right)
+      val ggAudioDevice = new TextField(Prefs.audioDevice.getOrElse(Prefs.defaultAudioDevice), 16) {
+        listenTo(this)
+        reactions += {
+          case ValueChanged(_) => Prefs.audioDevice.put(text)
+        }
+      }
+      // val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
+      theHorizontalLayout is Sequential(lbAudioDevice, ggAudioDevice)
+      theVerticalLayout   is Parallel(Baseline)(lbAudioDevice, ggAudioDevice)
+    }
 
+    val opt   = OptionPane.message(message = box, messageType = OptionPane.Message.Plain)
+    opt.title = "Preferences"
+    opt.show(None)
   }
 }
