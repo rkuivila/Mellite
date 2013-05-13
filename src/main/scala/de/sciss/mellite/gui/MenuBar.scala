@@ -41,6 +41,8 @@ object MenuBar {
         .add(ActionOpenFile.recentMenu)
         .add(Item("close",              proxy("Close",                    (menu1 + VK_W))))
         .add(Item("closeAll",           "Close All"))
+        .addLine()
+        .add(Item("bounce",             proxy("Bounce...",                (menu1 + VK_B))))
     ).add(
       Group("edit", "Edit")
         // eventually Undo / Redo here
@@ -72,6 +74,8 @@ object MenuBar {
     ).add(
       Group("operation", "Operation")
         .add(Item("cursorFollows",      "Cursor Follows Playhead"))
+        .addLine()
+        .add(Item("preferences", ActionPreferences))
     )
   }
 }

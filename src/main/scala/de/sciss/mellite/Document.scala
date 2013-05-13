@@ -31,7 +31,7 @@ import expr.LinkedList
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
-import de.sciss.synth.proc.{AuralSystem, Proc, Sys}
+import de.sciss.synth.proc.{Proc, Sys}
 import de.sciss.synth.expr.SpanLikes
 import de.sciss.serial.Serializer
 

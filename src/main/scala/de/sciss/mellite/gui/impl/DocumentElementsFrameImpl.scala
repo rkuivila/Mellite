@@ -47,28 +47,28 @@ object DocumentElementsFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): DocumentElementsFrame[S] = {
     // implicit val csr  = doc.cursor
     val folderView      = FolderView(doc.elements)
-    implicit val aural  = AuralSystem[S]
     val view            = new Impl(doc, folderView)
-    aural.addClient(new AuralSystem.Client[S] {
-      def started(s: Server)(implicit tx: S#Tx) {
-        // s.peer.dumpOSC()
-        view.setServer(Some(s))
-      }
-
-      def stopped()(implicit tx: S#Tx) {
-        view.setServer(None)
-      }
-    })
-    // XXX TODO: removeClient
 
     guiFromTx {
+      implicit val aural  = AuralSystem()
+      aural.addClient(new AuralSystem.Client {
+        def started(s: Server) {
+          // s.peer.dumpOSC()
+          view.setServer(Some(s))
+        }
+
+        def stopped() {
+          view.setServer(None)
+        }
+      })
+      // XXX TODO: removeClient
       view.guiInit()
     }
     view
   }
 
   private final class Impl[S <: Sys[S]](val document: Document[S], folderView: FolderView[S])
-                                       (implicit val cursor: stm.Cursor[S], aural: AuralSystem[S])
+                                       (implicit val cursor: stm.Cursor[S])
     extends DocumentElementsFrame[S] with ComponentHolder[Frame[S]] with CursorHolder[S] {
 
     // protected implicit def cursor: Cursor[S] = document.cursor
@@ -222,13 +222,11 @@ object DocumentElementsFrameImpl {
     // var frame: Frame[S] = _
     private var serverPane: JServerStatusPanel = _
 
-    def setServer(s: Option[Server])(implicit tx: S#Tx) {
-      guiFromTx {
-        serverPane.server = s.map(_.peer)
-      }
+    def setServer(s: Option[Server]) {
+      serverPane.server = s.map(_.peer)
     }
 
-    def guiInit() {
+    def guiInit()(implicit aural: AuralSystem) {
       requireEDT()
       require(comp == null, "Initialization called twice")
 

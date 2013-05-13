@@ -29,8 +29,7 @@ package impl
 import java.io.{IOException, FileNotFoundException, File}
 import de.sciss.lucre.{confluent, stm}
 import stm.store.BerkeleyDB
-import stm.Cursor
-import de.sciss.synth.proc.{AuralSystem, Confluent}
+import de.sciss.synth.proc.Confluent
 import de.sciss.serial.{DataInput, Serializer, DataOutput}
 import de.sciss.synth.expr.ExprImplicits
 

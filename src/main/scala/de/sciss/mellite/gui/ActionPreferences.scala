@@ -1,5 +1,5 @@
 /*
- *  TimelineView.scala
+ *  ActionPreferences.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -26,22 +26,18 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.{AuralSystem, Sys}
-import scala.swing.{Action, Component}
-import impl.{TimelineViewImpl => Impl}
-import de.sciss.lucre.stm.Cursor
-import de.sciss.lucre.stm
+import swing.{Dialog, Action}
+import java.awt.event.KeyEvent
+import java.io.File
+import de.sciss.synth.proc.Sys
+import de.sciss.desktop.{FileDialog, KeyStrokes}
+import util.control.NonFatal
 
-object TimelineView {
-  def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): TimelineView[S] =
-    Impl(document, group)
-}
-trait TimelineView[S <: Sys[S]] {
-  def component: Component
-  def timelineModel: TimelineModel
+object ActionPreferences extends Action( "Preferences...") {
+  import KeyStrokes._
+   accelerator = Some(menu1 + KeyEvent.VK_COMMA)
 
-  // ---- actions ----
-  def deleteAction      : Action
-  def splitObjectsAction: Action
+  def apply() {
+
+  }
 }
