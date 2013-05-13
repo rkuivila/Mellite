@@ -29,7 +29,6 @@ package gui
 import de.sciss.synth.proc.{AuralSystem, Sys}
 import scala.swing.{Action, Component}
 import impl.{TimelineViewImpl => Impl}
-import de.sciss.lucre.stm.Cursor
 import de.sciss.lucre.stm
 
 object TimelineView {
@@ -42,6 +41,7 @@ trait TimelineView[S <: Sys[S]] {
   def timelineModel: TimelineModel
 
   // ---- actions ----
+  def bounceAction      : Action
   def deleteAction      : Action
   def splitObjectsAction: Action
 }

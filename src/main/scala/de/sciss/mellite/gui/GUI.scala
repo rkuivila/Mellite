@@ -4,13 +4,27 @@ package gui
 
 import scala.swing.Swing._
 import scalaswingcontrib.group.GroupPanel
-import scala.swing.{Swing, Dialog, Component, TextField, Label, Alignment}
+import scala.swing.{Window, Swing, Dialog, Component, TextField, Label, Alignment}
 import java.awt.{Rectangle, EventQueue, GraphicsEnvironment}
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
   def centerOnScreen(w: desktop.Window) {
     placeWindow(w, 0.5f, 0.5f, 0)
+  }
+
+  def fixWidth(c: Component, width: Int = -1) {
+    val w         = if (width < 0) c.preferredSize.width else width
+    val min       = c.minimumSize
+    val max       = c.maximumSize
+    min.width     = w
+    max.width     = w
+    c.minimumSize = min
+    c.maximumSize = max
+  }
+
+  def findWindow(c: Component): Option[desktop.Window] = {
+    None  // XXX TODO - we should place a client property in Desktop
   }
 
   def maximumWindowBounds: Rectangle = {

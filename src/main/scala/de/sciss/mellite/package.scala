@@ -105,5 +105,10 @@ package object mellite {
       val i = n.lastIndexOf('.')
       if (i < 0) n else n.substring(0, i)
     }
+    def replaceExtension(s: String): File = {
+      val n   = nameWithoutExtension
+      val ext = if (s.charAt(0) == '.') s else "." + s
+      new File(f.getParentFile, n + ext)
+    }
   }
 }

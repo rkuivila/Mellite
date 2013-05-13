@@ -28,3 +28,8 @@
 0x10002	    AudioGrapheme
 0x10003     ArtifactLocation
 
+:: indeterminus ::
+
+[ 0x20000     Bounce -- NOT YET ]
+[ 0x20001     FScape -- NOT YET ]
+

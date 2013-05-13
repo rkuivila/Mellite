@@ -28,19 +28,17 @@ package mellite
 package gui
 package impl
 
-import swing.{Swing, TextField, Alignment, Label, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
+import swing.{Swing, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
 import lucre.stm
-import synth.proc.{Server, AuralSystem, Grapheme, Artifact, ProcGroup, Sys}
+import synth.proc.{Grapheme, Artifact, ProcGroup, Sys}
 import Swing._
-import scalaswingcontrib.group.GroupPanel
 import de.sciss.synth.expr._
-import desktop.{FileDialog, DialogSource, OptionPane, Window, Menu}
+import desktop.{FileDialog, DialogSource, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
 import synth.io.AudioFile
 import scala.util.control.NonFatal
 import java.io.File
-import synth.swing.j.JServerStatusPanel
 import javax.swing.{JSpinner, SpinnerNumberModel}
 
 object DocumentElementsFrameImpl {

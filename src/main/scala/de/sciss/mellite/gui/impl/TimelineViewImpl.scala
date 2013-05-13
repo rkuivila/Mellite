@@ -85,7 +85,7 @@ object TimelineViewImpl {
     val auralView = proc.AuralPresentation.runTx[S](transp, aural)
     // XXX TODO dispose transp and auralView
 
-    val view    = new Impl[S](groupH, transp, procMap, tlm, /* document.*/ cursor)
+    val view    = new Impl[S](document, groupH, transp, procMap, tlm)
 
     transp.react { implicit tx => {
       case proc.Transport.Play(t, time) => view.startedPlaying(time)
@@ -162,10 +162,11 @@ object TimelineViewImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]](groupH: stm.Source[S#Tx, ProcGroup[S]],
+  private final class Impl[S <: Sys[S]](document: Document[S], groupH: stm.Source[S#Tx, ProcGroup[S]],
                                         transp: ProcTransport[S],
                                         procMap: IdentifierMap[S#ID, S#Tx, TimelineProcView[S]],
-                                        val timelineModel: TimelineModel, cursor: Cursor[S]) extends TimelineView[S] {
+                                        val timelineModel: TimelineModel)
+                                       (implicit cursor: Cursor[S]) extends TimelineView[S] {
     impl =>
 
     import cursor.step
@@ -189,6 +190,16 @@ object TimelineViewImpl {
     private var view: View    = _
 
     // ---- actions ----
+
+    object bounceAction extends Action("Bounce") {
+      private var settings = ActionBounceTimeline.Settings[S]()
+
+      def apply() {
+        val (_settings, ok) = ActionBounceTimeline.query(settings, document, timelineModel, parent = GUI.findWindow(component))
+        settings = _settings
+        println(ok)
+      }
+    }
 
     object deleteAction extends Action("Delete") {
       def apply() {
