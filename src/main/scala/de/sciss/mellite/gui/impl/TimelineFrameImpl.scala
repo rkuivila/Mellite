@@ -9,10 +9,11 @@ import desktop.Window
 import lucre.stm
 
 object TimelineFrameImpl {
-  def apply[S <: Sys[S]](document: Document[S], name: String, group: Element.ProcGroup[S])
+  def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S],
                          aural: AuralSystem): TimelineFrame[S] = {
     val tlv   = TimelineView(document, group)
+    val name  = group.name.value
     val res   = new Impl(tlv, name)
     guiFromTx {
       res.init()

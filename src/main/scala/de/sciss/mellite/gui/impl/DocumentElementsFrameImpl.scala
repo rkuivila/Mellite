@@ -38,14 +38,13 @@ import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
 import synth.io.AudioFile
 import scala.util.control.NonFatal
-import java.io.File
 import javax.swing.{JSpinner, SpinnerNumberModel}
 
 object DocumentElementsFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx,
                                            cursor: stm.Cursor[S]): DocumentElementsFrame[S] = {
     // implicit val csr  = doc.cursor
-    val folderView      = FolderView(doc.elements)
+    val folderView      = FolderView(doc, doc.elements)
     val view            = new Impl(doc, folderView)
 
     guiFromTx {
@@ -59,6 +58,21 @@ object DocumentElementsFrameImpl {
     extends DocumentElementsFrame[S] with ComponentHolder[Frame[S]] with CursorHolder[S] {
 
     // protected implicit def cursor: Cursor[S] = document.cursor
+
+    def dispose()(implicit tx: S#Tx) {
+      disposeData()
+      guiFromTx(comp.dispose())
+    }
+
+    private def disposeData()(implicit tx: S#Tx) {
+      folderView.dispose()
+    }
+
+    def frameClosing() {
+      cursor.step { implicit tx =>
+        disposeData()
+      }
+    }
 
     private def targetFolder(implicit tx: S#Tx): Folder[S] = {
       val sel = folderView.selection
@@ -246,27 +260,10 @@ object DocumentElementsFrameImpl {
               // val e   = view.element()
               // import document.inMemory
               import Mellite.auralSystem
-              TimelineFrame[S](document, view.name, view.element())
+              TimelineFrame[S](document, view.element())
 
             case view: ElementView.AudioGrapheme[S] =>
-              val e         = view.element()
-              val afv       = AudioFileView(e)
-              val name      = view.name
-              val fileName  = view.value.artifact.nameWithoutExtension
-              guiFromTx {
-                new WindowImpl {
-                  def handler = Mellite.windowHandler
-                  def style   = Window.Regular
-                  component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
-                  title       = if (name == fileName) name else s"$name - $fileName"
-                  file        = Some(view.value.artifact)
-                  contents    = afv.component
-                  pack()
-                  // centerOnScreen()
-                  GUI.placeWindow(this, 1f, 0.75f, 24)
-                  front()
-                }
-              }
+              AudioFileFrame(document, view.element())
 
             case _ => // ...
           }
@@ -292,7 +289,7 @@ object DocumentElementsFrameImpl {
 
       // lazy val splitPane = new SplitPane(Orientation.Horizontal, folderPanel, Component.wrap(intp.component))
 
-      comp = new Frame(document,
+      comp = new Frame(this,
         folderPanel
         //        new BorderPanel {
         //        //        add(splitPane, BorderPanel.Position.Center)
@@ -310,13 +307,17 @@ object DocumentElementsFrameImpl {
     }
   }
 
-  private final class Frame[S <: Sys[S]](document: Document[S], _contents: Component) extends WindowImpl {
+  private final class Frame[S <: Sys[S]](view: Impl[S], _contents: Component) extends WindowImpl {
     def style       = Window.Regular
     def handler     = Mellite.windowHandler
 
-    title           = s"${document.folder.nameWithoutExtension} : Elements"
-    file            = Some(document.folder)
-    closeOperation  = Window.CloseIgnore
+    title           = s"${view.document.folder.nameWithoutExtension} : Elements"
+    file            = Some(view.document.folder)
+    closeOperation  = Window.CloseDispose
+    reactions += {
+      case Window.Closing(_) => view.frameClosing()
+    }
+
     contents        = _contents
 
     pack()

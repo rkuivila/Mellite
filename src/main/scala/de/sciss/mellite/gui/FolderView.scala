@@ -32,14 +32,23 @@ import impl.{FolderViewImpl => Impl}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import de.sciss.lucre.stm.{Cursor, Disposable}
 import de.sciss.model.Model
+import java.awt.datatransfer.DataFlavor
 
 object FolderView {
-  def apply[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = Impl(root)
+  def apply[S <: Sys[S]](document: Document[S], root: Folder[S])
+                        (implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = Impl(document, root)
 
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
     */
   type Selection[S <: Sys[S]] = IIdxSeq[(IIdxSeq[ElementView.FolderLike[S]], ElementView[S])]
+
+  final case class SelectionDnDData[S <: Sys[S]](document: Document[S], selection: Selection[S])
+
+  // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
+  val selectionFlavor =
+    new DataFlavor(s"""${DataFlavor.javaJVMLocalObjectMimeType};class="${classOf[SelectionDnDData[_]].getName}"""",
+      "folder-view selection")
 
   sealed trait Update[S <: Sys[S]] { def view: FolderView[S] }
   final case class SelectionChanged[S <: Sys[S]](view: FolderView[S], selection: Selection[S])

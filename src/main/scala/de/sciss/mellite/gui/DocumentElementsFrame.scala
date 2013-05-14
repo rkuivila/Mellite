@@ -30,13 +30,14 @@ package gui
 import impl.{DocumentElementsFrameImpl => Impl}
 import synth.proc.Sys
 import lucre.stm
+import de.sciss.lucre.stm.Disposable
 
 object DocumentElementsFrame {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): DocumentElementsFrame[S] =
     Impl(doc)
 }
 
-trait DocumentElementsFrame[S <: Sys[S]] {
+trait DocumentElementsFrame[S <: Sys[S]] extends Disposable[S#Tx] {
   def component: desktop.Window
   def document : Document[S]
 }

@@ -187,6 +187,7 @@ object ElementView {
   }
   sealed trait Int[S <: Sys[S]] extends ElementView[S] {
     def element: stm.Source[S#Tx, Element.Int[S]]
+    var value: _Int
   }
 
   // -------- Double --------

@@ -15,8 +15,10 @@ import scala.swing.Component
 import TransferHandler.COPY
 
 object AudioFileDnD {
+  // XXX TODO: should carry document to avoid cross-document DnD without deep copy
+
   final case class Drag(grapheme: Grapheme.Value.Audio, selection: Span)
-  final class Data[S <: Sys[S]](val source: stm.Source[S#Tx, AudioGrapheme[S]], val drag: Drag)
+  final case class Data[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, AudioGrapheme[S]], drag: Drag)
   final case class Drop(frame: Long, y: Int, drag: Drag)
 
   private[AudioFileDnD] final class Transferable[S <: Sys[S]](data: Data[S])
@@ -32,9 +34,11 @@ object AudioFileDnD {
     def getTransferData(flavor: DataFlavor): AnyRef = data
   }
 
+  // XXX TODO: hmmm. this is all a bit odd. Should be like Bus DnD in audio file view.
   final val flavor = new DataFlavor(classOf[Transferable[_]], "AudioRegion")
 
-  final class Button[S <: Sys[S]](val source: stm.Source[S#Tx, AudioGrapheme[S]], snapshot0: Grapheme.Value.Audio,
+  final class Button[S <: Sys[S]](document: Document[S], val source: stm.Source[S#Tx, AudioGrapheme[S]],
+                                  snapshot0: Grapheme.Value.Audio,
                                   timelineModel: TimelineModel)
     extends swing.Button("Region") {
 
@@ -47,7 +51,7 @@ object AudioFileDnD {
       override def createTransferable(c: JComponent): datatransfer.Transferable = {
         timelineModel.selection match {
           case sp @ Span(_, _) if sp.nonEmpty =>
-            new Transferable(new Data(source, Drag(grapheme = snapshot, selection = sp)))
+            new Transferable(Data(document, source, Drag(grapheme = snapshot, selection = sp)))
           case _ => null
         }
       }

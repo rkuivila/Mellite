@@ -8,10 +8,10 @@ import impl.{TimelineFrameImpl => Impl}
 import lucre.stm
 
 object TimelineFrame {
-  def apply[S <: Sys[S]](document: Document[S], name: String, group: Element.ProcGroup[S])
+  def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S],
                          aural: AuralSystem): TimelineFrame[S] =
-    Impl(document, name, group)
+    Impl(document, group)
 }
 trait TimelineFrame[S <: Sys[S]] {
   def window: Window

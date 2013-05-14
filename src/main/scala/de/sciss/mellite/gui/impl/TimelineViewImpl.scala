@@ -246,7 +246,7 @@ object TimelineViewImpl {
     }
 
     def splitObjects(time: Long)(views: TraversableOnce[TimelineProcView[S]])(implicit tx: S#Tx) {
-      ???
+      println("Not yet implemented: splitObjects") // ???
     }
 
     // ---- transport ----

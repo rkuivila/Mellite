@@ -32,55 +32,56 @@ import swing.{ScrollPane, Component}
 import collection.breakOut
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import scalaswingcontrib.tree.Tree
-import de.sciss.lucre.stm.{Cursor, IdentifierMap}
+import de.sciss.lucre.stm.{Disposable, Cursor, IdentifierMap}
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.mellite.gui.TreeTableCellRenderer.{State, TreeState}
 import scala.util.control.NonFatal
 import de.sciss.lucre.event.Change
+import javax.swing.{JComponent, TransferHandler}
+import java.awt.event.InputEvent
+import java.awt.datatransfer.{UnsupportedFlavorException, DataFlavor, Transferable}
+import java.io.IOException
 
 object FolderViewImpl {
   private final val DEBUG = false
 
-  def apply[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = {
-    val mapViews  = tx.newInMemoryIDMap[ElementView[S]]  // folder IDs to renderers
-    val rootView  = ElementView.Root(root)
-    val view      = new Impl[S](rootView, mapViews)
+  def apply[S <: Sys[S]](document: Document[S], root: Folder[S])
+                        (implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = {
+    val _doc    = document
+    val _cursor = cursor
+    new Impl[S] {
+      val cursor    = _cursor
+      val mapViews  = tx.newInMemoryIDMap[ElementView[S]]  // folder IDs to renderers
+      val rootView  = ElementView.Root(root)
+      val document  = _doc
 
-    type Path     = TreeTable.Path[ElementView.FolderLike[S]]
-
-    def loop(f: Folder[S], fv: ElementView.FolderLike[S]) {
-      val tup = f.iterator.map(c => c -> ElementView(fv, c)(tx)).toIndexedSeq
-      fv.children = tup.map(_._2)
-      tup.foreach { case (c, cv) =>
-        mapViews.put(c.id, cv)
-        (c, cv) match {
-          case (cf: Element.Folder[S], cfv: ElementView.Folder[S]) =>
-            loop(cf.entity, cfv)
-          case _ =>
+      private def buildMapView(f: Folder[S], fv: ElementView.FolderLike[S]) {
+        val tup = f.iterator.map(c => c -> ElementView(fv, c)(tx)).toIndexedSeq
+        fv.children = tup.map(_._2)
+        tup.foreach { case (c, cv) =>
+          mapViews.put(c.id, cv)
+          (c, cv) match {
+            case (cf: Element.Folder[S], cfv: ElementView.Folder[S]) =>
+              buildMapView(cf.entity, cfv)
+            case _ =>
+          }
         }
       }
+      buildMapView(root, rootView)
+
+      val observer = root.changed.react { implicit tx => upd =>
+        val c = rootView.convert(upd)
+        folderUpdated(rootView, c)
+      }
+
+      guiFromTx {
+        guiInit()
+      }
     }
-    loop(root, rootView)
-
-    // map += root.id ->
-
-    val obs = root.changed.react { implicit tx => upd =>
-      val c = rootView.convert(upd)
-      view.folderUpdated(rootView, c)
-    }
-    // XXX TODO: remember obs for disposal
-
-    guiFromTx {
-      view.guiInit()
-    }
-
-    view
   }
 
-  private final class Impl[S <: Sys[S]](_root: ElementView.Root[S],
-                                        mapViews: IdentifierMap[S#ID, S#Tx, ElementView[S]])
-                                       (implicit cursor: Cursor[S])
+  private abstract class Impl[S <: Sys[S]]
     extends ComponentHolder[Component] with FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
@@ -88,8 +89,14 @@ object FolderViewImpl {
     type Branch = ElementView.FolderLike[S]
     type Path   = TreeTable.Path[Branch]
 
+    protected def rootView: ElementView.Root[S]
+    protected def mapViews: IdentifierMap[S#ID, S#Tx, ElementView[S]]
+    protected implicit def cursor: Cursor[S]
+    protected def observer: Disposable[S#Tx]
+    protected def document: Document[S]
+
     private class ElementTreeModel extends AbstractTreeModel[Node] {
-      lazy val root: Node = _root // ! must be lazy. suckers....
+      lazy val root: Node = rootView // ! must be lazy. suckers....
 
       def getChildCount(parent: Node): Int = parent match {
         case b: ElementView.FolderLike[S] => b.children.size
@@ -227,17 +234,11 @@ object FolderViewImpl {
     }
 
     def dispose()(implicit tx: S#Tx) {
-      println("WARNING: FolderViewImpl.dispose() - leaving stuff dirty")
-      // val rootPath = Tree.Path(_root)
-      // XXX TODO: should not access children potentially outside GUI thread. Use linked list instead
-      // _root.children.zipWithIndex.reverse.foreach { case (v, idx) => elemRemoved(rootPath, idx, v.element()) }
-      // val r = _root.folder
-      // mapViews.get(r.id).foreach(_.dispose())
-      // mapViews.remove(r.id)
+      observer.dispose()
       mapViews.dispose()
     }
 
-    def guiInit() {
+    protected def guiInit() {
       requireEDT()
       require(comp == null, "Initialization called twice")
 
@@ -313,8 +314,28 @@ object FolderViewImpl {
           dispatch(FolderView.SelectionChanged(view, selection))
         // case e => println(s"other: $e")
       }
-      t.showsRootHandles = true
+      t.showsRootHandles  = true
       t.expandPath(Tree.Path.empty)
+      t.dragEnabled       = true
+      t.peer.setTransferHandler(new TransferHandler {
+        override def getSourceActions(c: JComponent): Int = {
+          TransferHandler.COPY | TransferHandler.MOVE // dragging only works when MOVE is included. Why?
+        }
+        override def createTransferable(c: JComponent): Transferable = {
+          // println("createTransferable")
+          new Transferable {
+            def getTransferDataFlavors: Array[DataFlavor] = Array(FolderView.selectionFlavor)
+            def isDataFlavorSupported(flavor: DataFlavor): Boolean = flavor == FolderView.selectionFlavor
+            def getTransferData(flavor: DataFlavor): AnyRef = {
+              if (flavor == FolderView.selectionFlavor) {
+                new FolderView.SelectionDnDData(document, selection)
+              } else {
+                throw new UnsupportedFlavorException(flavor)
+              }
+            }
+          }
+        }
+      })
 
       val scroll    = new ScrollPane(t)
       scroll.border = null
