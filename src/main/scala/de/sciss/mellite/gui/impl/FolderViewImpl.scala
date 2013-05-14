@@ -321,20 +321,10 @@ object FolderViewImpl {
         override def getSourceActions(c: JComponent): Int = {
           TransferHandler.COPY | TransferHandler.MOVE // dragging only works when MOVE is included. Why?
         }
-        override def createTransferable(c: JComponent): Transferable = {
-          // println("createTransferable")
-          new Transferable {
-            def getTransferDataFlavors: Array[DataFlavor] = Array(FolderView.selectionFlavor)
-            def isDataFlavorSupported(flavor: DataFlavor): Boolean = flavor == FolderView.selectionFlavor
-            def getTransferData(flavor: DataFlavor): AnyRef = {
-              if (flavor == FolderView.selectionFlavor) {
-                new FolderView.SelectionDnDData(document, selection)
-              } else {
-                throw new UnsupportedFlavorException(flavor)
-              }
-            }
+        override def createTransferable(c: JComponent): Transferable =
+          DragAndDrop.Transferable(FolderView.selectionFlavor) {
+            new FolderView.SelectionDnDData(document, selection)
           }
-        }
       })
 
       val scroll    = new ScrollPane(t)

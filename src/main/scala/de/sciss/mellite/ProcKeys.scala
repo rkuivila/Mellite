@@ -9,4 +9,6 @@ object ProcKeys {
   final val graphAudio  = "sig"
   /** Source code of the graph function. */
   final val attrGraphSource = "graph-source"
+  /** Bus attribute. Type `Int` */
+  final val attrBus     = "bus"
 }

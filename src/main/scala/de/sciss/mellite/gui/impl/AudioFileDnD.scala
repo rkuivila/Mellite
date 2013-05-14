@@ -17,43 +17,45 @@ import TransferHandler.COPY
 object AudioFileDnD {
   // XXX TODO: should carry document to avoid cross-document DnD without deep copy
 
-  final case class Drag(grapheme: Grapheme.Value.Audio, selection: Span)
-  final case class Data[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, AudioGrapheme[S]], drag: Drag)
-  final case class Drop(frame: Long, y: Int, drag: Drag)
+  final case class Drag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, AudioGrapheme[S]],
+                                     grapheme: Grapheme.Value.Audio, selection: Span,
+                                     bus: Option[stm.Source[S#Tx, Element.Int[S]]])
+  final case class Drop[S <: Sys[S]](frame: Long, y: Int, drag: Drag[S])
 
-  private[AudioFileDnD] final class Transferable[S <: Sys[S]](data: Data[S])
-  extends datatransfer.Transferable {
-    // println(s"New Transferable. Data = $data")
+  //  private[AudioFileDnD] final class Transferable[S <: Sys[S]](data: Drag[S])
+  //  extends datatransfer.Transferable {
+  //    // println(s"New Transferable. Data = $data")
+  //
+  //    def getTransferDataFlavors: Array[DataFlavor] = Array(AudioFileDnD.flavor)
+  //    def isDataFlavorSupported(flavor: DataFlavor): Boolean = {
+  //      val res = flavor == AudioFileDnD.flavor
+  //      // println(s"isDataFlavorSupported($flavor) == $res")
+  //      res
+  //    }
+  //    def getTransferData(flavor: DataFlavor): AnyRef = data
+  //  }
 
-    def getTransferDataFlavors: Array[DataFlavor] = Array(AudioFileDnD.flavor)
-    def isDataFlavorSupported(flavor: DataFlavor): Boolean = {
-      val res = flavor == AudioFileDnD.flavor
-      // println(s"isDataFlavorSupported($flavor) == $res")
-      res
-    }
-    def getTransferData(flavor: DataFlavor): AnyRef = data
-  }
-
-  // XXX TODO: hmmm. this is all a bit odd. Should be like Bus DnD in audio file view.
-  final val flavor = new DataFlavor(classOf[Transferable[_]], "AudioRegion")
+  final val flavor = DragAndDrop.internalFlavor[Drag[_]]
 
   final class Button[S <: Sys[S]](document: Document[S], val source: stm.Source[S#Tx, AudioGrapheme[S]],
                                   snapshot0: Grapheme.Value.Audio,
                                   timelineModel: TimelineModel)
     extends swing.Button("Region") {
 
-    var snapshot = snapshot0
+    var snapshot  = snapshot0
+    var bus       = Option.empty[stm.Source[S#Tx, Element.Int[S]]]
 
     private object Transfer extends TransferHandler {
       override def getSourceActions(c: JComponent): Int =
         if (timelineModel.selection.isEmpty) TransferHandler.NONE else COPY
 
-      override def createTransferable(c: JComponent): datatransfer.Transferable = {
-        timelineModel.selection match {
-          case sp @ Span(_, _) if sp.nonEmpty =>
-            new Transferable(Data(document, source, Drag(grapheme = snapshot, selection = sp)))
-          case _ => null
-        }
+      override def createTransferable(c: JComponent): datatransfer.Transferable =
+        DragAndDrop.Transferable(flavor) {
+          timelineModel.selection match {
+            case sp @ Span(_, _) if sp.nonEmpty =>
+              Drag(document, source, grapheme = snapshot, selection = sp, bus = bus)
+            case _ => null
+          }
       }
     }
 
@@ -96,10 +98,11 @@ trait AudioFileDnD[S <: Sys[S]] {
   
   import AudioFileDnD._
 
+  protected def document: Document[S]
   protected def timelineModel: TimelineModel
   
-  protected def updateDnD(drop: Option[Drop]): Unit
-  protected def acceptDnD(drop: Drop, data: Data[S]): Boolean
+  protected def updateDnD(drop: Option[Drop[S]]): Unit
+  protected def acceptDnD(drop:        Drop[S] ): Boolean
 
   private object Adaptor extends DropTargetAdapter {
     override def dragEnter(e: DropTargetDragEvent) {
@@ -119,27 +122,30 @@ trait AudioFileDnD[S <: Sys[S]] {
       e.rejectDrag()
     }
 
-    private def mkDrop(d: AudioFileDnD.Data[_], loc: Point): Drop = {
+    private def mkDrop(d: AudioFileDnD.Drag[S], loc: Point): Drop[S] = {
       val visi  = timelineModel.visible
       val w     = peer.getWidth
       val frame = (loc.x.toDouble / w * visi.length + visi.start).toLong
       val y     = loc.y
-      Drop(frame = frame, y = y, drag = d.drag)
+      Drop(frame = frame, y = y, drag = d)
     }
   
     private def process(e: DropTargetDragEvent) {
       val t = e.getTransferable
       if (!t.isDataFlavorSupported(AudioFileDnD.flavor)) {
+        println("NO WAY JOSE")
         abortDrag(e)
   
       } else t.getTransferData(AudioFileDnD.flavor) match {
-        case d: AudioFileDnD.Data[_] =>
-          val loc   = e.getLocation
-          val drop  = mkDrop(d, loc)
+        case d: AudioFileDnD.Drag[_] if (d.document == document) =>
+          val loc     = e.getLocation
+          val drag    = d.asInstanceOf[AudioFileDnD.Drag[S]]
+          val drop    = mkDrop(drag, loc)
           updateDnD(Some(drop))
           e.acceptDrag(COPY)
 
         case _ =>
+          println("HUH?")
           abortDrag(e)
       }
     }
@@ -152,12 +158,12 @@ trait AudioFileDnD[S <: Sys[S]] {
         e.rejectDrop()
   
       } else t.getTransferData(AudioFileDnD.flavor) match {
-        case d: AudioFileDnD.Data[_] =>
-          val data    = d.asInstanceOf[AudioFileDnD.Data[S]]
+        case d: AudioFileDnD.Drag[_] =>
+          val drag    = d.asInstanceOf[AudioFileDnD.Drag[S]]
           e.acceptDrop(COPY)
           val loc     = e.getLocation
-          val drop    = mkDrop(d, loc)
-          val success = acceptDnD(drop, data)
+          val drop    = mkDrop(drag, loc)
+          val success = acceptDnD(drop)
           e.dropComplete(success)
 
         case _ =>

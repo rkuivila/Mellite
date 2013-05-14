@@ -409,11 +409,11 @@ object TimelineViewImpl {
       }
     }
 
-    private def dropAudioRegion(drop: AudioFileDnD.Drop, data: AudioFileDnD.Data[S]): Boolean = step { implicit tx =>
+    private def dropAudioRegion(drop: AudioFileDnD.Drop[S]): Boolean = step { implicit tx =>
       val group = groupH()
       group.modifiableOption match {
         case Some(groupM) =>
-          DropAudioRegionAction(groupM, drop, data)
+          DropAudioRegionAction(groupM, drop)
           true
         case _ => false
       }
@@ -494,8 +494,9 @@ object TimelineViewImpl {
 
       object canvasComponent extends Component with AudioFileDnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
+        protected def document      = impl.document
 
-        private var audioDnD = Option.empty[AudioFileDnD.Drop]
+        private var audioDnD = Option.empty[AudioFileDnD.Drop[S]]
 
         // var visualBoost = 1f
         private var sonoBoost = 1f
@@ -512,13 +513,13 @@ object TimelineViewImpl {
           (b.width >> 1, b.height >> 1)
         }
 
-        protected def updateDnD(drop: Option[AudioFileDnD.Drop]) {
+        protected def updateDnD(drop: Option[AudioFileDnD.Drop[S]]) {
           audioDnD = drop
           repaint()
         }
 
-        protected def acceptDnD(drop: AudioFileDnD.Drop, data: AudioFileDnD.Data[S]): Boolean =
-          dropAudioRegion(drop, data)
+        protected def acceptDnD(drop: AudioFileDnD.Drop[S]): Boolean =
+          dropAudioRegion(drop)
 
         def imageObserver = peer
 

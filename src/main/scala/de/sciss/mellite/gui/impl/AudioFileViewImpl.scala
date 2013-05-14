@@ -60,11 +60,13 @@ object AudioFileViewImpl {
       ))
       transport.button(Stop).foreach(_.selected = true)
 
+      val ggDragRegion = new AudioFileDnD.Button(document, holder, snapshot, tlm)
+
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
           HStrut(4),
-          new AudioFileDnD.Button(document, holder, snapshot, tlm),
-          new BusSinkButton[S](impl),
+          ggDragRegion,
+          new BusSinkButton[S](impl, ggDragRegion),
           HGlue,
           HStrut(4),
           timeDisp.component,
@@ -86,13 +88,16 @@ object AudioFileViewImpl {
     def element(implicit tx: S#Tx): AudioGrapheme[S] = holder()
   }
 
-  private final class BusSinkButton[S <: Sys[S]](view: Impl[S]) extends Button("Drop bus") {
+  private final class BusSinkButton[S <: Sys[S]](view: Impl[S], export: AudioFileDnD.Button[S])
+    extends Button("Drop bus") {
+
     icon        = new ImageIcon(Mellite.getClass.getResource("dropicon16.png"))
-    GUI.fixWidth(this)
+    // this doesn't have any effect?
+    // GUI.fixWidth(this)
     foreground  = Color.gray
     focusable   = false
 
-    private var item = Option.empty[stm.Source[S#Tx, Element.Int[S]]]
+    // private var item = Option.empty[stm.Source[S#Tx, Element.Int[S]]]
 
     peer.setTransferHandler(new TransferHandler {
       // how to enforce a drop action: https://weblogs.java.net/blog/shan_man/archive/2006/02/choosing_the_dr.html
@@ -113,7 +118,7 @@ object AudioFileViewImpl {
           }
           ints.headOption match {
             case Some((name, it)) =>
-              item        = Some(it)
+              export.bus  = Some(it)
               text        = name
               foreground  = null
               repaint()

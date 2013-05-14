@@ -46,9 +46,7 @@ object FolderView {
   final case class SelectionDnDData[S <: Sys[S]](document: Document[S], selection: Selection[S])
 
   // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
-  val selectionFlavor =
-    new DataFlavor(s"""${DataFlavor.javaJVMLocalObjectMimeType};class="${classOf[SelectionDnDData[_]].getName}"""",
-      "folder-view selection")
+  val selectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]
 
   sealed trait Update[S <: Sys[S]] { def view: FolderView[S] }
   final case class SelectionChanged[S <: Sys[S]](view: FolderView[S], selection: Selection[S])

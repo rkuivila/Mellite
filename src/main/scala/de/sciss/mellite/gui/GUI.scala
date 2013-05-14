@@ -7,6 +7,7 @@ import scalaswingcontrib.group.GroupPanel
 import scala.swing.{Window, Swing, Dialog, Component, TextField, Label, Alignment}
 import java.awt.{Rectangle, EventQueue, GraphicsEnvironment}
 import javax.swing.Timer
+import java.awt.datatransfer.DataFlavor
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
