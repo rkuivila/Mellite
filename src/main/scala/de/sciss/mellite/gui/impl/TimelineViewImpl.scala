@@ -49,6 +49,7 @@ import de.sciss.lucre.expr.Expr
 import Predef.{any2stringadd => _, _}
 import scala.Some
 import de.sciss.lucre.event.Change
+import scala.concurrent.ExecutionContext
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -85,7 +86,7 @@ object TimelineViewImpl {
     val auralView = proc.AuralPresentation.runTx[S](transp, aural)
     // XXX TODO dispose transp and auralView
 
-    val view    = new Impl[S](document, groupH, transp, procMap, tlm)
+    val view    = new Impl(document, groupH, transp, procMap, tlm)
 
     transp.react { implicit tx => {
       case proc.Transport.Play(t, time) => view.startedPlaying(time)
@@ -192,12 +193,18 @@ object TimelineViewImpl {
     // ---- actions ----
 
     object bounceAction extends Action("Bounce") {
-      private var settings = ActionBounceTimeline.Settings[S]()
+      private var settings = ActionBounceTimeline.QuerySettings[S]()
 
       def apply() {
-        val (_settings, ok) = ActionBounceTimeline.query(settings, document, timelineModel, parent = GUI.findWindow(component))
+        import ActionBounceTimeline._
+        val window  = GUI.findWindow(component)
+        val (_settings, ok) = query(settings, document, timelineModel, window = window)
         settings = _settings
-        println(ok)
+        _settings.file match {
+          case Some(file) if ok =>
+            performGUI(document, _settings, groupH, file, window = window)
+          case _ =>
+        }
       }
     }
 

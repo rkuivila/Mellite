@@ -32,7 +32,8 @@ import synth.proc.Sys
 import lucre.stm
 
 object DocumentElementsFrame {
-  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): DocumentElementsFrame[S] = Impl(doc)
+  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): DocumentElementsFrame[S] =
+    Impl(doc)
 }
 
 trait DocumentElementsFrame[S <: Sys[S]] {

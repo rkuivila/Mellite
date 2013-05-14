@@ -42,7 +42,8 @@ import java.io.File
 import javax.swing.{JSpinner, SpinnerNumberModel}
 
 object DocumentElementsFrameImpl {
-  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): DocumentElementsFrame[S] = {
+  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx,
+                                           cursor: stm.Cursor[S]): DocumentElementsFrame[S] = {
     // implicit val csr  = doc.cursor
     val folderView      = FolderView(doc.elements)
     val view            = new Impl(doc, folderView)
@@ -59,13 +60,17 @@ object DocumentElementsFrameImpl {
 
     // protected implicit def cursor: Cursor[S] = document.cursor
 
-    private def addElement(elem: Element[S])(implicit tx: S#Tx) {
+    private def targetFolder(implicit tx: S#Tx): Folder[S] = {
       val sel = folderView.selection
-      val parent = if (sel.isEmpty) document.elements else sel.head match {
+      if (sel.isEmpty) document.elements else sel.head match {
         case (_, _parent: ElementView.Folder[S])        => _parent.folder
         case (_ :+ (_parent: ElementView.Folder[S]), _) => _parent.folder
         case _                                          => document.elements
       }
+    }
+
+    private def addElement(elem: Element[S])(implicit tx: S#Tx) {
+      val parent = targetFolder
       parent.addLast(elem)
     }
 
@@ -89,35 +94,24 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    private def queryArtifactLocation(): Option[(File, String)] = {
-      val dlg  = FileDialog.folder(title = "Choose Artifact Base Location")
-      dlg.show(None).flatMap { folder =>
-        val res = Dialog.showInput[String](folderView.component, "Enter initial store name:", "New Artifact Location",
-          Dialog.Message.Question, initial = folder.getName)
-        res.map(folder -> _)
-      }
-    }
-
-    private def createArtifactLocation(folder: File, name: String)(implicit tx: S#Tx): Element.ArtifactLocation[S] = {
-      val res = Element.ArtifactLocation(name, Artifact.Location.Modifiable(folder))
-      addElement(res)
-      res
-    }
-
     private def actionAddArtifactLocation() {
-      queryArtifactLocation().foreach { case (folder, name) =>
+      val query = ActionArtifactLocation.queryNew(window = Some(comp))
+      query.foreach { case (directory, name) =>
         atomic { implicit tx =>
-          createArtifactLocation(folder, name)
+          ActionArtifactLocation.create(directory, name, targetFolder)
         }
       }
     }
 
     private def actionAddAudioFile() {
-      val locs = folderView.selection.collect {
-        case (_, loc: ElementView.ArtifactLocation[S]) => loc
+      type Loc      = Element    .ArtifactLocation[S]
+      type LocView  = ElementView.ArtifactLocation[S]
+
+      val locViews = folderView.selection.collect {
+        case (_, view: LocView) => view
       }
 
-      val dlg = FileDialog.open(init = locs.headOption.map(_.directory), title = "Add Audio File")
+      val dlg = FileDialog.open(init = locViews.headOption.map(_.directory), title = "Add Audio File")
       dlg.setFilter(AudioFile.identify(_).isDefined)
       dlg.show(None).foreach { f =>
         val spec      = AudioFile.readSpec(f)
@@ -125,7 +119,7 @@ object DocumentElementsFrameImpl {
         val i         = name0.lastIndexOf('.')
         val name      = if (i < 0) name0 else name0.substring(0, i)
 
-        val locsOk = locs.flatMap { view =>
+        val locsOk = locViews.flatMap { view =>
           try {
             Artifact.relativize(view.directory, f)
             Some(view)
@@ -134,17 +128,18 @@ object DocumentElementsFrameImpl {
           }
         } .headOption
 
-        val locSource = locsOk match {
-          case Some(loc)  => Some(Right(loc))
-          case _          => queryArtifactLocation().map(tup => Left(tup))
+        val locSourceOpt: Option[stm.Source[S#Tx, Loc]] = locsOk match {
+          case Some(loc)  => Some(loc.element)
+          case _          =>
+            val parent = folderView.selection.collect {
+              case (_, f: ElementView.Folder[S]) => f.element
+            } .headOption
+            ActionArtifactLocation.query(document, file = f, folder = parent, window = Some(comp))
         }
 
-        locSource.foreach { either =>
+        locSourceOpt.foreach { locSource =>
           atomic { implicit tx =>
-            val loc       = either match {
-              case Left((folder, locName)) => createArtifactLocation(folder, locName)
-              case Right(view) => view.element()
-            }
+            val loc = locSource()
             loc.entity.modifiableOption.foreach { locM =>
               val offset    = Longs  .newVar[S](Longs  .newConst(0L))
               val gain      = Doubles.newVar[S](Doubles.newConst(1.0))
@@ -251,7 +246,7 @@ object DocumentElementsFrameImpl {
               // val e   = view.element()
               // import document.inMemory
               import Mellite.auralSystem
-              TimelineFrame(document, view.name, view.element())
+              TimelineFrame[S](document, view.name, view.element())
 
             case view: ElementView.AudioGrapheme[S] =>
               val e         = view.element()

@@ -6,11 +6,18 @@ import scala.swing.Swing._
 import scalaswingcontrib.group.GroupPanel
 import scala.swing.{Window, Swing, Dialog, Component, TextField, Label, Alignment}
 import java.awt.{Rectangle, EventQueue, GraphicsEnvironment}
+import javax.swing.Timer
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
   def centerOnScreen(w: desktop.Window) {
     placeWindow(w, 0.5f, 0.5f, 0)
+  }
+
+  def delay(millis: Int)(block: => Unit) {
+    val timer = new Timer(millis, Swing.ActionListener(_ => block))
+    timer.setRepeats(false)
+    timer.start()
   }
 
   def fixWidth(c: Component, width: Int = -1) {

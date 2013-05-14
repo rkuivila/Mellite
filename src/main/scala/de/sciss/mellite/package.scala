@@ -35,6 +35,7 @@ import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
 import scala.annotation.elidable
 import scala.annotation.elidable.CONFIG
+import scala.concurrent.ExecutionContext
 
 package object mellite {
   type Cf           = Confluent
@@ -47,6 +48,8 @@ package object mellite {
       println(logHeader.format(new Date()) + what)
     }
   }
+
+  implicit val executionContext: ExecutionContext = ExecutionContext.Implicits.global
 
   object Folder {
     import mellite.{Element => _Element}

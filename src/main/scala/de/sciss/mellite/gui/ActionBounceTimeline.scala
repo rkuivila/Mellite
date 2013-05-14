@@ -4,12 +4,12 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{Bounce, Sys}
-import de.sciss.desktop.{OptionPane, FileDialog, Window}
-import scala.swing.{Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
+import de.sciss.synth.proc.{Server, Artifact, Bounce, Sys}
+import de.sciss.desktop.{DialogSource, OptionPane, FileDialog, Window}
+import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFileSpec, SampleFormat, AudioFileType}
 import java.io.File
-import javax.swing.{JFormattedTextField, JSpinner, SpinnerNumberModel}
+import javax.swing.{SwingUtilities, JFormattedTextField, JSpinner, SpinnerNumberModel}
 import de.sciss.span.Span
 import Swing._
 import de.sciss.audiowidgets.AxisFormat
@@ -22,6 +22,9 @@ import scala.util.control.NonFatal
 import java.text.ParseException
 import collection.breakOut
 import scala.swing.event.{SelectionChanged, ValueChanged}
+import scala.util.{Failure, Success, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import de.sciss.processor.Processor
 
 object ActionBounceTimeline {
   object GainType {
@@ -34,17 +37,39 @@ object ActionBounceTimeline {
   case object Normalized extends GainType { final val id = 0 }
   case object Immediate  extends GainType { final val id = 1 }
 
-  final case class Settings[S <: Sys[S]](
+  final case class QuerySettings[S <: Sys[S]](
     file: Option[File] = None,
     spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
     gainAmount: Double = -0.2, gainType: GainType = Normalized,
     span: SpanOrVoid = Span.Void, channels: IIdxSeq[Range.Inclusive] = Vector(0 to 1),
     importFile: Boolean = true, location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
+  ) {
+    def prepare(group: stm.Source[S#Tx, proc.ProcGroup[S]], f: File): PerformSettings[S] = {
+      val server                = Server.Config()
+      server.nrtOutputPath      = f.path
+      server.nrtHeaderFormat    = spec.fileType
+      server.nrtSampleFormat    = spec.sampleFormat
+      server.sampleRate         = spec.sampleRate.toInt
+      server.outputBusChannels  = spec.numChannels
+
+      PerformSettings(
+        group = group, file = f, server = server, gainAmount = gainAmount, gainType = gainType, span = span,
+        channels = channels
+      )
+    }
+  }
+
+  final case class PerformSettings[S <: Sys[S]](
+    group: stm.Source[S#Tx, proc.ProcGroup[S]],
+    file: File,
+    server: Server.Config,
+    gainAmount: Double = -0.2, gainType: GainType = Normalized,
+    span: SpanOrVoid, channels: IIdxSeq[Range.Inclusive]
   )
 
-  def query[S <: Sys[S]](init: Settings[S], document: Document[S], timelineModel: TimelineModel,
-                         parent: Option[Window])
-                        (implicit cursor: stm.Cursor[S]) : (Settings[S], Boolean) = {
+  def query[S <: Sys[S]](init: QuerySettings[S], document: Document[S], timelineModel: TimelineModel,
+                         window: Option[Window])
+                        (implicit cursor: stm.Cursor[S]) : (QuerySettings[S], Boolean) = {
 
     val ggFileType      = new ComboBox[AudioFileType](AudioFileType.writable)
     ggFileType.selection.item = init.spec.fileType // AudioFileType.AIFF
@@ -69,7 +94,7 @@ object ActionBounceTimeline {
     init.file.foreach(f => ggPathText.text = f.path)
     val ggPathDialog    = Button("...") {
       val dlg = FileDialog.save(init = Some(new File(ggPathText.text)), title = "Bounce Audio Output File")
-      dlg.show(parent).foreach(setPathText)
+      dlg.show(window).foreach(setPathText)
     }
     ggPathDialog.peer.putClientProperty("JButton.buttonType", "gradient")
 
@@ -172,7 +197,7 @@ object ActionBounceTimeline {
     val opt = OptionPane.confirmation(message = box, optionType = OptionPane.Options.OkCancel,
       messageType = OptionPane.Message.Plain)
     opt.title = "Bounce Timeline to Disk"
-    val ok    = opt.show(parent) == OptionPane.Result.Ok
+    val ok    = opt.show(window) == OptionPane.Result.Ok
     val file  = if (ggPathText.text == "") None else Some(new File(ggPathText.text))
 
     val channels: IIdxSeq[Range.Inclusive] = try {
@@ -180,29 +205,113 @@ object ActionBounceTimeline {
     } catch {
       case _: ParseException => init.channels
     }
-    val location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None // ???
 
-    val settings = Settings(
+    val importFile  = ggImport.selected
+    val numChannels = channels.map(_.size).sum
+
+    var settings = QuerySettings(
       file        = file,
       spec        = AudioFileSpec(ggFileType.selection.item, ggSampleFormat.selection.item,
-        numChannels = channels.size, sampleRate = timelineModel.sampleRate),
+        numChannels = numChannels, sampleRate = timelineModel.sampleRate),
       gainAmount  = gainModel.getNumber.doubleValue(),
       gainType    = ggGainType.selection.item,
       span        = if (ggSpanUser.selected) tlSel else Span.Void,
       channels    = channels,
-      importFile  = ggImport.selected,
-      location    = location
+      importFile  = importFile,
+      location    = init.location
     )
 
-    if (ok && file.isEmpty) return query(settings, document, timelineModel, parent)
+    file match {
+      case Some(f) if importFile =>
+        init.location match {
+          case Some(source) if cursor.step { implicit tx =>
+              val parent = source().entity.directory
+              Try(Artifact.relativize(parent, f)).isSuccess
+            } =>  // ok, keep previous location
+
+          case _ => // either no location was set, or it's not parent of the file
+            ActionArtifactLocation.query(document, f) match {
+              case res @ Some(_)  => settings = settings.copy(location = res)
+              case _              => return (settings, false)
+            }
+        }
+      case _ =>
+    }
+
+    if (ok && file.isEmpty) return query(settings, document, timelineModel, window)
 
     (settings, ok)
   }
 
-  def perform[S <: Sys[S]](groupH: stm.Source[S#Tx, proc.ProcGroup[S]], span: Span,
-                           selection: Option[Iterable[TimelineProcView[S]]], parent: Option[Window]) {
+  //  final case class QuerySettings[S <: Sys[S]](
+  //    file: Option[File] = None,
+  //    spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
+  //    gainAmount: Double = -0.2, gainType: GainType = Normalized,
+  //    span: SpanOrVoid = Span.Void, channels: IIdxSeq[Range.Inclusive] = Vector(0 to 1),
+  //    importFile: Boolean = true, location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
+  //  )
 
-    // val bounce = Bounce[S, I]
-    ???
+  def performGUI[S <: Sys[S]](document: Document[S],
+                              settings: QuerySettings[S],
+                              group: stm.Source[S#Tx, proc.ProcGroup[S]], file: File,
+                              window: Option[Window] = None)
+                             (implicit cursor: stm.Cursor[S]) {
+
+    val pSet        = settings.prepare(group, file)
+    val process     = perform(document, pSet)
+
+    val ggProgress  = new ProgressBar()
+    val ggCancel    = Button("Abort") {
+      process.abort()
+    }
+    ggCancel.focusable = false
+    val op    = OptionPane(message = ggProgress, messageType = OptionPane.Message.Plain, entries = Seq(ggCancel))
+    val title = s"Bouncing to ${file.name} ..."
+    op.title  = title
+
+    def fDispose() {
+      val w = SwingUtilities.getWindowAncestor(op.peer); if (w != null) w.dispose()
+    }
+    process.addListener {
+      case prog @ Processor.Progress(_, _) => GUI.defer(ggProgress.value = prog.toInt)
+    }
+
+    process.onComplete {
+      case Success(_) =>
+        GUI.defer(fDispose())
+        println("Succeeded")
+        (settings.importFile, settings.location) match {
+          case (true, Some(locSource)) =>
+            // XXX TODO: Element.Bounce
+          case _ => // XXX TODO: revealInFinder?
+        }
+      case Failure(Processor.Aborted()) =>
+        GUI.defer(fDispose())
+      case Failure(e: Exception) => // XXX TODO: Desktop should allow Throwable for DialogSource.Exception
+        GUI.defer {
+          fDispose()
+          DialogSource.Exception(e -> title).show(window)
+        }
+      case Failure(e) =>
+        GUI.defer(fDispose())
+        e.printStackTrace()
+    }
+
+    GUI.delay(500) {
+      if (!process.isCompleted) op.show(window)
+    }
+  }
+
+  def perform[S <: Sys[S]](document: Document[S], settings: PerformSettings[S])
+                          (implicit cursor: stm.Cursor[S]): Processor[File, _] = {
+    import document.inMemory
+    val bounce  = Bounce[S, document.I]
+    val bCfg    = bounce.Config()
+    bCfg.group  = settings.group
+    bCfg.server.read(settings.server)
+    bCfg.span   = settings.span
+    val process = bounce(bCfg)
+    process.start()
+    process
   }
 }

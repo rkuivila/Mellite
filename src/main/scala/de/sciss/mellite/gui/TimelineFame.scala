@@ -9,7 +9,8 @@ import lucre.stm
 
 object TimelineFrame {
   def apply[S <: Sys[S]](document: Document[S], name: String, group: Element.ProcGroup[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): TimelineFrame[S] =
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S],
+                         aural: AuralSystem): TimelineFrame[S] =
     Impl(document, name, group)
 }
 trait TimelineFrame[S <: Sys[S]] {
