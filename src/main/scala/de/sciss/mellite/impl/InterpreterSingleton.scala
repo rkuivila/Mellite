@@ -1,5 +1,4 @@
 package de.sciss.mellite
-package gui
 package impl
 
 import de.sciss.scalainterpreter.Interpreter

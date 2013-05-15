@@ -36,7 +36,10 @@ object MenuBar {
     import KeyEvent._
     Root().add(
       Group("file", "File")
-        .add(Item("new", ActionNewFile))
+        .add(Group("new", "New")
+          .add(Item("new-doc", ActionNewFile))
+          .add(Item("repl",    InterpreterFrame.Action))
+        )
         .add(Item("open", ActionOpenFile))
         .add(ActionOpenFile.recentMenu)
         .add(Item("close",              proxy("Close",                    (menu1 + VK_W))))

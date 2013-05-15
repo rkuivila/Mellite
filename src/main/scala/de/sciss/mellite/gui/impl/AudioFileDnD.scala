@@ -5,7 +5,6 @@ package impl
 import java.awt.dnd.{DropTarget, DropTargetEvent, DropTargetDropEvent, DropTargetDragEvent, DropTargetAdapter}
 import de.sciss.span.Span
 import java.awt.{Point, datatransfer}
-import datatransfer.DataFlavor
 import de.sciss.synth.proc.{Grapheme, Sys}
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
@@ -89,7 +88,7 @@ object AudioFileDnD {
       }
     }
 
-    peer.addMouseListener(Mouse)
+    peer.addMouseListener      (Mouse)
     peer.addMouseMotionListener(Mouse)
   }
 }
@@ -133,7 +132,6 @@ trait AudioFileDnD[S <: Sys[S]] {
     private def process(e: DropTargetDragEvent) {
       val t = e.getTransferable
       if (!t.isDataFlavorSupported(AudioFileDnD.flavor)) {
-        println("NO WAY JOSE")
         abortDrag(e)
   
       } else t.getTransferData(AudioFileDnD.flavor) match {
@@ -145,7 +143,6 @@ trait AudioFileDnD[S <: Sys[S]] {
           e.acceptDrag(COPY)
 
         case _ =>
-          println("HUH?")
           abortDrag(e)
       }
     }
