@@ -17,9 +17,9 @@ final class TrackToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
 
   import TrackTools._
 
-  private var _currentTool: TrackTool[_] = TrackTool.cursor(canvas)
+  private var _currentTool: TrackTool[S, _] = TrackTool.cursor(canvas)
   def currentTool = _currentTool
-  def currentTool_=(value: TrackTool[_]) {
+  def currentTool_=(value: TrackTool[S, _]) {
     if (_currentTool != value) {
       val oldTool   = _currentTool
       _currentTool  = value

@@ -278,27 +278,29 @@ trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with Timeli
 
   import TrackTools._
 
-  private var _toolState = Option.empty[Any]
-  final protected def toolState = _toolState
+  //  private var _toolState = Option.empty[Any]
+  //  final protected def toolState = _toolState
+
+  protected var toolState: Option[Any]
 
   private val toolListener: TrackTool.Listener = {
     // case TrackTool.DragBegin =>
     case TrackTool.DragCancel =>
-      if (_toolState.isDefined) {
-        _toolState = None
+      if (toolState.isDefined) {
+        toolState = None
         repaint()
       }
     case TrackTool.DragEnd =>
-      _toolState.foreach { state =>
-        _toolState = None
+      toolState.foreach { state =>
+        toolState = None
         commitToolChanges(state)
         repaint()
       }
 
     case TrackTool.DragAdjust(value) =>
       val some = Some(value)
-      if (_toolState != some) {
-        _toolState = some
+      if (toolState != some) {
+        toolState = some
         repaint()
       }
   }

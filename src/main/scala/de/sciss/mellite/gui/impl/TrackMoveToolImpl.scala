@@ -3,13 +3,18 @@ package mellite
 package gui
 package impl
 
-import synth.proc.Sys
+import de.sciss.synth.proc.{Proc, Attribute, Sys}
 import java.awt.Cursor
+import de.sciss.span.{SpanLike, Span}
+import de.sciss.synth.expr.ExprImplicits
+import de.sciss.synth.proc
+import de.sciss.lucre.expr.Expr
 
 final class TrackMoveToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicTrackRegionTool[S, TrackTool.Move] {
 
   import TrackTool._
+  import BasicTrackRegionTool.MinDur
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
   val name          = "Move"
@@ -31,6 +36,62 @@ final class TrackMoveToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
     }
 
     Move(deltaTime = dtim, deltaTrack = dtrk, copy = d.currentEvent.isAltDown)
+  }
+
+  protected def commit(span: Expr[S, SpanLike], proc: Proc[S], drag: Move)(implicit tx: S#Tx) {
+    import drag._
+    if (deltaTrack != 0) {
+      // XXX TODO: could check for Expr.Const here and Expr.Var.
+      // in the case of const, just overwrite, in the case of
+      // var, check the value stored in the var, and update the var
+      // instead (recursion). otherwise, it will be some combinatory
+      // expression, and we could decide to construct a binary op instead!
+      val attr = proc.attributes
+      val expr = ExprImplicits[S]
+      import expr._
+      // attr[Attribute.Int[S]](ProcKeys.track).foreach {
+      //   case Expr.Var(vr) => vr.transform(_ + deltaTrack)
+      //   case _ =>
+      // }
+
+      // lucre.event.showLog = true
+      // lucre.bitemp.impl.BiGroupImpl.showLog = true
+
+      for (Expr.Var(t) <- attr[Attribute.Int](ProcKeys.attrTrack)) t.transform(_ + deltaTrack)
+
+      // lucre.event.showLog = false
+      // lucre.bitemp.impl.BiGroupImpl.showLog = false
+
+      // val trackNew  = math.max(0, trackOld + deltaTrack)
+      // attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(trackNew)))
+    }
+
+    val oldSpan   = span.value
+    val minStart  = canvas.timelineModel.bounds.start
+    val deltaC    = if (deltaTime >= 0) deltaTime else oldSpan match {
+      case Span.HasStart(oldStart)  => math.max(-(oldStart - minStart)         , deltaTime)
+      case Span.HasStop (oldStop)   => math.max(-(oldStop  - minStart + MinDur), deltaTime)
+    }
+    if (deltaC != 0L) {
+      val imp = ExprImplicits[S]
+      import imp._
+
+      TimelineProcView.getAudioRegion(span, proc) match {
+        case Some((gtime, audio)) => // audio region
+          (span, gtime) match {
+            case (Expr.Var(t1), Expr.Var(t2)) =>
+              t1.transform(_ shift deltaC)
+              t2.transform(_ + deltaC) // XXX TODO: actually should shift the segment as well, i.e. the ceil time?
+
+            case _ =>
+          }
+        case _ => // other proc
+          span match {
+            case Expr.Var(s) => s.transform(_ shift deltaC)
+            case _ =>
+          }
+      }
+    }
   }
 
   protected def dialog(): Option[Move] = {

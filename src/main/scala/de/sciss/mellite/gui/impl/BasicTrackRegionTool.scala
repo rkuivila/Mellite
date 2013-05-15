@@ -3,10 +3,15 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{Proc, Sys}
 import java.awt.event.{KeyEvent, KeyListener, MouseEvent}
 import javax.swing.event.MouseInputAdapter
+import de.sciss.span.SpanLike
+import de.sciss.lucre.expr.Expr
 
+object BasicTrackRegionTool {
+  final val MinDur  = 32
+}
 trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
   import TrackTool._
 
@@ -59,6 +64,16 @@ trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
       dispatch(DragEnd)
     }
   }
+
+  def commit(drag: A)(implicit tx: S#Tx) {
+    canvas.selectionModel.iterator.foreach { pv =>
+      val span  = pv.spanSource()
+      val proc  = pv.procSource()
+      commit(span, proc, drag)
+    }
+  }
+
+  protected def commit(span: Expr[S, SpanLike], proc: Proc[S], drag: A)(implicit tx: S#Tx): Unit
 
   //  protected def showDialog(message: AnyRef): Boolean = {
   //    val op = OptionPane(message = message, messageType = OptionPane.Message.Question,

@@ -10,7 +10,7 @@ import synth.proc.Sys
 import java.awt.event.KeyEvent
 import de.sciss.desktop.FocusType
 
-final class TrackToolsPaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: IIdxSeq[TrackTool[_]])
+final class TrackToolsPaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: IIdxSeq[TrackTool[S, _]])
   extends BoxPanel(Orientation.Horizontal) {
 
   private val group = new ButtonGroup()

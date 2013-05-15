@@ -9,7 +9,7 @@ import de.sciss.model.impl.ModelImpl
 import scala.swing.Component
 
 final class TrackCursorToolImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
-  extends TrackTool[Unit] with ModelImpl[TrackTool.Update[Unit]] {
+  extends TrackTool[S, Unit] with ModelImpl[TrackTool.Update[Unit]] {
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
   val name          = "Cursor"
@@ -22,4 +22,6 @@ final class TrackCursorToolImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
   def uninstall(component: Component) {
     component.cursor = null
   }
+
+  def commit(drag: Unit)(implicit tx: S#Tx) {}
 }

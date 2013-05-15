@@ -59,8 +59,9 @@ object TimelineViewImpl {
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
 
-  private val NoMove  = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
-  private val MinDur  = 32
+  private val NoMove    = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
+  private val NoResize  = TrackTool.Resize(deltaStart = 0L, deltaStop = 0L)
+  private val MinDur    = 32
 
   private val logEnabled  = false // true
 
@@ -71,7 +72,8 @@ object TimelineViewImpl {
   def apply[S <: Sys[S]](document: Document[S], element: Element.ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
-    val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 600).toLong), sampleRate)
+    val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
+    tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
     val group       = element.entity
     import ProcGroup.serializer
     val groupH      = tx.newHandle[proc.ProcGroup[S]](group)
@@ -189,6 +191,10 @@ object TimelineViewImpl {
 
     var component: Component  = _
     private var view: View    = _
+
+    private lazy val toolCursor  = TrackTool.cursor[S](view)
+    private lazy val toolMove    = TrackTool.move  [S](view)
+    private lazy val toolResize  = TrackTool.resize[S](view)
 
     // ---- actions ----
 
@@ -324,13 +330,10 @@ object TimelineViewImpl {
       ))
       transportStrip.button(Stop).foreach(_.selected = true)
 
-      val toolCursor  = TrackTool.cursor[S](view)
-      val toolMove    = TrackTool.move  [S](view)
-
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
           HStrut(4),
-          TrackTools.palette(view.trackTools, Vector(toolCursor, toolMove)),
+          TrackTools.palette(view.trackTools, Vector(toolCursor, toolMove, toolResize)),
           HGlue,
           HStrut(4),
           timeDisp.component,
@@ -429,66 +432,27 @@ object TimelineViewImpl {
 
       protected def commitToolChanges(value: Any) {
         step { implicit tx =>
-          selectionModel.iterator.foreach { pv =>
-            val span  = pv.spanSource()
-            val proc  = pv.procSource()
-            value match {
-              case TrackTool.Move(deltaTime, deltaTrack, copy) =>
-                if (deltaTrack != 0) {
-                   // XXX TODO: could check for Expr.Const here and Expr.Var.
-                  // in the case of const, just overwrite, in the case of
-                  // var, check the value stored in the var, and update the var
-                  // instead (recursion). otherwise, it will be some combinatory
-                  // expression, and we could decide to construct a binary op instead!
-                  val attr      = proc.attributes
-                  val expr      = ExprImplicits[S]
-                  import expr._
-                  // attr[Attribute.Int[S]](ProcKeys.track).foreach {
-                  //   case Expr.Var(vr) => vr.transform(_ + deltaTrack)
-                  //   case _ =>
-                  // }
-
-                  // lucre.event.showLog = true
-                  // lucre.bitemp.impl.BiGroupImpl.showLog = true
-
-                  for (Expr.Var(t) <- attr[Attribute.Int](ProcKeys.attrTrack)) t.transform(_ + deltaTrack)
-
-                  // lucre.event.showLog = false
-                  // lucre.bitemp.impl.BiGroupImpl.showLog = false
-
-                  // val trackNew  = math.max(0, trackOld + deltaTrack)
-                  // attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(trackNew)))
-                }
-
-                val oldSpan   = span.value
-                val minStart  = timelineModel.bounds.start
-                val deltaC    = if (deltaTime >= 0) deltaTime else oldSpan match {
-                  case Span.HasStart(oldStart) => math.max(-(oldStart - minStart), deltaTime)
-                  case Span.HasStop (oldStop)  => math.max(-(oldStop  - minStart + MinDur), deltaTime)
-                }
-                if (deltaC != 0L) {
-                  val imp = ExprImplicits[S]
-                  import imp._
-
-                  TimelineProcView.getAudioRegion(span, proc) match {
-                    case Some((gtime, audio)) =>  // audio region
-                      (span, gtime) match {
-                        case (Expr.Var(t1), Expr.Var(t2)) =>
-                          t1.transform(_ shift deltaC)
-                          t2.transform(_ +     deltaC)  // XXX TODO: actually should shift the segment as well, i.e. the ceil time?
-
-                        case _ =>
-                      }
-                    case _ =>                     // other proc
-                      span match {
-                        case Expr.Var(s) => s.transform(_ shift deltaC)
-                        case _ =>
-                      }
-                  }
-                }
-              case _ =>
-            }
+          value match {
+            case t: TrackTool.Move    => toolMove  .commit(t)
+            case t: TrackTool.Resize  => toolResize.commit(t)
+            case _ =>
           }
+        }
+      }
+
+      private var _toolState = Option.empty[Any]
+      private var moveState   = NoMove
+      private var resizeState = NoResize
+
+      protected def toolState = _toolState
+      protected def toolState_=(state: Option[Any]) {
+        _toolState  = state
+        moveState   = NoMove
+        resizeState = NoResize
+        state.foreach {
+          case s: TrackTool.Move    => moveState    = s
+          case s: TrackTool.Resize  => resizeState  = s
+          case _ =>
         }
       }
 
@@ -546,12 +510,7 @@ object TimelineViewImpl {
              case RegionViewMode.TitledBox  => hndlExtent
           }
 
-          val sel       = selectionModel
-          val tState    = toolState
-          val moveState = tState match {
-            case Some(mv: TrackTool.Move) => mv
-            case _ => NoMove
-          }
+          val sel         = selectionModel
 
           procViews.filterOverlaps((visi.start, visi.stop)).foreach { pv =>
             val selected  = sel.contains(pv)
@@ -605,7 +564,23 @@ object TimelineViewImpl {
               }
             }
 
-            def deltaTimeWithStart(start: Long): Long =
+            def adjustStart(start: Long): Long =
+              if (selected) {
+                val dt0 = moveState.deltaTime + resizeState.deltaStart
+                if (dt0 >= 0) dt0 else {
+                  math.max(-(start - total.start), dt0)
+                }
+              } else 0L
+
+            def adjustStop(stop: Long): Long =
+              if (selected) {
+                val dt0 = moveState.deltaTime + resizeState.deltaStop
+                if (dt0 >= 0) dt0 else {
+                  math.max(-(stop - total.start + MinDur), dt0)
+                }
+              } else 0L
+
+            def adjustMove(start: Long): Long =
               if (selected) {
                 val dt0 = moveState.deltaTime
                 if (dt0 >= 0) dt0 else {
@@ -615,25 +590,25 @@ object TimelineViewImpl {
 
             pv.span match {
               case Span(start, stop) =>
-                val dt = deltaTimeWithStart(start)
-                val x1 = frameToScreen(start + dt).toInt
-                val x2 = frameToScreen(stop  + dt).toInt
-                drawProc(start, x1, x2, dt)
+                val dStart    = adjustStart(start)
+                val dStop     = adjustStop (stop )
+                val newStart  = start + dStart
+                val newStop   = math.max(newStart + MinDur, stop + dStop)
+                val x1        = frameToScreen(newStart).toInt
+                val x2        = frameToScreen(newStop ).toInt
+                drawProc(start, x1, x2, adjustMove(start))
 
               case Span.From(start) =>
-                val dt = deltaTimeWithStart(start)
-                val x1 = frameToScreen(start + dt).toInt
-                drawProc(start, x1, w + 5, dt)
+                val dStart    = adjustStart(start)
+                val newStart  = start + dStart
+                val x1        = frameToScreen(newStart).toInt
+                drawProc(start, x1, w + 5, adjustMove(start))
 
               case Span.Until(stop) =>
-                val dt = if (selected) {
-                  val dt0 = moveState.deltaTime
-                  if (dt0 >= 0) dt0 else {
-                    math.max(-(stop - total.start + MinDur), dt0)
-                  }
-                } else 0L
-                val x2 = frameToScreen(stop + dt).toInt
-                drawProc(Long.MinValue, -5, x2, dt)
+                val dStop     = adjustStop(stop)
+                val newStop   = stop + dStop
+                val x2        = frameToScreen(newStop).toInt
+                drawProc(Long.MinValue, -5, x2, 0L)
 
               case Span.All =>
                 drawProc(Long.MinValue, -5, w + 5, 0L)

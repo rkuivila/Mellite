@@ -11,7 +11,7 @@ import javax.swing.ImageIcon
 import de.sciss.span.Span
 import scala.swing.Component
 
-trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[A] with ModelImpl[TrackTool.Update[A]] {
+trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackTool.Update[A]] {
   tool =>
 
   // protected def trackList: TrackList

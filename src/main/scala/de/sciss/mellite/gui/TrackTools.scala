@@ -3,10 +3,9 @@ package mellite
 package gui
 
 import java.awt.Cursor
-import java.awt.event.MouseEvent
 import annotation.switch
 import model.Model
-import de.sciss.mellite.gui.impl.{TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl, TimelineProcView}
+import de.sciss.mellite.gui.impl.{TrackResizeToolImpl, TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl, TimelineProcView}
 import de.sciss.lucre.event.Change
 import de.sciss.synth.proc.Sys
 import scala.swing.Component
@@ -15,21 +14,21 @@ import collection.immutable.{IndexedSeq => IIdxSeq}
 
 object TrackTools {
   sealed trait Update[S <: Sys[S]]
-  final case class ToolChanged[S <: Sys[S]]          (change: Change[TrackTool[_]  ]) extends Update[S]
-  final case class VisualBoostChanged[S <: Sys[S]]   (change: Change[Float         ]) extends Update[S]
-  final case class FadeViewModeChanged[S <: Sys[S]]  (change: Change[FadeViewMode  ]) extends Update[S]
-  final case class RegionViewModeChanged[S <: Sys[S]](change: Change[RegionViewMode]) extends Update[S]
+  final case class ToolChanged          [S <: Sys[S]](change: Change[TrackTool[S, _]]) extends Update[S]
+  final case class VisualBoostChanged   [S <: Sys[S]](change: Change[Float          ]) extends Update[S]
+  final case class FadeViewModeChanged  [S <: Sys[S]](change: Change[FadeViewMode   ]) extends Update[S]
+  final case class RegionViewModeChanged[S <: Sys[S]](change: Change[RegionViewMode ]) extends Update[S]
 
-  def apply[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTools[S] = new TrackToolsImpl(canvas)
-  def palette[S <: Sys[S]](control: TrackTools[S], tools: IIdxSeq[TrackTool[_]]): Component =
+  def apply  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTools[S] = new TrackToolsImpl(canvas)
+  def palette[S <: Sys[S]](control: TrackTools[S], tools: IIdxSeq[TrackTool[S, _]]): Component =
     new TrackToolsPaletteImpl[S](control, tools)
 }
 
 object RegionViewMode {
   /** No visual indicator for region borders */
-  case object None extends RegionViewMode { final val id = 0 }
+  case object None      extends RegionViewMode { final val id = 0 }
   /** Rounded box for region borders */
-  case object Box extends RegionViewMode { final val id = 1 }
+  case object Box       extends RegionViewMode { final val id = 1 }
   /** Rounded box with region name for region borders */
   case object TitledBox extends RegionViewMode { final val id = 2 }
 
@@ -43,9 +42,9 @@ sealed trait RegionViewMode { def id: Int }
 
 object FadeViewMode {
   /** No visual indicator for fades */
-  case object None extends FadeViewMode { final val id = 0 }
+  case object None     extends FadeViewMode { final val id = 0 }
   /** Curve overlays to indicate fades */
-  case object Curve extends FadeViewMode { final val id = 1 }
+  case object Curve    extends FadeViewMode { final val id = 1 }
   /** Gain adjustments to sonogram to indicate fades */
   case object Sonogram extends FadeViewMode { final val id = 2 }
 
@@ -60,7 +59,7 @@ sealed trait FadeViewMode {
 }
 
 trait TrackTools[S <: Sys[S]] extends Model[TrackTools.Update[S]] {
-  var currentTool: TrackTool[_]
+  var currentTool: TrackTool[S, _]
   var visualBoost: Float
   var fadeViewMode: FadeViewMode
   var regionViewMode: RegionViewMode
@@ -73,15 +72,17 @@ object TrackTool {
   case object DragEnd    extends Update[Nothing] // (commit: AbstractCompoundEdit)
   case object DragCancel extends Update[Nothing]
 
-  final case class Move(deltaTime: Long, deltaTrack: Int, copy: Boolean)
+  final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean)
+  final case class Resize(deltaStart: Long, deltaStop: Long)
 
   type Listener = Model.Listener[Update[Any]]
 
-  def cursor[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[Unit] = new TrackCursorToolImpl(canvas)
-  def move[S <: Sys[S]]  (canvas: TimelineProcCanvas[S]): TrackTool[Move] = new TrackMoveToolImpl(canvas)
+  def cursor[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Unit  ] = new TrackCursorToolImpl(canvas)
+  def move  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Move  ] = new TrackMoveToolImpl  (canvas)
+  def resize[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Resize] = new TrackResizeToolImpl(canvas)
 }
 
-trait TrackTool[A] extends Model[TrackTool.Update[A]] {
+trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
   def defaultCursor: Cursor
   def icon: Icon
   def name: String
@@ -89,34 +90,9 @@ trait TrackTool[A] extends Model[TrackTool.Update[A]] {
   def install  (component: Component): Unit
   def uninstall(component: Component): Unit
   // def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineProcView[S]]): Unit
-}
 
-//object TrackResizeTool {
-//  case class Resize(deltaStart: Long, deltaStop: Long)
-//}
-//class TrackResizeTool(trackList: TrackList, timelineModel: TimelineView)
-//  extends BasicTrackRegionTool[TrackResizeTool.Resize](trackList, timelineModel) {
-//
-//  import TrackResizeTool._
-//
-//  def defaultCursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-//
-//  val name = "Resize"
-//
-//  protected def dialog: Option[Resize] = None // not yet supported
-//
-//  protected def dragToParam(d: Drag): Resize = {
-//    val (deltaStart, deltaStop) =
-//      if (math.abs(d.firstPos - d.firstRegion.span.start) <
-//        math.abs(d.firstPos - d.firstRegion.span.stop)) {
-//
-//        (d.currentPos - d.firstPos, 0L)
-//      } else {
-//        (0L, d.currentPos - d.firstPos)
-//      }
-//    Resize(deltaStart, deltaStop)
-//  }
-//}
+  def commit(drag: A)(implicit tx: S#Tx): Unit
+}
 
 //object TrackGainTool {
 //  case class Gain(factor: Float)

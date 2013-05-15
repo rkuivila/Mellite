@@ -12,6 +12,7 @@ import language.implicitConversions
 import de.sciss.lucre.bitemp.BiExpr
 
 object TimelineProcView {
+  /** Queries the audio region's grapheme segment start and audio element. */
   def getAudioRegion[S <: Sys[S]](span: Expr[S, SpanLike], proc: Proc[S])
                                  (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme.Elem.Audio[S])] = {
     span.value match {
