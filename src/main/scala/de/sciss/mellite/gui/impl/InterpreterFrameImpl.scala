@@ -10,7 +10,7 @@ import de.sciss.desktop.impl.WindowImpl
 
 // careful... tripping over SI-3809 "illegal cyclic reference involving class Array"...
 private[gui] object InterpreterFrameImpl {
-  val fuckyou = Array(1, 2, 3)  // forcing scalac to recompile, so it doesn't fucking crash
+  val boom = Array(1, 2, 3)  // forcing scalac to recompile, so it doesn't crash
 
   private def readFile(file: File): String = {
     val fis = new FileInputStream(file)
