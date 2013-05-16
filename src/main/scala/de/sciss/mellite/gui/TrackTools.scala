@@ -5,7 +5,7 @@ package gui
 import java.awt.Cursor
 import annotation.switch
 import model.Model
-import de.sciss.mellite.gui.impl.{TrackResizeToolImpl, TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl, TimelineProcView}
+import de.sciss.mellite.gui.impl.{TrackGainToolImpl, TrackResizeToolImpl, TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl}
 import de.sciss.lucre.event.Change
 import de.sciss.synth.proc.Sys
 import scala.swing.Component
@@ -74,12 +74,14 @@ object TrackTool {
 
   final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean)
   final case class Resize(deltaStart: Long, deltaStop: Long)
+  final case class Gain  (factor: Float)
 
   type Listener = Model.Listener[Update[Any]]
 
   def cursor[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Unit  ] = new TrackCursorToolImpl(canvas)
   def move  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Move  ] = new TrackMoveToolImpl  (canvas)
   def resize[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Resize] = new TrackResizeToolImpl(canvas)
+  def gain  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Gain  ] = new TrackGainToolImpl  (canvas)
 }
 
 trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
@@ -93,31 +95,6 @@ trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
 
   def commit(drag: A)(implicit tx: S#Tx): Unit
 }
-
-//object TrackGainTool {
-//  case class Gain(factor: Float)
-//}
-//class TrackGainTool(trackList: TrackList, timelineModel: TimelineView)
-//  extends BasicTrackRegionTool[TrackGainTool.Gain](trackList, timelineModel) {
-//
-//  import TrackGainTool._
-//
-//  def defaultCursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
-//
-//  val name = "Gain"
-//
-//  protected def dialog: Option[Gain] = None // not yet supported
-//
-//  override protected def dragStarted(d: this.Drag): Boolean =
-//    d.currentEvent.getY != d.firstEvent.getY
-//
-//  protected def dragToParam(d: Drag): Gain = {
-//    val dy = d.firstEvent.getY - d.currentEvent.getY
-//    // use 0.1 dB per pixel. eventually we could use modifier keys...
-//    val factor = (dbamp(dy / 10)).toFloat
-//    Gain(factor)
-//  }
-//}
 
 //object TrackFadeTool {
 //  case class Fade(deltaFadeIn: Long, deltaFadeOut: Long,

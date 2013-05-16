@@ -60,18 +60,20 @@ object TimelineProcView {
 
     val attr  = proc.attributes
 
-    val track = attr[Attribute.Int]   (ProcKeys.attrTrack).map(_.value).getOrElse(0)
-    val name  = attr[Attribute.String](ProcKeys.attrName ).map(_.value).getOrElse {
+    val track = attr[Attribute.Int    ](ProcKeys.attrTrack).map(_.value).getOrElse(0)
+    val name  = attr[Attribute.String ](ProcKeys.attrName ).map(_.value).getOrElse {
       audio.map(_.value.artifact.nameWithoutExtension).getOrElse("<unnamed>")
     }
+    val mute  = attr[Attribute.Boolean](ProcKeys.attrMute ).map(_.value).getOrElse(false)
 
     new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
-      span = spanV, track = track, name = name, audio = audio)
+      span = spanV, track = track, name = name, mute = mute, audio = audio)
   }
 
   private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val procSource: stm.Source[S#Tx, Proc[S]],
                                         var span: SpanLike, var track: Int, var name: String,
+                                        var mute: Boolean,
                                         var audio: Option[Grapheme.Segment.Audio])
     extends TimelineProcView[S] {
 
@@ -95,6 +97,8 @@ sealed trait TimelineProcView[S <: Sys[S]] {
   var span: SpanLike
   var track: Int
   var name: String
+  // var gain: Float
+  var mute: Boolean
   // var audio: Option[Grapheme.Value.Audio]
   var audio: Option[Grapheme.Segment.Audio]
 

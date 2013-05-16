@@ -54,8 +54,11 @@ object DropAudioRegionAction {
       import ugen._
       val sig   = graph.scan     (ProcKeys.graphAudio).ar(0)
       val bus   = graph.attribute(ProcKeys.attrBus   ).ir(0)
+      // val amp   = graph.attribute(ProcKeys.attrGain  ).ir(1)
+      val mute  = graph.attribute(ProcKeys.attrMute  ).ir(0)
       // val env   = EnvGen.ar(Env.linen(0.2, (duri - 0.4).max(0), 0.2))
-      Out.ar(bus, sig /* * env */)
+      val env   = /* amp * */ (1 - mute)
+      Out.ar(bus, sig * env)
     }
     proc.graph_=(sg)
     group.add(span, proc)

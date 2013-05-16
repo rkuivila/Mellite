@@ -11,4 +11,8 @@ object ProcKeys {
   final val attrGraphSource = "graph-source"
   /** Bus attribute. Type `Int` */
   final val attrBus     = "bus"
+  /** Gain factor. Type `Double` */
+  final val attrGain    = "gain"
+  /** Gain factor. Type `Boolean` */
+  final val attrMute    = "mute"
 }

@@ -35,7 +35,7 @@ trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
     }
   }
 
-  final protected def dragStarted(d: this.Drag): Boolean =
+  /* final */ protected def dragStarted(d: this.Drag): Boolean =
     d.currentEvent.getPoint.distanceSq(d.firstEvent.getPoint) > 16
 
   final protected def dragBegin(d: Drag) {

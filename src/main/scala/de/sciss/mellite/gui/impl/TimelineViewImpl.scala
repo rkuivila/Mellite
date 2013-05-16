@@ -61,6 +61,7 @@ object TimelineViewImpl {
 
   private val NoMove    = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
   private val NoResize  = TrackTool.Resize(deltaStart = 0L, deltaStop = 0L)
+  private var NoGain    = TrackTool.Gain(1f)
   private val MinDur    = 32
 
   private val logEnabled  = false // true
@@ -192,9 +193,10 @@ object TimelineViewImpl {
     var component: Component  = _
     private var view: View    = _
 
-    private lazy val toolCursor  = TrackTool.cursor[S](view)
-    private lazy val toolMove    = TrackTool.move  [S](view)
-    private lazy val toolResize  = TrackTool.resize[S](view)
+    private lazy val toolCursor = TrackTool.cursor[S](view)
+    private lazy val toolMove   = TrackTool.move  [S](view)
+    private lazy val toolResize = TrackTool.resize[S](view)
+    private lazy val toolGain   = TrackTool.gain  [S](view)
 
     // ---- actions ----
 
@@ -333,7 +335,7 @@ object TimelineViewImpl {
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
           HStrut(4),
-          TrackTools.palette(view.trackTools, Vector(toolCursor, toolMove, toolResize)),
+          TrackTools.palette(view.trackTools, Vector(toolCursor, toolMove, toolResize, toolGain)),
           HGlue,
           HStrut(4),
           timeDisp.component,
@@ -435,6 +437,7 @@ object TimelineViewImpl {
           value match {
             case t: TrackTool.Move    => toolMove  .commit(t)
             case t: TrackTool.Resize  => toolResize.commit(t)
+            case t: TrackTool.Gain    => toolGain  .commit(t)
             case _ =>
           }
         }
@@ -443,15 +446,18 @@ object TimelineViewImpl {
       private var _toolState = Option.empty[Any]
       private var moveState   = NoMove
       private var resizeState = NoResize
+      private var gainState   = NoGain
 
       protected def toolState = _toolState
       protected def toolState_=(state: Option[Any]) {
         _toolState  = state
         moveState   = NoMove
         resizeState = NoResize
+        gainState   = NoGain
         state.foreach {
           case s: TrackTool.Move    => moveState    = s
           case s: TrackTool.Resize  => resizeState  = s
+          case s: TrackTool.Gain    => gainState    = s
           case _ =>
         }
       }
@@ -543,7 +549,7 @@ object TimelineViewImpl {
                   val dStart  = audio.offset /* - start */ + (/* start */ - segm.span.start) - move
                   val startC  = screenToFrame(px1C) // math.max(0.0, screenToFrame(px1C))
                   val stopC   = screenToFrame(px2C)
-                  sonoBoost   = audio.gain.toFloat * visualBoost
+                  sonoBoost   = audio.gain.toFloat * visualBoost * gainState.factor
                   val startP  = math.max(0L, startC + dStart)
                   val stopP   = startP + (stopC - startC)
                   sono.paint(startP, stopP, g, px1C, py + hndl, px2C - px1C, innerH, this)
