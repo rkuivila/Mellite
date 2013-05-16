@@ -103,15 +103,17 @@ package object mellite {
     def path: String  = f.getPath
     def name: String  = f.getName
     def parent: File  = f.getParentFile
-    def nameWithoutExtension: String = {
-      val n = f.getName
-      val i = n.lastIndexOf('.')
-      if (i < 0) n else n.substring(0, i)
-    }
+    def nameWithoutExtension: String = splitExtension._1
     def replaceExtension(s: String): File = {
       val n   = nameWithoutExtension
       val ext = if (s.charAt(0) == '.') s else "." + s
       new File(f.getParentFile, n + ext)
+    }
+    // returns name and extension (period dropped)
+    def splitExtension: (String, String) = {
+      val n = f.getName
+      val i = n.lastIndexOf('.')
+      if (i < 0) (n, "") else (n.substring(0, i), n.substring(i + 1))
     }
   }
 }

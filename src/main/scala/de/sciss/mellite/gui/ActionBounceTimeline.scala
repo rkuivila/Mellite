@@ -308,13 +308,7 @@ object ActionBounceTimeline {
             }
 
           case _ =>
-            val cmd = Seq("osascript", "-e", "tell application \"Finder\"", "-e", "activate", "-e",
-              "open location \"file:" + file.parent + "\"", "-e", "select file \"" + file.name + "\" of folder of the front window",
-              "-e", "end tell"
-            )
-            import sys.process._
-            // println(cmd.mkString(" "))
-            cmd.run()
+            IO.revealInFinder(file)
         }
       case Failure(Processor.Aborted()) =>
         GUI.defer(fDispose())
