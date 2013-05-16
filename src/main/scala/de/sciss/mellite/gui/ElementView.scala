@@ -299,7 +299,7 @@ object ElementView {
   // -------- AudioGrapheme --------
 
   object AudioGrapheme {
-    private val icon = new ImageIcon(
+    val icon: Icon = new ImageIcon(
       Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_audiographeme16.png"))
     )
 

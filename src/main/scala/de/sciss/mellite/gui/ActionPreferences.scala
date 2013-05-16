@@ -41,7 +41,7 @@ object ActionPreferences extends Action("Preferences...") {
   def apply() {
     import language.reflectiveCalls
     val box = new GroupPanel {
-      val lbAudioDevice = new Label( "Audio Device:", EmptyIcon, Alignment.Right)
+      val lbAudioDevice = new Label("Audio Device:", EmptyIcon, Alignment.Right)
       val ggAudioDevice = new TextField(Prefs.audioDevice.getOrElse(Prefs.defaultAudioDevice), 16) {
         listenTo(this)
         reactions += {

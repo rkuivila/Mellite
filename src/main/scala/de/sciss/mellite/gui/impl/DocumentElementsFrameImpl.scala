@@ -260,10 +260,13 @@ object DocumentElementsFrameImpl {
               // val e   = view.element()
               // import document.inMemory
               import Mellite.auralSystem
-              TimelineFrame[S](document, view.element())
+              TimelineFrame(document, view.element())
 
             case view: ElementView.AudioGrapheme[S] =>
               AudioFileFrame(document, view.element())
+
+            case view: ElementView.Recursion[S] =>
+              RecursionFrame(document, view.element())
 
             case _ => // ...
           }
