@@ -30,6 +30,6 @@
 
 :: indeterminus ::
 
-[ 0x20000     Bounce -- NOT YET ]
+0x20000     Recursion
 [ 0x20001     FScape -- NOT YET ]
 

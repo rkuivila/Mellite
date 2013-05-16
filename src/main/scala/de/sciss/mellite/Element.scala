@@ -40,7 +40,7 @@ import de.sciss.serial.{DataOutput, DataInput, Writable}
 object Element {
   import scala.{Int => _Int, Double => _Double}
   import java.lang.{String => _String}
-  import mellite.{Folder => _Folder}
+  import mellite.{Folder => _Folder, Recursion => _Recursion}
 
   type Name[S <: Sys[S]] = Expr.Var[S, _String]
 
@@ -259,9 +259,31 @@ object Element {
   sealed trait ArtifactLocation[S <: Sys[S]] extends Element[S] { type A = _Artifact.Location[S] }
 
   // ----------------- Recursion -----------------
-  // a bounce is a procgroup, a selection span,
-  // a gain/ normalize setting, a channel selection,
-  // an artifact variable
+
+  object Recursion extends Companion[Recursion] {
+    protected[Element] final val typeID = 0x20000
+
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): Recursion[S] with evt.Node[S] = {
+      val entity = _Recursion.read(in, access)
+      new Impl(targets, name, entity)
+    }
+
+    def apply[S <: Sys[S]](name: _String, init: _Recursion[S])(implicit tx: S#Tx): Recursion[S] = {
+      new Impl(evt.Targets[S], mkName(name), init)
+    }
+
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: _Recursion[S])
+      extends Element.ActiveImpl[S] with Recursion[S] {
+      self =>
+
+      def typeID = Recursion.typeID
+      def prefix = "Recursion"
+
+      protected def entityEvent = entity.changed
+    }
+  }
+  sealed trait Recursion[S <: Sys[S]] extends Element[S] { type A = _Recursion[S] }
 
   // ----------------- Serializer -----------------
 
@@ -284,6 +306,7 @@ object Element {
         case ProcGroup       .typeID => ProcGroup       .readIdentified(in, access, targets)
         case AudioGrapheme   .typeID => AudioGrapheme   .readIdentified(in, access, targets)
         case ArtifactLocation.typeID => ArtifactLocation.readIdentified(in, access, targets)
+        case Recursion       .typeID => Recursion       .readIdentified(in, access, targets)
         case _                       => sys.error(s"Unexpected element type cookie $typeID")
       }
     }

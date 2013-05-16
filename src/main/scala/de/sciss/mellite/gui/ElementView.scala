@@ -46,7 +46,7 @@ import de.sciss.lucre.event.Change
 object ElementView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double}
-  import mellite.{Folder => _Folder}
+  import mellite.{Folder => _Folder, Recursion => _Recursion}
 
   private[gui] def apply[S <: Sys[S]](parent: FolderLike[S], element: Element[S])
                                      (implicit tx: S#Tx): ElementView[S] = {
@@ -73,6 +73,9 @@ object ElementView {
       case e: Element.ArtifactLocation[S] =>
         val value = e.entity.directory
         new ArtifactLocation.Impl(parent, tx.newHandle(e), name, value)
+      case e: Element.Recursion[S] =>
+        val value = e.entity.deployed.artifact.value
+        new Recursion.Impl(parent, tx.newHandle(e), name, value)
     }
   }
 
@@ -83,27 +86,11 @@ object ElementView {
       Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_string16.png"))
     )
 
-    private object Comp extends BoxPanel(Orientation.Horizontal) {
-      val key = new DefaultTreeCellRenderer
-      key.setLeafIcon(icon)
-      val value = new DefaultTreeCellRenderer
-      value.setLeafIcon(null)
-      background = null
-      contents += Component.wrap(key)
-      contents += HStrut(8)
-      contents += Component.wrap(value)
-    }
-
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.String[S]],
                                                        var name: _String, var value: _String)
       extends String[S] with ElementView.Impl[S] {
 
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        Comp.key  .getTreeCellRendererComponent(tree.peer, name,  info.isSelected, false, true, info.row, info.hasFocus)
-        Comp.value.getTreeCellRendererComponent(tree.peer, value, info.isSelected, false, true, info.row, info.hasFocus)
-        Comp
-      }
       def prefix = "String"
       def icon = String.icon
 
@@ -135,28 +122,11 @@ object ElementView {
       Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_integer16.png"))
     )
 
-    // XXX TODO: DRY
-    private object Comp extends BoxPanel(Orientation.Horizontal) {
-      val key = new DefaultTreeCellRenderer
-      key.setLeafIcon(icon)
-      val value = new DefaultTreeCellRenderer
-      value.setLeafIcon(null)
-      background = null
-      contents += Component.wrap(key)
-      contents += HStrut(8)
-      contents += Component.wrap(value)
-    }
-
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.Int[S]],
                                                        var name: _String, var value: _Int)
       extends Int[S] with ElementView.Impl[S] {
 
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        Comp.key  .getTreeCellRendererComponent(tree.peer, name,  info.isSelected, false, true, info.row, info.hasFocus)
-        Comp.value.getTreeCellRendererComponent(tree.peer, value, info.isSelected, false, true, info.row, info.hasFocus)
-        Comp
-      }
       def prefix = "Int"
       def icon = Int.icon
 
@@ -197,28 +167,11 @@ object ElementView {
       Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_float16.png"))
     )
 
-    // XXX TODO: DRY
-    private object Comp extends BoxPanel(Orientation.Horizontal) {
-      val key = new DefaultTreeCellRenderer
-      key.setLeafIcon(icon)
-      val value = new DefaultTreeCellRenderer
-      value.setLeafIcon(null)
-      background = null
-      contents += Component.wrap(key)
-      contents += HStrut(8)
-      contents += Component.wrap(value)
-    }
-
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.Double[S]],
                                                        var name: _String, var value: _Double)
       extends Double[S] with ElementView.Impl[S] {
 
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        Comp.key  .getTreeCellRendererComponent(tree.peer, name,  info.isSelected, false, true, info.row, info.hasFocus)
-        Comp.value.getTreeCellRendererComponent(tree.peer, value, info.isSelected, false, true, info.row, info.hasFocus)
-        Comp
-      }
       def prefix = "Double"
       def icon = Double.icon
 
@@ -299,22 +252,12 @@ object ElementView {
   // -------- Group --------
 
   object Folder {
-    private final val cmpGroupJ = new DefaultTreeCellRenderer
-    private final val cmpGroup  = Component.wrap(cmpGroupJ)
-
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.Folder[S]],
                                                        var name: _String)
       extends Folder[S] with ElementView.Impl[S] {
 
       var children = IIdxSeq.empty[ElementView[S]]
-
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        // never show the leaf icon, always a folder icon. for empty folders, show the icon as if the folder is open
-        cmpGroupJ.getTreeCellRendererComponent(tree.peer, name, info.isSelected, info.isExpanded || info.isLeaf,
-          false /* info.isLeaf */, info.row, info.hasFocus)
-        cmpGroup
-      }
 
       def folder(implicit tx: S#Tx): _Folder[S] = element().entity
 
@@ -336,19 +279,11 @@ object ElementView {
       Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_procgroup16.png"))
     )
 
-    private final val cmpLabelJ = new DefaultTreeCellRenderer
-    cmpLabelJ.setLeafIcon(icon)
-    private final val cmpLabel  = Component.wrap(cmpLabelJ)
-
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.ProcGroup[S]],
                                                        var name: _String)
       extends ProcGroup[S] with ElementView.Impl[S] {
 
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        cmpLabelJ.getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
-        cmpLabel
-      }
       def prefix = "ProcGroup"
       def value {}
       def icon = ProcGroup.icon
@@ -368,28 +303,11 @@ object ElementView {
       Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_audiographeme16.png"))
     )
 
-    private object Comp extends BoxPanel(Orientation.Horizontal) {
-      val key = new DefaultTreeCellRenderer
-      key.setLeafIcon(icon)
-      val value = new DefaultTreeCellRenderer
-      value.setLeafIcon(null)
-      background = null
-      contents += Component.wrap(key)
-      contents += HStrut(8)
-      contents += Component.wrap(value)
-    }
-
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.AudioGrapheme[S]],
                                                        var name: _String, var value: Grapheme.Value.Audio)
       extends AudioGrapheme[S] with ElementView.Impl[S] {
 
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        Comp.key  .getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
-        val spec = value.spec.toString
-        Comp.value.getTreeCellRendererComponent(tree.peer, spec, info.isSelected, false, true, info.row, info.hasFocus)
-        Comp
-      }
       def prefix = "String"
       def icon = AudioGrapheme.icon
 
@@ -408,35 +326,18 @@ object ElementView {
     var value: Grapheme.Value.Audio
   }
 
-  // -------- ArtifactStore --------
+  // -------- ArtifactLocation --------
 
   object ArtifactLocation {
     private val icon = new ImageIcon(
       Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_location16.png"))
     )
 
-    private object Comp extends BoxPanel(Orientation.Horizontal) {
-      val key = new DefaultTreeCellRenderer
-      key.setLeafIcon(icon)
-      val value = new DefaultTreeCellRenderer
-      value.setLeafIcon(null)
-      background = null
-      contents += Component.wrap(key)
-      contents += HStrut(8)
-      contents += Component.wrap(value)
-    }
-
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.ArtifactLocation[S]],
                                                        var name: _String, var directory: File)
       extends ArtifactLocation[S] with ElementView.Impl[S] {
 
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = {
-        Comp.key.getTreeCellRendererComponent(tree.peer, name, info.isSelected, false, true, info.row, info.hasFocus)
-        val value = directory.toString
-        Comp.value.getTreeCellRendererComponent(tree.peer, value, info.isSelected, false, true, info.row, info.hasFocus)
-        Comp
-      }
       def prefix  = "ArtifactStore"
       def value   = directory
       def icon    = ArtifactLocation.icon
@@ -456,11 +357,32 @@ object ElementView {
     var directory: File
   }
 
+  object Recursion {
+    private val icon = new ImageIcon(
+      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_recursion16.png"))
+    )
+
+    private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
+                                                       val element: stm.Source[S#Tx, Element.Recursion[S]],
+                                                       var name: _String, var deployed: File)
+      extends Recursion[S] with ElementView.Impl[S] {
+
+      def prefix  = "Recursion"
+      def value   = deployed
+      def icon    = Recursion.icon
+
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): Boolean = false
+      def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = false
+    }
+  }
+  sealed trait Recursion[S <: Sys[S]] extends ElementView[S] {
+    def element: stm.Source[S#Tx, Element.Recursion[S]]
+    var deployed: File
+  }
+
   // -------- Root --------
 
   object Root {
-    private final val cmpBlank = new Label
-
     private[gui] def apply[S <: Sys[S]](folder: _Folder[S])(implicit tx: S#Tx): Root[S] = {
       import _Folder.serializer
       val res = new Impl(tx.newHandle(folder))
@@ -472,7 +394,6 @@ object ElementView {
       extends Root[S] {
 
       var children = IIdxSeq.empty[ElementView[S]]
-      def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component = cmpBlank
       def folder(implicit tx: S#Tx): _Folder[S] = handle()
       def name = "root"
       def parent: Option[FolderLike[S]] = None
@@ -492,7 +413,7 @@ object ElementView {
   }
 
   sealed trait Renderer[S <: Sys[S]] {
-    private[gui] def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component
+    // private[gui] def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component
     def name: _String
     def parent: Option[ElementView.FolderLike[S]]
     def value: Any

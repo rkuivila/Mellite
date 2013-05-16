@@ -9,7 +9,7 @@ import de.sciss.lucre.event.EventLike
 import impl.{RecursionImpl => Impl}
 import de.sciss.span.SpanLike
 import de.sciss.lucre.stm.Disposable
-import de.sciss.serial.Writable
+import de.sciss.serial.{DataInput, Writable}
 
 object Recursion {
   type Channels = IIdxSeq[Range.Inclusive]
@@ -18,6 +18,9 @@ object Recursion {
   def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanOrVoid, artifact: Artifact[S], spec: AudioFileSpec,
                          gain: Gain, channels: Channels)(implicit tx: S#Tx): Recursion[S] =
     Impl(group, span, artifact, spec, gain, channels)
+
+  def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Recursion[S] =
+    Impl.serializer.read(in, access)
 }
 trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] {
   import Recursion.Channels

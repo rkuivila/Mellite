@@ -201,7 +201,17 @@ object TimelineViewImpl {
     // ---- actions ----
 
     object bounceAction extends Action("Bounce") {
-      private var settings = ActionBounceTimeline.QuerySettings[S]()
+      private var _settings: ActionBounceTimeline.QuerySettings[S] = _
+      private def settings = {
+        if (_settings == null) {
+          val init  = ActionBounceTimeline.QuerySettings[S](span = timelineModel.selection)
+          settings_=(init)
+        }
+        _settings
+      }
+      private def settings_=(value: ActionBounceTimeline.QuerySettings[S]) {
+        _settings = value
+      }
 
       def apply() {
         import ActionBounceTimeline._

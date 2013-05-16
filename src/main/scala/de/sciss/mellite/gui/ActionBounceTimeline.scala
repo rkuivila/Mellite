@@ -7,7 +7,7 @@ import de.sciss.synth.proc
 import de.sciss.synth.proc.{Server, Artifact, Bounce, Sys}
 import de.sciss.desktop.{DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
-import de.sciss.synth.io.{AudioFileSpec, SampleFormat, AudioFileType}
+import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
 import java.io.File
 import javax.swing.{SwingUtilities, JFormattedTextField, JSpinner, SpinnerNumberModel}
 import de.sciss.span.Span
@@ -44,7 +44,7 @@ object ActionBounceTimeline {
     gain: Gain = Gain.normalized(-0.2f),
     span: SpanOrVoid    = Span.Void,
     channels: IIdxSeq[Range.Inclusive] = Vector(0 to 1),
-    importFile: Boolean = true,
+    importFile: Boolean = false,
     location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   ) {
     def prepare(group: stm.Source[S#Tx, proc.ProcGroup[S]], f: File): PerformSettings[S] = {
@@ -280,11 +280,28 @@ object ActionBounceTimeline {
     process.onComplete {
       case Success(_) =>
         GUI.defer(fDispose())
-        println("Succeeded")
         (settings.importFile, settings.location) match {
           case (true, Some(locSource)) =>
-            // XXX TODO: Element.Bounce
-          case _ => // XXX TODO: revealInFinder?
+            val elemName  = file.nameWithoutExtension
+            val spec      = AudioFile.readSpec(file)
+            cursor.step { implicit tx =>
+              val loc       = locSource()
+              loc.entity.modifiableOption.foreach { locM =>
+                val artifact  = locM.add(file)
+                val recursion = Recursion(group(), settings.span, artifact, spec, settings.gain, settings.channels)
+                val elem      = Element.Recursion(elemName, recursion)
+                document.elements.addLast(elem)
+              }
+            }
+
+          case _ =>
+            val cmd = Seq("osascript", "-e", "tell application \"Finder\"", "-e", "activate", "-e",
+              s"""open location "file:${file.parent}"""", "-e", s"""select file "${file.name}" of folder of the front window""",
+              "-e", "end tell"
+            )
+            import sys.process._
+            // println(cmd.mkString(" "))
+            cmd.run()
         }
       case Failure(Processor.Aborted()) =>
         GUI.defer(fDispose())
