@@ -21,6 +21,8 @@ object Recursion {
 
   def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Recursion[S] =
     Impl.serializer.read(in, access)
+
+  implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Recursion[S]] = Impl.serializer
 }
 trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] {
   import Recursion.Channels

@@ -10,7 +10,7 @@ import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
 import java.io.File
 import javax.swing.{SwingUtilities, JFormattedTextField, JSpinner, SpinnerNumberModel}
-import de.sciss.span.Span
+import de.sciss.span.{SpanLike, Span}
 import Swing._
 import de.sciss.audiowidgets.AxisFormat
 import de.sciss.mellite.gui.impl.TimelineProcView
@@ -50,25 +50,27 @@ object ActionBounceTimeline {
   ) {
     def prepare(group: stm.Source[S#Tx, proc.ProcGroup[S]], f: File): PerformSettings[S] = {
       val server                = Server.Config()
-      server.nrtOutputPath      = f.path
-      server.nrtHeaderFormat    = spec.fileType
-      server.nrtSampleFormat    = spec.sampleFormat
-      server.sampleRate         = spec.sampleRate.toInt
-      server.outputBusChannels  = spec.numChannels
-
+      specToServerConfig(f, spec, server)
       PerformSettings(
-        group = group, file = f, server = server, gain = gain, span = span, channels = channels
+        group = group, server = server, gain = gain, span = span, channels = channels
       )
     }
   }
 
   final case class PerformSettings[S <: Sys[S]](
     group: stm.Source[S#Tx, proc.ProcGroup[S]],
-    file: File,
     server: Server.Config,
     gain: Gain = Gain.normalized(-0.2f),
-    span: SpanOrVoid, channels: IIdxSeq[Range.Inclusive]
+    span: SpanLike, channels: IIdxSeq[Range.Inclusive]
   )
+
+  def specToServerConfig(file: File, spec: AudioFileSpec, config: Server.ConfigBuilder) {
+    config.nrtOutputPath      = file.path
+    config.nrtHeaderFormat    = spec.fileType
+    config.nrtSampleFormat    = spec.sampleFormat
+    config.sampleRate         = spec.sampleRate.toInt
+    config.outputBusChannels  = spec.numChannels
+  }
 
   def query[S <: Sys[S]](init: QuerySettings[S], document: Document[S], timelineModel: TimelineModel,
                          window: Option[Window])
@@ -307,7 +309,7 @@ object ActionBounceTimeline {
 
           case _ =>
             val cmd = Seq("osascript", "-e", "tell application \"Finder\"", "-e", "activate", "-e",
-              s"""open location "file:${file.parent}"""", "-e", s"""select file "${file.name}" of folder of the front window""",
+              "open location \"file:" + file.parent + "\"", "-e", "select file \"" + file.name + "\" of folder of the front window",
               "-e", "end tell"
             )
             import sys.process._

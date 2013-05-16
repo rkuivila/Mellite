@@ -4,7 +4,7 @@ package gui
 
 import scala.swing.Swing._
 import scalaswingcontrib.group.GroupPanel
-import scala.swing.{Window, Swing, Dialog, Component, TextField, Label, Alignment}
+import scala.swing.{AbstractButton, Button, Window, Swing, Dialog, Component, TextField, Label, Alignment}
 import java.awt.{Rectangle, EventQueue, GraphicsEnvironment}
 import javax.swing.Timer
 import java.awt.datatransfer.DataFlavor
@@ -29,6 +29,10 @@ object GUI {
     max.width     = w
     c.minimumSize = min
     c.maximumSize = max
+  }
+
+  def round(b: AbstractButton*) {
+    b.foreach(_.peer.putClientProperty("JButton.buttonType", "roundRect"))
   }
 
   def findWindow(c: Component): Option[desktop.Window] = {
