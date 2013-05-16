@@ -258,7 +258,7 @@ object Element {
   }
   sealed trait ArtifactLocation[S <: Sys[S]] extends Element[S] { type A = _Artifact.Location[S] }
 
-  // ----------------- Bounce -----------------
+  // ----------------- Recursion -----------------
   // a bounce is a procgroup, a selection span,
   // a gain/ normalize setting, a channel selection,
   // an artifact variable

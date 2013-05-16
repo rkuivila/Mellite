@@ -27,22 +27,25 @@ import scala.concurrent.{ExecutionContext, Future}
 import de.sciss.processor.Processor
 
 object ActionBounceTimeline {
-  object GainType {
-    def apply(id: Int): GainType = (id: @switch) match {
-      case Normalized.id  => Normalized
-      case Immediate .id  => Immediate
-    }
-  }
-  sealed trait GainType { def id: Int }
-  case object Normalized extends GainType { final val id = 0 }
-  case object Immediate  extends GainType { final val id = 1 }
+
+  //  object GainType {
+  //    def apply(id: Int): GainType = (id: @switch) match {
+  //      case Normalized.id  => Normalized
+  //      case Immediate .id  => Immediate
+  //    }
+  //  }
+  //  sealed trait GainType { def id: Int }
+  //  case object Normalized extends GainType { final val id = 0 }
+  //  case object Immediate  extends GainType { final val id = 1 }
 
   final case class QuerySettings[S <: Sys[S]](
-    file: Option[File] = None,
+    file: Option[File]  = None,
     spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
-    gainAmount: Double = -0.2, gainType: GainType = Normalized,
-    span: SpanOrVoid = Span.Void, channels: IIdxSeq[Range.Inclusive] = Vector(0 to 1),
-    importFile: Boolean = true, location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
+    gain: Gain = Gain.normalized(-0.2f),
+    span: SpanOrVoid    = Span.Void,
+    channels: IIdxSeq[Range.Inclusive] = Vector(0 to 1),
+    importFile: Boolean = true,
+    location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   ) {
     def prepare(group: stm.Source[S#Tx, proc.ProcGroup[S]], f: File): PerformSettings[S] = {
       val server                = Server.Config()
@@ -53,8 +56,7 @@ object ActionBounceTimeline {
       server.outputBusChannels  = spec.numChannels
 
       PerformSettings(
-        group = group, file = f, server = server, gainAmount = gainAmount, gainType = gainType, span = span,
-        channels = channels
+        group = group, file = f, server = server, gain = gain, span = span, channels = channels
       )
     }
   }
@@ -63,7 +65,7 @@ object ActionBounceTimeline {
     group: stm.Source[S#Tx, proc.ProcGroup[S]],
     file: File,
     server: Server.Config,
-    gainAmount: Double = -0.2, gainType: GainType = Normalized,
+    gain: Gain = Gain.normalized(-0.2f),
     span: SpanOrVoid, channels: IIdxSeq[Range.Inclusive]
   )
 
@@ -98,19 +100,19 @@ object ActionBounceTimeline {
     }
     ggPathDialog.peer.putClientProperty("JButton.buttonType", "gradient")
 
-    val gainModel   = new SpinnerNumberModel(init.gainAmount, -160.0, 160.0, 0.1)
+    val gainModel   = new SpinnerNumberModel(init.gain.decibels, -160.0, 160.0, 0.1)
     val ggGainAmtJ  = new JSpinner(gainModel)
     // println(ggGainAmtJ.getPreferredSize)
     val ggGainAmt   = Component.wrap(ggGainAmtJ)
 
-    val ggGainType  = new ComboBox[GainType](Seq(Normalized, Immediate))
-    ggGainType.selection.item = init.gainType
+    val ggGainType  = new ComboBox(Seq("Normalized", "Immediate"))
+    ggGainType.selection.index = if (init.gain.normalized) 0 else 1
     ggGainType.listenTo(ggGainType.selection)
     ggGainType.reactions += {
       case SelectionChanged(_) =>
-        ggGainType.selection.item match {
-          case Normalized => gainModel.setValue(-0.2)
-          case Immediate  => gainModel.setValue( 0.0)
+        ggGainType.selection.index match {
+          case 0 => gainModel.setValue(-0.2)
+          case 1 => gainModel.setValue( 0.0)
         }
         ggGainAmt.requestFocus()
     }
@@ -213,8 +215,7 @@ object ActionBounceTimeline {
       file        = file,
       spec        = AudioFileSpec(ggFileType.selection.item, ggSampleFormat.selection.item,
         numChannels = numChannels, sampleRate = timelineModel.sampleRate),
-      gainAmount  = gainModel.getNumber.doubleValue(),
-      gainType    = ggGainType.selection.item,
+      gain        = Gain(gainModel.getNumber.floatValue(), if (ggGainType.selection.index == 0) true else false),
       span        = if (ggSpanUser.selected) tlSel else Span.Void,
       channels    = channels,
       importFile  = importFile,
@@ -246,7 +247,7 @@ object ActionBounceTimeline {
   //  final case class QuerySettings[S <: Sys[S]](
   //    file: Option[File] = None,
   //    spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
-  //    gainAmount: Double = -0.2, gainType: GainType = Normalized,
+  //    gainAmount: Double = -0.2, gainType: Gain = Normalized,
   //    span: SpanOrVoid = Span.Void, channels: IIdxSeq[Range.Inclusive] = Vector(0 to 1),
   //    importFile: Boolean = true, location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   //  )
