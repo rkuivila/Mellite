@@ -74,7 +74,7 @@ object ElementView {
         val value = e.entity.directory
         new ArtifactLocation.Impl(parent, tx.newHandle(e), name, value)
       case e: Element.Recursion[S] =>
-        val value = e.entity.deployed.artifact.value
+        val value = e.entity.deployed.entity.artifact.value
         new Recursion.Impl(parent, tx.newHandle(e), name, value)
     }
   }

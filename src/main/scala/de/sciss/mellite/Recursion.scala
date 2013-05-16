@@ -15,9 +15,9 @@ object Recursion {
   type Channels = IIdxSeq[Range.Inclusive]
   type Update[S <: Sys[S]] = Unit
 
-  def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanOrVoid, artifact: Artifact[S], spec: AudioFileSpec,
+  def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanOrVoid, deployed: Element.AudioGrapheme[S],
                          gain: Gain, channels: Channels)(implicit tx: S#Tx): Recursion[S] =
-    Impl(group, span, artifact, spec, gain, channels)
+    Impl(group, span, deployed, gain, channels)
 
   def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Recursion[S] =
     Impl.serializer.read(in, access)
@@ -28,7 +28,7 @@ trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] {
   def group: ProcGroup[S]
   def span(implicit tx: S#Tx): SpanLike
   def span_=(value: SpanLike)(implicit tx: S#Tx): Unit
-  def deployed: Grapheme.Elem.Audio[S]
+  def deployed: Element.AudioGrapheme[S] //  Grapheme.Elem.Audio[S]
   def product: Artifact[S]
   def productSpec: AudioFileSpec
   def gain(implicit tx: S#Tx): Gain

@@ -210,7 +210,10 @@ object Element {
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): AudioGrapheme[S] with evt.Node[S] = {
-      val entity = Grapheme.Elem.Audio.readExpr(in, access)
+      val entity = Grapheme.Elem.Audio.readExpr(in, access) match {
+        case a: Grapheme.Elem.Audio[S] => a
+        case other => sys.error(s"Heck, expected a Grapheme.Elem.Audio, but got $other")  // XXX TODO
+      }
       new Impl(targets, name, entity)
     }
 
@@ -219,7 +222,7 @@ object Element {
     }
 
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S],
-                                          val entity: Expr[S, Grapheme.Value.Audio])
+                                          val entity: Grapheme.Elem.Audio[S]) // Expr[S, Grapheme.Value.Audio]
       extends Element.ActiveImpl[S] with AudioGrapheme[S] {
       self =>
 
@@ -229,7 +232,9 @@ object Element {
       protected def entityEvent = entity.changed
     }
   }
-  sealed trait AudioGrapheme[S <: Sys[S]] extends Element[S] { type A = Expr[S, Grapheme.Value.Audio] }
+  sealed trait AudioGrapheme[S <: Sys[S]] extends Element[S] {
+    type A = Grapheme.Elem.Audio[S] // Expr[S, Grapheme.Value.Audio]
+  }
 
   // ----------------- ArtifactLocation -----------------
 

@@ -4,7 +4,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{Server, Artifact, Bounce, Sys}
+import de.sciss.synth.proc.{Grapheme, Server, Artifact, Bounce, Sys}
 import de.sciss.desktop.{DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -25,6 +25,7 @@ import scala.swing.event.{SelectionChanged, ValueChanged}
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.{ExecutionContext, Future}
 import de.sciss.processor.Processor
+import de.sciss.synth.expr.{ExprImplicits, Doubles, Longs}
 
 object ActionBounceTimeline {
 
@@ -287,10 +288,20 @@ object ActionBounceTimeline {
             cursor.step { implicit tx =>
               val loc       = locSource()
               loc.entity.modifiableOption.foreach { locM =>
+                val imp = ExprImplicits[S]
+                import imp._
+                // val fileR     = Artifact.relativize(locM.directory, file)
                 val artifact  = locM.add(file)
-                val recursion = Recursion(group(), settings.span, artifact, spec, settings.gain, settings.channels)
-                val elem      = Element.Recursion(elemName, recursion)
-                document.elements.addLast(elem)
+                val depArtif  = Artifact.Modifiable(artifact)
+                val depOffset = Longs  .newVar(0L)
+                val depGain   = Doubles.newVar(1.0)
+                val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
+                val depElem   = Element.AudioGrapheme(file.nameWithoutExtension, deployed)
+
+                val recursion = Recursion(group(), settings.span, depElem, settings.gain, settings.channels)
+                val recElem   = Element.Recursion(elemName, recursion)
+                document.elements.addLast(depElem)
+                document.elements.addLast(recElem)
               }
             }
 

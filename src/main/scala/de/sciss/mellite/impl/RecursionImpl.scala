@@ -60,16 +60,21 @@ object RecursionImpl {
       val id          = targets.id
       val gain        = tx.readVar[Gain    ](id, in)
       val channels    = tx.readVar[Channels](id, in)(ImmutableSerializer.indexedSeq[Range.Inclusive])
-      val deployed    = Grapheme.Elem.Audio.readExpr(in, access) match {
-        case ja: Grapheme.Elem.Audio[S] => ja // XXX TODO sucky shit
+      //      val deployed    = Grapheme.Elem.Audio.readExpr(in, access) match {
+      //        case ja: Grapheme.Elem.Audio[S] => ja // XXX TODO sucky shit
+      //      }
+      val deployed    = Element.serializer[S].read(in, access) match {
+        case a: Element.AudioGrapheme[S]  => a
+        case other => sys.error(s"What the... expected an audio grapheme but got $other")
       }
+
       val product     = Artifact.Modifiable.read(in, access)
       val productSpec = AudioFileSpec.Serializer.read(in)
       new Impl(targets, group, span, gain, channels, deployed, product, productSpec)
     }
   }
 
-  def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanLike, artifact: Artifact[S], spec: AudioFileSpec,
+  def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanLike, deployed: Element.AudioGrapheme[S],
                          gain: Gain, channels: Channels)(implicit tx: S#Tx): Recursion[S] = {
     val imp = ExprImplicits[S]
     import imp._
@@ -79,17 +84,21 @@ object RecursionImpl {
     val _span     = SpanLikes.newVar(span)
     val _gain     = tx.newVar(id, gain)
     val _channels = tx.newVar(id, channels)(ImmutableSerializer.indexedSeq[Range.Inclusive])
-    val depArtif  = Artifact.Modifiable(artifact.location, artifact.value)
-    val depOffset = Longs  .newVar(0L)
-    val depGain   = Doubles.newVar(1.0)
-    val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
+    //    val depArtif  = Artifact.Modifiable(artifact.location, artifact.value)
+    //    val depOffset = Longs  .newVar(0L)
+    //    val depGain   = Doubles.newVar(1.0)
+    //    val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
 
-    new Impl(targets, group, _span, _gain, _channels, deployed, product = artifact, productSpec = spec)
+    val product   = deployed.entity.artifact
+    val spec      = deployed.entity.value.spec  // XXX TODO: should that be a method on entity?
+
+    new Impl(targets, group, _span, _gain, _channels, deployed, product = product, productSpec = spec)
   }
 
   private final class Impl[S <: Sys[S]](protected val targets: evt.Targets[S], val group: ProcGroup[S],
     _span: Expr.Var[S, SpanLike], _gain: S#Var[Gain], _channels: S#Var[Channels],
-    val deployed: Grapheme.Elem.Audio[S], val product: Artifact[S], val productSpec: AudioFileSpec)
+    val deployed: Element.AudioGrapheme[S] /* Grapheme.Elem.Audio[S] */, val product: Artifact[S],
+    val productSpec: AudioFileSpec)
     extends Recursion[S]
     with evt.impl.Generator     [S, Recursion.Update[S], Recursion[S]]
     with evt.impl.StandaloneLike[S, Recursion.Update[S], Recursion[S]] {
@@ -115,7 +124,7 @@ object RecursionImpl {
 
     /** Moves the product to deployed position. */
     def iterate()(implicit tx: S#Tx) {
-      val mod = deployed.artifact.modifiableOption.getOrElse(
+      val mod = deployed.entity.artifact.modifiableOption.getOrElse(
         sys.error("Can't iterate - deployed artifact not modifiable")
       )
       mod.child_=(product.value)

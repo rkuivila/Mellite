@@ -61,7 +61,7 @@ object TimelineViewImpl {
 
   private val NoMove    = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
   private val NoResize  = TrackTool.Resize(deltaStart = 0L, deltaStop = 0L)
-  private var NoGain    = TrackTool.Gain(1f)
+  private val NoGain    = TrackTool.Gain(1f)
   private val MinDur    = 32
 
   private val logEnabled  = false // true

@@ -17,7 +17,7 @@ object RecursionFrameImpl {
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] = {
     val name      = elem.name.value
     val recursion = elem.entity
-    val deployed  = recursion.deployed.artifact.value
+    val deployed  = recursion.deployed.entity.artifact.value
     val product   = recursion.product.value
     val spec      = recursion.productSpec
     val view      = new Impl(doc, elem, name, deployed)
@@ -28,7 +28,7 @@ object RecursionFrameImpl {
   }
 
   private final class Impl[S <: Sys[S]](val document: Document[S], elem: Element.Recursion[S], name: String, deployed: File)
-                                       (implicit cursor: stm.Cursor[S])
+                                       (implicit _cursor: stm.Cursor[S])
     extends RecursionFrame[S] with ComponentHolder[Window] {
 
     def dispose()(implicit tx: S#Tx) {
@@ -41,7 +41,7 @@ object RecursionFrameImpl {
     }
 
     private def frameClosing() {
-      cursor.step { implicit tx =>
+      _cursor.step { implicit tx =>
         disposeData()
       }
     }
@@ -53,7 +53,9 @@ object RecursionFrameImpl {
         val lbDeployed    = new Label("Deployed Artifact:", ElementView.AudioGrapheme.icon, Alignment.Right)
         val ggDeployed    = new Label(deployed.name)
         val viewDeployed  = Button("View") {
-          ??? // AudioFileFrame(document, elem.entity.deployed)
+          _cursor.step { implicit tx =>
+            AudioFileFrame(document, elem.entity.deployed)
+          }
         }
         viewDeployed.peer.putClientProperty("JButton.buttonType", "roundRect")
         theHorizontalLayout is Sequential(lbDeployed, ggDeployed, viewDeployed)
@@ -70,6 +72,7 @@ object RecursionFrameImpl {
         reactions += {
           case Window.Closing(_) => frameClosing()
         }
+        resizable   = false
         pack()
         GUI.centerOnScreen(this)
         front()
