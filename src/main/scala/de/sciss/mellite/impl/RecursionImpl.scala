@@ -89,8 +89,9 @@ object RecursionImpl {
     //    val depGain   = Doubles.newVar(1.0)
     //    val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
 
-    val product   = deployed.entity.artifact
-    val spec      = deployed.entity.value.spec  // XXX TODO: should that be a method on entity?
+    val depGraph  = deployed.entity
+    val product   = Artifact.Modifiable.copy(depGraph.artifact)
+    val spec      = depGraph.value.spec  // XXX TODO: should that be a method on entity?
 
     new Impl(targets, group, _span, _gain, _channels, deployed, product = product, productSpec = spec)
   }
@@ -127,7 +128,9 @@ object RecursionImpl {
       val mod = deployed.entity.artifact.modifiableOption.getOrElse(
         sys.error("Can't iterate - deployed artifact not modifiable")
       )
-      mod.child_=(product.value)
+      val prodF = product.value
+      val prodC = Artifact.relativize(mod.location.directory, prodF)
+      mod.child_=(prodC)
     }
 
     // ---- event dorfer ----
@@ -143,9 +146,9 @@ object RecursionImpl {
       val spanUpd = if (pull.contains(spanEvt)) pull(spanEvt) else None
       if (spanUpd.isDefined) return Some()
 
-      val gainEvt = _span.changed
-      val gainUpd = if (pull.contains(gainEvt)) pull(gainEvt) else None
-      if (gainUpd.isDefined) return Some()
+      val depEvt = deployed.changed
+      val depUpd = if (pull.contains(depEvt)) pull(depEvt) else None
+      if (depUpd.isDefined) return Some()
 
       val prodEvt = product.changed
       val prodUpd = if (pull.contains(prodEvt)) pull(prodEvt) else None

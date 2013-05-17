@@ -26,7 +26,7 @@ retrieveManaged := true
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
-// scalacOptions += "-no-specialization"
+scalacOptions += "-no-specialization"
 
 // scalacOptions ++= Seq("-Xelide-below", "INFO")
 

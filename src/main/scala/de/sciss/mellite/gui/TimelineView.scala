@@ -30,13 +30,14 @@ import de.sciss.synth.proc.{AuralSystem, Sys}
 import scala.swing.{Action, Component}
 import impl.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Disposable
 
 object TimelineView {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): TimelineView[S] =
     Impl(document, group)
 }
-trait TimelineView[S <: Sys[S]] {
+trait TimelineView[S <: Sys[S]] extends Disposable[S#Tx] {
   def component: Component
   def timelineModel: TimelineModel
 

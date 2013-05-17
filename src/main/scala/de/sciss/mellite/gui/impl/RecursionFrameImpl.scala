@@ -9,7 +9,7 @@ import java.io.File
 import de.sciss.desktop.{DialogSource, Window}
 import desktop.impl.WindowImpl
 import scalaswingcontrib.group.GroupPanel
-import scala.swing.{BorderPanel, FlowPanel, ProgressBar, Button, Alignment, Label}
+import scala.swing.{Component, BorderPanel, FlowPanel, ProgressBar, Button, Alignment, Label}
 import language.reflectiveCalls
 import de.sciss.synth.proc
 import de.sciss.processor.Processor
@@ -22,30 +22,46 @@ import scala.annotation.tailrec
 import de.sciss.lucre.stm.Disposable
 
 object RecursionFrameImpl {
+  private final case class View(name: String, deployed: File, product: File) {
+    def sameFiles: Boolean = deployed != product
+  }
+
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.Recursion[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] = {
-    val name      = elem.name.value
-    val recursion = elem.entity
-    val deployed  = recursion.deployed.entity.artifact.value
-    val product   = recursion.product.value
-    val spec      = recursion.productSpec
-
-    val view: Impl[S] = new Impl[S] {
+    new Impl[S] {
       val document  = doc
-      val recH      = tx.newHandle(recursion)
-      val _name     = name
-      val _depFile  = deployed
-      val _prodFile = product
-      val _spec     = spec
+      val recH      = tx.newHandle(elem.entity)
+      val _spec     = elem.entity.productSpec
       val _cursor   = cursor
-      val observer  = recursion.changed.react { implicit tx => {
-        case _ => println("Recursion update!")
+
+      private def mkView()(implicit tx: S#Tx): View = {
+        val name      = elem.name.value
+        val rec       = recH()
+        val deployed  = rec.deployed.entity.artifact.value
+        val product   = rec.product.value
+        val _depFile  = deployed
+        val _prodFile = product
+        View(name, deployed = _depFile, product = _prodFile)
+      }
+
+      private var _view = mkView()
+
+      def view: View = _view
+
+      val observer  = elem.changed.react { implicit tx => {
+        case _ =>
+          // println(s"Observed: $x")
+          val v = mkView()
+          guiFromTx {
+            _view = v
+            guiUpdate()
+          }
       }}
+
+      guiFromTx {
+        guiInit()
+      }
     }
-    guiFromTx {
-      view.guiInit()
-    }
-    view
   }
 
   private final class FileComparison(a: File, b: File) extends ProcessorImpl[Boolean, FileComparison] {
@@ -93,9 +109,7 @@ object RecursionFrameImpl {
     extends RecursionFrame[S] with ComponentHolder[Window] {
 
     protected def recH      : stm.Source[S#Tx, Recursion[S]]
-    protected def _name     : String
-    protected def _depFile  : File
-    protected def _prodFile : File
+    protected def view      : View
     protected def _spec     : AudioFileSpec
     protected implicit def _cursor   : stm.Cursor[S]
     protected def observer  : Disposable[S#Tx]
@@ -115,24 +129,40 @@ object RecursionFrameImpl {
       }
     }
 
-    def guiInit() {
-      // val fileName = deployed.nameWithoutExtension
+    private var ggDeployed: Label = _
+    private var ggProduct : Label = _
+    private var updateDeployed: Button = _
+    private var frame     : Frame = _
+    private var currentProc = Option.empty[Processor[Any, _]]
 
-      var funStopProcess = () => ()
+    final protected def guiUpdate() {
+      ggDeployed.text = view.deployed.name
+      ggProduct .text = view.product .name
+      // println(s"view.deployed = ${view.deployed}, product = ${view.product}")
+      frame.setTitle(view.name)
+      frame.file_=     (Some(view.deployed))
+      val enabled = currentProc.isEmpty
+      updateDeployed.enabled  = enabled && view.sameFiles
+    }
+
+    final protected def guiInit() {
+      // val fileName = deployed.nameWithoutExtension
 
       val ggProgress    = new ProgressBar
       val ggStopProcess = Button("Abort") {
-        funStopProcess()
+        currentProc.foreach(_.abort())
       }
-      GUI.fixWidth(ggProgress, 256)
-      GUI.round(ggStopProcess)
+      GUI.fixWidth(ggProgress, 480)
+      GUI.round   (ggStopProcess)
 
-      val lbDeployed    = new Label("Deployed Artifact:"   , ElementView.AudioGrapheme.icon, Alignment.Left)
+      val lbDeployed    = new Label("Deployed Artifact:"   , ElementView.AudioGrapheme.icon, Alignment.Right)
       lbDeployed.peer.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT)
-      val ggDeployed    = new Label(_depFile.name)
-      val lbProduct     = new Label("Most Recent Artifact:", ElementView.AudioGrapheme.icon, Alignment.Left)
+      ggDeployed        = new Label("---") // don't use `null`, it will stick to a width of zero
+      GUI.fixWidth(ggDeployed, 128)
+      val lbProduct     = new Label("Most Recent Artifact:", ElementView.AudioGrapheme.icon, Alignment.Right)
       lbProduct.peer.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT)
-      val ggProduct     = new Label(_prodFile .name)
+      ggProduct         = new Label("---")
+      GUI.fixWidth(ggProduct, 128)
 
       val panelProgress = new FlowPanel(ggProgress, ggStopProcess) {
         preferredSize = preferredSize
@@ -141,8 +171,8 @@ object RecursionFrameImpl {
       }
 
       def performProductUpdate() {
-        val b         = _prodFile.parent
-        val (n0,ext)  = _prodFile.splitExtension
+        val b         = view.product.parent
+        val (n0,ext)  = view.product.splitExtension
         val i         = n0.lastIndexOf('_')
         val n         = if (i < 0) n0 else n0.substring(0, i)
 
@@ -153,6 +183,7 @@ object RecursionFrameImpl {
 
         val newFile   = loopFile(1)
         performBounce(newFile) {
+          processStopped()
           _cursor.step { implicit tx =>
             val product = recH().product
             (/* product.location.modifiableOption, */ product.modifiableOption) match {
@@ -189,7 +220,7 @@ object RecursionFrameImpl {
       def performMatch() {
         val file = File.createTempFile("bounce", "." + _spec.fileType.extension)
         performBounce(file) {
-          val pCompare = new FileComparison(_depFile, file)
+          val pCompare = new FileComparison(view.deployed, file)
           pCompare.start()
           monitor("Compare", pCompare) { res =>
             processStopped()
@@ -200,26 +231,24 @@ object RecursionFrameImpl {
         }
       }
 
-      def updateDeployedEnabled = _depFile != _prodFile
-
       def updateGadgets(enabled: Boolean) {
-        matchDeployed.enabled   = enabled
-        updateDeployed.enabled  = enabled && updateDeployedEnabled
-        updateProduct.enabled   = enabled
-        ggProgress.visible      = !enabled
-        ggStopProcess.visible   = !enabled
+        matchDeployed .enabled  = enabled
+        updateDeployed.enabled  = enabled && view.sameFiles
+        updateProduct .enabled  = enabled
+        ggProgress    .visible  = !enabled
+        ggStopProcess .visible  = !enabled
       }
 
       def processStopped() {
         updateGadgets(enabled = true)
-        funStopProcess          = () => ()
+        currentProc = None
       }
 
       // `onSuccess` is called on EDT!
       def monitor[A](title: String, p: Processor[A, _])(onSuccess: A => Unit) {
         updateGadgets(enabled = false)
         ggStopProcess.requestFocus()
-        funStopProcess        = () => p.abort()
+        currentProc = Some(p)
 
         p.addListener {
           case prog @ Processor.Progress(_, _) => GUI.defer {
@@ -249,11 +278,13 @@ object RecursionFrameImpl {
       lazy val matchDeployed: Button = Button("Match") {
         performMatch()
       }
-      lazy val updateDeployed: Button = Button("Update \u2713") {
-        println("Update deployed")
+      updateDeployed = Button("Update \u2713") {
+        _cursor.step { implicit tx =>
+          recH().iterate()
+        }
       }
       lazy val viewProduct: Button = Button("View") {
-        IO.revealInFinder(_prodFile)
+        IO.revealInFinder(view.product)
       }
       lazy val dummyProduct = new Label(null)
       lazy val updateProduct: Button = Button("Update \u2697") {
@@ -261,7 +292,7 @@ object RecursionFrameImpl {
       }
       GUI.round(viewDeployed, matchDeployed, updateDeployed, viewProduct, updateProduct)
 
-      updateDeployed.enabled = updateDeployedEnabled
+      updateDeployed.enabled = view.sameFiles
 
       val box = new GroupPanel {
         theHorizontalLayout is Sequential(
@@ -279,26 +310,31 @@ object RecursionFrameImpl {
         linkHorizontalSize(lbDeployed, lbProduct)
       }
 
-      processStopped()
-
-      comp = new WindowImpl {
-        def handler = Mellite.windowHandler
-        def style   = Window.Regular
-        // component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
-        title       = _name
-        file        = Some(_depFile)
-        contents    = new BorderPanel {
-          add(box          , BorderPanel.Position.Center)
-          add(panelProgress, BorderPanel.Position.South)
-        }
-        reactions += {
-          case Window.Closing(_) => frameClosing()
-        }
-        resizable   = false
-        pack()
-        GUI.centerOnScreen(this)
-        front()
+      val panel = new BorderPanel {
+        add(box, BorderPanel.Position.Center)
+        add(panelProgress, BorderPanel.Position.South)
       }
+      frame = new Frame(panel)
+      guiUpdate()
+      processStopped()
+      GUI.centerOnScreen(frame)
+      frame.front()
+      comp  = frame
+    }
+
+    private class Frame(c: Component) extends WindowImpl {
+      def handler = Mellite.windowHandler
+      def style   = Window.Regular
+      // component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
+      contents    = c
+      reactions += {
+        case Window.Closing(_) => frameClosing()
+      }
+      resizable   = false
+      pack()
+
+      def setTitle(n: String) { title_=(n) }
+      // def setFile (f: File  ) { file_=(Some(f)) }
     }
   }
 }

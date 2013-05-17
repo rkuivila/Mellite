@@ -7,6 +7,7 @@ import de.sciss.synth.proc.{AuralSystem, Sys}
 import desktop.impl.WindowImpl
 import desktop.Window
 import lucre.stm
+import scala.swing.event.WindowClosing
 
 object TimelineFrameImpl {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
@@ -21,12 +22,27 @@ object TimelineFrameImpl {
     res
   }
 
-  private final class Impl[S <: Sys[S]](val view: TimelineView[S], name: String)
+  private final class Impl[S <: Sys[S]](val view: TimelineView[S], name: String)(implicit _cursor: stm.Cursor[S])
     extends TimelineFrame[S] {
 
     private var _window: Window = _
 
     def window = _window
+
+    def dispose()(implicit tx: S#Tx) {
+      disposeData()
+      guiFromTx(_window.dispose())
+    }
+
+    private def disposeData()(implicit tx: S#Tx) {
+      view.dispose()
+    }
+
+    private def frameClosing() {
+      _cursor.step { implicit tx =>
+        disposeData()
+      }
+    }
 
     def init() {
       _window = new WindowImpl {
@@ -41,6 +57,10 @@ object TimelineFrameImpl {
           "edit.delete"           -> view.deleteAction,
           "timeline.splitObjects" -> view.splitObjectsAction
         )
+
+        reactions += {
+          case WindowClosing(_) => frameClosing()
+        }
 
         pack()
         // centerOnScreen()

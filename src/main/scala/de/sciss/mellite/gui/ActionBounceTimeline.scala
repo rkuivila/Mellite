@@ -13,17 +13,13 @@ import javax.swing.{SwingUtilities, JFormattedTextField, JSpinner, SpinnerNumber
 import de.sciss.span.{SpanLike, Span}
 import Swing._
 import de.sciss.audiowidgets.AxisFormat
-import de.sciss.mellite.gui.impl.TimelineProcView
-import scala.annotation.switch
 import de.sciss.span.Span.SpanOrVoid
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import de.sciss.mellite.Element.ArtifactLocation
 import scala.util.control.NonFatal
 import java.text.ParseException
-import collection.breakOut
-import scala.swing.event.{SelectionChanged, ValueChanged}
+import scala.swing.event.SelectionChanged
 import scala.util.{Failure, Success, Try}
-import scala.concurrent.{ExecutionContext, Future}
 import de.sciss.processor.Processor
 import de.sciss.synth.expr.{ExprImplicits, Doubles, Longs}
 
@@ -293,8 +289,9 @@ object ActionBounceTimeline {
                 val imp = ExprImplicits[S]
                 import imp._
                 // val fileR     = Artifact.relativize(locM.directory, file)
-                val artifact  = locM.add(file)
-                val depArtif  = Artifact.Modifiable(artifact)
+                // val artifact  = locM.add(file)
+                // val depArtif  = Artifact.Modifiable(artifact)
+                val depArtif  = locM.add(file)
                 val depOffset = Longs  .newVar(0L)
                 val depGain   = Doubles.newVar(1.0)
                 val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)

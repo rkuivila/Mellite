@@ -10,6 +10,8 @@ import expr.Expr
 import synth.expr.SpanLikes
 import language.implicitConversions
 import de.sciss.lucre.bitemp.BiExpr
+import scala.util.Try
+import scala.util.control.NonFatal
 
 object TimelineProcView {
   /** Queries the audio region's grapheme segment start and audio element. */
@@ -61,23 +63,52 @@ object TimelineProcView {
     val attr  = proc.attributes
 
     val track = attr[Attribute.Int    ](ProcKeys.attrTrack).map(_.value).getOrElse(0)
-    val name  = attr[Attribute.String ](ProcKeys.attrName ).map(_.value).getOrElse {
-      audio.map(_.value.artifact.nameWithoutExtension).getOrElse("<unnamed>")
-    }
+    val name  = attr[Attribute.String ](ProcKeys.attrName ).map(_.value)
     val mute  = attr[Attribute.Boolean](ProcKeys.attrMute ).map(_.value).getOrElse(false)
 
     new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
-      span = spanV, track = track, name = name, mute = mute, audio = audio)
+      span = spanV, track = track, nameOpt = name, mute = mute, audio = audio)
   }
 
   private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val procSource: stm.Source[S#Tx, Proc[S]],
-                                        var span: SpanLike, var track: Int, var name: String,
+                                        var span: SpanLike, var track: Int, var nameOpt: Option[String],
                                         var mute: Boolean,
                                         var audio: Option[Grapheme.Segment.Audio])
     extends TimelineProcView[S] {
 
     var sono = Option.empty[sonogram.Overview]
+    override def toString = s"ProvView($name, $span, $audio)"
+
+    private var failedAcquire = false
+
+    def release() {
+      sono.foreach { ovr =>
+        sono = None
+        SonogramManager.release(ovr)
+      }
+    }
+
+    def name = nameOpt.getOrElse {
+      audio.map(_.value.artifact.nameWithoutExtension).getOrElse("<unnamed>")
+    }
+
+    def acquire(): Option[sonogram.Overview] = {
+      if (failedAcquire) return None
+      release()
+      sono = audio.flatMap { segm =>
+        try {
+          val ovr = SonogramManager.acquire(segm.value.artifact)  // XXX TODO: remove `Try` once manager is fixed
+          failedAcquire = false
+          Some(ovr)
+        } catch {
+          case NonFatal(_) =>
+          failedAcquire = true
+          None
+        }
+      }
+      sono
+    }
   }
 
   implicit def span[S <: Sys[S]](view: TimelineProcView[S]): (Long, Long) = {
@@ -96,7 +127,8 @@ sealed trait TimelineProcView[S <: Sys[S]] {
 
   var span: SpanLike
   var track: Int
-  var name: String
+  var nameOpt: Option[String]
+  def name: String
   // var gain: Float
   var mute: Boolean
   // var audio: Option[Grapheme.Value.Audio]
@@ -106,4 +138,8 @@ sealed trait TimelineProcView[S <: Sys[S]] {
   var sono: Option[sonogram.Overview]
 
   // def updateSpan(span: Expr[S, SpanLike])(implicit tx: S#Tx): Unit
+
+  def release(): Unit
+
+  def acquire(): Option[sonogram.Overview]
 }
