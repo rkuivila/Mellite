@@ -86,16 +86,17 @@ object TransformImpl {
     }
   }
 
-  private def compile(code: String): () => Unit = {
+  def compile(code: String): () => Unit = {
     val i = intp
     val pre =
       """de.sciss.mellite.impl.TransformImpl.Wrapper {
         |  import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat, Frames}
         |  import de.sciss.synth._
+        |  import de.sciss.mellite.RichFile
         |  val __import__ = de.sciss.mellite.impl.TransformImpl.Bindings.thisProcess()
         |  import __import__._
         |
-        |""".stripMargin
+      """.stripMargin
 
     val post =
       """
