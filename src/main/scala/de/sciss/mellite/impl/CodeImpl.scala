@@ -86,6 +86,15 @@ object CodeImpl {
     w.wrap(in, funFut) // .asInstanceOf[Future[() => B]])
   }
 
+  def compileBody[I, O, Repr <: Code { type In = I; type Out = O }](code: Repr)
+                      (implicit w: Wrapper[I, O, Repr]): Future[Unit] = {
+    future {
+      blocking {
+        compileThunk(code.source, w)
+      }
+    }
+  }
+
   private final class Intp(cset: nsc.Settings)
     extends IMain(cset, new NewLinePrintWriter(new ConsoleWriter, autoFlush = true)) {
 
@@ -131,7 +140,7 @@ object CodeImpl {
   }
 
   // note: synchronous
-  def compileThunk(code: String, w: Wrapper[_, _, _]): () => Any = {
+  private def compileThunk(code: String, w: Wrapper[_, _, _]): () => Any = {
     val i = intp
 
     val impS  = w.imports.map(i => s"  import $i\n").mkString

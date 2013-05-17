@@ -29,12 +29,8 @@ package gui
 
 import de.sciss.synth.proc.{Artifact, Grapheme, Sys}
 import lucre.stm
-import scalaswingcontrib.tree.Tree
-import swing.{Label, Swing, BoxPanel, Orientation, Component}
+import swing.Swing
 import collection.immutable.{IndexedSeq => IIdxSeq}
-import javax.swing.tree.DefaultTreeCellRenderer
-import Swing._
-import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.expr.LinkedList
 import java.io.File
 import java.awt.Toolkit
@@ -46,7 +42,7 @@ import de.sciss.lucre.event.Change
 object ElementView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double}
-  import mellite.{Folder => _Folder, Recursion => _Recursion}
+  import mellite.{Folder => _Folder, Recursion => _Recursion, Code => _Code}
 
   private[gui] def apply[S <: Sys[S]](parent: FolderLike[S], element: Element[S])
                                      (implicit tx: S#Tx): ElementView[S] = {
@@ -76,15 +72,16 @@ object ElementView {
       case e: Element.Recursion[S] =>
         val value = e.entity.deployed.entity.artifact.value
         new Recursion.Impl(parent, tx.newHandle(e), name, value)
+      case e: Element.Code[S] =>
+        val value = e.entity.value.contextName
+        new Code.Impl(parent, tx.newHandle(e), name, value)
     }
   }
 
   // -------- String --------
 
   object String {
-    private val icon = new ImageIcon(
-      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_string16.png"))
-    )
+    private val icon = imageIcon("string")
 
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.String[S]],
@@ -118,9 +115,7 @@ object ElementView {
   // -------- Int --------
 
   object Int {
-    private val icon = new ImageIcon(
-      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_integer16.png"))
-    )
+    private val icon = imageIcon("integer")
 
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.Int[S]],
@@ -163,9 +158,7 @@ object ElementView {
   // -------- Double --------
 
   object Double {
-    private val icon = new ImageIcon(
-      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_float16.png"))
-    )
+    private val icon = imageIcon("float")
 
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.Double[S]],
@@ -275,9 +268,7 @@ object ElementView {
   // -------- ProcGroup --------
 
   object ProcGroup {
-    private val icon = new ImageIcon(
-      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_procgroup16.png"))
-    )
+    private val icon = imageIcon("procgroup")
 
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.ProcGroup[S]],
@@ -299,9 +290,7 @@ object ElementView {
   // -------- AudioGrapheme --------
 
   object AudioGrapheme {
-    val icon: Icon = new ImageIcon(
-      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_audiographeme16.png"))
-    )
+    val icon: Icon = imageIcon("audiographeme")
 
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.AudioGrapheme[S]],
@@ -329,9 +318,7 @@ object ElementView {
   // -------- ArtifactLocation --------
 
   object ArtifactLocation {
-    private val icon = new ImageIcon(
-      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_location16.png"))
-    )
+    private val icon = imageIcon("location")
 
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.ArtifactLocation[S]],
@@ -357,10 +344,10 @@ object ElementView {
     var directory: File
   }
 
+  // -------- Recursion --------
+
   object Recursion {
-    private val icon = new ImageIcon(
-      Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource("icon_recursion16.png"))
-    )
+    private val icon = imageIcon("recursion")
 
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.Recursion[S]],
@@ -378,6 +365,28 @@ object ElementView {
   sealed trait Recursion[S <: Sys[S]] extends ElementView[S] {
     def element: stm.Source[S#Tx, Element.Recursion[S]]
     var deployed: File
+  }
+
+  // -------- ArtifactLocation --------
+
+  object Code {
+    private val icon = imageIcon("code")
+
+    private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
+                                                       val element: stm.Source[S#Tx, Element.Code[S]],
+                                                       var name: _String, var value: _String)
+      extends Code[S] with ElementView.Impl[S] {
+
+      def prefix  = "Code"
+      def icon    = Code.icon
+
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): Boolean = false
+      def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = false
+    }
+  }
+  sealed trait Code[S <: Sys[S]] extends ElementView[S] {
+    def element: stm.Source[S#Tx, Element.Code[S]]
+    var value: _String
   }
 
   // -------- Root --------
@@ -403,6 +412,10 @@ object ElementView {
     }
   }
   sealed trait Root[S <: Sys[S]] extends FolderLike[S]
+
+  private def imageIcon(name: _String): Icon = new ImageIcon(
+    Toolkit.getDefaultToolkit.getImage(Mellite.getClass.getResource(s"icon_${name}16.png"))
+  )
 
   private sealed trait Impl[S <: Sys[S]] extends ElementView[S] {
     protected def prefix: _String

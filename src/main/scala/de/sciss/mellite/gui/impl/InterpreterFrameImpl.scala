@@ -9,6 +9,7 @@ import de.sciss.desktop.Window
 import de.sciss.desktop.impl.WindowImpl
 
 // careful... tripping over SI-3809 "illegal cyclic reference involving class Array"...
+// actually SI-7481
 private[gui] object InterpreterFrameImpl {
   val boom = Array(1, 2, 3)  // forcing scalac to recompile, so it doesn't crash
 

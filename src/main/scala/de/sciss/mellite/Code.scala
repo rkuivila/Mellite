@@ -15,6 +15,10 @@ object Code {
 
   def read(in: DataInput): Code = serializer.read(in)
 
+  def apply(id: Int, source: String): Code = (id /* : @switch */ ) match {
+    case FileTransform.id => FileTransform(source)
+  }
+
   object FileTransform {
     final val id = 0
   }
@@ -23,7 +27,10 @@ object Code {
     type Out    = Future[Unit]
     def id      = FileTransform.id
 
-    def compile(): In => Out = Impl.compile[In, Out, FileTransform](this)
+    def compile(): In => Out        = Impl.compile    [In, Out, FileTransform](this)
+    def compileBody(): Future[Unit] = Impl.compileBody[In, Out, FileTransform](this)
+
+    def contextName = "File Transform"
   }
 }
 sealed trait Code extends Writable {
@@ -34,8 +41,10 @@ sealed trait Code extends Writable {
 
   def id: Int
   def source: String
+  def contextName: String
 
   def compile(): In => Out
+  def compileBody(): Future[Unit]
 
   def execute(in: In): Out = compile()(in)
 

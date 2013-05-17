@@ -40,7 +40,7 @@ import de.sciss.serial.{DataOutput, DataInput, Writable}
 object Element {
   import scala.{Int => _Int, Double => _Double}
   import java.lang.{String => _String}
-  import mellite.{Folder => _Folder, Recursion => _Recursion}
+  import mellite.{Folder => _Folder, Recursion => _Recursion, Code => _Code}
 
   type Name[S <: Sys[S]] = Expr.Var[S, _String]
 
@@ -290,6 +290,31 @@ object Element {
   }
   sealed trait Recursion[S <: Sys[S]] extends Element[S] { type A = _Recursion[S] }
 
+  object Code extends Companion[Code] {
+    protected[Element] final val typeID = Codes.typeID // 0x20001
+
+    protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
+                                   (implicit tx: S#Tx): Code[S] with evt.Node[S] = {
+      val entity = Codes.readExpr(in, access)
+      new Impl(targets, name, entity)
+    }
+
+    def apply[S <: Sys[S]](name: _String, init: Expr[S, _Code])(implicit tx: S#Tx): Code[S] = {
+      new Impl(evt.Targets[S], mkName(name), init)
+    }
+
+    private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr[S, _Code])
+      extends Element.ActiveImpl[S] with Code[S] {
+      self =>
+
+      def typeID = Code.typeID
+      def prefix = "Code"
+
+      protected def entityEvent = entity.changed
+    }
+  }
+  sealed trait Code[S <: Sys[S]] extends Element[S] { type A = Expr[S, _Code] }
+
   // ----------------- Serializer -----------------
 
   implicit def serializer[S <: Sys[S]]: evt.Serializer[S, Element[S]] = anySer.asInstanceOf[Ser[S]]
@@ -312,6 +337,7 @@ object Element {
         case AudioGrapheme   .typeID => AudioGrapheme   .readIdentified(in, access, targets)
         case ArtifactLocation.typeID => ArtifactLocation.readIdentified(in, access, targets)
         case Recursion       .typeID => Recursion       .readIdentified(in, access, targets)
+        case Code            .typeID => Code            .readIdentified(in, access, targets)
         case _                       => sys.error(s"Unexpected element type cookie $typeID")
       }
     }

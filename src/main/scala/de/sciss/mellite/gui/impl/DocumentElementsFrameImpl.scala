@@ -28,7 +28,7 @@ package mellite
 package gui
 package impl
 
-import swing.{Swing, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
+import scala.swing.{ComboBox, Swing, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
 import lucre.stm
 import synth.proc.{Grapheme, Artifact, ProcGroup, Sys}
 import Swing._
@@ -202,6 +202,35 @@ object DocumentElementsFrameImpl {
       }
     }
 
+    private def actionAddCode() {
+      val expr      = ExprImplicits[S]
+      import expr._
+      val ggValue   = new ComboBox(Seq("File Transform"))
+      actionAddPrimitive(tpe = "Code", ggValue = ggValue, prepare = ggValue.selection.index match {
+        case 0 => Some(Code.FileTransform(
+          """
+            |val ain   = AudioFile.openRead(in)
+            |val aout  = AudioFile.openWrite(out, ain.spec)
+            |val bufSz = 8192
+            |val buf   = ain.buffer(bufSz)
+            |var rem   = ain.numFrames
+            |while (rem > 0) {
+            |  val chunk = math.min(bufSz, rem).toInt
+            |  ain.read(buf, 0, chunk)
+            |  // ...
+            |  aout.write(buf, 0, chunk)
+            |  rem -= chunk
+            |  // checkAbort()
+            |}
+            |aout.close()
+            |ain .close()
+          """.stripMargin))
+        case _  => None
+      }) { implicit tx =>
+        (name, value) => Element.Code(name, Codes.newVar(Codes.newConst(value)))
+      }
+    }
+
     private def actionAddPrimitive[A](tpe: String, ggValue: Component, prepare: => Option[A])
                                      (create: S#Tx => (String, A) => Element[S]) {
       val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe, window = Some(comp))
@@ -228,6 +257,7 @@ object DocumentElementsFrameImpl {
           .add(Item("string",       Action("String"       )(actionAddString          ())))
           .add(Item("int",          Action("Int"          )(actionAddInt             ())))
           .add(Item("double",       Action("Double"       )(actionAddDouble          ())))
+          .add(Item("code",         Action("Code"         )(actionAddCode            ())))
         val res = pop.create(comp)
         res.peer.pack() // so we can read `size` correctly
         res
@@ -267,6 +297,9 @@ object DocumentElementsFrameImpl {
 
             case view: ElementView.Recursion[S] =>
               RecursionFrame(document, view.element())
+
+            case view: ElementView.Code[S] =>
+              CodeFrame(document, view.element())
 
             case _ => // ...
           }
