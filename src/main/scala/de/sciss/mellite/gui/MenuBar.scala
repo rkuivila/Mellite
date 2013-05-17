@@ -46,6 +46,7 @@ object MenuBar {
         .add(Item("closeAll",           "Close All"))
         .addLine()
         .add(Item("bounce",             proxy("Bounce...",                (menu1 + VK_B))))
+        .add(Item("bounce-transform",   proxy("Bounce And Transform...",  (menu1 + shift + VK_B))))
     ).add(
       Group("edit", "Edit")
         // eventually Undo / Redo here

@@ -32,7 +32,7 @@ import stm.{Disposable, Mutable}
 import de.sciss.synth.expr.{Doubles, Strings, Ints}
 import annotation.switch
 import de.sciss.{serial, mellite}
-import evt.{EventLike, EventLikeSerializer}
+import de.sciss.lucre.event.{Targets, EventLike, EventLikeSerializer}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import language.higherKinds
 import de.sciss.serial.{DataOutput, DataInput, Writable}
@@ -292,6 +292,18 @@ object Element {
 
   object Code extends Companion[Code] {
     protected[Element] final val typeID = Codes.typeID // 0x20001
+
+    //    implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Code[S]] = anySer.asInstanceOf[Ser[S]]
+    //
+    //    private val anySer = new Ser[InMemory]
+    //
+    //    private final class Ser[S <: Sys[S]] extends evt.NodeSerializer[S, Code[S]] {
+    //      def read(in: DataInput, access: S#Acc, targets: Targets[S])(implicit tx: S#Tx): Code[S] with evt.Node[S] = {
+    //        val typeID = in.readInt()
+    //        require(typeID == Code.typeID, s"Unexpected typeID $typeID (should be ${Code.typeID})")
+    //        readIdentified(in, access, targets)
+    //      }
+    //    }
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): Code[S] with evt.Node[S] = {

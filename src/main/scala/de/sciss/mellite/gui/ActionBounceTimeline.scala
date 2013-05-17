@@ -18,7 +18,7 @@ import collection.immutable.{IndexedSeq => IIdxSeq}
 import de.sciss.mellite.Element.ArtifactLocation
 import scala.util.control.NonFatal
 import java.text.ParseException
-import scala.swing.event.SelectionChanged
+import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.util.{Failure, Success, Try}
 import de.sciss.processor.Processor
 import de.sciss.synth.expr.{ExprImplicits, Doubles, Longs}
@@ -42,7 +42,8 @@ object ActionBounceTimeline {
     span: SpanOrVoid    = Span.Void,
     channels: IIdxSeq[Range.Inclusive] = Vector(0 to 1),
     importFile: Boolean = false,
-    location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
+    location:  Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None,
+    transform: Option[stm.Source[S#Tx, Element.Code    [S]]] = None
   ) {
     def prepare(group: stm.Source[S#Tx, proc.ProcGroup[S]], f: File): PerformSettings[S] = {
       val server                = Server.Config()
@@ -66,6 +67,28 @@ object ActionBounceTimeline {
     config.nrtSampleFormat    = spec.sampleFormat
     config.sampleRate         = spec.sampleRate.toInt
     config.outputBusChannels  = spec.numChannels
+  }
+
+  type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Element.Code[S]]
+
+  def findTransforms[S <: Sys[S]](document: Document[S])(implicit tx: S#Tx): IIdxSeq[Labeled[CodeSource[S]]] = {
+    type Res = IIdxSeq[Labeled[CodeSource[S]]]
+    def loop(xs: List[Element[S]], res: Res): Res =
+      xs match {
+        case (elem: Element.Code[S]) :: tail =>
+          val res1 = elem.entity.value match {
+            case ft: Code.FileTransform => res :+ Labeled(tx.newHandle(elem))(elem.name.value)
+            case _ => res
+          }
+          loop(tail, res1)
+        case (f: Element.Folder[S]) :: tail =>
+          val res1 = loop(f.entity.iterator.toList, res)
+          loop(tail, res1)
+        case _ :: tail  => loop(tail, res)
+        case Nil        => res
+      }
+
+    loop(document.elements.iterator.toList, Vector.empty)
   }
 
   def query[S <: Sys[S]](init: QuerySettings[S], document: Document[S], timelineModel: TimelineModel,
@@ -135,8 +158,43 @@ object ActionBounceTimeline {
     ggSpanGroup.select(if (init.span.isEmpty) ggSpanAll else ggSpanUser)
     ggSpanUser.enabled   = tlSel.nonEmpty
 
-    val ggImport    = new CheckBox("Import Output File Into Session")
+    var transformItemsCollected = false
+
+    def updateTransformEnabled() {
+      val enabled = ggImport.selected
+      checkTransform.enabled = enabled
+      ggTransform   .enabled = enabled && checkTransform.selected
+      if (ggTransform.enabled && !transformItemsCollected) {
+        val trns = cursor.step { implicit tx =>
+          findTransforms(document)
+        }
+        transformItemsCollected =  true
+        ggTransform.peer.setModel(ComboBox.newConstantModel(trns))
+        for (t <- init.transform; lb <- trns.find(_.value == t)) {
+          ggTransform.selection.item = lb
+        }
+      }
+    }
+
+    lazy val ggImport  = new CheckBox() {
+      listenTo(this)
+      reactions += {
+        case ButtonClicked(_) => updateTransformEnabled()
+      }
+    }
     ggImport.selected = init.importFile
+    updateTransformEnabled()
+
+    lazy val checkTransform = new CheckBox() {
+      listenTo(this)
+      reactions += {
+        case ButtonClicked(_) => updateTransformEnabled()
+      }
+    }
+    lazy val ggTransform = new ComboBox[Labeled[stm.Source[S#Tx, Element.Code[S]]]](Nil) // lazy filling
+    val pTransform  = new BoxPanel(Orientation.Horizontal) {
+      contents ++= Seq(checkTransform, HStrut(4), ggTransform)
+    }
 
     // cf. stackoverflow #4310439 - with added spaces after comma
     // val regRanges = """^(\d+(-\d+)?)(,\s*(\d+(-\d+)?))*$""".r
@@ -183,16 +241,21 @@ object ActionBounceTimeline {
     ggChannelsJ.setFocusLostBehavior(JFormattedTextField.COMMIT_OR_REVERT)
     val ggChannels  = Component.wrap(ggChannelsJ)
 
+    import Swing.EmptyIcon
+    import Alignment.Trailing
     val pPath     = new FlowPanel(ggPathText, ggPathDialog)
     val pFormat   = new FlowPanel(ggFileType, ggSampleFormat, ggGainAmt, new Label("dB"), ggGainType)
-    val pSpan     = new GridPanel(3, 2) {
-      contents ++= Seq(new Label("Channels:"     , Swing.EmptyIcon, Alignment.Right), ggChannels,
-                       new Label("Timeline Span:", Swing.EmptyIcon, Alignment.Right), ggSpanAll,
-                       new Label(""),                                                 ggSpanUser)
+    val pSpan     = new GridPanel(6, 2) {
+      contents ++= Seq(new Label("Channels:"                       , EmptyIcon, Trailing), ggChannels,
+                       new Label("Timeline Span:"                  , EmptyIcon, Trailing), ggSpanAll,
+                       HStrut(1),                                                          ggSpanUser,
+                       HStrut(1),                                                          VStrut(32),
+                       new Label("Import Output File Into Session:", EmptyIcon, Trailing), ggImport,
+                       new Label("Apply Transformation:"           , EmptyIcon, Trailing), pTransform)
     }
 
     val box       = new BoxPanel(Orientation.Vertical) {
-      contents ++= Seq(pPath, pFormat, pSpan, VStrut(32), ggImport)
+      contents ++= Seq(pPath, pFormat, pSpan)
     }
 
     val opt = OptionPane.confirmation(message = box, optionType = OptionPane.Options.OkCancel,
@@ -218,7 +281,8 @@ object ActionBounceTimeline {
       span        = if (ggSpanUser.selected) tlSel else Span.Void,
       channels    = channels,
       importFile  = importFile,
-      location    = init.location
+      location    = init.location,
+      transform   = if (checkTransform.selected) Option(ggTransform.selection.item).map(_.value) else None
     )
 
     file match {
@@ -297,7 +361,7 @@ object ActionBounceTimeline {
                 val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
                 val depElem   = Element.AudioGrapheme(file.nameWithoutExtension, deployed)
 
-                val recursion = Recursion(group(), settings.span, depElem, settings.gain, settings.channels)
+                val recursion = Recursion(group(), settings.span, depElem, settings.gain, settings.channels, None)
                 val recElem   = Element.Recursion(elemName, recursion)
                 document.elements.addLast(depElem)
                 document.elements.addLast(recElem)

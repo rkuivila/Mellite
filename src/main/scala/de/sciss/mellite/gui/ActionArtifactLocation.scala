@@ -26,12 +26,12 @@ object ActionArtifactLocation {
     type LocSource = stm.Source[S#Tx, ArtifactLocation[S]]
 
     val options = cursor.step { implicit tx =>
-      /* @tailrec */ def loop(xs: List[Element[S]], res: IIdxSeq[(LocSource, String)]): IIdxSeq[(LocSource, String)] =
+      /* @tailrec */ def loop(xs: List[Element[S]], res: IIdxSeq[Labeled[LocSource]]): IIdxSeq[Labeled[LocSource]] =
         xs match {
           case (a: ArtifactLocation[S]) :: tail =>
             val parent  = a.entity.directory
             val res1    = if (Try(Artifact.relativize(parent, file)).isSuccess) {
-              res :+ (tx.newHandle(a) -> a.name.value)
+              res :+ Labeled(tx.newHandle(a))(a.name.value)
             } else res
             loop(tail, res1)
           case (f: Element.Folder[S]) :: tail =>
@@ -56,10 +56,10 @@ object ActionArtifactLocation {
 
     options match {
       case IIdxSeq() => createNew()
-      case IIdxSeq((source, _)) => Some(source)
+      case IIdxSeq(Labeled(source)) => Some(source)
 
       case _ =>
-        val ggList = new swing.ListView(options.map(_._2))
+        val ggList = new swing.ListView(options)
         ggList.selection.intervalMode = swing.ListView.IntervalMode.Single
         ggList.selection.indices += 0
         val opt = OptionPane.apply(message = ggList, messageType = OptionPane.Message.Question,
@@ -68,7 +68,7 @@ object ActionArtifactLocation {
         val optRes = opt.show(window).id
         // println(s"res = $optRes, ok = ${OptionPane.Result.Ok.id}, cancel = ${OptionPane.Result.Cancel.id}")
         if (optRes == 0 ) {
-          Some(options(ggList.selection.leadIndex)._1)
+          ggList.selection.items.headOption.map(_.value)
         } else if (optRes == 1) {
           createNew()
         } else {

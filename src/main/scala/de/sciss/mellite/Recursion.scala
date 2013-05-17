@@ -16,8 +16,9 @@ object Recursion {
   type Update[S <: Sys[S]] = Unit
 
   def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanOrVoid, deployed: Element.AudioGrapheme[S],
-                         gain: Gain, channels: Channels)(implicit tx: S#Tx): Recursion[S] =
-    Impl(group, span, deployed, gain, channels)
+                         gain: Gain, channels: Channels, transform: Option[Element.Code[S]])
+                        (implicit tx: S#Tx): Recursion[S] =
+    Impl(group, span, deployed, gain, channels, transform)
 
   def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Recursion[S] =
     Impl.serializer.read(in, access)
@@ -37,6 +38,9 @@ trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] {
   def gain_=(value: Gain)(implicit tx: S#Tx): Unit
   def channels(implicit tx: S#Tx): Channels
   def channels_=(value: IIdxSeq[Range.Inclusive])(implicit tx: S#Tx): Unit
+
+  def transform: Option[Element.Code[S]]
+  // def transform_=(value: Option[Element.Code[S]])(implicit tx: S#Tx): Unit
 
   /** Moves the product to deployed position. */
   def iterate()(implicit tx: S#Tx): Unit
