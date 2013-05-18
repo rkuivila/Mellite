@@ -544,12 +544,35 @@ object TimelineViewImpl {
       }
     }
 
-    private def dropAudioRegion(drop: AudioFileDnD.Drop[S]): Boolean = step { implicit tx =>
-      val group = groupH()
-      group.modifiableOption match {
-        case Some(groupM) =>
-          DropAudioRegionAction(groupM, drop)
-          true
+    private def performDrop(drop: TimelineDnD.Drop[S]): Boolean = {
+      drop.drag match {
+        case ad: TimelineDnD.AudioDrag[S] =>
+          step { implicit tx =>
+            val group = groupH()
+            group.modifiableOption match {
+              case Some(groupM) =>
+                DropAudioRegionAction(groupM, time = drop.frame, y = drop.y, ad)
+                true
+              case _ => false
+            }
+          }
+
+        case id: TimelineDnD.IntDrag[S] =>
+          view.findRegion(drop.frame, view.screenToTrack(drop.y)) match {
+            case Some(hitRegion) =>
+              val regions = if (selectionModel.contains(hitRegion)) selectionModel.iterator.toList else hitRegion :: Nil
+              step { implicit tx =>
+                val intElem = id.source()
+                val attr    = Attribute.Int(intElem.entity)
+                regions.foreach { r =>
+                  val proc    = r.procSource()
+                  proc.attributes.put(ProcKeys.attrBus, attr)
+                }
+              }
+              true
+            case _ => false
+          }
+
         case _ => false
       }
     }
@@ -561,6 +584,14 @@ object TimelineViewImpl {
       def selectionModel  = impl.selectionModel
 
       def intersect(span: Span): Iterator[TimelineProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
+
+      def screenToTrack(y: Int): Int = y / 32
+
+      def findRegion(pos: Long, hitTrack: Int): Option[TimelineProcView[S]] = {
+        val span      = Span(pos, pos + 1)
+        val regions   = intersect(span)
+        regions.find(pv => pv.track == hitTrack || (pv.track + 1) == hitTrack)
+      }
 
       protected def commitToolChanges(value: Any) {
         step { implicit tx =>
@@ -593,11 +624,11 @@ object TimelineViewImpl {
         }
       }
 
-      object canvasComponent extends Component with AudioFileDnD[S] with sonogram.PaintController {
+      object canvasComponent extends Component with TimelineDnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
         protected def document      = impl.document
 
-        private var audioDnD = Option.empty[AudioFileDnD.Drop[S]]
+        private var currentDrop = Option.empty[TimelineDnD.Drop[S]]
 
         // var visualBoost = 1f
         private var sonoBoost = 1f
@@ -614,13 +645,13 @@ object TimelineViewImpl {
           (b.width >> 1, b.height >> 1)
         }
 
-        protected def updateDnD(drop: Option[AudioFileDnD.Drop[S]]) {
-          audioDnD = drop
+        protected def updateDnD(drop: Option[TimelineDnD.Drop[S]]) {
+          currentDrop = drop
           repaint()
         }
 
-        protected def acceptDnD(drop: AudioFileDnD.Drop[S]): Boolean =
-          dropAudioRegion(drop)
+        protected def acceptDnD(drop: TimelineDnD.Drop[S]): Boolean =
+          performDrop(drop)
 
         def imageObserver = peer
 
@@ -648,6 +679,8 @@ object TimelineViewImpl {
           }
 
           val sel         = selectionModel
+
+          g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
           procViews.filterOverlaps((visi.start, visi.stop)).foreach { pv =>
             val selected  = sel.contains(pv)
@@ -760,18 +793,31 @@ object TimelineViewImpl {
 
           paintPosAndSelection(g, h)
 
-          if (audioDnD.isDefined) audioDnD.foreach { drop =>
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-            val x1 = frameToScreen(drop.frame).toInt
-            val x2 = frameToScreen(drop.frame + drop.drag.selection.length).toInt
-            g.setColor(colrDropRegionBg)
-            val strkOrig = g.getStroke
-            g.setStroke(strkDropRegion)
-            val y   = drop.y - drop.y % 32
-            val x1b = math.min(x1 + 1, x2)
-            val x2b = math.max(x1b, x2 - 1)
-            g.drawRect(x1b, y + 1, x2b - x1b, 64)
-            g.setStroke(strkOrig)
+          if (currentDrop.isDefined) currentDrop.foreach { drop =>
+            drop.drag match {
+              case ad: TimelineDnD.AudioDrag[S] =>
+                val x1 = frameToScreen(drop.frame).toInt
+                val x2 = frameToScreen(drop.frame + ad.selection.length).toInt
+                g.setColor(colrDropRegionBg)
+                val strkOrig = g.getStroke
+                g.setStroke(strkDropRegion)
+                val y   = drop.y - drop.y % 32
+                val x1b = math.min(x1 + 1, x2)
+                val x2b = math.max(x1b, x2 - 1)
+                g.drawRect(x1b, y + 1, x2b - x1b, 64)
+                g.setStroke(strkOrig)
+
+              //              case id: TimelineDnD.IntDrag[S] =>
+              //                findRegion(drop.frame, screenToTrack(drop.y)).foreach { hitRegion =>
+              //                  if (selectionModel.contains(hitRegion)) {
+              //                    selectionModel.iterator.foreach { r =>
+              //
+              //                    }
+              //                  }
+              //                }
+
+              case _ =>
+            }
           }
         }
       }

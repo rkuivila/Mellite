@@ -21,10 +21,8 @@ trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl
   private val mia = new MouseAdapter {
     override def mousePressed(e: MouseEvent) {
       val pos       = canvas.screenToFrame(e.getX).toLong
-      val span      = Span(pos, pos + 1)
-      val regions   = canvas.intersect(span)
-      val hitTrack  = e.getY / 32
-      val regionOpt = regions.find(pv => pv.track == hitTrack || (pv.track + 1) == hitTrack)  // procs span "two tracks". ouchilah...
+      val hitTrack  = canvas.screenToTrack(e.getY)
+      val regionOpt = canvas.findRegion(pos, hitTrack)  // procs span "two tracks". ouchilah...
       handleSelect(e, hitTrack, pos, regionOpt)
       // if ((e.getClickCount == 2) && !regions.isEmpty) showObserverPage()
     }

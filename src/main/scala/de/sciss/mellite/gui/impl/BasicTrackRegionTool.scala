@@ -122,7 +122,7 @@ trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
       //      }
       //      val convE     = SwingUtilities.convertMouseEvent(comp, e, _currentTrack.renderer.trackComponent)
       _currentPos   = canvas.screenToFrame(e.getX).toLong
-      _currentTrack = (e.getY - firstEvent.getY) / 32 + firstEvent.getY / 32
+      _currentTrack = canvas.screenToTrack(e.getY - firstEvent.getY) + canvas.screenToTrack(firstEvent.getY)
     }
 
     override def mouseDragged(e: MouseEvent) {

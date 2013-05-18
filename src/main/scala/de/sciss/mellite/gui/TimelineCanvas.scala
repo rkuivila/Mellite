@@ -21,4 +21,7 @@ trait TimelineProcCanvas[S <: Sys[S]] extends TimelineCanvas {
   def selectionModel: ProcSelectionModel[S]
   // def group(implicit tx: S#Tx): ProcGroup[S]
   def intersect(span: Span): Iterator[TimelineProcView[S]]
+
+  def findRegion(frame: Long, hitTrack: Int): Option[TimelineProcView[S]]
+  def screenToTrack(y: Int): Int
 }
