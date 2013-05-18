@@ -63,7 +63,7 @@ object TimelineViewImpl {
   private val MinDur    = 32
 
   private val logEnabled  = false
-  private val DEBUG       = true
+  private val DEBUG       = false
 
   private def log(what: => String) {
     if (logEnabled) println(s"<timeline> $what")
