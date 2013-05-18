@@ -45,4 +45,5 @@ trait TimelineView[S <: Sys[S]] extends Disposable[S#Tx] {
   def bounceAction      : Action
   def deleteAction      : Action
   def splitObjectsAction: Action
+  def stopAllSoundAction: Action
 }

@@ -46,7 +46,7 @@ object MenuBar {
         .add(Item("closeAll",           "Close All"))
         .addLine()
         .add(Item("bounce",             proxy("Bounce...",                (menu1 + VK_B))))
-        .add(Item("bounce-transform",   proxy("Bounce And Transform...",  (menu1 + shift + VK_B))))
+        // .add(Item("bounce-transform",   proxy("Bounce And Transform...",  (menu1 + shift + VK_B))))
     ).add(
       Group("edit", "Edit")
         // eventually Undo / Redo here
@@ -56,6 +56,9 @@ object MenuBar {
         .add(Item("delete",             proxy("Delete",                   (plain + VK_BACK_SPACE))))
         .addLine()
         .add(Item("selectAll",          proxy("Select All",               (menu1 + VK_A))))
+    ).add(
+      Group("actions", "Actions")
+        .add(Item("stopAllSound",       proxy("Stop All Sound",           (menu1 + VK_PERIOD))))
     ).add(
       // --- timeline menu ---
       Group("timeline", "Timeline")

@@ -38,7 +38,7 @@ final class TrackMoveToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
     Move(deltaTime = dtim, deltaTrack = dtrk, copy = d.currentEvent.isAltDown)
   }
 
-  protected def commit(span: Expr[S, SpanLike], proc: Proc[S], drag: Move)(implicit tx: S#Tx) {
+  protected def commitProc(drag: Move)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx) {
     import drag._
     if (deltaTrack != 0) {
       // XXX TODO: could check for Expr.Const here and Expr.Var.

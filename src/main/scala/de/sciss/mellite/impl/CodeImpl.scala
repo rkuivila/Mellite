@@ -6,7 +6,7 @@ import de.sciss.serial.{DataInput, DataOutput, ImmutableSerializer}
 import scala.annotation.switch
 import scala.concurrent._
 import scala.collection.mutable
-import java.io.File
+import java.io.{ObjectInputStream, ByteArrayInputStream, ObjectOutputStream, File}
 import de.sciss.processor.Processor
 import scala.tools.nsc
 import scala.tools.nsc.interpreter.{Results, IMain}
@@ -17,6 +17,7 @@ import reflect.runtime.universe.{typeTag, TypeTag}
 import scala.util.control.NonFatal
 import scala.util.{Success, Failure}
 import scala.concurrent.duration.Duration
+import de.sciss.serial.impl.ByteArrayOutputStream
 
 object CodeImpl {
   private final val COOKIE  = 0x436F6465  // "Code"
@@ -113,13 +114,27 @@ object CodeImpl {
   }
 
   object Capture {
-    private val vr = new ThreadLocal[() => Any]
+    // private val vr = new ThreadLocal[() => Any]
+    private val vr = new ThreadLocal[Array[Byte]]
 
     def apply[A](thunk: => A) {
-      vr.set(() => thunk)
+      val fun = () => thunk
+      val baos  = new ByteArrayOutputStream()
+      val oos   = new ObjectOutputStream(baos)
+      oos.writeObject(fun)
+      oos.close()
+      // vr.set(() => thunk)
+      vr.set(baos.toByteArray)
     }
     
-    private[CodeImpl] def result: () => Any = vr.get()
+    private[CodeImpl] def result: () => Any = {
+      // vr.get()
+      val bais  = new ByteArrayInputStream(vr.get())
+      val ois   = new ObjectInputStream(bais)
+      val fun   = ois.readObject().asInstanceOf[() => Any]
+      ois.close()
+      fun
+    }
   }
 
   sealed trait Context[A] {
@@ -147,24 +162,27 @@ object CodeImpl {
     }
 
     protected def body() {
-      // blocking {
-      val prom  = Promise[Unit]()
-      val t = new Thread {
-        override def run() {
+      blocking {
+//      val prom  = Promise[Unit]()
+//      val t = new Thread {
+//        override def run() {
+        println("---1")
           FileTransformContext.contextVar.set(Bindings)
           try {
             fun()
-            prom.complete(Success())
+        println("---2")
+//            prom.complete(Success())
           } catch {
             case e: Exception =>
               e.printStackTrace()
-              prom.complete(Failure(e))
+              throw e
+//              prom.complete(Failure(e))
           }
-        }
+//        }
+//      }
+//      t.start()
+//      Await.result(prom.future, Duration.Inf)
       }
-      t.start()
-      Await.result(prom.future, Duration.Inf)
-      // }
     }
   }
 

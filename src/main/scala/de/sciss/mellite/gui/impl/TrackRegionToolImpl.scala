@@ -3,13 +3,14 @@ package mellite
 package gui
 package impl
 
-import synth.proc.Sys
+import de.sciss.synth.proc.{Proc, Sys}
 import model.impl.ModelImpl
 import mellite.gui.ProcSelectionModel
 import java.awt.event.{MouseAdapter, MouseEvent}
 import javax.swing.ImageIcon
-import de.sciss.span.Span
+import de.sciss.span.{SpanLike, Span}
 import scala.swing.Component
+import de.sciss.lucre.expr.Expr
 
 trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackTool.Update[A]] {
   tool =>
@@ -65,6 +66,18 @@ trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl
       handleSelect(e, hitTrack, pos, region)
     })
   }
+
+  def commit(drag: A)(implicit tx: S#Tx) {
+    canvas.selectionModel.iterator.foreach { pv =>
+      val span  = pv.spanSource()
+      val proc  = pv.procSource()
+      commitProc(drag)(span, proc)
+    }
+  }
+
+  protected def commitProc(drag: A)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit
+
+  // final protected def withSelectedProcs(fun: (Expr[S, SpanLike], Proc[S]) => Unit)(implicit tx: S#Tx)
 
   protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView[S]): Unit
 

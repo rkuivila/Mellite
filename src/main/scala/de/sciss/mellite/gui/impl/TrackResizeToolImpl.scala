@@ -40,7 +40,7 @@ final class TrackResizeToolImpl[S <: Sys[S]](protected val canvas: TimelineProcC
     Resize(dStart, dStop)
   }
 
-  protected def commit(span: Expr[S, SpanLike], proc: Proc[S], drag: Resize)(implicit tx: S#Tx) {
+  protected def commitProc(drag: Resize)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx) {
     import drag._
 
     val oldSpan   = span.value

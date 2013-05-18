@@ -55,6 +55,7 @@ object TimelineFrameImpl {
         bindMenus(
           "file.bounce"           -> view.bounceAction,
           "edit.delete"           -> view.deleteAction,
+          "actions.stopAllSound"  -> view.stopAllSoundAction,
           "timeline.splitObjects" -> view.splitObjectsAction
         )
 

@@ -54,6 +54,7 @@ object TimelineViewImpl {
   private val strkDropRegion      = new BasicStroke(3f)
   private val colrRegionBg        = new Color(0x68, 0x68, 0x68)
   private val colrRegionBgSel     = Color.blue
+  private val colrBgMuted         = new Color(0xFF, 0xFF, 0xFF, 0x60)
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
 
@@ -92,7 +93,7 @@ object TimelineViewImpl {
     val auralView = proc.AuralPresentation.runTx[S](transp, aural)
     disp ::= auralView
 
-    val view    = new Impl(document, groupH, transp, procMap, tlm)
+    val view    = new Impl(document, groupH, transp, procMap, tlm, auralView)
 
     val obsTransp = transp.react { implicit tx => {
       case proc.Transport.Play(t, time) => view.startedPlaying(time)
@@ -126,7 +127,15 @@ object TimelineViewImpl {
           case Proc.AssociationAdded  (key) =>
             key match {
               case Proc.AttributeKey(name) =>
-              case Proc.ScanKey     (name) =>
+                name match {
+                  case ProcKeys.attrMute =>
+                    timed.value.attributes[Attribute.Boolean](name).foreach { muted =>
+                      view.procMuteChanged(timed, muted.value)
+                    }
+                  case _ =>
+                }
+
+              case Proc.ScanKey(name) =>
             }
           case Proc.AssociationRemoved(key) =>
             key match {
@@ -134,12 +143,14 @@ object TimelineViewImpl {
               case Proc.ScanKey     (name) =>
             }
           case Proc.AttributeChange(name, Attribute.Update(attr, ach)) =>
-            if (name == ProcKeys.attrTrack) {
-              ach match {
-                case Change(before: Int, now: Int) =>
-                  view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
-                case _ =>
-              }
+            (name, ach) match {
+              case (ProcKeys.attrTrack, Change(before: Int, now: Int)) =>
+                view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
+
+              case (ProcKeys.attrMute, Change(_, now: Boolean)) =>
+                view.procMuteChanged(timed, now)
+
+              case _ =>
             }
 
           case Proc.ScanChange     (name, scanUpd) =>
@@ -175,7 +186,8 @@ object TimelineViewImpl {
   private final class Impl[S <: Sys[S]](document: Document[S], groupH: stm.Source[S#Tx, ProcGroup[S]],
                                         transp: ProcTransport[S],
                                         procMap: IdentifierMap[S#ID, S#Tx, TimelineProcView[S]],
-                                        val timelineModel: TimelineModel)
+                                        val timelineModel: TimelineModel,
+                                        auralView: AuralPresentation[S])
                                        (implicit cursor: Cursor[S]) extends TimelineView[S] {
     impl =>
 
@@ -204,6 +216,7 @@ object TimelineViewImpl {
     private lazy val toolMove   = TrackTool.move  [S](view)
     private lazy val toolResize = TrackTool.resize[S](view)
     private lazy val toolGain   = TrackTool.gain  [S](view)
+    private lazy val toolMute   = TrackTool.mute  [S](view)
 
     def dispose()(implicit tx: S#Tx) {
       timer.stop()  // save to call multiple times
@@ -218,6 +231,14 @@ object TimelineViewImpl {
     }
 
     // ---- actions ----
+
+    object stopAllSoundAction extends Action("StopAllSound") {
+      def apply() {
+        cursor.step { implicit tx =>
+          auralView.stopAll
+        }
+      }
+    }
 
     object bounceAction extends Action("Bounce") {
       private var _settings: ActionBounceTimeline.QuerySettings[S] = _
@@ -364,7 +385,7 @@ object TimelineViewImpl {
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
           HStrut(4),
-          TrackTools.palette(view.trackTools, Vector(toolCursor, toolMove, toolResize, toolGain)),
+          TrackTools.palette(view.trackTools, Vector(toolCursor, toolMove, toolResize, toolGain, toolMute)),
           HGlue,
           HStrut(4),
           timeDisp.component,
@@ -435,6 +456,17 @@ object TimelineViewImpl {
       }
     }
 
+    def procMuteChanged(timed: TimedProc[S], newMute: Boolean)(implicit tx: S#Tx) {
+      val pvo = procMap.get(timed.id)
+      log(s"procMuteChanged(newMute = $newMute, view = $pvo")
+      pvo.foreach { pv =>
+        guiFromTx {
+          pv.muted = newMute
+          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+        }
+      }
+    }
+
     def procAudioChanged(timed: TimedProc[S], newAudio: Option[Grapheme.Segment.Audio])(implicit tx: S#Tx) {
       val pvo = procMap.get(timed.id)
       log(s"procAudioChanged(newAudio = $newAudio, view = $pvo")
@@ -478,6 +510,7 @@ object TimelineViewImpl {
             case t: TrackTool.Move    => toolMove  .commit(t)
             case t: TrackTool.Resize  => toolResize.commit(t)
             case t: TrackTool.Gain    => toolGain  .commit(t)
+            case t: TrackTool.Mute    => toolMute  .commit(t)
             case _ =>
           }
         }
@@ -560,7 +593,6 @@ object TimelineViewImpl {
 
           procViews.filterOverlaps((visi.start, visi.stop)).foreach { pv =>
             val selected  = sel.contains(pv)
-            val muted     = false
 
             def drawProc(start: Long, x1: Int, x2: Int, move: Long) {
               val py    = (if (selected) math.max(0, pv.track + moveState.deltaTrack) else pv.track) * 32
@@ -600,12 +632,17 @@ object TimelineViewImpl {
                   g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
                   g.setColor(Color.white)
                   // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
-                  g.drawString(if (muted) "\u23DB " + name else name, px + 4, py + hndlBaseline)
+                  g.drawString(if (pv.muted) "\u23DB " + name else name, px + 4, py + hndlBaseline)
                   //              stakeInfo(ar).foreach { info =>
                   //                g2.setColor(Color.yellow)
                   //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
                   //              }
                   g.setClip(clipOrig)
+                }
+
+                if (pv.muted) {
+                  g.setColor(colrBgMuted)
+                  g.fillRoundRect(px, py, pw, ph, 5, 5)
                 }
               }
             }

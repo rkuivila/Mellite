@@ -24,6 +24,7 @@ object Transform {
         case Coded(source) =>
           out.writeByte(1)
           Code.serializer.write(source, out)
+        case _ => sys.error("WHAT THE HECK SCALA")
       }
     }
 

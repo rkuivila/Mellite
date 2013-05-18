@@ -303,6 +303,11 @@ trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with Timeli
         toolState = some
         repaint()
       }
+
+    case TrackTool.Adjust(state) =>
+      toolState = None
+      commitToolChanges(state)
+      repaint()
   }
 
   trackTools.addListener {

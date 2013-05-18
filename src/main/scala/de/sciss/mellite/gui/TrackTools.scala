@@ -5,7 +5,7 @@ package gui
 import java.awt.Cursor
 import annotation.switch
 import model.Model
-import de.sciss.mellite.gui.impl.{TrackGainToolImpl, TrackResizeToolImpl, TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl}
+import de.sciss.mellite.gui.impl.{TrackMuteToolImpl, TrackGainToolImpl, TrackResizeToolImpl, TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl}
 import de.sciss.lucre.event.Change
 import de.sciss.synth.proc.Sys
 import scala.swing.Component
@@ -71,10 +71,13 @@ object TrackTool {
   final case class DragAdjust[A](value: A) extends Update[A]
   case object DragEnd    extends Update[Nothing] // (commit: AbstractCompoundEdit)
   case object DragCancel extends Update[Nothing]
+  /** Direct adjustment without drag period. */
+  case class Adjust[A](value: A) extends Update[A]
 
   final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean)
   final case class Resize(deltaStart: Long, deltaStop: Long)
   final case class Gain  (factor: Float)
+  final case class Mute  (engaged: Boolean)
 
   type Listener = Model.Listener[Update[Any]]
 
@@ -82,6 +85,7 @@ object TrackTool {
   def move  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Move  ] = new TrackMoveToolImpl  (canvas)
   def resize[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Resize] = new TrackResizeToolImpl(canvas)
   def gain  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Gain  ] = new TrackGainToolImpl  (canvas)
+  def mute  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Mute  ] = new TrackMuteToolImpl  (canvas)
 }
 
 trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {

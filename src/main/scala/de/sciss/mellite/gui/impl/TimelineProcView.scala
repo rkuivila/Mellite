@@ -67,13 +67,13 @@ object TimelineProcView {
     val mute  = attr[Attribute.Boolean](ProcKeys.attrMute ).map(_.value).getOrElse(false)
 
     new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
-      span = spanV, track = track, nameOpt = name, mute = mute, audio = audio)
+      span = spanV, track = track, nameOpt = name, muted = mute, audio = audio)
   }
 
   private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val procSource: stm.Source[S#Tx, Proc[S]],
                                         var span: SpanLike, var track: Int, var nameOpt: Option[String],
-                                        var mute: Boolean,
+                                        var muted: Boolean,
                                         var audio: Option[Grapheme.Segment.Audio])
     extends TimelineProcView[S] {
 
@@ -130,7 +130,7 @@ sealed trait TimelineProcView[S <: Sys[S]] {
   var nameOpt: Option[String]
   def name: String
   // var gain: Float
-  var mute: Boolean
+  var muted: Boolean
   // var audio: Option[Grapheme.Value.Audio]
   var audio: Option[Grapheme.Segment.Audio]
 

@@ -31,7 +31,7 @@ final class TrackGainToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
     Gain(factor)
   }
 
-  protected def commit(span: Expr[S, SpanLike], proc: Proc[S], drag: Gain)(implicit tx: S#Tx) {
+  protected def commitProc(drag: Gain)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx) {
     import drag._
     val imp = ExprImplicits[S]
     import imp._
