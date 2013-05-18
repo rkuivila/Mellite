@@ -14,6 +14,9 @@ import scala.tools.nsc.{ConsoleWriter, NewLinePrintWriter}
 import de.sciss.processor.impl.ProcessorImpl
 import collection.immutable.{Seq => ISeq}
 import reflect.runtime.universe.{typeTag, TypeTag}
+import scala.util.control.NonFatal
+import scala.util.{Success, Failure}
+import scala.concurrent.duration.Duration
 
 object CodeImpl {
   private final val COOKIE  = 0x436F6465  // "Code"
@@ -144,10 +147,24 @@ object CodeImpl {
     }
 
     protected def body() {
-      blocking {
-        FileTransformContext.contextVar.set(Bindings)
-        fun()
+      // blocking {
+      val prom  = Promise[Unit]()
+      val t = new Thread {
+        override def run() {
+          FileTransformContext.contextVar.set(Bindings)
+          try {
+            fun()
+            prom.complete(Success())
+          } catch {
+            case e: Exception =>
+              e.printStackTrace()
+              prom.complete(Failure(e))
+          }
+        }
       }
+      t.start()
+      Await.result(prom.future, Duration.Inf)
+      // }
     }
   }
 
