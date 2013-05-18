@@ -42,7 +42,7 @@ object ActionBounceTimeline {
     spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
     gain: Gain = Gain.normalized(-0.2f),
     span: SpanOrVoid    = Span.Void,
-    channels: IIdxSeq[Range.Inclusive] = Vector(0 to 1),
+    channels: IIdxSeq[Range.Inclusive] = Vector(0 to 0 /* 1 */),
     importFile: Boolean = false,
     location:  Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None,
     transform: Option[stm.Source[S#Tx, Element.Code    [S]]] = None
