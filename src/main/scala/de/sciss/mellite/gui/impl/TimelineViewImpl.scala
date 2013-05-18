@@ -551,7 +551,7 @@ object TimelineViewImpl {
             val group = groupH()
             group.modifiableOption match {
               case Some(groupM) =>
-                DropAudioRegionAction(groupM, time = drop.frame, y = drop.y, ad)
+                DropAudioRegionAction(groupM, time = drop.frame, track = view.screenToTrack(drop.y), ad)
                 true
               case _ => false
             }

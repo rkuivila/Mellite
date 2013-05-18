@@ -3,7 +3,7 @@ package mellite
 
 import lucre.expr.Expr
 import span.{Span, SpanLike}
-import synth.proc.{Scan, Grapheme, Sys, Proc}
+import de.sciss.synth.proc.{ProcKeys, Scan, Grapheme, Sys, Proc}
 import synth.expr.ExprImplicits
 import de.sciss.lucre.bitemp.BiExpr
 

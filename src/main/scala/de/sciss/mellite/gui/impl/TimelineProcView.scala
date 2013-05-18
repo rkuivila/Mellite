@@ -3,7 +3,7 @@ package mellite
 package gui
 package impl
 
-import synth.proc.{Attribute, Grapheme, Scan, Proc, TimedProc, Sys}
+import de.sciss.synth.proc.{ProcKeys, Attribute, Grapheme, Scan, Proc, TimedProc, Sys}
 import lucre.{stm, expr}
 import span.{Span, SpanLike}
 import expr.Expr

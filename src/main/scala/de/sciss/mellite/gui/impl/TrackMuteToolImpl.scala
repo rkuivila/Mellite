@@ -3,7 +3,7 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Attribute, Proc, Sys}
+import de.sciss.synth.proc.{ProcKeys, Attribute, Proc, Sys}
 import de.sciss.model.impl.ModelImpl
 import java.awt.{Point, Toolkit}
 import scala.swing.Component

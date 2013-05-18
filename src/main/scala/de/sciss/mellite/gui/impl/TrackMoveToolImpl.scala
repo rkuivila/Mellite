@@ -3,7 +3,7 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Proc, Attribute, Sys}
+import de.sciss.synth.proc.{ProcKeys, Proc, Attribute, Sys}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.synth.expr.ExprImplicits

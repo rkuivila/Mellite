@@ -18,6 +18,7 @@
 13  Grapheme.Value.Audio
 14  FadeSpec.Value
 15  Env.ConstShape
+16  SynthGraph
 
 0x1000 | A.typeID   Option[A]
 

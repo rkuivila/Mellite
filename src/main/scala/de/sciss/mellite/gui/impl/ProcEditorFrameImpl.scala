@@ -3,7 +3,7 @@ package gui
 package impl
 
 import de.sciss.lucre.stm.{Source, Disposable, Cursor}
-import de.sciss.synth.proc.{Attribute, Sys, Proc}
+import de.sciss.synth.proc.{ProcKeys, Attribute, Sys, Proc}
 import swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
 import javax.swing.WindowConstants
 import java.awt.event.{WindowEvent, WindowAdapter}

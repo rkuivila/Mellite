@@ -4,17 +4,17 @@ package gui
 package impl
 
 import de.sciss.span.Span
-import de.sciss.synth.expr.{ExprImplicits, Longs, Ints, Spans}
-import de.sciss.synth.proc.{Sys, graph, Scan, Grapheme, Attribute, Proc}
+import de.sciss.synth.expr.{SynthGraphs, ExprImplicits, Longs, Ints, Spans}
+import de.sciss.synth.proc.{ProcKeys, Sys, graph, Scan, Grapheme, Attribute, Proc}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.synth.SynthGraph
 
 object DropAudioRegionAction {
   def apply[S <: Sys[S]](group: BiGroup.Modifiable[S, Proc[S], Proc.Update[S]],
-                         time: Long, y: Int, drag: TimelineDnD.AudioDrag[S])
+                         time: Long, track: Int, drag: TimelineDnD.AudioDrag[S])
                         (implicit tx: S#Tx) {
-    val expr    = ExprImplicits[S]
-    import expr._
+    val imp = ExprImplicits[S]
+    import imp._
 
     // val elem    = data.source()
     // val elemG = elem.entity
@@ -24,7 +24,6 @@ object DropAudioRegionAction {
     val proc    = Proc[S]
     // proc.name_=(elem.name)
     val attr    = proc.attributes
-    val track   = y / 32
     attr.put(ProcKeys.attrTrack, Attribute.Int(Ints.newVar(track)))
     drag.bus.foreach { busSource =>
       // val busName = busSource().name.value
@@ -48,19 +47,7 @@ object DropAudioRegionAction {
     // val crv = gv(dur -> stepShape)
     // grd.add(time -> crv)
     scanw.source_=(Some(Scan.Link.Grapheme(grw)))
-    // scand.source_=(Some(Scan.Link.Grapheme(grd)))
-    val sg = SynthGraph {
-      import synth._
-      import ugen._
-      val sig   = graph.scan     (ProcKeys.graphAudio).ar(0)
-      val bus   = graph.attribute(ProcKeys.attrBus   ).ir(0)
-      // val amp   = graph.attribute(ProcKeys.attrGain  ).ir(1)
-      val mute  = graph.attribute(ProcKeys.attrMute  ).ir(0)
-      // val env   = EnvGen.ar(Env.linen(0.2, (duri - 0.4).max(0), 0.2))
-      val env   = /* amp * */ (1 - mute)
-      Out.ar(bus, sig * env)
-    }
-    proc.graph_=(sg)
+    proc.graph_=(SynthGraphs.tape)
     group.add(span, proc)
   }
 }
