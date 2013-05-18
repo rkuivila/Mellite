@@ -35,7 +35,7 @@ object ActionBounceTimeline {
   //  case object Normalized extends GainType { final val id = 0 }
   //  case object Immediate  extends GainType { final val id = 1 }
 
-  private val DEBUG = true
+  private val DEBUG = false
 
   final case class QuerySettings[S <: Sys[S]](
     file: Option[File]  = None,

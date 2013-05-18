@@ -181,8 +181,16 @@ object RecursionFrameImpl {
           if (!f.exists()) f else loopFile(i + 1)
         }
 
-        val newFile   = loopFile(1)
-        performBounce(newFile) {
+        val ftOpt = _cursor.step { implicit tx =>
+          recH().transform.map(_.entity.value) match {
+            case Some(ft: Code.FileTransform) => Some(ft)
+            case _ => None
+          }
+        }
+        val newFile     = loopFile(1)
+        val bounceFile  = if (ftOpt.isDefined) File.createTempFile("bounce", "." + _spec.fileType.extension) else newFile
+
+        def embed() {
           processStopped()
           _cursor.step { implicit tx =>
             val product = recH().product
@@ -194,6 +202,18 @@ object RecursionFrameImpl {
               case _ =>
                 println("Woop. Product artifact is not modifiable !?")
             }
+          }
+        }
+
+        performBounce(bounceFile) {
+          ftOpt match {
+            case Some(ft) =>
+              ft.execute((bounceFile, newFile, { codeProcess =>
+                monitor("Transform", codeProcess) { _ =>
+                  embed()
+                }
+              }))
+            case _ => embed()
           }
         }
       }

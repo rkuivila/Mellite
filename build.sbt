@@ -42,6 +42,8 @@ appbundle.target <<= baseDirectory
 
 appbundle.signature := "Ttm "
 
+appbundle.javaOptions ++= Seq("-XX:+CMSClassUnloadingEnabled", "-XX:+UseConcMarkSweepGC", "-XX:MaxPermSize=128m")
+
 appbundle.documents += appbundle.Document(
   name       = "Mellite Document",
   role       = appbundle.Document.Editor,
