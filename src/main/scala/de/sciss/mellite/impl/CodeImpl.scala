@@ -123,17 +123,29 @@ object CodeImpl {
     def __context__(): A
   }
   
-  object FileTransformContext extends Context[FileTransformContext] {
-    private[CodeImpl] val contextVar = new ThreadLocal[FileTransformContext]
-    def __context__(): FileTransformContext = contextVar.get()
+  object FileTransformContext extends Context[FileTransformContext#Bindings] {
+    private[CodeImpl] val contextVar = new ThreadLocal[FileTransformContext#Bindings]
+    def __context__(): FileTransformContext#Bindings = contextVar.get()
   }
 
-  final class FileTransformContext(val in: File, val out: File, fun: () => Any)
+  final class FileTransformContext(in: File, out: File, fun: () => Any)
     extends ProcessorImpl[Unit, FileTransformContext] {
+    process =>
+
+    type Bindings = Bindings.type
+    object Bindings {
+      def in : File = process.in
+      def out: File = process.out
+      def checkAborted() { process.checkAborted() }
+      def progress(f: Double) {
+        process.progress(f.toFloat)
+        process.checkAborted()
+      }
+    }
 
     protected def body() {
       blocking {
-        FileTransformContext.contextVar.set(this)
+        FileTransformContext.contextVar.set(Bindings)
         fun()
       }
     }
@@ -158,7 +170,8 @@ object CodeImpl {
       """.stripMargin + code + "\n}"
 
     val res = i.interpret(synth)
-    i.reset()
+    // commented out to chase ClassNotFoundException
+    // i.reset()
     res match {
       case Results.Success    => Capture.result // .asInstanceOf[() => A]
       case Results.Error      => throw Code.CompilationFailed()

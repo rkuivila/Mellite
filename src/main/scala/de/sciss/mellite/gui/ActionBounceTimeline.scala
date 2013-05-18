@@ -35,6 +35,8 @@ object ActionBounceTimeline {
   //  case object Normalized extends GainType { final val id = 0 }
   //  case object Immediate  extends GainType { final val id = 1 }
 
+  private val DEBUG = true
+
   final case class QuerySettings[S <: Sys[S]](
     file: Option[File]  = None,
     spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
@@ -321,8 +323,14 @@ object ActionBounceTimeline {
                               window: Option[Window] = None)
                              (implicit cursor: stm.Cursor[S]) {
 
-    val pSet        = settings.prepare(group, file)
-    val process     = perform(document, pSet)
+    val hasTransform= settings.importFile && settings.transform.isDefined
+    val bounceFile  = if (hasTransform) {
+      File.createTempFile("bounce", "." + settings.spec.fileType.extension)
+    } else {
+      file
+    }
+    val pSet        = settings.prepare(group, bounceFile)
+    var process: Processor[Any, _] = perform(document, pSet)
 
     val ggProgress  = new ProgressBar()
     val ggCancel    = Button("Abort") {
@@ -333,44 +341,18 @@ object ActionBounceTimeline {
     val title = s"Bouncing to ${file.name} ..."
     op.title  = title
 
+    var processCompleted = false
+
     def fDispose() {
       val w = SwingUtilities.getWindowAncestor(op.peer); if (w != null) w.dispose()
+      processCompleted = true
     }
+    val progDiv = if (hasTransform) 2 else 1
     process.addListener {
-      case prog @ Processor.Progress(_, _) => GUI.defer(ggProgress.value = prog.toInt)
+      case prog @ Processor.Progress(_, _) => GUI.defer(ggProgress.value = prog.toInt / progDiv)
     }
 
-    process.onComplete {
-      case Success(_) =>
-        GUI.defer(fDispose())
-        (settings.importFile, settings.location) match {
-          case (true, Some(locSource)) =>
-            val elemName  = file.nameWithoutExtension
-            val spec      = AudioFile.readSpec(file)
-            cursor.step { implicit tx =>
-              val loc       = locSource()
-              loc.entity.modifiableOption.foreach { locM =>
-                val imp = ExprImplicits[S]
-                import imp._
-                // val fileR     = Artifact.relativize(locM.directory, file)
-                // val artifact  = locM.add(file)
-                // val depArtif  = Artifact.Modifiable(artifact)
-                val depArtif  = locM.add(file)
-                val depOffset = Longs  .newVar(0L)
-                val depGain   = Doubles.newVar(1.0)
-                val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
-                val depElem   = Element.AudioGrapheme(file.nameWithoutExtension, deployed)
-
-                val recursion = Recursion(group(), settings.span, depElem, settings.gain, settings.channels, None)
-                val recElem   = Element.Recursion(elemName, recursion)
-                document.elements.addLast(depElem)
-                document.elements.addLast(recElem)
-              }
-            }
-
-          case _ =>
-            IO.revealInFinder(file)
-        }
+    val onFailure: PartialFunction[Any, Unit] = {
       case Failure(Processor.Aborted()) =>
         GUI.defer(fDispose())
       case Failure(e: Exception) => // XXX TODO: Desktop should allow Throwable for DialogSource.Exception
@@ -383,8 +365,76 @@ object ActionBounceTimeline {
         e.printStackTrace()
     }
 
+    def bounceDone() {
+      if (DEBUG) println(s"bounceDone(). hasTransform? $hasTransform")
+      if (hasTransform) {
+        val ftOpt = cursor.step { implicit tx =>
+          settings.transform.flatMap(_.apply().entity.value match {
+            case ft: Code.FileTransform => Some(ft)
+            case _ => None
+          })
+        }
+        if (DEBUG) println(s"file transform option = ${ftOpt.isDefined}")
+        ftOpt match {
+          case Some(ft) =>
+            ft.execute((bounceFile, file, { codeProc =>
+              if (DEBUG) println("code code processor")
+              process = codeProc
+              codeProc.addListener {
+                case prog @ Processor.Progress(_, _) => GUI.defer(ggProgress.value = prog.toInt / progDiv + 50)
+              }
+              codeProc.onSuccess { case _ => allDone() }
+              codeProc.onFailure(onFailure)
+            }))
+          case _ =>
+            println("WARNING: Code does not denote a file transform")
+            GUI.defer(fDispose())
+            IO.revealInFinder(file)
+        }
+
+      } else {
+        allDone()
+      }
+    }
+
+    def allDone() {
+      if (DEBUG) println("allDone")
+      GUI.defer(fDispose())
+      (settings.importFile, settings.location) match {
+        case (true, Some(locSource)) =>
+          val elemName  = file.nameWithoutExtension
+          val spec      = AudioFile.readSpec(file)
+          cursor.step { implicit tx =>
+            val loc       = locSource()
+            loc.entity.modifiableOption.foreach { locM =>
+              val imp = ExprImplicits[S]
+              import imp._
+              // val fileR     = Artifact.relativize(locM.directory, file)
+              // val artifact  = locM.add(file)
+              // val depArtif  = Artifact.Modifiable(artifact)
+              val depArtif  = locM.add(file)
+              val depOffset = Longs  .newVar(0L)
+              val depGain   = Doubles.newVar(1.0)
+              val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
+              val depElem   = Element.AudioGrapheme(file.nameWithoutExtension, deployed)
+              val transfOpt = settings.transform.map(_.apply())
+              val recursion = Recursion(group(), settings.span, depElem, settings.gain, settings.channels, transfOpt)
+              val recElem   = Element.Recursion(elemName, recursion)
+              document.elements.addLast(depElem)
+              document.elements.addLast(recElem)
+            }
+          }
+
+        case _ =>
+          IO.revealInFinder(file)
+      }
+    }
+
+    process.onSuccess { case _ => bounceDone() }
+    process.onFailure(onFailure)
+
     GUI.delay(500) {
-      if (!process.isCompleted) op.show(window)
+      if (!processCompleted) op.show(window)
     }
   }
 
