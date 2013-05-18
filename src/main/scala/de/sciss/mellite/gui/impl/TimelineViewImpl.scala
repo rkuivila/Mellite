@@ -39,7 +39,7 @@ import synth.proc
 import fingertree.RangedSeq
 import javax.swing.{KeyStroke, UIManager}
 import java.util.Locale
-import bitemp.BiGroup
+import de.sciss.lucre.bitemp.{BiExpr, BiGroup}
 import audiowidgets.Transport
 import scala.swing.Swing._
 import java.awt.event.{KeyEvent, ActionEvent, ActionListener}
@@ -48,6 +48,8 @@ import Predef.{any2stringadd => _, _}
 import scala.Some
 import de.sciss.lucre.event.Change
 import scala.concurrent.stm.Ref
+import de.sciss.lucre.expr.Expr
+import de.sciss.synth.expr.{Doubles, ExprImplicits, Longs, SpanLikes}
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -304,7 +306,63 @@ object TimelineViewImpl {
     }
 
     def splitObjects(time: Long)(views: TraversableOnce[TimelineProcView[S]])(implicit tx: S#Tx) {
-      println("Not yet implemented: splitObjects") // ???
+      for {
+        group             <- groupH().modifiableOption
+        pv                <- views
+      } {
+        pv.spanSource() match {
+          case Expr.Var(oldSpan) =>
+            val imp = ExprImplicits[S]
+            import imp._
+            val leftProc  = pv.procSource()
+            val rightProc = copyProc(oldSpan, leftProc)
+            val rightSpan = oldSpan.value match {
+              case Span.HasStart(leftStart) =>
+                val _rightSpan = SpanLikes.newVar(oldSpan())
+                ProcActions.resize(_rightSpan, rightProc, ProcActions.Resize(time - leftStart, 0L), timelineModel)
+                _rightSpan
+
+              case Span.HasStop(rightStop) =>
+                SpanLikes.newVar(Span(time, rightStop))
+            }
+
+            oldSpan.value match {
+              case Span.HasStop(rightStop) =>
+                ProcActions.resize(oldSpan, leftProc, ProcActions.Resize(0L, time - rightStop), timelineModel)
+
+              case Span.HasStart(leftStart) =>
+                val leftSpan = Span(leftStart, time)
+                oldSpan() = leftSpan
+            }
+
+            group.add(rightSpan, rightProc)
+
+          case _ =>
+        }
+      }
+    }
+
+    def copyProc(parentSpan: Expr[S, SpanLike], parent: Proc[S])(implicit tx: S#Tx): Proc[S] = {
+      val res   = Proc[S]
+      res.graph_=(parent.graph)
+      parent.attributes.iterator.foreach { case (key, attr) =>
+        val attrOut = attr.mkCopy()
+        res.attributes.put(key, attrOut)
+      }
+      ProcActions.getAudioRegion(parentSpan, parent).foreach { case (time, audio) =>
+        val imp = ExprImplicits[S]
+        import imp._
+        val scanw       = res.scans.add(ProcKeys.graphAudio)
+        val grw         = Grapheme.Modifiable[S]
+        val gStart      = Longs.newVar(time.value)
+        val audioOffset = Longs.newVar(audio.offset.value)  // XXX TODO
+        val audioGain   = Doubles.newVar(audio.gain.value)
+        val gElem       = Grapheme.Elem.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
+        val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
+        grw.add(bi)
+        scanw.source_=(Some(Scan.Link.Grapheme(grw)))
+      }
+      res
     }
 
     // ---- transport ----

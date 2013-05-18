@@ -76,7 +76,7 @@ final class TrackMoveToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
       val imp = ExprImplicits[S]
       import imp._
 
-      TimelineProcView.getAudioRegion(span, proc) match {
+      ProcActions.getAudioRegion(span, proc) match {
         case Some((gtime, audio)) => // audio region
           (span, gtime) match {
             case (Expr.Var(t1), Expr.Var(t2)) =>

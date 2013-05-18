@@ -14,21 +14,6 @@ import scala.util.Try
 import scala.util.control.NonFatal
 
 object TimelineProcView {
-  /** Queries the audio region's grapheme segment start and audio element. */
-  def getAudioRegion[S <: Sys[S]](span: Expr[S, SpanLike], proc: Proc[S])
-                                 (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme.Elem.Audio[S])] = {
-    span.value match {
-      case Span.HasStart(frame) =>
-        for {
-          scan <- proc.scans.get(ProcKeys.graphAudio)
-          Scan.Link.Grapheme(g) <- scan.source
-          BiExpr(time, audio: Grapheme.Elem.Audio[S]) <- g.at(frame)
-        } yield (time, audio)
-
-      case _ => None
-    }
-  }
-
   def apply[S <: Sys[S]](timed: TimedProc[S])(implicit tx: S#Tx): TimelineProcView[S] = {
     val span  = timed.span
     val proc  = timed.value

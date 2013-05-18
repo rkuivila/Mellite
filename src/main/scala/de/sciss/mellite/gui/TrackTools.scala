@@ -75,7 +75,8 @@ object TrackTool {
   case class Adjust[A](value: A) extends Update[A]
 
   final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean)
-  final case class Resize(deltaStart: Long, deltaStop: Long)
+  type Resize = ProcActions.Resize
+  val  Resize = ProcActions.Resize
   final case class Gain  (factor: Float)
   final case class Mute  (engaged: Boolean)
 
