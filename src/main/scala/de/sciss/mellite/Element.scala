@@ -32,7 +32,7 @@ import stm.{Disposable, Mutable}
 import de.sciss.synth.expr.{Doubles, Strings, Ints}
 import annotation.switch
 import de.sciss.{serial, mellite}
-import de.sciss.lucre.event.{Targets, EventLike, EventLikeSerializer}
+import evt.{EventLike, EventLikeSerializer}
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import language.higherKinds
 import de.sciss.serial.{DataOutput, DataInput, Writable}
@@ -472,7 +472,7 @@ object Element {
     }
   }
 }
-/** Elements are what a document is made from. They comprise heterogenous objects from expressions (integer, double,
+/** Elements are what a document is made from. They comprise heterogeneous objects from expressions (integer, double,
   * string etc. expressions), processes and groups of processes, as well as `Element.Group` which is a container
   * for nested elements.
  */

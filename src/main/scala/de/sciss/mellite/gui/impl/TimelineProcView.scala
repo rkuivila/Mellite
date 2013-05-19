@@ -3,7 +3,7 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{ProcKeys, Attribute, Grapheme, Scan, Proc, TimedProc, Sys}
+import de.sciss.synth.proc.{FadeSpec, ProcKeys, Attribute, Grapheme, Scan, Proc, TimedProc, Sys}
 import lucre.{stm, expr}
 import span.{Span, SpanLike}
 import expr.Expr
@@ -14,6 +14,8 @@ import scala.util.Try
 import scala.util.control.NonFatal
 
 object TimelineProcView {
+  private val emptyFade = FadeSpec.Value(numFrames = 0L)
+
   def apply[S <: Sys[S]](timed: TimedProc[S])(implicit tx: S#Tx): TimelineProcView[S] = {
     val span  = timed.span
     val proc  = timed.value
@@ -47,19 +49,23 @@ object TimelineProcView {
 
     val attr  = proc.attributes
 
-    val track = attr[Attribute.Int    ](ProcKeys.attrTrack).map(_.value).getOrElse(0)
-    val name  = attr[Attribute.String ](ProcKeys.attrName ).map(_.value)
-    val mute  = attr[Attribute.Boolean](ProcKeys.attrMute ).map(_.value).getOrElse(false)
+    val track   = attr[Attribute.Int     ](ProcKeys.attrTrack).map(_.value).getOrElse(0)
+    val name    = attr[Attribute.String  ](ProcKeys.attrName ).map(_.value)
+    val mute    = attr[Attribute.Boolean ](ProcKeys.attrMute ).map(_.value).getOrElse(false)
+    val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn).map(_.value).getOrElse(emptyFade)
+    val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn).map(_.value).getOrElse(emptyFade)
 
     new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
-      span = spanV, track = track, nameOpt = name, muted = mute, audio = audio)
+      span = spanV, track = track, nameOpt = name, muted = mute, audio = audio,
+      fadeIn = fadeIn, fadeOut = fadeOut)
   }
 
   private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val procSource: stm.Source[S#Tx, Proc[S]],
                                         var span: SpanLike, var track: Int, var nameOpt: Option[String],
                                         var muted: Boolean,
-                                        var audio: Option[Grapheme.Segment.Audio])
+                                        var audio: Option[Grapheme.Segment.Audio],
+                                        var fadeIn: FadeSpec.Value, var fadeOut: FadeSpec.Value)
     extends TimelineProcView[S] {
 
     var sono = Option.empty[sonogram.Overview]
@@ -121,6 +127,9 @@ sealed trait TimelineProcView[S <: Sys[S]] {
 
   // EDT access only
   var sono: Option[sonogram.Overview]
+
+  var fadeIn : FadeSpec.Value
+  var fadeOut: FadeSpec.Value
 
   // def updateSpan(span: Expr[S, SpanLike])(implicit tx: S#Tx): Unit
 

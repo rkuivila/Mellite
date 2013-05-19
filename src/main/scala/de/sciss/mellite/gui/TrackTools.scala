@@ -5,7 +5,7 @@ package gui
 import java.awt.Cursor
 import annotation.switch
 import model.Model
-import de.sciss.mellite.gui.impl.{TrackMuteToolImpl, TrackGainToolImpl, TrackResizeToolImpl, TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl}
+import de.sciss.mellite.gui.impl.{TrackFadeToolImpl, TrackMuteToolImpl, TrackGainToolImpl, TrackResizeToolImpl, TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl}
 import de.sciss.lucre.event.Change
 import de.sciss.synth.proc.Sys
 import scala.swing.Component
@@ -79,6 +79,7 @@ object TrackTool {
   val  Resize = ProcActions.Resize
   final case class Gain  (factor: Float)
   final case class Mute  (engaged: Boolean)
+  final case class Fade  (deltaFadeIn: Long, deltaFadeOut: Long, deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
 
   type Listener = Model.Listener[Update[Any]]
 
@@ -87,6 +88,7 @@ object TrackTool {
   def resize[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Resize] = new TrackResizeToolImpl(canvas)
   def gain  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Gain  ] = new TrackGainToolImpl  (canvas)
   def mute  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Mute  ] = new TrackMuteToolImpl  (canvas)
+  def fade  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Fade  ] = new TrackFadeToolImpl  (canvas)
 }
 
 trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
@@ -101,11 +103,6 @@ trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
   def commit(drag: A)(implicit tx: S#Tx): Unit
 }
 
-//object TrackFadeTool {
-//  case class Fade(deltaFadeIn: Long, deltaFadeOut: Long,
-//                  deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
-//}
-//
 //class TrackFadeTool(trackList: TrackList, timelineModel: TimelineView)
 //  extends BasicTrackRegionTool[TrackFadeTool.Fade](trackList, timelineModel) {
 //
@@ -164,38 +161,6 @@ trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
 //    else
 //      Slide(amt, 0L)
 //  }
-//}
-
-//object TrackMuteTool {
-//  case class Mute(ce: AbstractCompoundEdit, state: Boolean)
-//
-//  private lazy val cursor = {
-//    val tk = Toolkit.getDefaultToolkit
-//    val img = tk.createImage(classOf[TrackMuteTool].getResource("cursor-mute.png"))
-//    tk.createCustomCursor(img, new Point(4, 4), "Mute")
-//  }
-//}
-//
-//class TrackMuteTool(protected val trackList: TrackList, protected val timelineModel: TimelineView)
-//  extends TrackRegionTool {
-//
-//  import TrackMuteTool._
-//
-//  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView) {
-//    region match {
-//      case mStake: MuteableTimelineProcView =>
-//        timelineModel.timeline.editor.foreach { ed =>
-//          val ce = ed.editBegin(name)
-//          dispatch(Mute(ce, !mStake.muted))
-//          ed.editEnd(ce)
-//        }
-//
-//      case _ =>
-//    }
-//  }
-//
-//  val defaultCursor = TrackMuteTool.cursor
-//  val name = "Mute"
 //}
 
 //object TrackAuditionTool {
