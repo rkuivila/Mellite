@@ -3,8 +3,8 @@ package mellite
 package gui
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc
-import de.sciss.synth.proc.{Grapheme, Server, Artifact, Bounce, Sys}
+import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
+import de.sciss.synth.proc.{Synth, Grapheme, Server, Artifact, Bounce, Sys}
 import de.sciss.desktop.{DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -442,11 +442,25 @@ object ActionBounceTimeline {
                           (implicit cursor: stm.Cursor[S]): Processor[File, _] = {
     import document.inMemory
     val bounce  = Bounce[S, document.I]
-    val bCfg    = bounce.Config()
-    bCfg.group  = settings.group
-    bCfg.server.read(settings.server)
-    bCfg.span   = settings.span
-    val process = bounce(bCfg)
+    val bnc     = bounce.Config()
+    bnc.group   = settings.group
+    bnc.server.read(settings.server)
+    bnc.span    = settings.span
+    bnc.init    = { (_tx, s) =>
+      implicit val tx = _tx
+      val graph = SynthGraph {
+        import ugen._
+        val inChans = settings.channels.flatten
+        val mxChan  = inChans.max
+        val sigIn   = In.ar(0, mxChan + 1 ) // XXX TODO: immediate gain could be applied here
+        inChans.zipWithIndex.foreach { case (in, out) =>
+          ReplaceOut.ar(out, sigIn \ in)
+        }
+      }
+      Synth.play(graph)(s.defaultGroup, addAction = addToTail)
+    }
+
+    val process = bounce(bnc)
     process.start()
     process
   }

@@ -28,7 +28,7 @@ package mellite
 package gui
 package impl
 
-import scala.swing.{Action, BorderPanel, Orientation, BoxPanel, Component}
+import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component}
 import span.{Span, SpanLike}
 import mellite.impl.TimelineModelImpl
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D}
@@ -52,6 +52,7 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.synth.expr.{Doubles, ExprImplicits, Longs, SpanLikes}
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
+import scala.swing.event.ValueChanged
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -452,6 +453,21 @@ object TimelineViewImpl {
       val timeDisp    = TimeDisplay(timelineModel)
       view            = new View
 
+      val ggVisualBoost = new Slider {
+        min       = 0
+        max       = 64
+        value     = 0
+        focusable = false
+        peer.putClientProperty( "JComponent.sizeVariant", "small" )
+        listenTo(this)
+        reactions += {
+          case ValueChanged(_) =>
+            import synth._
+            view.trackTools.visualBoost = value.linexp(0, 64, 1, 512) // .toFloat
+        }
+      }
+      GUI.fixWidth(ggVisualBoost)
+
       import Transport.{Action => _, _}
       transportStrip = Transport.makeButtonStrip(Seq(
         GoToBegin   { rtz()    },
@@ -468,6 +484,8 @@ object TimelineViewImpl {
           HStrut(4),
           TrackTools.palette(view.trackTools, Vector(
             toolCursor, toolMove, toolResize, toolGain, toolFade /* , toolSlide*/ , toolMute /* , toolAudition */)),
+          HStrut(4),
+          ggVisualBoost,
           HGlue,
           HStrut(4),
           timeDisp.component,
