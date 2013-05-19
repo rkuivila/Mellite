@@ -14,8 +14,6 @@ import scala.util.Try
 import scala.util.control.NonFatal
 
 object TimelineProcView {
-  private val emptyFade = FadeSpec.Value(numFrames = 0L)
-
   def apply[S <: Sys[S]](timed: TimedProc[S])(implicit tx: S#Tx): TimelineProcView[S] = {
     val span  = timed.span
     val proc  = timed.value
@@ -47,13 +45,13 @@ object TimelineProcView {
       }
     }
 
-    val attr  = proc.attributes
+    val attr    = proc.attributes
 
-    val track   = attr[Attribute.Int     ](ProcKeys.attrTrack).map(_.value).getOrElse(0)
-    val name    = attr[Attribute.String  ](ProcKeys.attrName ).map(_.value)
-    val mute    = attr[Attribute.Boolean ](ProcKeys.attrMute ).map(_.value).getOrElse(false)
-    val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn).map(_.value).getOrElse(emptyFade)
-    val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn).map(_.value).getOrElse(emptyFade)
+    val track   = attr[Attribute.Int     ](ProcKeys.attrTrack  ).map(_.value).getOrElse(0)
+    val name    = attr[Attribute.String  ](ProcKeys.attrName   ).map(_.value)
+    val mute    = attr[Attribute.Boolean ](ProcKeys.attrMute   ).map(_.value).getOrElse(false)
+    val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
+    val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
 
     new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
       span = spanV, track = track, nameOpt = name, muted = mute, audio = audio,

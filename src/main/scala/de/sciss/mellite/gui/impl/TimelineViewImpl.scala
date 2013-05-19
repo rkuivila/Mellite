@@ -31,11 +31,11 @@ package impl
 import scala.swing.{Action, BorderPanel, Orientation, BoxPanel, Component}
 import span.{Span, SpanLike}
 import mellite.impl.TimelineModelImpl
-import java.awt.{Font, RenderingHints, BasicStroke, Color, Graphics2D}
+import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D}
 import de.sciss.synth.proc._
 import lucre.{bitemp, stm}
 import de.sciss.lucre.stm.{Disposable, IdentifierMap, Cursor}
-import synth.proc
+import de.sciss.synth.{curveShape, linShape, Env, proc}
 import fingertree.RangedSeq
 import javax.swing.{KeyStroke, UIManager}
 import java.util.Locale
@@ -50,6 +50,8 @@ import de.sciss.lucre.event.Change
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
 import de.sciss.synth.expr.{Doubles, ExprImplicits, Longs, SpanLikes}
+import java.awt.geom.Path2D
+import java.awt.image.BufferedImage
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -59,10 +61,20 @@ object TimelineViewImpl {
   private val colrBgMuted         = new Color(0xFF, 0xFF, 0xFF, 0x60)
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
+  private val colrFade = new Color(0x05, 0xAF, 0x3A)
+  private val pntFade = {
+    val img = new BufferedImage(4, 2, BufferedImage.TYPE_INT_ARGB)
+    img.setRGB(0, 0, 4, 2, Array(
+      0xFF05AF3A, 0x00000000, 0x00000000, 0x00000000,
+      0x00000000, 0x00000000, 0xFF05AF3A, 0x00000000
+    ), 0, 4)
+    new TexturePaint(img, new Rectangle(0, 0, 4, 2))
+  }
 
   private val NoMove    = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
   private val NoResize  = TrackTool.Resize(deltaStart = 0L, deltaStop = 0L)
   private val NoGain    = TrackTool.Gain(1f)
+  private val NoFade    = TrackTool.Fade(0L, 0L, 0f, 0f)
   private val MinDur    = 32
 
   private val logEnabled  = false
@@ -110,6 +122,27 @@ object TimelineViewImpl {
       }
     }
 
+    def muteChanged(timed: TimedProc[S])(implicit tx: S#Tx) {
+      val attr    = timed.value.attributes
+      val muted   = attr[Attribute.Boolean](ProcKeys.attrMute).map(_.value).getOrElse(false)
+      view.procMuteChanged(timed, muted)
+    }
+
+    def fadeChanged(timed: TimedProc[S])(implicit tx: S#Tx) {
+      val attr    = timed.value.attributes
+      val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
+      val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
+      view.procFadeChanged(timed, fadeIn, fadeOut)
+    }
+
+    def attrChanged(timed: TimedProc[S], name: String)(implicit tx: S#Tx) {
+      name match {
+        case ProcKeys.attrMute => muteChanged(timed)
+        case ProcKeys.attrFadeIn | ProcKeys.attrFadeOut => fadeChanged(timed)
+        case _ =>
+      }
+    }
+
     val obsGroup = group.changed.react { implicit tx => _.changes.foreach {
       case BiGroup.Added  (span, timed) =>
         // println(s"Added   $span, $timed")
@@ -128,20 +161,12 @@ object TimelineViewImpl {
         procUpd.changes.foreach {
           case Proc.AssociationAdded  (key) =>
             key match {
-              case Proc.AttributeKey(name) =>
-                name match {
-                  case ProcKeys.attrMute =>
-                    timed.value.attributes[Attribute.Boolean](name).foreach { muted =>
-                      view.procMuteChanged(timed, muted.value)
-                    }
-                  case _ =>
-                }
-
+              case Proc.AttributeKey(name) => attrChanged(timed, name)
               case Proc.ScanKey(name) =>
             }
           case Proc.AssociationRemoved(key) =>
             key match {
-              case Proc.AttributeKey(name) =>
+              case Proc.AttributeKey(name) => attrChanged(timed, name)
               case Proc.ScanKey     (name) =>
             }
           case Proc.AttributeChange(name, Attribute.Update(attr, ach)) =>
@@ -149,10 +174,7 @@ object TimelineViewImpl {
               case (ProcKeys.attrTrack, Change(before: Int, now: Int)) =>
                 view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
 
-              case (ProcKeys.attrMute, Change(_, now: Boolean)) =>
-                view.procMuteChanged(timed, now)
-
-              case _ =>
+              case _ => attrChanged(timed, name)
             }
 
           case Proc.ScanChange     (name, scanUpd) =>
@@ -219,6 +241,7 @@ object TimelineViewImpl {
     private lazy val toolResize = TrackTool.resize[S](view)
     private lazy val toolGain   = TrackTool.gain  [S](view)
     private lazy val toolMute   = TrackTool.mute  [S](view)
+    private lazy val toolFade   = TrackTool.fade  [S](view)
 
     def dispose()(implicit tx: S#Tx) {
       timer.stop()  // save to call multiple times
@@ -443,7 +466,8 @@ object TimelineViewImpl {
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
           HStrut(4),
-          TrackTools.palette(view.trackTools, Vector(toolCursor, toolMove, toolResize, toolGain, toolMute)),
+          TrackTools.palette(view.trackTools, Vector(
+            toolCursor, toolMove, toolResize, toolGain, toolFade /* , toolSlide*/ , toolMute /* , toolAudition */)),
           HGlue,
           HStrut(4),
           timeDisp.component,
@@ -525,6 +549,18 @@ object TimelineViewImpl {
       }
     }
 
+    def procFadeChanged(timed: TimedProc[S], newFadeIn: FadeSpec.Value, newFadeOut: FadeSpec.Value)(implicit tx: S#Tx) {
+      val pvo = procMap.get(timed.id)
+      log(s"procFadeChanged(newFadeIn = $newFadeIn, newFadeOut = $newFadeOut, view = $pvo")
+      pvo.foreach { pv =>
+        guiFromTx {
+          pv.fadeIn   = newFadeIn
+          pv.fadeOut  = newFadeOut
+          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+        }
+      }
+    }
+
     def procAudioChanged(timed: TimedProc[S], newAudio: Option[Grapheme.Segment.Audio])(implicit tx: S#Tx) {
       val pvo = procMap.get(timed.id)
       log(s"procAudioChanged(newAudio = $newAudio, view = $pvo")
@@ -600,6 +636,7 @@ object TimelineViewImpl {
             case t: TrackTool.Resize  => toolResize.commit(t)
             case t: TrackTool.Gain    => toolGain  .commit(t)
             case t: TrackTool.Mute    => toolMute  .commit(t)
+            case t: TrackTool.Fade    => toolFade  .commit(t)
             case _ =>
           }
         }
@@ -609,6 +646,7 @@ object TimelineViewImpl {
       private var moveState   = NoMove
       private var resizeState = NoResize
       private var gainState   = NoGain
+      private var fadeState   = NoFade
 
       protected def toolState = _toolState
       protected def toolState_=(state: Option[Any]) {
@@ -616,10 +654,12 @@ object TimelineViewImpl {
         moveState   = NoMove
         resizeState = NoResize
         gainState   = NoGain
+        fadeState   = NoFade
         state.foreach {
           case s: TrackTool.Move    => moveState    = s
           case s: TrackTool.Resize  => resizeState  = s
           case s: TrackTool.Gain    => gainState    = s
+          case s: TrackTool.Fade    => fadeState    = s
           case _ =>
         }
       }
@@ -657,6 +697,15 @@ object TimelineViewImpl {
 
         def adjustGain(amp: Float, pos: Double) = amp * sonoBoost
 
+        private val shpFill = new Path2D.Float()
+        private val shpDraw = new Path2D.Float()
+
+        private def adjustFade(in: Env.ConstShape, deltaCurve: Float): Env.ConstShape = in match {
+          case `linShape`               => curveShape(math.max(-20, math.min(20,             deltaCurve)))
+          case `curveShape`(curvature)  => curveShape(math.max(-20, math.min(20, curvature + deltaCurve)))
+          case other => other
+        }
+
         override protected def paintComponent(g: Graphics2D) {
           super.paintComponent(g)
           val w = peer.getWidth
@@ -671,6 +720,8 @@ object TimelineViewImpl {
 
           val regionViewMode  = trackTools.regionViewMode
           val visualBoost     = trackTools.visualBoost
+          val fadeViewMode    = trackTools.fadeViewMode
+          // val fadeAdjusting   = fadeState != NoFade
 
           val hndl = regionViewMode match {
              case RegionViewMode.None       => 0
@@ -700,9 +751,12 @@ object TimelineViewImpl {
                   g.fillRoundRect(px, py, pw, ph, 5, 5)
                 }
 
-                pv.audio.foreach { segm =>
-                  val innerH  = ph - (hndl + 1)
+                val innerH  = ph - (hndl + 1)
+                val innerY  = py + hndl
+                g.clipRect(px + 1, innerY, pw - 2, innerH)
 
+                // --- sonagram ---
+                pv.audio.foreach { segm =>
                   val sonoOpt = pv.sono.orElse(pv.acquire())
 
                   sonoOpt.foreach { sono =>
@@ -714,10 +768,62 @@ object TimelineViewImpl {
                     sonoBoost   = audio.gain.toFloat * boost
                     val startP  = math.max(0L, startC + dStart)
                     val stopP   = startP + (stopC - startC)
-                    sono.paint(startP, stopP, g, px1C, py + hndl, px2C - px1C, innerH, this)
+                    sono.paint(startP, stopP, g, px1C, innerY, px2C - px1C, innerH, this)
                   }
                 }
 
+                // --- fades ---
+                def paintFade(shape: Env.ConstShape, fw: Float, y1: Float, y2: Float, x: Float, x0: Float) {
+                  import math.{max, log10}
+                  shpFill.reset()
+                  shpDraw.reset()
+                  val vscale  = innerH / -3f
+                  val y1s     = max(-3, log10(y1)) * vscale + innerY
+                  shpFill.moveTo(x, y1s)
+                  shpDraw.moveTo(x, y1s)
+                  var xs = 4
+                  while (xs < fw) {
+                    val ys = max(-3, log10(shape.levelAt(xs / fw, y1, y2))) * vscale + innerY
+                    shpFill.lineTo(x + xs, ys)
+                    shpDraw.lineTo(x + xs, ys)
+                    xs += 3
+                  }
+                  val y2s     = max(-3, log10(y2)) * vscale + innerY
+                  shpFill.lineTo(x + fw, y2s)
+                  shpDraw.lineTo(x + fw, y2s)
+                  shpFill.lineTo(x0, innerY)
+                  g.setPaint(pntFade)
+                  g.fill    (shpFill)
+                  g.setColor(colrFade)
+                  g.draw    (shpDraw)
+                }
+
+                if (fadeViewMode == FadeViewMode.Curve) {
+                  val st      = if (selected) fadeState else NoFade
+                  val fdIn    = pv.fadeIn  // XXX TODO: continue here. add delta
+                  val fdInFr  = fdIn.numFrames + st.deltaFadeIn
+                  if (fdInFr > 0) {
+                    val fw    = frameToScreen(fdInFr).toFloat
+                    val fdC   = st.deltaFadeInCurve
+                    val shape = if (fdC != 0f) adjustFade(fdIn.shape, fdC) else fdIn.shape
+                    // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = $px")
+                    paintFade(shape, fw = fw, y1 = fdIn.floor, y2 = 1f, x = px, x0 = px)
+                  }
+                  val fdOut   = pv.fadeOut
+                  val fdOutFr = fdOut.numFrames + st.deltaFadeOut
+                  if (fdOutFr > 0) {
+                    val fw    = frameToScreen(fdOutFr).toFloat
+                    val fdC   = st.deltaFadeOutCurve
+                    val shape = if (fdC != 0f) adjustFade(fdOut.shape, fdC) else fdOut.shape
+                    // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = ${px + pw - 1 - fw}")
+                    val x0    = px + pw - 1
+                    paintFade(shape, fw = fw, y1 = 1f, y2 = fdOut.floor, x = x0 - fw, x0 = x0)
+                  }
+                }
+                
+                g.setClip(clipOrig)
+    
+                // --- label ---
                 if (regionViewMode == RegionViewMode.TitledBox) {
                   val name = pv.name // .orElse(pv.audio.map(_.value.artifact.nameWithoutExtension))
                   g.clipRect(px + 2, py + 2, pw - 4, ph - 4)

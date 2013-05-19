@@ -7,7 +7,7 @@ import annotation.switch
 import model.Model
 import de.sciss.mellite.gui.impl.{TrackFadeToolImpl, TrackMuteToolImpl, TrackGainToolImpl, TrackResizeToolImpl, TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl}
 import de.sciss.lucre.event.Change
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{FadeSpec, Sys}
 import scala.swing.Component
 import javax.swing.Icon
 import collection.immutable.{IndexedSeq => IIdxSeq}
@@ -59,9 +59,9 @@ sealed trait FadeViewMode {
 }
 
 trait TrackTools[S <: Sys[S]] extends Model[TrackTools.Update[S]] {
-  var currentTool: TrackTool[S, _]
-  var visualBoost: Float
-  var fadeViewMode: FadeViewMode
+  var currentTool   : TrackTool[S, _]
+  var visualBoost   : Float
+  var fadeViewMode  : FadeViewMode
   var regionViewMode: RegionViewMode
 }
 
@@ -80,6 +80,8 @@ object TrackTool {
   final case class Gain  (factor: Float)
   final case class Mute  (engaged: Boolean)
   final case class Fade  (deltaFadeIn: Long, deltaFadeOut: Long, deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
+
+  final val EmptyFade = FadeSpec.Value(numFrames = 0L)
 
   type Listener = Model.Listener[Update[Any]]
 
