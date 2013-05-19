@@ -765,6 +765,7 @@ object TimelineViewImpl {
                     val startC  = screenToFrame(px1C) // math.max(0.0, screenToFrame(px1C))
                     val stopC   = screenToFrame(px2C)
                     val boost   = if (selected) visualBoost * gainState.factor else visualBoost
+                    // println(s"audio.gain = ${audio.gain.toFloat}")
                     sonoBoost   = audio.gain.toFloat * boost
                     val startP  = math.max(0L, startC + dStart)
                     val stopP   = startP + (stopC - startC)
@@ -803,7 +804,7 @@ object TimelineViewImpl {
                   val fdIn    = pv.fadeIn  // XXX TODO: continue here. add delta
                   val fdInFr  = fdIn.numFrames + st.deltaFadeIn
                   if (fdInFr > 0) {
-                    val fw    = frameToScreen(fdInFr).toFloat
+                    val fw    = framesToScreen(fdInFr).toFloat
                     val fdC   = st.deltaFadeInCurve
                     val shape = if (fdC != 0f) adjustFade(fdIn.shape, fdC) else fdIn.shape
                     // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = $px")
@@ -812,7 +813,7 @@ object TimelineViewImpl {
                   val fdOut   = pv.fadeOut
                   val fdOutFr = fdOut.numFrames + st.deltaFadeOut
                   if (fdOutFr > 0) {
-                    val fw    = frameToScreen(fdOutFr).toFloat
+                    val fw    = framesToScreen(fdOutFr).toFloat
                     val fdC   = st.deltaFadeOutCurve
                     val shape = if (fdC != 0f) adjustFade(fdOut.shape, fdC) else fdOut.shape
                     // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = ${px + pw - 1 - fw}")

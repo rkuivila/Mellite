@@ -28,7 +28,7 @@ object Code {
     def id      = FileTransform.id
 
     // def compile(): In => Out        = Impl.compile    [In, Out, FileTransform](this)
-    def compileBody(): Future[Unit] = Impl.compileBody[In, Out, FileTransform](this)
+    def compileBody(): Future[Unit] = Impl2.compileBody[In, Out, FileTransform](this)
 
     def execute(in: In): Out = Impl2.execute[In, Out, FileTransform](this, in)
 

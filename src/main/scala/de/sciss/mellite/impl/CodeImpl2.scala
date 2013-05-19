@@ -29,7 +29,9 @@ object CodeImpl2 {
       def imports: ISeq[String] = ISeq(
         "de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat, Frames}",
         "de.sciss.synth._",
-        "de.sciss.mellite.RichFile"
+        "de.sciss.mellite.RichFile",
+        "de.sciss.fscape.{FScapeJobs => fscape}",
+        "de.sciss.mellite.TransformUtil._"
       )
 
       def binding: Option[String] = Some("FileTransformContext")
@@ -56,7 +58,7 @@ object CodeImpl2 {
   def execute[I, O, Repr <: Code { type In = I; type Out = O }](code: Repr, in: I)
                       (implicit w: Wrapper[I, O, Repr]): O = {
     w.wrap(in) {
-      compileThunk(code.source, w)
+      compileThunk(code.source, w, execute = true)
     }
   }
 
@@ -64,7 +66,7 @@ object CodeImpl2 {
                       (implicit w: Wrapper[I, O, Repr]): Future[Unit] = {
     future {
       blocking {
-        compileThunk(code.source, w)
+        compileThunk(code.source, w, execute = false)
       }
     }
   }
@@ -84,7 +86,7 @@ object CodeImpl2 {
   }
 
   object Run {
-    def apply[A](thunk: => A): A = thunk
+    def apply[A](execute: Boolean)(thunk: => A): A = if (execute) thunk else null.asInstanceOf[A]
   }
 
   sealed trait Context[A] {
@@ -136,7 +138,7 @@ object CodeImpl2 {
   private val pkg = "de.sciss.mellite.impl.CodeImpl2"
 
   // note: synchronous
-  private def compileThunk(code: String, w: Wrapper[_, _, _]): Any = {
+  private def compileThunk(code: String, w: Wrapper[_, _, _], execute: Boolean): Any = {
     val i = intp
 
     val impS  = w.imports.map(i => s"  import $i\n").mkString
@@ -147,7 +149,7 @@ object CodeImpl2 {
     ).getOrElse("")
     val aTpe  = w.blockTag.tpe.toString
     val synth =
-     s"""$pkg.Run[$aTpe] {
+     s"""$pkg.Run[$aTpe]($execute) {
         |$impS
         |$bindS
         |
@@ -158,7 +160,7 @@ object CodeImpl2 {
     // i.reset()
     res match {
       case Results.Success =>
-        if (aTpe == "Unit") () else {
+        if (aTpe == "Unit" || !execute) () else {
           val n = i.mostRecentVar
           i.valueOfTerm(n).getOrElse(sys.error(s"No value for term $n"))
         }

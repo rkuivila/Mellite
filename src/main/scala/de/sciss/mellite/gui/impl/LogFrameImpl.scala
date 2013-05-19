@@ -4,7 +4,7 @@ package impl
 
 import swing.{Component, ScrollPane, Swing}
 import de.sciss.scalainterpreter.LogPane
-import java.io.OutputStream
+import java.io.{PrintStream, OutputStream}
 import javax.swing.BorderFactory
 import swing.event.WindowClosing
 import de.sciss.desktop.impl.WindowImpl
@@ -28,9 +28,13 @@ private[gui] final class LogFrameImpl extends LogFrame with WindowImpl {
     LogPane(cfg)
   }
 
+  private val printLog = new PrintStream(log.outputStream)
+
   private val observer: OutputStream = new OutputStream {
     override def write(b: Array[Byte], off: Int, len: Int) {
       log.makeDefault() // detaches this observer
+      System.setOut(printLog) // XXX TODO: should investigate why we need this as well, and incorporate it into LogPane
+      System.setErr(printLog)
       log.outputStream.write(b, off, len)
       Swing.onEDT(frame.front()) // there we go
     }
@@ -40,9 +44,13 @@ private[gui] final class LogFrameImpl extends LogFrame with WindowImpl {
     }
   }
 
+  private val printObserver = new PrintStream(observer)
+
   def observe() {
     Console.setOut(observer)
     Console.setErr(observer)
+    System.setOut(printObserver)
+    System.setErr(printObserver)
   }
 
   observe()

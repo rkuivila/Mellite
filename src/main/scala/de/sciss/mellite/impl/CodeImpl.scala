@@ -53,7 +53,9 @@ object CodeImpl {
       def imports: ISeq[String] = ISeq(
         "de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat, Frames}",
         "de.sciss.synth._",
-        "de.sciss.mellite.RichFile"
+        "de.sciss.mellite.RichFile",
+        "de.sciss.fscape.{FScapeJobs => fscape}",
+        "de.sciss.mellite.TransformUtil._"
       )
 
       def binding: Option[String] = Some("FileTransformContext")

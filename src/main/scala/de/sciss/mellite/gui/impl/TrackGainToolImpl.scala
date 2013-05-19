@@ -35,10 +35,15 @@ final class TrackGainToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
     import drag._
     val imp = ExprImplicits[S]
     import imp._
+    // println(s"gain : commitProc. factor = $factor")
     ProcActions.getAudioRegion(span, proc) match {
       case Some((gtime, audio)) => // audio region
+        // println(s"audio.gain = ${audio.gain}")
         audio.gain match {
-          case Expr.Var(vr) => vr.transform(_ * factor)
+          case Expr.Var(vr) =>
+            // println(s"old value ${vr.value}")
+            vr.transform(_ * factor)
+            // println(s"new value ${vr.value}")
           case _ =>
         }
       case _ =>

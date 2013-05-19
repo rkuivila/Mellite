@@ -4,22 +4,31 @@ import de.sciss.sonogram
 import java.io.File
 import scala.concurrent.ExecutionContext
 import java.util.concurrent.Executors
+import de.sciss.dsp.{Threading, ConstQ}
 
 object SonogramManager {
   private lazy val _instance = {
     val cfg               = sonogram.OverviewManager.Config()
     val folder            = new File(new File(sys.props("user.home"), "mellite"), "cache")
     folder.mkdirs()
-    val sizeLimit         = 2L << 10 << 10 << 10  // 2 GB
+    val sizeLimit         = 2L << 10 << 10 << 100  // 20 GB
     cfg.caching           = Some(sonogram.OverviewManager.Caching(folder, sizeLimit))
     // currently a problem with JTransforms
     // cfg.executionContext  = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
+    // cfg.executionContext  = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(2))
     sonogram.OverviewManager(cfg)
   }
 
   def instance: sonogram.OverviewManager = _instance
 
-  def acquire(file: File): sonogram.Overview = _instance.acquire(sonogram.OverviewManager.Job(file))
+  def acquire(file: File): sonogram.Overview = {
+    val cq    = ConstQ.Config()
+    cq.bandsPerOct  = 18
+    cq.maxTimeRes   = 18
+    cq.threading    = Threading.Single
+    val job   = sonogram.OverviewManager.Job(file, cq)
+    _instance.acquire(job)
+  }
   def release(overview: sonogram.Overview) { _instance.release(overview) }
 
   implicit def executionContext = _instance.config.executionContext

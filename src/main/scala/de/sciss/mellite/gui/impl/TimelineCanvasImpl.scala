@@ -144,6 +144,11 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     unitIncrement = 4
   }
 
+  final def framesToScreen(numFrames: Long): Double = {
+    val visi = timelineModel.visible
+    numFrames.toDouble / visi.length * canvasComponent.peer.getWidth
+  }
+
   final def frameToScreen(frame: Long): Double = {
     val visi = timelineModel.visible
     (frame - visi.start).toDouble / visi.length * canvasComponent.peer.getWidth
