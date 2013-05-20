@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Grapheme, Sys}
+import de.sciss.synth.proc.{AuralSystem, Grapheme, Sys}
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
@@ -14,20 +14,35 @@ import de.sciss.mellite.impl.TimelineModelImpl
 import de.sciss.sonogram
 import javax.swing.{TransferHandler, ImageIcon}
 import javax.swing.TransferHandler.TransferSupport
+import de.sciss.synth.proc
 
 object AudioFileViewImpl {
-  def apply[S <: Sys[S]](document: Document[S], element: AudioGrapheme[S])(implicit tx: S#Tx): AudioFileView[S] = {
-    val res = new Impl(document: Document[S], tx.newHandle(element))
-    val f   = element.entity.value // .artifact // store.resolve(element.entity.value.artifact)
-    guiFromTx(res.guiInit(f))
+  def apply[S <: Sys[S]](doc: Document[S], elem: AudioGrapheme[S])
+                        (implicit tx: S#Tx, aural: AuralSystem): AudioFileView[S] = {
+    val f             = elem.entity.value // .artifact // store.resolve(element.entity.value.artifact)
+    val sampleRate    = f.spec.sampleRate
+    type I            = doc.I
+    implicit val itx  = doc.inMemoryBridge(tx)
+    val group         = proc.ProcGroup.Modifiable[I]
+    import doc.inMemoryCursor
+    val res           = new Impl[S, I] {
+      val timelineModel = new TimelineModelImpl(Span(0L, f.spec.numFrames), sampleRate)
+      val document      = doc
+      val holder        = tx.newHandle(elem)
+      val transportView = TransportView[I, I](group, sampleRate, timelineModel)
+    }
+    guiFromTx(res.guiInit(f))(tx)
     res
   }
 
-  private final class Impl[S <: Sys[S]](val document: Document[S], holder: stm.Source[S#Tx, AudioGrapheme[S]])
-    extends AudioFileView[S] {
+  private abstract class Impl[S <: Sys[S], I <: Sys[I]]
+    extends AudioFileView[S] with ComponentHolder[Component] {
     impl =>
 
-    var component: Component = _
+    protected def holder       : stm.Source[S#Tx, AudioGrapheme[S]]
+    val document               : Document[S]
+    protected def transportView: TransportView[I]
+    protected def timelineModel: TimelineModel
 
     private var _sono: sonogram.Overview = _
 
@@ -44,51 +59,35 @@ object AudioFileViewImpl {
       //      sono.onComplete {
       //        case x => println(s"<view> $x")
       //      }
-      val tlm       = new TimelineModelImpl(Span(0L, _sono.inputSpec.numFrames), _sono.inputSpec.sampleRate)
-      val sonoView  = new AudioFileViewJ(_sono, tlm)
+      val sonoView  = new AudioFileViewJ(_sono, timelineModel)
 
-      val timeDisp  = TimeDisplay(tlm)
+      val ggDragRegion = new AudioFileDnD.Button(document, holder, snapshot, timelineModel)
 
-      import Transport._
-      val transport = Transport.makeButtonStrip(Seq(
-        GoToBegin   {},
-        Rewind      {},
-        Stop        {},
-        Play        {},
-        FastForward {},
-        Loop        {}
-      ))
-      transport.button(Stop).foreach(_.selected = true)
-
-      val ggDragRegion = new AudioFileDnD.Button(document, holder, snapshot, tlm)
-
-      val transportPane = new BoxPanel(Orientation.Horizontal) {
+      val topPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
           HStrut(4),
           ggDragRegion,
           new BusSinkButton[S](impl, ggDragRegion),
           HGlue,
           HStrut(4),
-          timeDisp.component,
-          HStrut(8),
-          transport,
+          transportView.component,
           HStrut(4)
         )
       }
 
       val pane = new BorderPanel {
         layoutManager.setVgap(2)
-        add(transportPane,      BorderPanel.Position.North )
+        add(topPane,            BorderPanel.Position.North )
         add(sonoView.component, BorderPanel.Position.Center)
       }
 
-      component = pane
+      comp = pane
     }
 
     def element(implicit tx: S#Tx): AudioGrapheme[S] = holder()
   }
 
-  private final class BusSinkButton[S <: Sys[S]](view: Impl[S], export: AudioFileDnD.Button[S])
+  private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: AudioFileDnD.Button[S])
     extends Button("Drop bus") {
 
     icon        = new ImageIcon(Mellite.getClass.getResource("dropicon16.png"))

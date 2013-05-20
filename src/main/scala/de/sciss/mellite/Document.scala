@@ -67,8 +67,9 @@ sealed trait Document[S <: Sys[S]] {
 
   // def masterCursor: stm.Cursor[S]
 
-  type I <: evt.Sys[I]
-  implicit def inMemory: S#Tx => I#Tx
+  type I <: Sys[I]
+  implicit def inMemoryBridge: S#Tx => I#Tx
+  implicit def inMemoryCursor: stm.Cursor[I]
 
   def elements(implicit tx: S#Tx): Folder[S]
 

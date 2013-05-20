@@ -285,11 +285,11 @@ object DocumentElementsFrameImpl {
       lazy val ggView: Button = Button("View") {
         val views = folderView.selection.map { case (_, view) => view }
         if (views.nonEmpty) atomic { implicit tx =>
+          import Mellite.auralSystem
           views.foreach {
             case view: ElementView.ProcGroup[S] =>
               // val e   = view.element()
               // import document.inMemory
-              import Mellite.auralSystem
               TimelineFrame(document, view.element())
 
             case view: ElementView.AudioGrapheme[S] =>

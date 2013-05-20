@@ -4,14 +4,14 @@ package gui
 package impl
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{AuralSystem, Sys}
 import de.sciss.desktop.impl.WindowImpl
 import de.sciss.desktop.Window
 import java.io.File
 
 object AudioFileFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.AudioGrapheme[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): AudioFileFrame[S] = {
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): AudioFileFrame[S] = {
     val afv       = AudioFileView(doc, elem)
     val name      = elem.name.value
     val file      = elem.entity.value.artifact

@@ -100,7 +100,7 @@ object TimelineViewImpl {
 
     var disp = List.empty[Disposable[S#Tx]]
 
-    import document.inMemory // {cursor, inMemory}
+    import document.inMemoryBridge // {cursor, inMemory}
     val procMap   = tx.newInMemoryIDMap[TimelineProcView[S]]
     disp ::= procMap
     val transp    = proc.Transport[S, document.I](group, sampleRate = sampleRate)
@@ -153,9 +153,9 @@ object TimelineViewImpl {
         // println(s"Removed $span, $timed")
         view.removeProc(span, timed)
 
-      case BiGroup.ElementMoved  (timed, spanCh ) =>
+      case BiGroup.ElementMoved  (timed, spanChange) =>
         // println(s"Moved   $timed, $spanCh")
-        view.procMoved(timed, spanCh = spanCh, trackCh = Change(0, 0))
+        view.procMoved(timed, spanCh = spanChange, trackCh = Change(0, 0))
 
       case BiGroup.ElementMutated(timed, procUpd) =>
         if (DEBUG) println(s"Mutated $timed, $procUpd")
@@ -213,7 +213,8 @@ object TimelineViewImpl {
                                         procMap: IdentifierMap[S#ID, S#Tx, TimelineProcView[S]],
                                         val timelineModel: TimelineModel,
                                         auralView: AuralPresentation[S])
-                                       (implicit cursor: Cursor[S]) extends TimelineView[S] {
+                                       (implicit cursor: Cursor[S])
+    extends TimelineView[S] with ComponentHolder[Component] {
     impl =>
 
     import cursor.step
@@ -233,7 +234,6 @@ object TimelineViewImpl {
     private var transportStrip: Component with Transport.ButtonStrip = _
     private val selectionModel = ProcSelectionModel[S]
 
-    var component: Component  = _
     private var view: View    = _
     val disposables           = Ref(List.empty[Disposable[S#Tx]])
 
@@ -507,13 +507,7 @@ object TimelineViewImpl {
         }
       })
 
-      val pane  = new BorderPanel {
-        layoutManager.setVgap(2)
-        add(transportPane,  BorderPanel.Position.North )
-        add(view.component, BorderPanel.Position.Center)
-      }
-
-      component = pane
+      comp = transportPane
     }
 
     def addProc(span: SpanLike, timed: TimedProc[S], repaint: Boolean)(implicit tx: S#Tx) {

@@ -2,14 +2,14 @@ package de.sciss
 package mellite
 package gui
 
-import synth.proc.Sys
+import de.sciss.synth.proc.{AuralSystem, Sys}
 import lucre.stm
 import stm.Disposable
 import impl.{RecursionFrameImpl => Impl}
 
 object RecursionFrame {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.Recursion[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] =
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): RecursionFrame[S] =
     Impl(doc, elem)
 }
 

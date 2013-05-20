@@ -3,7 +3,7 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Artifact, Server, Sys}
+import de.sciss.synth.proc.{AuralSystem, Artifact, Server, Sys}
 import lucre.stm
 import java.io.File
 import de.sciss.desktop.{DialogSource, Window}
@@ -27,12 +27,13 @@ object RecursionFrameImpl {
   }
 
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.Recursion[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] = {
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): RecursionFrame[S] = {
     new Impl[S] {
       val document  = doc
       val recH      = tx.newHandle(elem.entity)
       val _spec     = elem.entity.productSpec
       val _cursor   = cursor
+      val _aural    = aural
 
       private def mkView()(implicit tx: S#Tx): View = {
         val name      = elem.name.value
@@ -112,6 +113,7 @@ object RecursionFrameImpl {
     protected def view      : View
     protected def _spec     : AudioFileSpec
     protected implicit def _cursor   : stm.Cursor[S]
+    protected implicit def _aural    : AuralSystem
     protected def observer  : Disposable[S#Tx]
 
     final def dispose()(implicit tx: S#Tx) {

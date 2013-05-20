@@ -114,6 +114,7 @@ object DocumentImpl {
     def elements(implicit tx: S#Tx): Folder[S] = access().elements
 
     type I = system.I
-    val inMemory = (tx: S#Tx) => Confluent.inMemory(tx)
+    val inMemoryBridge = (tx: S#Tx) => Confluent.inMemory(tx)
+    def inMemoryCursor: stm.Cursor[I] = system.inMemory
   }
 }

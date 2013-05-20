@@ -440,7 +440,7 @@ object ActionBounceTimeline {
 
   def perform[S <: Sys[S]](document: Document[S], settings: PerformSettings[S])
                           (implicit cursor: stm.Cursor[S]): Processor[File, _] = {
-    import document.inMemory
+    import document.inMemoryBridge
     val bounce  = Bounce[S, document.I]
     val bnc     = bounce.Config()
     bnc.group   = settings.group
