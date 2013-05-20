@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{AuralSystem, Grapheme, Sys}
+import de.sciss.synth.proc.{Artifact, AuralSystem, Grapheme, Sys}
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
@@ -10,11 +10,12 @@ import java.awt.Color
 import de.sciss.audiowidgets.Transport
 import Swing._
 import de.sciss.span.Span
-import de.sciss.mellite.impl.TimelineModelImpl
+import de.sciss.mellite.impl.{InsertAudioRegion, TimelineModelImpl}
 import de.sciss.sonogram
 import javax.swing.{TransferHandler, ImageIcon}
 import javax.swing.TransferHandler.TransferSupport
 import de.sciss.synth.proc
+import de.sciss.synth.expr.ExprImplicits
 
 object AudioFileViewImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: AudioGrapheme[S])
@@ -24,9 +25,23 @@ object AudioFileViewImpl {
     type I            = doc.I
     implicit val itx  = doc.inMemoryBridge(tx)
     val group         = proc.ProcGroup.Modifiable[I]
+    val fullSpan      = Span(0L, f.spec.numFrames)
+
+    // ---- we go through a bit of a mess here to convert S -> I ----
+    val graphemeV     = elem.entity.value
+    val imp = ExprImplicits[I]
+    import imp._
+    val artifact      = elem.entity.artifact
+    val artifDir      = artifact.location.directory
+    val iLoc          = Artifact.Location.Modifiable[I](artifDir)
+    val iArtifact     = iLoc.add(artifact.value)
+    val iGrapheme     = Grapheme.Elem.Audio[I](iArtifact, graphemeV.spec, graphemeV.offset, graphemeV.gain)
+    InsertAudioRegion[I](group, time = 0L, track = 0, grapheme = iGrapheme, selection = fullSpan,
+      bus = None)
+
     import doc.inMemoryCursor
     val res           = new Impl[S, I] {
-      val timelineModel = new TimelineModelImpl(Span(0L, f.spec.numFrames), sampleRate)
+      val timelineModel = new TimelineModelImpl(fullSpan, sampleRate)
       val document      = doc
       val holder        = tx.newHandle(elem)
       val transportView = TransportView[I, I](group, sampleRate, timelineModel)

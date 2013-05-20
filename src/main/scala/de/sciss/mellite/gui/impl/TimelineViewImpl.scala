@@ -30,10 +30,9 @@ package impl
 
 import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component}
 import span.{Span, SpanLike}
-import mellite.impl.TimelineModelImpl
+import de.sciss.mellite.impl.{InsertAudioRegion, TimelineModelImpl}
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D}
-import de.sciss.synth.proc._
-import lucre.{bitemp, stm}
+import lucre.stm
 import de.sciss.lucre.stm.{Disposable, IdentifierMap, Cursor}
 import de.sciss.synth.{curveShape, linShape, Env, proc}
 import fingertree.RangedSeq
@@ -53,6 +52,7 @@ import de.sciss.synth.expr.{Doubles, ExprImplicits, Longs, SpanLikes}
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.ValueChanged
+import de.sciss.synth.proc.{FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, Sys, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -99,6 +99,8 @@ object TimelineViewImpl {
     //    }
 
     var disp = List.empty[Disposable[S#Tx]]
+
+    // XXX TODO --- should use TransportView now!
 
     import document.inMemoryBridge // {cursor, inMemory}
     val procMap   = tx.newInMemoryIDMap[TimelineProcView[S]]
@@ -507,7 +509,13 @@ object TimelineViewImpl {
         }
       })
 
-      comp = transportPane
+      val pane = new BorderPanel {
+        layoutManager.setVgap(2)
+        add(transportPane , BorderPanel.Position.North )
+        add(view.component, BorderPanel.Position.Center)
+      }
+
+      comp = pane
     }
 
     def addProc(span: SpanLike, timed: TimedProc[S], repaint: Boolean)(implicit tx: S#Tx) {
@@ -599,7 +607,8 @@ object TimelineViewImpl {
             val group = groupH()
             group.modifiableOption match {
               case Some(groupM) =>
-                DropAudioRegionAction(groupM, time = drop.frame, track = view.screenToTrack(drop.y), ad)
+                InsertAudioRegion(groupM, time = drop.frame, track = view.screenToTrack(drop.y),
+                   /* document = ad.document, */ grapheme = ad.source().entity, selection = ad.selection, bus = ad.bus)
                 true
               case _ => false
             }
