@@ -735,9 +735,11 @@ object TimelineViewImpl {
           g.fillRect(0, 0, w, h)
 
           val total     = timelineModel.bounds
-          val visi      = timelineModel.visible
+          // val visi      = timelineModel.visible
           val clipOrig  = g.getClip
           val cr        = clipOrig.getBounds
+          val visiStart = screenToFrame(cr.x).toLong
+          val visiStop  = screenToFrame(cr.x + cr.width).toLong
 
           val regionViewMode  = trackTools.regionViewMode
           val visualBoost     = trackTools.visualBoost
@@ -754,7 +756,7 @@ object TimelineViewImpl {
 
           g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-          procViews.filterOverlaps((visi.start, visi.stop)).foreach { pv =>
+          procViews.filterOverlaps((visiStart, visiStop)).foreach { pv =>
             val selected  = sel.contains(pv)
 
             def drawProc(start: Long, x1: Int, x2: Int, move: Long) {

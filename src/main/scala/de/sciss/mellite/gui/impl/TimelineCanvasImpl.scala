@@ -35,6 +35,7 @@ import java.awt.image.BufferedImage
 import scala.swing.Swing._
 import scala.swing.event.{MouseDragged, Key, MousePressed, ValueChanged, UIElementResized}
 import de.sciss.synth.proc.Sys
+import de.sciss.lucre.event.Change
 
 object TimelineCanvasImpl {
   private sealed trait AxisMouseAction
@@ -70,6 +71,8 @@ trait TimelineCanvasImpl extends TimelineCanvas {
 
   private var axisMouseAction: AxisMouseAction = AxisPosition
 
+  // this is an auxiliary object which may be used
+  // by any method on the EDT
   private val r = new Rectangle
 
   protected def paintPosAndSelection(g: Graphics2D, h: Int) {
@@ -243,10 +246,21 @@ trait TimelineCanvasImpl extends TimelineCanvas {
       updateScroll()
       repaint()  // XXX TODO: optimize dirty region / copy double buffer
 
-    case TimelineModel.Position(_, frame) =>
-      // XXX TODO: optimize dirty region
-      timeAxis.repaint()
-      repaint()
+    case TimelineModel.Position(_, Change(before, now)) =>
+      val mn = math.min(before, now)
+      val mx = math.max(before, now)
+      val x0 = math.max(0                            , frameToScreen(mn).toInt)
+      val x1 = math.min(canvasComponent.peer.getWidth, frameToScreen(mx).toInt + 1)
+      if (x0 < x1) {
+        r.x      = x0
+        r.width  = x1 - x0
+        r.y      = 0
+        r.height = timeAxis.peer.getHeight
+        timeAxis.repaint(r)
+
+        r.height = canvasComponent.peer.getHeight
+        canvasComponent.repaint(r)
+      }
 
     case TimelineModel.Selection(_, span) =>
       // XXX TODO: optimize dirty region
