@@ -269,22 +269,13 @@ object TimelineViewImpl {
     }
 
     object bounceAction extends Action("Bounce") {
-      private var _settings: ActionBounceTimeline.QuerySettings[S] = _
-      private def settings = {
-        if (_settings == null) {
-          val init  = ActionBounceTimeline.QuerySettings[S](span = timelineModel.selection)
-          settings_=(init)
-        }
-        _settings
-      }
-      private def settings_=(value: ActionBounceTimeline.QuerySettings[S]) {
-        _settings = value
-      }
+      private var settings = ActionBounceTimeline.QuerySettings[S]()
 
       def apply() {
         import ActionBounceTimeline._
         val window  = GUI.findWindow(component)
-        val (_settings, ok) = query(settings, document, timelineModel, window = window)
+        val setUpd  = settings.copy(span = timelineModel.selection)
+        val (_settings, ok) = query(setUpd, document, timelineModel, window = window)
         settings = _settings
         _settings.file match {
           case Some(file) if ok =>
