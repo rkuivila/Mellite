@@ -118,14 +118,14 @@ object Nullstellen extends ProcessorFactory {
     var layerOffset     = 0L
     var materialFolder  = new File("material")
     var numChannels     = 4
-    var strategy        = Strategy.Imitation: Strategy
-    var startDur        = (66150L, 132300L)
-    var stopDur         = (88400L, 176800L)
-    var startWeight     = 0.75f
-    var stopWeight      = 0.25f
+    var strategy        = Strategy.NImitation: Strategy
+    var startDur        = ((0.5) * 44100L).toLong -> ((1.5) * 44100L).toLong
+    var stopDur         = ((0.5) * 44100L).toLong -> ((1.5) * 44100L).toLong
+    var startWeight     = 0.5f // 0.75f
+    var stopWeight      = 0.5f // 0.25f
     var maxOverlap      = 0.333f
     var connectionWeight= 0.5f
-    var strategyWeight  = 0.5f
+    var strategyWeight  = 0.0f // 0.5f
     var seed            = 0L
 
     // var updater: Updater = (_) => ()
@@ -307,7 +307,7 @@ class Nullstellen private(config: Nullstellen.Config)
           } else res
         } else res
       }
-      val startPos = segms(startIdx)
+      val startPos = segms(math.min(numSegm - 1, startIdx)) // XXX
 
       //         val w       = math.max( 0.0, math.min( 1.0, ((minStop + maxStop) / 2 - startPos).toDouble / spanLen ))
       val w = math.max(0.0, math.min(1.0, (gagaDur + startPos - layStart).toDouble / spanLen))
@@ -328,7 +328,7 @@ class Nullstellen private(config: Nullstellen.Config)
 
       var chunkOk = false
 
-      println(s"startIdx $startIdx, minIdx $minIdx, maxIdx $maxIdx, numSegm $numSegm, segms.size ${segms.size}")
+      // println(s"startIdx $startIdx, minIdx $minIdx, maxIdx $maxIdx, numSegm $numSegm, segms.size ${segms.size}")
 
       if (minIdx <= maxIdx && maxIdx < numSegm) {
         val stopIdx = minIdx + rnd.nextInt(maxIdx - minIdx + 1)
@@ -623,7 +623,7 @@ class Nullstellen private(config: Nullstellen.Config)
             val base      = w1(j)(0)
             val baseDone0 = Vector(base)
             if (bestPrognosis(baseDone0, xDone0) > bestCorr) {
-              recurse(IIdxSeq(j), baseDone0, xDone0, j + 1)
+              recurse(Vector(j), baseDone0, xDone0, j + 1)
             }
             j += 1
           }

@@ -8,6 +8,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 import de.sciss.mellite
 import de.sciss.strugatzki.FeatureExtraction
+import de.sciss.processor.Processor
 
 object MetaNull {
   def perform(in: File, out: File, config: Nullstellen.Config) {
@@ -23,12 +24,25 @@ object MetaNull {
       cb.tlSpan       = span // Span(0L, spec.numFrames)
       cb.layerOffset  = span.start
       val p = Nullstellen(cb)
+      var lastProg = 0
+      p.addListener {
+        case prog @ Processor.Progress(_, _) =>
+          val newProg = prog.toInt / 2
+          while (lastProg < newProg) {
+            print('#')
+            lastProg += 1
+          }
+      }
       p.start()
-      Await.result(p, Duration.Inf)
+      val res = Await.result(p, Duration.Inf)
+      println()
+      res
     }
 
     println(":::: All Matches ::::")
     matches.foreach(println)
+
+    // ...
   }
 
   private def findNonSilentSpans(in: File): IIdxSeq[Span] = {
