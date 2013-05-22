@@ -20,7 +20,8 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "sonogramoverview"   % "1.6.2+",  // bug in 1.6.1
   "de.sciss" %% "serial"             % "1.0.1+",  // bug in 1.0.0
   "de.sciss" %  "jtreetable"         % "1.2.+",
-  "de.sciss" %% "fscapejobs"         % "1.4.+"
+  "de.sciss" %% "fscapejobs"         % "1.4.+",
+  "de.sciss" %% "strugatzki"         % "1.9.+"
 )
 
 retrieveManaged := true
