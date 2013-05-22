@@ -32,6 +32,10 @@ scalacOptions += "-no-specialization"
 
 // scalacOptions ++= Seq("-Xelide-below", "INFO")
 
+initialCommands in console :=
+  """import de.sciss.mellite._
+    |import de.sciss.indeterminus._""".stripMargin
+
 fork in run := true  // required for shutdown hook, and also the scheduled thread pool, it seems
 
 // ---- packaging ----

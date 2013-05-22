@@ -116,4 +116,6 @@ package object mellite {
       if (i < 0) (n, "") else (n.substring(0, i), n.substring(i + 1))
     }
   }
+
+  def file(path: String): File = new File(path)
 }

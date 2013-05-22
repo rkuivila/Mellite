@@ -6,7 +6,6 @@ import de.sciss.synth.io.AudioFile
 import FeatureSegmentation.Break
 import FeatureCorrelation.Match
 import collection.immutable.{LongMap, IndexedSeq => IIdxSeq}
-import java.awt.EventQueue
 import xml.{XML, NodeSeq}
 import de.sciss.processor.ProcessorFactory
 import de.sciss.span.Span
@@ -18,13 +17,13 @@ import scala.concurrent.duration.Duration
 import de.sciss.strugatzki.impl.MathUtil
 
 object Nullstellen extends ProcessorFactory {
-  type Product = Unit
+  type Product = IIdxSeq[IIdxSeq[(Long, Match)]] // Unit
 
   //  def folder = new File(LeereNull.baseFolder, "third_move")
   //
   //  def featureFolder = new File(folder, "feature")
 
-  var verbose = false
+  var verbose = true
 
   object Strategy {
     def apply(name: String): Strategy = name match {
@@ -105,7 +104,9 @@ object Nullstellen extends ProcessorFactory {
     def connectionWeight: Float
     def strategyWeight  : Float
 
-    def updater: Updater
+    // def updater: Updater
+
+    def seed: Long
   }
 
   //  object ConfigBuilder {
@@ -125,12 +126,13 @@ object Nullstellen extends ProcessorFactory {
     var maxOverlap      = 0.333f
     var connectionWeight= 0.5f
     var strategyWeight  = 0.5f
+    var seed            = 0L
 
-    var updater: Updater = (_) => ()
+    // var updater: Updater = (_) => ()
 
     def build: Config = Config(
       tlSpan, layer, layerOffset, materialFolder, numChannels, strategy, startDur, stopDur,
-      startWeight, stopWeight, maxOverlap, connectionWeight, strategyWeight, updater
+      startWeight, stopWeight, maxOverlap, connectionWeight, strategyWeight, seed /* , updater */
     )
 
     def read(settings: Config) {
@@ -147,6 +149,7 @@ object Nullstellen extends ProcessorFactory {
       maxOverlap      = settings.maxOverlap
       connectionWeight= settings.connectionWeight
       strategyWeight  = settings.strategyWeight
+      seed            = settings.seed
     }
   }
 
@@ -179,7 +182,7 @@ object Nullstellen extends ProcessorFactory {
                           materialFolder: File, numChannels: Int, strategy: Strategy,
                           startDur: (Long, Long), stopDur: (Long, Long),
                           startWeight: Float, stopWeight: Float, maxOverlap: Float,
-                          connectionWeight: Float, strategyWeight: Float, updater: Updater)
+                          connectionWeight: Float, strategyWeight: Float, seed: Long /*, updater: Updater */)
     extends ConfigLike {
     def toXML =
 <ueberzeichnung>
@@ -219,7 +222,7 @@ object Nullstellen extends ProcessorFactory {
 }
 
 class Nullstellen private(config: Nullstellen.Config)
-  extends /* NullGoodies with */ ProcessorImpl[Unit, Nullstellen] {
+  extends /* NullGoodies with */ ProcessorImpl[Nullstellen.Product, Nullstellen] {
 
   import Nullstellen._
 
@@ -232,7 +235,9 @@ class Nullstellen private(config: Nullstellen.Config)
 
   private def featureFolder = config.materialFolder // XXX TODO -- good idea or not?
 
-  protected def body() {
+  protected def body(): Nullstellen.Product = {
+    var result: Nullstellen.Product = Vector.empty
+
     val (metaFile, extrOption) = metaFileForLayer(config.layer)
     handleProcessOption[Unit](0.05f, extrOption)
 
@@ -271,7 +276,7 @@ class Nullstellen private(config: Nullstellen.Config)
     val segmProc  = FeatureSegmentation(segmCfgB)
     val segms     = layStart +: handleProcess[IndexedSeq[Break]](0.1f, segmProc).map(_.pos).sorted // XXX already sorted?
     val numSegm   = segms.size
-    if (numSegm == 0) return
+    if (numSegm == 0) return result
 
     if (verbose) {
       println("\n:::::::::: " + (if (numSegm <= 5) "All " else "First 5 of ") + numSegm + " segments ::::::::::\n")
@@ -282,7 +287,7 @@ class Nullstellen private(config: Nullstellen.Config)
     var lastSegmLen   = 0L
     var lastStartIdx  = 0
     var lastStopIdx   = 0
-    val rnd           = new util.Random()
+    val rnd           = new util.Random(config.seed)
     // tracks the matches per channel
     var lastMatch     = Option.empty[IIdxSeq[Match]]
     val gagaDur       = (config.startDur._1 + config.startDur._2 + config.stopDur._1 + config.stopDur._2) / 4
@@ -323,7 +328,9 @@ class Nullstellen private(config: Nullstellen.Config)
 
       var chunkOk = false
 
-      if (minIdx <= maxIdx) {
+      println(s"startIdx $startIdx, minIdx $minIdx, maxIdx $maxIdx, numSegm $numSegm, segms.size ${segms.size}")
+
+      if (minIdx <= maxIdx && maxIdx < numSegm) {
         val stopIdx = minIdx + rnd.nextInt(maxIdx - minIdx + 1)
         //            val plainSpan  = Span( segms( startIdx ), segms( stopIdx ))
         //            val layerSpan  = Span( plainSpan.start + settings.layerOffset, plainSpan.stop + settings.layerOffset )
@@ -675,9 +682,10 @@ class Nullstellen private(config: Nullstellen.Config)
           }
 
           chunkOk = true
-          defer {
-            config.updater(w4)
-          }
+          result :+= w4
+          //          defer {
+          //            config.updater(w4)
+          //          }
         }
       }
 
@@ -692,15 +700,17 @@ class Nullstellen private(config: Nullstellen.Config)
         lastMatch = None
       }
     }
+
+    result
   }
 
-  private def defer(thunk: => Unit) {
-    EventQueue.invokeLater(new Runnable {
-      def run() {
-        thunk
-      }
-    })
-  }
+  //  private def defer(thunk: => Unit) {
+  //    EventQueue.invokeLater(new Runnable {
+  //      def run() {
+  //        thunk
+  //      }
+  //    })
+  //  }
 
   //  private def copyFile(source: File, dest: File) {
   //    val sourceCh  = new FileInputStream (source).getChannel
@@ -730,7 +740,9 @@ class Nullstellen private(config: Nullstellen.Config)
   }
 
   private def metaFileForLayer(layer: File): (File, Option[FeatureExtraction with Processor.Prepared]) = {
-    val metaFile = extrMetaFile(plainName(layer), featureFolder)
+    val folder = new File(sys.props("java.io.tmpdir"))
+
+    val metaFile = extrMetaFile(plainName(layer), folder /* featureFolder */)
     if (metaFile.exists()) {
       (metaFile, None)
     } else {
@@ -738,7 +750,7 @@ class Nullstellen private(config: Nullstellen.Config)
       if (!metaDir.exists()) metaDir.mkdirs()
       val extrCfg           = FeatureExtraction.Config()
       extrCfg.audioInput    = layer
-      val ff                = featureFile(plainName(layer), featureFolder)
+      val ff                = featureFile(plainName(layer), folder /* featureFolder */)
       extrCfg.featureOutput = ff
       extrCfg.metaOutput    = Some(metaFile)
       //         settings.numCoeffs      = default
