@@ -42,11 +42,12 @@ object MetaNull {
       val res = Await.result(p, Duration.Inf)
       println()
 
-      if (res.nonEmpty) {
-        val dropEqual = res.init.dropWhile(_.head._2.sim > 0.9) :+ res.last
-        Some(dropEqual.head)
-
-      } else None
+      //      if (res.nonEmpty) {
+      //        val dropEqual = res.init.dropWhile(_.head._2.sim > 0.9) :+ res.last
+      //        Some(dropEqual.head)
+      //
+      //      } else None
+      res
     }
 
     println(s":::: ${if (matches.size <= 5) "All" else "First 5"} Matches ::::")
