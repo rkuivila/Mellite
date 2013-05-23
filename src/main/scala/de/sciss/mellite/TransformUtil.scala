@@ -14,4 +14,6 @@ object TransformUtil {
   }
 
   def tempFile(): File = File.createTempFile("mellite", ".tmp")
+
+  def file(path: String) = new File(path)
 }

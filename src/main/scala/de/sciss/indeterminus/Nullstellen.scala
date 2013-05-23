@@ -285,8 +285,8 @@ class Nullstellen private(config: Nullstellen.Config)
 
     var lastSpan      = Span(layStart, layStart)
     var lastSegmLen   = 0L
-    var lastStartIdx  = 0
-    var lastStopIdx   = 0
+    var lastStartIdx  = -1 // XXX 0
+    var lastStopIdx   = -1 // XXX 0
     val rnd           = new util.Random(config.seed)
     // tracks the matches per channel
     var lastMatch     = Option.empty[IIdxSeq[Match]]
@@ -295,7 +295,7 @@ class Nullstellen private(config: Nullstellen.Config)
     while (lastSpan.stop < layStop) {
       val maxOvl  = (config.maxOverlap.toDouble * lastSegmLen + 0.5).toLong
       var idx     = lastStopIdx
-      while ((idx > 0)  && ((lastSpan.stop - segms(idx)) <= maxOvl)) idx -= 1
+      while ((idx > 0) && ((lastSpan.stop - segms(idx)) <= maxOvl)) idx -= 1
       //         val startIdx = math.min( lastIdx, idx + 1 )
       val startIdx = {
         val res   = math.max(lastStartIdx, idx + 1)
@@ -432,7 +432,7 @@ class Nullstellen private(config: Nullstellen.Config)
               res
             }
           case _ => corrs.map {
-            nm => IIdxSeq.fill(numChannels)(nm.sim)
+            nm => Vector.fill(numChannels)(nm.sim)
           }
         }
 
@@ -458,10 +458,10 @@ class Nullstellen private(config: Nullstellen.Config)
         // c11 x c23 x c34 x c43
         // c11 x c23 x c34 x c45...c4x
 
-        if ((config.strategyWeight > 0f) && (numMatches > numChannels)) {
-          var bestCorr = 0.0
-          var bestSeq = IIdxSeq.empty[Int]
-          var xMap = LongMap.empty[Float]
+        val w2 = if ((config.strategyWeight > 0f) && (numMatches > numChannels)) {
+          var bestCorr  = 0.0
+          var bestSeq   = IIdxSeq.empty[Int]
+          var xMap      = Map.empty[Long, Float]
 
           def weightFun(values: IIdxSeq[Float]): Float = {
             // we could change this to give extra penalty
@@ -628,65 +628,67 @@ class Nullstellen private(config: Nullstellen.Config)
             j += 1
           }
 
-          val w2 = bestSeq
-
           if (verbose) {
             println("\nResult : " + bestSeq)
           }
 
-          val w3 = w2.map(corrs(_))
+          bestSeq
+        } else {
+          Vector.tabulate(numMatches)(i => i) // ??
+        }
 
-          lastSegmLen   = w3.map(_.punch.length).min
-          lastSpan      = layerSpan
-          lastStartIdx  = startIdx
-          lastStopIdx   = stopIdx
-          lastMatch     = Some(w3) // without the adjustments?
+        val w3 = w2.map(corrs(_))
 
-          // now adjust matches according to segmentation bounds in the match
-          val basicOffset = tlStart + (layerSpan.start - layStart)
-          val w4 = w3 map { m =>
-            //               val mFeat               = featureFile( plainName( m.file ), folder )
-            val mMeta               = extrMetaFile(plainName(m.file), featureFolder)
-            val mSegCfg             = FeatureSegmentation.Config()
-            mSegCfg.corrLen         = 44100L // have 0.5 seconds on each side
-            mSegCfg.databaseFolder  = config.materialFolder // LeereNull.databaseFolder // hold the normalization data
-            mSegCfg.metaInput       = mMeta
-            mSegCfg.minSpacing      = 0L
-            mSegCfg.numBreaks       = 1
-            mSegCfg.temporalWeight  = 0.75f // XXX could be configurable
+        lastSegmLen   = w3.map(_.punch.length).min
+        lastSpan      = layerSpan
+        lastStartIdx  = startIdx
+        lastStopIdx   = stopIdx
+        lastMatch     = Some(w3) // without the adjustments?
 
-            def findAdjust(span: Span): Option[Long] = {
-              mSegCfg.span = span
-              val mSegProc = FeatureSegmentation(mSegCfg)
-              handleProcess[IndexedSeq[Break]](perc, mSegProc).map(_.pos).headOption
-            }
+        // now adjust matches according to segmentation bounds in the match
+        val basicOffset = tlStart + (layerSpan.start - layStart)
+        val w4 = w3 map { m =>
+          //               val mFeat               = featureFile( plainName( m.file ), folder )
+          val mMeta               = extrMetaFile(plainName(m.file), featureFolder)
+          val mSegCfg             = FeatureSegmentation.Config()
+          mSegCfg.corrLen         = 44100L // have 0.5 seconds on each side
+          mSegCfg.databaseFolder  = config.materialFolder // LeereNull.databaseFolder // hold the normalization data
+          mSegCfg.metaInput       = mMeta
+          mSegCfg.minSpacing      = 0L
+          mSegCfg.numBreaks       = 1
+          mSegCfg.temporalWeight  = 0.75f // XXX could be configurable
 
-            val mSegStartStart  = math.max(0L, m.punch.start - 66150L)
-            val mSegStartStop   = math.min((m.punch.start + m.punch.stop) / 2, m.punch.start + 44100L) + 22050L
-            val mStart0         = findAdjust(Span(mSegStartStart, mSegStartStop)).getOrElse(m.punch.start)
-
-            val mSegStopStart   = math.max(0L, math.max((m.punch.start + m.punch.stop) / 2, m.punch.stop - 44100L) - 22050L)
-            val mFileLen        = AudioFile.readSpec(m.file).numFrames
-            val mSegStopStop    = math.min(mFileLen, m.punch.stop + 66150L)
-            val mStop           = findAdjust(Span(mSegStopStart, mSegStopStop)).getOrElse(m.punch.stop)
-
-            val actualOffset0 = basicOffset + mStart0 - m.punch.start
-            val (actualOffset, mStart) = if (actualOffset0 >= 0) (actualOffset0, mStart0)
-            else {
-              (0L, mStart0 - actualOffset0)
-            }
-
-            val mAdjusted = m.copy(punch = Span(mStart, mStop))
-
-            (actualOffset, mAdjusted)
+          def findAdjust(span: Span): Option[Long] = {
+            mSegCfg.span = span
+            val mSegProc = FeatureSegmentation(mSegCfg)
+            handleProcess[IndexedSeq[Break]](perc, mSegProc).map(_.pos).headOption
           }
 
-          chunkOk = true
-          result :+= w4
-          //          defer {
-          //            config.updater(w4)
-          //          }
+          val mSegStartStart  = math.max(0L, m.punch.start - 66150L)
+          val mSegStartStop   = math.min((m.punch.start + m.punch.stop) / 2, m.punch.start + 44100L) + 22050L
+          val mStart0         = findAdjust(Span(mSegStartStart, mSegStartStop)).getOrElse(m.punch.start)
+
+          val mSegStopStart   = math.max(0L, math.max((m.punch.start + m.punch.stop) / 2, m.punch.stop - 44100L) - 22050L)
+          val mFileLen        = AudioFile.readSpec(m.file).numFrames
+          val mSegStopStop    = math.min(mFileLen, m.punch.stop + 66150L)
+          val mStop           = findAdjust(Span(mSegStopStart, mSegStopStop)).getOrElse(m.punch.stop)
+
+          val actualOffset0 = basicOffset + mStart0 - m.punch.start
+          val (actualOffset, mStart) = if (actualOffset0 >= 0) (actualOffset0, mStart0)
+          else {
+            (0L, mStart0 - actualOffset0)
+          }
+
+          val mAdjusted = m.copy(punch = Span(mStart, mStop))
+
+          (actualOffset, mAdjusted)
         }
+
+        chunkOk = true
+        result :+= w4
+        //          defer {
+        //            config.updater(w4)
+        //          }
       }
 
       if (!chunkOk) {

@@ -9,13 +9,14 @@ import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.mellite.Element.AudioGrapheme
 import de.sciss.lucre.stm
 import de.sciss.mellite.Document
+import de.sciss.lucre.expr.Expr
 
 object InsertAudioRegion {
   def apply[S <: Sys[S]](group: BiGroup.Modifiable[S, Proc[S], Proc.Update[S]],
                          time: Long, track: Int, // drag: TimelineDnD.AudioDrag[S])
                          grapheme: Grapheme.Elem.Audio[S],
                          selection: Span, bus: Option[stm.Source[S#Tx, Element.Int[S]]])
-                        (implicit tx: S#Tx) {
+                        (implicit tx: S#Tx): (Expr[S, Span], Proc[S]) = {
     val imp = ExprImplicits[S]
     import imp._
 
@@ -50,5 +51,7 @@ object InsertAudioRegion {
     scanw.source_=(Some(Scan.Link.Grapheme(grw)))
     proc.graph_=(SynthGraphs.tape)
     group.add(span, proc)
+
+    (span, proc)
   }
 }

@@ -1,19 +1,24 @@
 package de.sciss.indeterminus
 
 import java.io.{FileFilter, File}
-import de.sciss.synth.io.AudioFile
+import de.sciss.synth.io.{AudioFileSpec, AudioFile}
 import de.sciss.span.Span
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 import de.sciss.mellite
-import de.sciss.strugatzki.FeatureExtraction
+import de.sciss.strugatzki.{FeatureCorrelation, FeatureExtraction}
 import de.sciss.processor.Processor
+import de.sciss.synth.proc
+import de.sciss.mellite._
+import de.sciss.mellite.impl.InsertAudioRegion
+import de.sciss.synth.proc.{FadeSpec, Attribute, ProcKeys, Artifact, Grapheme}
+import de.sciss.synth.expr.ExprImplicits
 
 object MetaNull {
   def perform(in: File, out: File, config: Nullstellen.Config) {
-    // val spec  = AudioFile.readSpec(in)
-    val spans = findNonSilentSpans(in)
+    val inSpec  = AudioFile.readSpec(in)
+    val spans   = findNonSilentSpans(in) // .take(2)
 
     import de.sciss.mellite.executionContext
 
@@ -36,13 +41,70 @@ object MetaNull {
       p.start()
       val res = Await.result(p, Duration.Inf)
       println()
-      res
+
+      if (res.nonEmpty) {
+        val dropEqual = res.init.dropWhile(_.head._2.sim > 0.9) :+ res.last
+        Some(dropEqual.head)
+
+      } else None
     }
 
-    println(":::: All Matches ::::")
-    matches.foreach(println)
+    println(s":::: ${if (matches.size <= 5) "All" else "First 5"} Matches ::::")
+    matches.take(5).foreach(println)
+
+    bounce(inSpec, out, matches)
 
     // ...
+  }
+
+  private def bounce(inSpec: AudioFileSpec, out: File, matches: IIdxSeq[IIdxSeq[(Long, FeatureCorrelation.Match)]]) {
+    type I            = proc.InMemory
+    implicit val sys  = proc.InMemory()
+    val p = sys.step { implicit tx =>
+      val group = proc.ProcGroup.Modifiable[I]
+      matches.foreach { case (time, m) +: _ =>    // just mono right now
+        val loc       = Artifact.Location.Modifiable[I](m.file.parent.parent) // XXX TODO: bug in Artifact.Location -- needs one sub-level at least
+        val artifact  = loc.add(m.file)
+        val spec      = AudioFile.readSpec(m.file)
+        val offset    = 0L
+        val gain      = math.sqrt(m.boostIn * m.boostOut)
+        val imp = ExprImplicits[I]
+        import imp._
+        val grapheme  = Grapheme.Elem.Audio(artifact, spec, offset, gain)
+        val span      = m.punch
+        val (_, proc) = InsertAudioRegion(group = group, time = time, track = 0, grapheme = grapheme, selection = span, bus = None)
+        val fdIn      = FadeSpec.Elem.newConst[I](FadeSpec.Value(882))
+        val fdOut     = FadeSpec.Elem.newConst[I](FadeSpec.Value(math.min(span.length - 882, 22050)))
+        proc.attributes.put(ProcKeys.attrFadeIn , Attribute.FadeSpec(fdIn ))
+        proc.attributes.put(ProcKeys.attrFadeOut, Attribute.FadeSpec(fdOut))
+      }
+
+      val bnc   = proc.Bounce[I, I]
+      val bc    = bnc.Config()
+      implicit val ser = proc.ProcGroup.Modifiable.serializer[I]
+      bc.group  = tx.newHandle(group)
+      // bc.init   = ...
+      val sc                = bc.server
+      sc.outputBusChannels  = 1
+      sc.sampleRate         = inSpec.sampleRate.toInt
+      sc.nrtOutputPath      = out.path
+      bc.span               = Span(0L, inSpec.numFrames)
+
+      bnc(bc)
+    }
+
+    var lastProg = 0
+    p.addListener {
+      case prog @ Processor.Progress(_, _) =>
+        val newProg = prog.toInt / 2
+        while (lastProg < newProg) {
+          print('#')
+          lastProg += 1
+        }
+    }
+    println("Bouncing...")
+    p.start()
+    Await.result(p, Duration.Inf)
   }
 
   private def findNonSilentSpans(in: File): IIdxSeq[Span] = {
