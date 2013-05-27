@@ -9,9 +9,8 @@ import span.{Span, SpanLike}
 import expr.Expr
 import synth.expr.SpanLikes
 import language.implicitConversions
-import de.sciss.lucre.bitemp.BiExpr
-import scala.util.Try
 import scala.util.control.NonFatal
+import de.sciss.file._
 
 object TimelineProcView {
   def apply[S <: Sys[S]](timed: TimedProc[S])(implicit tx: S#Tx): TimelineProcView[S] = {
@@ -79,7 +78,7 @@ object TimelineProcView {
     }
 
     def name = nameOpt.getOrElse {
-      audio.map(_.value.artifact.nameWithoutExtension).getOrElse("<unnamed>")
+      audio.map(_.value.artifact.base).getOrElse("<unnamed>")
     }
 
     def acquire(): Option[sonogram.Overview] = {

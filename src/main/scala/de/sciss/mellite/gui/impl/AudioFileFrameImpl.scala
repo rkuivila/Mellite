@@ -7,7 +7,7 @@ import de.sciss.lucre.stm
 import de.sciss.synth.proc.{AuralSystem, Sys}
 import de.sciss.desktop.impl.WindowImpl
 import de.sciss.desktop.Window
-import java.io.File
+import de.sciss.file._
 
 object AudioFileFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.AudioGrapheme[S])
@@ -42,7 +42,7 @@ object AudioFileFrameImpl {
     }
 
     def guiInit() {
-      val fileName = _file.nameWithoutExtension
+      val fileName = _file.base
       comp = new WindowImpl {
         def handler = Mellite.windowHandler
         def style   = Window.Regular

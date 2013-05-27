@@ -14,6 +14,7 @@ import de.sciss.mellite._
 import de.sciss.mellite.impl.InsertAudioRegion
 import de.sciss.synth.proc.{FadeSpec, Attribute, ProcKeys, Artifact, Grapheme}
 import de.sciss.synth.expr.ExprImplicits
+import de.sciss.file._
 
 object MetaNull {
   def perform(in: File, out: File, config: Nullstellen.Config) {

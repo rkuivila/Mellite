@@ -10,9 +10,9 @@ import de.sciss.synth.expr.ExprImplicits
 import de.sciss.lucre.{confluent, stm}
 import java.util.{Locale, Date}
 import de.sciss.mellite.gui.TreeTableSelectionChanged
-import scala.Some
 import java.text.SimpleDateFormat
 import de.sciss.lucre.event.Change
+import de.sciss.file._
 
 object DocumentCursorsFrameImpl {
   type S = proc.Confluent
@@ -276,7 +276,7 @@ object DocumentCursorsFrameImpl {
         def style       = desktop.Window.Regular
         def handler     = Mellite.windowHandler
 
-        title           = s"${document.folder.nameWithoutExtension} : Cursors"
+        title           = s"${document.folder.base} : Cursors"
         file            = Some(document.folder)
         closeOperation  = desktop.Window.CloseIgnore
         contents        = new BorderPanel {

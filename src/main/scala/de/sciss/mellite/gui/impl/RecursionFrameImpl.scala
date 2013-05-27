@@ -20,6 +20,7 @@ import concurrent.blocking
 import java.awt.{ComponentOrientation, Color}
 import scala.annotation.tailrec
 import de.sciss.lucre.stm.Disposable
+import de.sciss.file._
 
 object RecursionFrameImpl {
   private final case class View(name: String, deployed: File, product: File) {
@@ -174,7 +175,7 @@ object RecursionFrameImpl {
 
       def performProductUpdate() {
         val b         = view.product.parent
-        val (n0,ext)  = view.product.splitExtension
+        val (n0,ext)  = view.product.baseAndExt
         val i         = n0.lastIndexOf('_')
         val n         = if (i < 0) n0 else n0.substring(0, i)
 

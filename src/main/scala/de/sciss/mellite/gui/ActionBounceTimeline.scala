@@ -22,6 +22,7 @@ import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.util.{Failure, Success, Try}
 import de.sciss.processor.Processor
 import de.sciss.synth.expr.{ExprImplicits, Doubles, Longs}
+import de.sciss.file._
 
 object ActionBounceTimeline {
 
@@ -107,7 +108,7 @@ object ActionBounceTimeline {
     val ggPathText      = new TextField(32)
 
     def setPathText(file: File) {
-      ggPathText.text = file.replaceExtension(ggFileType.selection.item.extension).path
+      ggPathText.text = file.replaceExt(ggFileType.selection.item.extension).path
     }
 
     ggFileType.listenTo(ggFileType.selection)
@@ -402,7 +403,7 @@ object ActionBounceTimeline {
       GUI.defer(fDispose())
       (settings.importFile, settings.location) match {
         case (true, Some(locSource)) =>
-          val elemName  = file.nameWithoutExtension
+          val elemName  = file.base
           val spec      = AudioFile.readSpec(file)
           cursor.step { implicit tx =>
             val loc       = locSource()
@@ -416,7 +417,7 @@ object ActionBounceTimeline {
               val depOffset = Longs  .newVar(0L)
               val depGain   = Doubles.newVar(1.0)
               val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
-              val depElem   = Element.AudioGrapheme(file.nameWithoutExtension, deployed)
+              val depElem   = Element.AudioGrapheme(file.base, deployed)
               val transfOpt = settings.transform.map(_.apply())
               val recursion = Recursion(group(), settings.span, depElem, settings.gain, settings.channels, transfOpt)
               val recElem   = Element.Recursion(elemName, recursion)

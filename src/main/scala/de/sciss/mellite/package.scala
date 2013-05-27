@@ -97,25 +97,4 @@ package object mellite {
       LinkedList.Modifiable.serializer[InMemory, _Element[InMemory], _Element.Update[InMemory]](_.changed)
   }
   type Folder[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Element.Update[S]]
-
-  implicit class RichFile(f: File) {
-    def /(child: String): File = new File(f, child)
-    def path: String  = f.getPath
-    def name: String  = f.getName
-    def parent: File  = f.getParentFile
-    def nameWithoutExtension: String = splitExtension._1
-    def replaceExtension(s: String): File = {
-      val n   = nameWithoutExtension
-      val ext = if (s.charAt(0) == '.') s else "." + s
-      new File(f.getParentFile, n + ext)
-    }
-    // returns name and extension (period dropped)
-    def splitExtension: (String, String) = {
-      val n = f.getName
-      val i = n.lastIndexOf('.')
-      if (i < 0) (n, "") else (n.substring(0, i), n.substring(i + 1))
-    }
-  }
-
-  def file(path: String): File = new File(path)
 }

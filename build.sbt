@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "serial"             % "1.0.1+",  // bug in 1.0.0
   "de.sciss" %  "jtreetable"         % "1.2.+",
   "de.sciss" %% "fscapejobs"         % "1.4.+",
-  "de.sciss" %% "strugatzki"         % "1.9.+"
+  "de.sciss" %% "strugatzki"         % "1.9.+",
+  "de.sciss" %% "fileutil"           % "1.0.+"
 )
 
 retrieveManaged := true

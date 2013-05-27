@@ -39,6 +39,7 @@ import desktop.impl.WindowImpl
 import synth.io.AudioFile
 import scala.util.control.NonFatal
 import javax.swing.{JSpinner, SpinnerNumberModel}
+import de.sciss.file._
 
 object DocumentElementsFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx,
@@ -347,7 +348,7 @@ object DocumentElementsFrameImpl {
     def style       = Window.Regular
     def handler     = Mellite.windowHandler
 
-    title           = s"${view.document.folder.nameWithoutExtension} : Elements"
+    title           = s"${view.document.folder.base} : Elements"
     file            = Some(view.document.folder)
     closeOperation  = Window.CloseDispose
     reactions += {

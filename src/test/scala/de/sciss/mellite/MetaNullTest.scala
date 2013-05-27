@@ -1,6 +1,7 @@
 package de.sciss.mellite
 
 import de.sciss.indeterminus.{MetaNull, Nullstellen}
+import de.sciss.file._
 
 object MetaNullTest extends App {
   val c = Nullstellen.Config()

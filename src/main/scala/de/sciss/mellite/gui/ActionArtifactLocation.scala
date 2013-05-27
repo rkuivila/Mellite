@@ -2,15 +2,14 @@ package de.sciss
 package mellite
 package gui
 
-import java.io.File
 import de.sciss.synth.proc.{Artifact, Sys}
 import de.sciss.lucre.stm
 import de.sciss.mellite.Element.ArtifactLocation
-import scala.annotation.tailrec
 import collection.immutable.{IndexedSeq => IIdxSeq}
 import scala.util.Try
 import de.sciss.desktop.{OptionPane, Window, FileDialog}
-import scala.swing.{Component, Dialog}
+import scala.swing.Dialog
+import de.sciss.file._
 
 object ActionArtifactLocation {
   //  sealed trait QueryResult
