@@ -53,7 +53,7 @@ object CodeImpl {
       def imports: ISeq[String] = ISeq(
         "de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat, Frames}",
         "de.sciss.synth._",
-        "de.sciss.mellite.RichFile",
+        "de.sciss.file._",
         "de.sciss.fscape.{FScapeJobs => fscape}",
         "de.sciss.mellite.TransformUtil._"
       )
