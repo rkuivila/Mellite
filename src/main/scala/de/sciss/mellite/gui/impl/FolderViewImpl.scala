@@ -366,17 +366,29 @@ object FolderViewImpl {
         private def insertData(sel: FolderView.Selection[S], newParentView: Branch, idx: Int): Boolean = {
           // println(s"insert into $parent at index $idx")
 
+          def isNested(pv: Branch, cv: Branch): Boolean =
+            pv == cv || (pv.children.collect {
+              case pcv: ElementView.Folder[S] => pcv
+            } .exists(isNested(_, cv)))
+
+          // make sure we are not moving a folder within itself (it will magically disappear :)
+          val sel1 = sel.filter {
+            case (_, cv: ElementView.Folder[S]) if isNested(cv, newParentView) => false
+            case _ => true
+          }
+
           // if we move children within the same folder, adjust the insertion index by
           // decrementing it for any child which is above the insertion index, because
           // we will first remove all children, then re-insert them.
           val idx0 = if (idx >= 0) idx else newParentView.children.size
-          val idx1 = idx0 - sel.count {
-            case (_ :+ `newParentView`, cv) => newParentView.children.indexOf(cv) <= idx
+          val idx1 = idx0 - sel1.count {
+            case (_ :+ `newParentView`, cv) => newParentView.children.indexOf(cv) <= idx0
             case _ => false
           }
+          // println(s"idx0 $idx0 idx1 $idx1")
 
           cursor.step { implicit tx =>
-            val tup = sel.map {
+            val tup = sel1.map {
               case (_ :+ pv, cv) => pv.folder -> cv.element()
             }
 
