@@ -254,7 +254,7 @@ object ElementView {
 
       def folder(implicit tx: S#Tx): _Folder[S] = element().entity
 
-      def prefix = "Group"
+      def prefix = "Folder"
       def icon = Swing.EmptyIcon
 
       def tryUpdate  (value : Any)(implicit tx: S#Tx): Boolean = false
@@ -409,6 +409,8 @@ object ElementView {
       def icon = Swing.EmptyIcon
 
       def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean = false
+
+      override def toString = "ElementView.Root"
     }
   }
   sealed trait Root[S <: Sys[S]] extends FolderLike[S]

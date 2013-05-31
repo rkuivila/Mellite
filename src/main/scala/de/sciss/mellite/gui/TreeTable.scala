@@ -4,16 +4,13 @@ package gui
 
 import scala.swing.{Publisher, Reactions, Component}
 import de.sciss.treetable.j
-import javax.swing.{table => jtab}
-import javax.swing.{tree => jtree}
+import javax.swing.{table => jtab, tree => jtree, event => jse, DropMode}
 import collection.breakOut
 import language.implicitConversions
-import javax.swing.{event => jse}
 import javax.swing.tree.TreePath
 import de.sciss.treetable.j.event.TreeColumnModelListener
 import java.awt
 import scala.collection.mutable
-import javax.swing.event.{TreeSelectionEvent, ListSelectionListener}
 
 object TreeTable {
   private trait JTreeTableMixin { def tableWrapper: TreeTable[_, _] }
@@ -32,6 +29,26 @@ object TreeTable {
   implicit private[gui] def treePathToPath[A](tp: jtree.TreePath): Path[A] = {
     if (tp == null) Path.empty
     else tp.getPath.map(_.asInstanceOf[A])(breakOut) // .toIndexedSeq
+  }
+
+  final case class DropLocation[A](private val peer: j.TreeTable.DropLocation) {
+    def path: Path[A] = peer.getPath
+
+    /**
+     * Returns the child index within the last branch of the path.
+     *
+     * @return  the index at which a drop occurs within the children of
+     *          the branch denoted by `getPath`. For example, `0` means
+     *          the drop happens before the first child, `1` means it
+     *          happens after the first child. For `ON` drop mode, `-1`
+     *          indicates that the drop occurs above the parent node.
+     */
+    def index : Int = peer.getIndex
+    def row   : Int = peer.getRow
+    def column: Int = peer.getColumn
+
+    def isInsertRow   : Boolean = peer.isInsertRow
+    def isInsertColumn: Boolean = peer.isInsertColumn
   }
 }
 class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColumnModel0: Col,
@@ -222,12 +239,17 @@ class TreeTable[A, Col <: TreeColumnModel[A]](treeModel0: TreeModel[A], treeColu
   def dragEnabled                      : Boolean =  peer.getDragEnabled
   def dragEnabled_=              (value: Boolean) { peer.setDragEnabled(value) }
 
+  def dropMode                        : DropMode = peer.getDropMode
+  def dropMode_=                (value: DropMode) { peer.setDropMode(value) }
+
   def expandPath(path: Path[A]) { peer.expandPath(path) }
 
   def hierarchicalColumn: Int = peer.getHierarchicalColumn
 
   // def apply(row: Int, column: Int): Any = peer.getValueAt(row, column)
   def getNode(row: Int): A = peer.getNode(row).asInstanceOf[A]
+
+  def dropLocation: Option[TreeTable.DropLocation[A]] = Option(peer.getDropLocation).map(TreeTable.DropLocation[A])
 
   object selection extends Publisher {
     protected abstract class SelectionSet[B](a: => Seq[B]) extends mutable.Set[B] {

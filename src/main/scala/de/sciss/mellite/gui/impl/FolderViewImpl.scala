@@ -38,10 +38,9 @@ import de.sciss.synth.expr.ExprImplicits
 import de.sciss.mellite.gui.TreeTableCellRenderer.{State, TreeState}
 import scala.util.control.NonFatal
 import de.sciss.lucre.event.Change
-import javax.swing.{JComponent, TransferHandler}
-import java.awt.event.InputEvent
-import java.awt.datatransfer.{UnsupportedFlavorException, DataFlavor, Transferable}
-import java.io.IOException
+import javax.swing.{DropMode, JComponent, TransferHandler}
+import java.awt.datatransfer.Transferable
+import javax.swing.TransferHandler.TransferSupport
 
 object FolderViewImpl {
   private final val DEBUG = false
@@ -317,7 +316,10 @@ object FolderViewImpl {
       t.showsRootHandles  = true
       t.expandPath(Tree.Path.empty)
       t.dragEnabled       = true
+      t.dropMode          = DropMode.ON_OR_INSERT_ROWS
       t.peer.setTransferHandler(new TransferHandler {
+        // ---- export ----
+
         override def getSourceActions(c: JComponent): Int = {
           TransferHandler.COPY | TransferHandler.MOVE // dragging only works when MOVE is included. Why?
         }
@@ -335,6 +337,78 @@ object FolderViewImpl {
               DragAndDrop.Transferable.seq(tSel, tElem)
 
             case _ => tSel
+          }
+        }
+
+        // ---- import ----
+        override def canImport(support: TransferSupport): Boolean = {
+          t.dropLocation match {
+            case Some(tdl) =>
+              // println(s"last = ${tdl.path.last}; column ${tdl.column}; isLeaf? ${t.treeModel.isLeaf(tdl.path.last)}")
+              val res = (tdl.index >= 0 || (tdl.column == 0 && (tdl.path.last match {
+                case _: ElementView.Folder[_] => true
+                case _                        => false
+
+              }))) &&
+                support.isDataFlavorSupported(FolderView.selectionFlavor) &&
+                support.getUserDropAction == TransferHandler.MOVE
+
+              //              if (res) {
+              //                println(s"userDropAction = ${support.getUserDropAction}")
+              //              }
+              res
+
+            case _ => false
+          }
+        }
+
+        // XXX TODO: not sure whether removal should be in exportDone or something
+        private def insertData(sel: FolderView.Selection[S], newParentView: Branch, idx: Int): Boolean = {
+          // println(s"insert into $parent at index $idx")
+
+          // if we move children within the same folder, adjust the insertion index by
+          // decrementing it for any child which is above the insertion index, because
+          // we will first remove all children, then re-insert them.
+          val idx0 = if (idx >= 0) idx else newParentView.children.size
+          val idx1 = idx0 - sel.count {
+            case (_ :+ `newParentView`, cv) => newParentView.children.indexOf(cv) <= idx
+            case _ => false
+          }
+
+          cursor.step { implicit tx =>
+            val tup = sel.map {
+              case (_ :+ pv, cv) => pv.folder -> cv.element()
+            }
+
+            val newParent = newParentView.folder
+            tup             .foreach { case  (oldParent, c)       => oldParent.remove(            c) }
+            tup.zipWithIndex.foreach { case ((_        , c), off) => newParent.insert(idx1 + off, c) }
+          }
+
+          true
+        }
+
+        override def importData(support: TransferSupport): Boolean = {
+          if (!support.isDataFlavorSupported(FolderView.selectionFlavor)) return false
+          t.dropLocation match {
+            case Some(tdl) =>
+              val data = support.getTransferable.getTransferData(FolderView.selectionFlavor)
+                .asInstanceOf[FolderView.SelectionDnDData[S]]
+              if (data.document == document) {
+                val sel = data.selection
+                //                (tdl.path, tdl.index) match {
+                //                  case (_ :+ (parent: ElementView.FolderLike[S]),       -1) => insertData(sel, parent,  -1)
+                //                  case (_ :+ (parent: ElementView.FolderLike[S]) :+ _, idx) => insertData(sel, parent, idx)
+                //                }
+                tdl.path.last match {
+                  case parent: ElementView.FolderLike[S] => insertData(sel, parent, tdl.index)
+                  case _ => false
+                }
+              } else {
+                false
+              }
+
+            case _ => false
           }
         }
       })
