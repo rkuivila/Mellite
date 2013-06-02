@@ -9,7 +9,7 @@ import de.sciss.desktop.{DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
 import java.io.File
-import javax.swing.{SwingUtilities, JFormattedTextField, JSpinner, SpinnerNumberModel}
+import javax.swing.{SwingUtilities, JFormattedTextField, SpinnerNumberModel}
 import de.sciss.span.{SpanLike, Span}
 import Swing._
 import de.sciss.audiowidgets.AxisFormat
@@ -19,7 +19,7 @@ import de.sciss.mellite.Element.ArtifactLocation
 import scala.util.control.NonFatal
 import java.text.ParseException
 import scala.swing.event.{ButtonClicked, SelectionChanged}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Try}
 import de.sciss.processor.Processor
 import de.sciss.synth.expr.{ExprImplicits, Doubles, Longs}
 import de.sciss.file._
@@ -126,9 +126,7 @@ object ActionBounceTimeline {
     ggPathDialog.peer.putClientProperty("JButton.buttonType", "gradient")
 
     val gainModel   = new SpinnerNumberModel(init.gain.decibels, -160.0, 160.0, 0.1)
-    val ggGainAmtJ  = new JSpinner(gainModel)
-    // println(ggGainAmtJ.getPreferredSize)
-    val ggGainAmt   = Component.wrap(ggGainAmtJ)
+    val ggGainAmt   = new Spinner(gainModel)
 
     val ggGainType  = new ComboBox(Seq("Normalized", "Immediate"))
     ggGainType.selection.index = if (init.gain.normalized) 0 else 1

@@ -1,6 +1,6 @@
-package de.sciss.mellite.gui.impl
+package de.sciss.mellite.gui
 
-class ScrollBarImpl extends swing.ScrollBar {
+class ScrollBar extends swing.ScrollBar {
   me =>
   peer.addAdjustmentListener(new java.awt.event.AdjustmentListener {
     def adjustmentValueChanged(e: java.awt.event.AdjustmentEvent) {

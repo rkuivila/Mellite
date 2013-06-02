@@ -38,7 +38,7 @@ import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
 import synth.io.AudioFile
 import scala.util.control.NonFatal
-import javax.swing.{JSpinner, SpinnerNumberModel}
+import javax.swing.SpinnerNumberModel
 import de.sciss.file._
 
 object DocumentElementsFrameImpl {
@@ -170,26 +170,22 @@ object DocumentElementsFrameImpl {
     private def actionAddInt() {
       val expr      = ExprImplicits[S]
       import expr._
-      val ggValueJ  = new JSpinner(new SpinnerNumberModel(0, Int.MinValue, Int.MaxValue, 1))
-      val ggValue   = Component.wrap(ggValueJ)
-      actionAddPrimitive(tpe = "Integer", ggValue = ggValue, prepare = ggValueJ.getValue match {
-        case n: java.lang.Number => Some(n.intValue())
-        case _  => None
-      }) { implicit tx =>
-        (name, value) => Element.Int(name, Ints.newVar(value))
+      val model     = new SpinnerNumberModel(0, Int.MinValue, Int.MaxValue, 1)
+      val ggValue   = new Spinner(model)
+      actionAddPrimitive(tpe = "Integer", ggValue = ggValue, prepare = Some(model.getNumber.intValue())) {
+        implicit tx =>
+          (name, value) => Element.Int(name, Ints.newVar(value))
       }
     }
 
     private def actionAddDouble() {
       val expr      = ExprImplicits[S]
       import expr._
-      val ggValueJ  = new JSpinner(new SpinnerNumberModel(0.0, Double.NegativeInfinity, Double.PositiveInfinity, 1.0))
-      val ggValue   = Component.wrap(ggValueJ)
-      actionAddPrimitive(tpe = "Double", ggValue = ggValue, prepare = ggValueJ.getValue match {
-        case n: java.lang.Number => Some(n.doubleValue())
-        case _  => None
-      }) { implicit tx =>
-        (name, value) => Element.Double(name, Doubles.newVar(value))
+      val model     = new SpinnerNumberModel(0.0, Double.NegativeInfinity, Double.PositiveInfinity, 1.0)
+      val ggValue   = new Spinner(model)
+      actionAddPrimitive(tpe = "Double", ggValue = ggValue, prepare = Some(model.getNumber.doubleValue)) {
+        implicit tx =>
+          (name, value) => Element.Double(name, Doubles.newVar(value))
       }
     }
 

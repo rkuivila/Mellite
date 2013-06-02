@@ -142,7 +142,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
 
   // final def canvasComponent: Component
 
-  private val scroll = new ScrollBarImpl {
+  private val scroll = new ScrollBar {
     orientation   = Orientation.Horizontal
     unitIncrement = 4
   }
