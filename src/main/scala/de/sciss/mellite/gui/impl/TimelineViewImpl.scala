@@ -34,7 +34,7 @@ import de.sciss.mellite.impl.{InsertAudioRegion, TimelineModelImpl}
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D}
 import lucre.stm
 import de.sciss.lucre.stm.{Disposable, IdentifierMap, Cursor}
-import de.sciss.synth.{curveShape, linShape, Env, proc}
+import de.sciss.synth.{Curve, proc}
 import fingertree.RangedSeq
 import javax.swing.{KeyStroke, UIManager}
 import java.util.Locale
@@ -712,10 +712,10 @@ object TimelineViewImpl {
         private val shpFill = new Path2D.Float()
         private val shpDraw = new Path2D.Float()
 
-        private def adjustFade(in: Env.ConstShape, deltaCurve: Float): Env.ConstShape = in match {
-          case `linShape`               => curveShape(math.max(-20, math.min(20,             deltaCurve)))
-          case `curveShape`(curvature)  => curveShape(math.max(-20, math.min(20, curvature + deltaCurve)))
-          case other => other
+        private def adjustFade(in: Curve, deltaCurve: Float): Curve = in match {
+          case Curve.linear                 => Curve.parametric(math.max(-20, math.min(20,             deltaCurve)))
+          case Curve.parametric(curvature)  => Curve.parametric(math.max(-20, math.min(20, curvature + deltaCurve)))
+          case other                        => other
         }
 
         override protected def paintComponent(g: Graphics2D) {
@@ -788,7 +788,7 @@ object TimelineViewImpl {
                 }
 
                 // --- fades ---
-                def paintFade(shape: Env.ConstShape, fw: Float, y1: Float, y2: Float, x: Float, x0: Float) {
+                def paintFade(curve: Curve, fw: Float, y1: Float, y2: Float, x: Float, x0: Float) {
                   import math.{max, log10}
                   shpFill.reset()
                   shpDraw.reset()
@@ -798,7 +798,7 @@ object TimelineViewImpl {
                   shpDraw.moveTo(x, y1s)
                   var xs = 4
                   while (xs < fw) {
-                    val ys = max(-3, log10(shape.levelAt(xs / fw, y1, y2))) * vscale + innerY
+                    val ys = max(-3, log10(curve.levelAt(xs / fw, y1, y2))) * vscale + innerY
                     shpFill.lineTo(x + xs, ys)
                     shpDraw.lineTo(x + xs, ys)
                     xs += 3
@@ -820,7 +820,7 @@ object TimelineViewImpl {
                   if (fdInFr > 0) {
                     val fw    = framesToScreen(fdInFr).toFloat
                     val fdC   = st.deltaFadeInCurve
-                    val shape = if (fdC != 0f) adjustFade(fdIn.shape, fdC) else fdIn.shape
+                    val shape = if (fdC != 0f) adjustFade(fdIn.curve, fdC) else fdIn.curve
                     // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = $px")
                     paintFade(shape, fw = fw, y1 = fdIn.floor, y2 = 1f, x = px, x0 = px)
                   }
@@ -829,7 +829,7 @@ object TimelineViewImpl {
                   if (fdOutFr > 0) {
                     val fw    = framesToScreen(fdOutFr).toFloat
                     val fdC   = st.deltaFadeOutCurve
-                    val shape = if (fdC != 0f) adjustFade(fdOut.shape, fdC) else fdOut.shape
+                    val shape = if (fdC != 0f) adjustFade(fdOut.curve, fdC) else fdOut.curve
                     // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = ${px + pw - 1 - fw}")
                     val x0    = px + pw - 1
                     paintFade(shape, fw = fw, y1 = 1f, y2 = fdOut.floor, x = x0 - fw, x0 = x0)

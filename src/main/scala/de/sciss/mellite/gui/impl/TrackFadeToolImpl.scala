@@ -6,9 +6,8 @@ package impl
 import de.sciss.synth.proc.{FadeSpec, ProcKeys, Proc, Attribute, Sys}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
-import de.sciss.synth.expr.ExprImplicits
-import de.sciss.synth.{linShape, curveShape, proc}
 import de.sciss.lucre.expr.Expr
+import de.sciss.synth.Curve
 
 final class TrackFadeToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicTrackRegionTool[S, TrackTool.Fade] {
@@ -62,18 +61,18 @@ final class TrackFadeToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
     }
 
     val dIn     = math.max(-valIn.numFrames, math.min(total - (valIn.numFrames + valOut.numFrames), deltaFadeIn))
-    val valInC  = valIn.shape match {
-      case `linShape`               => 0f
-      case `curveShape`(curvature)  => curvature
-      case _                        => Float.NaN
+    val valInC  = valIn.curve match {
+      case Curve.linear                 => 0f
+      case Curve.parametric(curvature)  => curvature
+      case _                            => Float.NaN
     }
     val dInC    = if (valInC.isNaN) 0f else math.max(-20, math.min(20, deltaFadeInCurve + valInC)) - valInC
 
     val newValIn = if (dIn != 0L || dInC != 0f) {
       val newInC  = valInC + dInC
-      val shape   = if (newInC == 0f) linShape else curveShape(newInC)
+      val curve   = if (newInC == 0f) Curve.linear else Curve.parametric(newInC)
       val fr      = valIn.numFrames + dIn
-      val res     = FadeSpec.Value(fr, shape, valIn.floor)
+      val res     = FadeSpec.Value(fr, curve, valIn.floor)
       val elem    = FadeSpec.Elem.newConst[S](res)
       exprIn match {
         case Some(Expr.Var(vr)) =>
@@ -92,18 +91,18 @@ final class TrackFadeToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
 
     // XXX TODO: DRY
     val dOut    = math.max(-valOut.numFrames, math.min(total - newValIn.numFrames, deltaFadeOut))
-    val valOutC = valOut.shape match {
-      case `linShape`               => 0f
-      case `curveShape`(curvature)  => curvature
-      case _                        => Float.NaN
+    val valOutC = valOut.curve match {
+      case Curve.linear                 => 0f
+      case Curve.parametric(curvature)  => curvature
+      case _                            => Float.NaN
     }
     val dOutC    = if (valOutC.isNaN) 0f else math.max(-20, math.min(20, deltaFadeOutCurve + valOutC)) - valOutC
 
     if (dOut != 0L || dOutC != 0f) {
       val newOutC = valOutC + dOutC
-      val shape   = if (newOutC == 0f) linShape else curveShape(newOutC)
+      val curve   = if (newOutC == 0f) Curve.linear else Curve.parametric(newOutC)
       val fr      = valOut.numFrames + dOut
-      val res     = FadeSpec.Value(fr, shape, valOut.floor)
+      val res     = FadeSpec.Value(fr, curve, valOut.floor)
       val elem    = FadeSpec.Elem.newConst[S](res)
       exprOut match {
         case Some(Expr.Var(vr)) =>
