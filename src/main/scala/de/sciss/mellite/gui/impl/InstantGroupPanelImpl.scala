@@ -114,12 +114,6 @@ object InstantGroupPanelImpl {
       }
     }
 
-//      transport.reactTx { implicit tx => {
-//         case Transport.Advance( _, _, time, added, removed, params ) => advance( time, added, removed, params )
-//         case Transport.Play( _ ) => playStop( b = true  )
-//         case Transport.Stop( _ ) => playStop( b = false )
-//      }}
-
       guiFromTx( vis.guiInit() )
       advance( transport.time, all, IIdxSeq.empty, IIdxSeq.empty )   // after init!
       vis

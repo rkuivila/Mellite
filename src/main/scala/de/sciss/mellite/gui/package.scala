@@ -61,6 +61,11 @@ package object gui {
       })
   }
 
+  def guiFromTx(body: => Unit)(implicit tx: Txn[_]) {
+    //      STMTxn.afterCommit( _ => body )( tx.peer )
+    guiCode.transform(_ :+ (() => body))(tx.peer)
+  }
+
   private def wordWrap(s: String, margin: Int = 80): String = {
     if (s == null) return "" // fuck java
     val sz = s.length
@@ -81,11 +86,6 @@ package object gui {
   def formatException(e: Throwable): String = {
     e.getClass.toString + " :\n" + wordWrap(e.getMessage) + "\n" +
       e.getStackTrace.take(10).map("   at " + _).mkString("\n")
-  }
-
-  def guiFromTx(body: => Unit)(implicit tx: Txn[_]) {
-    //      STMTxn.afterCommit( _ => body )( tx.peer )
-    guiCode.transform(_ :+ (() => body))(tx.peer)
   }
 
  //   def primaryMenuKey( ch: Char )  : KeyStroke = KeyStroke.getKeyStroke( ch, primaryMod )
