@@ -19,6 +19,8 @@
 14  FadeSpec.Value
 15  Env.ConstShape
 16  SynthGraph
+17  IncompleteProduct (SoundDesigner)
+18  UGenSource (SoundDesigner)
 
 0x1000 | A.typeID   Option[A]
 
@@ -33,4 +35,3 @@
 
 0x20000     Recursion
 0x20001     Code
-

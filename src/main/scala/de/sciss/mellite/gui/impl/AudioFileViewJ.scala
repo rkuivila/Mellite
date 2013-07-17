@@ -51,7 +51,7 @@ final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineM
   //  }
 
   object canvasComponent extends Component with sonogram.PaintController {
-    private var paintFun: Graphics2D => Unit = paintChecker("Calculating...") _
+    private var paintFun: Graphics2D => Unit = paintChecker("Calculating...")
 
     override def paintComponent(g: Graphics2D) {
       paintFun(g)
@@ -84,7 +84,7 @@ final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineM
     def imageObserver = peer
 
     private def ready() {
-      paintFun    = paintReady _
+      paintFun    = paintReady
       repaint()
     }
 
