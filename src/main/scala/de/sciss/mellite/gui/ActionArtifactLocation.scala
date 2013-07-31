@@ -10,6 +10,7 @@ import scala.util.Try
 import de.sciss.desktop.{OptionPane, Window, FileDialog}
 import scala.swing.Dialog
 import de.sciss.file._
+import de.sciss.swingplus.Labeled
 
 object ActionArtifactLocation {
   //  sealed trait QueryResult
@@ -66,7 +67,7 @@ object ActionArtifactLocation {
         opt.title = s"Choose Location for ${file.name}"
         val optRes = opt.show(window).id
         // println(s"res = $optRes, ok = ${OptionPane.Result.Ok.id}, cancel = ${OptionPane.Result.Cancel.id}")
-        if (optRes == 0 ) {
+        if (optRes == 0) {
           ggList.selection.items.headOption.map(_.value)
         } else if (optRes == 1) {
           createNew()

@@ -36,6 +36,7 @@ import scala.swing.Swing._
 import scala.swing.event.{MouseDragged, Key, MousePressed, ValueChanged, UIElementResized}
 import de.sciss.synth.proc.Sys
 import de.sciss.lucre.event.Change
+import de.sciss.swingplus.ScrollBar
 
 object TimelineCanvasImpl {
   private sealed trait AxisMouseAction
@@ -172,7 +173,7 @@ trait TimelineCanvasImpl extends TimelineCanvas {
     val visi            = timelineModel.visible
     val total           = timelineModel.bounds
     val framesPerPixel  = math.max(1, ((total.length + (trackWidth >> 1)) / trackWidth).toInt)
-    val max             = math.min(0x3FFFFFFFL, (total.length / framesPerPixel)).toInt
+    val max             = math.min(0x3FFFFFFFL, total.length / framesPerPixel).toInt
     val pos             = math.min(max - 1, (visi.start - total.start) / framesPerPixel).toInt
     val visiAmt         = math.min(max - pos, visi.length / framesPerPixel).toInt
     val blockInc        = math.max(1, visiAmt * 4 / 5)

@@ -23,6 +23,7 @@ import scala.util.{Failure, Try}
 import de.sciss.processor.Processor
 import de.sciss.synth.expr.{ExprImplicits, Doubles, Longs}
 import de.sciss.file._
+import de.sciss.swingplus.{Spinner, Labeled}
 
 object ActionBounceTimeline {
 
@@ -214,7 +215,7 @@ object ActionBounceTimeline {
             } else {
               val a = s.substring(0, i).toInt - 1
               val b = s.substring(i +1).toInt - 1
-              (a to b)
+              a to b
             }
           }
         }
@@ -227,8 +228,8 @@ object ActionBounceTimeline {
       def valueToString(value: Any): String = try {
         value match {
           case sq: IIdxSeq[_] => sq.map {
-            case r: Range if (r.start < r.end)  => s"${r.start + 1}-${r.end + 1}"
-            case r: Range                       => s"${r.start + 1}"
+            case r: Range if r.start < r.end  => s"${r.start + 1}-${r.end + 1}"
+            case r: Range                     => s"${r.start + 1}"
           } .mkString(", ")
         }
       } catch {

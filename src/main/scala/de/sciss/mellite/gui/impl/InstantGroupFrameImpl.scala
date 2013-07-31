@@ -36,6 +36,7 @@ import synth.proc.{Sys, Proc}
 import java.awt.event.KeyEvent
 import de.sciss.span.Span
 import de.sciss.desktop.KeyStrokes
+import de.sciss.swingplus.DoClickAction
 
 object InstantGroupFrameImpl {
   def apply[S <: Sys[S]](group: Document.Group[S], transport: Document.Transport[S])
@@ -64,7 +65,7 @@ object InstantGroupFrameImpl {
 
     private def newProc() {
       Dialog.showInput(parent = prefusePanel.component, message = "Name for new process:", title = "New Process",
-        messageType = Dialog.Message.Question, initial = "Unnamed").foreach(newProc(_))
+        messageType = Dialog.Message.Question, initial = "Unnamed").foreach(newProc)
     }
 
     private def newProc(name: String) {

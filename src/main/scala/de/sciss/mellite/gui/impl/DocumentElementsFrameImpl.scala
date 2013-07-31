@@ -28,10 +28,9 @@ package mellite
 package gui
 package impl
 
-import scala.swing.{ComboBox, Swing, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
+import scala.swing.{ComboBox, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
 import lucre.stm
 import synth.proc.{Grapheme, Artifact, ProcGroup, Sys}
-import Swing._
 import de.sciss.synth.expr._
 import desktop.{FileDialog, DialogSource, Window, Menu}
 import scalaswingcontrib.PopupMenu
@@ -40,6 +39,7 @@ import synth.io.AudioFile
 import scala.util.control.NonFatal
 import javax.swing.SpinnerNumberModel
 import de.sciss.file._
+import de.sciss.swingplus.Spinner
 
 object DocumentElementsFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx,

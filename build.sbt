@@ -1,6 +1,6 @@
 name := "Mellite"
 
-version := "0.2.0"
+version := "0.2.1-SNAPSHOT"
 
 organization := "de.sciss"
 
@@ -10,13 +10,14 @@ description := "An application based on SoundProcesses"
 
 licenses := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 
-scalaVersion := "2.10.1"
+scalaVersion := "2.10.2"
 
 libraryDependencies ++= Seq(
   "de.sciss" %% "soundprocesses"     % "1.8.+",
   "de.sciss" %% "scalacolliderswing" % "1.8.+",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.+",
   "de.sciss" %% "desktop"            % "0.3.+",
+  "de.sciss" %% "swingplus"          % "0.0.1+",
   "de.sciss" %% "sonogramoverview"   % "1.6.2+",  // bug in 1.6.1
   "de.sciss" %% "serial"             % "1.0.1+",  // bug in 1.0.0
   "de.sciss" %  "jtreetable"         % "1.2.1+",
