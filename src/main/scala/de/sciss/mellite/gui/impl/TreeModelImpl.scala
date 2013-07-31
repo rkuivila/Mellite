@@ -6,7 +6,7 @@ import scalaswingcontrib.tree.{NowYouSeeMe, Tree, TreeModel}
 import javax.swing.{tree => jst}
 import javax.swing.{event => jse}
 import collection.breakOut
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import reflect.ClassTag
 import Tree.Path
 import collection.mutable
@@ -25,7 +25,7 @@ object TreeModelImpl {
   * @param rootItems  function that provides the root level children
   * @param children   function that expands any internal branching node to its children
   */
-final class TreeModelImpl[A](rootItems: => IIdxSeq[A], children: A => IIdxSeq[A]) extends TreeModel[A] {
+final class TreeModelImpl[A](rootItems: => Vec[A], children: A => Vec[A]) extends TreeModel[A] {
   import TreeModelImpl._
 
   def roots: Seq[A] = rootItems

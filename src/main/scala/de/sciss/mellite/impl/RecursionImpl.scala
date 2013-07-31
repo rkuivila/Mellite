@@ -3,15 +3,12 @@ package mellite
 package impl
 
 import de.sciss.synth.io.AudioFileSpec
-import de.sciss.synth.proc.{InMemory, Grapheme, Sys, ProcGroup, Artifact}
+import de.sciss.synth.proc.{InMemory, Sys, ProcGroup, Artifact}
 import de.sciss.lucre.{expr, event => evt}
 import expr.Expr
 import de.sciss.span.SpanLike
-import de.sciss.synth.expr.{Doubles, Longs, SpanLikes, ExprImplicits}
-import scala.collection.immutable.IndexedSeq
+import de.sciss.synth.expr.{SpanLikes, ExprImplicits}
 import de.sciss.serial.{ImmutableSerializer, DataInput, DataOutput}
-import de.sciss.synth.proc.impl.CommonSerializers
-import de.sciss.lucre.event.{Pull, Targets}
 import scala.annotation.switch
 
 object RecursionImpl {

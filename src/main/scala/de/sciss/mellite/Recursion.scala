@@ -2,9 +2,9 @@ package de.sciss
 package mellite
 
 import de.sciss.synth.io.AudioFileSpec
-import de.sciss.synth.proc.{Grapheme, Sys, Artifact, ProcGroup}
+import de.sciss.synth.proc.{Sys, Artifact, ProcGroup}
 import de.sciss.span.Span.SpanOrVoid
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.EventLike
 import impl.{RecursionImpl => Impl}
 import de.sciss.span.SpanLike
@@ -12,7 +12,7 @@ import de.sciss.lucre.stm.Disposable
 import de.sciss.serial.{DataInput, Writable}
 
 object Recursion {
-  type Channels = IIdxSeq[Range.Inclusive]
+  type Channels = Vec[Range.Inclusive]
   type Update[S <: Sys[S]] = Unit
 
   def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanOrVoid, deployed: Element.AudioGrapheme[S],
@@ -37,7 +37,7 @@ trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] {
   def gain(implicit tx: S#Tx): Gain
   def gain_=(value: Gain)(implicit tx: S#Tx): Unit
   def channels(implicit tx: S#Tx): Channels
-  def channels_=(value: IIdxSeq[Range.Inclusive])(implicit tx: S#Tx): Unit
+  def channels_=(value: Vec[Range.Inclusive])(implicit tx: S#Tx): Unit
 
   def transform: Option[Element.Code[S]]
   // def transform_=(value: Option[Element.Code[S]])(implicit tx: S#Tx): Unit

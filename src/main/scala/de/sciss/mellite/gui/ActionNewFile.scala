@@ -29,7 +29,6 @@ package gui
 import swing.{Dialog, Action}
 import java.awt.event.KeyEvent
 import java.io.File
-import de.sciss.synth.proc.Sys
 import de.sciss.desktop.{FileDialog, KeyStrokes}
 import util.control.NonFatal
 

@@ -5,7 +5,7 @@ import java.io.File
 import de.sciss.synth.io.AudioFile
 import FeatureSegmentation.Break
 import FeatureCorrelation.Match
-import collection.immutable.{LongMap, IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import xml.{XML, NodeSeq}
 import de.sciss.processor.ProcessorFactory
 import de.sciss.span.Span
@@ -17,7 +17,7 @@ import scala.concurrent.duration.Duration
 import de.sciss.strugatzki.impl.MathUtil
 
 object Nullstellen extends ProcessorFactory {
-  type Product = IIdxSeq[IIdxSeq[(Long, Match)]] // Unit
+  type Product = Vec[Vec[(Long, Match)]] // Unit
 
   //  def folder = new File(LeereNull.baseFolder, "third_move")
   //
@@ -119,8 +119,8 @@ object Nullstellen extends ProcessorFactory {
     var materialFolder  = new File("material")
     var numChannels     = 4
     var strategy        = Strategy.NImitation: Strategy
-    var startDur        = ((0.5) * 44100L).toLong -> ((1.5) * 44100L).toLong
-    var stopDur         = ((0.5) * 44100L).toLong -> ((1.5) * 44100L).toLong
+    var startDur        = (0.5 * 44100L).toLong -> (1.5 * 44100L).toLong
+    var stopDur         = (0.5 * 44100L).toLong -> (1.5 * 44100L).toLong
     var startWeight     = 0.5f // 0.75f
     var stopWeight      = 0.5f // 0.25f
     var maxOverlap      = 0.333f
@@ -202,7 +202,7 @@ object Nullstellen extends ProcessorFactory {
 </ueberzeichnung>
    }
 
-  type Updater = IIdxSeq[(Long, Match)] => Unit
+  type Updater = Vec[(Long, Match)] => Unit
 
   //  /**
   //   * @param   settings the settings that control how the material generation is perfored
@@ -289,7 +289,7 @@ class Nullstellen private(config: Nullstellen.Config)
     var lastStopIdx   = -1 // XXX 0
     val rnd           = new util.Random(config.seed)
     // tracks the matches per channel
-    var lastMatch     = Option.empty[IIdxSeq[Match]]
+    var lastMatch     = Option.empty[Vec[Match]]
     val gagaDur       = (config.startDur._1 + config.startDur._2 + config.stopDur._1 + config.stopDur._2) / 4
     var sameStartIdx  = 0
     while (lastSpan.stop < layStop) {
@@ -371,7 +371,7 @@ class Nullstellen private(config: Nullstellen.Config)
 
         // account for connectivity
         val w1 = lastMatch match {
-          case Some(lms) if (config.connectionWeight > 0f) =>
+          case Some(lms) if config.connectionWeight > 0f =>
             corrs.map { nm =>
               val nmFeat = featureFile(plainName(nm.file), featureFolder)
               val nextAF = AudioFile.openRead(nmFeat)
@@ -460,10 +460,10 @@ class Nullstellen private(config: Nullstellen.Config)
 
         val w2 = if ((config.strategyWeight > 0f) && (numMatches > numChannels)) {
           var bestCorr  = 0.0
-          var bestSeq   = IIdxSeq.empty[Int]
+          var bestSeq   = Vec.empty[Int]
           var xMap      = Map.empty[Long, Float]
 
-          def weightFun(values: IIdxSeq[Float]): Float = {
+          def weightFun(values: Vec[Float]): Float = {
             // we could change this to give extra penalty
             // to particularly low values. for now, just
             // the average will do.
@@ -543,18 +543,18 @@ class Nullstellen private(config: Nullstellen.Config)
             numChannels * (numChannels + 1) / 2
           } // number of cross correlations between channels
 
-          def bestPrognosis(baseDone: IIdxSeq[Float], xDone: IIdxSeq[Float]): Float = {
+          def bestPrognosis(baseDone: Vec[Float], xDone: Vec[Float]): Float = {
             val chansMissing  = numChannels - baseDone.size
             val xMissing      = xTotalNum - xDone.size
-            val baseValues    = baseDone ++ IIdxSeq.fill(chansMissing)(1f)
-            val xValues       = xDone ++ IIdxSeq.fill(xMissing)(1f)
+            val baseValues    = baseDone ++ Vec.fill(chansMissing)(1f)
+            val xValues       = xDone ++ Vec.fill(xMissing)(1f)
             weightFun(baseValues) * (1f - stratW) + weightFun(xValues) * stratW
           }
 
           var progDone = 0
           val progDoneNum = numMatches * numChannels // numMatches
 
-          def recurse(taken: IIdxSeq[Int], baseDone: IIdxSeq[Float], xDone: IIdxSeq[Float], numDone: Int) {
+          def recurse(taken: Vec[Int], baseDone: Vec[Float], xDone: Vec[Float], numDone: Int) {
             val chan = taken.size
             require(chan == baseDone.size)
             checkAborted()

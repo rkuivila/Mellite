@@ -96,7 +96,6 @@ final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineM
 
     // ---- constructor ----
 
-    import ExecutionContext.Implicits.global
     sono.onComplete {
       case Success(_) => /* println("SUCCESS"); */ execInGUI(ready())
       case Failure(e) => /* println("FAILURE"); */ execInGUI(failed(e))

@@ -2,10 +2,7 @@ package de.sciss
 package mellite
 package impl
 
-import de.sciss.serial.{DataInput, DataOutput, ImmutableSerializer}
-import scala.annotation.switch
 import scala.concurrent._
-import scala.collection.mutable
 import java.io.File
 import de.sciss.processor.Processor
 import scala.tools.nsc
@@ -14,7 +11,6 @@ import scala.tools.nsc.{ConsoleWriter, NewLinePrintWriter}
 import de.sciss.processor.impl.ProcessorImpl
 import collection.immutable.{Seq => ISeq}
 import reflect.runtime.universe.{typeTag, TypeTag}
-import scala.util.control.NonFatal
 import scala.util.{Success, Failure}
 import scala.concurrent.duration.Duration
 

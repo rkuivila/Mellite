@@ -5,7 +5,7 @@ package impl
 
 import scala.swing._
 import synth.proc
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.lucre.{confluent, stm}
 import java.util.{Locale, Date}
@@ -49,7 +49,7 @@ object DocumentCursorsFrameImpl {
   }
 
   private final class CursorView(val elem: Cursors[S, D], val parent: Option[CursorView],
-                                 var children: IIdxSeq[CursorView], var name: String,
+                                 var children: Vec[CursorView], var name: String,
                                  val created: Long, var updated: Long)
 
   private final class Impl(val document: ConfluentDocument, _root: CursorView)(implicit cursor: stm.Cursor[D])
@@ -156,7 +156,7 @@ object DocumentCursorsFrameImpl {
       addChildren(cv, child)
     }
 
-    def elemUpdated(v: Node, upd: IIdxSeq[Cursors.Change[S, D]])(implicit tx: D#Tx) {
+    def elemUpdated(v: Node, upd: Vec[Cursors.Change[S, D]])(implicit tx: D#Tx) {
       upd.foreach {
         case Cursors.ChildAdded  (idx, child) => elemAdded  (v, idx, child)
         case Cursors.ChildRemoved(idx, child) => elemRemoved(v, idx, child)

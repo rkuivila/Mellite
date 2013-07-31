@@ -6,9 +6,7 @@ import span.Span
 import synth.expr.{SynthGraphs, ExprImplicits, Longs, Ints, Spans}
 import synth.proc.{ProcKeys, Sys, Scan, Grapheme, Attribute, Proc}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
-import de.sciss.mellite.Element.AudioGrapheme
 import de.sciss.lucre.stm
-import de.sciss.mellite.Document
 import de.sciss.lucre.expr.Expr
 
 object InsertAudioRegion {

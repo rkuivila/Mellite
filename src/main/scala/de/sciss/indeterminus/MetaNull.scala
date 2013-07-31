@@ -1,9 +1,9 @@
 package de.sciss.indeterminus
 
-import java.io.{FileFilter, File}
+import java.io.FileFilter
 import de.sciss.synth.io.{AudioFileSpec, AudioFile}
 import de.sciss.span.Span
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.duration.Duration
 import scala.concurrent.Await
 import de.sciss.mellite
@@ -59,7 +59,7 @@ object MetaNull {
     // ...
   }
 
-  private def bounce(inSpec: AudioFileSpec, out: File, matches: IIdxSeq[IIdxSeq[(Long, FeatureCorrelation.Match)]]) {
+  private def bounce(inSpec: AudioFileSpec, out: File, matches: Vec[Vec[(Long, FeatureCorrelation.Match)]]) {
     type I            = proc.InMemory
     implicit val sys  = proc.InMemory()
     val p = sys.step { implicit tx =>
@@ -109,7 +109,7 @@ object MetaNull {
     Await.result(p, Duration.Inf)
   }
 
-  private def findNonSilentSpans(in: File): IIdxSeq[Span] = {
+  private def findNonSilentSpans(in: File): Vec[Span] = {
     val afIn  = AudioFile.openRead(in)
     try {
       val bufSz     = 8192
@@ -168,7 +168,6 @@ object MetaNull {
       if (sub != null) sub.flatMap(loop).toVector ++ files else files
     }
 
-    import mellite._
     import sys.process._
 
     val inFiles = loop(inDir)

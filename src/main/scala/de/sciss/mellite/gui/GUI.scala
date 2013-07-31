@@ -4,10 +4,9 @@ package gui
 
 import scala.swing.Swing._
 import scalaswingcontrib.group.GroupPanel
-import scala.swing.{AbstractButton, Button, Window, Swing, Dialog, Component, TextField, Label, Alignment}
+import scala.swing.{AbstractButton, Swing, Dialog, Component, TextField, Label, Alignment}
 import java.awt.{Rectangle, EventQueue, GraphicsEnvironment}
 import javax.swing.Timer
-import java.awt.datatransfer.DataFlavor
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {

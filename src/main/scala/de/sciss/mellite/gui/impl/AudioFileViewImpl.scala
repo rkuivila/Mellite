@@ -7,7 +7,6 @@ import de.sciss.lucre.stm
 import Element.AudioGrapheme
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
 import java.awt.Color
-import de.sciss.audiowidgets.Transport
 import Swing._
 import de.sciss.span.Span
 import de.sciss.mellite.impl.{InsertAudioRegion, TimelineModelImpl}

@@ -5,10 +5,8 @@ package impl
 
 import de.sciss.synth.proc.{Proc, Sys}
 import model.impl.ModelImpl
-import mellite.gui.ProcSelectionModel
 import java.awt.event.{MouseAdapter, MouseEvent}
-import javax.swing.ImageIcon
-import de.sciss.span.{SpanLike, Span}
+import de.sciss.span.SpanLike
 import scala.swing.Component
 import de.sciss.lucre.expr.Expr
 

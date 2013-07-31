@@ -4,13 +4,13 @@ package gui
 package impl
 
 import scala.swing.{ToggleButton, Action, Orientation, BoxPanel}
-import javax.swing.{KeyStroke, ImageIcon, ButtonGroup}
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import javax.swing.{KeyStroke, ButtonGroup}
+import collection.immutable.{IndexedSeq => Vec}
 import synth.proc.Sys
 import java.awt.event.KeyEvent
 import de.sciss.desktop.FocusType
 
-final class TrackToolsPaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: IIdxSeq[TrackTool[S, _]])
+final class TrackToolsPaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackTool[S, _]])
   extends BoxPanel(Orientation.Horizontal) {
 
   private val group = new ButtonGroup()

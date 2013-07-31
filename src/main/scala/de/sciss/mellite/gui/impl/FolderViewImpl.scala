@@ -30,7 +30,7 @@ package impl
 import de.sciss.synth.proc.Sys
 import swing.{ScrollPane, Component}
 import collection.breakOut
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import scalaswingcontrib.tree.Tree
 import de.sciss.lucre.stm.{Disposable, Cursor, IdentifierMap}
 import de.sciss.model.impl.ModelImpl
@@ -197,7 +197,7 @@ object FolderViewImpl {
       }
     }
 
-    def elemUpdated(elem: Element[S], changes: IIdxSeq[Element.Change[S]])(implicit tx: S#Tx) {
+    def elemUpdated(elem: Element[S], changes: Vec[Element.Change[S]])(implicit tx: S#Tx) {
       val viewOpt = mapViews.get(elem.id)
       if (viewOpt.isEmpty) {
         println(s"WARNING: No view for elem $elem")
@@ -248,7 +248,7 @@ object FolderViewImpl {
 
         def update(node: Node, value: String) {
           node match {
-            case v: ElementView[S] if (value != v.name) =>
+            case v: ElementView[S] if value != v.name =>
               cursor.step { implicit tx =>
                 val expr = ExprImplicits[S]
                 import expr._
@@ -367,9 +367,9 @@ object FolderViewImpl {
           // println(s"insert into $parent at index $idx")
 
           def isNested(pv: Branch, cv: Branch): Boolean =
-            pv == cv || (pv.children.collect {
+            pv == cv || pv.children.collect {
               case pcv: ElementView.Folder[S] => pcv
-            } .exists(isNested(_, cv)))
+            }.exists(isNested(_, cv))
 
           // make sure we are not moving a folder within itself (it will magically disappear :)
           val sel1 = sel.filter {
@@ -436,10 +436,10 @@ object FolderViewImpl {
       })(breakOut)
 
     object PathExtrator {
-      def unapply(path: Seq[Node]): Option[(IIdxSeq[ElementView.FolderLike[S]], ElementView[S])] =
+      def unapply(path: Seq[Node]): Option[(Vec[ElementView.FolderLike[S]], ElementView[S])] =
         path match {
           case init :+ (last: ElementView[S]) =>
-            val pre: IIdxSeq[ElementView.FolderLike[S]] = init.map({
+            val pre: Vec[ElementView.FolderLike[S]] = init.map({
               case g: ElementView.FolderLike[S] => g
               case _ => return None
             })(breakOut)

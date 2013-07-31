@@ -29,7 +29,6 @@ package impl
 
 import de.sciss.lucre.stm.Cursor
 import scala.swing.{Swing, Orientation, BoxPanel, Component}
-import de.sciss.synth.expr.ExprImplicits
 import de.sciss.audiowidgets.{Transport => GUITransport, LCDPanel}
 import de.sciss.synth.proc.Sys
 import java.awt.event.{ActionEvent, ActionListener}
@@ -92,9 +91,6 @@ object TransportPanelImpl {
                                              csrPos: S#Acc )( implicit protected val cursor: Cursor[ S ])
    extends TransportPanel[ S ] with ComponentHolder[ Component ] with CursorHolder[ S ] {
       import GUITransport.{GoToBegin, Rewind, FastForward, Stop, Play}
-
-      private val imp = ExprImplicits[ S ]
-      import imp._
 
       private var buttons: GUITransport.ButtonStrip = _
       private var millisVar: Long = 0L

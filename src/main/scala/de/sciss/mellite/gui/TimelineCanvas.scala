@@ -4,7 +4,6 @@ package gui
 
 import scala.swing.Component
 import de.sciss.synth.proc.Sys
-import de.sciss.mellite.Element.ProcGroup
 import de.sciss.mellite.gui.impl.TimelineProcView
 import de.sciss.span.Span
 

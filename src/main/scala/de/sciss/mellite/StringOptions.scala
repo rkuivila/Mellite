@@ -59,7 +59,7 @@ object StringOptions extends BiTypeImpl[Option[String]] {
 
    def readTuple[ S <: Sys[ S ]]( cookie: Int, in: DataInput, access: S#Acc, targets: Targets[ S ])
                                 ( implicit tx: S#Tx ) : ExN[ S ] = {
-      (cookie /* : @switch */) match {
+      cookie match {
 //         case 1 =>
 //            val tpe  = in.readInt()
 //            require( tpe == typeID, "Invalid type id (found " + tpe + ", required " + typeID + ")" )

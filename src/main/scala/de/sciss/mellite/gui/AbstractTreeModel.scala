@@ -1,7 +1,7 @@
 package de.sciss.mellite.gui
 
 import scala.annotation.tailrec
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 
 trait AbstractTreeModel[A] extends TreeModel[A] {
   import TreeTable.Path
@@ -37,7 +37,7 @@ trait AbstractTreeModel[A] extends TreeModel[A] {
 
   private def fire(nodes: Seq[A])(fun: (TreeModel[A], Path[A], Seq[(Int, A)]) => TreeModelEvent[A]) {
     var pred  = Map.empty[A, Path[A]]
-    var paths = Map.empty[Path[A], IIdxSeq[(Int, A)]] withDefaultValue Vector.empty
+    var paths = Map.empty[Path[A], Vec[(Int, A)]] withDefaultValue Vector.empty
     nodes.foreach { n =>
       val (path, idx) = getParent(n) match {
         case Some(parent) =>

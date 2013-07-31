@@ -6,7 +6,7 @@ import de.sciss.synth.proc.{Sys, Proc}
 import de.sciss.lucre.stm.Source
 
 object VisualProc {
-   val COLUMN_DATA   = "nuages.data"
+  val COLUMN_DATA = "nuages.data"
 }
-final class VisualProc[ S <: Sys[ S ]]( var name: String, var par: Map[ String, Double ],
-                                        val staleCursor: S#Acc, val procH: Source[ S#Tx, Proc[ S ]])
+final class VisualProc[S <: Sys[S]](var name: String, var par: Map[String, Double],
+                                    val staleCursor: S#Acc, val procH: Source[S#Tx, Proc[S]])

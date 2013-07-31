@@ -7,7 +7,6 @@ import de.sciss.synth.proc.{ProcKeys, Proc, Attribute, Sys}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.synth.expr.ExprImplicits
-import de.sciss.synth.proc
 import de.sciss.lucre.expr.Expr
 
 final class TrackMoveToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])

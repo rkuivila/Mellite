@@ -6,7 +6,6 @@ package impl
 import de.sciss.synth.proc.{ProcKeys, Attribute, Proc, Sys}
 import de.sciss.model.impl.ModelImpl
 import java.awt.{Point, Toolkit}
-import scala.swing.Component
 import java.awt.event.MouseEvent
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike

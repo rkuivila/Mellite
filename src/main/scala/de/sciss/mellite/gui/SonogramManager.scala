@@ -2,8 +2,6 @@ package de.sciss.mellite.gui
 
 import de.sciss.sonogram
 import java.io.File
-import scala.concurrent.ExecutionContext
-import java.util.concurrent.Executors
 import de.sciss.dsp.{Threading, ConstQ}
 
 object SonogramManager {

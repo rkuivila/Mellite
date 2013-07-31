@@ -32,7 +32,7 @@ import stm.{Source, Cursor, Disposable, Sys}
 import expr.LinkedList
 import swing.{ScrollPane, Component}
 import javax.swing.DefaultListModel
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import concurrent.stm.{Ref => STMRef}
 import swing.event.ListSelectionChanged
 import de.sciss.serial.Serializer
@@ -66,7 +66,7 @@ object ListViewImpl {
 
     private val mList = new DefaultListModel
 
-    private var viewObservers = IIdxSeq.empty[Observer]
+    private var viewObservers = Vec.empty[Observer]
 
     // private val current = STMRef( Option.empty[ (S#Acc, LinkedList[ S, Elem, U ], Disposable[ S#Tx ])])
     private val current = STMRef(Option.empty[(Source[S#Tx, LinkedList[S, Elem, U]], Disposable[S#Tx])])
@@ -137,7 +137,7 @@ object ListViewImpl {
       }
     }
 
-    private def notifyViewObservers(current: IIdxSeq[Int]) {
+    private def notifyViewObservers(current: Vec[Int]) {
       val evt = ListView.SelectionChanged(current)
       viewObservers.foreach(_.tryApply(evt))
     }
@@ -156,7 +156,7 @@ object ListViewImpl {
       obs
     }
 
-    def guiSelection: IIdxSeq[Int] = {
+    def guiSelection: Vec[Int] = {
       requireEDT()
       ggList.selection.indices.toIndexedSeq
     }
@@ -184,9 +184,9 @@ object ListViewImpl {
       mList.clear()
     }
 
-    def addAll(items: IIdxSeq[String]) {
+    def addAll(items: Vec[String]) {
       mList.clear()
-      items.foreach(mList.addElement _)
+      items.foreach(mList.addElement)
     }
 
     def add(idx: Int, item: String) {
@@ -204,7 +204,7 @@ object ListViewImpl {
     def dispose()(implicit tx: S#Tx) {
       list_=(None)
       guiFromTx {
-        viewObservers = IIdxSeq.empty
+        viewObservers = Vec.empty
       }
     }
   }

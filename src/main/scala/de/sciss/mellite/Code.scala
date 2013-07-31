@@ -1,7 +1,6 @@
 package de.sciss.mellite
 
 import de.sciss.serial.{Writable, DataInput, DataOutput, ImmutableSerializer}
-import scala.annotation.switch
 import impl.{CodeImpl => Impl, CodeImpl2 => Impl2}
 import java.io.File
 import scala.concurrent.Future
@@ -15,7 +14,7 @@ object Code {
 
   def read(in: DataInput): Code = serializer.read(in)
 
-  def apply(id: Int, source: String): Code = (id /* : @switch */ ) match {
+  def apply(id: Int, source: String): Code = id match {
     case FileTransform.id => FileTransform(source)
   }
 

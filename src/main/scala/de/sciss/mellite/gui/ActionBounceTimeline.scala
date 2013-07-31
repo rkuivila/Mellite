@@ -14,7 +14,7 @@ import de.sciss.span.{SpanLike, Span}
 import Swing._
 import de.sciss.audiowidgets.AxisFormat
 import de.sciss.span.Span.SpanOrVoid
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.mellite.Element.ArtifactLocation
 import scala.util.control.NonFatal
 import java.text.ParseException
@@ -44,7 +44,7 @@ object ActionBounceTimeline {
     spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
     gain: Gain = Gain.normalized(-0.2f),
     span: SpanOrVoid    = Span.Void,
-    channels: IIdxSeq[Range.Inclusive] = Vector(0 to 0 /* 1 */),
+    channels: Vec[Range.Inclusive] = Vector(0 to 0 /* 1 */),
     importFile: Boolean = false,
     location:  Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None,
     transform: Option[stm.Source[S#Tx, Element.Code    [S]]] = None
@@ -62,7 +62,7 @@ object ActionBounceTimeline {
     group: stm.Source[S#Tx, proc.ProcGroup[S]],
     server: Server.Config,
     gain: Gain = Gain.normalized(-0.2f),
-    span: SpanLike, channels: IIdxSeq[Range.Inclusive]
+    span: SpanLike, channels: Vec[Range.Inclusive]
   )
 
   def specToServerConfig(file: File, spec: AudioFileSpec, config: Server.ConfigBuilder) {
@@ -75,8 +75,8 @@ object ActionBounceTimeline {
 
   type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Element.Code[S]]
 
-  def findTransforms[S <: Sys[S]](document: Document[S])(implicit tx: S#Tx): IIdxSeq[Labeled[CodeSource[S]]] = {
-    type Res = IIdxSeq[Labeled[CodeSource[S]]]
+  def findTransforms[S <: Sys[S]](document: Document[S])(implicit tx: S#Tx): Vec[Labeled[CodeSource[S]]] = {
+    type Res = Vec[Labeled[CodeSource[S]]]
     def loop(xs: List[Element[S]], res: Res): Res =
       xs match {
         case (elem: Element.Code[S]) :: tail =>
@@ -205,7 +205,7 @@ object ActionBounceTimeline {
     val regRanges = """(\d+(-\d+)?)""".r
 
     val fmtRanges = new JFormattedTextField.AbstractFormatter {
-      def stringToValue(text: String): IIdxSeq[Range.Inclusive] = try {
+      def stringToValue(text: String): Vec[Range.Inclusive] = try {
         regRanges.findAllIn(text).toIndexedSeq match {
           case list if list.nonEmpty => list.map { s =>
             val i = s.indexOf('-')
@@ -227,7 +227,7 @@ object ActionBounceTimeline {
 
       def valueToString(value: Any): String = try {
         value match {
-          case sq: IIdxSeq[_] => sq.map {
+          case sq: Vec[_] => sq.map {
             case r: Range if r.start < r.end  => s"${r.start + 1}-${r.end + 1}"
             case r: Range                     => s"${r.start + 1}"
           } .mkString(", ")
@@ -266,7 +266,7 @@ object ActionBounceTimeline {
     val ok    = opt.show(window) == OptionPane.Result.Ok
     val file  = if (ggPathText.text == "") None else Some(new File(ggPathText.text))
 
-    val channels: IIdxSeq[Range.Inclusive] = try {
+    val channels: Vec[Range.Inclusive] = try {
       fmtRanges.stringToValue(ggChannelsJ.getText)
     } catch {
       case _: ParseException => init.channels
@@ -313,7 +313,7 @@ object ActionBounceTimeline {
   //    file: Option[File] = None,
   //    spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
   //    gainAmount: Double = -0.2, gainType: Gain = Normalized,
-  //    span: SpanOrVoid = Span.Void, channels: IIdxSeq[Range.Inclusive] = Vector(0 to 1),
+  //    span: SpanOrVoid = Span.Void, channels: Vec[Range.Inclusive] = Vector(0 to 1),
   //    importFile: Boolean = true, location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   //  )
 

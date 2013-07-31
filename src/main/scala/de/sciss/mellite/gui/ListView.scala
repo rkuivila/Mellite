@@ -31,7 +31,7 @@ import de.sciss.lucre.{stm, expr}
 import stm.{Cursor, Disposable, Sys}
 import expr.LinkedList
 import impl.{ListViewImpl => Impl}
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.serial.Serializer
 
 object ListView {
@@ -46,14 +46,14 @@ object ListView {
   : ListView[S, Elem, U] = Impl.empty(show)
 
   sealed trait Update
-  final case class SelectionChanged(current: IIdxSeq[Int]) extends Update
+  final case class SelectionChanged(current: Vec[Int]) extends Update
 }
 trait ListView[S <: Sys[S], Elem, U] extends Disposable[S#Tx] {
   def component: Component
 
   def guiReact(pf: PartialFunction[ListView.Update, Unit]): Removable
 
-  def guiSelection: IIdxSeq[Int]
+  def guiSelection: Vec[Int]
 
   def list(implicit tx: S#Tx): Option[LinkedList[S, Elem, U]]
   def list_=(list: Option[LinkedList[S, Elem, U]])(implicit tx: S#Tx): Unit

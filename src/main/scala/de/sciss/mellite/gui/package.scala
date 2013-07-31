@@ -25,17 +25,16 @@
 
 package de.sciss.mellite
 
-import concurrent.stm.{Txn => STMTxn, TxnLocal}
+import concurrent.stm.TxnLocal
 import de.sciss.lucre.stm.Txn
-import java.awt.{Toolkit, EventQueue}
-import collection.immutable.{IndexedSeq => IIdxSeq}
-import javax.swing.KeyStroke
+import java.awt.EventQueue
+import collection.immutable.{IndexedSeq => Vec}
 
 package object gui {
-  private val guiCode = TxnLocal(init = IIdxSeq.empty[() => Unit], afterCommit = handleGUI)
+  private val guiCode = TxnLocal(init = Vec.empty[() => Unit], afterCommit = handleGUI)
   //   private lazy val primaryMod   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
 
-  private def handleGUI(seq: IIdxSeq[() => Unit]) {
+  private def handleGUI(seq: Vec[() => Unit]) {
     def exec() {
       seq.foreach { fun =>
         try {

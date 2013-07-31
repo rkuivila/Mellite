@@ -31,7 +31,7 @@ import de.sciss.lucre.stm.Cursor
 import de.sciss.synth.proc.{ProcKeys, Attribute, Sys, Proc, Param, ProcTransport}
 import de.sciss.lucre.bitemp.BiGroup
 import java.awt.{RenderingHints, Graphics2D, Color}
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import prefuse.{Display, Visualization}
 import prefuse.action.layout.graph.ForceDirectedLayout
 import prefuse.action.{RepaintAction, ActionList}
@@ -58,13 +58,13 @@ object InstantGroupPanelImpl {
     val map = tx.newInMemoryIDMap[Map[SpanLike, List[VisualProc[S]]]]
     val all = transport.iterator.toIndexedSeq
 
-    def playStop(b: Boolean)(implicit tx: S#Tx) {
-      guiFromTx(vis.playing = b)
-    }
+    //    def playStop(b: Boolean)(implicit tx: S#Tx) {
+    //      guiFromTx(vis.playing = b)
+    //    }
 
-    def advance(time: Long, added: IIdxSeq[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
-                removed: IIdxSeq[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
-                params: IIdxSeq[(SpanLike, BiGroup.TimedElem[S, Proc[S]], Map[String, Param])])(implicit tx: S#Tx) {
+    def advance(time: Long, added: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
+                removed: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
+                params: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]], Map[String, Param])])(implicit tx: S#Tx) {
       val vpRem = removed.flatMap {
         case (span, timed) =>
           map.get(timed.id).flatMap { vpm =>
@@ -115,7 +115,7 @@ object InstantGroupPanelImpl {
     }
 
       guiFromTx( vis.guiInit() )
-      advance( transport.time, all, IIdxSeq.empty, IIdxSeq.empty )   // after init!
+      advance( transport.time, all, Vec.empty, Vec.empty )   // after init!
       vis
    }
 

@@ -5,7 +5,7 @@ package gui
 import de.sciss.synth.proc.{Artifact, Sys}
 import de.sciss.lucre.stm
 import de.sciss.mellite.Element.ArtifactLocation
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import scala.util.Try
 import de.sciss.desktop.{OptionPane, Window, FileDialog}
 import scala.swing.Dialog
@@ -26,7 +26,7 @@ object ActionArtifactLocation {
     type LocSource = stm.Source[S#Tx, ArtifactLocation[S]]
 
     val options = cursor.step { implicit tx =>
-      /* @tailrec */ def loop(xs: List[Element[S]], res: IIdxSeq[Labeled[LocSource]]): IIdxSeq[Labeled[LocSource]] =
+      /* @tailrec */ def loop(xs: List[Element[S]], res: Vec[Labeled[LocSource]]): Vec[Labeled[LocSource]] =
         xs match {
           case (a: ArtifactLocation[S]) :: tail =>
             val parent  = a.entity.directory
@@ -55,8 +55,8 @@ object ActionArtifactLocation {
     }
 
     options match {
-      case IIdxSeq() => createNew()
-      case IIdxSeq(Labeled(source)) => Some(source)
+      case Vec() => createNew()
+      case Vec(Labeled(source)) => Some(source)
 
       case _ =>
         val ggList = new swing.ListView(options)

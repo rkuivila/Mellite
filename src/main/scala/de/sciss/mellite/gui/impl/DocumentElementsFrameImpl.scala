@@ -200,8 +200,6 @@ object DocumentElementsFrameImpl {
     }
 
     private def actionAddCode() {
-      val expr      = ExprImplicits[S]
-      import expr._
       val ggValue   = new ComboBox(Seq("File Transform"))
       actionAddPrimitive(tpe = "Code", ggValue = ggValue, prepare = ggValue.selection.index match {
         case 0 => Some(Code.FileTransform(

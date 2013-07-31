@@ -197,7 +197,7 @@ object RecursionFrameImpl {
           processStopped()
           _cursor.step { implicit tx =>
             val product = recH().product
-            (/* product.location.modifiableOption, */ product.modifiableOption) match {
+            product.modifiableOption match {
               case (/* Some(locM), */ Some(artM)) =>
                 val newChild  = Artifact.relativize(artM.location.directory, newFile)
                 artM.child_=(newChild)

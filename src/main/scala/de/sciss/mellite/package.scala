@@ -29,8 +29,7 @@ import lucre.expr
 import expr.LinkedList
 import synth.proc.{InMemory, Sys, Confluent}
 import de.sciss.serial.{Serializer, DataInput}
-import scala.collection.immutable.{IndexedSeq => IIdxSeq}
-import java.io.File
+import scala.collection.immutable.{IndexedSeq => Vec}
 import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
 import scala.annotation.elidable
@@ -84,7 +83,7 @@ package object mellite {
     //    }
 
     // private[Folder] type _Update[S <: Sys[S]] = LinkedList.Update[S, _Element[S], _Element.Update[S]]
-    type Update[S <: Sys[S]] = IIdxSeq[Change[S]]
+    type Update[S <: Sys[S]] = Vec[Change[S]]
     sealed trait Change[S <: Sys[S]] { def elem: _Element[S] }
     final case class Added  [S <: Sys[S]](idx: Int, elem: _Element[S]) extends Change[S]
     final case class Removed[S <: Sys[S]](idx: Int, elem: _Element[S]) extends Change[S]

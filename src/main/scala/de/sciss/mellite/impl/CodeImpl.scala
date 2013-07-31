@@ -14,9 +14,6 @@ import scala.tools.nsc.{ConsoleWriter, NewLinePrintWriter}
 import de.sciss.processor.impl.ProcessorImpl
 import collection.immutable.{Seq => ISeq}
 import reflect.runtime.universe.{typeTag, TypeTag}
-import scala.util.control.NonFatal
-import scala.util.{Success, Failure}
-import scala.concurrent.duration.Duration
 import de.sciss.serial.impl.ByteArrayOutputStream
 
 object CodeImpl {

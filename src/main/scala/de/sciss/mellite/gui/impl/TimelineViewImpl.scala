@@ -127,7 +127,7 @@ object TimelineViewImpl {
 
     def muteChanged(timed: TimedProc[S])(implicit tx: S#Tx) {
       val attr    = timed.value.attributes
-      val muted   = attr[Attribute.Boolean](ProcKeys.attrMute).map(_.value).getOrElse(false)
+      val muted   = attr[Attribute.Boolean](ProcKeys.attrMute).exists(_.value)
       view.procMuteChanged(timed, muted)
     }
 
@@ -287,7 +287,7 @@ object TimelineViewImpl {
 
     object deleteAction extends Action("Delete") {
       def apply() {
-        withSelection(implicit tx => deleteObjects _)
+        withSelection(implicit tx => deleteObjects)
       }
     }
 
@@ -297,7 +297,7 @@ object TimelineViewImpl {
         val pos1    = pos - MinDur
         val pos2    = pos + MinDur
         withFilteredSelection(pv => pv.span.contains(pos1) && pv.span.contains(pos2)) { implicit tx =>
-          splitObjects(pos) _
+          splitObjects(pos)
         }
       }
     }

@@ -3,13 +3,11 @@ package mellite
 package gui
 package impl
 
-import javax.swing.TransferHandler
 import javax.swing.TransferHandler._
 import java.awt.dnd.{DropTarget, DropTargetDropEvent, DropTargetEvent, DropTargetDragEvent, DropTargetAdapter}
-import de.sciss.synth.proc.{Grapheme, Sys}
+import de.sciss.synth.proc.Sys
 import scala.swing.Component
 import java.awt.Point
-import scala.Some
 import de.sciss.lucre.stm
 import de.sciss.mellite.Element.AudioGrapheme
 import de.sciss.span.Span
@@ -73,7 +71,7 @@ trait TimelineDnD[S <: Sys[S]] {
         abortDrag(e)
 
       } else t.getTransferData(TimelineDnD.flavor) match {
-        case d: TimelineDnD.Drag[_] if (d.document == document) =>
+        case d: TimelineDnD.Drag[_] if d.document == document =>
           val loc     = e.getLocation
           val drag    = d.asInstanceOf[TimelineDnD.Drag[S]]
           val drop    = mkDrop(drag, loc)

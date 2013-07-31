@@ -48,7 +48,7 @@ object TimelineProcView {
 
     val track   = attr[Attribute.Int     ](ProcKeys.attrTrack  ).map(_.value).getOrElse(0)
     val name    = attr[Attribute.String  ](ProcKeys.attrName   ).map(_.value)
-    val mute    = attr[Attribute.Boolean ](ProcKeys.attrMute   ).map(_.value).getOrElse(false)
+    val mute    = attr[Attribute.Boolean ](ProcKeys.attrMute).exists(_.value)
     val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
     val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
 

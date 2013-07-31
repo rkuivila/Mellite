@@ -30,7 +30,7 @@ package gui
 import de.sciss.synth.proc.{Artifact, Grapheme, Sys}
 import lucre.stm
 import swing.Swing
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.expr.LinkedList
 import java.io.File
 import java.awt.Toolkit
@@ -42,7 +42,7 @@ import de.sciss.lucre.event.Change
 object ElementView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double}
-  import mellite.{Folder => _Folder, Recursion => _Recursion, Code => _Code}
+  import mellite.{Folder => _Folder} // , Recursion => _Recursion, Code => _Code}
 
   private[gui] def apply[S <: Sys[S]](parent: FolderLike[S], element: Element[S])
                                      (implicit tx: S#Tx): ElementView[S] = {
@@ -130,7 +130,7 @@ object ElementView {
           case num: _Int  => Some(num)
           case s: _String => Try(s.toInt).toOption
         }
-        numOpt.map { num =>
+        numOpt.exists { num =>
           val expr    = element().entity
           val changed = expr.value != num
           if (changed) {
@@ -139,7 +139,7 @@ object ElementView {
             expr() = num
           }
           changed
-        } .getOrElse(false)
+        }
       }
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
@@ -173,7 +173,7 @@ object ElementView {
           case num: _Double => Some(num)
           case s: _String => Try(s.toDouble).toOption
         }
-        numOpt.map { num =>
+        numOpt.exists { num =>
           val expr = element().entity
           val changed = expr.value != num
           if (changed) {
@@ -182,7 +182,7 @@ object ElementView {
             expr() = num
           }
           changed
-        } .getOrElse(false)
+        }
       }
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
@@ -218,7 +218,7 @@ object ElementView {
       }
 
     /** The children of the folder. This variable _must only be accessed or updated_ on the event thread. */
-    var children: IIdxSeq[ElementView[S]]
+    var children: Vec[ElementView[S]]
 
     def value {}
   }
@@ -231,7 +231,7 @@ object ElementView {
                                                        var name: _String)
       extends Folder[S] with ElementView.Impl[S] {
 
-      var children = IIdxSeq.empty[ElementView[S]]
+      var children = Vec.empty[ElementView[S]]
 
       def folder(implicit tx: S#Tx): _Folder[S] = element().entity
 
@@ -383,7 +383,7 @@ object ElementView {
     private final class Impl[S <: Sys[S]](handle: stm.Source[S#Tx, _Folder[S]])
       extends Root[S] {
 
-      var children = IIdxSeq.empty[ElementView[S]]
+      var children = Vec.empty[ElementView[S]]
       def folder(implicit tx: S#Tx): _Folder[S] = handle()
       def name = "root"
       def parent: Option[FolderLike[S]] = None

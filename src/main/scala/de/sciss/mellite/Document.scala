@@ -57,7 +57,7 @@ object Document {
 }
 
 sealed trait Document[S <: Sys[S]] {
-  import Document.{Group => _, _}
+  import Document.{Group => _}
 
   implicit def system: S
   // implicit def cursor: Cursor[S]

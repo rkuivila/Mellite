@@ -3,7 +3,7 @@ package mellite
 package gui
 package impl
 
-import lucre.{stm, event => evt}
+import lucre.stm
 import synth.proc
 import proc.{AuralPresentation, AuralSystem, Sys, ProcGroup}
 import java.awt.event.{KeyEvent, ActionListener, ActionEvent}

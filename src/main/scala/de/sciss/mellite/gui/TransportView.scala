@@ -4,7 +4,7 @@ package gui
 
 import synth.proc
 import proc.{AuralSystem, AuralPresentation, Sys, ProcGroup, ProcTransport}
-import lucre.{stm, event => evt}
+import lucre.stm
 import impl.{TransportViewImpl => Impl}
 import stm.Disposable
 import scala.swing.Component

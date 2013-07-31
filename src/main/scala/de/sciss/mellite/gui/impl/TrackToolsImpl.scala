@@ -7,7 +7,6 @@ import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.proc.Sys
 import de.sciss.lucre.event.Change
 import javax.swing.ImageIcon
-import scala.swing.Component
 
 object TrackToolsImpl {
   def getIcon(name: String) = new ImageIcon(Mellite.getClass.getResource(s"icon-$name.png"))

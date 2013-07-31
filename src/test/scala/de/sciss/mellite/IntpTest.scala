@@ -1,7 +1,5 @@
 package de.sciss.mellite
 
-import java.io.File
-
 object IntpTest extends App {
   // TransformImpl.test2()
 

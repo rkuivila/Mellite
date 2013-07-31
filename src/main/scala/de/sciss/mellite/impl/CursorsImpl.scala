@@ -138,7 +138,7 @@ object CursorsImpl {
         // println(s"---- enter pull : list = $listOpt")
 
         // val flat1   = genOpt.toIndexedSeq
-        val flat1   = nameOpt.map(Cursors.Renamed[S, D1](_)).toIndexedSeq
+        val flat1   = nameOpt.map(Cursors.Renamed[S, D1]).toIndexedSeq
         val changes = listOpt match {
           case Some(listUpd) =>
             val childUpdates = listUpd.changes.collect {

@@ -29,10 +29,9 @@ package gui
 import de.sciss.synth.proc.Sys
 import swing.Component
 import impl.{FolderViewImpl => Impl}
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.stm.{Cursor, Disposable}
 import de.sciss.model.Model
-import java.awt.datatransfer.DataFlavor
 
 object FolderView {
   def apply[S <: Sys[S]](document: Document[S], root: Folder[S])
@@ -41,7 +40,7 @@ object FolderView {
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
     */
-  type Selection[S <: Sys[S]] = IIdxSeq[(IIdxSeq[ElementView.FolderLike[S]], ElementView[S])]
+  type Selection[S <: Sys[S]] = Vec[(Vec[ElementView.FolderLike[S]], ElementView[S])]
 
   final case class SelectionDnDData[S <: Sys[S]](document: Document[S], selection: Selection[S])
 

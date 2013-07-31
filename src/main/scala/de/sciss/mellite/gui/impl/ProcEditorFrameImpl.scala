@@ -85,7 +85,7 @@ object ProcEditorFrameImpl {
       val lbName = new Label("Name:")
       ggName = new TextField(initName, 16) {
         action = Action("") {
-          val newName = text
+          // val newName = text
           println("NOT YET IMPLEMENTED")
           //               atomic { implicit tx =>
           //                  val imp  = ExprImplicits[ S ]

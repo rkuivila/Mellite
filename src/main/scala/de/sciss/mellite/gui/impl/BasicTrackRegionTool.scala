@@ -3,11 +3,9 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Proc, Sys}
+import de.sciss.synth.proc.Sys
 import java.awt.event.{KeyEvent, KeyListener, MouseEvent}
 import javax.swing.event.MouseInputAdapter
-import de.sciss.span.SpanLike
-import de.sciss.lucre.expr.Expr
 
 object BasicTrackRegionTool {
   final val MinDur  = 32

@@ -32,7 +32,6 @@ import de.sciss.synth.proc.Sys
 import de.sciss.desktop.{Menu, RecentFiles, FileDialog, KeyStrokes}
 import util.control.NonFatal
 import java.io.File
-import de.sciss.synth.proc
 
 object ActionOpenFile extends Action( "Open...") {
   import KeyStrokes._
@@ -67,7 +66,7 @@ object ActionOpenFile extends Action( "Open...") {
   def apply() {
     val dlg = FileDialog.open(title = fullTitle)
     dlg.setFilter { f => f.isDirectory && f.getName.endsWith(".mllt") }
-    dlg.show(None).foreach(perform _)
+    dlg.show(None).foreach(perform)
   }
 
   def perform(folder: File) {

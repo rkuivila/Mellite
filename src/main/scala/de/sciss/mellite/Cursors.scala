@@ -1,9 +1,9 @@
 package de.sciss
 package mellite
 
-import de.sciss.lucre.{event => evt, confluent, stm, data}
-import collection.immutable.{IndexedSeq => IIdxSeq}
-import lucre.event.{DurableLike => DSys, Sys}
+import de.sciss.lucre.{event => evt, confluent, data}
+import collection.immutable.{IndexedSeq => Vec}
+import lucre.event.{DurableLike => DSys}
 import lucre.confluent.reactive.{ConfluentReactiveLike => KSys}
 import impl.{CursorsImpl => Impl}
 import de.sciss.lucre.expr.Expr
@@ -17,7 +17,7 @@ object Cursors {
   implicit def serializer[S <: KSys[S], D1 <: DSys[D1]](implicit system: S { type D = D1 }):
     serial.Serializer[D1#Tx, D1#Acc, Cursors[S, D1]] with evt.Reader[D1, Cursors[S, D1]] = Impl.serializer[S, D1]
 
-  final case class Update[S <: KSys[S], D <: DSys[D]](source: Cursors[S, D], changes: IIdxSeq[Change[S, D]])
+  final case class Update[S <: KSys[S], D <: DSys[D]](source: Cursors[S, D], changes: Vec[Change[S, D]])
 
   // final case class Advanced[S <: Sys[S], D <: Sys[D]](source: Cursors[S, D], change: evt.Change[S#Acc])
   //   extends Update[S, D]

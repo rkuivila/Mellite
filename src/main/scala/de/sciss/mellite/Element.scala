@@ -33,7 +33,7 @@ import de.sciss.synth.expr.{Doubles, Strings, Ints}
 import annotation.switch
 import de.sciss.{serial, mellite}
 import evt.{EventLike, EventLikeSerializer}
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 import language.higherKinds
 import de.sciss.serial.{DataOutput, DataInput, Writable}
 
@@ -46,7 +46,7 @@ object Element {
 
   // ----------------- Updates -----------------
 
-  final case class Update [S <: Sys[S]](element: Element[S], changes: IIdxSeq[Change[S]])
+  final case class Update [S <: Sys[S]](element: Element[S], changes: Vec[Change[S]])
 
   sealed trait Change[S <: Sys[S]]
   final case class Renamed[S <: Sys[S]](change: evt.Change[_String]) extends Change[S]
@@ -426,7 +426,7 @@ object Element {
     protected object NameChange extends EventImpl {
       final val slot = 0
       def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Update[S]] = {
-        pull(name.changed).map(ch => Update(self, IIdxSeq(Renamed(ch))))
+        pull(name.changed).map(ch => Update(self, Vec(Renamed(ch))))
       }
 
       def connect()(implicit tx: S#Tx) {
@@ -453,13 +453,13 @@ object Element {
 
     protected def entityEvent: evt.EventLike[S, Any, _]
 
-    final protected def events = IIdxSeq(NameChange, EntityChange)
+    final protected def events = Vec(NameChange, EntityChange)
     final protected def changedSlot = 2
 
     private object EntityChange extends EventImpl {
       final val slot = 1
       def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Update[S]] = {
-        pull(entityEvent).map(ch => Update(self, IIdxSeq(Entity(ch))))
+        pull(entityEvent).map(ch => Update(self, Vec(Entity(ch))))
       }
 
       def connect()(implicit tx: S#Tx) {

@@ -10,7 +10,7 @@ import de.sciss.lucre.event.Change
 import de.sciss.synth.proc.{FadeSpec, Sys}
 import scala.swing.Component
 import javax.swing.Icon
-import collection.immutable.{IndexedSeq => IIdxSeq}
+import collection.immutable.{IndexedSeq => Vec}
 
 object TrackTools {
   sealed trait Update[S <: Sys[S]]
@@ -20,7 +20,7 @@ object TrackTools {
   final case class RegionViewModeChanged[S <: Sys[S]](change: Change[RegionViewMode ]) extends Update[S]
 
   def apply  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTools[S] = new TrackToolsImpl(canvas)
-  def palette[S <: Sys[S]](control: TrackTools[S], tools: IIdxSeq[TrackTool[S, _]]): Component =
+  def palette[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackTool[S, _]]): Component =
     new TrackToolsPaletteImpl[S](control, tools)
 }
 

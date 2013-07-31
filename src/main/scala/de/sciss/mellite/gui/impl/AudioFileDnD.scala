@@ -2,15 +2,13 @@ package de.sciss.mellite
 package gui
 package impl
 
-import java.awt.dnd.{DropTarget, DropTargetEvent, DropTargetDropEvent, DropTargetDragEvent, DropTargetAdapter}
 import de.sciss.span.Span
-import java.awt.{Point, datatransfer}
+import java.awt.datatransfer
 import de.sciss.synth.proc.{Grapheme, Sys}
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
 import javax.swing.{JComponent, ImageIcon, TransferHandler}
 import java.awt.event.{MouseEvent, MouseAdapter}
-import scala.swing.Component
 import TransferHandler.COPY
 
 object AudioFileDnD {
