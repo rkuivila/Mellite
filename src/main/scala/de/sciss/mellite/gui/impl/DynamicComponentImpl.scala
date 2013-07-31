@@ -7,6 +7,7 @@ import javax.swing.event.{AncestorEvent, AncestorListener}
 import java.awt
 import scala.swing.Component
 
+// XXX TODO: replace with desktop version (however that needs component method)
 trait DynamicComponentImpl {
   _: Component =>
 

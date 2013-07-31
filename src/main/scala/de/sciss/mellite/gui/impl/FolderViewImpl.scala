@@ -35,12 +35,13 @@ import scalaswingcontrib.tree.Tree
 import de.sciss.lucre.stm.{Disposable, Cursor, IdentifierMap}
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.expr.ExprImplicits
-import de.sciss.mellite.gui.TreeTableCellRenderer.{State, TreeState}
 import scala.util.control.NonFatal
 import de.sciss.lucre.event.Change
 import javax.swing.{DropMode, JComponent, TransferHandler}
 import java.awt.datatransfer.Transferable
 import javax.swing.TransferHandler.TransferSupport
+import de.sciss.treetable.{TreeTableSelectionChanged, TreeTableCellRenderer, TreeColumnModel, AbstractTreeModel, TreeTable}
+import de.sciss.treetable.TreeTableCellRenderer.TreeState
 
 object FolderViewImpl {
   private final val DEBUG = false
@@ -282,7 +283,7 @@ object FolderViewImpl {
       t.renderer    = new TreeTableCellRenderer {
         private val component = TreeTableCellRenderer.Default
         def getRendererComponent(treeTable: TreeTable[_, _], value: Any, row: Int, column: Int,
-                                 state: State): Component = {
+                                 state: TreeTableCellRenderer.State): Component = {
           val value1 = if (value != ()) value else null
           val res = component.getRendererComponent(treeTable, value1, row = row, column = column, state = state)
           if (row >= 0) state.tree match {

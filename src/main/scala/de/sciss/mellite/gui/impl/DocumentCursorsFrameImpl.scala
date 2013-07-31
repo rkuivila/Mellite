@@ -9,10 +9,10 @@ import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.lucre.{confluent, stm}
 import java.util.{Locale, Date}
-import de.sciss.mellite.gui.TreeTableSelectionChanged
 import java.text.SimpleDateFormat
 import de.sciss.lucre.event.Change
 import de.sciss.file._
+import de.sciss.treetable.{TreeTableSelectionChanged, TreeTableCellRenderer, TreeColumnModel, TreeTable, AbstractTreeModel}
 
 object DocumentCursorsFrameImpl {
   type S = proc.Confluent
