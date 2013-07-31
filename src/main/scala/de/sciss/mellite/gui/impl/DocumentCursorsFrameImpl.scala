@@ -68,18 +68,17 @@ object DocumentCursorsFrameImpl {
       def getIndexOfChild(parent: Node, child: Node): Int = parent.children.indexOf(child)
       def getParent(node: Node): Option[Node] = node.parent
 
-      def valueForPathChanged(path: TreeTable.Path[Node], newValue: Node) {
+      def valueForPathChanged(path: TreeTable.Path[Node], newValue: Node): Unit =
         println(s"valueForPathChanged($path, $newValue)")
-      }
 
-      def elemAdded(parent: Node, idx: Int, view: Node) {
+      def elemAdded(parent: Node, idx: Int, view: Node): Unit = {
         // if (DEBUG) println(s"model.elemAdded($parent, $idx, $view)")
         require(idx >= 0 && idx <= parent.children.size)
         parent.children = parent.children.patch(idx, Vector(view), 0)
         fireNodesInserted(view)
       }
 
-      def elemRemoved(parent: Node, idx: Int) {
+      def elemRemoved(parent: Node, idx: Int): Unit = {
         // if (DEBUG) println(s"model.elemRemoved($parent, $idx)")
         require(idx >= 0 && idx < parent.children.size)
         val v = parent.children(idx)
@@ -90,16 +89,13 @@ object DocumentCursorsFrameImpl {
         parent.children  = parent.children.patch(idx, Vector.empty, 1)
       }
 
-      def elemUpdated(view: Node) {
-        // if (DEBUG) println(s"model.elemUpdated($view)")
-        fireNodesChanged(view)
-      }
+      def elemUpdated(view: Node): Unit = fireNodesChanged(view)
     }
 
     private var _model: ElementTreeModel  = _
     private var t: TreeTable[Node, TreeColumnModel[Node]] = _
 
-    private def actionAdd(parent: Node) {
+    private def actionAdd(parent: Node): Unit = {
       val format  = new SimpleDateFormat("yyyy MM dd MM | HH:mm:ss", Locale.US) // don't bother user with alpha characters
       val ggValue = new FormattedTextField(format)
       ggValue.peer.setValue(new Date(parent.updated))
@@ -119,7 +115,7 @@ object DocumentCursorsFrameImpl {
       }
     }
 
-    private def elemRemoved(parent: Node, idx: Int, child: Cursors[S, D])(implicit tx: D#Tx) {
+    private def elemRemoved(parent: Node, idx: Int, child: Cursors[S, D])(implicit tx: D#Tx): Unit =
       mapViews.get(child).foreach { cv =>
         // NOTE: parent.children is only updated on the GUI thread through the model.
         // no way we could verify the index here!!
@@ -134,15 +130,13 @@ object DocumentCursorsFrameImpl {
           _model.elemRemoved(parent, idx)
         }
       }
-    }
 
-    def addChildren(parentView: Node, parent: Cursors[S, D])(implicit tx: D#Tx) {
+    def addChildren(parentView: Node, parent: Cursors[S, D])(implicit tx: D#Tx): Unit =
       parent.descendants.toList.zipWithIndex.foreach { case (c, ci) =>
         elemAdded(parent = parentView, idx = ci, child = c)
       }
-    }
 
-    private def elemAdded(parent: Node, idx: Int, child: Cursors[S, D])(implicit tx: D#Tx) {
+    private def elemAdded(parent: Node, idx: Int, child: Cursors[S, D])(implicit tx: D#Tx): Unit = {
       val cv   = createView(document, parent = Some(parent), elem = child)
       // NOTE: parent.children is only updated on the GUI thread through the model.
       // no way we could verify the index here!!
@@ -156,7 +150,7 @@ object DocumentCursorsFrameImpl {
       addChildren(cv, child)
     }
 
-    def elemUpdated(v: Node, upd: Vec[Cursors.Change[S, D]])(implicit tx: D#Tx) {
+    def elemUpdated(v: Node, upd: Vec[Cursors.Change[S, D]])(implicit tx: D#Tx): Unit =
       upd.foreach {
         case Cursors.ChildAdded  (idx, child) => elemAdded  (v, idx, child)
         case Cursors.ChildRemoved(idx, child) => elemRemoved(v, idx, child)
@@ -169,9 +163,8 @@ object DocumentCursorsFrameImpl {
             elemUpdated(cv, childUpd)
           }
       }
-    }
 
-    def guiInit() {
+    def guiInit(): Unit = {
       requireEDT()
       require(comp == null, "Initialization called twice")
 
@@ -180,7 +173,7 @@ object DocumentCursorsFrameImpl {
       val colName = new TreeColumnModel.Column[Node, String]("Name") {
         def apply(node: Node): String = node.name
 
-        def update(node: Node, value: String) {
+        def update(node: Node, value: String): Unit =
           if (value != node.name) {
             cursor.step { implicit tx =>
               val expr = ExprImplicits[D]
@@ -188,20 +181,19 @@ object DocumentCursorsFrameImpl {
               node.elem.name_=(value)
             }
           }
-        }
 
         def isEditable(node: Node) = true
       }
 
       val colCreated = new TreeColumnModel.Column[Node, Date]("Origin") {
         def apply(node: Node): Date = new Date(node.created)
-        def update(node: Node, value: Date) {}
+        def update(node: Node, value: Date) = ()
         def isEditable(node: Node) = false
       }
 
       val colUpdated = new TreeColumnModel.Column[Node, Date]("Updated") {
         def apply(node: Node): Date = new Date(node.updated)
-        def update(node: Node, value: Date) {}
+        def update(node: Node, value: Date) = ()
         def isEditable(node: Node) = false
       }
 

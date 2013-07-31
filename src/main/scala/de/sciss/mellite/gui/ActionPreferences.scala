@@ -38,7 +38,7 @@ object ActionPreferences extends Action("Preferences...") {
   import KeyStrokes._
   accelerator = Some(menu1 + KeyEvent.VK_COMMA)
 
-  def apply() {
+  def apply(): Unit = {
     import language.reflectiveCalls
     val box = new GroupPanel {
       val lbAudioDevice = new Label("Audio Device:", EmptyIcon, Alignment.Right)

@@ -17,7 +17,7 @@ trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl
   protected def canvas: TimelineProcCanvas[S]
 
   private val mia = new MouseAdapter {
-    override def mousePressed(e: MouseEvent) {
+    override def mousePressed(e: MouseEvent): Unit = {
       val pos       = canvas.screenToFrame(e.getX).toLong
       val hitTrack  = canvas.screenToTrack(e.getY)
       val regionOpt = canvas.findRegion(pos, hitTrack)  // procs span "two tracks". ouchilah...
@@ -26,19 +26,19 @@ trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl
     }
   }
 
-  final def uninstall(component: Component) {
+  final def uninstall(component: Component): Unit = {
     component.peer.removeMouseListener(mia)
     component.peer.removeMouseMotionListener(mia)
     component.cursor = null
   }
 
-  final def install(component: Component) {
+  final def install(component: Component): Unit = {
     component.peer.addMouseListener(mia)
     component.peer.addMouseMotionListener(mia)
     component.cursor = defaultCursor
   }
 
-  private def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineProcView[S]]) {
+  private def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineProcView[S]]): Unit = {
     val selm = canvas.selectionModel
     if (e.isShiftDown) {
       regionOpt.foreach { region =>
@@ -63,13 +63,12 @@ trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl
     })
   }
 
-  def commit(drag: A)(implicit tx: S#Tx) {
+  def commit(drag: A)(implicit tx: S#Tx): Unit =
     canvas.selectionModel.iterator.foreach { pv =>
       val span  = pv.spanSource()
       val proc  = pv.procSource()
       commitProc(drag)(span, proc)
     }
-  }
 
   protected def commitProc(drag: A)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit
 

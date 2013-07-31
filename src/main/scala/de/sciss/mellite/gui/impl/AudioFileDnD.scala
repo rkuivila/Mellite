@@ -64,24 +64,23 @@ object AudioFileDnD {
     private var dndStarted  = false
 
     private object Mouse extends MouseAdapter {
-      override def mousePressed(e: MouseEvent) {
+      override def mousePressed(e: MouseEvent): Unit = {
         dndInitX	  = e.getX
         dndInitY    = e.getY
         dndPressed  = true
         dndStarted	= false
       }
 
-      override def mouseReleased(e: MouseEvent) {
+      override def mouseReleased(e: MouseEvent): Unit = {
         dndPressed  = false
         dndStarted	= false
       }
 
-      override def mouseDragged(e: MouseEvent) {
+      override def mouseDragged(e: MouseEvent): Unit =
         if (dndPressed && !dndStarted && ((math.abs(e.getX - dndInitX) > 5) || (math.abs(e.getY - dndInitY) > 5))) {
           Transfer.exportAsDrag(peer, e, COPY)
           dndStarted = true
         }
-      }
     }
 
     peer.addMouseListener      (Mouse)

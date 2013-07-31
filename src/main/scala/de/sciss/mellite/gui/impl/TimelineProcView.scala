@@ -70,12 +70,11 @@ object TimelineProcView {
 
     private var failedAcquire = false
 
-    def release() {
+    def release(): Unit =
       sono.foreach { ovr =>
         sono = None
         SonogramManager.release(ovr)
       }
-    }
 
     def name = nameOpt.getOrElse {
       audio.map(_.value.artifact.base).getOrElse("<unnamed>")

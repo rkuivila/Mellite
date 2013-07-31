@@ -117,20 +117,18 @@ object RecursionFrameImpl {
     protected implicit def _aural    : AuralSystem
     protected def observer  : Disposable[S#Tx]
 
-    final def dispose()(implicit tx: S#Tx) {
+    final def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
       guiFromTx(comp.dispose())
     }
 
-    private def disposeData()(implicit tx: S#Tx) {
+    private def disposeData()(implicit tx: S#Tx): Unit =
       observer.dispose()
-    }
 
-    private def frameClosing() {
+    private def frameClosing(): Unit =
       _cursor.step { implicit tx =>
         disposeData()
       }
-    }
 
     private var ggDeployed: Label = _
     private var ggProduct : Label = _
@@ -138,7 +136,7 @@ object RecursionFrameImpl {
     private var frame     : Frame = _
     private var currentProc = Option.empty[Processor[Any, _]]
 
-    final protected def guiUpdate() {
+    final protected def guiUpdate(): Unit = {
       ggDeployed.text = view.deployed.name
       ggProduct .text = view.product .name
       // println(s"view.deployed = ${view.deployed}, product = ${view.product}")
@@ -148,7 +146,7 @@ object RecursionFrameImpl {
       updateDeployed.enabled  = enabled && view.sameFiles
     }
 
-    final protected def guiInit() {
+    final protected def guiInit(): Unit = {
       // val fileName = deployed.nameWithoutExtension
 
       val ggProgress    = new ProgressBar
@@ -173,7 +171,7 @@ object RecursionFrameImpl {
         maximumSize   = preferredSize
       }
 
-      def performProductUpdate() {
+      def performProductUpdate(): Unit = {
         val b         = view.product.parent
         val (n0,ext)  = view.product.baseAndExt
         val i         = n0.lastIndexOf('_')
@@ -193,7 +191,7 @@ object RecursionFrameImpl {
         val newFile     = loopFile(1)
         val bounceFile  = if (ftOpt.isDefined) File.createTempFile("bounce", "." + _spec.fileType.extension) else newFile
 
-        def embed() {
+        def embed(): Unit = {
           processStopped()
           _cursor.step { implicit tx =>
             val product = recH().product
@@ -221,7 +219,7 @@ object RecursionFrameImpl {
         }
       }
 
-      def performBounce(file: File)(success: => Unit) {
+      def performBounce(file: File)(success: => Unit): Unit = {
         val (groupH, gain, span, channels, audio) = _cursor.step { implicit tx =>
           import proc.ProcGroup.serializer
           val e         = recH()
@@ -240,7 +238,7 @@ object RecursionFrameImpl {
         monitor("Bounce", pBounce) { _ => success }
       }
 
-      def performMatch() {
+      def performMatch(): Unit = {
         val file = File.createTempFile("bounce", "." + _spec.fileType.extension)
         performBounce(file) {
           val pCompare = new FileComparison(view.deployed, file)
@@ -254,7 +252,7 @@ object RecursionFrameImpl {
         }
       }
 
-      def updateGadgets(enabled: Boolean) {
+      def updateGadgets(enabled: Boolean): Unit = {
         matchDeployed .enabled  = enabled
         updateDeployed.enabled  = enabled && view.sameFiles
         updateProduct .enabled  = enabled
@@ -262,33 +260,33 @@ object RecursionFrameImpl {
         ggStopProcess .visible  = !enabled
       }
 
-      def processStopped() {
+      def processStopped(): Unit = {
         updateGadgets(enabled = true)
         currentProc = None
       }
 
       // `onSuccess` is called on EDT!
-      def monitor[A](title: String, p: Processor[A, _])(onSuccess: A => Unit) {
+      def monitor[A](title: String, p: Processor[A, _])(onSuccess: A => Unit): Unit = {
         updateGadgets(enabled = false)
         ggStopProcess.requestFocus()
         currentProc = Some(p)
 
         p.addListener {
-          case prog @ Processor.Progress(_, _) => GUI.defer {
+          case prog @ Processor.Progress(_, _) => defer {
             ggProgress.value = prog.toInt
           }
         }
         p.onComplete {
-          case Success(value) => GUI.defer(onSuccess(value))
+          case Success(value) => defer(onSuccess(value))
           case Failure(Processor.Aborted()) =>
-            GUI.defer(processStopped())
+            defer(processStopped())
           case Failure(e: Exception) => // XXX TODO: Desktop should allow Throwable for DialogSource.Exception
-            GUI.defer {
+            defer {
               processStopped()
               DialogSource.Exception(e -> title).show(Some(comp))
             }
           case Failure(e) =>
-            GUI.defer(processStopped())
+            defer(processStopped())
             e.printStackTrace()
         }
       }
@@ -356,8 +354,8 @@ object RecursionFrameImpl {
       resizable   = false
       pack()
 
-      def setTitle(n: String) { title_=(n) }
-      // def setFile (f: File  ) { file_=(Some(f)) }
+      def setTitle(n: String): Unit = title_=(n)
+      // def setFile (f: File  ): Unit = file_=(Some(f))
     }
   }
 }

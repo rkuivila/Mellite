@@ -37,9 +37,8 @@ object DocumentImpl {
   private type S = Cf
 
   private implicit object serializer extends Serializer[S#Tx, S#Acc, Data] {
-    def write(data: Data, out: DataOutput) {
+    def write(data: Data, out: DataOutput): Unit =
       data.write(out)
-    }
 
     def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): Data = {
       val cookie = in.readLong()
@@ -91,16 +90,14 @@ object DocumentImpl {
     def elements: Folder[S]
     // def cursor: confluent.Cursor[S, S#D]
 
-    final def write(out: DataOutput) {
+    final def write(out: DataOutput): Unit = {
       out.writeLong(COOKIE)
       elements.write(out)
       // cursor  .write(out)
     }
 
-    final def dispose()(implicit tx: S#Tx) {
+    final def dispose()(implicit tx: S#Tx): Unit =
       elements.dispose()
-      // cursor  .dispose()
-    }
 
     override def toString = s"Data ($elements)"
   }

@@ -17,7 +17,7 @@ import de.sciss.synth.expr.ExprImplicits
 import de.sciss.file._
 
 object MetaNull {
-  def perform(in: File, out: File, config: Nullstellen.Config) {
+  def perform(in: File, out: File, config: Nullstellen.Config): Unit = {
     val inSpec  = AudioFile.readSpec(in)
     val spans   = findNonSilentSpans(in) // .take(2)
 
@@ -59,7 +59,7 @@ object MetaNull {
     // ...
   }
 
-  private def bounce(inSpec: AudioFileSpec, out: File, matches: Vec[Vec[(Long, FeatureCorrelation.Match)]]) {
+  private def bounce(inSpec: AudioFileSpec, out: File, matches: Vec[Vec[(Long, FeatureCorrelation.Match)]]): Unit = {
     type I            = proc.InMemory
     implicit val sys  = proc.InMemory()
     val p = sys.step { implicit tx =>
@@ -159,7 +159,7 @@ object MetaNull {
     }
   }
 
-  def makeDatabaseAliases(inDir: File, outDir: File) {
+  def makeDatabaseAliases(inDir: File, outDir: File): Unit = {
     def loop(base: File): Vector[File] = {
       val sub   = base.listFiles(new FileFilter {
         def accept(f: File): Boolean = f.isDirectory
@@ -191,7 +191,7 @@ object MetaNull {
     if (files0 == null) Vector.empty else files0.toVector
   }
 
-  def runExtractors(inDir: File, outDir: File) {
+  def runExtractors(inDir: File, outDir: File): Unit = {
     import mellite.executionContext
     val files   = acceptableAudioFiles(inDir)
     files.foreach { inF =>

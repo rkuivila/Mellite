@@ -44,7 +44,7 @@ trait TimelineNavigation {
 
     accelerator = Some(stroke)
 
-    def apply() {
+    def apply(): Unit = {
       val visiSpan    = timelineModel.visible
       val visiLen     = visiSpan.length
       val pos         = timelineModel.position

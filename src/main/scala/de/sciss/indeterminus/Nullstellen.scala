@@ -135,7 +135,7 @@ object Nullstellen extends ProcessorFactory {
       startWeight, stopWeight, maxOverlap, connectionWeight, strategyWeight, seed /* , updater */
     )
 
-    def read(settings: Config) {
+    def read(settings: Config): Unit = {
       tlSpan          = settings.tlSpan
       layer           = settings.layer
       layerOffset     = settings.layerOffset
@@ -228,10 +228,7 @@ class Nullstellen private(config: Nullstellen.Config)
 
   private var progressFactor = 1.0f
 
-  private def progressed(f: Float) {
-    val p = f * progressFactor
-    progress(p)
-  }
+  private def progressed(f: Float): Unit = progress(f * progressFactor)
 
   private def featureFolder = config.materialFolder // XXX TODO -- good idea or not?
 
@@ -554,7 +551,7 @@ class Nullstellen private(config: Nullstellen.Config)
           var progDone = 0
           val progDoneNum = numMatches * numChannels // numMatches
 
-          def recurse(taken: Vec[Int], baseDone: Vec[Float], xDone: Vec[Float], numDone: Int) {
+          def recurse(taken: Vec[Int], baseDone: Vec[Float], xDone: Vec[Float], numDone: Int): Unit = {
             val chan = taken.size
             require(chan == baseDone.size)
             checkAborted()

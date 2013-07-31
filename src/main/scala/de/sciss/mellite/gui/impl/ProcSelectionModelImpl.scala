@@ -18,25 +18,22 @@ final class ProcSelectionModelImpl[S <: Sys[S]]
 
   def iterator: Iterator[TimelineProcView[S]] = set.iterator
 
-  def +=(view: TimelineProcView[S]) {
+  def +=(view: TimelineProcView[S]): Unit =
     if (!set.contains(view)) {
       set += view
       dispatch(Update(added = Set(view), removed = Set.empty))
     }
-  }
 
-  def -=(view: TimelineProcView[S]) {
+  def -=(view: TimelineProcView[S]): Unit =
     if (set.contains(view)) {
       set -= view
       dispatch(Update(added = Set.empty, removed = Set(view)))
     }
-  }
 
-  def clear() {
+  def clear(): Unit =
     if (set.nonEmpty) {
       val removed = set
       set = Set.empty
       dispatch(Update(added = Set.empty, removed = removed))
     }
-  }
 }

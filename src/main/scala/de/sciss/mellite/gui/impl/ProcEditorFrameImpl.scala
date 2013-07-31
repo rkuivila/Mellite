@@ -48,19 +48,19 @@ object ProcEditorFrameImpl {
       ggName.text
     }
 
-    def name_=(value: String) {
+    def name_=(value: String): Unit = {
       requireEDT()
       ggName.text = value
     }
 
     def proc(implicit tx: S#Tx): Proc[S] = procH() // tx.refresh( csrPos, staleProc )
 
-    def dispose()(implicit tx: S#Tx) {
+    def dispose()(implicit tx: S#Tx): Unit = {
       observer.dispose()
       guiFromTx(comp.dispose())
     }
 
-    def guiInit(initName: String, initGraphSource: Option[String]) {
+    def guiInit(initName: String, initGraphSource: Option[String]): Unit = {
       requireEDT()
       require(comp == null, "Initialization called twice")
 
@@ -74,12 +74,11 @@ object ProcEditorFrameImpl {
       ggSource = CodePane(cCfg)
       ggSource.editor.setEnabled(false)
       ggSource.editor.setPreferredSize(new Dimension(300, 300))
-      InterpreterSingleton {
-        in =>
-          execInGUI {
-            intOpt = Some(in)
-            ggSource.editor.setEnabled(true)
-          }
+      InterpreterSingleton { in =>
+        defer {
+          intOpt = Some(in)
+          ggSource.editor.setEnabled(true)
+        }
       }
 
       val lbName = new Label("Name:")
@@ -139,15 +138,12 @@ object ProcEditorFrameImpl {
         // f*** scala swing... how should this be written?
         peer.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE)
         peer.addWindowListener(new WindowAdapter {
-          override def windowClosing(e: WindowEvent) {
+          override def windowClosing(e: WindowEvent): Unit =
             atomic(implicit tx => dispose())
-          }
         })
 
         contents = new BorderPanel {
-
           import BorderPanel.Position._
-
           add(topPanel, North)
           add(Component.wrap(ggSource.component), Center)
           add(botPanel, South)

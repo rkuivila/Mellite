@@ -59,7 +59,7 @@ object CursorsImpl {
     override def toString() = "Cursors" + id
 
     def name(implicit tx: D1#Tx): Expr[D1, String] = nameVar()
-    def name_=(value: Expr[D1, String])(implicit tx: D1#Tx) { nameVar() = value }
+    def name_=(value: Expr[D1, String])(implicit tx: D1#Tx): Unit = nameVar() = value
 
     def descendants(implicit tx: D1#Tx): data.Iterator[D1#Tx, Cursors[S, D1]] = list.iterator
 
@@ -70,11 +70,10 @@ object CursorsImpl {
       child
     }
 
-    def removeChild(child: Cursors[S, D1])(implicit tx: D1#Tx) {
+    def removeChild(child: Cursors[S, D1])(implicit tx: D1#Tx): Unit =
       if (!list.remove(child)) println(s"WARNING: Cursor $child was not a child of $impl")
-    }
 
-    protected def writeData(out: DataOutput) {
+    protected def writeData(out: DataOutput): Unit = {
       out.writeInt(COOKIE)
       seminal.write(out)
       cursor .write(out)
@@ -82,7 +81,7 @@ object CursorsImpl {
       list   .write(out)
     }
 
-    protected def disposeData()(implicit tx: D1#Tx) {
+    protected def disposeData()(implicit tx: D1#Tx): Unit = {
       cursor .dispose()
       nameVar.dispose()
       list   .dispose()
@@ -112,14 +111,14 @@ object CursorsImpl {
 
       def node = impl
 
-      def connect()(implicit tx: D1#Tx) {
+      def connect()(implicit tx: D1#Tx): Unit = {
         // log(s"$this.connect")
         // GeneratorEvent ---> this
         list.changed    ---> this
         nameVar.changed ---> this
       }
 
-      def disconnect()(implicit tx: D1#Tx) {
+      def disconnect()(implicit tx: D1#Tx): Unit = {
         // log(s"$this.disconnect()")
         // GeneratorEvent -/-> this
         list.changed    -/-> this

@@ -45,7 +45,7 @@ object ActionOpenFile extends Action( "Open...") {
   private def fullTitle = "Open Document"
 
   // XXX TODO: should be in another place
-  def openGUI[S <: Sys[S]](doc: Document[S]) {
+  def openGUI[S <: Sys[S]](doc: Document[S]): Unit = {
     recentFiles.add(doc.folder)
     doc match {
       case cf: ConfluentDocument =>
@@ -63,13 +63,13 @@ object ActionOpenFile extends Action( "Open...") {
   def recentFiles: RecentFiles  = _recent
   def recentMenu : Menu.Group   = _recent.menu
 
-  def apply() {
+  def apply(): Unit = {
     val dlg = FileDialog.open(title = fullTitle)
     dlg.setFilter { f => f.isDirectory && f.getName.endsWith(".mllt") }
     dlg.show(None).foreach(perform)
   }
 
-  def perform(folder: File) {
+  def perform(folder: File): Unit =
     try {
       val doc = Document.read(folder)
       openGUI(doc)
@@ -82,5 +82,4 @@ object ActionOpenFile extends Action( "Open...") {
           messageType = Dialog.Message.Error
         )
     }
-  }
 }

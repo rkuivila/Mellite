@@ -19,23 +19,12 @@ trait AbstractTreeModel[A] extends TreeModel[A] {
     loop(Path.empty, node)
   }
 
-  final protected def fireNodesChanged(nodes: A*) {
-    fire(nodes)(TreeNodesChanged[A])
-  }
+  final protected def fireNodesChanged    (nodes: A*): Unit = fire(nodes)(TreeNodesChanged    [A])
+  final protected def fireNodesInserted   (nodes: A*): Unit = fire(nodes)(TreeNodesInserted   [A])
+  final protected def fireNodesRemoved    (nodes: A*): Unit = fire(nodes)(TreeNodesRemoved    [A])
+  final protected def fireStructureChanged(nodes: A*): Unit = fire(nodes)(TreeStructureChanged[A])
 
-  final protected def fireNodesInserted(nodes: A*) {
-    fire(nodes)(TreeNodesInserted[A])
-  }
-
-  final protected def fireNodesRemoved(nodes: A*) {
-    fire(nodes)(TreeNodesRemoved[A])
-  }
-
-  final protected def fireStructureChanged(nodes: A*) {
-    fire(nodes)(TreeStructureChanged[A])
-  }
-
-  private def fire(nodes: Seq[A])(fun: (TreeModel[A], Path[A], Seq[(Int, A)]) => TreeModelEvent[A]) {
+  private def fire(nodes: Seq[A])(fun: (TreeModel[A], Path[A], Seq[(Int, A)]) => TreeModelEvent[A]): Unit = {
     var pred  = Map.empty[A, Path[A]]
     var paths = Map.empty[Path[A], Vec[(Int, A)]] withDefaultValue Vector.empty
     nodes.foreach { n =>

@@ -38,7 +38,7 @@ object TreeColumnModel {
 
     def getValueAt(node: A, column: Int): Any = columns(column)(node)
 
-    def setValueAt(value: Any, node: A, column: Int) {
+    def setValueAt(value: Any, node: A, column: Int): Unit = {
       columns(column).asInstanceOf[Column[A, Any]](node) = value
       val path = pathToRoot(node)
       publish(TreeColumnChanged(this, path, column))

@@ -47,7 +47,7 @@ final class TrackFadeToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
     result
   }
 
-  protected def commitProc(drag: Fade)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx) {
+  protected def commitProc(drag: Fade)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
     import drag._
 
     val attr    = proc.attributes

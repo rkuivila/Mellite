@@ -45,7 +45,7 @@ class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
     var started = false
   }
 
-  def setSmartFixed(vi: VisualItem, state: Boolean) {
+  def setSmartFixed(vi: VisualItem, state: Boolean): Unit = {
     if (state) {
       vi.setFixed(true)
       return
@@ -66,7 +66,7 @@ class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
     } else None
   }
 
-  override def itemEntered(vi: VisualItem, e: MouseEvent) {
+  override def itemEntered(vi: VisualItem, e: MouseEvent): Unit = {
     //      e.getComponent.setCursor( csrHand )
     hoverItem = Some(vi)
     vi match {
@@ -83,7 +83,7 @@ class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
 
   private def getDisplay(e: MouseEvent) = e.getComponent.asInstanceOf[Display]
 
-  override def itemExited(vi: VisualItem, e: MouseEvent) {
+  override def itemExited(vi: VisualItem, e: MouseEvent): Unit = {
     hoverItem = None
     vi match {
       case ni: NodeItem =>
@@ -98,7 +98,7 @@ class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
     //      e.getComponent.setCursor( csrDefault )
   }
 
-  override def itemPressed(vi: VisualItem, e: MouseEvent) {
+  override def itemPressed(vi: VisualItem, e: MouseEvent): Unit = {
     val d = getDisplay(e)
     val displayPt = d.getAbsoluteCoordinate(e.getPoint, null)
     getData(vi).foreach { vp =>
@@ -121,7 +121,7 @@ class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
     if (vi.isInstanceOf[AggregateItem]) setFixed(vi, fixed = true)
   }
 
-  override def itemReleased(vi: VisualItem, e: MouseEvent) {
+  override def itemReleased(vi: VisualItem, e: MouseEvent): Unit = {
     //      vis.getRenderer( vi ) match {
     //         case pr: NuagesProcRenderer => {
     //            val data = vi.get( COL_NUAGES ).asInstanceOf[ VisualData ]
@@ -140,7 +140,7 @@ class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
     }
   }
 
-  override def itemDragged(vi: VisualItem, e: MouseEvent) {
+  override def itemDragged(vi: VisualItem, e: MouseEvent): Unit = {
     val d = getDisplay(e)
     val newPt = d.getAbsoluteCoordinate(e.getPoint, null)
     //      vis.getRenderer( vi ) match {
@@ -163,7 +163,7 @@ class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
   }
 
   // recursive over aggregate items
-  private def setFixed(vi: VisualItem, fixed: Boolean) {
+  private def setFixed(vi: VisualItem, fixed: Boolean): Unit =
     vi match {
       case ai: AggregateItem =>
         val iter = ai.items()
@@ -174,10 +174,9 @@ class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
 
       case _ => setSmartFixed(vi, fixed)
     }
-  }
 
   // recursive over aggregate items
-  private def move(vi: VisualItem, dx: Double, dy: Double) {
+  private def move(vi: VisualItem, dx: Double, dy: Double): Unit =
     vi match {
       case ai: AggregateItem =>
         val iter = ai.items()
@@ -196,5 +195,4 @@ class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
         vi.setEndX(x + dx)
         vi.setEndY(y + dy)
     }
-  }
 }

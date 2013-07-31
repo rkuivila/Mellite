@@ -7,7 +7,7 @@ import java.io.File
 
 object TransformUtil {
   implicit final class RichFScapeJob(val job: FScapeJobs.Doc) {
-    def perform() {
+    def perform(): Unit = {
       val fut = FScape.perform(job)
       Await.result(fut, Duration.Inf)
     }

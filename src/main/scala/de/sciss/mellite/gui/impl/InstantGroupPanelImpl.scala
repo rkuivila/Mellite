@@ -58,13 +58,12 @@ object InstantGroupPanelImpl {
     val map = tx.newInMemoryIDMap[Map[SpanLike, List[VisualProc[S]]]]
     val all = transport.iterator.toIndexedSeq
 
-    //    def playStop(b: Boolean)(implicit tx: S#Tx) {
+    //    def playStop(b: Boolean)(implicit tx: S#Tx): Unit =
     //      guiFromTx(vis.playing = b)
-    //    }
 
     def advance(time: Long, added: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
                 removed: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
-                params: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]], Map[String, Param])])(implicit tx: S#Tx) {
+                params: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]], Map[String, Param])])(implicit tx: S#Tx): Unit = {
       val vpRem = removed.flatMap {
         case (span, timed) =>
           map.get(timed.id).flatMap { vpm =>
@@ -119,205 +118,198 @@ object InstantGroupPanelImpl {
       vis
    }
 
-//   private final class VisualProc( val name: String )
+  //   private final class VisualProc( val name: String )
 
-   private val ACTION_COLOR   = "color"
-   private val ACTION_LAYOUT  = "layout"
-   private val GROUP_GRAPH    = "graph"
-   private val GROUP_NODES    = "graph.nodes"
-//   private val GROUP_EDGES    = "graph.edges"
-   private val LAYOUT_TIME    = 50
-//   private val colrPlay       = new Color( 0, 0x80, 0 )
-//   private val colrStop       = Color.black
+  private val ACTION_COLOR = "color"
+  private val ACTION_LAYOUT = "layout"
+  private val GROUP_GRAPH = "graph"
+  private val GROUP_NODES = "graph.nodes"
+  //   private val GROUP_EDGES    = "graph.edges"
+  private val LAYOUT_TIME = 50
 
-   private final class Impl[ S <: Sys[ S ]]( transport: ProcTransport[ S ], cursor: Cursor[ S ])
-   extends InstantGroupPanel[ S ] with ComponentHolder[ Component ] {
-      private var playingVar = false
-//      private var vps      = Set.empty[ VisualProc ]
-      private var nodeMap  = Map.empty[ VisualProc[ S ], data.Node ]
+  //   private val colrPlay       = new Color( 0, 0x80, 0 )
+  //   private val colrStop       = Color.black
 
-      private val g        = {
-         val res = new data.Graph
-//         res.addColumn( VisualItem.LABEL, classOf[ String ])
-         res.addColumn( VisualProc.COLUMN_DATA, classOf[ VisualProc[ S ]])
-         res
+  private final class Impl[S <: Sys[S]](transport: ProcTransport[S], cursor: Cursor[S])
+    extends InstantGroupPanel[S] with ComponentHolder[Component] {
+
+    private var playingVar = false
+    //      private var vps      = Set.empty[ VisualProc ]
+    private var nodeMap = Map.empty[VisualProc[S], data.Node]
+
+    private val g = {
+      val res = new data.Graph
+      //         res.addColumn( VisualItem.LABEL, classOf[ String ])
+      res.addColumn(VisualProc.COLUMN_DATA, classOf[VisualProc[S]])
+      res
+    }
+    private var pVis: Visualization = _
+    private var display: Display = _
+
+    def guiInit(): Unit = {
+      requireEDT()
+      require(comp == null, "Initialization called twice")
+
+      pVis = new Visualization()
+      pVis.addGraph(GROUP_GRAPH, g)
+
+      display = new Display(pVis) {
+        override protected def setRenderingHints(g: Graphics2D): Unit = {
+          g.setRenderingHint(RenderingHints.KEY_ANTIALIASING      , RenderingHints.VALUE_ANTIALIAS_ON         )
+          g.setRenderingHint(RenderingHints.KEY_RENDERING         , RenderingHints.VALUE_RENDER_QUALITY       )
+          // XXX somehow this has now effect:
+          g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS , RenderingHints.VALUE_FRACTIONALMETRICS_ON )
+          g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL    , RenderingHints.VALUE_STROKE_PURE          )
+        }
       }
-      private var pVis: Visualization = _
-      private var display: Display = _
+      display.setBackground(Color.black)
 
-      def guiInit() {
-         requireEDT()
-         require( comp == null, "Initialization called twice" )
+      val lay = new ForceDirectedLayout(GROUP_GRAPH)
+      val fs = lay.getForceSimulator
 
-         pVis = new Visualization()
-         pVis.addGraph( GROUP_GRAPH, g )
+      // a somewhat weird force that keeps unconnected vertices
+      // within some bounds :)
+      fs.addForce(new AbstractForce {
+        private val x = 0f
+        private val y = 0f
+        private val r = 150f
+        private val grav = 0.4f
 
-         display = new Display( pVis ) {
-            override protected def setRenderingHints( g: Graphics2D ) {
-               g.setRenderingHint( RenderingHints.KEY_ANTIALIASING,      RenderingHints.VALUE_ANTIALIAS_ON )
-               g.setRenderingHint( RenderingHints.KEY_RENDERING,         RenderingHints.VALUE_RENDER_QUALITY )
-               // XXX somehow this has now effect:
-               g.setRenderingHint( RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON )
-               g.setRenderingHint( RenderingHints.KEY_STROKE_CONTROL,    RenderingHints.VALUE_STROKE_PURE )
-            }
-         }
-         display.setBackground( Color.black )
+        protected def getParameterNames: Array[String] = Array[String]()
 
-         val lay = new ForceDirectedLayout( GROUP_GRAPH )
-         val fs = lay.getForceSimulator
+        override def isItemForce = true
 
-         // a somewhat weird force that keeps unconnected vertices
-         // within some bounds :)
-         fs.addForce( new AbstractForce {
-            private val x     = 0f
-            private val y     = 0f
-            private val r     = 150f
-            private val grav  = 0.4f
+        override def getForce(item: ForceItem): Unit = {
+          val n   = item.location
+          val dx  = x - n(0)
+          val dy  = y - n(1)
+          val d   = math.sqrt(dx * dx + dy * dy).toFloat
+          val dr  = r - d
+          val v   = grav * item.mass / (dr * dr)
+          if (d == 0.0) return
+          item.force(0) += v * dx / d
+          item.force(1) += v * dy / d
 
-            protected def getParameterNames : Array[ String ] = Array[ String ]()
+          //               println( "" + (dx/d) + "," + (dy/d) + "," + dr + "," + v )
+        }
+      })
 
-            override def isItemForce = true
+      //         val lbRend = new LabelRenderer( VisualItem.LABEL )
+      val lbRend = new NodeRenderer(VisualProc.COLUMN_DATA)
+      val rf = new DefaultRendererFactory(lbRend)
+      pVis.setRendererFactory(rf)
 
-            override def getForce( item: ForceItem ) {
-               val n = item.location
-               val dx = x-n(0)
-               val dy = y-n(1)
-               val d = math.sqrt(dx*dx+dy*dy).toFloat
-               val dr = r-d
-               val v = grav*item.mass / (dr*dr)
-               if( d == 0.0 ) return
-               item.force(0) += v*dx/d
-               item.force(1) += v*dy/d
+      // colors
+      val actionNodeStroke  = new ColorAction(GROUP_NODES, VisualItem.STROKECOLOR, ColorLib.rgb(255, 255, 255))
+      val actionNodeFill    = new ColorAction(GROUP_NODES, VisualItem.FILLCOLOR  , ColorLib.rgb(  0,   0,   0))
+      val actionTextColor   = new ColorAction(GROUP_NODES, VisualItem.TEXTCOLOR  , ColorLib.rgb(255, 255, 255))
 
-//               println( "" + (dx/d) + "," + (dy/d) + "," + dr + "," + v )
-            }
-         })
+      // quick repaint
+      val actionColor = new ActionList()
+      actionColor.add(actionTextColor)
+      actionColor.add(actionNodeStroke)
+      actionColor.add(actionNodeFill)
+      pVis.putAction(ACTION_COLOR, actionColor)
 
-//         val lbRend = new LabelRenderer( VisualItem.LABEL )
-         val lbRend = new NodeRenderer( VisualProc.COLUMN_DATA )
-         val rf = new DefaultRendererFactory( lbRend )
-         pVis.setRendererFactory( rf )
+      val actionLayout = new ActionList(Activity.INFINITY, LAYOUT_TIME)
+      actionLayout.add(lay)
+      actionLayout.add(new RepaintAction())
+      pVis.putAction(ACTION_LAYOUT, actionLayout)
+      pVis.alwaysRunAfter(ACTION_COLOR, ACTION_LAYOUT)
 
-         // colors
-         val actionNodeStroke = new ColorAction( GROUP_NODES, VisualItem.STROKECOLOR, ColorLib.rgb( 255, 255, 255 ))
-         val actionNodeFill   = new ColorAction( GROUP_NODES, VisualItem.FILLCOLOR,   ColorLib.rgb(   0,   0,   0 ))
-         val actionTextColor  = new ColorAction( GROUP_NODES, VisualItem.TEXTCOLOR,   ColorLib.rgb( 255, 255, 255 ))
+      // ------------------------------------------------
 
-         // quick repaint
-         val actionColor = new ActionList()
-         actionColor.add( actionTextColor )
-         actionColor.add( actionNodeStroke )
-         actionColor.add( actionNodeFill )
-         pVis.putAction( ACTION_COLOR, actionColor )
+      // initialize the display
+      display.setSize(600, 600)
+      val origin = new java.awt.Point(0, 0)
+      display.zoom(origin, 2.0)
+      display.panTo(origin)
+      display.addControlListener(new ZoomControl())
+      display.addControlListener(new WheelZoomControl())
+      display.addControlListener(new ZoomToFitControl())
+      display.addControlListener(new PanControl())
+      //         display.addControlListener( new DragControl() )
+      display.addControlListener(new VisualProcControl(cursor))
+      display.setHighQuality(true)
 
-         val actionLayout = new ActionList( Activity.INFINITY, LAYOUT_TIME )
-         actionLayout.add( lay )
-         actionLayout.add( new RepaintAction() )
-         pVis.putAction( ACTION_LAYOUT, actionLayout )
-         pVis.alwaysRunAfter( ACTION_COLOR, ACTION_LAYOUT )
+      display.setForeground(Color.WHITE)
+      display.setBackground(Color.BLACK)
 
-         // ------------------------------------------------
+      display.addAncestorListener(new AncestorListener {
+        def ancestorAdded(e: AncestorEvent): Unit =
+          startAnimation()
 
-         // initialize the display
-         display.setSize( 600, 600 )
-         val origin = new java.awt.Point( 0, 0 )
-         display.zoom( origin, 2.0 )
-         display.panTo( origin )
-         display.addControlListener( new ZoomControl() )
-         display.addControlListener( new WheelZoomControl() )
-         display.addControlListener( new ZoomToFitControl() )
-         display.addControlListener( new PanControl() )
-//         display.addControlListener( new DragControl() )
-         display.addControlListener( new VisualProcControl( cursor ))
-         display.setHighQuality( true )
+        def ancestorRemoved(e: AncestorEvent): Unit =
+          stopAnimation()
 
-         display.setForeground( Color.WHITE )
-         display.setBackground( Color.BLACK )
+        def ancestorMoved(e: AncestorEvent) = ()
+      })
 
-         display.addAncestorListener( new AncestorListener {
-            def ancestorAdded( e: AncestorEvent ) {
-               startAnimation()
-            }
+      comp = Component.wrap(display)
+    }
 
-            def ancestorRemoved( e: AncestorEvent) {
-               stopAnimation()
-            }
-
-            def ancestorMoved( e: AncestorEvent) {}
-         })
-
-         comp = Component.wrap( display )
-      }
-
-      def add( vps: VisualProc[ S ]* ) {
-//         vps ++= procs
-         visDo {
-            vps.foreach( add1 )
-         }
+    def add(vps: VisualProc[S]*): Unit =
+      visDo {
+        vps.foreach(add1)
       }
 
-      def remove( vps: VisualProc[ S ]* ) {
-//         vps --= procs
-         visDo {
-            vps.foreach( rem1 )
-         }
+    def remove(vps: VisualProc[S]*): Unit =
+      visDo {
+        vps.foreach(rem1)
       }
 
-      def updated( pairs: (VisualProc[ S ], Map[ String, Param ])* ) {
-         visDo {
-            pairs.foreach { case (vp, map) =>
-               vp.par ++= map
-            }
-         }
+    def updated(pairs: (VisualProc[S], Map[String, Param])*): Unit =
+      visDo {
+        pairs.foreach {
+          case (vp, map) =>
+            vp.par ++= map
+        }
       }
 
-      private def add1( vp: VisualProc[ S ]) {
-         val pNode   = g.addNode()
-//         val vi      = pVis.getVisualItem( GROUP_GRAPH, pNode )
-//         vi.setString( VisualItem.LABEL, vp.name )
-//         pNode.setString( VisualItem.LABEL, vp.name )
-//         val vi = pVis.getVisualItem( GROUP_NODES, pNode )
-//         if( vi != null ) vi.set( COLUMN_DATA, vp )
-         pNode.set( VisualProc.COLUMN_DATA, vp )
-         nodeMap    += vp -> pNode
+    private def add1(vp: VisualProc[S]): Unit = {
+      val pNode = g.addNode()
+      //         val vi      = pVis.getVisualItem( GROUP_GRAPH, pNode )
+      //         vi.setString( VisualItem.LABEL, vp.name )
+      //         pNode.setString( VisualItem.LABEL, vp.name )
+      //         val vi = pVis.getVisualItem( GROUP_NODES, pNode )
+      //         if( vi != null ) vi.set( COLUMN_DATA, vp )
+      pNode.set(VisualProc.COLUMN_DATA, vp)
+      nodeMap += vp -> pNode
+    }
+
+    private def rem1(vp: VisualProc[S]): Unit =
+      nodeMap.get(vp) match {
+        case Some(n) =>
+          g.removeNode(n)
+          nodeMap -= vp
+        case _ =>
       }
 
-      private def rem1( vp: VisualProc[ S ]) {
-         nodeMap.get( vp ) match {
-            case Some( n ) =>
-               g.removeNode( n )
-               nodeMap -= vp
-            case _ =>
-         }
+    def playing: Boolean = playingVar
+
+    def playing_=(b: Boolean): Unit =
+      if (playingVar != b) {
+        playingVar = b
+        //            display.setBackground( if( b ) colrPlay else colrStop )
+        //            display.repaint()
       }
 
-      def playing : Boolean = playingVar
-      def playing_=( b: Boolean ) {
-         if( playingVar != b ) {
-            playingVar = b
-//            display.setBackground( if( b ) colrPlay else colrStop )
-//            display.repaint()
-         }
-      }
+    private def stopAnimation(): Unit = {
+      pVis.cancel(ACTION_COLOR)
+      pVis.cancel(ACTION_LAYOUT)
+    }
 
-      private def stopAnimation() {
-         pVis.cancel( ACTION_COLOR )
-         pVis.cancel( ACTION_LAYOUT )
-      }
+    private def startAnimation(): Unit =
+      pVis.run(ACTION_COLOR)
 
-      private def startAnimation() {
-         pVis.run( ACTION_COLOR )
+    private def visDo(thunk: => Unit): Unit =
+      pVis.synchronized {
+        stopAnimation()
+        try {
+          thunk
+        } finally {
+          startAnimation()
+        }
       }
-
-      private def visDo( thunk: => Unit ) {
-         pVis.synchronized {
-            stopAnimation()
-            try {
-               thunk
-            } finally {
-               startAnimation()
-            }
-         }
-      }
-   }
+  }
 }

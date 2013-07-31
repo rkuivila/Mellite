@@ -42,11 +42,8 @@ package object mellite {
   private lazy val logHeader = new SimpleDateFormat("[d MMM yyyy, HH:mm''ss.SSS] 'Mellite' - ", Locale.US)
   var showLog = false
 
-  @elidable(CONFIG) private[mellite] def log(what: => String) {
-    if (showLog) {
-      println(logHeader.format(new Date()) + what)
-    }
-  }
+  @elidable(CONFIG) private[mellite] def log(what: => String): Unit =
+    if (showLog) println(logHeader.format(new Date()) + what)
 
   implicit val executionContext: ExecutionContext = ExecutionContext.Implicits.global
 

@@ -60,20 +60,18 @@ object DocumentElementsFrameImpl {
 
     // protected implicit def cursor: Cursor[S] = document.cursor
 
-    def dispose()(implicit tx: S#Tx) {
+    def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
       guiFromTx(comp.dispose())
     }
 
-    private def disposeData()(implicit tx: S#Tx) {
+    private def disposeData()(implicit tx: S#Tx): Unit =
       folderView.dispose()
-    }
 
-    def frameClosing() {
+    def frameClosing(): Unit =
       cursor.step { implicit tx =>
         disposeData()
       }
-    }
 
     private def targetFolder(implicit tx: S#Tx): Folder[S] = {
       val sel = folderView.selection
@@ -89,7 +87,7 @@ object DocumentElementsFrameImpl {
       parent.addLast(elem)
     }
 
-    private def actionAddFolder() {
+    private def actionAddFolder(): Unit = {
       val res = Dialog.showInput[String](folderView.component, "Enter initial folder name:", "New Folder",
         Dialog.Message.Question, initial = "Folder")
       res.foreach { name =>
@@ -99,7 +97,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    private def actionAddProcGroup() {
+    private def actionAddProcGroup(): Unit = {
       val res = Dialog.showInput[String](folderView.component, "Enter initial group name:", "New ProcGroup",
         Dialog.Message.Question, initial = "Timeline")
       res.foreach { name =>
@@ -109,7 +107,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    private def actionAddArtifactLocation() {
+    private def actionAddArtifactLocation(): Unit = {
       val query = ActionArtifactLocation.queryNew(window = Some(comp))
       query.foreach { case (directory, name) =>
         atomic { implicit tx =>
@@ -118,7 +116,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    private def actionAddAudioFile() {
+    private def actionAddAudioFile(): Unit = {
       type Loc      = Element    .ArtifactLocation[S]
       type LocView  = ElementView.ArtifactLocation[S]
 
@@ -167,7 +165,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    private def actionAddInt() {
+    private def actionAddInt(): Unit = {
       val expr      = ExprImplicits[S]
       import expr._
       val model     = new SpinnerNumberModel(0, Int.MinValue, Int.MaxValue, 1)
@@ -178,7 +176,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    private def actionAddDouble() {
+    private def actionAddDouble(): Unit = {
       val expr      = ExprImplicits[S]
       import expr._
       val model     = new SpinnerNumberModel(0.0, Double.NegativeInfinity, Double.PositiveInfinity, 1.0)
@@ -189,7 +187,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    private def actionAddString() {
+    private def actionAddString(): Unit = {
       val expr      = ExprImplicits[S]
       import expr._
       val ggValue   = new TextField(20)
@@ -199,7 +197,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    private def actionAddCode() {
+    private def actionAddCode(): Unit = {
       val ggValue   = new ComboBox(Seq("File Transform"))
       actionAddPrimitive(tpe = "Code", ggValue = ggValue, prepare = ggValue.selection.index match {
         case 0 => Some(Code.FileTransform(
@@ -238,7 +236,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    def guiInit() {
+    def guiInit(): Unit = {
       requireEDT()
       require(comp == null, "Initialization called twice")
 

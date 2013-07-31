@@ -18,7 +18,7 @@ final class TrackToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
 
   private var _currentTool: TrackTool[S, _] = TrackTool.cursor(canvas)
   def currentTool = _currentTool
-  def currentTool_=(value: TrackTool[S, _]) {
+  def currentTool_=(value: TrackTool[S, _]): Unit =
     if (_currentTool != value) {
       val oldTool   = _currentTool
       _currentTool  = value
@@ -26,35 +26,31 @@ final class TrackToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
       value    .install(canvas.canvasComponent)
       dispatch(ToolChanged(Change(oldTool, value)))
     }
-  }
 
   private var _visualBoost: Float = 1f
   def visualBoost = _visualBoost
-  def visualBoost_=(value: Float) {
+  def visualBoost_=(value: Float): Unit =
     if (_visualBoost != value) {
       val oldBoost  = _visualBoost
       _visualBoost  = value
       dispatch(VisualBoostChanged(Change(oldBoost, value)))
     }
-  }
 
   private var _fadeViewMode: FadeViewMode = FadeViewMode.Curve
   def fadeViewMode = _fadeViewMode
-  def fadeViewMode_=(value: FadeViewMode) {
+  def fadeViewMode_=(value: FadeViewMode): Unit =
     if (_fadeViewMode != value) {
       val oldMode   = _fadeViewMode
       _fadeViewMode = value
       dispatch(FadeViewModeChanged(Change(oldMode, value)))
     }
-  }
 
   private var _regionViewMode: RegionViewMode = RegionViewMode.TitledBox
   def regionViewMode = _regionViewMode
-  def regionViewMode_=(value: RegionViewMode) {
+  def regionViewMode_=(value: RegionViewMode): Unit =
     if (_regionViewMode != value) {
       val oldMode     = _regionViewMode
       _regionViewMode = value
       dispatch(RegionViewModeChanged(Change(oldMode, value)))
     }
-  }
 }

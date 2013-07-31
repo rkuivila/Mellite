@@ -13,7 +13,7 @@ final class TimeDisplayImpl(model: TimelineModel) extends TimeDisplay {
   private val lcd       = new Label with DynamicComponentImpl {
     protected def component: Component = this
 
-    private def updateText(frame: Long) {
+    private def updateText(frame: Long): Unit = {
       val secs = frame / model.sampleRate
       text = lcdFormat.format(secs, decimals = 3, pad = 12)
     }
@@ -23,16 +23,15 @@ final class TimeDisplayImpl(model: TimelineModel) extends TimeDisplay {
         updateText(frame)
     }
 
-    protected def componentShown() {
+    protected def componentShown(): Unit = {
       model.addListener(tlmListener)
       updateText(model.position)
     }
 
-    protected def componentHidden() {
+    protected def componentHidden(): Unit =
       model.removeListener(tlmListener)
-    }
 
-    override protected def paintComponent(g2: Graphics2D) {
+    override protected def paintComponent(g2: Graphics2D): Unit = {
       val atOrig  = g2.getTransform
       try {
         // stupid lcd font has wrong ascent

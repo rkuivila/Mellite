@@ -55,7 +55,7 @@ object FolderViewImpl {
       val rootView  = ElementView.Root(root)
       val document  = _doc
 
-      private def buildMapView(f: Folder[S], fv: ElementView.FolderLike[S]) {
+      private def buildMapView(f: Folder[S], fv: ElementView.FolderLike[S]): Unit = {
         val tup = f.iterator.map(c => c -> ElementView(fv, c)(tx)).toIndexedSeq
         fv.children = tup.map(_._2)
         tup.foreach { case (c, cv) =>
@@ -119,11 +119,10 @@ object FolderViewImpl {
 
       def getParent(node: Node): Option[Node] = node.parent
 
-      def valueForPathChanged(path: TreeTable.Path[Node], newValue: Node) {
+      def valueForPathChanged(path: TreeTable.Path[Node], newValue: Node): Unit =
         println(s"valueForPathChanged($path, $newValue)")
-      }
 
-      def elemAdded(parent: ElementView.FolderLike[S], idx: Int, view: ElementView[S]) {
+      def elemAdded(parent: ElementView.FolderLike[S], idx: Int, view: ElementView[S]): Unit = {
         if (DEBUG) println(s"model.elemAdded($parent, $idx, $view)")
         val g       = parent  // Option.getOrElse(_root)
         require(idx >= 0 && idx <= g.children.size)
@@ -131,7 +130,7 @@ object FolderViewImpl {
         fireNodesInserted(view)
       }
 
-      def elemRemoved(parent: ElementView.FolderLike[S], idx: Int) {
+      def elemRemoved(parent: ElementView.FolderLike[S], idx: Int): Unit = {
         if (DEBUG) println(s"model.elemRemoved($parent, $idx)")
         require(idx >= 0 && idx < parent.children.size)
         val v       = parent.children(idx)
@@ -142,7 +141,7 @@ object FolderViewImpl {
         parent.children  = parent.children.patch(idx, Vector.empty, 1)
       }
 
-      def elemUpdated(view: ElementView[S]) {
+      def elemUpdated(view: ElementView[S]): Unit = {
         if (DEBUG) println(s"model.elemUpdated($view)")
         fireNodesChanged(view)
       }
@@ -151,7 +150,7 @@ object FolderViewImpl {
     private var _model: ElementTreeModel  = _
     private var t: TreeTable[Node, TreeColumnModel[Node]] = _
 
-    def elemAdded(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+    def elemAdded(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx): Unit = {
       if (DEBUG) println(s"elemAdded($parent, $idx $elem)")
       val v = ElementView(parent, elem)
       mapViews.put(elem.id, v)
@@ -175,7 +174,7 @@ object FolderViewImpl {
       }
     }
 
-    def elemRemoved(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx) {
+    def elemRemoved(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx): Unit = {
       if (DEBUG) println(s"elemRemoved($parent, $idx, $elem)")
       mapViews.get(elem.id).foreach { v =>
         (elem, v) match {
@@ -197,7 +196,7 @@ object FolderViewImpl {
       }
     }
 
-    def elemUpdated(elem: Element[S], changes: Vec[Element.Change[S]])(implicit tx: S#Tx) {
+    def elemUpdated(elem: Element[S], changes: Vec[Element.Change[S]])(implicit tx: S#Tx): Unit = {
       val viewOpt = mapViews.get(elem.id)
       if (viewOpt.isEmpty) {
         println(s"WARNING: No view for elem $elem")
@@ -224,20 +223,19 @@ object FolderViewImpl {
       }
     }
 
-    def folderUpdated(fv: ElementView.FolderLike[S], upd: Folder.Update[S])(implicit tx: S#Tx) {
+    def folderUpdated(fv: ElementView.FolderLike[S], upd: Folder.Update[S])(implicit tx: S#Tx): Unit =
       upd.foreach {
         case Folder.Added  (idx, elem)      => elemAdded  (fv, idx, elem)
         case Folder.Removed(idx, elem)      => elemRemoved(fv, idx, elem)
         case Folder.Element(elem, elemUpd)  => elemUpdated(elem, elemUpd.changes)
       }
-    }
 
-    def dispose()(implicit tx: S#Tx) {
+    def dispose()(implicit tx: S#Tx): Unit = {
       observer.dispose()
       mapViews.dispose()
     }
 
-    protected def guiInit() {
+    protected def guiInit(): Unit = {
       requireEDT()
       require(comp == null, "Initialization called twice")
 
@@ -246,7 +244,7 @@ object FolderViewImpl {
       val colName = new TreeColumnModel.Column[Node, String]("Name") {
         def apply(node: Node): String = node.name
 
-        def update(node: Node, value: String) {
+        def update(node: Node, value: String): Unit =
           node match {
             case v: ElementView[S] if value != v.name =>
               cursor.step { implicit tx =>
@@ -256,7 +254,6 @@ object FolderViewImpl {
               }
             case _ =>
           }
-        }
 
         def isEditable(node: Node) = node match {
           case b: ElementView[S] => true
@@ -266,10 +263,10 @@ object FolderViewImpl {
 
       val colValue = new TreeColumnModel.Column[Node, Any]("Value") {
         def apply(node: Node): Any = node.value
-        def update(node: Node, value: Any) {
-          // println(s"update $node with $value of class ${value.getClass}")
+
+        def update(node: Node, value: Any): Unit =
           cursor.step { implicit tx => node.tryUpdate(value) }
-        }
+
         def isEditable(node: Node) = node match {
           case b: ElementView.FolderLike[S] => false
           case _ => true

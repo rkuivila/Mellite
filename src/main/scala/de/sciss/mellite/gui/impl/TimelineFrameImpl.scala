@@ -29,22 +29,20 @@ object TimelineFrameImpl {
 
     def window = _window
 
-    def dispose()(implicit tx: S#Tx) {
+    def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
       guiFromTx(_window.dispose())
     }
 
-    private def disposeData()(implicit tx: S#Tx) {
+    private def disposeData()(implicit tx: S#Tx): Unit =
       view.dispose()
-    }
 
-    private def frameClosing() {
+    private def frameClosing(): Unit =
       _cursor.step { implicit tx =>
         disposeData()
       }
-    }
 
-    def init() {
+    def init(): Unit = {
       _window = new WindowImpl {
         def handler = Mellite.windowHandler
         def style   = Window.Regular

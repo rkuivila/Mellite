@@ -10,17 +10,15 @@ import javax.swing.Timer
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
-  def centerOnScreen(w: desktop.Window) {
-    placeWindow(w, 0.5f, 0.5f, 0)
-  }
+  def centerOnScreen(w: desktop.Window): Unit = placeWindow(w, 0.5f, 0.5f, 0)
 
-  def delay(millis: Int)(block: => Unit) {
+  def delay(millis: Int)(block: => Unit): Unit = {
     val timer = new Timer(millis, Swing.ActionListener(_ => block))
     timer.setRepeats(false)
     timer.start()
   }
 
-  def fixWidth(c: Component, width: Int = -1) {
+  def fixWidth(c: Component, width: Int = -1): Unit = {
     val w         = if (width < 0) c.preferredSize.width else width
     val min       = c.minimumSize
     val max       = c.maximumSize
@@ -30,31 +28,23 @@ object GUI {
     c.maximumSize = max
   }
 
-  def round(b: AbstractButton*) {
+  def round(b: AbstractButton*): Unit =
     b.foreach(_.peer.putClientProperty("JButton.buttonType", "roundRect"))
-  }
 
-  def findWindow(c: Component): Option[desktop.Window] = {
+  def findWindow(c: Component): Option[desktop.Window] =
     None  // XXX TODO - we should place a client property in Desktop
-  }
 
   def maximumWindowBounds: Rectangle = {
     val ge  = GraphicsEnvironment.getLocalGraphicsEnvironment
     ge.getMaximumWindowBounds
   }
 
-  def placeWindow(w: desktop.Window, horizontal: Float, vertical: Float, padding: Int) {
+  def placeWindow(w: desktop.Window, horizontal: Float, vertical: Float, padding: Int): Unit = {
     val bs  = maximumWindowBounds
     val b   = w.size
     val x   = (horizontal * (bs.width  - padding * 2 - b.width )).toInt + bs.x + padding
     val y   = (vertical   * (bs.height - padding * 2 - b.height)).toInt + bs.y + padding
     w.location = (x, y)
-  }
-
-  def requireEDT() { require(EventQueue.isDispatchThread) }
-
-  def defer(thunk: => Unit) {
-    if (EventQueue.isDispatchThread) thunk else Swing.onEDT(thunk)
   }
 
   def keyValueDialog(value: Component, title: String = "New Entry", defaultName: String = "Name",

@@ -29,7 +29,6 @@ package impl
 
 import de.sciss.sonogram
 import java.awt.{Color, Graphics2D}
-import scala.concurrent.ExecutionContext
 import scala.util.Failure
 import scala.util.Success
 import scala.swing.{Swing, Component}
@@ -53,7 +52,7 @@ final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineM
   object canvasComponent extends Component with sonogram.PaintController {
     private var paintFun: Graphics2D => Unit = paintChecker("Calculating...")
 
-    override def paintComponent(g: Graphics2D) {
+    override def paintComponent(g: Graphics2D): Unit = {
       paintFun(g)
       paintPosAndSelection(g, height)
     }
@@ -66,7 +65,7 @@ final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineM
       (b.width >> 1, b.height >> 1)
     }
 
-    private def paintChecker(message: String)(g: Graphics2D) {
+    private def paintChecker(message: String)(g: Graphics2D): Unit = {
       g.setPaint(pntChecker)
 
       g.fillRect(0, 0, width, height)
@@ -74,7 +73,7 @@ final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineM
       g.drawString(message, 10, 20)
     }
 
-    private def paintReady(g: Graphics2D) {
+    private def paintReady(g: Graphics2D): Unit = {
       val visi = timelineModel.visible
       sono.paint(spanStart = visi.start, spanStop = visi.stop, g, 0, 0, width, height, this)
     }
@@ -83,12 +82,12 @@ final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineM
 
     def imageObserver = peer
 
-    private def ready() {
-      paintFun    = paintReady
+    private def ready(): Unit = {
+      paintFun = paintReady
       repaint()
     }
 
-    private def failed(exception: Throwable) {
+    private def failed(exception: Throwable): Unit = {
       val message = s"${exception.getClass.getName} - ${exception.getMessage}"
       paintFun    = paintChecker(message)
       repaint()
@@ -97,8 +96,8 @@ final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineM
     // ---- constructor ----
 
     sono.onComplete {
-      case Success(_) => /* println("SUCCESS"); */ execInGUI(ready())
-      case Failure(e) => /* println("FAILURE"); */ execInGUI(failed(e))
+      case Success(_) => /* println("SUCCESS"); */ defer(ready())
+      case Failure(e) => /* println("FAILURE"); */ defer(failed(e))
     }
   }
 

@@ -102,18 +102,18 @@ object CodeImpl2 {
     object Bindings {
       def in : File = process.in
       def out: File = process.out
-      def checkAborted() { process.checkAborted() }
-      def progress(f: Double) {
+      def checkAborted(): Unit = process.checkAborted()
+      def progress(f: Double): Unit = {
         process.progress(f.toFloat)
         process.checkAborted()
       }
     }
 
-    protected def body() {
+    protected def body(): Unit = {
       // blocking {
       val prom  = Promise[Unit]()
       val t = new Thread {
-        override def run() {
+        override def run(): Unit = {
           FileTransformContext.contextVar.set(Bindings)
           try {
             fun()

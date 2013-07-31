@@ -17,33 +17,27 @@ trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
 
   protected def dragToParam(d: Drag): A
 
-  final protected def dragEnd() {
-    dispatch(DragEnd)
-  }
+  final protected def dragEnd   ()       : Unit = dispatch(DragEnd   )
+  final protected def dragCancel(d: Drag): Unit = dispatch(DragCancel)
 
-  final protected def dragCancel(d: Drag) {
-    dispatch(DragCancel)
-  }
-
-  final protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView[S]) {
+  final protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView[S]): Unit =
     if (e.getClickCount == 2) {
       handleDoubleClick()
     } else {
       new Drag(e, hitTrack, pos, region)
     }
-  }
 
   /* final */ protected def dragStarted(d: this.Drag): Boolean =
     d.currentEvent.getPoint.distanceSq(d.firstEvent.getPoint) > 16
 
-  final protected def dragBegin(d: Drag) {
+  final protected def dragBegin(d: Drag): Unit = {
     val p = dragToParam(d)
     _currentParam = Some(p)
     dispatch(DragBegin)
     dispatch(DragAdjust(p))
   }
 
-  final protected def dragAdjust(d: Drag) {
+  final protected def dragAdjust(d: Drag): Unit =
     _currentParam.foreach { oldP =>
       val p = dragToParam(d)
       if (p != oldP) {
@@ -51,17 +45,15 @@ trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
         dispatch(DragAdjust(p))
       }
     }
-  }
 
   protected def dialog(): Option[A]
 
-  final protected def handleDoubleClick() {
+  final protected def handleDoubleClick(): Unit =
     dialog().foreach { p =>
       dispatch(DragBegin)
       dispatch(DragAdjust(p))
       dispatch(DragEnd)
     }
-  }
 
   //  protected def showDialog(message: AnyRef): Boolean = {
   //    val op = OptionPane(message = message, messageType = OptionPane.Message.Question,
@@ -92,19 +84,19 @@ trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
       comp.requestFocus() // (why? needed to receive key events?)
     }
 
-    override def mouseReleased(e: MouseEvent) {
+    override def mouseReleased(e: MouseEvent): Unit = {
       unregister()
       if (started) dragEnd()
     }
 
-    private def unregister() {
+    private def unregister(): Unit = {
       val comp = firstEvent.getComponent
       comp.removeMouseListener      (this)
       comp.removeMouseMotionListener(this)
       comp.removeKeyListener        (this)
     }
 
-    private def calcCurrent(e: MouseEvent) {
+    private def calcCurrent(e: MouseEvent): Unit = {
       _currentEvent = e
       //      _currentTrack = firstTrack // default assumption
       //      val comp = e.getComponent
@@ -123,7 +115,7 @@ trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
       _currentTrack = canvas.screenToTrack(e.getY - firstEvent.getY) + canvas.screenToTrack(firstEvent.getY)
     }
 
-    override def mouseDragged(e: MouseEvent) {
+    override def mouseDragged(e: MouseEvent): Unit = {
       calcCurrent(e)
       if (!started) {
         started = dragStarted(this)
@@ -134,15 +126,14 @@ trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
       dragAdjust(this)
     }
 
-    def keyPressed(e: KeyEvent) {
+    def keyPressed(e: KeyEvent): Unit =
       if (e.getKeyCode == KeyEvent.VK_ESCAPE) {
         unregister()
         dragCancel(this)
       }
-    }
 
-    def keyTyped   (e: KeyEvent) {}
-    def keyReleased(e: KeyEvent) {}
+    def keyTyped   (e: KeyEvent) = ()
+    def keyReleased(e: KeyEvent) = ()
   }
 }
 

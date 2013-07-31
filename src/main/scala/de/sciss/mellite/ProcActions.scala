@@ -28,7 +28,7 @@ object ProcActions {
   }
 
   def resize[S <: Sys[S]](span: Expr[S, SpanLike], proc: Proc[S], amount: Resize, timelineModel: TimelineModel)
-                         (implicit tx: S#Tx) {
+                         (implicit tx: S#Tx): Unit = {
     import amount._
 
     val oldSpan   = span.value

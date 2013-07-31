@@ -24,9 +24,7 @@ final class TrackToolsPaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: Ve
     val name  = tool.name
     b.action  = new Action(null) {
       icon = tool.icon
-      def apply() {
-        control.currentTool = tool // println(name)
-      }
+      def apply(): Unit = control.currentTool = tool // println(name)
     }
     b.focusable = false
     val j = b.peer
@@ -40,10 +38,7 @@ final class TrackToolsPaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: Ve
     import desktop.Implicits._
     b.addAction(key = s"tracktool-$name", focus = FocusType.Window, action = new Action(name) {
       accelerator = Some(KeyStroke.getKeyStroke(KeyEvent.VK_1 + idx, 0))
-      def apply() {
-        // control.currentTool = tool
-        b.doClick()
-      }
+      def apply(): Unit = b.doClick()
     })
     contents += b
   }

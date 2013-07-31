@@ -19,7 +19,7 @@ import de.sciss.serial.impl.ByteArrayOutputStream
 object CodeImpl {
   private final val COOKIE  = 0x436F6465  // "Code"
   implicit object serializer extends ImmutableSerializer[Code] {
-    def write(v: Code, out: DataOutput) {
+    def write(v: Code, out: DataOutput): Unit = {
       out.writeInt(COOKIE)
       out.writeInt(v.id)
       out.writeUTF(v.source)
@@ -116,7 +116,7 @@ object CodeImpl {
     // private val vr = new ThreadLocal[() => Any]
     private val vr = new ThreadLocal[Array[Byte]]
 
-    def apply[A](thunk: => A) {
+    def apply[A](thunk: => A): Unit = {
       val fun = () => thunk
       val baos  = new ByteArrayOutputStream()
       val oos   = new ObjectOutputStream(baos)
@@ -153,36 +153,35 @@ object CodeImpl {
     object Bindings {
       def in : File = process.in
       def out: File = process.out
-      def checkAborted() { process.checkAborted() }
-      def progress(f: Double) {
+      def checkAborted(): Unit = process.checkAborted()
+      def progress(f: Double): Unit = {
         process.progress(f.toFloat)
         process.checkAborted()
       }
     }
 
-    protected def body() {
+    protected def body(): Unit =
       blocking {
-//      val prom  = Promise[Unit]()
-//      val t = new Thread {
-//        override def run() {
+        //      val prom  = Promise[Unit]()
+        //      val t = new Thread {
+        //        override def run(): Unit = {
         println("---1")
-          FileTransformContext.contextVar.set(Bindings)
-          try {
-            fun()
-        println("---2")
-//            prom.complete(Success())
-          } catch {
-            case e: Exception =>
-              e.printStackTrace()
-              throw e
-//              prom.complete(Failure(e))
-          }
-//        }
-//      }
-//      t.start()
-//      Await.result(prom.future, Duration.Inf)
+        FileTransformContext.contextVar.set(Bindings)
+        try {
+          fun()
+          println("---2")
+          //            prom.complete(Success())
+        } catch {
+          case e: Exception =>
+            e.printStackTrace()
+            throw e
+          //              prom.complete(Failure(e))
+        }
+        //        }
+        //      }
+        //      t.start()
+        //      Await.result(prom.future, Duration.Inf)
       }
-    }
   }
 
   // note: synchronous

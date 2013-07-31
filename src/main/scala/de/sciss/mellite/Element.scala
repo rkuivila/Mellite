@@ -67,9 +67,7 @@ object Element {
 
     private val anySer = new Serializer[InMemory]
     private final class Serializer[S <: Sys[S]] extends serial.Serializer[S#Tx, S#Acc, E[S]] {
-      def write(v: E[S], out: DataOutput) {
-        v.write(out)
-      }
+      def write(v: E[S], out: DataOutput): Unit = v.write(out)
 
       def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): E[S] = {
         val targets = evt.Targets.read[S](in, access)
@@ -354,9 +352,7 @@ object Element {
       }
     }
 
-    //    def write(elem: Element[S], out: DataOutput) {
-    //      elem.write(out)
-    //    }
+    //    def write(elem: Element[S], out: DataOutput): Unit = elem.write(out)
   }
 
   private def mkName[S <: Sys[S]](name: _String)(implicit tx: S#Tx): Name[S] =
@@ -391,13 +387,13 @@ object Element {
 
     protected def typeID: _Int
 
-    final protected def writeData(out: DataOutput) {
+    final protected def writeData(out: DataOutput): Unit = {
       out.writeInt(typeID)
       name.write(out)
       entity.write(out)
     }
 
-    final protected def disposeData()(implicit tx: S#Tx) {
+    final protected def disposeData()(implicit tx: S#Tx): Unit = {
       name.dispose()
       entity.dispose()
     }
@@ -429,13 +425,8 @@ object Element {
         pull(name.changed).map(ch => Update(self, Vec(Renamed(ch))))
       }
 
-      def connect()(implicit tx: S#Tx) {
-        name.changed ---> this
-      }
-
-      def disconnect()(implicit tx: S#Tx) {
-        name.changed -/-> this
-      }
+      def connect   ()(implicit tx: S#Tx): Unit = name.changed ---> this
+      def disconnect()(implicit tx: S#Tx): Unit = name.changed -/-> this
     }
   }
 
@@ -462,13 +453,8 @@ object Element {
         pull(entityEvent).map(ch => Update(self, Vec(Entity(ch))))
       }
 
-      def connect()(implicit tx: S#Tx) {
-        entityEvent ---> this
-      }
-
-      def disconnect()(implicit tx: S#Tx) {
-        entityEvent -/-> this
-      }
+      def connect   ()(implicit tx: S#Tx): Unit = entityEvent ---> this
+      def disconnect()(implicit tx: S#Tx): Unit = entityEvent -/-> this
     }
   }
 }

@@ -14,9 +14,7 @@ object InterpreterFrame {
     import KeyEvent._
     accelerator = Some(menu1 + VK_R)
 
-    def apply() {
-      InterpreterFrame()
-    }
+    def apply(): Unit = InterpreterFrame()
   }
 
   /** The content of this object is imported into the REPL */

@@ -22,7 +22,7 @@ object RecursionImpl {
   private val anySer = new Ser[InMemory]
 
   implicit object RangeSer extends ImmutableSerializer[Range.Inclusive] {
-    def write(v: Range.Inclusive, out: DataOutput) {
+    def write(v: Range.Inclusive, out: DataOutput): Unit =
       if (v.start == v.end) {
         out.writeByte(0)
         out.writeInt(v.start)
@@ -32,7 +32,6 @@ object RecursionImpl {
         out.writeInt(v.end  )
         out.writeInt(v.step )
       }
-    }
 
     def read(in: DataInput): Range.Inclusive = {
       (in.readByte(): @switch) match {
@@ -104,32 +103,32 @@ object RecursionImpl {
     with evt.impl.StandaloneLike[S, Recursion.Update[S], Recursion[S]] {
 
     def span(implicit tx: S#Tx): SpanLike = _span.value
-    def span_=(value: SpanLike)(implicit tx: S#Tx) {
+    def span_=(value: SpanLike)(implicit tx: S#Tx): Unit = {
       val imp = ExprImplicits[S]
       import imp._
       _span() = value
     }
 
     def gain(implicit tx: S#Tx): Gain = _gain()
-    def gain_=(value: Gain)(implicit tx: S#Tx) {
+    def gain_=(value: Gain)(implicit tx: S#Tx): Unit = {
       _gain() = value
       fire()
     }
 
     def channels(implicit tx: S#Tx): Channels = _channels()
-    def channels_=(value: Channels)(implicit tx: S#Tx) {
+    def channels_=(value: Channels)(implicit tx: S#Tx): Unit = {
       _channels() = value
       fire()
     }
 
     //    def transform(implicit tx: S#Tx): Option[Element.Code[S]] = _transform()
-    //    def transform_=(value: Option[Element.Code[S]])(implicit tx: S#Tx) {
+    //    def transform_=(value: Option[Element.Code[S]])(implicit tx: S#Tx): Unit = {
     //      _transform() = value
     //      fire()
     //    }
 
     /** Moves the product to deployed position. */
-    def iterate()(implicit tx: S#Tx) {
+    def iterate()(implicit tx: S#Tx): Unit = {
       val mod = deployed.entity.artifact.modifiableOption.getOrElse(
         sys.error("Can't iterate - deployed artifact not modifiable")
       )
@@ -168,7 +167,7 @@ object RecursionImpl {
       None
     }
 
-    protected def writeData(out: DataOutput) {
+    protected def writeData(out: DataOutput): Unit = {
       out.writeShort(COOKIE)
       group    .write(out)
       _span    .write(out)
@@ -180,14 +179,14 @@ object RecursionImpl {
       AudioFileSpec.Serializer.write(productSpec, out)
     }
 
-    protected def disposeData()(implicit tx: S#Tx) {
+    protected def disposeData()(implicit tx: S#Tx): Unit = {
       // group: NO
       _span    .dispose()
       _gain    .dispose()
       _channels.dispose()
     }
 
-    def connect()(implicit tx: S#Tx) {
+    def connect()(implicit tx: S#Tx): Unit = {
       // ignore group
       _span   .changed ---> this
       deployed.changed ---> this
@@ -195,7 +194,7 @@ object RecursionImpl {
       transform.foreach(_.changed ---> this)
     }
 
-    def disconnect()(implicit tx: S#Tx) {
+    def disconnect()(implicit tx: S#Tx): Unit = {
       _span   .changed -/-> this
       deployed.changed -/-> this
       product .changed -/-> this

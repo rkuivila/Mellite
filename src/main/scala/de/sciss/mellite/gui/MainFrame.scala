@@ -18,34 +18,26 @@ final class MainFrame extends WindowImpl {
   private val serverPane = new JServerStatusPanel()
   serverPane.bootAction = Some(boot _)
 
-  //  def setServer(s: Option[Server]) {
-  //    serverPane.server = s.map(_.peer)
-  //  }
+  //  def setServer(s: Option[Server]): Unit serverPane.server = s.map(_.peer)
 
   component.peer.getRootPane.putClientProperty("Window.style", "small")
   component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", java.lang.Boolean.TRUE)
   resizable = false
   contents  = Component.wrap(serverPane)
 
-  private def boot() {
+  private def boot(): Unit = {
     val config        = Server.Config()
     val audioDevice   = Prefs.audioDevice.getOrElse(Prefs.defaultAudioDevice)
     if (audioDevice != Prefs.defaultAudioDevice) config.deviceName = Some(audioDevice)
     auralSystem.start(config)
   }
 
-  private def setServer(s: Option[Server]) {
+  private def setServer(s: Option[Server]): Unit =
     Swing.onEDT(serverPane.server = s.map(_.peer))
-  }
 
   auralSystem.addClient(new AuralSystem.Client {
-    def started(s: Server) {
-      setServer(Some(s))
-    }
-
-    def stopped() {
-      setServer(None)
-    }
+    def started(s: Server): Unit = setServer(Some(s))
+    def stopped()         : Unit = setServer(None)
   })
   // XXX TODO: removeClient
 

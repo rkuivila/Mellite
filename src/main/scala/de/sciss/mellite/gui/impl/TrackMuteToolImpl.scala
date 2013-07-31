@@ -26,7 +26,7 @@ final class TrackMuteToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
   val name          = "Mute"
   val icon          = TrackToolsImpl.getIcon("mute")
 
-  protected def commitProc(mute: Mute)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx) {
+  protected def commitProc(mute: Mute)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
     val attr      = proc.attributes
     attr[Attribute.Boolean](ProcKeys.attrMute) match {
       // XXX TODO: Booleans should have `not` operator
@@ -35,7 +35,6 @@ final class TrackMuteToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCan
     }
   }
 
-  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView[S]) {
+  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView[S]): Unit =
     dispatch(TrackTool.Adjust(Mute(!region.muted)))
-  }
 }

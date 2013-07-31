@@ -45,7 +45,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
 
   implicit def auralSystem: AuralSystem = _aural
 
-  override protected def init() {
+  override protected def init(): Unit = {
     LogFrame.instance
     new MainFrame
   }

@@ -49,7 +49,5 @@ sealed trait Code extends Writable {
 
   def execute(in: In): Out // = compile()(in)
 
-  def write(out: DataOutput) {
-    Code.serializer.write(this, out)
-  }
+  def write(out: DataOutput): Unit = Code.serializer.write(this, out)
 }

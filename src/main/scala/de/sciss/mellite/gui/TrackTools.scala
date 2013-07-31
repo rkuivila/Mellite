@@ -196,7 +196,7 @@ trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
 //        val stopper = atp.play(ar, frameOffset)
 //        val comp = e.getComponent
 //        comp.addMouseListener(new MouseAdapter {
-//          override def mouseReleased(e2: MouseEvent) {
+//          override def mouseReleased(e2: MouseEvent): Unit = {
 //            stopper.stop()
 //            comp.removeMouseListener(this)
 //          }

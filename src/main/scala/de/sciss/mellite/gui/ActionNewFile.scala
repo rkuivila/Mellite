@@ -47,7 +47,7 @@ object ActionNewFile extends Action( "New...") {
 
   private def fullTitle = "New Document"
 
-  def apply() {
+  def apply(): Unit =
     FileDialog.save(title = "Location for New Document").show(None).foreach { folder0 =>
       val name    = folder0.getName
       val folder  = if (name.endsWith(".mllt")) folder0 else new File(folder0.getParentFile, name + ".mllt")
@@ -83,5 +83,4 @@ object ActionNewFile extends Action( "New...") {
           )
       }
     }
-  }
 }

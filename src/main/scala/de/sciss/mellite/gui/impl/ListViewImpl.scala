@@ -77,7 +77,7 @@ object ListViewImpl {
       }
     }
 
-    def list_=(newOption: Option[LinkedList[S, Elem, U]])(implicit tx: S#Tx) {
+    def list_=(newOption: Option[LinkedList[S, Elem, U]])(implicit tx: S#Tx): Unit = {
       current.get(tx.peer).foreach {
         case (_, obs) =>
           disposeObserver(obs)
@@ -93,20 +93,18 @@ object ListViewImpl {
     private final class Observer(fun: PartialFunction[ListView.Update, Unit]) extends Removable {
       obs =>
 
-      def remove() {
+      def remove(): Unit =
         viewObservers = viewObservers.filterNot(_ == obs)
-      }
 
-      def tryApply(evt: ListView.Update) {
+      def tryApply(evt: ListView.Update): Unit =
         try {
           if (fun.isDefinedAt(evt)) fun(evt)
         } catch {
           case e: Exception => e.printStackTrace()
         }
-      }
     }
 
-    private def disposeObserver(obs: Disposable[S#Tx])(implicit tx: S#Tx) {
+    private def disposeObserver(obs: Disposable[S#Tx])(implicit tx: S#Tx): Unit = {
       obs.dispose()
       guiFromTx {
         view.clear()
@@ -137,7 +135,7 @@ object ListViewImpl {
       }
     }
 
-    private def notifyViewObservers(current: Vec[Int]) {
+    private def notifyViewObservers(current: Vec[Int]): Unit = {
       val evt = ListView.SelectionChanged(current)
       viewObservers.foreach(_.tryApply(evt))
     }
@@ -161,7 +159,7 @@ object ListViewImpl {
       ggList.selection.indices.toIndexedSeq
     }
 
-    def guiInit() {
+    def guiInit(): Unit = {
       requireEDT()
       require(comp == null, "Initialization called twice")
       //         val rend = new DefaultListCellRenderer {
@@ -180,28 +178,23 @@ object ListViewImpl {
       comp = new ScrollPane(ggList)
     }
 
-    def clear() {
-      mList.clear()
-    }
+    def clear(): Unit = mList.clear()
 
-    def addAll(items: Vec[String]) {
+    def addAll(items: Vec[String]): Unit = {
       mList.clear()
       items.foreach(mList.addElement)
     }
 
-    def add(idx: Int, item: String) {
+    def add(idx: Int, item: String): Unit =
       mList.add(idx, item)
-    }
 
-    def remove(idx: Int) {
+    def remove(idx: Int): Unit =
       mList.remove(idx)
-    }
 
-    def update(idx: Int, item: String) {
+    def update(idx: Int, item: String): Unit =
       mList.set(idx, item)
-    }
 
-    def dispose()(implicit tx: S#Tx) {
+    def dispose()(implicit tx: S#Tx): Unit = {
       list_=(None)
       guiFromTx {
         viewObservers = Vec.empty

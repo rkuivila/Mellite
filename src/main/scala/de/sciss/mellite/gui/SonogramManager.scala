@@ -27,7 +27,7 @@ object SonogramManager {
     val job   = sonogram.OverviewManager.Job(file, cq)
     _instance.acquire(job)
   }
-  def release(overview: sonogram.Overview) { _instance.release(overview) }
+  def release(overview: sonogram.Overview): Unit = _instance.release(overview)
 
   implicit def executionContext = _instance.config.executionContext
 }

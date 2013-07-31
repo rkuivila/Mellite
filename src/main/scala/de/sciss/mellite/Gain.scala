@@ -10,7 +10,7 @@ object Gain {
   def normalized(decibels: Float) = Gain(decibels, normalized = true )
 
   implicit object Serializer extends ImmutableSerializer[Gain] {
-    def write(v: Gain, out: DataOutput) { v.write(out) }
+    def write(v: Gain, out: DataOutput): Unit = v.write(out)
     def read(in: DataInput): Gain = Gain.read(in)
   }
 
@@ -28,7 +28,7 @@ final case class Gain(decibels: Float, normalized: Boolean) extends Writable {
     decibels.dbamp
   }
 
-  def write(out: DataOutput) {
+  def write(out: DataOutput): Unit = {
     out.writeShort(Gain.COOKIE)
     out.writeFloat(decibels)
     out.writeByte(if (normalized) 1 else 0)

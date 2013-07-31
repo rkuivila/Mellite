@@ -9,23 +9,20 @@ import de.sciss.serial.{DataOutput, DataInput}
 object StringOptions extends BiTypeImpl[Option[String]] {
   final val typeID = 0x1000 | Strings.typeID
 
-  /* protected */ def readValue(in: DataInput): Option[String] = {
+  /* protected */ def readValue(in: DataInput): Option[String] =
     (in.readUnsignedByte(): @switch) match {
       case 0      => None
       case 1      => Some(in.readUTF())
       case other  => sys.error("Unknown cookie " + other)
     }
 
-  }
-
-  /* protected */ def writeValue(value: Option[String], out: DataOutput) {
+  /* protected */ def writeValue(value: Option[String], out: DataOutput): Unit =
     if (value.isDefined) {
       out.writeByte(1)
       out.writeUTF(value.get)
     } else {
       out.writeByte(0)
     }
-  }
 
   //   final class Ops[ S <: Sys[ S ]]( ex: Ex[ S ])( implicit tx: S#Tx ) {
 //      private type E = Ex[ S ]

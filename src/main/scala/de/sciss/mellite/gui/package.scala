@@ -29,13 +29,14 @@ import concurrent.stm.TxnLocal
 import de.sciss.lucre.stm.Txn
 import java.awt.EventQueue
 import collection.immutable.{IndexedSeq => Vec}
+import scala.swing.Swing
 
 package object gui {
   private val guiCode = TxnLocal(init = Vec.empty[() => Unit], afterCommit = handleGUI)
   //   private lazy val primaryMod   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
 
-  private def handleGUI(seq: Vec[() => Unit]) {
-    def exec() {
+  private def handleGUI(seq: Vec[() => Unit]): Unit = {
+    def exec(): Unit =
       seq.foreach { fun =>
         try {
           fun()
@@ -43,27 +44,17 @@ package object gui {
           case e: Throwable => e.printStackTrace()
         }
       }
-    }
-    execInGUI(exec())
+
+    defer(exec())
   }
 
-  def requireEDT() {
-      require( EventQueue.isDispatchThread, "Called outside event dispatch thread" )
-   }
+  def requireEDT(): Unit = require(EventQueue.isDispatchThread)
 
-  def execInGUI(code: => Unit) {
-    if (EventQueue.isDispatchThread)
-      code
-    else
-      EventQueue.invokeLater(new Runnable {
-        def run() { code }
-      })
-  }
+  def defer(thunk: => Unit): Unit =
+    if (EventQueue.isDispatchThread) thunk else Swing.onEDT(thunk)
 
-  def guiFromTx(body: => Unit)(implicit tx: Txn[_]) {
-    //      STMTxn.afterCommit( _ => body )( tx.peer )
+  def guiFromTx(body: => Unit)(implicit tx: Txn[_]): Unit =
     guiCode.transform(_ :+ (() => body))(tx.peer)
-  }
 
   private def wordWrap(s: String, margin: Int = 80): String = {
     if (s == null) return "" // fuck java

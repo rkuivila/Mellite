@@ -17,7 +17,7 @@ object Transform {
   }
 
   implicit object Serializer extends ImmutableSerializer[Transform] {
-    def write(v: Transform, out: DataOutput) {
+    def write(v: Transform, out: DataOutput): Unit = {
       out.writeInt(COOKIE)
       v match { // "match may not be exhaustive" - not true, scalac bug
         case Unmodified   => out.writeByte(0)

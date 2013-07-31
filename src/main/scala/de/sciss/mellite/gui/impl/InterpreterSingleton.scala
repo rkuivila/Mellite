@@ -18,7 +18,7 @@ object InterpreterSingleton {
   //      "de.sciss.mellite.gui.impl.InterpreterSingleton.Result.value = {" + code + "}"
   //   }
 
-  def apply(fun: Interpreter => Unit) {
+  def apply(fun: Interpreter => Unit): Unit =
     sync.synchronized {
       inOpt match {
         case Some(in) =>
@@ -28,7 +28,6 @@ object InterpreterSingleton {
           funs :+= fun
       }
     }
-  }
 
   private lazy val makeOne = {
     val cfg = Interpreter.Config()

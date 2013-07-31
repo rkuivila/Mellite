@@ -26,22 +26,20 @@ object AudioFileFrameImpl {
                                        (implicit cursor: stm.Cursor[S])
     extends AudioFileFrame[S] with ComponentHolder[Window] {
 
-    def dispose()(implicit tx: S#Tx) {
+    def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
       guiFromTx(comp.dispose())
     }
 
-    private def disposeData()(implicit tx: S#Tx) {
+    private def disposeData()(implicit tx: S#Tx): Unit =
       afv.dispose()
-    }
 
-    private def frameClosing() {
+    private def frameClosing(): Unit =
       cursor.step { implicit tx =>
         disposeData()
       }
-    }
 
-    def guiInit() {
+    def guiInit(): Unit = {
       val fileName = _file.base
       comp = new WindowImpl {
         def handler = Mellite.windowHandler

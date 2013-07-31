@@ -60,13 +60,12 @@ object AudioFileViewImpl {
 
     private var _sono: sonogram.Overview = _
 
-    def dispose()(implicit tx: S#Tx) {
+    def dispose()(implicit tx: S#Tx): Unit =
       guiFromTx {
         SonogramManager.release(_sono)
       }
-    }
 
-    def guiInit(snapshot: Grapheme.Value.Audio) {
+    def guiInit(snapshot: Grapheme.Value.Audio): Unit = {
       // println("AudioFileView guiInit")
       _sono = SonogramManager.acquire(snapshot.artifact)
       // import SonogramManager.executionContext

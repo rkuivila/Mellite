@@ -65,7 +65,7 @@ object ActionBounceTimeline {
     span: SpanLike, channels: Vec[Range.Inclusive]
   )
 
-  def specToServerConfig(file: File, spec: AudioFileSpec, config: Server.ConfigBuilder) {
+  def specToServerConfig(file: File, spec: AudioFileSpec, config: Server.ConfigBuilder): Unit = {
     config.nrtOutputPath      = file.path
     config.nrtHeaderFormat    = spec.fileType
     config.nrtSampleFormat    = spec.sampleFormat
@@ -108,9 +108,8 @@ object ActionBounceTimeline {
 
     val ggPathText      = new TextField(32)
 
-    def setPathText(file: File) {
+    def setPathText(file: File): Unit =
       ggPathText.text = file.replaceExt(ggFileType.selection.item.extension).path
-    }
 
     ggFileType.listenTo(ggFileType.selection)
     ggFileType.reactions += {
@@ -162,7 +161,7 @@ object ActionBounceTimeline {
 
     var transformItemsCollected = false
 
-    def updateTransformEnabled() {
+    def updateTransformEnabled(): Unit = {
       val enabled = ggImport.selected
       checkTransform.enabled = enabled
       ggTransform   .enabled = enabled && checkTransform.selected
@@ -321,7 +320,7 @@ object ActionBounceTimeline {
                               settings: QuerySettings[S],
                               group: stm.Source[S#Tx, proc.ProcGroup[S]], file: File,
                               window: Option[Window] = None)
-                             (implicit cursor: stm.Cursor[S]) {
+                             (implicit cursor: stm.Cursor[S]): Unit = {
 
     val hasTransform= settings.importFile && settings.transform.isDefined
     val bounceFile  = if (hasTransform) {
@@ -343,29 +342,29 @@ object ActionBounceTimeline {
 
     var processCompleted = false
 
-    def fDispose() {
+    def fDispose(): Unit = {
       val w = SwingUtilities.getWindowAncestor(op.peer); if (w != null) w.dispose()
       processCompleted = true
     }
     val progDiv = if (hasTransform) 2 else 1
     process.addListener {
-      case prog @ Processor.Progress(_, _) => GUI.defer(ggProgress.value = prog.toInt / progDiv)
+      case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt / progDiv)
     }
 
     val onFailure: PartialFunction[Any, Unit] = {
       case Failure(Processor.Aborted()) =>
-        GUI.defer(fDispose())
+        defer(fDispose())
       case Failure(e: Exception) => // XXX TODO: Desktop should allow Throwable for DialogSource.Exception
-        GUI.defer {
+        defer {
           fDispose()
           DialogSource.Exception(e -> title).show(window)
         }
       case Failure(e) =>
-        GUI.defer(fDispose())
+        defer(fDispose())
         e.printStackTrace()
     }
 
-    def bounceDone() {
+    def bounceDone(): Unit = {
       if (DEBUG) println(s"bounceDone(). hasTransform? $hasTransform")
       if (hasTransform) {
         val ftOpt = cursor.step { implicit tx =>
@@ -381,14 +380,14 @@ object ActionBounceTimeline {
               if (DEBUG) println("code code processor")
               process = codeProc
               codeProc.addListener {
-                case prog @ Processor.Progress(_, _) => GUI.defer(ggProgress.value = prog.toInt / progDiv + 50)
+                case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt / progDiv + 50)
               }
               codeProc.onSuccess { case _ => allDone() }
               codeProc.onFailure(onFailure)
             }))
           case _ =>
             println("WARNING: Code does not denote a file transform")
-            GUI.defer(fDispose())
+            defer(fDispose())
             IO.revealInFinder(file)
         }
 
@@ -397,9 +396,9 @@ object ActionBounceTimeline {
       }
     }
 
-    def allDone() {
+    def allDone(): Unit = {
       if (DEBUG) println("allDone")
-      GUI.defer(fDispose())
+      defer(fDispose())
       (settings.importFile, settings.location) match {
         case (true, Some(locSource)) =>
           val elemName  = file.base

@@ -40,7 +40,6 @@ final class TrackResizeToolImpl[S <: Sys[S]](protected val canvas: TimelineProcC
     Resize(dStart, dStop)
   }
 
-  protected def commitProc(drag: Resize)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx) {
+  protected def commitProc(drag: Resize)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit =
     ProcActions.resize(span, proc, drag, canvas.timelineModel)
-  }
 }

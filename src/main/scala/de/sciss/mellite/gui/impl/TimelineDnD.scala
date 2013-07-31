@@ -40,19 +40,11 @@ trait TimelineDnD[S <: Sys[S]] {
   protected def acceptDnD(drop:        Drop[S] ): Boolean
 
   private object Adaptor extends DropTargetAdapter {
-    override def dragEnter(e: DropTargetDragEvent) {
-      process(e)
-    }
+    override def dragEnter(e: DropTargetDragEvent): Unit = process(e)
+    override def dragOver (e: DropTargetDragEvent): Unit = process(e)
+    override def dragExit (e: DropTargetEvent    ): Unit = updateDnD(None)
 
-    override def dragOver(e: DropTargetDragEvent) {
-      process(e)
-    }
-
-    override def dragExit(e: DropTargetEvent) {
-      updateDnD(None)
-    }
-
-    private def abortDrag(e: DropTargetDragEvent) {
+    private def abortDrag(e: DropTargetDragEvent): Unit = {
       updateDnD(None)
       e.rejectDrag()
     }
@@ -65,7 +57,7 @@ trait TimelineDnD[S <: Sys[S]] {
       Drop(frame = frame, y = y, drag = d)
     }
 
-    private def process(e: DropTargetDragEvent) {
+    private def process(e: DropTargetDragEvent): Unit = {
       val t = e.getTransferable
       if (!t.isDataFlavorSupported(TimelineDnD.flavor)) {
         abortDrag(e)
@@ -83,7 +75,7 @@ trait TimelineDnD[S <: Sys[S]] {
       }
     }
 
-    def drop(e: DropTargetDropEvent) {
+    def drop(e: DropTargetDropEvent): Unit = {
       updateDnD(None)
 
       val t = e.getTransferable

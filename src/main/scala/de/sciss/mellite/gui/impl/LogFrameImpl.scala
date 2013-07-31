@@ -31,7 +31,7 @@ private[gui] final class LogFrameImpl extends LogFrame with WindowImpl {
   private val printLog = new PrintStream(log.outputStream)
 
   private val observer: OutputStream = new OutputStream {
-    override def write(b: Array[Byte], off: Int, len: Int) {
+    override def write(b: Array[Byte], off: Int, len: Int): Unit = {
       log.makeDefault() // detaches this observer
       System.setOut(printLog) // XXX TODO: should investigate why we need this as well, and incorporate it into LogPane
       System.setErr(printLog)
@@ -39,14 +39,12 @@ private[gui] final class LogFrameImpl extends LogFrame with WindowImpl {
       Swing.onEDT(frame.front()) // there we go
     }
 
-    def write(b: Int) {
-      write(Array(b.toByte), 0, 1)
-    }
+    def write(b: Int): Unit = write(Array(b.toByte), 0, 1)
   }
 
   private val printObserver = new PrintStream(observer)
 
-  def observe() {
+  def observe(): Unit = {
     Console.setOut(observer)
     Console.setErr(observer)
     System.setOut(printObserver)

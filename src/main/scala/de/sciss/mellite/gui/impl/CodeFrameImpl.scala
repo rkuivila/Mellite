@@ -66,7 +66,7 @@ object CodeFrameImpl {
 
     private def currentText: String = codePane.editor.getText
 
-    private def checkClose() {
+    private def checkClose(): Unit = {
       if (futCompile.isDefined) {
         ggStatus.text = "busy!"
         return
@@ -94,14 +94,14 @@ object CodeFrameImpl {
       disposeFromGUI()
     }
 
-    private def disposeFromGUI() {
+    private def disposeFromGUI(): Unit = {
       _cursor.step { implicit tx =>
         disposeData()
       }
       comp.dispose()
     }
 
-    final def dispose()(implicit tx: S#Tx) {
+    final def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
       guiFromTx {
         comp.dispose()
@@ -109,11 +109,11 @@ object CodeFrameImpl {
       }
     }
 
-    private def disposeData()(implicit tx: S#Tx) {
+    private def disposeData()(implicit tx: S#Tx): Unit = {
       // observer.dispose()
     }
 
-    def guiInit() {
+    def guiInit(): Unit = {
       codePane  = CodePane(codeCfg)
       // intp      = Interpreter(intpCfg)
       // intpPane  = InterpreterPane.wrap(intp, codePane)
@@ -130,7 +130,7 @@ object CodeFrameImpl {
         val fut     = newCode.compileBody()
         futCompile  = Some(fut)
         fut.onComplete { res =>
-          GUI.defer {
+          defer {
             futCompile = None
             val st = res match {
               case Success(_) => "\u2713"

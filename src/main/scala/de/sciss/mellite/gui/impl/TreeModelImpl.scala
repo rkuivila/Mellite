@@ -50,9 +50,8 @@ final class TreeModelImpl[A](rootItems: => Vec[A], children: A => Vec[A]) extend
     def getRoot: AnyRef = hiddenRoot
     def isLeaf(node: Any): Boolean = getChildrenOf(node).isEmpty
 
-//    private[tree] def copyListenersFrom(otherPeer: ExternalTreeModel[A]#ExternalTreeModelPeer) {
-//      otherPeer.treeModelListeners foreach addTreeModelListener
-//    }
+    //    private[tree] def copyListenersFrom(otherPeer: ExternalTreeModel[A]#ExternalTreeModelPeer): Unit =
+    //      otherPeer.treeModelListeners foreach addTreeModelListener
 
     def treeModelListeners: Seq[jse.TreeModelListener] = treeModelListenerList
 

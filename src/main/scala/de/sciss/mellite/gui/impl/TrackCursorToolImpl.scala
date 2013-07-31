@@ -15,13 +15,11 @@ final class TrackCursorToolImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
   val name          = "Cursor"
   val icon          = TrackToolsImpl.getIcon("text")
 
-  def install(component: Component) {
+  def install(component: Component): Unit =
     component.cursor = defaultCursor
-  }
 
-  def uninstall(component: Component) {
+  def uninstall(component: Component): Unit =
     component.cursor = null
-  }
 
-  def commit(drag: Unit)(implicit tx: S#Tx) {}
+  def commit(drag: Unit)(implicit tx: S#Tx) = ()
 }

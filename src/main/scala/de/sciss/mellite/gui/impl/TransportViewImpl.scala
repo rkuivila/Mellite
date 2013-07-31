@@ -50,7 +50,7 @@ object TransportViewImpl {
     private var timerSys    = 0L
     // private val srm         = 0.001 * transport.sampleRate
     private val timer       = new javax.swing.Timer(31, new ActionListener {
-      def actionPerformed(e: ActionEvent) {
+      def actionPerformed(e: ActionEvent): Unit = {
         val elapsed             = ((System.currentTimeMillis() - timerSys) * samplesPerMilli).toLong
         _timelineModel.position  = timerFrame + elapsed
       }
@@ -58,14 +58,14 @@ object TransportViewImpl {
 
     private var transportStrip: Component with Transport.ButtonStrip = _
 
-    def dispose()(implicit tx: S#Tx) {
+    def dispose()(implicit tx: S#Tx): Unit = {
       timer.stop()  // save to call multiple times
       observer.dispose()
     }
 
     // ---- transport ----
 
-    def startedPlaying(time: Long)(implicit tx: S#Tx) {
+    def startedPlaying(time: Long)(implicit tx: S#Tx): Unit = {
       guiFromTx {
         timer.stop()
         timerFrame  = time
@@ -76,7 +76,7 @@ object TransportViewImpl {
       }
     }
 
-    def stoppedPlaying(time: Long)(implicit tx: S#Tx) {
+    def stoppedPlaying(time: Long)(implicit tx: S#Tx): Unit = {
       guiFromTx {
         timer.stop()
         _timelineModel.position = time // XXX TODO if Cursor follows Playhead
@@ -85,43 +85,36 @@ object TransportViewImpl {
       }
     }
 
-    private def rtz() {
+    private def rtz(): Unit = {
       stop()
       val start = _timelineModel.bounds.start
       _timelineModel.position  = start
       _timelineModel.visible   = Span(start, start + _timelineModel.visible.length)
     }
 
-    private def rewind() {
+    private def rewind() = ()
 
-    }
-
-    private def playOrStop() {
+    private def playOrStop(): Unit =
       step { implicit tx =>
         if (transport.isPlaying) transport.stop() else {
           transport.seek(_timelineModel.position)
           transport.play()
         }
       }
-    }
 
-    private def stop() {
+    private def stop(): Unit =
       step { implicit tx => transport.stop() }
-    }
 
-    private def play() {
+    private def play(): Unit =
       step { implicit tx =>
         transport.stop()
         transport.seek(_timelineModel.position)
         transport.play()
       }
-    }
 
-    private def ffwd() {
+    private def ffwd() = ()
 
-    }
-
-    def guiInit() {
+    def guiInit(): Unit = {
       val timeDisp    = TimeDisplay(_timelineModel)
 
       import Transport.{Action => _, _}
@@ -150,15 +143,12 @@ object TransportViewImpl {
 
       transportPane.addAction("playstop", focus = FocusType.Window, action = new Action("playstop") {
         accelerator = Some(plain + VK_SPACE)
-        def apply() {
-          playOrStop()
-        }
+        def apply(): Unit = playOrStop()
       })
       transportPane.addAction("rtz", focus = FocusType.Window, action = new Action("rtz") {
         accelerator = Some(plain + VK_ENTER)
-        def apply() {
+        def apply(): Unit =
           transportStrip.button(GoToBegin).foreach(_.doClick())
-        }
       })
 
       comp = transportPane

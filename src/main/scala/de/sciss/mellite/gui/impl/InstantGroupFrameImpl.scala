@@ -63,12 +63,11 @@ object InstantGroupFrameImpl {
     def group(implicit tx: S#Tx): Document.Group[S] = groupH() // tx.refresh( csrPos, staleGroup )( Document.Serializers.group[ S ])
     //      def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
 
-    private def newProc() {
+    private def newProc(): Unit =
       Dialog.showInput(parent = prefusePanel.component, message = "Name for new process:", title = "New Process",
         messageType = Dialog.Message.Question, initial = "Unnamed").foreach(newProc)
-    }
 
-    private def newProc(name: String) {
+    private def newProc(name: String): Unit =
       atomic { implicit tx =>
         // import synth._; import ugen._
         val imp = ExprImplicits[S]
@@ -88,9 +87,8 @@ object InstantGroupFrameImpl {
         //            }
         g.add(span, proc)
       }
-    }
 
-    def guiInit() {
+    def guiInit(): Unit = {
       requireEDT()
       require(comp == null, "Initialization called twice")
 
