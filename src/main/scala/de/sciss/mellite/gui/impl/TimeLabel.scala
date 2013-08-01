@@ -6,21 +6,22 @@ import javax.swing.JComponent
 import java.awt.{Font, Graphics, Graphics2D, Dimension}
 
 object TimeLabel {
-//   private val prefSz   = new Dimension( 126, 20 )
-   private val prefSz   = new Dimension( 112, 16 )
-   private lazy val fnt = {
-      val is   = Mellite.getClass.getResourceAsStream( "Receiptional Receipt.ttf" ) // "LCDML___.TTF"
-      require( is != null, "Font resource not found" )   // fucking Java
-      val res = Font.createFont( Font.TRUETYPE_FONT, is ).deriveFont( 13f )
-      is.close()
-      res
-   }
+  //   private val prefSz   = new Dimension( 126, 20 )
+  private val prefSz = new Dimension(112, 16)
+  private lazy val fnt = {
+    val is = Mellite.getClass.getResourceAsStream("Receiptional Receipt.ttf") // "LCDML___.TTF"
+    require(is != null, "Font resource not found") // fucking Java
+    val res = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(13f)
+    is.close()
+    res
+  }
 }
+
 class TimeLabel extends JComponent {
   import TimeLabel._
 
   private var millisVar = 0L
-  private var textVar = ""
+  private var textVar   = ""
 
   //   def text: String = textVar
   //   def text_=( value: String ): Unit = {

@@ -47,7 +47,7 @@ object InsertAudioRegion {
     // val crv = gv(dur -> stepShape)
     // grd.add(time -> crv)
     scanw.source_=(Some(Scan.Link.Grapheme(grw)))
-    proc.graph_=(SynthGraphs.tape)
+    proc.graph() = SynthGraphs.tape
     group.add(span, proc)
 
     (span, proc)

@@ -355,7 +355,7 @@ object TimelineViewImpl {
 
     def copyProc(parentSpan: Expr[S, SpanLike], parent: Proc[S])(implicit tx: S#Tx): Proc[S] = {
       val res   = Proc[S]
-      res.graph_=(parent.graph)
+      res.graph() = parent.graph
       parent.attributes.iterator.foreach { case (key, attr) =>
         val attrOut = attr.mkCopy()
         res.attributes.put(key, attrOut)

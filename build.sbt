@@ -13,16 +13,16 @@ licenses := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 scalaVersion := "2.10.2"
 
 libraryDependencies ++= Seq(
-  "de.sciss" %% "soundprocesses"     % "1.8.+",
-  "de.sciss" %% "scalacolliderswing" % "1.8.+",
+  "de.sciss" %% "soundprocesses"     % "1.9.+",
+  "de.sciss" %% "scalacolliderswing" % "1.9.+",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.+",
-  "de.sciss" %% "desktop"            % "0.3.+",
+  "de.sciss" %% "desktop"            % "0.3.2+",
   "de.sciss" %% "swingplus"          % "0.0.1+",
   "de.sciss" %% "sonogramoverview"   % "1.6.2+",  // bug in 1.6.1
   "de.sciss" %% "serial"             % "1.0.1+",  // bug in 1.0.0
   "de.sciss" %% "treetable-scala"    % "1.3.+",
   "de.sciss" %% "fscapejobs"         % "1.4.+",
-  "de.sciss" %% "strugatzki"         % "2.0.+",
+  "de.sciss" %% "strugatzki"         % "2.1.+",
   "de.sciss" %% "fileutil"           % "1.0.+"
 )
 

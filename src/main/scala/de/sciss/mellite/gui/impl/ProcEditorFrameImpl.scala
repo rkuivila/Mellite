@@ -116,7 +116,7 @@ object ProcEditorFrameImpl {
                       val imp = ExprImplicits[S]
                       import imp._
                       proc.attributes.put(ProcKeys.attrGraphSource, Attribute.String(code)) // XXX TODO: should update the var
-                      proc.graph_=(sg)
+                      proc.graph() = sg
                     }
                   case _ =>
                     lbStatus.text = "! Invalid result: " + value + " !"
