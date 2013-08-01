@@ -312,7 +312,7 @@ object FolderViewImpl {
         // case e => println(s"other: $e")
       }
       t.showsRootHandles  = true
-      t.expandPath(Tree.Path.empty)
+      t.expandPath(Tree.Path(_model.root))
       t.dragEnabled       = true
       t.dropMode          = DropMode.ON_OR_INSERT_ROWS
       t.peer.setTransferHandler(new TransferHandler {
