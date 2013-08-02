@@ -12,7 +12,7 @@ import java.io.File
 import javax.swing.{SwingUtilities, JFormattedTextField, SpinnerNumberModel}
 import de.sciss.span.{SpanLike, Span}
 import Swing._
-import de.sciss.audiowidgets.AxisFormat
+import de.sciss.audiowidgets.{TimelineModel, AxisFormat}
 import de.sciss.span.Span.SpanOrVoid
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.mellite.Element.ArtifactLocation

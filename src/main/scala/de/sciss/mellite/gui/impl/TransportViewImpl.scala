@@ -6,14 +6,15 @@ package impl
 import lucre.stm
 import synth.proc
 import proc.{AuralPresentation, AuralSystem, Sys, ProcGroup}
-import java.awt.event.{KeyEvent, ActionListener, ActionEvent}
+import java.awt.event.{KeyEvent, ActionEvent}
 import scala.swing.{Swing, Action, Orientation, BoxPanel, Component}
-import audiowidgets.Transport
+import de.sciss.audiowidgets.{TimelineModel, Transport}
 import span.Span
 import desktop.{FocusType, KeyStrokes}
 import stm.Disposable
 import Swing._
 
+// XXX TODO: DRY - look at TimelineViewImpl
 object TransportViewImpl {
   def apply[S <: Sys[S], I <: stm.Sys[I]](group: ProcGroup[S], sampleRate: Double, timelineModel: TimelineModel)
                                          (implicit tx: S#Tx, cursor: stm.Cursor[S],
@@ -49,12 +50,12 @@ object TransportViewImpl {
     private var timerFrame  = 0L
     private var timerSys    = 0L
     // private val srm         = 0.001 * transport.sampleRate
-    private val timer       = new javax.swing.Timer(31, new ActionListener {
-      def actionPerformed(e: ActionEvent): Unit = {
-        val elapsed             = ((System.currentTimeMillis() - timerSys) * samplesPerMilli).toLong
-        _timelineModel.position  = timerFrame + elapsed
-      }
-    })
+    private lazy val timer  = new javax.swing.Timer(31,
+      Swing.ActionListener(_timelineModel.modifiableOption.fold((_: ActionEvent) => ()) { mod => (e: ActionEvent) =>
+        val elapsed   = ((System.currentTimeMillis() - timerSys) * samplesPerMilli).toLong
+        mod.position  = timerFrame + elapsed
+      })
+    )
 
     private var transportStrip: Component with Transport.ButtonStrip = _
 
@@ -79,7 +80,7 @@ object TransportViewImpl {
     def stoppedPlaying(time: Long)(implicit tx: S#Tx): Unit = {
       guiFromTx {
         timer.stop()
-        _timelineModel.position = time // XXX TODO if Cursor follows Playhead
+        _timelineModel.modifiableOption.foreach(_.position = time) // XXX TODO if Cursor follows Playhead
         transportStrip.button(Transport.Play).foreach(_.selected = false)
         transportStrip.button(Transport.Stop).foreach(_.selected = true )
       }
@@ -87,9 +88,11 @@ object TransportViewImpl {
 
     private def rtz(): Unit = {
       stop()
-      val start = _timelineModel.bounds.start
-      _timelineModel.position  = start
-      _timelineModel.visible   = Span(start, start + _timelineModel.visible.length)
+      _timelineModel.modifiableOption.foreach { mod =>
+        val start = mod.bounds.start
+        mod.position  = start
+        mod.visible   = Span(start, start + mod.visible.length)
+      }
     }
 
     private def rewind() = ()

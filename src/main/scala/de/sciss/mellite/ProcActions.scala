@@ -6,6 +6,7 @@ import span.{Span, SpanLike}
 import de.sciss.synth.proc.{ProcKeys, Scan, Grapheme, Sys, Proc}
 import synth.expr.ExprImplicits
 import de.sciss.lucre.bitemp.BiExpr
+import de.sciss.audiowidgets.TimelineModel
 
 object ProcActions {
   private val MinDur    = 32

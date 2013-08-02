@@ -33,6 +33,8 @@ import scala.util.Failure
 import scala.util.Success
 import scala.swing.{Swing, Component}
 import Swing._
+import de.sciss.audiowidgets.TimelineModel
+import de.sciss.audiowidgets.impl.TimelineCanvasImpl
 
 final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
   extends TimelineCanvasImpl {

@@ -2,11 +2,10 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.audiowidgets.{LCDPanel, LCDColors, LCDFont, AxisFormat}
+import de.sciss.audiowidgets.{TimelineModel, LCDPanel, LCDColors, LCDFont, AxisFormat}
 import scala.swing.{Swing, Orientation, BoxPanel, Component, Label}
-import de.sciss.lucre.event.Change
-import java.awt.Graphics2D
 import Swing._
+import de.sciss.model.Change
 
 final class TimeDisplayImpl(model: TimelineModel) extends TimeDisplay {
   private val lcdFormat = AxisFormat.Time(hours = true, millis = true)
@@ -31,18 +30,18 @@ final class TimeDisplayImpl(model: TimelineModel) extends TimeDisplay {
     protected def componentHidden(): Unit =
       model.removeListener(tlmListener)
 
-    override protected def paintComponent(g2: Graphics2D): Unit = {
-      val atOrig  = g2.getTransform
-      try {
-        // stupid lcd font has wrong ascent
-        g2.translate(0, 3)
-        // g2.setColor(java.awt.Color.red)
-        // g2.fillRect(0, 0, 100, 100)
-        super.paintComponent(g2)
-      } finally {
-        g2.setTransform(atOrig)
-      }
-    }
+    //    override protected def paintComponent(g2: java.awt.Graphics2D): Unit = {
+    //      val atOrig  = g2.getTransform
+    //      try {
+    //        // stupid lcd font has wrong ascent
+    //        g2.translate(0, 3)
+    //        // g2.setColor(java.awt.Color.red)
+    //        // g2.fillRect(0, 0, 100, 100)
+    //        super.paintComponent(g2)
+    //      } finally {
+    //        g2.setTransform(atOrig)
+    //      }
+    //    }
 
     font        = LCDFont().deriveFont(11f)
     foreground  = LCDColors.defaultFg

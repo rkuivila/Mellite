@@ -9,12 +9,14 @@ import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component
 import java.awt.Color
 import Swing._
 import de.sciss.span.Span
-import de.sciss.mellite.impl.{InsertAudioRegion, TimelineModelImpl}
+import de.sciss.mellite.impl.InsertAudioRegion
 import de.sciss.sonogram
 import javax.swing.{TransferHandler, ImageIcon}
 import javax.swing.TransferHandler.TransferSupport
 import de.sciss.synth.proc
 import de.sciss.synth.expr.ExprImplicits
+import de.sciss.audiowidgets.impl.TimelineModelImpl
+import de.sciss.audiowidgets.TimelineModel
 
 object AudioFileViewImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: AudioGrapheme[S])

@@ -28,9 +28,9 @@ package mellite
 package gui
 package impl
 
-import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component}
+import scala.swing.{Swing, Slider, Action, BorderPanel, Orientation, BoxPanel, Component}
 import span.{Span, SpanLike}
-import de.sciss.mellite.impl.{InsertAudioRegion, TimelineModelImpl}
+import de.sciss.mellite.impl.InsertAudioRegion
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D}
 import lucre.stm
 import de.sciss.lucre.stm.{Disposable, IdentifierMap, Cursor}
@@ -39,9 +39,9 @@ import fingertree.RangedSeq
 import javax.swing.{KeyStroke, UIManager}
 import java.util.Locale
 import de.sciss.lucre.bitemp.{BiExpr, BiGroup}
-import audiowidgets.Transport
+import de.sciss.audiowidgets.{TimelineModel, Transport}
 import scala.swing.Swing._
-import java.awt.event.{KeyEvent, ActionEvent, ActionListener}
+import java.awt.event.{KeyEvent, ActionEvent}
 import de.sciss.desktop.FocusType
 import Predef.{any2stringadd => _, _}
 import scala.Some
@@ -53,6 +53,7 @@ import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.ValueChanged
 import de.sciss.synth.proc.{FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, Sys, AuralSystem, ProcGroup, ProcTransport, TimedProc}
+import de.sciss.audiowidgets.impl.TimelineModelImpl
 
 object TimelineViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -224,12 +225,12 @@ object TimelineViewImpl {
     private var timerFrame  = 0L
     private var timerSys    = 0L
     private val srm         = 0.001 * transp.sampleRate
-    private val timer       = new javax.swing.Timer(31, new ActionListener {
-      def actionPerformed(e: ActionEvent): Unit = {
-        val elapsed             = ((System.currentTimeMillis() - timerSys) * srm).toLong
-        timelineModel.position  = timerFrame + elapsed
-      }
-    })
+    private val timer       = new javax.swing.Timer(31,
+      Swing.ActionListener(timelineModel.modifiableOption.fold((_: ActionEvent) => ()) { mod => (e: ActionEvent) =>
+        val elapsed   = ((System.currentTimeMillis() - timerSys) * srm).toLong
+        mod.position  = timerFrame + elapsed
+      })
+    )
 
     private var transportStrip: Component with Transport.ButtonStrip = _
     private val selectionModel = ProcSelectionModel[S]
@@ -391,16 +392,18 @@ object TimelineViewImpl {
     def stoppedPlaying(time: Long)(implicit tx: S#Tx): Unit =
       guiFromTx {
         timer.stop()
-        timelineModel.position = time // XXX TODO if Cursor follows Playhead
+        timelineModel.modifiableOption.foreach(_.position = time) // XXX TODO if Cursor follows Playhead
         transportStrip.button(Transport.Play).foreach(_.selected = false)
         transportStrip.button(Transport.Stop).foreach(_.selected = true )
       }
 
     private def rtz(): Unit = {
       stop()
-      val start = timelineModel.bounds.start
-      timelineModel.position  = start
-      timelineModel.visible   = Span(start, start + timelineModel.visible.length)
+      timelineModel.modifiableOption.foreach { mod =>
+        val start = mod.bounds.start
+        mod.position  = start
+        mod.visible   = Span(start, start + mod.visible.length)
+      }
     }
 
     private def rewind() = ()

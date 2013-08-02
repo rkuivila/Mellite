@@ -11,6 +11,7 @@ import java.awt.Point
 import de.sciss.lucre.stm
 import de.sciss.mellite.Element.AudioGrapheme
 import de.sciss.span.Span
+import de.sciss.audiowidgets.TimelineModel
 
 object TimelineDnD {
   sealed trait Drag[S <: Sys[S]] {

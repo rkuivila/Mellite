@@ -10,6 +10,7 @@ import Element.AudioGrapheme
 import javax.swing.{JComponent, ImageIcon, TransferHandler}
 import java.awt.event.{MouseEvent, MouseAdapter}
 import TransferHandler.COPY
+import de.sciss.audiowidgets.TimelineModel
 
 object AudioFileDnD {
   // XXX TODO: should carry document to avoid cross-document DnD without deep copy

@@ -31,6 +31,7 @@ import scala.swing.{Action, Component}
 import impl.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Disposable
+import de.sciss.audiowidgets.TimelineModel
 
 object TimelineView {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])

@@ -8,6 +8,7 @@ import lucre.stm
 import impl.{TransportViewImpl => Impl}
 import stm.Disposable
 import scala.swing.Component
+import de.sciss.audiowidgets.TimelineModel
 
 object TransportView {
   def apply[S <: Sys[S], I <: stm.Sys[I]](group: ProcGroup[S], sampleRate: Double, timelineModel: TimelineModel)
