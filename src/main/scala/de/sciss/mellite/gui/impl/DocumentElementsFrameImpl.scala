@@ -36,7 +36,6 @@ import desktop.{FileDialog, DialogSource, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import desktop.impl.WindowImpl
 import synth.io.AudioFile
-import scala.util.control.NonFatal
 import javax.swing.SpinnerNumberModel
 import de.sciss.file._
 import de.sciss.swingplus.Spinner
@@ -117,48 +116,17 @@ object DocumentElementsFrameImpl {
     }
 
     private def actionAddAudioFile(): Unit = {
-      type Loc      = Element    .ArtifactLocation[S]
-      type LocView  = ElementView.ArtifactLocation[S]
-
-      val locViews = folderView.selection.collect {
-        case (_, view: LocView) => view
-      }
-
-      val dlg = FileDialog.open(init = locViews.headOption.map(_.directory), title = "Add Audio File")
+      val locViews  = folderView.locations
+      val dlg       = FileDialog.open(init = locViews.headOption.map(_.directory), title = "Add Audio File")
       dlg.setFilter(AudioFile.identify(_).isDefined)
       dlg.show(None).foreach { f =>
-        val spec      = AudioFile.readSpec(f)
-        val name0     = f.getName
-        val i         = name0.lastIndexOf('.')
-        val name      = if (i < 0) name0 else name0.substring(0, i)
-
-        val locsOk = locViews.flatMap { view =>
-          try {
-            Artifact.relativize(view.directory, f)
-            Some(view)
-          } catch {
-            case NonFatal(_) => None
-          }
-        } .headOption
-
-        val locSourceOpt: Option[stm.Source[S#Tx, Loc]] = locsOk match {
-          case Some(loc)  => Some(loc.element)
-          case _          =>
-            val parent = folderView.selection.collect {
-              case (_, f: ElementView.Folder[S]) => f.element
-            } .headOption
-            ActionArtifactLocation.query(document, file = f, folder = parent, window = Some(comp))
-        }
-
+        val spec          = AudioFile.readSpec(f)
+        val locSourceOpt  = folderView.findLocation(f)
         locSourceOpt.foreach { locSource =>
           atomic { implicit tx =>
             val loc = locSource()
             loc.entity.modifiableOption.foreach { locM =>
-              val offset    = Longs  .newVar[S](Longs  .newConst(0L))
-              val gain      = Doubles.newVar[S](Doubles.newConst(1.0))
-              val artifact  = locM.add(f)
-              val audio     = Grapheme.Elem.Audio(artifact, spec, offset, gain)
-              addElement(Element.AudioGrapheme(name, audio))
+              ElementActions.addAudioFile(targetFolder, -1, locM, f, spec)
             }
           }
         }

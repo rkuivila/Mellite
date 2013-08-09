@@ -32,6 +32,8 @@ import impl.{FolderViewImpl => Impl}
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.stm.{Cursor, Disposable}
 import de.sciss.model.Model
+import de.sciss.lucre.stm
+import java.io.File
 
 object FolderView {
   def apply[S <: Sys[S]](document: Document[S], root: Folder[S])
@@ -54,4 +56,8 @@ object FolderView {
 trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with Disposable[S#Tx] {
   def component: Component
   def selection: FolderView.Selection[S]
+
+  def locations: Vec[ElementView.ArtifactLocation[S]]
+
+  def findLocation(f: File): Option[stm.Source[S#Tx, Element.ArtifactLocation[S]]]
 }

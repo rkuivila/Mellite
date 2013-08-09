@@ -27,9 +27,9 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{Artifact, Sys}
 import swing.{ScrollPane, Component}
-import collection.breakOut
+import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
 import scalaswingcontrib.tree.Tree
 import de.sciss.lucre.stm.{Disposable, Cursor, IdentifierMap}
@@ -38,10 +38,14 @@ import de.sciss.synth.expr.ExprImplicits
 import scala.util.control.NonFatal
 import de.sciss.lucre.event.Change
 import javax.swing.{DropMode, JComponent, TransferHandler}
-import java.awt.datatransfer.Transferable
+import java.awt.datatransfer.{DataFlavor, Transferable}
 import javax.swing.TransferHandler.TransferSupport
 import de.sciss.treetable.{TreeTableSelectionChanged, TreeTableCellRenderer, TreeColumnModel, AbstractTreeModel, TreeTable}
 import de.sciss.treetable.TreeTableCellRenderer.TreeState
+import java.io.File
+import de.sciss.lucre.stm
+import de.sciss.synth.io.AudioFile
+import scala.util.Try
 
 object FolderViewImpl {
   private final val DEBUG = false
@@ -343,18 +347,25 @@ object FolderViewImpl {
           t.dropLocation match {
             case Some(tdl) =>
               // println(s"last = ${tdl.path.last}; column ${tdl.column}; isLeaf? ${t.treeModel.isLeaf(tdl.path.last)}")
-              val res = (tdl.index >= 0 || (tdl.column == 0 && (tdl.path.last match {
+              val locOk = tdl.index >= 0 || (tdl.column == 0 && (tdl.path.last match {
                 case _: ElementView.Folder[_] => true
                 case _                        => false
+              }))
 
-              }))) &&
-                support.isDataFlavorSupported(FolderView.selectionFlavor) &&
-                support.getUserDropAction == TransferHandler.MOVE
+              if (locOk) {
+                // println("Supported flavours:")
+                // support.getDataFlavors.foreach(println)
 
-              //              if (res) {
-              //                println(s"userDropAction = ${support.getUserDropAction}")
-              //              }
-              res
+                // println(s"File? ${support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)}")
+                // println(s"Action = ${support.getUserDropAction}")
+
+                support.isDataFlavorSupported(DataFlavor.javaFileListFlavor) ||
+                  (support.isDataFlavorSupported(FolderView.selectionFlavor) &&
+                   support.getUserDropAction == TransferHandler.MOVE)
+
+              } else {
+                false
+              }
 
             case _ => false
           }
@@ -398,29 +409,62 @@ object FolderViewImpl {
           true
         }
 
-        override def importData(support: TransferSupport): Boolean = {
-          if (!support.isDataFlavorSupported(FolderView.selectionFlavor)) return false
+        private def importSelection(support: TransferSupport, parent: ElementView.FolderLike[S], index: Int): Boolean = {
+          val data = support.getTransferable.getTransferData(FolderView.selectionFlavor)
+            .asInstanceOf[FolderView.SelectionDnDData[S]]
+          if (data.document == document) {
+            val sel = data.selection
+            insertData(sel, parent, index)
+          } else {
+            false
+          }
+        }
+
+        private def importFiles(support: TransferSupport, parent: ElementView.FolderLike[S], index: Int): Boolean = {
+          import JavaConversions._
+          val data  = support.getTransferable.getTransferData(DataFlavor.javaFileListFlavor)
+            .asInstanceOf[java.util.List[File]].toList
+          val tup   = data.flatMap { f =>
+            Try(AudioFile.readSpec(f)).toOption.map(f -> _)
+          }
+          val trip  = tup.flatMap { case (f, spec) =>
+            findLocation(f).map { loc => (f, spec, loc) }
+          }
+
+          if (trip.nonEmpty) {
+            cursor.step { implicit tx =>
+              trip.foreach {
+                case (f, spec, locS) =>
+                  val loc = locS()
+                  loc.entity.modifiableOption.foreach { locM =>
+                    ElementActions.addAudioFile(parent.folder, index, locM, f, spec)
+                  }
+              }
+            }
+            true
+
+          } else {
+            false
+          }
+        }
+
+        override def importData(support: TransferSupport): Boolean =
           t.dropLocation match {
             case Some(tdl) =>
-              val data = support.getTransferable.getTransferData(FolderView.selectionFlavor)
-                .asInstanceOf[FolderView.SelectionDnDData[S]]
-              if (data.document == document) {
-                val sel = data.selection
-                //                (tdl.path, tdl.index) match {
-                //                  case (_ :+ (parent: ElementView.FolderLike[S]),       -1) => insertData(sel, parent,  -1)
-                //                  case (_ :+ (parent: ElementView.FolderLike[S]) :+ _, idx) => insertData(sel, parent, idx)
-                //                }
-                tdl.path.last match {
-                  case parent: ElementView.FolderLike[S] => insertData(sel, parent, tdl.index)
-                  case _ => false
-                }
-              } else {
-                false
+              tdl.path.last match {
+                case parent: ElementView.FolderLike[S] =>
+                  val idx = tdl.index
+                  if      (support.isDataFlavorSupported(FolderView.selectionFlavor   ))
+                    importSelection(support, parent, idx)
+                  else if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
+                    importFiles    (support, parent, idx)
+                  else false
+
+                case _ => false
               }
 
             case _ => false
           }
-        }
       })
 
       val scroll    = new ScrollPane(t)
@@ -432,6 +476,30 @@ object FolderViewImpl {
       t.selection.paths.collect({
         case PathExtrator(path, child) => (path, child)
       })(breakOut)
+
+    def locations: Vec[ElementView.ArtifactLocation[S]] = selection.collect {
+      case (_, view: ElementView.ArtifactLocation[S]) => view
+    }
+
+    def findLocation(f: File): Option[stm.Source[S#Tx, Element.ArtifactLocation[S]]] = {
+      val locsOk = locations.flatMap { view =>
+        try {
+          Artifact.relativize(view.directory, f)
+          Some(view)
+        } catch {
+          case NonFatal(_) => None
+        }
+      } .headOption
+
+      locsOk match {
+        case Some(loc)  => Some(loc.element)
+        case _          =>
+          val parent = selection.collect {
+            case (_, f: ElementView.Folder[S]) => f.element
+          } .headOption
+          ActionArtifactLocation.query(document, file = f, folder = parent) // , window = Some(comp))
+      }
+    }
 
     object PathExtrator {
       def unapply(path: Seq[Node]): Option[(Vec[ElementView.FolderLike[S]], ElementView[S])] =
