@@ -703,11 +703,9 @@ class Nullstellen private(config: Nullstellen.Config)
     result
   }
 
-  //  private def defer(thunk: => Unit) {
+  //  private def defer(thunk: => Unit): Unit = {
   //    EventQueue.invokeLater(new Runnable {
-  //      def run() {
-  //        thunk
-  //      }
+  //      def run(): Unit = thunk
   //    })
   //  }
 

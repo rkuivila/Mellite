@@ -81,7 +81,7 @@ object DocumentElementsFrameImpl {
       }
     }
 
-    private def addElement(elem: Element[S])(implicit tx: S#Tx) {
+    private def addElement(elem: Element[S])(implicit tx: S#Tx): Unit = {
       val parent = targetFolder
       parent.addLast(elem)
     }

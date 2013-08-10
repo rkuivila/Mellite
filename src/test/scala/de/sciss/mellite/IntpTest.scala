@@ -18,9 +18,8 @@ object IntpTest extends App {
   println(res)
 
   val t: Thread = new Thread {
-    override def run() {
+    override def run(): Unit =
       t.synchronized(t.wait())
-    }
   }
   t.start()
 

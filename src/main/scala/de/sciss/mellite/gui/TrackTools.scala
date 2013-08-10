@@ -176,7 +176,7 @@ trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
 //class TrackAuditionTool(doc: Session, protected val trackList: TrackList, protected val timelineModel: TimelineView)
 //  extends TrackRegionTool {
 //
-//  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView) {
+//  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView): Unit = {
 //    val fromStart = e.isAltDown
 //    if (!fromStart) {
 //      timelineModel.editor.foreach { ed =>
