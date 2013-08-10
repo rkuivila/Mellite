@@ -20,7 +20,7 @@ object ProcActions {
       case Span.HasStart(frame) =>
         for {
           scan <- proc.scans.get(ProcKeys.graphAudio)
-          Scan.Link.Grapheme(g) <- scan.source
+          Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
           BiExpr(time, audio: Grapheme.Elem.Audio[S]) <- g.at(frame)
         } yield (time, audio)
 

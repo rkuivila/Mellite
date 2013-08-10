@@ -32,9 +32,9 @@ import java.io.File
 import de.sciss.desktop.{FileDialog, KeyStrokes}
 import util.control.NonFatal
 
-object ActionNewFile extends Action( "New...") {
+object ActionNewFile extends Action("Session...") {
   import KeyStrokes._
-   accelerator = Some(menu1 + KeyEvent.VK_N)
+  accelerator = Some(menu1 + KeyEvent.VK_N)
 
   private def deleteRecursive(f: File): Boolean = {
     if (f.isDirectory) {

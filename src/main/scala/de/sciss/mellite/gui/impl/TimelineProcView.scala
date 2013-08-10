@@ -24,7 +24,7 @@ object TimelineProcView {
     // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
     val audio = proc.scans.get(ProcKeys.graphAudio).flatMap { scanw =>
       // println("--- has scan")
-      scanw.source.flatMap {
+      scanw.sources.flatMap {
         case Scan.Link.Grapheme(g) =>
           // println("--- scan is linked")
           spanV match {
@@ -41,7 +41,7 @@ object TimelineProcView {
             case _ => None
           }
         case _ => None
-      }
+      } .toList.headOption
     }
 
     val attr    = proc.attributes

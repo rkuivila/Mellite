@@ -171,7 +171,7 @@ object TimelineViewImpl {
               case Proc.AttributeKey(name) => attrChanged(timed, name)
               case Proc.ScanKey     (name) =>
             }
-          case Proc.AttributeChange(name, Attribute.Update(attr, ach)) =>
+          case Proc.AttributeChange(name, attr, ach) =>
             (name, ach) match {
               case (ProcKeys.attrTrack, Change(before: Int, now: Int)) =>
                 view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
@@ -179,12 +179,9 @@ object TimelineViewImpl {
               case _ => attrChanged(timed, name)
             }
 
-          case Proc.ScanChange     (name, scanUpd) =>
-            scanUpd match {
-              case Scan.SinkAdded  (scan, sink) =>
-              case Scan.SinkRemoved(scan, sink) =>
-              case Scan.SourceChanged(scan, sourceOpt) =>
-              case Scan.SourceUpdate(scan, Grapheme.Update(grapheme, segms)) =>
+          case Proc.ScanChange(name, scan, scanUpds) =>
+            scanUpds.foreach {
+              case Scan.GraphemeChange(grapheme, segms) =>
                 if (name == ProcKeys.graphAudio) {
                   timed.span.value match {
                     case Span.HasStart(startFrame) =>
@@ -196,6 +193,8 @@ object TimelineViewImpl {
                     case _ =>
                   }
                 }
+
+              case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
             }
 
           case Proc.GraphChange(ch) =>
@@ -372,7 +371,7 @@ object TimelineViewImpl {
         val gElem       = Grapheme.Elem.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
         val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
         grw.add(bi)
-        scanw.source_=(Some(Scan.Link.Grapheme(grw)))
+        scanw addSource grw
       }
       res
     }
