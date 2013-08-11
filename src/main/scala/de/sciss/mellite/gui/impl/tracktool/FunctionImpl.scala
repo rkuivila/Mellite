@@ -30,8 +30,7 @@ package tracktool
 
 import java.awt.Cursor
 import de.sciss.synth.proc.{Attribute, ProcKeys, Proc, Sys}
-import de.sciss.span.{SpanLike, Span}
-import de.sciss.lucre.expr.Expr
+import de.sciss.span.Span
 import java.awt.event.MouseEvent
 import de.sciss.synth.expr.{Ints, Spans}
 
@@ -46,7 +45,8 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
 
   protected type Initial = Unit
 
-  protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[timeline.ProcView[S]]): Unit =
+  protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[timeline.ProcView[S]]): Unit = {
+    handleMouseSelection(e, regionOpt)
     regionOpt match {
       case Some(region) =>
         if (e.getClickCount == 2) {
@@ -55,6 +55,7 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
 
       case _  => new Drag(e, hitTrack, pos, ())
     }
+  }
 
   protected def dragToParam(d: Drag): Function = {
     val dStart  = math.min(d.firstPos, d.currentPos)

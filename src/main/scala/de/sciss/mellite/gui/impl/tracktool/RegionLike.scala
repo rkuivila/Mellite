@@ -28,11 +28,9 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Proc, Sys}
+import de.sciss.synth.proc.Sys
 import java.awt.event.{MouseAdapter, MouseEvent}
-import de.sciss.span.SpanLike
 import scala.swing.Component
-import de.sciss.lucre.expr.Expr
 import de.sciss.model.impl.ModelImpl
 
 trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackTool.Update[A]] {
@@ -40,6 +38,27 @@ trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackToo
 
   // protected def trackList: TrackList
   protected def canvas: TimelineProcCanvas[S]
+
+  /** Applies standard mouse selection techniques regarding regions. */
+  protected final def handleMouseSelection(e: MouseEvent, regionOpt: Option[timeline.ProcView[S]]): Unit = {
+    val selm = canvas.selectionModel
+    if (e.isShiftDown) {
+      regionOpt.foreach { region =>
+        if (selm.contains(region)) {
+          selm -= region
+        } else {
+          selm += region
+        }
+      }
+    } else {
+      if (regionOpt.map(region => !selm.contains(region)) getOrElse true) {
+        // either hitten a region which wasn't selected, or hitting an empty area
+        // --> deselect all
+        selm.clear()
+        regionOpt.foreach(selm += _)
+      }
+    }
+  }
 
   private val mia = new MouseAdapter {
     override def mousePressed(e: MouseEvent): Unit = {

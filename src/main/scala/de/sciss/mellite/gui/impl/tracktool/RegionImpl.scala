@@ -37,24 +37,7 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
   tool =>
 
   protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[timeline.ProcView[S]]): Unit = {
-    val selm = canvas.selectionModel
-    if (e.isShiftDown) {
-      regionOpt.foreach { region =>
-        if (selm.contains(region)) {
-          selm -= region
-        } else {
-          selm += region
-        }
-      }
-    } else {
-      if (regionOpt.map(region => !selm.contains(region)) getOrElse true) {
-        // either hitten a region which wasn't selected, or hitting an empty area
-        // --> deselect all
-        selm.clear()
-        regionOpt.foreach(selm += _)
-      }
-    }
-
+    handleMouseSelection(e, regionOpt)
     // now go on if region is selected
     regionOpt.foreach { region =>
       if (selm.contains(region)) handleSelect(e, hitTrack, pos, region)
