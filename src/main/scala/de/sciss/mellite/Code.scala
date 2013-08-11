@@ -47,12 +47,11 @@ object Code {
     type Out    = synth.SynthGraph
     def id      = SynthGraph.id
 
-    /** Human readable name. */
-    def contextName = SynthGraph.name
-
     def compileBody(): Future[Unit] = Impl2.compileBody[In, Out, SynthGraph](this)
 
-    def execute(in: In): Out = ???
+    def execute(in: In): Out = Impl2.execute[In, Out, SynthGraph](this, in)
+
+    def contextName = SynthGraph.name
   }
 }
 sealed trait Code extends Writable {
@@ -61,12 +60,19 @@ sealed trait Code extends Writable {
   /** The interfacing output type */
   type Out
 
+  /** Identifier to distinguish types of code. */
   def id: Int
+
+  /** Source code. */
   def source: String
+
+  /** Human readable name. */
   def contextName: String
 
+  /** Compiles the code body without executing it. */
   def compileBody(): Future[Unit]
 
+  /** Compiles and executes the code. Returns the wrapped result. */
   def execute(in: In): Out // = compile()(in)
 
   def write(out: DataOutput): Unit = Code.serializer.write(this, out)
