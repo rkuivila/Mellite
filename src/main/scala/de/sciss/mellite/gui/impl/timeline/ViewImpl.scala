@@ -1,5 +1,5 @@
 /*
- *  TimelineViewImpl.scala
+ *  ViewImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -58,7 +58,7 @@ import scala.swing.event.ValueChanged
 import de.sciss.synth.proc.{FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, Sys, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 
-object TimelineViewImpl {
+object ViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
   private val strkDropRegion      = new BasicStroke(3f)
   private val colrRegionBg        = new Color(0x68, 0x68, 0x68)
@@ -106,7 +106,7 @@ object TimelineViewImpl {
     // XXX TODO --- should use TransportView now!
 
     import document.inMemoryBridge // {cursor, inMemory}
-    val procMap   = tx.newInMemoryIDMap[TimelineProcView[S]]
+    val procMap   = tx.newInMemoryIDMap[ProcView[S]]
     disp ::= procMap
     val transp    = proc.Transport[S, document.I](group, sampleRate = sampleRate)
     disp ::= transp
@@ -213,7 +213,7 @@ object TimelineViewImpl {
 
   private final class Impl[S <: Sys[S]](document: Document[S], groupH: stm.Source[S#Tx, ProcGroup[S]],
                                         transp: ProcTransport[S],
-                                        procMap: IdentifierMap[S#ID, S#Tx, TimelineProcView[S]],
+                                        procMap: IdentifierMap[S#ID, S#Tx, ProcView[S]],
                                         val timelineModel: TimelineModel,
                                         auralView: AuralPresentation[S])
                                        (implicit cursor: Cursor[S])
@@ -222,7 +222,7 @@ object TimelineViewImpl {
 
     import cursor.step
 
-    private var procViews = RangedSeq.empty[TimelineProcView[S], Long]
+    private var procViews = RangedSeq.empty[ProcView[S], Long]
 
     private var timerFrame  = 0L
     private var timerSys    = 0L
@@ -301,26 +301,26 @@ object TimelineViewImpl {
       }
     }
 
-    private def withSelection(fun: S#Tx => TraversableOnce[TimelineProcView[S]] => Unit): Unit = {
+    private def withSelection(fun: S#Tx => TraversableOnce[ProcView[S]] => Unit): Unit = {
       val sel = selectionModel.iterator
       if (sel.hasNext) step { implicit tx => fun(tx)(sel) }
     }
 
-    private def withFilteredSelection(p: TimelineProcView[S] => Boolean)
-                                     (fun: S#Tx => TraversableOnce[TimelineProcView[S]] => Unit): Unit = {
+    private def withFilteredSelection(p: ProcView[S] => Boolean)
+                                     (fun: S#Tx => TraversableOnce[ProcView[S]] => Unit): Unit = {
       val sel = selectionModel.iterator
       val flt = sel.filter(p)
       if (flt.hasNext) step { implicit tx => fun(tx)(flt) }
     }
 
-    def deleteObjects(views: TraversableOnce[TimelineProcView[S]])(implicit tx: S#Tx): Unit =
+    def deleteObjects(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit =
       for (group <- groupH().modifiableOption; pv <- views) {
         val span  = pv.spanSource()
         val proc  = pv.procSource()
         group.remove(span, proc)
       }
 
-    def splitObjects(time: Long)(views: TraversableOnce[TimelineProcView[S]])(implicit tx: S#Tx): Unit =
+    def splitObjects(time: Long)(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit =
       for {
         group             <- groupH().modifiableOption
         pv                <- views
@@ -500,7 +500,7 @@ object TimelineViewImpl {
       log(s"addProc($span, $timed)")
       // timed.span
       // val proc = timed.value
-      val pv = TimelineProcView(timed)
+      val pv = ProcView(timed)
       procMap.put(timed.id, pv)
       if (repaint) {
         procViews += pv
@@ -577,9 +577,9 @@ object TimelineViewImpl {
       }
     }
 
-    private def performDrop(drop: TimelineDnD.Drop[S]): Boolean = {
+    private def performDrop(drop: DnD.Drop[S]): Boolean = {
       drop.drag match {
-        case ad: TimelineDnD.AudioDrag[S] =>
+        case ad: DnD.AudioDrag[S] =>
           step { implicit tx =>
             val group = groupH()
             group.modifiableOption match {
@@ -591,7 +591,7 @@ object TimelineViewImpl {
             }
           }
 
-        case id: TimelineDnD.IntDrag[S] =>
+        case id: DnD.IntDrag[S] =>
           view.findRegion(drop.frame, view.screenToTrack(drop.y)) match {
             case Some(hitRegion) =>
               val regions = if (selectionModel.contains(hitRegion)) selectionModel.iterator.toList else hitRegion :: Nil
@@ -611,17 +611,17 @@ object TimelineViewImpl {
       }
     }
 
-    private final class View extends TimelineProcCanvasImpl[S] {
+    private final class View extends ProcCanvasImpl[S] {
       view =>
       // import AbstractTimelineView._
       def timelineModel   = impl.timelineModel
       def selectionModel  = impl.selectionModel
 
-      def intersect(span: Span): Iterator[TimelineProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
+      def intersect(span: Span): Iterator[ProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
 
       def screenToTrack(y: Int): Int = y / 32
 
-      def findRegion(pos: Long, hitTrack: Int): Option[TimelineProcView[S]] = {
+      def findRegion(pos: Long, hitTrack: Int): Option[ProcView[S]] = {
         val span      = Span(pos, pos + 1)
         val regions   = intersect(span)
         regions.find(pv => pv.track == hitTrack || (pv.track + 1) == hitTrack)
@@ -661,11 +661,11 @@ object TimelineViewImpl {
         }
       }
 
-      object canvasComponent extends Component with TimelineDnD[S] with sonogram.PaintController {
+      object canvasComponent extends Component with DnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
         protected def document      = impl.document
 
-        private var currentDrop = Option.empty[TimelineDnD.Drop[S]]
+        private var currentDrop = Option.empty[DnD.Drop[S]]
 
         // var visualBoost = 1f
         private var sonoBoost = 1f
@@ -682,12 +682,12 @@ object TimelineViewImpl {
           (b.width >> 1, b.height >> 1)
         }
 
-        protected def updateDnD(drop: Option[TimelineDnD.Drop[S]]): Unit = {
+        protected def updateDnD(drop: Option[DnD.Drop[S]]): Unit = {
           currentDrop = drop
           repaint()
         }
 
-        protected def acceptDnD(drop: TimelineDnD.Drop[S]): Boolean =
+        protected def acceptDnD(drop: DnD.Drop[S]): Boolean =
           performDrop(drop)
 
         def imageObserver = peer
@@ -901,7 +901,7 @@ object TimelineViewImpl {
 
           if (currentDrop.isDefined) currentDrop.foreach { drop =>
             drop.drag match {
-              case ad: TimelineDnD.AudioDrag[S] =>
+              case ad: DnD.AudioDrag[S] =>
                 val x1 = frameToScreen(drop.frame).toInt
                 val x2 = frameToScreen(drop.frame + ad.selection.length).toInt
                 g.setColor(colrDropRegionBg)

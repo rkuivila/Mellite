@@ -1,5 +1,5 @@
 /*
- *  AudioFileViewImpl.scala
+ *  ViewImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -44,7 +44,7 @@ import de.sciss.synth.expr.ExprImplicits
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.audiowidgets.TimelineModel
 
-object AudioFileViewImpl {
+object ViewImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: AudioGrapheme[S])
                         (implicit tx: S#Tx, aural: AuralSystem): AudioFileView[S] = {
     val f             = elem.entity.value // .artifact // store.resolve(element.entity.value.artifact)
@@ -100,9 +100,9 @@ object AudioFileViewImpl {
       //      sono.onComplete {
       //        case x => println(s"<view> $x")
       //      }
-      val sonoView  = new AudioFileViewJ(_sono, timelineModel)
+      val sonoView  = new ViewJ(_sono, timelineModel)
 
-      val ggDragRegion = new AudioFileDnD.Button(document, holder, snapshot, timelineModel)
+      val ggDragRegion = new DnD.Button(document, holder, snapshot, timelineModel)
 
       val topPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
@@ -128,7 +128,7 @@ object AudioFileViewImpl {
     def element(implicit tx: S#Tx): AudioGrapheme[S] = holder()
   }
 
-  private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: AudioFileDnD.Button[S])
+  private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: DnD.Button[S])
     extends Button("Drop bus") {
 
     icon        = new ImageIcon(Mellite.getClass.getResource("dropicon16.png"))

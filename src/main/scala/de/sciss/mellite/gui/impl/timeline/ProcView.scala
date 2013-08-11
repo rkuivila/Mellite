@@ -1,5 +1,5 @@
 /*
- *  TimelineProcView.scala
+ *  ProcView.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -38,8 +38,8 @@ import language.implicitConversions
 import scala.util.control.NonFatal
 import de.sciss.file._
 
-object TimelineProcView {
-  def apply[S <: Sys[S]](timed: TimedProc[S])(implicit tx: S#Tx): TimelineProcView[S] = {
+object ProcView {
+  def apply[S <: Sys[S]](timed: TimedProc[S])(implicit tx: S#Tx): ProcView[S] = {
     val span  = timed.span
     val proc  = timed.value
     val spanV = span.value
@@ -89,7 +89,7 @@ object TimelineProcView {
                                         var muted: Boolean,
                                         var audio: Option[Grapheme.Segment.Audio],
                                         var fadeIn: FadeSpec.Value, var fadeOut: FadeSpec.Value)
-    extends TimelineProcView[S] {
+    extends ProcView[S] {
 
     var sono = Option.empty[sonogram.Overview]
     override def toString = s"ProvView($name, $span, $audio)"
@@ -124,7 +124,7 @@ object TimelineProcView {
     }
   }
 
-  implicit def span[S <: Sys[S]](view: TimelineProcView[S]): (Long, Long) = {
+  implicit def span[S <: Sys[S]](view: ProcView[S]): (Long, Long) = {
     view.span match {
       case Span(start, stop)  => (start, stop)
       case Span.From(start)   => (start, Long.MaxValue)
@@ -134,7 +134,7 @@ object TimelineProcView {
     }
   }
 }
-sealed trait TimelineProcView[S <: Sys[S]] {
+sealed trait ProcView[S <: Sys[S]] {
   def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
   def procSource: stm.Source[S#Tx, Proc[S]]
 

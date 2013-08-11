@@ -28,7 +28,7 @@ package de.sciss.mellite.gui
 import de.sciss.lucre.stm.Cursor
 import de.sciss.synth.proc
 import proc.{Sys, ProcTransport}
-import impl.realtime.{InstantGroupPanelImpl => Impl}
+import impl.realtime.{PanelImpl => Impl}
 import swing.Component
 
 object InstantGroupPanel {

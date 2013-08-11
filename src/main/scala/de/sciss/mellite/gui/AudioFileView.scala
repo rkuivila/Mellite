@@ -4,7 +4,7 @@ package gui
 import de.sciss.synth.proc.{AuralSystem, Sys}
 import swing.Component
 import Element.AudioGrapheme
-import impl.audiofile.{AudioFileViewImpl => Impl}
+import impl.audiofile.{ViewImpl => Impl}
 import de.sciss.lucre.stm.Disposable
 
 object AudioFileView {

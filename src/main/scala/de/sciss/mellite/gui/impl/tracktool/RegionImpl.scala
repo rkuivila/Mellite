@@ -30,12 +30,11 @@ package tracktool
 
 import de.sciss.synth.proc.Sys
 import java.awt.event.MouseEvent
-import de.sciss.mellite.gui.impl.timeline.TimelineProcView
 
 trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
   tool =>
 
-  protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineProcView[S]]): Unit = {
+  protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[timeline.ProcView[S]]): Unit = {
     val selm = canvas.selectionModel
     if (e.isShiftDown) {
       regionOpt.foreach { region =>
@@ -60,5 +59,5 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
     }
   }
 
-  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView[S]): Unit
+  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: timeline.ProcView[S]): Unit
 }

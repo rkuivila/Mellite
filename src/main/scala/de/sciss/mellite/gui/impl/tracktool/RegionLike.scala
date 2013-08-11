@@ -34,7 +34,6 @@ import de.sciss.span.SpanLike
 import scala.swing.Component
 import de.sciss.lucre.expr.Expr
 import de.sciss.model.impl.ModelImpl
-import de.sciss.mellite.gui.impl.timeline.TimelineProcView
 
 trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackTool.Update[A]] {
   tool =>
@@ -64,7 +63,7 @@ trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackToo
   }
 
   protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long,
-                            regionOpt: Option[TimelineProcView[S]]): Unit
+                            regionOpt: Option[timeline.ProcView[S]]): Unit
 
   def commit(drag: A)(implicit tx: S#Tx): Unit =
     canvas.selectionModel.iterator.foreach { pv =>

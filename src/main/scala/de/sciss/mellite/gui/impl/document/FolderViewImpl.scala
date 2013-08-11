@@ -47,7 +47,6 @@ import java.io.File
 import de.sciss.lucre.stm
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
-import de.sciss.mellite.gui.impl.timeline.TimelineDnD
 
 object FolderViewImpl {
   private final val DEBUG = false
@@ -335,8 +334,8 @@ object FolderViewImpl {
           sel.headOption match {
             case Some((_, elemView: ElementView.Int[S])) =>
               val elem = elemView.element
-              val tElem = DragAndDrop.Transferable(TimelineDnD.flavor) {
-                TimelineDnD.IntDrag[S](document, elem)
+              val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
+                timeline.DnD.IntDrag[S](document, elem)
               }
               DragAndDrop.Transferable.seq(tSel, tElem)
 

@@ -1,5 +1,5 @@
 /*
- *  TimelineDnD.scala
+ *  DnD.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -39,7 +39,7 @@ import de.sciss.span.Span
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.mellite.Document
 
-object TimelineDnD {
+object DnD {
   sealed trait Drag[S <: Sys[S]] {
     def document: Document[S]
     def source: stm.Source[S#Tx, Element[S]]
@@ -55,10 +55,10 @@ object TimelineDnD {
 
   final val flavor = DragAndDrop.internalFlavor[Drag[_]]
 }
-trait TimelineDnD[S <: Sys[S]] {
+trait DnD[S <: Sys[S]] {
   _: Component =>
 
-  import TimelineDnD._
+  import DnD._
 
   protected def document: Document[S]
   protected def timelineModel: TimelineModel
@@ -76,7 +76,7 @@ trait TimelineDnD[S <: Sys[S]] {
       e.rejectDrag()
     }
 
-    private def mkDrop(d: TimelineDnD.Drag[S], loc: Point): Drop[S] = {
+    private def mkDrop(d: DnD.Drag[S], loc: Point): Drop[S] = {
       val visi  = timelineModel.visible
       val w     = peer.getWidth
       val frame = (loc.x.toDouble / w * visi.length + visi.start).toLong
@@ -86,13 +86,13 @@ trait TimelineDnD[S <: Sys[S]] {
 
     private def process(e: DropTargetDragEvent): Unit = {
       val t = e.getTransferable
-      if (!t.isDataFlavorSupported(TimelineDnD.flavor)) {
+      if (!t.isDataFlavorSupported(DnD.flavor)) {
         abortDrag(e)
 
-      } else t.getTransferData(TimelineDnD.flavor) match {
-        case d: TimelineDnD.Drag[_] if d.document == document =>
+      } else t.getTransferData(DnD.flavor) match {
+        case d: DnD.Drag[_] if d.document == document =>
           val loc     = e.getLocation
-          val drag    = d.asInstanceOf[TimelineDnD.Drag[S]]
+          val drag    = d.asInstanceOf[DnD.Drag[S]]
           val drop    = mkDrop(drag, loc)
           updateDnD(Some(drop))
           e.acceptDrag(COPY)
@@ -106,12 +106,12 @@ trait TimelineDnD[S <: Sys[S]] {
       updateDnD(None)
 
       val t = e.getTransferable
-      if (!t.isDataFlavorSupported(TimelineDnD.flavor)) {
+      if (!t.isDataFlavorSupported(DnD.flavor)) {
         e.rejectDrop()
 
-      } else t.getTransferData(TimelineDnD.flavor) match {
-        case d: TimelineDnD.Drag[_] =>
-          val drag    = d.asInstanceOf[TimelineDnD.Drag[S]]
+      } else t.getTransferData(DnD.flavor) match {
+        case d: DnD.Drag[_] =>
+          val drag    = d.asInstanceOf[DnD.Drag[S]]
           e.acceptDrop(COPY)
           val loc     = e.getLocation
           val drop    = mkDrop(drag, loc)

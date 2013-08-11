@@ -1,5 +1,5 @@
 /*
- *  InstantGroupFrameImpl.scala
+ *  FrameImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -39,7 +39,7 @@ import de.sciss.span.Span
 import de.sciss.desktop.KeyStrokes
 import de.sciss.swingplus.DoClickAction
 
-object InstantGroupFrameImpl {
+object FrameImpl {
   def apply[S <: Sys[S]](group: Document.Group[S], transport: Document.Transport[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupFrame[S] = {
     val prefusePanel      = InstantGroupPanel(transport)

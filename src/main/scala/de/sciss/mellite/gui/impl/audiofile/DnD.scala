@@ -1,5 +1,5 @@
 /*
- *  AudioFileDnD.scala
+ *  DnD.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -36,10 +36,10 @@ import javax.swing.{JComponent, ImageIcon, TransferHandler}
 import java.awt.event.{MouseEvent, MouseAdapter}
 import TransferHandler.COPY
 import de.sciss.audiowidgets.TimelineModel
-import de.sciss.mellite.gui.impl.timeline.TimelineDnD
+import de.sciss.mellite.gui.impl.timeline
 import de.sciss.mellite.Element.AudioGrapheme
 
-object AudioFileDnD {
+object DnD {
   // XXX TODO: should carry document to avoid cross-document DnD without deep copy
 
 
@@ -56,7 +56,7 @@ object AudioFileDnD {
   //    def getTransferData(flavor: DataFlavor): AnyRef = data
   //  }
 
-  import TimelineDnD.{AudioDrag => Drag, flavor}
+  import timeline.DnD.{AudioDrag => Drag, flavor}
 
   // final val flavor = DragAndDrop.internalFlavor[Drag[_]]
 

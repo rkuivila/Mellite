@@ -1,5 +1,5 @@
 /*
- *  DocumentElementsFrameImpl.scala
+ *  ElementsFrameImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -40,7 +40,7 @@ import javax.swing.SpinnerNumberModel
 import de.sciss.file._
 import de.sciss.swingplus.Spinner
 
-object DocumentElementsFrameImpl {
+object ElementsFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx,
                                            cursor: stm.Cursor[S]): DocumentElementsFrame[S] = {
     // implicit val csr  = doc.cursor

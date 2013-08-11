@@ -3,7 +3,7 @@ package gui
 
 import swing.Frame
 import de.sciss.lucre.stm.Cursor
-import impl.realtime.{InstantGroupFrameImpl => Impl}
+import impl.realtime.{FrameImpl => Impl}
 import de.sciss.synth.proc.Sys
 
 object InstantGroupFrame {

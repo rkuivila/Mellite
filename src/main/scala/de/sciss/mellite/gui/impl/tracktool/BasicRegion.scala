@@ -31,7 +31,6 @@ package tracktool
 import de.sciss.synth.proc.Sys
 import java.awt.event.{KeyEvent, KeyListener, MouseEvent}
 import javax.swing.event.MouseInputAdapter
-import de.sciss.mellite.gui.impl.timeline.TimelineProcView
 
 object BasicRegion {
   final val MinDur  = 32
@@ -46,7 +45,7 @@ trait BasicRegion[S <: Sys[S], A] extends RegionImpl[S, A] {
   final protected def dragEnd   ()       : Unit = dispatch(DragEnd   )
   final protected def dragCancel(d: Drag): Unit = dispatch(DragCancel)
 
-  final protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView[S]): Unit =
+  final protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: timeline.ProcView[S]): Unit =
     if (e.getClickCount == 2) {
       handleDoubleClick()
     } else {
@@ -89,7 +88,7 @@ trait BasicRegion[S <: Sys[S], A] extends RegionImpl[S, A] {
   //  }
 
   protected class Drag(val firstEvent: MouseEvent, val firstTrack: Int,
-                       val firstPos: Long, val firstRegion: TimelineProcView[S])
+                       val firstPos: Long, val firstRegion: timeline.ProcView[S])
     extends MouseInputAdapter with KeyListener {
 
     private var started         = false

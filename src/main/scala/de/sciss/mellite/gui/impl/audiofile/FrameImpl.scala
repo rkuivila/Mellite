@@ -1,5 +1,5 @@
 /*
- *  TimelineFrameImpl.scala
+ *  FrameImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -26,76 +26,59 @@
 package de.sciss.mellite
 package gui
 package impl
-package timeline
+package audiofile
 
+import de.sciss.lucre.stm
 import de.sciss.synth.proc.{AuralSystem, Sys}
 import de.sciss.desktop.impl.WindowImpl
 import de.sciss.desktop.Window
-import de.sciss.lucre.stm
-import scala.swing.event.WindowClosing
-import de.sciss.mellite.{Mellite, Element, Document}
-import de.sciss.lucre.stm
-import de.sciss.mellite.gui._
-import scala.swing.event.WindowClosing
-import de.sciss.desktop.Window
-import de.sciss.desktop.impl.WindowImpl
-import scala.swing.event.WindowClosing
+import de.sciss.file._
 
-object TimelineFrameImpl {
-  def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S],
-                         aural: AuralSystem): TimelineFrame[S] = {
-    val tlv   = TimelineView(document, group)
-    val name  = group.name.value
-    val res   = new Impl(tlv, name)
+object FrameImpl {
+  def apply[S <: Sys[S]](doc: Document[S], elem: Element.AudioGrapheme[S])
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): AudioFileFrame[S] = {
+    val afv       = AudioFileView(doc, elem)
+    val name      = elem.name.value
+    val file      = elem.entity.value.artifact
+    val view      = new Impl(doc, afv, name, file)
     guiFromTx {
-      res.init()
+      view.guiInit()
     }
-    res
+    view
   }
 
-  private final class Impl[S <: Sys[S]](val view: TimelineView[S], name: String)(implicit _cursor: stm.Cursor[S])
-    extends TimelineFrame[S] {
-
-    private var _window: Window = _
-
-    def window = _window
+  private final class Impl[S <: Sys[S]](val document: Document[S], afv: AudioFileView[S], name: String, _file: File)
+                                       (implicit cursor: stm.Cursor[S])
+    extends AudioFileFrame[S] with ComponentHolder[Window] {
 
     def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      guiFromTx(_window.dispose())
+      guiFromTx(comp.dispose())
     }
 
     private def disposeData()(implicit tx: S#Tx): Unit =
-      view.dispose()
+      afv.dispose()
 
     private def frameClosing(): Unit =
-      _cursor.step { implicit tx =>
+      cursor.step { implicit tx =>
         disposeData()
       }
 
-    def init(): Unit = {
-      _window = new WindowImpl {
+    def guiInit(): Unit = {
+      val fileName = _file.base
+      comp = new WindowImpl {
         def handler = Mellite.windowHandler
         def style   = Window.Regular
         component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
-        title       = name
-        contents    = view.component
-
-        bindMenus(
-          "file.bounce"           -> view.bounceAction,
-          "edit.delete"           -> view.deleteAction,
-          "actions.stopAllSound"  -> view.stopAllSoundAction,
-          "timeline.splitObjects" -> view.splitObjectsAction
-        )
-
+        title       = if (name == fileName) name else s"$name - $fileName"
+        file        = Some(_file)
+        contents    = afv.component
         reactions += {
-          case WindowClosing(_) => frameClosing()
+          case Window.Closing(_) => frameClosing()
         }
-
         pack()
         // centerOnScreen()
-        GUI.placeWindow(this, 0f, 0.25f, 24)
+        GUI.placeWindow(this, 1f, 0.75f, 24)
         front()
       }
     }

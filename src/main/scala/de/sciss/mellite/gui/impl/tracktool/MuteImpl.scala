@@ -36,7 +36,6 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
 import de.sciss.synth.expr.Booleans
 import de.sciss.mellite.gui.TrackTool.Mute
-import de.sciss.mellite.gui.impl.timeline.TimelineProcView
 
 object MuteImpl {
   private lazy val cursor = {
@@ -61,6 +60,6 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     }
   }
 
-  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView[S]): Unit =
+  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: timeline.ProcView[S]): Unit =
     dispatch(TrackTool.Adjust(Mute(!region.muted)))
 }

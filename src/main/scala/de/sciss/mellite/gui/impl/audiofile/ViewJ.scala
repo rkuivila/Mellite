@@ -1,5 +1,5 @@
 /*
- *  AudioFileViewJ.scala
+ *  ViewJ.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -37,7 +37,7 @@ import Swing._
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
 
-final class AudioFileViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
+final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
   extends TimelineCanvasImpl {
 
   import TimelineCanvasImpl._

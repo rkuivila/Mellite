@@ -1,5 +1,5 @@
 /*
- *  TimelineProcCanvasImpl.scala
+ *  ProcCanvasImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -31,7 +31,7 @@ package timeline
 import de.sciss.synth.proc.Sys
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
 
-trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCanvas[S] {
+trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCanvas[S] {
   final val trackTools = TrackTools[S](this)
 
   import TrackTools._

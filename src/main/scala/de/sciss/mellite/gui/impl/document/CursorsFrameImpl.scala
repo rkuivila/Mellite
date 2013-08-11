@@ -1,5 +1,5 @@
 /*
- *  DocumentCursorsFrameImpl.scala
+ *  CursorsFrameImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -44,7 +44,7 @@ import de.sciss.desktop
 import de.sciss.treetable.TreeTableSelectionChanged
 import de.sciss.lucre.event.Change
 
-object DocumentCursorsFrameImpl {
+object CursorsFrameImpl {
   type S = proc.Confluent
   type D = S#D
 

@@ -37,19 +37,19 @@ final class ProcSelectionModelImpl[S <: Sys[S]]
   import ProcSelectionModel.Update
 
   // no sync because we assume the model is only used on the event thread
-  private var set = Set.empty[TimelineProcView[S]]
+  private var set = Set.empty[ProcView[S]]
 
-  def contains(view: TimelineProcView[S]): Boolean = set.contains(view)
+  def contains(view: ProcView[S]): Boolean = set.contains(view)
 
-  def iterator: Iterator[TimelineProcView[S]] = set.iterator
+  def iterator: Iterator[ProcView[S]] = set.iterator
 
-  def +=(view: TimelineProcView[S]): Unit =
+  def +=(view: ProcView[S]): Unit =
     if (!set.contains(view)) {
       set += view
       dispatch(Update(added = Set(view), removed = Set.empty))
     }
 
-  def -=(view: TimelineProcView[S]): Unit =
+  def -=(view: ProcView[S]): Unit =
     if (set.contains(view)) {
       set -= view
       dispatch(Update(added = Set.empty, removed = Set(view)))

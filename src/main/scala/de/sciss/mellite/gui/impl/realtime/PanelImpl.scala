@@ -1,5 +1,5 @@
 /*
- *  InstantGroupPanelImpl.scala
+ *  PanelImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -48,7 +48,7 @@ import prefuse.util.force.{AbstractForce, ForceItem}
 import swing.Component
 import de.sciss.span.SpanLike
 
-object InstantGroupPanelImpl {
+object PanelImpl {
   def apply[S <: Sys[S]](transport: ProcTransport[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] = {
 
