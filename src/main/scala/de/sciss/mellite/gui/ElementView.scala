@@ -42,7 +42,7 @@ import de.sciss.lucre.event.Change
 object ElementView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double}
-  import mellite.{Folder => _Folder} // , Recursion => _Recursion, Code => _Code}
+  import mellite.{Folder => _Folder, Code => _Code} // , Recursion => _Recursion}
 
   private[gui] def apply[S <: Sys[S]](parent: FolderLike[S], element: Element[S])
                                      (implicit tx: S#Tx): ElementView[S] = {
@@ -73,7 +73,7 @@ object ElementView {
         val value = e.entity.deployed.entity.artifact.value
         new Recursion.Impl(parent, tx.newHandle(e), name, value)
       case e: Element.Code[S] =>
-        val value = e.entity.value.contextName
+        val value = e.entity.value
         new Code.Impl(parent, tx.newHandle(e), name, value)
     }
   }
@@ -355,7 +355,7 @@ object ElementView {
 
     private[ElementView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
                                                        val element: stm.Source[S#Tx, Element.Code[S]],
-                                                       var name: _String, var value: _String)
+                                                       var name: _String, var value: _Code)
       extends Code[S] with ElementView.Impl[S] {
 
       def prefix  = "Code"
@@ -367,7 +367,7 @@ object ElementView {
   }
   sealed trait Code[S <: Sys[S]] extends ElementView[S] {
     def element: stm.Source[S#Tx, Element.Code[S]]
-    var value: _String
+    var value: _Code
   }
 
   // -------- Root --------

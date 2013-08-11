@@ -331,11 +331,20 @@ object FolderViewImpl {
           val tSel  = DragAndDrop.Transferable(FolderView.selectionFlavor) {
             new FolderView.SelectionDnDData(document, selection)
           }
+          // except for the general selection flavour, see if there is more specific types
+          // (current Int and Code are supported)
           sel.headOption match {
             case Some((_, elemView: ElementView.Int[S])) =>
-              val elem = elemView.element
+              val elem  = elemView.element
               val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
                 timeline.DnD.IntDrag[S](document, elem)
+              }
+              DragAndDrop.Transferable.seq(tSel, tElem)
+
+            case Some((_, elemView: ElementView.Code[S])) /* if elemView.value.id == Code.SynthGraph.id */ =>
+              val elem  = elemView.element
+              val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
+                timeline.DnD.CodeDrag[S](document, elem)
               }
               DragAndDrop.Transferable.seq(tSel, tElem)
 

@@ -49,7 +49,8 @@ object DnD {
                                           bus: Option[stm.Source[S#Tx, Element.Int[S]]])
     extends Drag[S]
 
-  final case class IntDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Element.Int[S]]) extends Drag[S]
+  final case class IntDrag [S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Element.Int [S]]) extends Drag[S]
+  final case class CodeDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Element.Code[S]]) extends Drag[S]
 
   final case class Drop[S <: Sys[S]](frame: Long, y: Int, drag: Drag[S])
 

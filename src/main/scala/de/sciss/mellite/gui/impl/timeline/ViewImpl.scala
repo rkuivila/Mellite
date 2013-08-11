@@ -50,12 +50,13 @@ import Predef.{any2stringadd => _, _}
 import de.sciss.lucre.event.Change
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
-import de.sciss.synth.expr.{Doubles, ExprImplicits, Longs, SpanLikes}
+import de.sciss.synth.expr.{SynthGraphs, Doubles, ExprImplicits, Longs, SpanLikes}
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.ValueChanged
 import de.sciss.synth.proc.{FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, Sys, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
+import scala.util.control.NonFatal
 
 object ViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -580,6 +581,14 @@ object ViewImpl {
     }
 
     private def performDrop(drop: DnD.Drop[S]): Boolean = {
+      def withRegions(fun: S#Tx => List[ProcView[S]] => Boolean): Boolean =
+        view.findRegion(drop.frame, view.screenToTrack(drop.y)).exists { hitRegion =>
+          val regions = if (selectionModel.contains(hitRegion)) selectionModel.iterator.toList else hitRegion :: Nil
+          step { implicit tx =>
+            fun(tx)(regions)
+          }
+        }
+
       drop.drag match {
         case ad: DnD.AudioDrag[S] =>
           step { implicit tx =>
@@ -593,21 +602,40 @@ object ViewImpl {
             }
           }
 
-        case id: DnD.IntDrag[S] =>
-          view.findRegion(drop.frame, view.screenToTrack(drop.y)) match {
-            case Some(hitRegion) =>
-              val regions = if (selectionModel.contains(hitRegion)) selectionModel.iterator.toList else hitRegion :: Nil
-              step { implicit tx =>
-                val intElem = id.source()
-                val attr    = Attribute.Int(intElem.entity)
-                regions.foreach { r =>
-                  val proc    = r.procSource()
-                  proc.attributes.put(ProcKeys.attrBus, attr)
+        case id: DnD.IntDrag[S] => withRegions { implicit tx => regions =>
+          val intElem = id.source()
+          val attr    = Attribute.Int(intElem.entity)
+          regions.foreach { r =>
+            val proc    = r.procSource()
+            proc.attributes.put(ProcKeys.attrBus, attr)
+          }
+          true
+        }
+
+        case cd: DnD.CodeDrag[S] => withRegions { implicit tx => regions =>
+          val codeElem  = cd.source()
+          val code      = codeElem.entity.value
+          code match {
+            case csg: Code.SynthGraph =>
+              try {
+                val sg        = csg.execute()  // XXX TODO: compilation blocks, not good!
+                val attrName  = Attribute.String(codeElem.name)
+                regions.foreach { pv =>
+                  val p     = pv.procSource()
+                  p.graph() = SynthGraphs.newConst(sg)  // XXX TODO: ideally would link to code updates
+                  p.attributes.put(ProcKeys.attrName, attrName)
                 }
+                true
+
+              } catch {
+                case NonFatal(e) =>
+                  e.printStackTrace()
+                  false
               }
-              true
+
             case _ => false
           }
+        }
 
         case _ => false
       }
