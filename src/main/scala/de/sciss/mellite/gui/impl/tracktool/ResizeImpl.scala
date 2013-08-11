@@ -1,23 +1,21 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
 import java.awt.Cursor
 import de.sciss.synth.proc.{Proc, Sys}
 import de.sciss.span.{SpanLike, Span}
-import de.sciss.synth.expr.ExprImplicits
 import de.sciss.lucre.expr.Expr
 
-final class TrackResizeToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends BasicTrackRegionTool[S, TrackTool.Resize] {
+final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
+  extends BasicRegion[S, TrackTool.Resize] {
 
   import TrackTool._
-  import BasicTrackRegionTool.MinDur
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
   val name          = "Resize"
-  val icon          = TrackToolsImpl.getIcon("hresize")
+  val icon          = ToolsImpl.getIcon("hresize")
 
   protected def dialog(): Option[Resize] = None // not yet supported
 

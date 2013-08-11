@@ -1,7 +1,7 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
 import de.sciss.synth.proc.{FadeSpec, ProcKeys, Proc, Attribute, Sys}
 import java.awt.Cursor
@@ -9,14 +9,14 @@ import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
 import de.sciss.synth.Curve
 
-final class TrackFadeToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends BasicTrackRegionTool[S, TrackTool.Fade] {
+final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
+  extends BasicRegion[S, TrackTool.Fade] {
 
   import TrackTool._
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR)
   val name          = "Fade"
-  val icon          = TrackToolsImpl.getIcon("fade")
+  val icon          = ToolsImpl.getIcon("fade")
 
   private var dragCurve = false
 

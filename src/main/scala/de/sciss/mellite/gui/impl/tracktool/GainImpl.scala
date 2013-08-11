@@ -1,22 +1,23 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
 import java.awt.Cursor
 import de.sciss.synth.proc.{Proc, Sys}
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
 import de.sciss.synth.expr.ExprImplicits
+import de.sciss.synth
 
-final class TrackGainToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends BasicTrackRegionTool[S, TrackTool.Gain] {
+final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
+  extends BasicRegion[S, TrackTool.Gain] {
 
   import TrackTool._
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
   val name          = "Gain"
-  val icon          = TrackToolsImpl.getIcon("vresize")
+  val icon          = ToolsImpl.getIcon("vresize")
 
   protected def dialog(): Option[Gain] = None // not yet supported
 

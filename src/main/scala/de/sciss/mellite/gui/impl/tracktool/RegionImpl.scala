@@ -1,16 +1,16 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
 import de.sciss.synth.proc.{Proc, Sys}
-import model.impl.ModelImpl
 import java.awt.event.{MouseAdapter, MouseEvent}
 import de.sciss.span.SpanLike
 import scala.swing.Component
 import de.sciss.lucre.expr.Expr
+import de.sciss.model.impl.ModelImpl
 
-trait TrackRegionToolImpl[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackTool.Update[A]] {
+trait RegionImpl[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackTool.Update[A]] {
   tool =>
 
   // protected def trackList: TrackList

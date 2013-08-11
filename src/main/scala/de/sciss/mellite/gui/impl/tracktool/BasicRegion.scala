@@ -1,16 +1,16 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
 import de.sciss.synth.proc.Sys
 import java.awt.event.{KeyEvent, KeyListener, MouseEvent}
 import javax.swing.event.MouseInputAdapter
 
-object BasicTrackRegionTool {
+object BasicRegion {
   final val MinDur  = 32
 }
-trait BasicTrackRegionTool[S <: Sys[S], A] extends TrackRegionToolImpl[S, A] {
+trait BasicRegion[S <: Sys[S], A] extends RegionImpl[S, A] {
   import TrackTool._
 
   final protected var _currentParam = Option.empty[A]

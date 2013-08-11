@@ -5,6 +5,7 @@ import impl.{CodeImpl => Impl, CodeImpl2 => Impl2}
 import java.io.File
 import scala.concurrent.Future
 import de.sciss.processor.Processor
+import de.sciss.synth
 
 object Code {
   final case class CompilationFailed() extends Exception
@@ -33,6 +34,21 @@ object Code {
 
     def contextName = "File Transform"
   }
+
+  object SynthGraph {
+    final val id = 1
+  }
+  final case class SynthGraph(source: String) extends Code {
+    type In     = Unit
+    type Out    = synth.SynthGraph
+    def id      = SynthGraph.id
+
+    def contextName = "SynthGraph"
+
+    def compileBody(): Future[Unit] = ???
+
+    def execute(in: In): Out = ???
+  }
 }
 sealed trait Code extends Writable {
   /** The interfacing input type */
@@ -44,7 +60,6 @@ sealed trait Code extends Writable {
   def source: String
   def contextName: String
 
-  // def compile(): In => Out
   def compileBody(): Future[Unit]
 
   def execute(in: In): Out // = compile()(in)

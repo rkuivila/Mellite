@@ -1,19 +1,19 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
-import synth.proc.Sys
 import java.awt.Cursor
 import de.sciss.model.impl.ModelImpl
 import scala.swing.Component
+import de.sciss.synth.proc.Sys
 
-final class TrackCursorToolImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
+final class CursorImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
   extends TrackTool[S, Unit] with ModelImpl[TrackTool.Update[Unit]] {
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
   val name          = "Cursor"
-  val icon          = TrackToolsImpl.getIcon("text")
+  val icon          = ToolsImpl.getIcon("text")
 
   def install(component: Component): Unit =
     component.cursor = defaultCursor

@@ -1,7 +1,7 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
 import de.sciss.synth.proc.{ProcKeys, Proc, Attribute, Sys}
 import java.awt.Cursor
@@ -9,15 +9,15 @@ import de.sciss.span.{SpanLike, Span}
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.lucre.expr.Expr
 
-final class TrackMoveToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends BasicTrackRegionTool[S, TrackTool.Move] {
+final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
+  extends BasicRegion[S, TrackTool.Move] {
 
   import TrackTool._
-  import BasicTrackRegionTool.MinDur
+  import BasicRegion.MinDur
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
   val name          = "Move"
-  val icon          = TrackToolsImpl.getIcon("openhand")
+  val icon          = ToolsImpl.getIcon("openhand")
 
   protected def dragToParam(d: Drag): Move = {
     val eNow  = d.currentEvent

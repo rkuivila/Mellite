@@ -1,16 +1,17 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
 import scala.swing.{ToggleButton, Action, Orientation, BoxPanel}
 import javax.swing.{KeyStroke, ButtonGroup}
 import collection.immutable.{IndexedSeq => Vec}
-import synth.proc.Sys
 import java.awt.event.KeyEvent
 import de.sciss.desktop.FocusType
+import de.sciss.synth.proc.Sys
+import de.sciss.desktop
 
-final class TrackToolsPaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackTool[S, _]])
+final class PaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackTool[S, _]])
   extends BoxPanel(Orientation.Horizontal) {
 
   private val group = new ButtonGroup()

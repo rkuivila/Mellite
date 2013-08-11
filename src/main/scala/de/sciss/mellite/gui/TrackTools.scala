@@ -5,12 +5,12 @@ package gui
 import java.awt.Cursor
 import annotation.switch
 import model.Model
-import de.sciss.mellite.gui.impl.{TrackFadeToolImpl, TrackMuteToolImpl, TrackGainToolImpl, TrackResizeToolImpl, TrackCursorToolImpl, TrackMoveToolImpl, TrackToolsPaletteImpl, TrackToolsImpl}
 import de.sciss.lucre.event.Change
 import de.sciss.synth.proc.{FadeSpec, Sys}
 import scala.swing.Component
 import javax.swing.Icon
 import collection.immutable.{IndexedSeq => Vec}
+import de.sciss.mellite.gui.impl.tracktool.{CursorImpl, PaletteImpl, ToolsImpl, ResizeImpl, MuteImpl, MoveImpl, GainImpl, FadeImpl}
 
 object TrackTools {
   sealed trait Update[S <: Sys[S]]
@@ -19,9 +19,9 @@ object TrackTools {
   final case class FadeViewModeChanged  [S <: Sys[S]](change: Change[FadeViewMode   ]) extends Update[S]
   final case class RegionViewModeChanged[S <: Sys[S]](change: Change[RegionViewMode ]) extends Update[S]
 
-  def apply  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTools[S] = new TrackToolsImpl(canvas)
+  def apply  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTools[S] = new ToolsImpl(canvas)
   def palette[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackTool[S, _]]): Component =
-    new TrackToolsPaletteImpl[S](control, tools)
+    new PaletteImpl[S](control, tools)
 }
 
 object RegionViewMode {
@@ -85,12 +85,13 @@ object TrackTool {
 
   type Listener = Model.Listener[Update[Any]]
 
-  def cursor[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Unit  ] = new TrackCursorToolImpl(canvas)
-  def move  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Move  ] = new TrackMoveToolImpl  (canvas)
-  def resize[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Resize] = new TrackResizeToolImpl(canvas)
-  def gain  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Gain  ] = new TrackGainToolImpl  (canvas)
-  def mute  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Mute  ] = new TrackMuteToolImpl  (canvas)
-  def fade  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Fade  ] = new TrackFadeToolImpl  (canvas)
+  def cursor  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Unit  ] = new CursorImpl(canvas)
+  def move    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Move  ] = new MoveImpl  (canvas)
+  def resize  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Resize] = new ResizeImpl(canvas)
+  def gain    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Gain  ] = new GainImpl  (canvas)
+  def mute    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Mute  ] = new MuteImpl  (canvas)
+  def fade    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Fade  ] = new FadeImpl  (canvas)
+  // def function[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Fade  ] = new FadeImpl  (canvas)
 }
 
 trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
@@ -104,42 +105,6 @@ trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
 
   def commit(drag: A)(implicit tx: S#Tx): Unit
 }
-
-//class TrackFadeTool(trackList: TrackList, timelineModel: TimelineView)
-//  extends BasicTrackRegionTool[TrackFadeTool.Fade](trackList, timelineModel) {
-//
-//  import TrackFadeTool._
-//
-//  def defaultCursor = Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR)
-//
-//  val name = "Fade"
-//
-//  private var curvature = false
-//
-//  protected def dialog: Option[Fade] = None // not yet supported
-//
-//  protected def dragToParam(d: Drag): Fade = {
-//    val leftHand = math.abs(d.firstPos - d.firstRegion.span.start) <
-//      math.abs(d.firstPos - d.firstRegion.span.stop)
-//    val (deltaTime, deltaCurve) = if (curvature) {
-//      val dc = (d.firstEvent.getY - d.currentEvent.getY) * 0.1f
-//      (0L, if (leftHand) -dc else dc)
-//    } else {
-//      (if (leftHand) d.currentPos - d.firstPos else d.firstPos - d.currentPos, 0f)
-//    }
-//    if (leftHand) Fade(deltaTime, 0L, deltaCurve, 0f)
-//    else Fade(0L, deltaTime, 0f, deltaCurve)
-//  }
-//
-//  override protected def dragStarted(d: this.Drag): Boolean = {
-//    val result = super.dragStarted(d)
-//    if (result) {
-//      curvature = math.abs(d.currentEvent.getX - d.firstEvent.getX) <
-//        math.abs(d.currentEvent.getY - d.firstEvent.getY)
-//    }
-//    result
-//  }
-//}
 
 //object TrackSlideTool {
 //  case class Slide(deltaOuter: Long, deltaInner: Long)

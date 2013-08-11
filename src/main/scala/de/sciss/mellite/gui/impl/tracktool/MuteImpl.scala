@@ -1,7 +1,7 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
 import de.sciss.synth.proc.{ProcKeys, Attribute, Proc, Sys}
 import de.sciss.model.impl.ModelImpl
@@ -10,21 +10,21 @@ import java.awt.event.MouseEvent
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
 import de.sciss.synth.expr.Booleans
-import TrackTool.Mute
+import de.sciss.mellite.gui.TrackTool.Mute
 
-object TrackMuteToolImpl {
+object MuteImpl {
   private lazy val cursor = {
     val tk = Toolkit.getDefaultToolkit
     val img = tk.createImage(Mellite.getClass.getResource("cursor-mute.png"))
     tk.createCustomCursor(img, new Point(4, 4), "Mute")
   }
 }
-final class TrackMuteToolImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends TrackRegionToolImpl[S, Mute] with ModelImpl[TrackTool.Update[Mute]] {
+final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
+  extends RegionImpl[S, Mute] with ModelImpl[TrackTool.Update[Mute]] {
 
-  def defaultCursor = TrackMuteToolImpl.cursor
+  def defaultCursor = MuteImpl.cursor
   val name          = "Mute"
-  val icon          = TrackToolsImpl.getIcon("mute")
+  val icon          = ToolsImpl.getIcon("mute")
 
   protected def commitProc(mute: Mute)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
     val attr      = proc.attributes

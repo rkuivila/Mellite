@@ -1,17 +1,17 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package tracktool
 
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.proc.Sys
 import de.sciss.lucre.event.Change
 import javax.swing.ImageIcon
 
-object TrackToolsImpl {
+object ToolsImpl {
   def getIcon(name: String) = new ImageIcon(Mellite.getClass.getResource(s"icon-$name.png"))
 }
-final class TrackToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
+final class ToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
   extends TrackTools[S] with ModelImpl[TrackTools.Update[S]] {
 
   import TrackTools._
