@@ -29,15 +29,16 @@ package impl
 package tracktool
 
 import java.awt.{Color, RenderingHints, Point, Toolkit}
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{Scan, Sys, Proc}
 import de.sciss.mellite.gui.TimelineProcCanvas
 import de.sciss.mellite.gui.TrackTool
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
-import de.sciss.synth.proc.Proc
 import java.awt.image.BufferedImage
 import java.awt.geom.{Ellipse2D, Area}
 import javax.swing.ImageIcon
+import collection.breakOut
+import de.sciss.synth.proc.Scan.Link
 
 object PatchImpl {
   private lazy val image: BufferedImage = {
@@ -79,9 +80,48 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Patch(d.initial, sink)
   }
 
-  protected def commitProc(drag: Patch[S])(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
-    // XXX TODO
+  private def mkLink(sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])(implicit tx: S#Tx): Unit = {
+    log(s"Link $sourceKey to $sinkKey")
+    source.addSink(Link.Scan(sink))
   }
+
+  protected def commitProc(drag: Patch[S])(span: Expr[S, SpanLike], out: Proc[S])(implicit tx: S#Tx): Unit =
+    drag.sink match {
+      case Patch.Linked(view) =>
+        val in    = view.procSource()
+        val outs0 = out.scans.iterator.toList
+        val ins0  = in .scans.iterator.toList
+        val outs1: Set[Scan[S]] = outs0.map(_._2)(breakOut)
+        val ins1 : Set[Scan[S]] = ins0 .map(_._2)(breakOut)
+
+        // remove scans which are already linked to the other proc
+        val outs  = outs0.filterNot { case (key, scan) =>
+          scan.sinks  .toList.exists {
+            case Link.Scan(peer) if ins1.contains(peer) => true
+            case _ => false
+          }
+        }
+        val ins   = ins0 .filterNot { case (key, scan) =>
+          scan.sources.toList.exists {
+            case Link.Scan(peer) if outs1.contains(peer) => true
+            case _ => false
+          }
+        }
+
+        log(s"Possible outs: ${outs.map(_._1).mkString(", ")}; possible ins: ${ins.map(_._1).mkString(", ")}")
+
+        if (outs.isEmpty || ins.isEmpty) return   // nothing to patch
+        if (outs.size == 1 && ins.size == 1) {    // exactly one possible connection, go ahead
+          val (sourceKey, source) = outs.head
+          val (sinkKey  , sink  ) = ins .head
+          mkLink(sourceKey, source, sinkKey, sink)
+
+        } else {  // present dialog to user
+          println(s"Woop. Multiple choice... Dialog not yet implemented...")
+        }
+
+      case _ =>
+    }
 
   protected def dialog(): Option[Patch[S]] = {
     println("Not yet implemented - movement dialog")

@@ -57,6 +57,7 @@ import scala.swing.event.ValueChanged
 import de.sciss.synth.proc.{FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, Sys, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import scala.util.control.NonFatal
+import collection.breakOut
 
 object ViewImpl {
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
@@ -84,7 +85,7 @@ object ViewImpl {
 
   private val MinDur      = 32
 
-  private val logEnabled  = false
+  private val logEnabled  = true
   private val DEBUG       = false
 
   private def log(what: => String): Unit =
@@ -620,12 +621,29 @@ object ViewImpl {
           code match {
             case csg: Code.SynthGraph =>
               try {
-                val sg        = csg.execute()  // XXX TODO: compilation blocks, not good!
+                val sg = csg.execute()  // XXX TODO: compilation blocks, not good!
+
+                val scanKeys: Set[String] = sg.sources.collect {
+                  case proc.graph.scan.In (key, _) => key
+                  case proc.graph.scan.Out(key, _) => key
+                } (breakOut)
+                // sg.sources.foreach(println)
+                if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
+
                 val attrName  = Attribute.String(codeElem.name)
                 regions.foreach { pv =>
                   val p     = pv.procSource()
                   p.graph() = SynthGraphs.newConst(sg)  // XXX TODO: ideally would link to code updates
                   p.attributes.put(ProcKeys.attrName, attrName)
+                  val toRemove = p.scans.iterator.collect {
+                    case (key, scan) if !scanKeys.contains(key) && scan.sinks.isEmpty && scan.sources.isEmpty => key
+                  }
+                  toRemove.foreach(p.scans.remove) // unconnected scans which are not referred to from synth def
+                  val existing = p.scans.iterator.collect {
+                    case (key, _) if scanKeys contains key => key
+                  }
+                  val toAdd = scanKeys -- existing.toSet
+                  toAdd.foreach(p.scans.add)
                 }
                 true
 
