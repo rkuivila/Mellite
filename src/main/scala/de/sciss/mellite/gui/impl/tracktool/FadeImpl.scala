@@ -46,7 +46,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   private var dragCurve = false
 
   protected def dragToParam(d: Drag): Fade = {
-    val firstSpan = d.firstRegion.span
+    val firstSpan = d.initial.span
     val leftHand = firstSpan match {
       case Span(start, stop)  => math.abs(d.firstPos - start) < math.abs(d.firstPos - stop)
       case Span.From(start)   => true

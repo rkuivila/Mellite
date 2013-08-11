@@ -28,8 +28,10 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{Proc, Sys}
 import java.awt.event.MouseEvent
+import de.sciss.span.SpanLike
+import de.sciss.lucre.expr.Expr
 
 trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
   tool =>
@@ -58,6 +60,15 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
       if (selm.contains(region)) handleSelect(e, hitTrack, pos, region)
     }
   }
+
+  def commit(drag: A)(implicit tx: S#Tx): Unit =
+    canvas.selectionModel.iterator.foreach { pv =>
+      val span  = pv.spanSource()
+      val proc  = pv.procSource()
+      commitProc(drag)(span, proc)
+    }
+
+  protected def commitProc(drag: A)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit
 
   protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: timeline.ProcView[S]): Unit
 }

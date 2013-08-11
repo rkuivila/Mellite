@@ -11,6 +11,7 @@ import scala.swing.Component
 import javax.swing.Icon
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.mellite.gui.impl.tracktool.{FunctionImpl, CursorImpl, PaletteImpl, ToolsImpl, ResizeImpl, MuteImpl, MoveImpl, GainImpl, FadeImpl}
+import de.sciss.span.Span
 
 object TrackTools {
   sealed trait Update[S <: Sys[S]]
@@ -77,10 +78,10 @@ object TrackTool {
   final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean)
   type Resize = ProcActions.Resize
   val  Resize = ProcActions.Resize
-  final case class Gain  (factor: Float)
-  final case class Mute  (engaged: Boolean)
-  final case class Fade  (deltaFadeIn: Long, deltaFadeOut: Long, deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
-  trait Function // XXX TODO
+  final case class Gain    (factor: Float)
+  final case class Mute    (engaged: Boolean)
+  final case class Fade    (deltaFadeIn: Long, deltaFadeOut: Long, deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
+  final case class Function(track: Int, span: Span)
 
   final val EmptyFade = FadeSpec.Value(numFrames = 0L)
 

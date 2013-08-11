@@ -29,40 +29,48 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{Proc, Sys}
+import de.sciss.synth.proc.{Attribute, ProcKeys, Proc, Sys}
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
+import java.awt.event.MouseEvent
+import de.sciss.synth.expr.{Ints, Spans}
 
 final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends BasicRegion[S, TrackTool.Function] {
+  extends RegionLike[S, TrackTool.Function] with Dragging[S, TrackTool.Function] {
 
   import TrackTool._
 
-  def defaultCursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
+  def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
   val name          = "Function"
-  val icon          = ToolsImpl.getIcon("hresize")
+  val icon          = ToolsImpl.getIcon("function")
 
-  protected def dialog(): Option[Function] = None // not yet supported
+  protected type Initial = Unit
+
+  protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[timeline.ProcView[S]]): Unit =
+    regionOpt match {
+      case Some(region) =>
+        if (e.getClickCount == 2) {
+          println("Edit TODO")
+        }
+
+      case _  => new Drag(e, hitTrack, pos, ())
+    }
 
   protected def dragToParam(d: Drag): Function = {
-    val (usesStart, usesStop) = d.firstRegion.span match {
-      case Span.From (_)      => (true, false)
-      case Span.Until(_)      => (false, true)
-      case Span(start, stop)  =>
-        val s = math.abs(d.firstPos - start) < math.abs(d.firstPos - stop)
-        (s, !s)
-      case _                  => (false, false)
-    }
-    val (dStart, dStop) = if (usesStart) {
-      (d.currentPos - d.firstPos, 0L)
-    } else if (usesStop) {
-      (0L, d.currentPos - d.firstPos)
-    } else {
-      (0L, 0L)
-    }
-    ??? // Function(dStart, dStop)
+    val dStart  = math.min(d.firstPos, d.currentPos)
+    val dStop   = math.max(dStart + BasicRegion.MinDur, math.max(d.firstPos, d.currentPos))
+    Function(d.firstTrack, Span(dStart, dStop))
   }
 
-  protected def commitProc(drag: Function)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit =
-    ??? // ProcActions.resize(span, proc, drag, canvas.timelineModel)
+  def commit(drag: Function)(implicit tx: S#Tx): Unit =
+    canvas.group.modifiableOption.foreach { g =>
+      val span  = Spans.newVar(Spans.newConst(drag.span))
+      val p     = Proc[S]
+      p.attributes.put(ProcKeys.attrTrack, Attribute.Int(Ints.newVar(Ints.newConst(drag.track))))
+      g.add(span, p)
+      log(s"Added function region $p, span = ${drag.span}, track = ${drag.track}")
+
+      // canvas.selectionModel.clear()
+      // canvas.selectionModel += ?
+    }
 }

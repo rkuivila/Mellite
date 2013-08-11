@@ -47,7 +47,6 @@ import scala.swing.Swing._
 import java.awt.event.{KeyEvent, ActionEvent}
 import de.sciss.desktop.FocusType
 import Predef.{any2stringadd => _, _}
-import scala.Some
 import de.sciss.lucre.event.Change
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
@@ -76,11 +75,12 @@ object ViewImpl {
     new TexturePaint(img, new Rectangle(0, 0, 4, 2))
   }
 
-  private val NoMove    = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
-  private val NoResize  = TrackTool.Resize(deltaStart = 0L, deltaStop = 0L)
-  private val NoGain    = TrackTool.Gain(1f)
-  private val NoFade    = TrackTool.Fade(0L, 0L, 0f, 0f)
-  private val MinDur    = 32
+  private val NoMove      = TrackTool.Move(deltaTime = 0L, deltaTrack = 0, copy = false)
+  private val NoResize    = TrackTool.Resize(deltaStart = 0L, deltaStop = 0L)
+  private val NoGain      = TrackTool.Gain(1f)
+  private val NoFade      = TrackTool.Fade(0L, 0L, 0f, 0f)
+  private val NoFunction  = TrackTool.Function(-1, Span(0L, 0L))
+  private val MinDur      = 32
 
   private val logEnabled  = false
   private val DEBUG       = false
@@ -240,12 +240,13 @@ object ViewImpl {
     private var view: View    = _
     val disposables           = Ref(List.empty[Disposable[S#Tx]])
 
-    private lazy val toolCursor = TrackTool.cursor[S](view)
-    private lazy val toolMove   = TrackTool.move  [S](view)
-    private lazy val toolResize = TrackTool.resize[S](view)
-    private lazy val toolGain   = TrackTool.gain  [S](view)
-    private lazy val toolMute   = TrackTool.mute  [S](view)
-    private lazy val toolFade   = TrackTool.fade  [S](view)
+    private lazy val toolCursor   = TrackTool.cursor  [S](view)
+    private lazy val toolMove     = TrackTool.move    [S](view)
+    private lazy val toolResize   = TrackTool.resize  [S](view)
+    private lazy val toolGain     = TrackTool.gain    [S](view)
+    private lazy val toolMute     = TrackTool.mute    [S](view)
+    private lazy val toolFade     = TrackTool.fade    [S](view)
+    private lazy val toolFunction = TrackTool.function[S](view)
 
     def dispose()(implicit tx: S#Tx): Unit = {
       timer.stop()  // save to call multiple times
@@ -466,7 +467,8 @@ object ViewImpl {
         contents ++= Seq(
           HStrut(4),
           TrackTools.palette(view.trackTools, Vector(
-            toolCursor, toolMove, toolResize, toolGain, toolFade /* , toolSlide*/ , toolMute /* , toolAudition */)),
+            toolCursor, toolMove, toolResize, toolGain, toolFade /* , toolSlide*/ ,
+            toolMute /* , toolAudition */, toolFunction)),
           HStrut(4),
           ggVisualBoost,
           HGlue,
@@ -614,12 +616,14 @@ object ViewImpl {
     private final class View extends ProcCanvasImpl[S] {
       view =>
       // import AbstractTimelineView._
-      def timelineModel   = impl.timelineModel
-      def selectionModel  = impl.selectionModel
+      def timelineModel             = impl.timelineModel
+      def selectionModel            = impl.selectionModel
+      def group(implicit tx: S#Tx)  = impl.groupH()
 
       def intersect(span: Span): Iterator[ProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
 
-      def screenToTrack(y: Int): Int = y / 32
+      def screenToTrack(y    : Int): Int = y     / 32
+      def trackToScreen(track: Int): Int = track * 32
 
       def findRegion(pos: Long, hitTrack: Int): Option[ProcView[S]] = {
         val span      = Span(pos, pos + 1)
@@ -627,36 +631,42 @@ object ViewImpl {
         regions.find(pv => pv.track == hitTrack || (pv.track + 1) == hitTrack)
       }
 
-      protected def commitToolChanges(value: Any): Unit =
+      protected def commitToolChanges(value: Any): Unit = {
+        log(s"Commit tool changes $value")
         step { implicit tx =>
           value match {
-            case t: TrackTool.Move    => toolMove  .commit(t)
-            case t: TrackTool.Resize  => toolResize.commit(t)
-            case t: TrackTool.Gain    => toolGain  .commit(t)
-            case t: TrackTool.Mute    => toolMute  .commit(t)
-            case t: TrackTool.Fade    => toolFade  .commit(t)
+            case t: TrackTool.Move      => toolMove     commit t
+            case t: TrackTool.Resize    => toolResize   commit t
+            case t: TrackTool.Gain      => toolGain     commit t
+            case t: TrackTool.Mute      => toolMute     commit t
+            case t: TrackTool.Fade      => toolFade     commit t
+            case t: TrackTool.Function  => toolFunction commit t
             case _ =>
           }
         }
+      }
 
-      private var _toolState = Option.empty[Any]
-      private var moveState   = NoMove
-      private var resizeState = NoResize
-      private var gainState   = NoGain
-      private var fadeState   = NoFade
+      private var _toolState    = Option.empty[Any]
+      private var moveState     = NoMove
+      private var resizeState   = NoResize
+      private var gainState     = NoGain
+      private var fadeState     = NoFade
+      private var functionState = NoFunction
 
       protected def toolState = _toolState
       protected def toolState_=(state: Option[Any]): Unit = {
-        _toolState  = state
-        moveState   = NoMove
-        resizeState = NoResize
-        gainState   = NoGain
-        fadeState   = NoFade
+        _toolState    = state
+        moveState     = NoMove
+        resizeState   = NoResize
+        gainState     = NoGain
+        fadeState     = NoFade
+        functionState = NoFunction
         state.foreach {
-          case s: TrackTool.Move    => moveState    = s
-          case s: TrackTool.Resize  => resizeState  = s
-          case s: TrackTool.Gain    => gainState    = s
-          case s: TrackTool.Fade    => fadeState    = s
+          case s: TrackTool.Move      => moveState      = s
+          case s: TrackTool.Resize    => resizeState    = s
+          case s: TrackTool.Gain      => gainState      = s
+          case s: TrackTool.Fade      => fadeState      = s
+          case s: TrackTool.Function  => functionState  = s
           case _ =>
         }
       }
@@ -902,29 +912,30 @@ object ViewImpl {
           if (currentDrop.isDefined) currentDrop.foreach { drop =>
             drop.drag match {
               case ad: DnD.AudioDrag[S] =>
-                val x1 = frameToScreen(drop.frame).toInt
-                val x2 = frameToScreen(drop.frame + ad.selection.length).toInt
-                g.setColor(colrDropRegionBg)
-                val strkOrig = g.getStroke
-                g.setStroke(strkDropRegion)
-                val y   = drop.y - drop.y % 32
-                val x1b = math.min(x1 + 1, x2)
-                val x2b = math.max(x1b, x2 - 1)
-                g.drawRect(x1b, y + 1, x2b - x1b, 64)
-                g.setStroke(strkOrig)
-
-              //              case id: TimelineDnD.IntDrag[S] =>
-              //                findRegion(drop.frame, screenToTrack(drop.y)).foreach { hitRegion =>
-              //                  if (selectionModel.contains(hitRegion)) {
-              //                    selectionModel.iterator.foreach { r =>
-              //
-              //                    }
-              //                  }
-              //                }
+                val track = screenToTrack(drop.y)
+                val span  = Span(drop.frame, drop.frame + ad.selection.length)
+                drawDropFrame(g, track, span)
 
               case _ =>
             }
           }
+
+          if (functionState.track >= 0) {
+            drawDropFrame(g, functionState.track, functionState.span)
+          }
+        }
+
+        private def drawDropFrame(g: Graphics2D, track: Int, span: Span): Unit = {
+          val x1 = frameToScreen(span.start).toInt
+          val x2 = frameToScreen(span.stop ).toInt
+          g.setColor(colrDropRegionBg)
+          val strkOrig = g.getStroke
+          g.setStroke(strkDropRegion)
+          val y   = trackToScreen(track)
+          val x1b = math.min(x1 + 1, x2)
+          val x2b = math.max(x1b, x2 - 1)
+          g.drawRect(x1b, y + 1, x2b - x1b, 64)
+          g.setStroke(strkOrig)
         }
       }
     }

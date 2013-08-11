@@ -37,10 +37,10 @@ import scala.annotation.elidable.CONFIG
 import scala.concurrent.ExecutionContext
 
 package object mellite {
-  type Cf           = Confluent
+  type Cf = Confluent
 
   private lazy val logHeader = new SimpleDateFormat("[d MMM yyyy, HH:mm''ss.SSS] 'Mellite' - ", Locale.US)
-  var showLog = false
+  var showLog = true
 
   @elidable(CONFIG) private[mellite] def log(what: => String): Unit =
     if (showLog) println(logHeader.format(new Date()) + what)

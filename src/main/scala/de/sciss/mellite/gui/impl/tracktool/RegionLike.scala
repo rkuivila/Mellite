@@ -51,26 +51,17 @@ trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackToo
   }
 
   final def uninstall(component: Component): Unit = {
-    component.peer.removeMouseListener(mia)
+    component.peer.removeMouseListener      (mia)
     component.peer.removeMouseMotionListener(mia)
     component.cursor = null
   }
 
   final def install(component: Component): Unit = {
-    component.peer.addMouseListener(mia)
+    component.peer.addMouseListener      (mia)
     component.peer.addMouseMotionListener(mia)
     component.cursor = defaultCursor
   }
 
   protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long,
                             regionOpt: Option[timeline.ProcView[S]]): Unit
-
-  def commit(drag: A)(implicit tx: S#Tx): Unit =
-    canvas.selectionModel.iterator.foreach { pv =>
-      val span  = pv.spanSource()
-      val proc  = pv.procSource()
-      commitProc(drag)(span, proc)
-    }
-
-  protected def commitProc(drag: A)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit
 }

@@ -45,7 +45,7 @@ fork in run := true  // required for shutdown hook, and also the scheduled threa
 
 seq(appbundle.settings: _*)
 
-appbundle.icon := Some(file("application.png"))
+appbundle.icon := Some(file("icons") / "application.png")
 
 appbundle.target <<= baseDirectory
 
@@ -56,7 +56,7 @@ appbundle.javaOptions ++= Seq("-XX:+CMSClassUnloadingEnabled", "-XX:+UseConcMark
 appbundle.documents += appbundle.Document(
   name       = "Mellite Document",
   role       = appbundle.Document.Editor,
-  icon       = Some(file("document.png")),
+  icon       = Some(file("icons") / "document.png"),
   extensions = Seq("mllt"),
   isPackage  = true
 )

@@ -44,11 +44,13 @@ trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCa
   private val toolListener: TrackTool.Listener = {
     // case TrackTool.DragBegin =>
     case TrackTool.DragCancel =>
+      log(s"Drag cancel $toolState")
       if (toolState.isDefined) {
         toolState = None
         repaint()
       }
     case TrackTool.DragEnd =>
+      log(s"Drag end $toolState")
       toolState.foreach { state =>
         toolState = None
         commitToolChanges(state)
@@ -56,6 +58,7 @@ trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCa
       }
 
     case TrackTool.DragAdjust(value) =>
+      // log(s"Drag adjust $value")
       val some = Some(value)
       if (toolState != some) {
         toolState = some
@@ -63,13 +66,14 @@ trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCa
       }
 
     case TrackTool.Adjust(state) =>
+      log(s"Tool commit $state")
       toolState = None
       commitToolChanges(state)
       repaint()
   }
 
   trackTools.addListener {
-    case ToolChanged          (change) =>
+    case ToolChanged(change) =>
       change.before.removeListener(toolListener)
       change.now   .addListener   (toolListener)
     case VisualBoostChanged   (change) => repaint()
