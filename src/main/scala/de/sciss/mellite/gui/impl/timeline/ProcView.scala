@@ -29,17 +29,30 @@ package impl
 package timeline
 
 import de.sciss.synth.proc.{FadeSpec, ProcKeys, Attribute, Grapheme, Scan, Proc, TimedProc, Sys}
-import de.sciss.lucre.{stm, expr}
+import de.sciss.lucre.{data, stm, expr}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.sonogram
+import de.sciss.sonogram.{Overview => SonoOverview}
 import expr.Expr
 import de.sciss.synth.expr.SpanLikes
 import language.implicitConversions
 import scala.util.control.NonFatal
 import de.sciss.file._
+import de.sciss.lucre.stm.IdentifierMap
+import collection.immutable.{IndexedSeq => Vec}
+import de.sciss.synth.proc.impl.CommonSerializers
 
 object ProcView {
-  def apply[S <: Sys[S]](timed: TimedProc[S])(implicit tx: S#Tx): ProcView[S] = {
+  /** Constructs a new proc view from a given proc, and a map with the known proc (views).
+    * This will automatically add the new view to the map!
+    *
+    * @param timed    the proc to create the view for
+    * @param procMap  a map from `TimedProc` ids to their views. This is used to establish scan links.
+    * @param scanMap  a map from `Scan` ids to their keys and a handle on the timed-proc's id.
+    */
+  def apply[S <: Sys[S]](timed: TimedProc[S],
+                         procMap: IdentifierMap[S#ID, S#Tx, ProcView[S]],
+                         scanMap: IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])])
+                        (implicit tx: S#Tx): ProcView[S] = {
     val span  = timed.span
     val proc  = timed.value
     val spanV = span.value
@@ -78,38 +91,75 @@ object ProcView {
     val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
     val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
 
-    new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
-      span = spanV, track = track, nameOpt = name, muted = mute, audio = audio,
+    val res = new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
+      span = spanV, track = track, nameOption = name, muted = mute, audio = audio,
       fadeIn = fadeIn, fadeOut = fadeOut)
+
+    import CommonSerializers.Identifier
+    lazy val idH = tx.newHandle(timed.id)
+
+    def add[A, B](map : Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
+      map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
+
+    proc.scans.iterator.foreach { case (key, scan) =>
+      def findLinks(inp: Boolean): Unit = {
+        val it = if (inp) scan.sources else scan.sinks
+        it.foreach {
+          case Scan.Link.Scan(peer) if scanMap.contains(peer.id) =>
+            val Some((thatKey, thatIdH)) = scanMap.get(peer.id)
+            procMap.get(thatIdH()).foreach { thatView =>
+              if (inp) {
+                res.inputs       = add(res.inputs      , key    , Link(thatView, thatKey))
+                thatView.outputs = add(thatView.outputs, thatKey, Link(res     , key    ))
+              } else {
+                res.outputs      = add(res.outputs     , key    , Link(thatView, thatKey))
+                thatView.inputs  = add(thatView.inputs , thatKey, Link(res     , key    ))
+              }
+            }
+        }
+      }
+      scanMap.put(scan.id, key -> idH)
+      findLinks(inp = true )
+      findLinks(inp = false)
+    }
+
+    procMap.put(timed.id, res)
+    res
   }
 
   private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val procSource: stm.Source[S#Tx, Proc[S]],
-                                        var span: SpanLike, var track: Int, var nameOpt: Option[String],
-                                        var muted: Boolean,
-                                        var audio: Option[Grapheme.Segment.Audio],
-                                        var fadeIn: FadeSpec.Value, var fadeOut: FadeSpec.Value)
+                                        var span      : SpanLike,
+                                        var track     : Int,
+                                        var nameOption: Option[String],
+                                        var muted     : Boolean,
+                                        var audio     : Option[Grapheme.Segment.Audio],
+                                        var fadeIn    : FadeSpec.Value,
+                                        var fadeOut   : FadeSpec.Value)
     extends ProcView[S] {
 
-    var sono = Option.empty[sonogram.Overview]
     override def toString = s"ProvView($name, $span, $audio)"
 
     private var failedAcquire = false
+    var sonogram  = Option.empty[SonoOverview]
 
-    def release(): Unit =
-      sono.foreach { ovr =>
-        sono = None
+    var inputs    = Map.empty[String, Vec[ProcView.Link[S]]]
+    var outputs   = Map.empty[String, Vec[ProcView.Link[S]]]
+
+    def releaseSonogram(): Unit =
+      sonogram.foreach { ovr =>
+        sonogram = None
         SonogramManager.release(ovr)
       }
 
-    def name = nameOpt.getOrElse {
+    def name = nameOption.getOrElse {
       audio.map(_.value.artifact.base).getOrElse("<unnamed>")
     }
 
-    def acquire(): Option[sonogram.Overview] = {
+    def acquireSonogram(): Option[SonoOverview] = {
       if (failedAcquire) return None
-      release()
-      sono = audio.flatMap { segm =>
+      releaseSonogram()
+      sonogram = audio.flatMap { segm =>
         try {
           val ovr = SonogramManager.acquire(segm.value.artifact)  // XXX TODO: remove `Try` once manager is fixed
           failedAcquire = false
@@ -120,7 +170,15 @@ object ProcView {
           None
         }
       }
-      sono
+      sonogram
+    }
+
+    def dispose(procMap: IdentifierMap[S#ID, S#Tx, ProcView[S]],
+                scanMap: IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]): Unit = {
+
+      releaseSonogram()
+
+      ???
     }
   }
 
@@ -133,29 +191,48 @@ object ProcView {
       case Span.Void          => (Long.MinValue, Long.MinValue)
     }
   }
+
+  case class Link[S <: Sys[S]](target: ProcView[S], targetKey: String)
 }
+
+/** A data set for graphical display of a proc. Accessors and mutators should
+  * only be called on the event dispatch thread. Mutators are plain variables
+  * and do not affect the underlying model. They should typically only be called
+  * in response to observing a change in the model.
+  */
 sealed trait ProcView[S <: Sys[S]] {
   def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
   def procSource: stm.Source[S#Tx, Proc[S]]
 
   var span: SpanLike
   var track: Int
-  var nameOpt: Option[String]
+  var nameOption: Option[String]
+
+  /** The proc's name or a place holder name if no name is set. */
   def name: String
-  // var gain: Float
+
+  var inputs : Map[String, Vec[ProcView.Link[S]]]
+  var outputs: Map[String, Vec[ProcView.Link[S]]]
+
   var muted: Boolean
-  // var audio: Option[Grapheme.Value.Audio]
+
+  /** If this proc is bound to an audio grapheme for the default scan key, returns
+    * this grapheme segment (underlying audio file of a tape object). */
   var audio: Option[Grapheme.Segment.Audio]
 
-  // EDT access only
-  var sono: Option[sonogram.Overview]
+  var sonogram: Option[SonoOverview]
 
   var fadeIn : FadeSpec.Value
   var fadeOut: FadeSpec.Value
 
-  // def updateSpan(span: Expr[S, SpanLike])(implicit tx: S#Tx): Unit
+  /** Releases a sonogram view. If none had been acquired, this is a safe no-op.
+    * Updates the `sono` variable.
+    */
+  def releaseSonogram(): Unit
 
-  def release(): Unit
+  /** Attemps to acquire a sonogram view. Updates the `sono` variable if successful. */
+  def acquireSonogram(): Option[SonoOverview]
 
-  def acquire(): Option[sonogram.Overview]
+  def dispose(procMap: IdentifierMap[S#ID, S#Tx, ProcView[S]],
+              scanMap: IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]): Unit
 }

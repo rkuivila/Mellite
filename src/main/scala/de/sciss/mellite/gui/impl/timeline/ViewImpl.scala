@@ -110,13 +110,17 @@ object ViewImpl {
 
     import document.inMemoryBridge // {cursor, inMemory}
     val procMap   = tx.newInMemoryIDMap[ProcView[S]]
-    disp ::= procMap
+    val scanMap   = tx.newInMemoryIDMap[(String, stm.Source[S#Tx, S#ID])]
+
+    // not these two, they will separately disposed:
+    // disp ::= procMap
+    // disp ::= scanMap
     val transp    = proc.Transport[S, document.I](group, sampleRate = sampleRate)
     disp ::= transp
     val auralView = proc.AuralPresentation.runTx[S](transp, aural)
     disp ::= auralView
 
-    val view    = new Impl(document, groupH, transp, procMap, tlm, auralView)
+    val view    = new Impl(document, groupH, transp, procMap, scanMap, tlm, auralView)
 
     val obsTransp = transp.react { implicit tx => {
       case proc.Transport.Play(t, time) => view.startedPlaying(time)
@@ -214,11 +218,13 @@ object ViewImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]](document: Document[S], groupH: stm.Source[S#Tx, ProcGroup[S]],
-                                        transp: ProcTransport[S],
-                                        procMap: IdentifierMap[S#ID, S#Tx, ProcView[S]],
-                                        val timelineModel: TimelineModel,
-                                        auralView: AuralPresentation[S])
+  private final class Impl[S <: Sys[S]](document          : Document[S],
+                                        groupH            : stm.Source[S#Tx, ProcGroup[S]],
+                                        transp            : ProcTransport[S],
+                                        procMap           : IdentifierMap[S#ID, S#Tx, ProcView[S]],
+                                        scanMap           : IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])],
+                                        val timelineModel : TimelineModel,
+                                        auralView         : AuralPresentation[S])
                                        (implicit cursor: Cursor[S])
     extends TimelineView[S] with ComponentHolder[Component] {
     impl =>
@@ -258,9 +264,9 @@ object ViewImpl {
       guiFromTx {
         val pit     = procViews.iterator
         procViews   = RangedSeq.empty
-        pit.foreach { pv =>
-          pv.release()
-        }
+        pit.foreach(_.dispose(procMap, scanMap))
+        procMap.dispose()
+        scanMap.dispose()
       }
     }
 
@@ -506,8 +512,7 @@ object ViewImpl {
       log(s"addProc($span, $timed)")
       // timed.span
       // val proc = timed.value
-      val pv = ProcView(timed)
-      procMap.put(timed.id, pv)
+      val pv = ProcView(timed, procMap, scanMap)
       if (repaint) {
         procViews += pv
         guiFromTx(view.canvasComponent.repaint()) // XXX TODO: optimize dirty rectangle
@@ -522,7 +527,7 @@ object ViewImpl {
         procMap.remove(timed.id)
         guiFromTx {
           procViews -= pv
-          pv.release()
+          pv.dispose(procMap, scanMap)
           view.canvasComponent.repaint() // XXX TODO: optimize dirty rectangle
         }
       }
@@ -577,7 +582,7 @@ object ViewImpl {
           }
 
           pv.audio = newAudio
-          if (newSono) pv.release()
+          if (newSono) pv.releaseSonogram()
           view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
         }
       }
@@ -820,7 +825,7 @@ object ViewImpl {
 
                 // --- sonagram ---
                 pv.audio.foreach { segm =>
-                  val sonoOpt = pv.sono.orElse(pv.acquire())
+                  val sonoOpt = pv.sonogram.orElse(pv.acquireSonogram())
 
                   sonoOpt.foreach { sono =>
                     val audio   = segm.value
