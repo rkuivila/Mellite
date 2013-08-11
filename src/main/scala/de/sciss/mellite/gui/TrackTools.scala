@@ -10,8 +10,9 @@ import de.sciss.synth.proc.{FadeSpec, Sys}
 import scala.swing.Component
 import javax.swing.Icon
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.mellite.gui.impl.tracktool.{FunctionImpl, CursorImpl, PaletteImpl, ToolsImpl, ResizeImpl, MuteImpl, MoveImpl, GainImpl, FadeImpl}
+import de.sciss.mellite.gui.impl.tracktool.{PatchImpl, FunctionImpl, CursorImpl, PaletteImpl, ToolsImpl, ResizeImpl, MuteImpl, MoveImpl, GainImpl, FadeImpl}
 import de.sciss.span.Span
+import de.sciss.mellite.gui.impl.timeline.ProcView
 
 object TrackTools {
   sealed trait Update[S <: Sys[S]]
@@ -83,6 +84,13 @@ object TrackTool {
   final case class Fade    (deltaFadeIn: Long, deltaFadeOut: Long, deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
   final case class Function(track: Int, span: Span)
 
+  object Patch {
+    sealed trait Sink[+S]
+    case class Linked[S <: Sys[S]](proc: ProcView[S]) extends Sink[S]
+    case class Unlinked(frame: Long, y: Int) extends Sink[Nothing]
+  }
+  final case class Patch[S <: Sys[S]](source: ProcView[S], sink: Patch.Sink[S])
+
   final val EmptyFade = FadeSpec.Value(numFrames = 0L)
 
   type Listener = Model.Listener[Update[Any]]
@@ -94,6 +102,7 @@ object TrackTool {
   def mute    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Mute    ] = new MuteImpl    (canvas)
   def fade    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Fade    ] = new FadeImpl    (canvas)
   def function[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Function] = new FunctionImpl(canvas)
+  def patch   [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Patch[S]] = new PatchImpl   (canvas)
 }
 
 trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {

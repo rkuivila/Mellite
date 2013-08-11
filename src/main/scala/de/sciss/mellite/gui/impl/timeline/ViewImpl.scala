@@ -81,6 +81,7 @@ object ViewImpl {
   private val NoGain      = TrackTool.Gain(1f)
   private val NoFade      = TrackTool.Fade(0L, 0L, 0f, 0f)
   private val NoFunction  = TrackTool.Function(-1, Span(0L, 0L))
+
   private val MinDur      = 32
 
   private val logEnabled  = false
@@ -248,6 +249,7 @@ object ViewImpl {
     private lazy val toolMute     = TrackTool.mute    [S](view)
     private lazy val toolFade     = TrackTool.fade    [S](view)
     private lazy val toolFunction = TrackTool.function[S](view)
+    private lazy val toolPatch    = TrackTool.patch   [S](view)
 
     def dispose()(implicit tx: S#Tx): Unit = {
       timer.stop()  // save to call multiple times
@@ -469,7 +471,7 @@ object ViewImpl {
           HStrut(4),
           TrackTools.palette(view.trackTools, Vector(
             toolCursor, toolMove, toolResize, toolGain, toolFade /* , toolSlide*/ ,
-            toolMute /* , toolAudition */, toolFunction)),
+            toolMute /* , toolAudition */, toolFunction, toolPatch)),
           HStrut(4),
           ggVisualBoost,
           HGlue,
@@ -669,17 +671,20 @@ object ViewImpl {
             case t: TrackTool.Mute      => toolMute     commit t
             case t: TrackTool.Fade      => toolFade     commit t
             case t: TrackTool.Function  => toolFunction commit t
+            case t: TrackTool.Patch[S]  => toolPatch    commit t
             case _ =>
           }
         }
       }
 
+      private val NoPatch       = TrackTool.Patch[S](null, null) // grmpfff
       private var _toolState    = Option.empty[Any]
       private var moveState     = NoMove
       private var resizeState   = NoResize
       private var gainState     = NoGain
       private var fadeState     = NoFade
       private var functionState = NoFunction
+      private var patchState    = NoPatch
 
       protected def toolState = _toolState
       protected def toolState_=(state: Option[Any]): Unit = {
@@ -689,12 +694,15 @@ object ViewImpl {
         gainState     = NoGain
         fadeState     = NoFade
         functionState = NoFunction
+        patchState    = NoPatch
+
         state.foreach {
           case s: TrackTool.Move      => moveState      = s
           case s: TrackTool.Resize    => resizeState    = s
           case s: TrackTool.Gain      => gainState      = s
           case s: TrackTool.Fade      => fadeState      = s
           case s: TrackTool.Function  => functionState  = s
+          case s: TrackTool.Patch[S]  => patchState     = s
           case _ =>
         }
       }
@@ -951,6 +959,42 @@ object ViewImpl {
           if (functionState.track >= 0) {
             drawDropFrame(g, functionState.track, functionState.span)
           }
+
+          if (patchState.source != null) {
+            drawPatch(g, patchState)
+          }
+        }
+
+        private def drawPatch(g: Graphics2D, patch: TrackTool.Patch[S]): Unit = {
+          val srcTrk    = patch.source.track
+          val srcFrameC = patch.source.span match {
+            case Span(start, stop)  => (start + stop)/2
+            case hs: Span.HasStart  => hs.start + (timelineModel.sampleRate * 0.1).toLong
+            case _ => return
+          }
+          val (srcY, sinkFrameC, sinkY) = patch.sink match {
+            case TrackTool.Patch.Unlinked(f, y) =>
+              val y0 = if (screenToTrack(y) < srcTrk) trackToScreen(srcTrk) + 4 else trackToScreen(srcTrk + 2) - 5
+              (y0, f, y)
+            case TrackTool.Patch.Linked(_view) =>
+              val f = _view.span match {
+                case Span(start, stop)  => (start + stop)/2
+                case hs: Span.HasStart  => hs.start + (timelineModel.sampleRate * 0.1).toLong
+                case _ => return
+              }
+              val sinkTrk = _view.track
+              val y0 = if (sinkTrk <  srcTrk) trackToScreen(srcTrk ) + 4 else trackToScreen(srcTrk  + 2) - 5
+              val y1 = if (sinkTrk >= srcTrk) trackToScreen(sinkTrk) + 4 else trackToScreen(sinkTrk + 2) - 5
+              (y0, f, y1)
+          }
+
+          g.setColor(colrDropRegionBg)
+          val strkOrig = g.getStroke
+          g.setStroke(strkDropRegion)
+          val srcX  = frameToScreen(srcFrameC ).toInt
+          val sinkX = frameToScreen(sinkFrameC).toInt
+          g.drawLine(srcX, srcY, sinkX, sinkY)
+          g.setStroke(strkOrig)
         }
 
         private def drawDropFrame(g: Graphics2D, track: Int, span: Span): Unit = {
