@@ -40,7 +40,7 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
     handleMouseSelection(e, regionOpt)
     // now go on if region is selected
     regionOpt.foreach { region =>
-      if (selm.contains(region)) handleSelect(e, hitTrack, pos, region)
+      if (canvas.selectionModel.contains(region)) handleSelect(e, hitTrack, pos, region)
     }
   }
 
