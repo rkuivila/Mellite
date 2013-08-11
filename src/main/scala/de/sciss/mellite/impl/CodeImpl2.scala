@@ -42,12 +42,37 @@ object CodeImpl2 {
 
       def blockTag = typeTag[Unit]
     }
+
+    implicit object SynthGraph
+      extends Wrapper[Unit, synth.SynthGraph, Code.SynthGraph] {
+
+      def imports: ISeq[String] = ISeq(
+        "de.sciss.synth._",
+        "de.sciss.synth.ugen._",
+        "de.sciss.synth.proc.graph._"
+      )
+
+      def binding = None
+
+      def wrap(in: Unit)(fun: => Any): synth.SynthGraph = synth.SynthGraph(fun)
+
+      def blockTag = typeTag[Unit]
+    }
   }
   trait Wrapper[In, Out, Repr] {
     def imports: ISeq[String]
     def binding: Option[String]
-    // def wrap(in: In, funFut: Future[() => Any]): Out
+
+    /** When `execute` is called, the result of executing the compiled code
+      * is passed into this function.
+      *
+      * @param in   the code type's input
+      * @param fun  the thunk that executes the coe
+      * @return     the result of `fun` wrapped into type `Out`
+      */
     def wrap(in: In)(fun: => Any): Out
+
+    /** TypeTag of */
     def blockTag: TypeTag[_]
   }
 
@@ -149,7 +174,7 @@ object CodeImpl2 {
         |$impS
         |$bindS
         |
-      """.stripMargin + code + "\n}"
+        |""".stripMargin + code + "\n}"
 
     val res = i.interpret(synth)
     // commented out to chase ClassNotFoundException

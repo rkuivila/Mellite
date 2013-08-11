@@ -166,26 +166,33 @@ object ElementsFrameImpl {
     }
 
     private def actionAddCode(): Unit = {
-      val ggValue   = new ComboBox(Seq("File Transform"))
+      val ggValue = new ComboBox(Seq(Code.FileTransform.name, Code.SynthGraph.name))
       actionAddPrimitive(tpe = "Code", ggValue = ggValue, prepare = ggValue.selection.index match {
         case 0 => Some(Code.FileTransform(
-          """
-            |val ain   = AudioFile.openRead(in)
-            |val aout  = AudioFile.openWrite(out, ain.spec)
-            |val bufSz = 8192
-            |val buf   = ain.buffer(bufSz)
-            |var rem   = ain.numFrames
-            |while (rem > 0) {
-            |  val chunk = math.min(bufSz, rem).toInt
-            |  ain.read(buf, 0, chunk)
-            |  // ...
-            |  aout.write(buf, 0, chunk)
-            |  rem -= chunk
-            |  // checkAbort()
-            |}
-            |aout.close()
-            |ain .close()
-          """.stripMargin))
+          """|val ain   = AudioFile.openRead(in)
+             |val aout  = AudioFile.openWrite(out, ain.spec)
+             |val bufSz = 8192
+             |val buf   = ain.buffer(bufSz)
+             |var rem   = ain.numFrames
+             |while (rem > 0) {
+             |  val chunk = math.min(bufSz, rem).toInt
+             |  ain.read(buf, 0, chunk)
+             |  // ...
+             |  aout.write(buf, 0, chunk)
+             |  rem -= chunk
+             |  // checkAbort()
+             |}
+             |aout.close()
+             |ain .close()
+             |""".stripMargin))
+
+        case 1 => Some(Code.SynthGraph(
+          """|val in   = scan.In("in").ar
+             |val sig  = in
+             |scan.Out("out") := sig
+             |""".stripMargin
+        ))
+
         case _  => None
       }) { implicit tx =>
         (name, value) => Element.Code(name, Codes.newVar(Codes.newConst(value)))

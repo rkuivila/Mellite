@@ -30,11 +30,7 @@ object CodeImpl {
       require(cookie == COOKIE, s"Unexpected cookie $cookie (requires $COOKIE)")
       val id      = in.readInt()
       val source  = in.readUTF()
-      import Code._
-      (id: @switch) match {
-        case FileTransform.id => FileTransform(source)
-        case _ => sys.error(s"Unsupported context id $id")
-      }
+      Code.apply(id, source)
     }
   }
 

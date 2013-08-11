@@ -6,6 +6,7 @@ import java.io.File
 import scala.concurrent.Future
 import de.sciss.processor.Processor
 import de.sciss.synth
+import scala.annotation.switch
 
 object Code {
   final case class CompilationFailed() extends Exception
@@ -15,12 +16,14 @@ object Code {
 
   def read(in: DataInput): Code = serializer.read(in)
 
-  def apply(id: Int, source: String): Code = id match {
+  def apply(id: Int, source: String): Code = (id: @switch) match {
     case FileTransform.id => FileTransform(source)
+    case SynthGraph   .id => SynthGraph   (source)
   }
 
   object FileTransform {
-    final val id = 0
+    final val id    = 0
+    final val name  = "File Transform"
   }
   final case class FileTransform(source: String) extends Code {
     type In     = (File, File, Processor[Any, _] => Unit)
@@ -32,20 +35,22 @@ object Code {
 
     def execute(in: In): Out = Impl2.execute[In, Out, FileTransform](this, in)
 
-    def contextName = "File Transform"
+    def contextName = FileTransform.name
   }
 
   object SynthGraph {
-    final val id = 1
+    final val id    = 1
+    final val name  = "Synth Graph"
   }
   final case class SynthGraph(source: String) extends Code {
     type In     = Unit
     type Out    = synth.SynthGraph
     def id      = SynthGraph.id
 
-    def contextName = "SynthGraph"
+    /** Human readable name. */
+    def contextName = SynthGraph.name
 
-    def compileBody(): Future[Unit] = ???
+    def compileBody(): Future[Unit] = Impl2.compileBody[In, Out, SynthGraph](this)
 
     def execute(in: In): Out = ???
   }
