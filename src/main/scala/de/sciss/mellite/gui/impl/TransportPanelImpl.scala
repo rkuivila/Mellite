@@ -34,6 +34,7 @@ import de.sciss.synth.proc.Sys
 import java.awt.event.{ActionEvent, ActionListener}
 import javax.swing.event.{ChangeEvent, ChangeListener}
 import Swing._
+import de.sciss.mellite.gui.impl.component.TimeLabel
 
 object TransportPanelImpl {
   def apply[S <: Sys[S]](transport: Document.Transport[S])

@@ -26,6 +26,7 @@
 package de.sciss.mellite
 package gui
 package impl
+package realtime
 
 import prefuse.controls.ControlAdapter
 import javax.swing.SwingUtilities

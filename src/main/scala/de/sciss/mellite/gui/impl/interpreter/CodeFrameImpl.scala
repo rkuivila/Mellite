@@ -1,7 +1,7 @@
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package interpreter
 
 import de.sciss.synth.proc.Sys
 import de.sciss.desktop.{OptionPane, Window}
@@ -10,9 +10,10 @@ import de.sciss.desktop.impl.WindowImpl
 import scala.swing.{FlowPanel, BorderPanel, Swing, Label, Button, Component}
 import de.sciss.lucre.stm
 import de.sciss.lucre.expr.Expr
-import scala.util.{Failure, Success}
 import scala.concurrent.Future
 import Swing._
+import scala.util.Failure
+import scala.util.Success
 
 object CodeFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.Code[S])

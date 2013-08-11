@@ -26,6 +26,7 @@
 package de.sciss.mellite
 package gui
 package impl
+package timeline
 
 import de.sciss.synth.proc.Sys
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl

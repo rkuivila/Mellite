@@ -30,7 +30,7 @@ import swing.Component
 import de.sciss.lucre.{stm, expr}
 import stm.{Cursor, Disposable, Sys}
 import expr.LinkedList
-import impl.{ListViewImpl => Impl}
+import impl.component.{ListViewImpl => Impl}
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.serial.Serializer
 

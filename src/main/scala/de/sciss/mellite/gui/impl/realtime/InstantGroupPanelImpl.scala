@@ -26,6 +26,7 @@
 package de.sciss.mellite
 package gui
 package impl
+package realtime
 
 import de.sciss.lucre.stm.Cursor
 import de.sciss.synth.proc.{ProcKeys, Attribute, Sys, Proc, Param, ProcTransport}

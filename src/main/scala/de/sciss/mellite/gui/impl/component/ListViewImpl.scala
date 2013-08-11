@@ -26,6 +26,7 @@
 package de.sciss.mellite
 package gui
 package impl
+package component
 
 import de.sciss.lucre.{stm, expr}
 import stm.{Source, Cursor, Disposable, Sys}

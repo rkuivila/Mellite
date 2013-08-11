@@ -1,6 +1,4 @@
-package de.sciss.mellite
-package gui
-package impl
+package de.sciss.mellite.gui.impl.realtime
 
 import de.sciss.synth.proc.{Sys, Proc}
 import de.sciss.lucre.stm.Source

@@ -1,5 +1,5 @@
 /*
- *  CursorImpl.scala
+ *  ProcSelectionModelImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -26,25 +26,39 @@
 package de.sciss.mellite
 package gui
 package impl
-package tracktool
+package timeline
 
-import java.awt.Cursor
 import de.sciss.model.impl.ModelImpl
-import scala.swing.Component
 import de.sciss.synth.proc.Sys
 
-final class CursorImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
-  extends TrackTool[S, Unit] with ModelImpl[TrackTool.Update[Unit]] {
+final class ProcSelectionModelImpl[S <: Sys[S]]
+  extends ProcSelectionModel[S] with ModelImpl[ProcSelectionModel.Update[S]] {
 
-  def defaultCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
-  val name          = "Cursor"
-  val icon          = ToolsImpl.getIcon("text")
+  import ProcSelectionModel.Update
 
-  def install(component: Component): Unit =
-    component.cursor = defaultCursor
+  // no sync because we assume the model is only used on the event thread
+  private var set = Set.empty[TimelineProcView[S]]
 
-  def uninstall(component: Component): Unit =
-    component.cursor = null
+  def contains(view: TimelineProcView[S]): Boolean = set.contains(view)
 
-  def commit(drag: Unit)(implicit tx: S#Tx) = ()
+  def iterator: Iterator[TimelineProcView[S]] = set.iterator
+
+  def +=(view: TimelineProcView[S]): Unit =
+    if (!set.contains(view)) {
+      set += view
+      dispatch(Update(added = Set(view), removed = Set.empty))
+    }
+
+  def -=(view: TimelineProcView[S]): Unit =
+    if (set.contains(view)) {
+      set -= view
+      dispatch(Update(added = Set.empty, removed = Set(view)))
+    }
+
+  def clear(): Unit =
+    if (set.nonEmpty) {
+      val removed = set
+      set = Set.empty
+      dispatch(Update(added = Set.empty, removed = removed))
+    }
 }

@@ -3,11 +3,13 @@ package impl
 
 import de.sciss.scalainterpreter.Interpreter
 
+import collection.immutable.{IndexedSeq => Vec}
+
 object InterpreterSingleton {
   private val sync = new AnyRef
 
-  private var funs  = IndexedSeq.empty[Interpreter => Unit]
-  private var inOpt = Option    .empty[Interpreter]
+  private var funs  = Vec   .empty[Interpreter => Unit]
+  private var inOpt = Option.empty[Interpreter]
 
   //   object Result {
   //      var value : Any = ()

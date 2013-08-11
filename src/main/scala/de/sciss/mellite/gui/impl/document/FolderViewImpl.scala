@@ -26,6 +26,7 @@
 package de.sciss.mellite
 package gui
 package impl
+package document
 
 import de.sciss.synth.proc.{Artifact, Sys}
 import swing.{ScrollPane, Component}
@@ -46,6 +47,7 @@ import java.io.File
 import de.sciss.lucre.stm
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
+import de.sciss.mellite.gui.impl.timeline.TimelineDnD
 
 object FolderViewImpl {
   private final val DEBUG = false

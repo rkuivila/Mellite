@@ -27,7 +27,7 @@ package de.sciss
 package mellite
 package gui
 
-import impl.{DocumentElementsFrameImpl => Impl}
+import impl.document.{DocumentElementsFrameImpl => Impl}
 import synth.proc.Sys
 import lucre.stm
 import de.sciss.lucre.stm.Disposable

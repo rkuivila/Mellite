@@ -1,16 +1,43 @@
+/*
+ *  AudioFileDnD.scala
+ *  (Mellite)
+ *
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
+ *
+ *  This software is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either
+ *  version 2, june 1991 of the License, or (at your option) any later version.
+ *
+ *  This software is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public
+ *  License (gpl.txt) along with this software; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ *  For further information, please contact Hanns Holger Rutz at
+ *  contact@sciss.de
+ */
+
 package de.sciss.mellite
 package gui
 package impl
+package audiofile
 
 import de.sciss.span.Span
 import java.awt.datatransfer
 import de.sciss.synth.proc.{Grapheme, Sys}
 import de.sciss.lucre.stm
-import Element.AudioGrapheme
 import javax.swing.{JComponent, ImageIcon, TransferHandler}
 import java.awt.event.{MouseEvent, MouseAdapter}
 import TransferHandler.COPY
 import de.sciss.audiowidgets.TimelineModel
+import de.sciss.mellite.gui.impl.timeline.TimelineDnD
+import de.sciss.mellite.Element.AudioGrapheme
 
 object AudioFileDnD {
   // XXX TODO: should carry document to avoid cross-document DnD without deep copy

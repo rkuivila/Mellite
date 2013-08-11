@@ -1,6 +1,7 @@
 package de.sciss.mellite
 package gui
 package impl
+package interpreter
 
 import de.sciss.scalainterpreter.{InterpreterPane, Interpreter, CodePane}
 import java.io.{IOException, FileInputStream, File}

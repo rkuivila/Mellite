@@ -2,7 +2,7 @@ package de.sciss
 package mellite
 package gui
 
-import impl.{DocumentCursorsFrameImpl => Impl}
+import impl.document.{DocumentCursorsFrameImpl => Impl}
 import synth.proc
 
 object DocumentCursorsFrame {

@@ -26,6 +26,7 @@
 package de.sciss.mellite
 package gui
 package impl
+package audiofile
 
 import de.sciss.sonogram
 import java.awt.{Color, Graphics2D}

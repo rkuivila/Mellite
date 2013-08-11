@@ -28,7 +28,7 @@ package gui
 
 import de.sciss.synth.proc.Sys
 import swing.Component
-import impl.{FolderViewImpl => Impl}
+import impl.document.{FolderViewImpl => Impl}
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.stm.{Cursor, Disposable}
 import de.sciss.model.Model

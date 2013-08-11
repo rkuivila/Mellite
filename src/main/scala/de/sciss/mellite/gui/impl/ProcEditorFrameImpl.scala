@@ -11,6 +11,7 @@ import de.sciss.scalainterpreter.{Interpreter, CodePane}
 import java.awt.Dimension
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.expr.ExprImplicits
+import de.sciss.mellite.impl.InterpreterSingleton
 
 object ProcEditorFrameImpl {
   def apply[S <: Sys[S]](proc: Proc[S])(implicit tx: S#Tx, cursor: Cursor[S]): ProcEditorFrame[S] = {

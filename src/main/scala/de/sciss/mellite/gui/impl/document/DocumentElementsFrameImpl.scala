@@ -23,19 +23,19 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package document
 
 import scala.swing.{ComboBox, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
-import lucre.stm
-import synth.proc.{Grapheme, Artifact, ProcGroup, Sys}
+import de.sciss.lucre.stm
+import de.sciss.synth.proc.{ProcGroup, Sys}
 import de.sciss.synth.expr._
-import desktop.{FileDialog, DialogSource, Window, Menu}
+import de.sciss.desktop.{FileDialog, DialogSource, Window, Menu}
 import scalaswingcontrib.PopupMenu
-import desktop.impl.WindowImpl
-import synth.io.AudioFile
+import de.sciss.desktop.impl.WindowImpl
+import de.sciss.synth.io.AudioFile
 import javax.swing.SpinnerNumberModel
 import de.sciss.file._
 import de.sciss.swingplus.Spinner

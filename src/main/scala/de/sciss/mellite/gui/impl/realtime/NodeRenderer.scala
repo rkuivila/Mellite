@@ -1,6 +1,7 @@
 package de.sciss.mellite
 package gui
 package impl
+package realtime
 
 import prefuse.render.AbstractShapeRenderer
 import prefuse.visual.VisualItem

@@ -26,6 +26,7 @@
 package de.sciss.mellite
 package gui
 package impl
+package realtime
 
 import de.sciss.lucre.stm.{Source, Cursor}
 import swing.{Dialog, Action, Button, FlowPanel, BorderPanel, Frame}

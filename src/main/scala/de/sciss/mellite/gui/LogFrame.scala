@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 
 import de.sciss.scalainterpreter.LogPane
-import impl.{LogFrameImpl => Impl}
+import impl.component.{LogFrameImpl => Impl}
 import de.sciss.desktop.Window
 
 object LogFrame {

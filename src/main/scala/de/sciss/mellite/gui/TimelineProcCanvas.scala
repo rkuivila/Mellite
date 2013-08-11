@@ -3,9 +3,9 @@ package mellite
 package gui
 
 import de.sciss.synth.proc.Sys
-import de.sciss.mellite.gui.impl.TimelineProcView
 import de.sciss.span.Span
 import de.sciss.audiowidgets.TimelineCanvas
+import de.sciss.mellite.gui.impl.timeline.TimelineProcView
 
 trait TimelineProcCanvas[S <: Sys[S]] extends TimelineCanvas {
   def selectionModel: ProcSelectionModel[S]

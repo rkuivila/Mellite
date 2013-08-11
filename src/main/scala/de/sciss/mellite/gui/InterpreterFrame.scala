@@ -2,9 +2,9 @@ package de.sciss
 package mellite
 package gui
 
-import impl.{InterpreterFrameImpl => Impl}
 import java.awt.event.KeyEvent
 import desktop.KeyStrokes
+import impl.interpreter.{InterpreterFrameImpl => Impl}
 
 object InterpreterFrame {
   def apply(): InterpreterFrame = Impl()

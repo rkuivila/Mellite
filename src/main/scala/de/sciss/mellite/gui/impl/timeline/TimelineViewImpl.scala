@@ -23,19 +23,22 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 package impl
+package timeline
 
 import scala.swing.{Swing, Slider, Action, BorderPanel, Orientation, BoxPanel, Component}
-import span.{Span, SpanLike}
+import de.sciss.span.{Span, SpanLike}
 import de.sciss.mellite.impl.InsertAudioRegion
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D}
-import lucre.stm
+import de.sciss.synth
+import de.sciss.desktop
+import de.sciss.lucre.stm
+import de.sciss.sonogram
 import de.sciss.lucre.stm.{Disposable, IdentifierMap, Cursor}
 import de.sciss.synth.{Curve, proc}
-import fingertree.RangedSeq
+import de.sciss.fingertree.RangedSeq
 import javax.swing.{KeyStroke, UIManager}
 import java.util.Locale
 import de.sciss.lucre.bitemp.{BiExpr, BiGroup}

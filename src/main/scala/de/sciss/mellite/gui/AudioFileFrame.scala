@@ -5,7 +5,7 @@ package gui
 import de.sciss.synth.proc.{AuralSystem, Sys}
 import lucre.stm
 import stm.Disposable
-import impl.{AudioFileFrameImpl => Impl}
+import impl.audiofile.{AudioFileFrameImpl => Impl}
 
 object AudioFileFrame {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.AudioGrapheme[S])

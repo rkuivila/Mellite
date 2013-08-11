@@ -1,5 +1,5 @@
 /*
- *  ResizeImpl.scala
+ *  FunctionImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -33,18 +33,18 @@ import de.sciss.synth.proc.{Proc, Sys}
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
 
-final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends BasicRegion[S, TrackTool.Resize] {
+final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
+  extends BasicRegion[S, TrackTool.Function] {
 
   import TrackTool._
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-  val name          = "Resize"
+  val name          = "Function"
   val icon          = ToolsImpl.getIcon("hresize")
 
-  protected def dialog(): Option[Resize] = None // not yet supported
+  protected def dialog(): Option[Function] = None // not yet supported
 
-  protected def dragToParam(d: Drag): Resize = {
+  protected def dragToParam(d: Drag): Function = {
     val (usesStart, usesStop) = d.firstRegion.span match {
       case Span.From (_)      => (true, false)
       case Span.Until(_)      => (false, true)
@@ -60,9 +60,9 @@ final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     } else {
       (0L, 0L)
     }
-    Resize(dStart, dStop)
+    ??? // Function(dStart, dStop)
   }
 
-  protected def commitProc(drag: Resize)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit =
-    ProcActions.resize(span, proc, drag, canvas.timelineModel)
+  protected def commitProc(drag: Function)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit =
+    ??? // ProcActions.resize(span, proc, drag, canvas.timelineModel)
 }

@@ -1,18 +1,48 @@
-package de.sciss
-package mellite
+/*
+ *  DocumentCursorsFrameImpl.scala
+ *  (Mellite)
+ *
+ *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
+ *
+ *  This software is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either
+ *  version 2, june 1991 of the License, or (at your option) any later version.
+ *
+ *  This software is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ *  General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public
+ *  License (gpl.txt) along with this software; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ *
+ *  For further information, please contact Hanns Holger Rutz at
+ *  contact@sciss.de
+ */
+
+package de.sciss.mellite
 package gui
 package impl
+package document
 
 import scala.swing._
-import synth.proc
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.lucre.{confluent, stm}
 import java.util.{Locale, Date}
 import java.text.SimpleDateFormat
-import de.sciss.lucre.event.Change
 import de.sciss.file._
-import de.sciss.treetable.{TreeTableSelectionChanged, TreeTableCellRenderer, TreeColumnModel, TreeTable, AbstractTreeModel}
+import de.sciss.treetable.{TreeTableCellRenderer, TreeColumnModel, TreeTable, AbstractTreeModel}
+import de.sciss.synth.proc
+import de.sciss.mellite._
+import de.sciss.mellite.gui._
+import de.sciss.mellite.gui.impl.ComponentHolder
+import de.sciss.desktop
+import de.sciss.treetable.TreeTableSelectionChanged
+import de.sciss.lucre.event.Change
 
 object DocumentCursorsFrameImpl {
   type S = proc.Confluent
@@ -23,7 +53,7 @@ object DocumentCursorsFrameImpl {
     val rootView  = createView(document, parent = None, elem = root)
     val view      = new Impl(document, rootView)(tx.system)
 
-    val obs = root.changed.react { implicit tx => upd =>
+    /* val obs = */ root.changed.react { implicit tx => upd =>
       log(s"DocumentCursorsFrame update $upd")
       view.elemUpdated(rootView, upd.changes)
     }

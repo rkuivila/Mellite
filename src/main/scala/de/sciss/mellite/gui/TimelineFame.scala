@@ -4,7 +4,7 @@ package gui
 
 import desktop.Window
 import de.sciss.synth.proc.{AuralSystem, Sys}
-import impl.{TimelineFrameImpl => Impl}
+import impl.timeline.{TimelineFrameImpl => Impl}
 import lucre.stm
 import de.sciss.lucre.stm.Disposable
 
