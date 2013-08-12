@@ -49,7 +49,10 @@ object ProcView {
   private final val DEBUG = false
 
   final val Unnamed = "<unnamed>"
-  
+
+  private def addLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
+    map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
+
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
     *
@@ -106,9 +109,6 @@ object ProcView {
     import CommonSerializers.Identifier
     lazy val idH = tx.newHandle(timed.id)
 
-    def add[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
-      map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
-
     proc.scans.iterator.foreach { case (key, scan) =>
       def findLinks(inp: Boolean): Unit = {
         val it = if (inp) scan.sources else scan.sinks
@@ -119,11 +119,11 @@ object ProcView {
             procMap.get(thatID).foreach { thatView =>
               if (DEBUG) println(s"PV ${timed.id} add link from $key to $thatID, $thatKey")
               if (inp) {
-                res.inputs       = add(res.inputs      , key    , Link(thatView, thatKey))
-                thatView.outputs = add(thatView.outputs, thatKey, Link(res     , key    ))
+                res     .addInput (key    , thatView, thatKey)
+                thatView.addOutput(thatKey, res     , key    )
               } else {
-                res.outputs      = add(res.outputs     , key    , Link(thatView, thatKey))
-                thatView.inputs  = add(thatView.inputs , thatKey, Link(res     , key    ))
+                res     .addOutput(key    , thatView, thatKey)
+                thatView.addInput (thatKey, res     , key    )
               }
             }
 
@@ -228,6 +228,12 @@ object ProcView {
       inputs  = Map.empty
       outputs = Map.empty
     }
+
+    def addInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
+      inputs  = addLink(inputs , thisKey, Link(thatView, thatKey))
+
+    def addOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
+      outputs = addLink(outputs, thisKey, Link(thatView, thatKey))
   }
 
   implicit def span[S <: Sys[S]](view: ProcView[S]): (Long, Long) = {
@@ -249,7 +255,7 @@ object ProcView {
   * in response to observing a change in the model.
   */
 sealed trait ProcView[S <: Sys[S]] {
-  import ProcView.{LinkMap, ProcMap, ScanMap}
+  import ProcView.{LinkMap, ProcMap, ScanMap, Link, addLink}
   
   def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
   def procSource: stm.Source[S#Tx, Proc[S]]
@@ -263,6 +269,9 @@ sealed trait ProcView[S <: Sys[S]] {
 
   var inputs : LinkMap[S]
   var outputs: LinkMap[S]
+
+  def addInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit
+  def addOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit
 
   var muted: Boolean
 

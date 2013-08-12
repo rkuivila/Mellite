@@ -177,6 +177,36 @@ object ViewImpl {
         case _ =>
       }
 
+    def scanAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+      timed.value.scans.get(name).foreach { scan =>
+        scan.sources.foreach {
+          case Scan.Link.Scan(peer) =>
+            view.scanSourceAdded(timed, name, scan, peer)
+          case _ =>
+        }
+        scan.sinks.foreach {
+          case Scan.Link.Scan(peer) =>
+            view.scanSinkAdded(timed, name, scan, peer)
+          case _ =>
+        }
+      }
+    }
+
+    def scanRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+      timed.value.scans.get(name).foreach { scan =>
+        scan.sources.foreach {
+          case Scan.Link.Scan(peer) =>
+            view.scanSourceRemoved(timed, name, scan, peer)
+          case _ =>
+        }
+        scan.sinks.foreach {
+          case Scan.Link.Scan(peer) =>
+            view.scanSinkRemoved(timed, name, scan, peer)
+          case _ =>
+        }
+      }
+    }
+
     val obsGroup = group.changed.react { implicit tx => _.changes.foreach {
       case BiGroup.Added  (span, timed) =>
         // println(s"Added   $span, $timed")
@@ -196,12 +226,12 @@ object ViewImpl {
           case Proc.AssociationAdded  (key) =>
             key match {
               case Proc.AttributeKey(name) => attrChanged(timed, name)
-              case Proc.ScanKey(name) =>
+              case Proc.ScanKey     (name) => scanAdded  (timed, name)
             }
           case Proc.AssociationRemoved(key) =>
             key match {
               case Proc.AttributeKey(name) => attrChanged(timed, name)
-              case Proc.ScanKey     (name) =>
+              case Proc.ScanKey     (name) => scanRemoved(timed, name)
             }
           case Proc.AttributeChange(name, attr, ach) =>
             (name, ach) match {
@@ -225,6 +255,13 @@ object ViewImpl {
                     case _ =>
                   }
                 }
+
+              case Scan.SinkAdded    (Scan.Link.Scan(peer)) =>
+                val test: Scan[S] = scan
+                view.scanSinkAdded    (timed, name, test, peer)
+              case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => view.scanSinkRemoved  (timed, name, scan, peer)
+              case Scan.SourceAdded  (Scan.Link.Scan(peer)) => view.scanSourceAdded  (timed, name, scan, peer)
+              case Scan.SourceRemoved(Scan.Link.Scan(peer)) => view.scanSourceRemoved(timed, name, scan, peer)
 
               case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
             }
@@ -530,6 +567,8 @@ object ViewImpl {
       comp = pane
     }
 
+    private def repaintAll(): Unit = view.canvasComponent.repaint()
+
     def addProc(span: SpanLike, timed: TimedProc[S], repaint: Boolean)(implicit tx: S#Tx): Unit = {
       log(s"addProc($span, $timed)")
       // timed.span
@@ -538,7 +577,7 @@ object ViewImpl {
       if (repaint) {
         guiFromTx {
           procViews += pv
-          view.canvasComponent.repaint()    // XXX TODO: optimize dirty rectangle
+          repaintAll()    // XXX TODO: optimize dirty rectangle
         }
       }  else {
         procViews += pv // not necessary to defer this to GUI because non-repainting happens in init!
@@ -552,7 +591,7 @@ object ViewImpl {
         guiFromTx {
           procViews -= pv
           pv.disposeGUI()
-          view.canvasComponent.repaint() // XXX TODO: optimize dirty rectangle
+          repaintAll() // XXX TODO: optimize dirty rectangle
         }
       }
     }
@@ -566,7 +605,7 @@ object ViewImpl {
           if (spanCh .isSignificant) pv.span  = spanCh .now
           if (trackCh.isSignificant) pv.track = trackCh.now
           procViews  += pv
-          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+          repaintAll()  // XXX TODO: optimize dirty rectangle
         }
       }
 
@@ -576,7 +615,7 @@ object ViewImpl {
       pvo.foreach { pv =>
         guiFromTx {
           pv.muted = newMute
-          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+          repaintAll()  // XXX TODO: optimize dirty rectangle
         }
       }
     }
@@ -587,7 +626,7 @@ object ViewImpl {
       pvo.foreach { pv =>
         guiFromTx {
           pv.nameOption = newName
-          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+          repaintAll()  // XXX TODO: optimize dirty rectangle
         }
       }
     }
@@ -599,7 +638,7 @@ object ViewImpl {
         guiFromTx {
           pv.fadeIn   = newFadeIn
           pv.fadeOut  = newFadeOut
-          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+          repaintAll()  // XXX TODO: optimize dirty rectangle
         }
       }
     }
@@ -618,11 +657,45 @@ object ViewImpl {
 
           pv.audio = newAudio
           if (newSono) pv.releaseSonogram()
-          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+          repaintAll()  // XXX TODO: optimize dirty rectangle
         }
       }
     }
 
+    def scanSinkAdded(timed: TimedProc[S], srcKey: String, src: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit =
+      for {
+        srcView             <- procMap.get(timed.id)
+        (sinkKey, sinkIdH)  <- scanMap.get(sink .id)
+        sinkView            <- procMap.get(sinkIdH())
+      } {
+        log(s"scanSinkAdded(srcKey = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view = $sinkView")
+        guiFromTx {
+          srcView .addOutput(srcKey , sinkView, sinkKey)
+          sinkView.addInput (sinkKey, srcView , srcKey )
+        }
+      }
+
+    def scanSinkRemoved(timed: TimedProc[S], name: String, source: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit = {
+      val pvo = procMap.get(timed.id)
+      log(s"scanSinkRemoved(name = $name, source = $source, sink = $sink, view = $pvo")
+
+      ???
+    }
+
+    def scanSourceAdded(timed: TimedProc[S], name: String, sink: Scan[S], source: Scan[S])(implicit tx: S#Tx): Unit = {
+      val pvo = procMap.get(timed.id)
+      log(s"scanSourceAdded(name = $name, sink = $sink, source = $source, view = $pvo")
+
+      ???
+    }
+
+    def scanSourceRemoved(timed: TimedProc[S], name: String, sink: Scan[S], source: Scan[S])(implicit tx: S#Tx): Unit = {
+      val pvo = procMap.get(timed.id)
+      log(s"scanSourceRemoved(name = $name, sink = $sink, source = $source, view = $pvo")
+
+      ???
+    }
+    
     private def performDrop(drop: DnD.Drop[S]): Boolean = {
       def withRegions(fun: S#Tx => List[ProcView[S]] => Boolean): Boolean =
         view.findRegion(drop.frame, view.screenToTrack(drop.y)).exists { hitRegion =>
