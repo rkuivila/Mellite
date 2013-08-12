@@ -36,7 +36,7 @@ import de.sciss.lucre.expr.Expr
 final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Resize] {
 
-  import TrackTool._
+  import TrackTool.{Cursor => _, _}
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
   val name          = "Resize"

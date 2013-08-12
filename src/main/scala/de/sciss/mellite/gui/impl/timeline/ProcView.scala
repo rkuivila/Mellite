@@ -42,11 +42,13 @@ import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.synth.proc.impl.CommonSerializers
 
 object ProcView {
-  private type LinkMap[S <: Sys[S]] = Map[String, Vec[ProcView.Link[S]]]
-  private type ProcMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcView[S]]
-  private type ScanMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
+  type LinkMap[S <: Sys[S]] = Map[String, Vec[ProcView.Link[S]]]
+  type ProcMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcView[S]]
+  type ScanMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
 
-  private final val DEBUG = true
+  private final val DEBUG = false
+
+  final val Unnamed = "<unnamed>"
   
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
@@ -55,9 +57,9 @@ object ProcView {
     * @param procMap  a map from `TimedProc` ids to their views. This is used to establish scan links.
     * @param scanMap  a map from `Scan` ids to their keys and a handle on the timed-proc's id.
     */
-  def apply[S <: Sys[S]](timed: TimedProc[S],
-                         procMap: ProcMap[S],
-                         scanMap: ScanMap[S])
+  def apply[S <: Sys[S]](timed  : TimedProc[S],
+                         procMap: ProcMap  [S],
+                         scanMap: ScanMap  [S])
                         (implicit tx: S#Tx): ProcView[S] = {
     val span  = timed.span
     val proc  = timed.value
@@ -169,7 +171,7 @@ object ProcView {
       }
 
     def name = nameOption.getOrElse {
-      audio.map(_.value.artifact.base).getOrElse("<unnamed>")
+      audio.map(_.value.artifact.base).getOrElse(Unnamed)
     }
 
     def acquireSonogram(): Option[SonoOverview] = {

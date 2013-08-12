@@ -31,12 +31,12 @@ package timeline
 import scala.swing.{Swing, Slider, Action, BorderPanel, Orientation, BoxPanel, Component}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.mellite.impl.InsertAudioRegion
-import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, Stroke}
+import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, LinearGradientPaint}
 import de.sciss.synth
 import de.sciss.desktop
 import de.sciss.lucre.stm
 import de.sciss.sonogram
-import de.sciss.lucre.stm.{Disposable, IdentifierMap, Cursor}
+import de.sciss.lucre.stm.{Disposable, Cursor}
 import de.sciss.synth.{Curve, proc}
 import de.sciss.fingertree.RangedSeq
 import javax.swing.{KeyStroke, UIManager}
@@ -60,13 +60,23 @@ import scala.util.control.NonFatal
 import collection.breakOut
 
 object ViewImpl {
+  private val colrBg              = Color.darkGray
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
   private val strkDropRegion      = new BasicStroke(3f)
-  private val colrRegionBg        = new Color(0x68, 0x68, 0x68)
-  private val colrRegionBgSel     = Color.blue
-  private val colrBgMuted         = new Color(0xFF, 0xFF, 0xFF, 0x60)
+  private val colrRegionOutline   = new Color(0x68, 0x68, 0x68)
+  private val colrRegionOutlineSel= Color.blue
+  private val pntRegionBg         = new LinearGradientPaint(0f, 1f, 0f, 62f,
+    Array[Float](0f, 0.23f, 0.77f, 1f), Array[Color](new Color(0x5E, 0x5E, 0x5E), colrRegionOutline,
+      colrRegionOutline, new Color(0x77, 0x77, 0x77)))
+  private val pntRegionBgSel       = new LinearGradientPaint(0f, 1f, 0f, 62f,
+    Array[Float](0f, 0.23f, 0.77f, 1f), Array[Color](new Color(0x00, 0x00, 0xE6), colrRegionOutlineSel,
+      colrRegionOutlineSel, new Color(0x1A, 0x1A, 0xFF)))
+  private val colrRegionBgMuted   = new Color(0xFF, 0xFF, 0xFF, 0x60)
   private val colrLink            = new Color(0x80, 0x80, 0x80)
   private val strkLink            = new BasicStroke(2f)
+  private val colrNameShadow      = new Color(0, 0, 0, 0x80)
+  private val colrName            = Color.white
+
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
   private val colrFade = new Color(0x05, 0xAF, 0x3A)
@@ -146,6 +156,12 @@ object ViewImpl {
       view.procMuteChanged(timed, muted)
     }
 
+    def nameChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
+      val attr    = timed.value.attributes
+      val nameOpt = attr[Attribute.String](ProcKeys.attrName).map(_.value)
+      view.procNameChanged(timed, nameOpt)
+    }
+
     def fadeChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attributes
       val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
@@ -155,8 +171,9 @@ object ViewImpl {
 
     def attrChanged(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit =
       name match {
-        case ProcKeys.attrMute => muteChanged(timed)
+        case ProcKeys.attrMute  => muteChanged(timed)
         case ProcKeys.attrFadeIn | ProcKeys.attrFadeOut => fadeChanged(timed)
+        case ProcKeys.attrName  => nameChanged(timed)
         case _ =>
       }
 
@@ -226,8 +243,8 @@ object ViewImpl {
   private final class Impl[S <: Sys[S]](document          : Document[S],
                                         groupH            : stm.Source[S#Tx, ProcGroup[S]],
                                         transp            : ProcTransport[S],
-                                        procMap           : IdentifierMap[S#ID, S#Tx, ProcView[S]],
-                                        scanMap           : IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])],
+                                        procMap           : ProcView.ProcMap[S],
+                                        scanMap           : ProcView.ScanMap[S],
                                         val timelineModel : TimelineModel,
                                         auralView         : AuralPresentation[S])
                                        (implicit cursor: Cursor[S])
@@ -564,6 +581,17 @@ object ViewImpl {
       }
     }
 
+    def procNameChanged(timed: TimedProc[S], newName: Option[String])(implicit tx: S#Tx): Unit = {
+      val pvo = procMap.get(timed.id)
+      log(s"procNameChanged(newName = $newName, view = $pvo")
+      pvo.foreach { pv =>
+        guiFromTx {
+          pv.nameOption = newName
+          view.canvasComponent.repaint()  // XXX TODO: optimize dirty rectangle
+        }
+      }
+    }
+
     def procFadeChanged(timed: TimedProc[S], newFadeIn: FadeSpec.Value, newFadeOut: FadeSpec.Value)(implicit tx: S#Tx): Unit = {
       val pvo = procMap.get(timed.id)
       log(s"procFadeChanged(newFadeIn = $newFadeIn, newFadeOut = $newFadeOut, view = $pvo")
@@ -695,6 +723,7 @@ object ViewImpl {
         log(s"Commit tool changes $value")
         step { implicit tx =>
           value match {
+            case t: TrackTool.Cursor    => toolCursor   commit t
             case t: TrackTool.Move      => toolMove     commit t
             case t: TrackTool.Resize    => toolResize   commit t
             case t: TrackTool.Gain      => toolGain     commit t
@@ -783,7 +812,7 @@ object ViewImpl {
           super.paintComponent(g)
           val w = peer.getWidth
           val h = peer.getHeight
-          g.setColor(Color.darkGray) // g.setPaint(pntChecker)
+          g.setColor(colrBg) // g.setPaint(pntChecker)
           g.fillRect(0, 0, w, h)
 
           val total     = timelineModel.bounds
@@ -792,7 +821,7 @@ object ViewImpl {
           val strkOrig  = g.getStroke
           val cr        = clipOrig.getBounds
           val visiStart = screenToFrame(cr.x).toLong
-          val visiStop  = screenToFrame(cr.x + cr.width).toLong
+          val visiStop  = screenToFrame(cr.x + cr.width).toLong + 1 // plus one to avoid glitches
 
           val regionViewMode  = trackTools.regionViewMode
           val visualBoost     = trackTools.visualBoost
@@ -824,9 +853,15 @@ object ViewImpl {
               if (px1C < px2C) {  // skip this if we are not overlapping with clip
 
                 if (regionViewMode != RegionViewMode.None) {
-                  g.setColor(if (selected) colrRegionBgSel else colrRegionBg)
-                  g.fillRoundRect(px, py, pw, ph, 5, 5)
+                  g.translate(px, py)
+                  g.setColor(if (selected) colrRegionOutlineSel else colrRegionOutline)
+                  g.fillRoundRect(0, 0, pw, ph, 5, 5)
+                  g.setPaint(if (selected) pntRegionBgSel else pntRegionBg)
+                  g.fillRoundRect(1, 1, pw - 2, ph - 2, 4, 4)
+                  g.translate(-px, -py)
                 }
+                g.setColor(colrBg)
+                g.drawLine(px - 1, py, px - 1, py + ph - 1) // better distinguish directly neighbouring regions
 
                 val innerH  = ph - (hndl + 1)
                 val innerY  = py + hndl
@@ -905,9 +940,14 @@ object ViewImpl {
                 if (regionViewMode == RegionViewMode.TitledBox) {
                   val name = pv.name // .orElse(pv.audio.map(_.value.artifact.nameWithoutExtension))
                   g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
-                  g.setColor(Color.white)
                   // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
-                  g.drawString(if (pv.muted) "\u23DB " + name else name, px + 4, py + hndlBaseline)
+                  val text  = if (pv.muted) "\u23DB " + name else name
+                  val tx    = px + 4
+                  val ty    = py + hndlBaseline
+                  g.setColor(colrNameShadow)
+                  g.drawString(text, tx, ty + 1)
+                  g.setColor(colrName)
+                  g.drawString(text, tx, ty)
                   //              stakeInfo(ar).foreach { info =>
                   //                g2.setColor(Color.yellow)
                   //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
@@ -916,7 +956,7 @@ object ViewImpl {
                 }
 
                 if (pv.muted) {
-                  g.setColor(colrBgMuted)
+                  g.setColor(colrRegionBgMuted)
                   g.fillRoundRect(px, py, pw, ph, 5, 5)
                 }
               }

@@ -37,7 +37,7 @@ import de.sciss.lucre.expr.Expr
 final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Move] {
 
-  import TrackTool._
+  import TrackTool.{Cursor => _, _}
   import BasicRegion.MinDur
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)

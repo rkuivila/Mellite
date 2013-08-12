@@ -37,7 +37,7 @@ import de.sciss.synth.Curve
 final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Fade] {
 
-  import TrackTool._
+  import TrackTool.{Cursor => _, _}
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR)
   val name          = "Fade"

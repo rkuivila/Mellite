@@ -29,22 +29,58 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.model.impl.ModelImpl
-import scala.swing.Component
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{Attribute, ProcKeys, Proc, Sys}
+import java.awt.event.MouseEvent
+import de.sciss.mellite.gui.impl.timeline.ProcView
+import de.sciss.lucre.expr.Expr
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.desktop.OptionPane
+import scala.swing.{Label, FlowPanel, TextField}
+import de.sciss.synth.expr.{ExprImplicits, Strings}
 
-final class CursorImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
-  extends TrackTool[S, Unit] with ModelImpl[TrackTool.Update[Unit]] {
+final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends RegionImpl[S, TrackTool.Cursor] {
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
   val name          = "Cursor"
   val icon          = ToolsImpl.getIcon("text")
 
-  def install(component: Component): Unit =
-    component.cursor = defaultCursor
+  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: ProcView[S]): Unit =
+    if (e.getClickCount == 2) {
+      val ggText  = new TextField(region.name, 24)
+      val panel   = new FlowPanel(new Label("Name:"), ggText)
 
-  def uninstall(component: Component): Unit =
-    component.cursor = null
+      val pane    = OptionPane(panel, OptionPane.Options.OkCancel, OptionPane.Message.Question, focus = Some(ggText))
+      pane.title  = "Rename Region"
+      val res     = pane.show(None) // XXX TODO: search for window source
+      if (res == OptionPane.Result.Ok && ggText.text != region.name) {
+        val text    = ggText.text
+        val nameOpt = if (text == "" || text == ProcView.Unnamed) None else Some(text)
+        dispatch(TrackTool.Adjust(TrackTool.Cursor(nameOpt)))
+      }
 
-  def commit(drag: Unit)(implicit tx: S#Tx) = ()
+    } else {
+      canvas.timelineModel.modifiableOption.foreach { mod =>
+        val it    = canvas.selectionModel.iterator
+        val empty = Span.Void: Span.SpanOrVoid
+        val all   = (empty /: it) { (res, pv) =>
+          pv.span match {
+            case sp @ Span(_, _) => res.nonEmptyOption.fold(sp)(_ union sp)
+          }
+        }
+        mod.selection = all
+      }
+    }
+
+  protected def commitProc(drag: TrackTool.Cursor)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
+    val attr  = proc.attributes
+    val expr  = ExprImplicits[S]
+    import expr._
+    drag.name match {
+      case Some(n) => attr.apply[Attribute.String](ProcKeys.attrName) match {
+        case Some(Expr.Var(vr)) => vr() = n
+        case _                  => attr.put(ProcKeys.attrName, Attribute.String(Strings.newVar(n)))
+      }
+      case _ => attr.remove(ProcKeys.attrName)
+    }
+  }
 }

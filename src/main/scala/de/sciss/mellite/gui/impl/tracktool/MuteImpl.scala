@@ -29,7 +29,6 @@ package impl
 package tracktool
 
 import de.sciss.synth.proc.{ProcKeys, Attribute, Proc, Sys}
-import de.sciss.model.impl.ModelImpl
 import java.awt.{Point, Toolkit}
 import java.awt.event.MouseEvent
 import de.sciss.lucre.expr.Expr
@@ -45,7 +44,7 @@ object MuteImpl {
   }
 }
 final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends RegionImpl[S, Mute] with ModelImpl[TrackTool.Update[Mute]] {
+  extends RegionImpl[S, Mute] {
 
   def defaultCursor = MuteImpl.cursor
   val name          = "Mute"

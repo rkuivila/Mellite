@@ -83,6 +83,7 @@ object TrackTool {
   final case class Mute    (engaged: Boolean)
   final case class Fade    (deltaFadeIn: Long, deltaFadeOut: Long, deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
   final case class Function(track: Int, span: Span)
+  final case class Cursor  (name: Option[String])
 
   object Patch {
     sealed trait Sink[+S]
@@ -95,7 +96,7 @@ object TrackTool {
 
   type Listener = Model.Listener[Update[Any]]
 
-  def cursor  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Unit    ] = new CursorImpl  (canvas)
+  def cursor  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Cursor  ] = new CursorImpl  (canvas)
   def move    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Move    ] = new MoveImpl    (canvas)
   def resize  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Resize  ] = new ResizeImpl  (canvas)
   def gain    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Gain    ] = new GainImpl    (canvas)

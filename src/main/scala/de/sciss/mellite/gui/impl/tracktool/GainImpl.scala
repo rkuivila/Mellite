@@ -38,7 +38,7 @@ import de.sciss.synth
 final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Gain] {
 
-  import TrackTool._
+  import TrackTool.{Cursor => _, _}
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
   val name          = "Gain"

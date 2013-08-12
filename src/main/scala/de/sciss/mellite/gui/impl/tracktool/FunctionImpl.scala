@@ -37,7 +37,7 @@ import de.sciss.synth.expr.{Ints, Spans}
 final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends RegionLike[S, TrackTool.Function] with Dragging[S, TrackTool.Function] {
 
-  import TrackTool._
+  import TrackTool.{Cursor => _, _}
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
   val name          = "Function"
