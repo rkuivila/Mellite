@@ -29,7 +29,7 @@ package impl
 package timeline
 
 import de.sciss.synth.proc.{FadeSpec, ProcKeys, Attribute, Grapheme, Scan, Proc, TimedProc, Sys}
-import de.sciss.lucre.{data, stm, expr}
+import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.sonogram.{Overview => SonoOverview}
 import expr.Expr
@@ -42,6 +42,12 @@ import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.synth.proc.impl.CommonSerializers
 
 object ProcView {
+  private type LinkMap[S <: Sys[S]] = Map[String, Vec[ProcView.Link[S]]]
+  private type ProcMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcView[S]]
+  private type ScanMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
+
+  private final val DEBUG = true
+  
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
     *
@@ -50,8 +56,8 @@ object ProcView {
     * @param scanMap  a map from `Scan` ids to their keys and a handle on the timed-proc's id.
     */
   def apply[S <: Sys[S]](timed: TimedProc[S],
-                         procMap: IdentifierMap[S#ID, S#Tx, ProcView[S]],
-                         scanMap: IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])])
+                         procMap: ProcMap[S],
+                         scanMap: ScanMap[S])
                         (implicit tx: S#Tx): ProcView[S] = {
     val span  = timed.span
     val proc  = timed.value
@@ -98,7 +104,7 @@ object ProcView {
     import CommonSerializers.Identifier
     lazy val idH = tx.newHandle(timed.id)
 
-    def add[A, B](map : Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
+    def add[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
       map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
 
     proc.scans.iterator.foreach { case (key, scan) =>
@@ -107,7 +113,9 @@ object ProcView {
         it.foreach {
           case Scan.Link.Scan(peer) if scanMap.contains(peer.id) =>
             val Some((thatKey, thatIdH)) = scanMap.get(peer.id)
-            procMap.get(thatIdH()).foreach { thatView =>
+            val thatID = thatIdH()
+            procMap.get(thatID).foreach { thatView =>
+              if (DEBUG) println(s"PV ${timed.id} add link from $key to $thatID, $thatKey")
               if (inp) {
                 res.inputs       = add(res.inputs      , key    , Link(thatView, thatKey))
                 thatView.outputs = add(thatView.outputs, thatKey, Link(res     , key    ))
@@ -116,8 +124,16 @@ object ProcView {
                 thatView.inputs  = add(thatView.inputs , thatKey, Link(res     , key    ))
               }
             }
+
+          case other =>
+            if (DEBUG) other match {
+              case Scan.Link.Scan(peer) =>
+                println(s"PV ${timed.id} missing link from $key to scan $peer")
+              case _ =>
+            }
         }
       }
+      if (DEBUG) println(s"PV ${timed.id} add scan ${scan.id}, $key")
       scanMap.put(scan.id, key -> idH)
       findLinks(inp = true )
       findLinks(inp = false)
@@ -136,7 +152,7 @@ object ProcView {
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var fadeIn    : FadeSpec.Value,
                                         var fadeOut   : FadeSpec.Value)
-    extends ProcView[S] {
+    extends ProcView[S] { self =>
 
     override def toString = s"ProvView($name, $span, $audio)"
 
@@ -173,12 +189,42 @@ object ProcView {
       sonogram
     }
 
-    def dispose(procMap: IdentifierMap[S#ID, S#Tx, ProcView[S]],
-                scanMap: IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]): Unit = {
+    def disposeTx(timed: TimedProc[S],
+                  procMap: ProcMap[S],
+                  scanMap: ScanMap[S])(implicit tx: S#Tx): Unit = {
+      procMap.remove(timed.id)
+      val proc = timed.value
+      proc.scans.iterator.foreach { case (_, scan) =>
+        scanMap.remove(scan.id)
+      }
+    }
 
+    def disposeGUI(): Unit = {
       releaseSonogram()
+      
+      def removeLinks(map: LinkMap[S])(getMap: ProcView[S] => LinkMap[S])
+                                      (setMap: (ProcView[S], LinkMap[S]) => Unit): Unit = {
+        map.foreach { case (_, links) =>
+          links.foreach { link =>
+            val thatView  = link.target
+            val thatMap   = getMap(thatView)
+            val thatKey   = link.targetKey
+            thatMap.get(thatKey).foreach { thatLinks =>
+              val updLinks = thatLinks.filterNot(_ == self)
+              val updMap   = if (updLinks.isEmpty)
+                thatMap - thatKey
+              else
+                thatMap + (thatKey -> updLinks)
+              setMap(thatView, updMap)
+            }
+          }
+        }
+      }
 
-      ???
+      removeLinks(inputs )(_.outputs)(_.outputs = _)
+      removeLinks(outputs)(_.inputs )(_.inputs  = _)
+      inputs  = Map.empty
+      outputs = Map.empty
     }
   }
 
@@ -201,6 +247,8 @@ object ProcView {
   * in response to observing a change in the model.
   */
 sealed trait ProcView[S <: Sys[S]] {
+  import ProcView.{LinkMap, ProcMap, ScanMap}
+  
   def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
   def procSource: stm.Source[S#Tx, Proc[S]]
 
@@ -211,8 +259,8 @@ sealed trait ProcView[S <: Sys[S]] {
   /** The proc's name or a place holder name if no name is set. */
   def name: String
 
-  var inputs : Map[String, Vec[ProcView.Link[S]]]
-  var outputs: Map[String, Vec[ProcView.Link[S]]]
+  var inputs : LinkMap[S]
+  var outputs: LinkMap[S]
 
   var muted: Boolean
 
@@ -233,6 +281,9 @@ sealed trait ProcView[S <: Sys[S]] {
   /** Attemps to acquire a sonogram view. Updates the `sono` variable if successful. */
   def acquireSonogram(): Option[SonoOverview]
 
-  def dispose(procMap: IdentifierMap[S#ID, S#Tx, ProcView[S]],
-              scanMap: IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]): Unit
+  def disposeTx(timed: TimedProc[S],
+                procMap: ProcMap[S],
+                scanMap: ScanMap[S])(implicit tx: S#Tx): Unit
+
+  def disposeGUI(): Unit
 }

@@ -31,7 +31,7 @@ package timeline
 import scala.swing.{Swing, Slider, Action, BorderPanel, Orientation, BoxPanel, Component}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.mellite.impl.InsertAudioRegion
-import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D}
+import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, Stroke}
 import de.sciss.synth
 import de.sciss.desktop
 import de.sciss.lucre.stm
@@ -65,6 +65,8 @@ object ViewImpl {
   private val colrRegionBg        = new Color(0x68, 0x68, 0x68)
   private val colrRegionBgSel     = Color.blue
   private val colrBgMuted         = new Color(0xFF, 0xFF, 0xFF, 0x60)
+  private val colrLink            = new Color(0x80, 0x80, 0x80)
+  private val strkLink            = new BasicStroke(2f)
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
   private val colrFade = new Color(0x05, 0xAF, 0x3A)
@@ -112,9 +114,12 @@ object ViewImpl {
     val procMap   = tx.newInMemoryIDMap[ProcView[S]]
     val scanMap   = tx.newInMemoryIDMap[(String, stm.Source[S#Tx, S#ID])]
 
-    // not these two, they will separately disposed:
-    // disp ::= procMap
-    // disp ::= scanMap
+    // ugly: the view dispose method cannot iterate over the procs
+    // (other than through a GUI driven data structure). thus, it
+    // only call pv.disposeGUI() and the procMap and scanMap must be
+    // freed directly...
+    disp ::= procMap
+    disp ::= scanMap
     val transp    = proc.Transport[S, document.I](group, sampleRate = sampleRate)
     disp ::= transp
     val auralView = proc.AuralPresentation.runTx[S](transp, aural)
@@ -264,7 +269,7 @@ object ViewImpl {
       guiFromTx {
         val pit     = procViews.iterator
         procViews   = RangedSeq.empty
-        pit.foreach(_.dispose(procMap, scanMap))
+        pit.foreach(_.disposeGUI())
         procMap.dispose()
         scanMap.dispose()
       }
@@ -514,8 +519,10 @@ object ViewImpl {
       // val proc = timed.value
       val pv = ProcView(timed, procMap, scanMap)
       if (repaint) {
-        procViews += pv
-        guiFromTx(view.canvasComponent.repaint()) // XXX TODO: optimize dirty rectangle
+        guiFromTx {
+          procViews += pv
+          view.canvasComponent.repaint()    // XXX TODO: optimize dirty rectangle
+        }
       }  else {
         procViews += pv // not necessary to defer this to GUI because non-repainting happens in init!
       }
@@ -524,10 +531,10 @@ object ViewImpl {
     def removeProc(span: SpanLike, timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       log(s"removeProcProc($span, $timed)")
       procMap.get(timed.id).foreach { pv =>
-        procMap.remove(timed.id)
+        pv.disposeTx(timed, procMap, scanMap)
         guiFromTx {
           procViews -= pv
-          pv.dispose(procMap, scanMap)
+          pv.disposeGUI()
           view.canvasComponent.repaint() // XXX TODO: optimize dirty rectangle
         }
       }
@@ -782,6 +789,7 @@ object ViewImpl {
           val total     = timelineModel.bounds
           // val visi      = timelineModel.visible
           val clipOrig  = g.getClip
+          val strkOrig  = g.getStroke
           val cr        = clipOrig.getBounds
           val visiStart = screenToFrame(cr.x).toLong
           val visiStop  = screenToFrame(cr.x + cr.width).toLong
@@ -801,7 +809,8 @@ object ViewImpl {
 
           g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-          procViews.filterOverlaps((visiStart, visiStop)).foreach { pv =>
+          val pvs = procViews.filterOverlaps((visiStart, visiStop)).toList // warning: iterator, we need to traverse twice!
+          pvs.foreach { pv =>
             val selected  = sel.contains(pv)
 
             def drawProc(start: Long, x1: Int, x2: Int, move: Long): Unit = {
@@ -966,8 +975,24 @@ object ViewImpl {
             }
           }
 
+          // --- links ---
+          g.setColor(colrLink)
+          g.setStroke(strkLink)
+
+          pvs.foreach { pv =>
+            // println(s"For ${pv.name} inputs = ${pv.inputs}, outputs = ${pv.outputs}")
+            pv.inputs.foreach { case (_, links) =>
+              links.foreach { link =>
+                drawLink(g, pv, link.target)
+              }
+            }
+          }
+          g.setStroke(strkOrig)
+
+          // --- timeline cursor and selection ---
           paintPosAndSelection(g, h)
 
+          // --- ongoing drag and drop / tools ---
           if (currentDrop.isDefined) currentDrop.foreach { drop =>
             drop.drag match {
               case ad: DnD.AudioDrag[S] =>
@@ -988,35 +1013,51 @@ object ViewImpl {
           }
         }
 
+        private def linkFrame(pv: ProcView[S]): Long = pv.span match {
+          case Span(start, stop)  => (start + stop)/2
+          case hs: Span.HasStart  => hs.start + (timelineModel.sampleRate * 0.1).toLong
+          case _ => 0L
+        }
+
+        private def linkY(a: ProcView[S], b: ProcView[S]): Int = {
+          val at = a.track
+          if (at >= b.track) trackToScreen(at) + 4 else trackToScreen(at + 2) - 5
+        }
+
+        private def drawLink(g: Graphics2D, source: ProcView[S], sink: ProcView[S]): Unit = {
+          val srcFrameC   = linkFrame(source)
+          val sinkFrameC  = linkFrame(sink)
+          val srcY        = linkY(source, sink  )
+          val sinkY       = linkY(sink  , source)
+
+          drawLinkLine(g, srcFrameC, srcY, sinkFrameC, sinkY)
+        }
+
+        @inline private def drawLinkLine(g: Graphics2D, pos1: Long, y1: Int, pos2: Long, y2: Int): Unit = {
+          val x1    = frameToScreen(pos1).toInt
+          val x2    = frameToScreen(pos2).toInt
+          g.drawLine(x1, y1, x2, y2)
+        }
+
         private def drawPatch(g: Graphics2D, patch: TrackTool.Patch[S]): Unit = {
-          val srcTrk    = patch.source.track
-          val srcFrameC = patch.source.span match {
-            case Span(start, stop)  => (start + stop)/2
-            case hs: Span.HasStart  => hs.start + (timelineModel.sampleRate * 0.1).toLong
-            case _ => return
-          }
+          val src       = patch.source
+          val srcTrk    = src.track
+          val srcFrameC = linkFrame(src)
           val (srcY, sinkFrameC, sinkY) = patch.sink match {
             case TrackTool.Patch.Unlinked(f, y) =>
               val y0 = if (screenToTrack(y) < srcTrk) trackToScreen(srcTrk) + 4 else trackToScreen(srcTrk + 2) - 5
               (y0, f, y)
-            case TrackTool.Patch.Linked(_view) =>
-              val f = _view.span match {
-                case Span(start, stop)  => (start + stop)/2
-                case hs: Span.HasStart  => hs.start + (timelineModel.sampleRate * 0.1).toLong
-                case _ => return
-              }
-              val sinkTrk = _view.track
-              val y0 = if (sinkTrk <  srcTrk) trackToScreen(srcTrk ) + 4 else trackToScreen(srcTrk  + 2) - 5
-              val y1 = if (sinkTrk >= srcTrk) trackToScreen(sinkTrk) + 4 else trackToScreen(sinkTrk + 2) - 5
+            case TrackTool.Patch.Linked(sink) =>
+              val f       = linkFrame(sink)
+              val y0      = linkY(src, sink)
+              val y1      = linkY(sink, src)
               (y0, f, y1)
           }
 
           g.setColor(colrDropRegionBg)
           val strkOrig = g.getStroke
           g.setStroke(strkDropRegion)
-          val srcX  = frameToScreen(srcFrameC ).toInt
-          val sinkX = frameToScreen(sinkFrameC).toInt
-          g.drawLine(srcX, srcY, sinkX, sinkY)
+          drawLinkLine(g, srcFrameC, srcY, sinkFrameC, sinkY)
           g.setStroke(strkOrig)
         }
 
