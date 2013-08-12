@@ -662,39 +662,46 @@ object ViewImpl {
       }
     }
 
-    def scanSinkAdded(timed: TimedProc[S], srcKey: String, src: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit =
+    private def withLink(timed: TimedProc[S], that: Scan[S])(fun: (ProcView[S], ProcView[S], String) => Unit)
+                        (implicit tx: S#Tx): Unit =
       for {
-        srcView             <- procMap.get(timed.id)
-        (sinkKey, sinkIdH)  <- scanMap.get(sink .id)
-        sinkView            <- procMap.get(sinkIdH())
+        thisView            <- procMap.get(timed.id)
+        (thatKey, thatIdH)  <- scanMap.get(that .id)
+        thatView            <- procMap.get(thatIdH())
       } {
-        log(s"scanSinkAdded(srcKey = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view = $sinkView")
         guiFromTx {
-          srcView .addOutput(srcKey , sinkView, sinkKey)
-          sinkView.addInput (sinkKey, srcView , srcKey )
+          fun(thisView, thatView, thatKey)
+          repaintAll()
         }
       }
 
-    def scanSinkRemoved(timed: TimedProc[S], name: String, source: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit = {
-      val pvo = procMap.get(timed.id)
-      log(s"scanSinkRemoved(name = $name, source = $source, sink = $sink, view = $pvo")
+    def scanSinkAdded(timed: TimedProc[S], srcKey: String, src: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit =
+      withLink(timed, sink) { (srcView, sinkView, sinkKey) =>
+        log(s"scanSinkAdded(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
+        srcView .addOutput(srcKey , sinkView, sinkKey)
+        sinkView.addInput (sinkKey, srcView , srcKey )
+      }
 
-      ???
-    }
+    def scanSinkRemoved(timed: TimedProc[S], srcKey: String, src: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit =
+      withLink(timed, sink) { (srcView, sinkView, sinkKey) =>
+        log(s"scanSinkRemoved(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
+        srcView .removeOutput(srcKey , sinkView, sinkKey)
+        sinkView.removeInput (sinkKey, srcView , srcKey )
+      }
 
-    def scanSourceAdded(timed: TimedProc[S], name: String, sink: Scan[S], source: Scan[S])(implicit tx: S#Tx): Unit = {
-      val pvo = procMap.get(timed.id)
-      log(s"scanSourceAdded(name = $name, sink = $sink, source = $source, view = $pvo")
+    def scanSourceAdded(timed: TimedProc[S], sinkKey: String, sink: Scan[S], src: Scan[S])(implicit tx: S#Tx): Unit =
+      withLink(timed, src) { (sinkView, srcView, srcKey) =>
+        log(s"scanSourceAdded(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
+        srcView .addOutput(srcKey , sinkView, sinkKey)
+        sinkView.addInput (sinkKey, srcView , srcKey )
+      }
 
-      ???
-    }
-
-    def scanSourceRemoved(timed: TimedProc[S], name: String, sink: Scan[S], source: Scan[S])(implicit tx: S#Tx): Unit = {
-      val pvo = procMap.get(timed.id)
-      log(s"scanSourceRemoved(name = $name, sink = $sink, source = $source, view = $pvo")
-
-      ???
-    }
+    def scanSourceRemoved(timed: TimedProc[S], sinkKey: String, sink: Scan[S], src: Scan[S])(implicit tx: S#Tx): Unit =
+      withLink(timed, sink) { (sinkView, srcView, srcKey) =>
+        log(s"scanSourceRemoved(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
+        srcView .removeOutput(srcKey , sinkView, sinkKey)
+        sinkView.removeInput (sinkKey, srcView , srcKey )
+      }
     
     private def performDrop(drop: DnD.Drop[S]): Boolean = {
       def withRegions(fun: S#Tx => List[ProcView[S]] => Boolean): Boolean =

@@ -53,6 +53,20 @@ object ProcView {
   private def addLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
     map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
 
+//  private def removeLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
+//    val thatMap   = getMap(thatView)
+//    val thatKey   = link.targetKey
+//    thatMap.get(thatKey).foreach { thatLinks =>
+//      val updLinks = thatLinks.filterNot(_ == self)
+//      val updMap   = if (updLinks.isEmpty)
+//        thatMap - thatKey
+//      else
+//        thatMap + (thatKey -> updLinks)
+//      setMap(thatView, updMap)
+//    }
+//  }
+//
+
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
     *
@@ -234,6 +248,12 @@ object ProcView {
 
     def addOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
       outputs = addLink(outputs, thisKey, Link(thatView, thatKey))
+
+    def removeInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
+      ??? // inputs  = addLink(inputs , thisKey, Link(thatView, thatKey))
+
+    def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
+      ??? // outputs = addLink(outputs, thisKey, Link(thatView, thatKey))
   }
 
   implicit def span[S <: Sys[S]](view: ProcView[S]): (Long, Long) = {
@@ -270,8 +290,11 @@ sealed trait ProcView[S <: Sys[S]] {
   var inputs : LinkMap[S]
   var outputs: LinkMap[S]
 
-  def addInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit
-  def addOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit
+  def addInput    (thisKey: String, thatView: ProcView[S], thatKey: String): Unit
+  def addOutput   (thisKey: String, thatView: ProcView[S], thatKey: String): Unit
+
+  def removeInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit
+  def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit
 
   var muted: Boolean
 
