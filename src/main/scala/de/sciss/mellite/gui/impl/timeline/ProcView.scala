@@ -53,19 +53,10 @@ object ProcView {
   private def addLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
     map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
 
-//  private def removeLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
-//    val thatMap   = getMap(thatView)
-//    val thatKey   = link.targetKey
-//    thatMap.get(thatKey).foreach { thatLinks =>
-//      val updLinks = thatLinks.filterNot(_ == self)
-//      val updMap   = if (updLinks.isEmpty)
-//        thatMap - thatKey
-//      else
-//        thatMap + (thatKey -> updLinks)
-//      setMap(thatView, updMap)
-//    }
-//  }
-//
+  private def removeLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] = {
+    val newVec = map.getOrElse(key, Vec.empty).filterNot(_ == value)
+    if (newVec.isEmpty) map - key else map + (key -> newVec)
+  }
 
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
@@ -217,7 +208,8 @@ object ProcView {
 
     def disposeGUI(): Unit = {
       releaseSonogram()
-      
+
+      // XXX TODO: DRY, use removeLink, follow pattern of apply method
       def removeLinks(map: LinkMap[S])(getMap: ProcView[S] => LinkMap[S])
                                       (setMap: (ProcView[S], LinkMap[S]) => Unit): Unit = {
         map.foreach { case (_, links) =>
@@ -225,6 +217,7 @@ object ProcView {
             val thatView  = link.target
             val thatMap   = getMap(thatView)
             val thatKey   = link.targetKey
+
             thatMap.get(thatKey).foreach { thatLinks =>
               val updLinks = thatLinks.filterNot(_ == self)
               val updMap   = if (updLinks.isEmpty)
@@ -250,10 +243,10 @@ object ProcView {
       outputs = addLink(outputs, thisKey, Link(thatView, thatKey))
 
     def removeInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
-      ??? // inputs  = addLink(inputs , thisKey, Link(thatView, thatKey))
+      inputs  = removeLink(inputs , thisKey, Link(thatView, thatKey))
 
     def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
-      ??? // outputs = addLink(outputs, thisKey, Link(thatView, thatKey))
+      outputs = removeLink(outputs, thisKey, Link(thatView, thatKey))
   }
 
   implicit def span[S <: Sys[S]](view: ProcView[S]): (Long, Long) = {
@@ -275,7 +268,7 @@ object ProcView {
   * in response to observing a change in the model.
   */
 sealed trait ProcView[S <: Sys[S]] {
-  import ProcView.{LinkMap, ProcMap, ScanMap, Link, addLink}
+  import ProcView.{LinkMap, ProcMap, ScanMap}
   
   def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
   def procSource: stm.Source[S#Tx, Proc[S]]
