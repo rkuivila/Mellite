@@ -1,5 +1,5 @@
 /*
- *  TimelineView.scala
+ *  GlobalProcsView.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
@@ -26,25 +26,17 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.{AuralSystem, Sys}
-import scala.swing.{Action, Component}
-import impl.timeline.{TimelineViewImpl => Impl}
-import de.sciss.lucre.stm
+import de.sciss.synth.proc.Sys
 import de.sciss.lucre.stm.Disposable
-import de.sciss.audiowidgets.TimelineModel
+import scala.swing.Component
+import de.sciss.lucre.stm
+import impl.timeline.{GlobalProcsViewImpl => Impl}
 
-object TimelineView {
+object GlobalProcsView {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): TimelineView[S] =
-    Impl(document, group)
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] =
+      Impl(document, group)
 }
-trait TimelineView[S <: Sys[S]] extends Disposable[S#Tx] {
+trait GlobalProcsView[S <: Sys[S]] extends Disposable[S#Tx] {
   def component: Component
-  def timelineModel: TimelineModel
-
-  // ---- actions ----
-  def bounceAction      : Action
-  def deleteAction      : Action
-  def splitObjectsAction: Action
-  def stopAllSoundAction: Action
 }

@@ -60,7 +60,7 @@ import scala.util.control.NonFatal
 import collection.breakOut
 import java.awt.geom.GeneralPath
 
-object ViewImpl {
+object TimelineViewImpl {
   private val colrBg              = Color.darkGray
   private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
   private val strkDropRegion      = new BasicStroke(3f)
@@ -1174,7 +1174,6 @@ object ViewImpl {
 
         private def drawPatch(g: Graphics2D, patch: TrackTool.Patch[S]): Unit = {
           val src       = patch.source
-          val srcTrk    = src.track
           val srcFrameC = linkFrame(src)
           val srcY      = linkY(src, input = false)
           val (sinkFrameC, sinkY) = patch.sink match {
