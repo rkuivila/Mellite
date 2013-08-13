@@ -58,6 +58,7 @@ import de.sciss.synth.proc.{FadeSpec, AuralPresentation, Attribute, Grapheme, Pr
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import scala.util.control.NonFatal
 import collection.breakOut
+import java.awt.geom.GeneralPath
 
 object ViewImpl {
   private val colrBg              = Color.darkGray
@@ -76,6 +77,10 @@ object ViewImpl {
   private val strkLink            = new BasicStroke(2f)
   private val colrNameShadow      = new Color(0, 0, 0, 0x80)
   private val colrName            = Color.white
+  private val path2d              = new GeneralPath
+
+  private final val LinkArrowLen  = 0 // 10  ; currently no arrow tip painted
+ 	private final val LinkCtrlPtLen = 20
 
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
@@ -1101,7 +1106,7 @@ object ViewImpl {
 
           pvs.foreach { pv =>
             // println(s"For ${pv.name} inputs = ${pv.inputs}, outputs = ${pv.outputs}")
-            pv.inputs.foreach { case (_, links) =>
+            pv.outputs.foreach { case (_, links) =>
               links.foreach { link =>
                 drawLink(g, pv, link.target)
               }
@@ -1139,39 +1144,45 @@ object ViewImpl {
           case _ => 0L
         }
 
-        private def linkY(a: ProcView[S], b: ProcView[S]): Int = {
-          val at = a.track
-          if (at >= b.track) trackToScreen(at) + 4 else trackToScreen(at + 2) - 5
-        }
+        private def linkY(view: ProcView[S], input: Boolean): Int =
+          if (input)
+            trackToScreen(view.track) + 4
+          else
+            trackToScreen(view.track + 2) - 5
 
         private def drawLink(g: Graphics2D, source: ProcView[S], sink: ProcView[S]): Unit = {
           val srcFrameC   = linkFrame(source)
           val sinkFrameC  = linkFrame(sink)
-          val srcY        = linkY(source, sink  )
-          val sinkY       = linkY(sink  , source)
+          val srcY        = linkY(source, input = false)
+          val sinkY       = linkY(sink  , input = true )
 
           drawLinkLine(g, srcFrameC, srcY, sinkFrameC, sinkY)
         }
 
         @inline private def drawLinkLine(g: Graphics2D, pos1: Long, y1: Int, pos2: Long, y2: Int): Unit = {
-          val x1    = frameToScreen(pos1).toInt
-          val x2    = frameToScreen(pos2).toInt
-          g.drawLine(x1, y1, x2, y2)
+          val x1      = frameToScreen(pos1).toFloat
+          val x2      = frameToScreen(pos2).toFloat
+          // g.drawLine(x1, y1, x2, y2)
+
+          // Yo crazy mama, Wolkenpumpe "5" style
+          val ctrlLen = math.min(LinkCtrlPtLen, math.abs(y2 - LinkArrowLen - y1))
+          path2d.reset()
+          path2d.moveTo (x1 - 0.5f, y1)
+          path2d.curveTo(x1 - 0.5f, y1 + ctrlLen, x2 - 0.5f, y2 - ctrlLen - LinkArrowLen, x2 - 0.5f, y2 - LinkArrowLen)
+          g.draw(path2d)
         }
 
         private def drawPatch(g: Graphics2D, patch: TrackTool.Patch[S]): Unit = {
           val src       = patch.source
           val srcTrk    = src.track
           val srcFrameC = linkFrame(src)
-          val (srcY, sinkFrameC, sinkY) = patch.sink match {
-            case TrackTool.Patch.Unlinked(f, y) =>
-              val y0 = if (screenToTrack(y) < srcTrk) trackToScreen(srcTrk) + 4 else trackToScreen(srcTrk + 2) - 5
-              (y0, f, y)
+          val srcY      = linkY(src, input = false)
+          val (sinkFrameC, sinkY) = patch.sink match {
+            case TrackTool.Patch.Unlinked(f, y) => (f, y)
             case TrackTool.Patch.Linked(sink) =>
               val f       = linkFrame(sink)
-              val y0      = linkY(src, sink)
-              val y1      = linkY(sink, src)
-              (y0, f, y1)
+              val y1      = linkY(sink, input = true)
+              (f, y1)
           }
 
           g.setColor(colrDropRegionBg)

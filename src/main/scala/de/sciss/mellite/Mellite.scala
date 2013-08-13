@@ -39,6 +39,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   synth.proc.showAuralLog     = true
   synth.proc.showLog          = true
   // synth.proc.showTransportLog = true
+  showLog                     = true
 
   protected lazy val menuFactory: Menu.Root = MenuBar()
 

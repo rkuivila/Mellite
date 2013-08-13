@@ -39,15 +39,17 @@ import java.awt.geom.{Ellipse2D, Area}
 import javax.swing.ImageIcon
 import collection.breakOut
 import de.sciss.synth.proc.Scan.Link
+import java.awt.event.MouseEvent
+import de.sciss.mellite.gui.impl.timeline.ProcView
 
 object PatchImpl {
   private lazy val image: BufferedImage = {
-    val img = new BufferedImage(17, 17, BufferedImage.TYPE_INT_ARGB)
-    val g   = img.createGraphics()
-    val shp1 =    new Area(new Ellipse2D.Float(0, 0, 17, 17))
-    shp1.subtract(new Area(new Ellipse2D.Float(5, 5,  7,  7)))
-    val shp2 =    new Area(new Ellipse2D.Float(1, 1, 15, 15))
-    shp2.subtract(new Area(new Ellipse2D.Float(4, 4,  9,  9)))
+    val img   = new BufferedImage(17, 17, BufferedImage.TYPE_INT_ARGB)
+    val g     = img.createGraphics()
+    val shp1  =   new Area(new Ellipse2D.Float(0, 0, 17, 17))
+    shp1 subtract new Area(new Ellipse2D.Float(5, 5,  7,  7))
+    val shp2  =   new Area(new Ellipse2D.Float(1, 1, 15, 15))
+    shp2 subtract new Area(new Ellipse2D.Float(4, 4,  9,  9))
     g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
     g.setColor(Color.white)
     g.fill(shp1)
@@ -61,7 +63,7 @@ object PatchImpl {
     Toolkit.getDefaultToolkit.createCustomCursor(image, new Point(8, 8), "patch")
 }
 final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends BasicRegion[S, TrackTool.Patch[S]] {
+  extends RegionImpl[S, TrackTool.Patch[S]] with Dragging[S, TrackTool.Patch[S]] {
 
   import TrackTool._
 
@@ -69,10 +71,12 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   val name          = "Patch"
   val icon          = new ImageIcon(PatchImpl.image)
 
+  protected type Initial = ProcView[S]
+
   protected def dragToParam(d: Drag): Patch[S] = {
     val pos   = d.currentPos
     val sink  = canvas.findRegion(frame = pos, hitTrack = d.currentTrack) match {
-      case Some(r) if r != d.initial =>
+      case Some(r) if r != d.initial /* && r.inputs.nonEmpty */ =>  // region.inpus only carries linked ones!
         Patch.Linked(r)
       case _ =>
         Patch.Unlinked(frame = pos, y = d.currentEvent.getY)
@@ -80,51 +84,94 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Patch(d.initial, sink)
   }
 
-  private def mkLink(sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])(implicit tx: S#Tx): Unit = {
-    log(s"Link $sourceKey to $sinkKey")
+
+  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: ProcView[S]): Unit =
+    /* if (region.outputs.nonEmpty) */ new Drag(e, hitTrack, pos, region)  // region.outputs only carries linked ones!
+
+  private def addLink(sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])(implicit tx: S#Tx): Unit = {
+    log(s"Link $sourceKey / $source to $sinkKey / $sink")
     source.addSink(Link.Scan(sink))
+  }
+
+  private def removeLink(sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])(implicit tx: S#Tx): Unit = {
+    log(s"Unink $sourceKey / $source from $sinkKey / $sink")
+    source.removeSink(Link.Scan(sink))
   }
 
   protected def commitProc(drag: Patch[S])(span: Expr[S, SpanLike], out: Proc[S])(implicit tx: S#Tx): Unit =
     drag.sink match {
       case Patch.Linked(view) =>
-        val in    = view.procSource()
-        val outs0 = out.scans.iterator.toList
-        val ins0  = in .scans.iterator.toList
-        val outs1: Set[Scan[S]] = outs0.map(_._2)(breakOut)
-        val ins1 : Set[Scan[S]] = ins0 .map(_._2)(breakOut)
+        val in      = view.procSource()
+        val outsIt  = out.scans.iterator // .toList
+        val insSeq0 = in .scans.iterator.toIndexedSeq
 
-        // remove scans which are already linked to the other proc
-        val outs  = outs0.filterNot { case (key, scan) =>
-          scan.sinks  .toList.exists {
-            case Link.Scan(peer) if ins1.contains(peer) => true
-            case _ => false
+        // val outs1: Set[Scan[S]] = outs0.map(_._2)(breakOut)
+        // val ins1 : Set[Scan[S]] = ins0 .map(_._2)(breakOut)
+
+        //        // remove scans which are already linked to the other proc
+        //        val outs  = outs0.filterNot { case (key, scan) =>
+        //          scan.sinks  .toList.exists {
+        //            case Link.Scan(peer) if ins1.contains(peer) => true
+        //            case _ => false
+        //          }
+        //        }
+        //        val ins   = ins0 .filterNot { case (key, scan) =>
+        //          scan.sources.toList.exists {
+        //            case Link.Scan(peer) if outs1.contains(peer) => true
+        //            case _ => false
+        //          }
+        //        }
+
+        // if there is already a link between the two, take the drag gesture as a command to remove it
+        val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
+          srcScan.sinks.toList.flatMap {
+            case Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
+              case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
+            }
+
+            case _ => None
           }
         }
-        val ins   = ins0 .filterNot { case (key, scan) =>
-          scan.sources.toList.exists {
-            case Link.Scan(peer) if outs1.contains(peer) => true
-            case _ => false
+
+        if (existIt.hasNext) {
+          val (srcKey, srcScan, sinkKey, sinkScan) = existIt.next()
+          removeLink(srcKey, srcScan, sinkKey, sinkScan)
+
+        } else {
+          // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
+          val outsSeq = out.scans.iterator.filter(_._1.startsWith("out")).toIndexedSeq
+          val insSeq  = insSeq0           .filter(_._1.startsWith("in"))
+
+          if (outsSeq.isEmpty || insSeq.isEmpty) return   // nothing to patch
+
+          if (outsSeq.size == 1 && insSeq.size == 1) {    // exactly one possible connection, go ahead
+            val (srcKey , src ) = outsSeq.head
+            val (sinkKey, sink) = insSeq .head
+            addLink(srcKey, src, sinkKey, sink)
+
+          } else {  // present dialog to user
+            log(s"Possible outs: ${outsSeq.map(_._1).mkString(", ")}; possible ins: ${insSeq.map(_._1).mkString(", ")}")
+            println(s"Woop. Multiple choice... Dialog not yet implemented...")
           }
         }
 
-        log(s"Possible outs: ${outs.map(_._1).mkString(", ")}; possible ins: ${ins.map(_._1).mkString(", ")}")
 
-        if (outs.isEmpty || ins.isEmpty) return   // nothing to patch
-        if (outs.size == 1 && ins.size == 1) {    // exactly one possible connection, go ahead
-          val (sourceKey, source) = outs.head
-          val (sinkKey  , sink  ) = ins .head
-          mkLink(sourceKey, source, sinkKey, sink)
-
-        } else {  // present dialog to user
-          println(s"Woop. Multiple choice... Dialog not yet implemented...")
-        }
+      //        val outs  = outs0.filterNot { case (key, scan) =>
+      //          scan.sinks  .toList.exists {
+      //            case Link.Scan(peer) if ins1.contains(peer) => true
+      //            case _ => false
+      //          }
+      //        }
+      //        val ins   = ins0 .filterNot { case (key, scan) =>
+      //          scan.sources.toList.exists {
+      //            case Link.Scan(peer) if outs1.contains(peer) => true
+      //            case _ => false
+      //          }
+      //        }
+      //
+      //
+      //        if (outs.isEmpty || ins.isEmpty) return   // nothing to patch
 
       case _ =>
     }
-
-  protected def dialog(): Option[Patch[S]] = {
-    println("Not yet implemented - movement dialog")
-    None
-  }
 }
