@@ -29,71 +29,59 @@ package impl
 package timeline
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{Grapheme, Scan, ProcKeys, Proc, Sys}
-import de.sciss.synth.proc
-import de.sciss.lucre.bitemp.BiGroup
-import de.sciss.lucre.event.Change
-import de.sciss.span.Span
+import de.sciss.synth.proc.Sys
+import scala.swing.{Table, Component}
+import collection.immutable.{IndexedSeq => Vec}
+import javax.swing.table.AbstractTableModel
+import scala.annotation.switch
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] = {
 
-//    val obsGroup = group.changed.react { implicit tx => _.changes.foreach {
-//      case BiGroup.Added  (Span.All, timed) => view.addProc   (timed)
-//      case BiGroup.Removed(Span.All, timed) => view.removeProc(timed)
-//      case BiGroup.ElementMoved(timed, Change(Span.All, _)) => view.removeProc(timed)
-//      case BiGroup.ElementMoved(timed, Change(_, Span.All)) => view.addProc   (timed)
-//      case BiGroup.ElementMutated(timed, procUpd) =>
-//        procUpd.changes.foreach {
-//          case Proc.AssociationAdded  (key) =>
-//            key match {
-//              case Proc.AttributeKey(name) => attrChanged(timed, name)
-//              case Proc.ScanKey     (name) => scanAdded  (timed, name)
-//            }
-//          case Proc.AssociationRemoved(key) =>
-//            key match {
-//              case Proc.AttributeKey(name) => attrChanged(timed, name)
-//              case Proc.ScanKey     (name) => scanRemoved(timed, name)
-//            }
-//          case Proc.AttributeChange(name, attr, ach) =>
-//            (name, ach) match {
-//              case (ProcKeys.attrTrack, Change(before: Int, now: Int)) =>
-//                view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
-//
-//              case _ => attrChanged(timed, name)
-//            }
-//
-//          case Proc.ScanChange(name, scan, scanUpds) =>
-//            scanUpds.foreach {
-//              case Scan.GraphemeChange(grapheme, segms) =>
-//                if (name == ProcKeys.graphAudio) {
-//                  timed.span.value match {
-//                    case Span.HasStart(startFrame) =>
-//                      val segmOpt = segms.find(_.span.contains(startFrame)) match {
-//                        case Some(segm: Grapheme.Segment.Audio) => Some(segm)
-//                        case _ => None
-//                      }
-//                      view.procAudioChanged(timed, segmOpt)
-//                    case _ =>
-//                  }
-//                }
-//
-//              case Scan.SinkAdded    (Scan.Link.Scan(peer)) =>
-//                val test: Scan[S] = scan
-//                view.scanSinkAdded    (timed, name, test, peer)
-//              case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => view.scanSinkRemoved  (timed, name, scan, peer)
-//              case Scan.SourceAdded  (Scan.Link.Scan(peer)) => view.scanSourceAdded  (timed, name, scan, peer)
-//              case Scan.SourceRemoved(Scan.Link.Scan(peer)) => view.scanSourceRemoved(timed, name, scan, peer)
-//
-//              case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
-//            }
-//
-//          case Proc.GraphChange(ch) =>
-//        }
-//    }}
-//    disp ::= obsGroup
+    val view = new Impl[S]
+    guiFromTx(view.guiInit())
+    view
+  }
 
-    ???
+  private final class Impl[S <: Sys[S]] extends GlobalProcsView[S] with ComponentHolder[Component] {
+
+    private var procSeq = Vec.empty[ProcView[S]]
+
+    private val tm = new AbstractTableModel {
+      def getRowCount     = procSeq.size
+      def getColumnCount  = 4 // currently: name, gain, mute and bus
+
+      def getValueAt(row: Int, column: Int): AnyRef = {
+        val pv  = procSeq(row)
+        val res = (column: @switch) match {
+          case 0 => pv.name
+          case 1 => 1.0   // gain: XXX TODO
+          case 2 => pv.muted
+          case 3 => 0     // bus: XXX TODO
+        }
+        res.asInstanceOf[AnyRef]
+      }
+    }
+
+    def guiInit(): Unit = {
+      val table   = new Table()
+      table.model = tm
+      comp        = table
+    }
+
+    def dispose()(implicit tx: S#Tx) = ()
+
+    def add(proc: ProcView[S]): Unit = {
+      val row   = procSeq.size
+      procSeq :+= proc
+      tm.fireTableRowsInserted(row, row)
+    }
+
+    def remove(proc: ProcView[S]): Unit = {
+      val row   = procSeq.indexOf(proc)
+      procSeq   = procSeq.patch(row, Vec.empty, 1)
+      tm.fireTableRowsDeleted(row, row)
+    }
   }
 }

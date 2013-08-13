@@ -30,7 +30,7 @@ import de.sciss.synth.proc.Sys
 import de.sciss.lucre.stm.Disposable
 import scala.swing.Component
 import de.sciss.lucre.stm
-import impl.timeline.{GlobalProcsViewImpl => Impl}
+import de.sciss.mellite.gui.impl.timeline.{GlobalProcsViewImpl => Impl, ProcView}
 
 object GlobalProcsView {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
@@ -39,4 +39,7 @@ object GlobalProcsView {
 }
 trait GlobalProcsView[S <: Sys[S]] extends Disposable[S#Tx] {
   def component: Component
+
+  def add   (proc: ProcView[S]): Unit
+  def remove(proc: ProcView[S]): Unit
 }
