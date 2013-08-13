@@ -161,7 +161,7 @@ object ProcView {
                                         var fadeOut   : FadeSpec.Value)
     extends ProcView[S] { self =>
 
-    override def toString = s"ProvView($name, $span, $audio)"
+    override def toString = s"ProcView($name, $span, $audio)"
 
     private var failedAcquire = false
     var sonogram  = Option.empty[SonoOverview]
