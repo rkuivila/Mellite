@@ -209,31 +209,23 @@ object ProcView {
     def disposeGUI(): Unit = {
       releaseSonogram()
 
-      // XXX TODO: DRY, use removeLink, follow pattern of apply method
-      def removeLinks(map: LinkMap[S])(getMap: ProcView[S] => LinkMap[S])
-                                      (setMap: (ProcView[S], LinkMap[S]) => Unit): Unit = {
-        map.foreach { case (_, links) =>
+      def removeLinks(inp: Boolean): Unit = {
+        val map = if (inp) inputs else outputs
+        map.foreach { case (thisKey, links) =>
           links.foreach { link =>
             val thatView  = link.target
-            val thatMap   = getMap(thatView)
             val thatKey   = link.targetKey
-
-            thatMap.get(thatKey).foreach { thatLinks =>
-              val updLinks = thatLinks.filterNot(_ == self)
-              val updMap   = if (updLinks.isEmpty)
-                thatMap - thatKey
-              else
-                thatMap + (thatKey -> updLinks)
-              setMap(thatView, updMap)
-            }
+            if (inp)
+              thatView.removeOutput(thatKey, self, thisKey)
+            else
+              thatView.removeInput (thatKey, self, thisKey)
           }
         }
+        if (inp) inputs = Map.empty else outputs = Map.empty
       }
 
-      removeLinks(inputs )(_.outputs)(_.outputs = _)
-      removeLinks(outputs)(_.inputs )(_.inputs  = _)
-      inputs  = Map.empty
-      outputs = Map.empty
+      removeLinks(inp = true )
+      removeLinks(inp = false)
     }
 
     def addInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
