@@ -166,8 +166,9 @@ object ProcActions {
           val sg = csg.execute()  // XXX TODO: compilation blocks, not good!
 
           val scanKeys: Set[String] = sg.sources.collect {
-            case proc.graph.scan.In (key, _) => key
-            case proc.graph.scan.Out(key, _) => key
+            case proc.graph.scan.In   (key, _)    => key
+            case proc.graph.scan.Out  (key, _)    => key
+            case proc.graph.scan.InFix(key, _, _) => key
           } (breakOut)
           // sg.sources.foreach(println)
           if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
