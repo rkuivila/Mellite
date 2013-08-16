@@ -99,11 +99,9 @@ object TimelineViewImpl {
 
   private val MinDur      = 32
 
-  private val logEnabled  = true
   private val DEBUG       = false
 
-  private def log(what: => String): Unit =
-    if (logEnabled) println(s"<timeline> $what")
+  import de.sciss.mellite.{logTimeline => log}
 
   def apply[S <: Sys[S]](document: Document[S], element: Element.ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): TimelineView[S] = {
@@ -323,7 +321,7 @@ object TimelineViewImpl {
     )
 
     private var transportStrip: Component with Transport.ButtonStrip = _
-    private val selectionModel = ProcSelectionModel[S]
+    val procSelectionModel = ProcSelectionModel[S]
 
     private var view: View    = _
     val disposables           = Ref(List.empty[Disposable[S#Tx]])
@@ -396,13 +394,13 @@ object TimelineViewImpl {
     }
 
     private def withSelection(fun: S#Tx => TraversableOnce[ProcView[S]] => Unit): Unit = {
-      val sel = selectionModel.iterator
+      val sel = procSelectionModel.iterator
       if (sel.hasNext) step { implicit tx => fun(tx)(sel) }
     }
 
     private def withFilteredSelection(p: ProcView[S] => Boolean)
                                      (fun: S#Tx => TraversableOnce[ProcView[S]] => Unit): Unit = {
-      val sel = selectionModel.iterator
+      val sel = procSelectionModel.iterator
       val flt = sel.filter(p)
       if (flt.hasNext) step { implicit tx => fun(tx)(flt) }
     }
@@ -450,6 +448,7 @@ object TimelineViewImpl {
         val attrOut = attr.mkCopy()
         res.attributes.put(key, attrOut)
       }
+      parent.scans.keys.foreach(res.scans.add)
       ProcActions.getAudioRegion(parentSpan, parent).foreach { case (time, audio) =>
         val imp = ExprImplicits[S]
         import imp._
@@ -777,7 +776,7 @@ object TimelineViewImpl {
     private def performDrop(drop: DnD.Drop[S]): Boolean = {
       def withRegions(fun: S#Tx => List[ProcView[S]] => Boolean): Boolean =
         view.findRegion(drop.frame, view.screenToTrack(drop.y)).exists { hitRegion =>
-          val regions = if (selectionModel.contains(hitRegion)) selectionModel.iterator.toList else hitRegion :: Nil
+          val regions = if (procSelectionModel.contains(hitRegion)) procSelectionModel.iterator.toList else hitRegion :: Nil
           step { implicit tx =>
             fun(tx)(regions)
           }
@@ -824,7 +823,7 @@ object TimelineViewImpl {
       view =>
       // import AbstractTimelineView._
       def timelineModel             = impl.timelineModel
-      def selectionModel            = impl.selectionModel
+      def selectionModel            = impl.procSelectionModel
       def group(implicit tx: S#Tx)  = impl.groupH()
 
       def intersect(span: Span): Iterator[ProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
@@ -1144,7 +1143,7 @@ object TimelineViewImpl {
               links.foreach { link =>
                 if (link.target.isGlobal) {
                   if (regionViewMode == RegionViewMode.TitledBox) {
-                    // XXX TODO
+                    // XXX TODO: extra infos such as gain
                   }
 
                 } else {

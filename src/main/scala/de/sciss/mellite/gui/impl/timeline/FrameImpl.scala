@@ -29,17 +29,13 @@ package impl
 package timeline
 
 import de.sciss.synth.proc.{AuralSystem, Sys}
-import de.sciss.desktop.impl.WindowImpl
-import de.sciss.desktop.Window
-import de.sciss.lucre.stm
-import scala.swing.event.WindowClosing
 import de.sciss.mellite.{Mellite, Element, Document}
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui._
-import scala.swing.event.WindowClosing
 import de.sciss.desktop.Window
 import de.sciss.desktop.impl.WindowImpl
 import scala.swing.event.WindowClosing
+import scala.swing.Action
 
 object FrameImpl {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
@@ -86,7 +82,12 @@ object FrameImpl {
           "file.bounce"           -> view.bounceAction,
           "edit.delete"           -> view.deleteAction,
           "actions.stopAllSound"  -> view.stopAllSoundAction,
-          "timeline.splitObjects" -> view.splitObjectsAction
+          "timeline.splitObjects" -> view.splitObjectsAction,
+          "actions.debugPrint"    -> Action(null) {
+            view.procSelectionModel.iterator.foreach { pv =>
+              println(pv.debugString)
+            }
+          }
         )
 
         reactions += {

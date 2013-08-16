@@ -40,10 +40,14 @@ package object mellite {
   type Cf = Confluent
 
   private lazy val logHeader = new SimpleDateFormat("[d MMM yyyy, HH:mm''ss.SSS] 'Mellite' - ", Locale.US)
-  var showLog = false
+  var showLog         = false
+  var showTimelineLog = false
 
   @elidable(CONFIG) private[mellite] def log(what: => String): Unit =
     if (showLog) println(logHeader.format(new Date()) + what)
+
+  @elidable(CONFIG) private[mellite] def logTimeline(what: => String): Unit =
+    if (showTimelineLog) println(s"${logHeader.format(new Date())} <timeline> $what")
 
   implicit val executionContext: ExecutionContext = ExecutionContext.Implicits.global
 

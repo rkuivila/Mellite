@@ -167,6 +167,12 @@ object ProcView {
 
     override def toString = s"ProcView($name, $span, $audio)"
 
+    def debugString =
+      s"ProcView(span = $span, track = $track, nameOption = $nameOption, muted = $muted, audio = $audio, " +
+      s"fadeIn = $fadeIn, fadeOut = $fadeOut, gain = $gain, busOption = $busOption)\n" +
+      inputs .mkString("  inputs  = [", ", ", "]\n") +
+      outputs.mkString("  outputs = [", ", ", "]\n")
+
     private var failedAcquire = false
     var sonogram  = Option.empty[SonoOverview]
 
@@ -323,4 +329,6 @@ sealed trait ProcView[S <: Sys[S]] {
                 scanMap: ScanMap[S])(implicit tx: S#Tx): Unit
 
   def disposeGUI(): Unit
+
+  def debugString: String
 }

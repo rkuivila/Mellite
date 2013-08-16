@@ -39,8 +39,9 @@ object TimelineView {
     Impl(document, group)
 }
 trait TimelineView[S <: Sys[S]] extends Disposable[S#Tx] {
-  def component: Component
-  def timelineModel: TimelineModel
+  def component         : Component
+  def timelineModel     : TimelineModel
+  def procSelectionModel: ProcSelectionModel[S]
 
   // ---- GUI actions ----
   def bounceAction      : Action
