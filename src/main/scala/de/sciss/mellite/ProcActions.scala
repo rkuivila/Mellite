@@ -288,8 +288,8 @@ object ProcActions {
     source.addSink(Scan.Link.Scan(sink))
   }
 
-  private def removeLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
-                                     (implicit tx: S#Tx): Unit = {
+  def removeLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
+                             (implicit tx: S#Tx): Unit = {
     log(s"Unlink $sourceKey / $source from $sinkKey / $sink")
     source.removeSink(Scan.Link.Scan(sink))
   }

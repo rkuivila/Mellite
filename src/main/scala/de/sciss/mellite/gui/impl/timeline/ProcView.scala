@@ -107,10 +107,11 @@ object ProcView {
     val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
     val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
     val gain    = attr[Attribute.Double  ](ProcKeys.attrGain   ).map(_.value).getOrElse(1.0)
+    val bus     = attr[Attribute.Int     ](ProcKeys.attrBus    ).map(_.value)
 
     val res = new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
       span = spanV, track = track, nameOption = name, muted = mute, audio = audio,
-      fadeIn = fadeIn, fadeOut = fadeOut, gain = gain)
+      fadeIn = fadeIn, fadeOut = fadeOut, gain = gain, busOption = bus)
 
     import CommonSerializers.Identifier
     lazy val idH = tx.newHandle(timed.id)
@@ -160,7 +161,8 @@ object ProcView {
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var fadeIn    : FadeSpec.Value,
                                         var fadeOut   : FadeSpec.Value,
-                                        var gain      : Double)
+                                        var gain      : Double,
+                                        var busOption : Option[Int])
     extends ProcView[S] { self =>
 
     override def toString = s"ProcView($name, $span, $audio)"
@@ -294,6 +296,8 @@ sealed trait ProcView[S <: Sys[S]] {
   def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit
 
   var muted: Boolean
+
+  var busOption: Option[Int]
 
   /** If this proc is bound to an audio grapheme for the default scan key, returns
     * this grapheme segment (underlying audio file of a tape object). */

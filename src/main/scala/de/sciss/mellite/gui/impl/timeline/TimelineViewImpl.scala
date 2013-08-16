@@ -173,6 +173,12 @@ object TimelineViewImpl {
       view.procGainChanged(timed, gain)
     }
 
+    def busChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
+      val attr    = timed.value.attributes
+      val busOpt  = attr[Attribute.Int](ProcKeys.attrBus).map(_.value)
+      view.procBusChanged(timed, busOpt)
+    }
+
     def fadeChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attributes
       val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
@@ -186,6 +192,7 @@ object TimelineViewImpl {
         case ProcKeys.attrFadeIn | ProcKeys.attrFadeOut => fadeChanged(timed)
         case ProcKeys.attrName  => nameChanged(timed)
         case ProcKeys.attrGain  => gainChanged(timed)
+        case ProcKeys.attrBus   => busChanged (timed)
         case _ =>
       }
 
@@ -222,7 +229,6 @@ object TimelineViewImpl {
     val obsGroup = group.changed.react { implicit tx => _.changes.foreach {
       case BiGroup.Added  (span, timed) =>
         // println(s"Added   $span, $timed")
-        if (span == Span.All)
         view.addProc(span, timed, repaint = true)
 
       case BiGroup.Removed(span, timed) =>
@@ -397,12 +403,25 @@ object TimelineViewImpl {
       if (flt.hasNext) step { implicit tx => fun(tx)(flt) }
     }
 
-    def deleteObjects(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit =
+    def deleteObjects(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit = {
+      requireEDT()
       for (group <- groupH().modifiableOption; pv <- views) {
         val span  = pv.spanSource()
         val proc  = pv.proc
+        pv.inputs.foreach {
+          case (sinkKey, sources) =>
+            sources.foreach {
+              case ProcView.Link(sourceView, sourceKey) =>
+                sourceView.proc.scans.get(sourceKey).foreach { source =>
+                  proc.scans.get(sinkKey).foreach { sink =>
+                    ProcActions.removeLink(sourceKey = sourceKey, source = source, sinkKey = sinkKey, sink = sink)
+                  }
+                }
+            }
+        }
         group.remove(span, proc)
       }
+    }
 
     def splitObjects(time: Long)(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit =
       for {
@@ -672,6 +691,17 @@ object TimelineViewImpl {
       pvo.foreach { pv =>
         guiFromTx {
           pv.nameOption = newName
+          procUpdated(pv)
+        }
+      }
+    }
+
+    def procBusChanged(timed: TimedProc[S], newBus: Option[Int])(implicit tx: S#Tx): Unit = {
+      val pvo = procMap.get(timed.id)
+      log(s"procBusChanged(newBus = $newBus, view = $pvo")
+      pvo.foreach { pv =>
+        guiFromTx {
+          pv.busOption = newBus
           procUpdated(pv)
         }
       }

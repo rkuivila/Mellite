@@ -38,9 +38,9 @@ import Swing._
 import de.sciss.desktop.OptionPane
 import javax.swing.{JComponent, TransferHandler, DropMode}
 import javax.swing.TransferHandler.TransferSupport
-import java.awt.datatransfer.{Transferable, DataFlavor}
+import java.awt.datatransfer.Transferable
 import de.sciss.synth.expr.Ints
-import java.awt.event.InputEvent
+import scala.swing.event.TableColumnsSelected
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S])
@@ -73,7 +73,7 @@ object GlobalProcsViewImpl {
           case 0 => pv.name
           case 1 => pv.gain
           case 2 => pv.muted
-          case 3 => 0     // bus: XXX TODO
+          case 3 => pv.busOption.getOrElse(0)
         }
         res.asInstanceOf[AnyRef]
       }
@@ -127,9 +127,10 @@ object GlobalProcsViewImpl {
         }
       }
 
-    private def removeSelectedItem(): Unit = {
-      println("TODO: removeSelectedItem")
-    }
+    private def removeProcs(pvs: Iterable[ProcView[S]]): Unit =
+      if (pvs.nonEmpty) atomic { implicit tx =>
+        //
+      }
 
     private def setColumnWidth(tcm: TableColumnModel, idx: Int, w: Int): Unit = {
       val tc = tcm.getColumn(idx)
@@ -204,9 +205,16 @@ object GlobalProcsViewImpl {
       val ggAdd = Button("+")(addItemWithDialog())
       ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
 
-      val ggDelete: Button = Button("\u2212")(removeSelectedItem())
+      val ggDelete: Button = Button("\u2212") {
+        val pvs = table.selection.rows.map(procSeq)
+        removeProcs(pvs)
+      }
       ggDelete.enabled = false
       ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
+      table.listenTo(table.selection)
+      table.reactions += {
+        case TableColumnsSelected(_, range, _) => ggDelete.enabled = range.nonEmpty
+      }
 
       val butPanel  = new FlowPanel(ggAdd, ggDelete)
 
