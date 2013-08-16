@@ -323,9 +323,9 @@ object FolderViewImpl {
       t.peer.setTransferHandler(new TransferHandler {
         // ---- export ----
 
-        override def getSourceActions(c: JComponent): Int = {
+        override def getSourceActions(c: JComponent): Int =
           TransferHandler.COPY | TransferHandler.MOVE // dragging only works when MOVE is included. Why?
-        }
+
         override def createTransferable(c: JComponent): Transferable = {
           val sel   = selection
           val tSel  = DragAndDrop.Transferable(FolderView.selectionFlavor) {

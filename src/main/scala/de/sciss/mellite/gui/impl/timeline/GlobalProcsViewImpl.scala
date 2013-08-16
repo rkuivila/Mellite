@@ -36,10 +36,11 @@ import javax.swing.table.{TableColumnModel, AbstractTableModel}
 import scala.annotation.switch
 import Swing._
 import de.sciss.desktop.OptionPane
-import javax.swing.{TransferHandler, DropMode}
+import javax.swing.{JComponent, TransferHandler, DropMode}
 import javax.swing.TransferHandler.TransferSupport
-import java.awt.datatransfer.DataFlavor
+import java.awt.datatransfer.{Transferable, DataFlavor}
 import de.sciss.synth.expr.Ints
+import java.awt.event.InputEvent
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S])
@@ -156,7 +157,18 @@ object GlobalProcsViewImpl {
 
       // ---- drag and drop ----
       tj.setDropMode(DropMode.ON)
+      tj.setDragEnabled(true)
       tj.setTransferHandler(new TransferHandler {
+        override def getSourceActions(c: JComponent): Int = TransferHandler.LINK
+
+        override def createTransferable(c: JComponent): Transferable = {
+          val sel = table.selection.rows
+          sel.headOption.map { row =>
+            val pv = procSeq(row)
+            DragAndDrop.Transferable(timeline.DnD.flavor)(timeline.DnD.ProcDrag(document, pv.procSource))
+          } .orNull
+        }
+
         // ---- import ----
         override def canImport(support: TransferSupport): Boolean =
           support.isDataFlavorSupported(timeline.DnD.flavor)

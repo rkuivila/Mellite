@@ -37,7 +37,7 @@ object DragAndDrop {
     new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType + ";class=\"" + ct.runtimeClass.getName + "\"") with Flavor[A]
 
   object Transferable {
-    /** Creates an export-only transferable for one particular flavor. */
+    /** Creates a transferable for one particular flavor. */
     def apply[A](flavor: Flavor[A])(data: A): Transferable = new Transferable {
       override def toString = s"Transferable($data)"
 
@@ -55,7 +55,7 @@ object DragAndDrop {
       }
     }
 
-    /** Creates an export-only transferable by wrapping a sequence of existing transferables. */
+    /** Creates a transferable by wrapping a sequence of existing transferables. */
     def seq(xs: Transferable*): Transferable = new Transferable {
       def getTransferDataFlavors: Array[DataFlavor] = xs.flatMap(_.getTransferDataFlavors)(breakOut)
       def isDataFlavorSupported(_flavor: DataFlavor): Boolean = xs.exists(_.isDataFlavorSupported(_flavor))

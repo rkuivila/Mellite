@@ -29,7 +29,7 @@ package impl
 package tracktool
 
 import java.awt.{Color, RenderingHints, Point, Toolkit}
-import de.sciss.synth.proc.{Scan, Sys, Proc}
+import de.sciss.synth.proc.{Sys, Proc}
 import de.sciss.mellite.gui.TimelineProcCanvas
 import de.sciss.mellite.gui.TrackTool
 import de.sciss.lucre.expr.Expr
@@ -37,8 +37,6 @@ import de.sciss.span.SpanLike
 import java.awt.image.BufferedImage
 import java.awt.geom.{Ellipse2D, Area}
 import javax.swing.ImageIcon
-import collection.breakOut
-import de.sciss.synth.proc.Scan.Link
 import java.awt.event.MouseEvent
 import de.sciss.mellite.gui.impl.timeline.ProcView
 
@@ -84,93 +82,14 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Patch(d.initial, sink)
   }
 
-
   protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: ProcView[S]): Unit =
     /* if (region.outputs.nonEmpty) */ new Drag(e, hitTrack, pos, region)  // region.outputs only carries linked ones!
-
-  private def addLink(sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])(implicit tx: S#Tx): Unit = {
-    log(s"Link $sourceKey / $source to $sinkKey / $sink")
-    source.addSink(Link.Scan(sink))
-  }
-
-  private def removeLink(sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])(implicit tx: S#Tx): Unit = {
-    log(s"Unink $sourceKey / $source from $sinkKey / $sink")
-    source.removeSink(Link.Scan(sink))
-  }
 
   protected def commitProc(drag: Patch[S])(span: Expr[S, SpanLike], out: Proc[S])(implicit tx: S#Tx): Unit =
     drag.sink match {
       case Patch.Linked(view) =>
-        val in      = view.procSource()
-        val outsIt  = out.scans.iterator // .toList
-        val insSeq0 = in .scans.iterator.toIndexedSeq
-
-        // val outs1: Set[Scan[S]] = outs0.map(_._2)(breakOut)
-        // val ins1 : Set[Scan[S]] = ins0 .map(_._2)(breakOut)
-
-        //        // remove scans which are already linked to the other proc
-        //        val outs  = outs0.filterNot { case (key, scan) =>
-        //          scan.sinks  .toList.exists {
-        //            case Link.Scan(peer) if ins1.contains(peer) => true
-        //            case _ => false
-        //          }
-        //        }
-        //        val ins   = ins0 .filterNot { case (key, scan) =>
-        //          scan.sources.toList.exists {
-        //            case Link.Scan(peer) if outs1.contains(peer) => true
-        //            case _ => false
-        //          }
-        //        }
-
-        // if there is already a link between the two, take the drag gesture as a command to remove it
-        val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
-          srcScan.sinks.toList.flatMap {
-            case Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
-              case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
-            }
-
-            case _ => None
-          }
-        }
-
-        if (existIt.hasNext) {
-          val (srcKey, srcScan, sinkKey, sinkScan) = existIt.next()
-          removeLink(srcKey, srcScan, sinkKey, sinkScan)
-
-        } else {
-          // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
-          val outsSeq = out.scans.iterator.filter(_._1.startsWith("out")).toIndexedSeq
-          val insSeq  = insSeq0           .filter(_._1.startsWith("in"))
-
-          if (outsSeq.isEmpty || insSeq.isEmpty) return   // nothing to patch
-
-          if (outsSeq.size == 1 && insSeq.size == 1) {    // exactly one possible connection, go ahead
-            val (srcKey , src ) = outsSeq.head
-            val (sinkKey, sink) = insSeq .head
-            addLink(srcKey, src, sinkKey, sink)
-
-          } else {  // present dialog to user
-            log(s"Possible outs: ${outsSeq.map(_._1).mkString(", ")}; possible ins: ${insSeq.map(_._1).mkString(", ")}")
-            println(s"Woop. Multiple choice... Dialog not yet implemented...")
-          }
-        }
-
-
-      //        val outs  = outs0.filterNot { case (key, scan) =>
-      //          scan.sinks  .toList.exists {
-      //            case Link.Scan(peer) if ins1.contains(peer) => true
-      //            case _ => false
-      //          }
-      //        }
-      //        val ins   = ins0 .filterNot { case (key, scan) =>
-      //          scan.sources.toList.exists {
-      //            case Link.Scan(peer) if outs1.contains(peer) => true
-      //            case _ => false
-      //          }
-      //        }
-      //
-      //
-      //        if (outs.isEmpty || ins.isEmpty) return   // nothing to patch
+        val in = view.procSource()
+        ProcActions.linkOrUnlink(out, in)
 
       case _ =>
     }

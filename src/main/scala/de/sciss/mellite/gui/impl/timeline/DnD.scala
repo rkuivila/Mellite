@@ -30,7 +30,7 @@ package timeline
 
 import javax.swing.TransferHandler._
 import java.awt.dnd.{DropTarget, DropTargetDropEvent, DropTargetEvent, DropTargetDragEvent, DropTargetAdapter}
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{Proc, Sys}
 import scala.swing.Component
 import java.awt.Point
 import de.sciss.lucre.stm
@@ -42,7 +42,7 @@ import de.sciss.mellite.Document
 object DnD {
   sealed trait Drag[S <: Sys[S]] {
     def document: Document[S]
-    def source: stm.Source[S#Tx, Element[S]]
+    // def source: stm.Source[S#Tx, Element[S]]
   }
   final case class AudioDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, AudioGrapheme[S]],
                                           /* grapheme: Grapheme.Value.Audio, */ selection: Span,
@@ -51,6 +51,7 @@ object DnD {
 
   final case class IntDrag [S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Element.Int [S]]) extends Drag[S]
   final case class CodeDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Element.Code[S]]) extends Drag[S]
+  final case class ProcDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Proc[S]])         extends Drag[S]
 
   final case class Drop[S <: Sys[S]](frame: Long, y: Int, drag: Drag[S])
 

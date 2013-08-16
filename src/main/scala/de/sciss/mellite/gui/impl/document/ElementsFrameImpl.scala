@@ -187,9 +187,9 @@ object ElementsFrameImpl {
              |""".stripMargin))
 
         case 1 => Some(Code.SynthGraph(
-          """|val in   = scan("in").ar
+          """|val in   = scan.In("in")
              |val sig  = in
-             |scan("out") := sig
+             |scan.Out("out", sig)
              |""".stripMargin
         ))
 

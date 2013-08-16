@@ -181,9 +181,9 @@ object ProcActions {
           val sg = csg.execute()  // XXX TODO: compilation blocks, not good!
 
           val scanKeys: Set[String] = sg.sources.collect {
-            case proc.graph.scan.In   (key, _)    => key
-            case proc.graph.scan.Out  (key, _)    => key
-            case proc.graph.scan.InFix(key, _, _) => key
+            case proc.graph.scan.In   (key, _) => key
+            case proc.graph.scan.Out  (key, _) => key
+            case proc.graph.scan.InFix(key, _) => key
           } (breakOut)
           // sg.sources.foreach(println)
           if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
@@ -279,5 +279,59 @@ object ProcActions {
 
     group.add(Span.All, proc) // constant span expression
     proc
+  }
+
+
+  private def addLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
+                                  (implicit tx: S#Tx): Unit = {
+    log(s"Link $sourceKey / $source to $sinkKey / $sink")
+    source.addSink(Scan.Link.Scan(sink))
+  }
+
+  private def removeLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
+                                     (implicit tx: S#Tx): Unit = {
+    log(s"Unlink $sourceKey / $source from $sinkKey / $sink")
+    source.removeSink(Scan.Link.Scan(sink))
+  }
+
+  def linkOrUnlink[S <: Sys[S]](out: Proc[S], in: Proc[S])(implicit tx: S#Tx): Boolean = {
+    val outsIt  = out.scans.iterator // .toList
+    val insSeq0 = in .scans.iterator.toIndexedSeq
+
+    // if there is already a link between the two, take the drag gesture as a command to remove it
+    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
+      srcScan.sinks.toList.flatMap {
+        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
+          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
+        }
+
+        case _ => None
+      }
+    }
+
+    if (existIt.hasNext) {
+      val (srcKey, srcScan, sinkKey, sinkScan) = existIt.next()
+      removeLink(srcKey, srcScan, sinkKey, sinkScan)
+      true
+
+    } else {
+      // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
+      val outsSeq = out.scans.iterator.filter(_._1.startsWith("out")).toIndexedSeq
+      val insSeq  = insSeq0           .filter(_._1.startsWith("in"))
+
+      if (outsSeq.isEmpty || insSeq.isEmpty) return false   // nothing to patch
+
+      if (outsSeq.size == 1 && insSeq.size == 1) {    // exactly one possible connection, go ahead
+        val (srcKey , src ) = outsSeq.head
+        val (sinkKey, sink) = insSeq .head
+        addLink(srcKey, src, sinkKey, sink)
+        true
+
+      } else {  // present dialog to user
+        log(s"Possible outs: ${outsSeq.map(_._1).mkString(", ")}; possible ins: ${insSeq.map(_._1).mkString(", ")}")
+        println(s"Woop. Multiple choice... Dialog not yet implemented...")
+        false
+      }
+    }
   }
 }

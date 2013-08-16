@@ -622,7 +622,7 @@ object TimelineViewImpl {
 
           pv.disposeGUI()
 
-          if (pv.isGlobal) repaintAll() // XXX TODO: optimize dirty rectangle
+          if (!pv.isGlobal) repaintAll() // XXX TODO: optimize dirty rectangle
         }
       }
     }
@@ -792,6 +792,14 @@ object TimelineViewImpl {
         case cd: DnD.CodeDrag[S] => withRegions { implicit tx => regions =>
           val codeElem  = cd.source()
           ProcActions.setSynthGraph(regions.map(_.proc), codeElem)
+        }
+
+        case pd: DnD.ProcDrag[S] => withRegions { implicit tx => regions =>
+          val in = pd.source()
+          regions.map { pv =>
+            val out = pv.proc
+            ProcActions.linkOrUnlink(out, in)
+          } .exists(identity)
         }
 
         case _ => false
@@ -1120,7 +1128,14 @@ object TimelineViewImpl {
             // println(s"For ${pv.name} inputs = ${pv.inputs}, outputs = ${pv.outputs}")
             pv.outputs.foreach { case (_, links) =>
               links.foreach { link =>
-                drawLink(g, pv, link.target)
+                if (link.target.isGlobal) {
+                  if (regionViewMode == RegionViewMode.TitledBox) {
+                    // XXX TODO
+                  }
+
+                } else {
+                  drawLink(g, pv, link.target)
+                }
               }
             }
           }
