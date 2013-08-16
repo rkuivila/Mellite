@@ -139,6 +139,21 @@ object ProcActions {
     }
   }
 
+  def adjustGain[S <: Sys[S]](proc: Proc[S], factor: Double)(implicit tx: S#Tx): Unit = {
+    if (factor == 1.0) return
+
+    val attr  = proc.attributes
+    val imp   = ExprImplicits[S]
+    import imp._
+
+    attr.apply[Attribute.Double](ProcKeys.attrGain) match {
+      case Some(Expr.Var(vr)) => vr.transform(_ * factor)
+      case other =>
+        val newGain = other.map(_.value).getOrElse(1.0) * factor
+        attr.put(ProcKeys.attrGain, Attribute.Double(Doubles.newVar(newGain)))
+    }
+  }
+
   def setBus[S <: Sys[S]](procs: Iterable[Proc[S]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
     val attr    = Attribute.Int(intExpr)
     procs.foreach { proc =>

@@ -57,11 +57,13 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Gain(factor)
   }
 
-  protected def commitProc(drag: Gain)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
+  protected def commitProc(drag: Gain)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit =
+    ProcActions.adjustGain(proc, drag.factor)
+
+  private def commitOld(drag: Gain)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
     import drag._
     val imp = ExprImplicits[S]
     import imp._
-    // println(s"gain : commitProc. factor = $factor")
     ProcActions.getAudioRegion(span, proc) match {
       case Some((gtime, audio)) => // audio region
         // println(s"audio.gain = ${audio.gain}")

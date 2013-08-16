@@ -167,6 +167,12 @@ object TimelineViewImpl {
       view.procNameChanged(timed, nameOpt)
     }
 
+    def gainChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
+      val attr  = timed.value.attributes
+      val gain  = attr[Attribute.Double](ProcKeys.attrGain).map(_.value).getOrElse(1.0)
+      view.procGainChanged(timed, gain)
+    }
+
     def fadeChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attributes
       val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
@@ -179,6 +185,7 @@ object TimelineViewImpl {
         case ProcKeys.attrMute  => muteChanged(timed)
         case ProcKeys.attrFadeIn | ProcKeys.attrFadeOut => fadeChanged(timed)
         case ProcKeys.attrName  => nameChanged(timed)
+        case ProcKeys.attrGain  => gainChanged(timed)
         case _ =>
       }
 
@@ -670,6 +677,17 @@ object TimelineViewImpl {
       }
     }
 
+    def procGainChanged(timed: TimedProc[S], newGain: Double)(implicit tx: S#Tx): Unit = {
+      val pvo = procMap.get(timed.id)
+      log(s"procGainChanged(newGain = $newGain, view = $pvo")
+      pvo.foreach { pv =>
+        guiFromTx {
+          pv.gain = newGain
+          procUpdated(pv)
+        }
+      }
+    }
+
     def procFadeChanged(timed: TimedProc[S], newFadeIn: FadeSpec.Value, newFadeOut: FadeSpec.Value)(implicit tx: S#Tx): Unit = {
       val pvo = procMap.get(timed.id)
       log(s"procFadeChanged(newFadeIn = $newFadeIn, newFadeOut = $newFadeOut, view = $pvo")
@@ -957,7 +975,7 @@ object TimelineViewImpl {
                     val stopC   = screenToFrame(px2C)
                     val boost   = if (selected) visualBoost * gainState.factor else visualBoost
                     // println(s"audio.gain = ${audio.gain.toFloat}")
-                    sonoBoost   = audio.gain.toFloat * boost
+                    sonoBoost   = (audio.gain + pv.gain).toFloat * boost
                     val startP  = math.max(0L, startC + dStart)
                     val stopP   = startP + (stopC - startC)
                     sono.paint(startP, stopP, g, px1C, innerY, px2C - px1C, innerH, this)
