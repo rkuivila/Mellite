@@ -41,6 +41,7 @@ import javax.swing.TransferHandler.TransferSupport
 import java.awt.datatransfer.Transferable
 import de.sciss.synth.expr.Ints
 import scala.swing.event.TableColumnsSelected
+import scala.util.Try
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S])
@@ -83,23 +84,27 @@ object GlobalProcsViewImpl {
       override def setValueAt(value: Any, row: Int, column: Int): Unit = {
         val pv = procSeq(row)
         (column, value) match {
-          case (0, name : String  ) =>
+          case (0, name: String) =>
             atomic { implicit tx =>
               ProcActions.rename(pv.proc, if (name.isEmpty) None else Some(name))
             }
-          case (1, gain : Double  ) =>
-            atomic { implicit tx =>
-              ProcActions.setGain(pv.proc, gain)
+          case (1, gainS: String) =>  // XXX TODO: should use spinner for editing
+            Try(gainS.toDouble).foreach { gain =>
+              atomic { implicit tx =>
+                ProcActions.setGain(pv.proc, gain)
+              }
             }
 
-          case (2, muted: Boolean ) =>
+          case (2, muted: Boolean) =>
             atomic { implicit tx =>
               ProcActions.toggleMute(pv.proc)
             }
 
-          case (3, bus  : Int     ) =>
-            atomic { implicit tx =>
-              ProcActions.setBus(pv.proc :: Nil, Ints.newConst(bus))
+          case (3, busS: String) =>   // XXX TODO: should use spinner for editing
+            Try(busS.toInt).foreach { bus =>
+              atomic { implicit tx =>
+                ProcActions.setBus(pv.proc :: Nil, Ints.newConst(bus))
+              }
             }
 
           case _ =>
@@ -128,8 +133,10 @@ object GlobalProcsViewImpl {
       }
 
     private def removeProcs(pvs: Iterable[ProcView[S]]): Unit =
-      if (pvs.nonEmpty) atomic { implicit tx =>
-        //
+      if (pvs.nonEmpty) groupHOpt.foreach { groupH =>
+        atomic { implicit tx =>
+          ProcGUIActions.removeProcs(groupH(), pvs)
+        }
       }
 
     private def setColumnWidth(tcm: TableColumnModel, idx: Int, w: Int): Unit = {

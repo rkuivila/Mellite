@@ -377,7 +377,11 @@ object TimelineViewImpl {
 
     object deleteAction extends Action("Delete") {
       def apply(): Unit =
-        withSelection(implicit tx => deleteObjects)
+        withSelection { implicit tx => views =>
+          groupH().modifiableOption.foreach { mod =>
+            ProcGUIActions.removeProcs(mod, views)
+          }
+        }
     }
 
     object splitObjectsAction extends Action("Split Selected Objects") {
@@ -401,26 +405,6 @@ object TimelineViewImpl {
       val sel = selectionModel.iterator
       val flt = sel.filter(p)
       if (flt.hasNext) step { implicit tx => fun(tx)(flt) }
-    }
-
-    def deleteObjects(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit = {
-      requireEDT()
-      for (group <- groupH().modifiableOption; pv <- views) {
-        val span  = pv.spanSource()
-        val proc  = pv.proc
-        pv.inputs.foreach {
-          case (sinkKey, sources) =>
-            sources.foreach {
-              case ProcView.Link(sourceView, sourceKey) =>
-                sourceView.proc.scans.get(sourceKey).foreach { source =>
-                  proc.scans.get(sinkKey).foreach { sink =>
-                    ProcActions.removeLink(sourceKey = sourceKey, source = source, sinkKey = sinkKey, sink = sink)
-                  }
-                }
-            }
-        }
-        group.remove(span, proc)
-      }
     }
 
     def splitObjects(time: Long)(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit =

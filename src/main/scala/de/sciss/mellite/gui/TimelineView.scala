@@ -28,7 +28,7 @@ package gui
 
 import de.sciss.synth.proc.{AuralSystem, Sys}
 import scala.swing.{Action, Component}
-import impl.timeline.{TimelineViewImpl => Impl}
+import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl, ProcView}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Disposable
 import de.sciss.audiowidgets.TimelineModel
@@ -42,7 +42,7 @@ trait TimelineView[S <: Sys[S]] extends Disposable[S#Tx] {
   def component: Component
   def timelineModel: TimelineModel
 
-  // ---- actions ----
+  // ---- GUI actions ----
   def bounceAction      : Action
   def deleteAction      : Action
   def splitObjectsAction: Action
