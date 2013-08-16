@@ -49,14 +49,12 @@ import Predef.{any2stringadd => _, _}
 import de.sciss.lucre.event.Change
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
-import de.sciss.synth.expr.{SynthGraphs, Doubles, ExprImplicits, Longs, SpanLikes}
+import de.sciss.synth.expr.{Doubles, ExprImplicits, Longs, SpanLikes}
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.ValueChanged
 import de.sciss.synth.proc.{FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, Sys, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
-import scala.util.control.NonFatal
-import collection.breakOut
 import java.awt.geom.GeneralPath
 
 object TimelineViewImpl {
@@ -217,6 +215,7 @@ object TimelineViewImpl {
     val obsGroup = group.changed.react { implicit tx => _.changes.foreach {
       case BiGroup.Added  (span, timed) =>
         // println(s"Added   $span, $timed")
+        if (span == Span.All)
         view.addProc(span, timed, repaint = true)
 
       case BiGroup.Removed(span, timed) =>
@@ -394,7 +393,7 @@ object TimelineViewImpl {
     def deleteObjects(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit =
       for (group <- groupH().modifiableOption; pv <- views) {
         val span  = pv.spanSource()
-        val proc  = pv.procSource()
+        val proc  = pv.proc
         group.remove(span, proc)
       }
 
@@ -407,7 +406,7 @@ object TimelineViewImpl {
           case Expr.Var(oldSpan) =>
             val imp = ExprImplicits[S]
             import imp._
-            val leftProc  = pv.procSource()
+            val leftProc  = pv.proc
             val rightProc = copyProc(oldSpan, leftProc)
             val rightSpan = oldSpan.value match {
               case Span.HasStart(leftStart) =>
@@ -568,6 +567,7 @@ object TimelineViewImpl {
 
       val pane2 = new SplitPane(Orientation.Vertical, globalView.component, view.component)
       pane2.dividerSize = 4
+      pane2.border      = null
 
       val pane = new BorderPanel {
         import BorderPanel.Position._
@@ -587,14 +587,20 @@ object TimelineViewImpl {
       // timed.span
       // val proc = timed.value
       val pv = ProcView(timed, procMap, scanMap)
-      if (repaint) {
-        guiFromTx {
+
+      def doAdd() {
+        if (pv.isGlobal) {
+          globalView.add(pv)
+        } else {
           procViews += pv
-          repaintAll()    // XXX TODO: optimize dirty rectangle
+          if (repaint) repaintAll()    // XXX TODO: optimize dirty rectangle
         }
-      }  else {
-        procViews += pv // not necessary to defer this to GUI because non-repainting happens in init!
       }
+
+      if (repaint)
+        guiFromTx(doAdd())
+      else
+        doAdd()
     }
 
     def removeProc(span: SpanLike, timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
@@ -602,9 +608,14 @@ object TimelineViewImpl {
       procMap.get(timed.id).foreach { pv =>
         pv.disposeTx(timed, procMap, scanMap)
         guiFromTx {
-          procViews -= pv
+          if (pv.isGlobal)
+            globalView.remove(pv)
+          else
+            procViews -= pv
+
           pv.disposeGUI()
-          repaintAll() // XXX TODO: optimize dirty rectangle
+
+          if (pv.isGlobal) repaintAll() // XXX TODO: optimize dirty rectangle
         }
       }
     }
@@ -614,13 +625,28 @@ object TimelineViewImpl {
     def procMoved(timed: TimedProc[S], spanCh: Change[SpanLike], trackCh: Change[Int])(implicit tx: S#Tx): Unit =
       procMap.get(timed.id).foreach { pv =>
         guiFromTx {
-          procViews  -= pv
+          if (pv.isGlobal)
+            globalView.remove(pv)
+          else
+            procViews -= pv
+
           if (spanCh .isSignificant) pv.span  = spanCh .now
           if (trackCh.isSignificant) pv.track = trackCh.now
-          procViews  += pv
-          repaintAll()  // XXX TODO: optimize dirty rectangle
+
+          if (pv.isGlobal) {
+            globalView.add(pv)
+          } else {
+            procViews += pv
+            repaintAll()  // XXX TODO: optimize dirty rectangle
+          }
         }
       }
+
+    private def procUpdated(view: ProcView[S]): Unit =
+      if (view.isGlobal)
+        globalView.updated(view)
+      else
+        repaintAll()  // XXX TODO: optimize dirty rectangle
 
     def procMuteChanged(timed: TimedProc[S], newMute: Boolean)(implicit tx: S#Tx): Unit = {
       val pvo = procMap.get(timed.id)
@@ -628,7 +654,7 @@ object TimelineViewImpl {
       pvo.foreach { pv =>
         guiFromTx {
           pv.muted = newMute
-          repaintAll()  // XXX TODO: optimize dirty rectangle
+          procUpdated(pv)
         }
       }
     }
@@ -639,7 +665,7 @@ object TimelineViewImpl {
       pvo.foreach { pv =>
         guiFromTx {
           pv.nameOption = newName
-          repaintAll()  // XXX TODO: optimize dirty rectangle
+          procUpdated(pv)
         }
       }
     }
@@ -740,55 +766,14 @@ object TimelineViewImpl {
           }
 
         case id: DnD.IntDrag[S] => withRegions { implicit tx => regions =>
-          val intElem = id.source()
-          val attr    = Attribute.Int(intElem.entity)
-          regions.foreach { r =>
-            val proc    = r.procSource()
-            proc.attributes.put(ProcKeys.attrBus, attr)
-          }
+          val intExpr = id.source().entity
+          ProcActions.setBus(regions.map(_.proc), intExpr)
           true
         }
 
         case cd: DnD.CodeDrag[S] => withRegions { implicit tx => regions =>
           val codeElem  = cd.source()
-          val code      = codeElem.entity.value
-          code match {
-            case csg: Code.SynthGraph =>
-              try {
-                val sg = csg.execute()  // XXX TODO: compilation blocks, not good!
-
-                val scanKeys: Set[String] = sg.sources.collect {
-                  case proc.graph.scan.In (key, _) => key
-                  case proc.graph.scan.Out(key, _) => key
-                } (breakOut)
-                // sg.sources.foreach(println)
-                if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
-
-                val attrName  = Attribute.String(codeElem.name)
-                regions.foreach { pv =>
-                  val p     = pv.procSource()
-                  p.graph() = SynthGraphs.newConst(sg)  // XXX TODO: ideally would link to code updates
-                  p.attributes.put(ProcKeys.attrName, attrName)
-                  val toRemove = p.scans.iterator.collect {
-                    case (key, scan) if !scanKeys.contains(key) && scan.sinks.isEmpty && scan.sources.isEmpty => key
-                  }
-                  toRemove.foreach(p.scans.remove) // unconnected scans which are not referred to from synth def
-                  val existing = p.scans.iterator.collect {
-                    case (key, _) if scanKeys contains key => key
-                  }
-                  val toAdd = scanKeys -- existing.toSet
-                  toAdd.foreach(p.scans.add)
-                }
-                true
-
-              } catch {
-                case NonFatal(e) =>
-                  e.printStackTrace()
-                  false
-              }
-
-            case _ => false
-          }
+          ProcActions.setSynthGraph(regions.map(_.proc), codeElem)
         }
 
         case _ => false

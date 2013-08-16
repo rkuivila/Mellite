@@ -353,7 +353,7 @@ object FolderViewImpl {
         }
 
         // ---- import ----
-        override def canImport(support: TransferSupport): Boolean = {
+        override def canImport(support: TransferSupport): Boolean =
           t.dropLocation match {
             case Some(tdl) =>
               // println(s"last = ${tdl.path.last}; column ${tdl.column}; isLeaf? ${t.treeModel.isLeaf(tdl.path.last)}")
@@ -379,7 +379,6 @@ object FolderViewImpl {
 
             case _ => false
           }
-        }
 
         // XXX TODO: not sure whether removal should be in exportDone or something
         private def insertData(sel: FolderView.Selection[S], newParentView: Branch, idx: Int): Boolean = {

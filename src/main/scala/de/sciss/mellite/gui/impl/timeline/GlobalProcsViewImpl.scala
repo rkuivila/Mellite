@@ -29,56 +29,102 @@ package impl
 package timeline
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{Proc, Sys, ProcGroup}
+import de.sciss.synth.proc.{Sys, ProcGroup}
 import scala.swing.{Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
 import collection.immutable.{IndexedSeq => Vec}
 import javax.swing.table.{TableColumnModel, AbstractTableModel}
 import scala.annotation.switch
 import Swing._
 import de.sciss.desktop.OptionPane
+import javax.swing.{TransferHandler, DropMode}
+import javax.swing.TransferHandler.TransferSupport
+import java.awt.datatransfer.DataFlavor
+import de.sciss.synth.expr.Ints
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] = {
 
-    val view = new Impl[S]
+    import ProcGroup.Modifiable.serializer
+    val groupHOpt = group.modifiableOption.map(tx.newHandle(_))
+    val view      = new Impl[S](document, groupHOpt)
     guiFromTx(view.guiInit())
     view
   }
 
-  private final class Impl[S <: Sys[S]](implicit cursor: stm.Cursor[S]) extends GlobalProcsView[S] with ComponentHolder[Component] {
+  private final class Impl[S <: Sys[S]](document: Document[S],
+                                        groupHOpt: Option[stm.Source[S#Tx, ProcGroup.Modifiable[S]]])
+                                       (implicit cursor: stm.Cursor[S])
+    extends GlobalProcsView[S] with ComponentHolder[Component] {
 
     private var procSeq = Vec.empty[ProcView[S]]
 
+    private def atomic[A](block: S#Tx => A): A = cursor.step(block)
+
+    // columns: name, gain, muted, bus
     private val tm = new AbstractTableModel {
       def getRowCount     = procSeq.size
-      def getColumnCount  = 4 // currently: name, gain, mute and bus
+      def getColumnCount  = 4
 
       def getValueAt(row: Int, column: Int): AnyRef = {
         val pv  = procSeq(row)
         val res = (column: @switch) match {
           case 0 => pv.name
-          case 1 => 1.0   // gain: XXX TODO
+          case 1 => pv.gain
           case 2 => pv.muted
           case 3 => 0     // bus: XXX TODO
         }
         res.asInstanceOf[AnyRef]
       }
-    }
 
-    private def addItemWithDialog(): Unit = {
-      // val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe)
-      val op    = OptionPane.textInput(message = "Name:", initial = "Bus")
-      op.title  = "Add Global Proc"
-      op.show(None).foreach { name =>
-        // println(s"Add proc: $name")
+      override def isCellEditable(row: Int, column: Int): Boolean = true
 
-        cursor.step { implicit tx =>
-          val proc = Proc[S]
-          ???
+      override def setValueAt(value: Any, row: Int, column: Int): Unit = {
+        val pv = procSeq(row)
+        (column, value) match {
+          case (0, name : String  ) =>
+            atomic { implicit tx =>
+              ProcActions.rename(pv.proc, if (name.isEmpty) None else Some(name))
+            }
+          case (1, gain : Double  ) =>
+            atomic { implicit tx =>
+              ProcActions.setGain(pv.proc, gain)
+            }
+
+          case (2, muted: Boolean ) =>
+            atomic { implicit tx =>
+              ProcActions.toggleMute(pv.proc)
+            }
+
+          case (3, bus  : Int     ) =>
+            atomic { implicit tx =>
+              ProcActions.setBus(pv.proc :: Nil, Ints.newConst(bus))
+            }
+
+          case _ =>
         }
       }
+
+      override def getColumnName(column: Int): String = (column: @switch) match {
+        case 0 => "Name"
+        case 1 => "Gain"
+        case 2 => "M" // short because column only uses checkbox
+        case 3 => "Bus"
+        case other => super.getColumnName(column)
+      }
     }
+
+    private def addItemWithDialog(): Unit =
+      groupHOpt.foreach { groupH =>
+        val op    = OptionPane.textInput(message = "Name:", initial = "Bus")
+        op.title  = "Add Global Proc"
+        op.show(None).foreach { name =>
+          // println(s"Add proc: $name")
+          atomic { implicit tx =>
+            ProcActions.insertGlobalRegion(groupH(), name, bus = None)
+          }
+        }
+      }
 
     private def removeSelectedItem(): Unit = {
       println("TODO: removeSelectedItem")
@@ -92,6 +138,7 @@ object GlobalProcsViewImpl {
 
     def guiInit(): Unit = {
       val table         = new Table()
+      table.peer.putClientProperty("JComponent.sizeVariant", "small")
       table.model       = tm
       // table.background  = Color.darkGray
       val jt            = table.peer
@@ -101,10 +148,43 @@ object GlobalProcsViewImpl {
       //      }
       val tcm = jt.getColumnModel
       setColumnWidth(tcm, 0, 48)
-      setColumnWidth(tcm, 1, 24)
+      setColumnWidth(tcm, 1, 32)
       setColumnWidth(tcm, 2, 16)
       setColumnWidth(tcm, 3, 24)
-      table.peer.setPreferredScrollableViewportSize(116 -> 100)
+      val tj = table.peer
+      tj.setPreferredScrollableViewportSize(124 -> 100)
+
+      // ---- drag and drop ----
+      tj.setDropMode(DropMode.ON)
+      tj.setTransferHandler(new TransferHandler {
+        // ---- import ----
+        override def canImport(support: TransferSupport): Boolean =
+          support.isDataFlavorSupported(timeline.DnD.flavor)
+
+        override def importData(support: TransferSupport): Boolean =
+          support.isDataFlavorSupported(timeline.DnD.flavor) && {
+            Option(tj.getDropLocation).fold(false) { dl =>
+              val pv    = procSeq(dl.getRow)
+              val drag  = support.getTransferable.getTransferData(timeline.DnD.flavor).asInstanceOf[timeline.DnD.Drag[S]]
+              drag match {
+                case timeline.DnD.IntDrag (`document`, source) =>
+                  atomic { implicit tx =>
+                    val intExpr = source().entity
+                    ProcActions.setBus(pv.proc :: Nil, intExpr)
+                  }
+                  true
+
+                case timeline.DnD.CodeDrag(`document`, source) =>
+                  atomic { implicit tx =>
+                    val codeElem = source()
+                    ProcActions.setSynthGraph(pv.proc :: Nil, codeElem)
+                  }
+
+                case _ => false
+              }
+            }
+          }
+      })
 
       val scroll    = new ScrollPane(table)
       scroll.border = null
@@ -119,8 +199,8 @@ object GlobalProcsViewImpl {
       val butPanel  = new FlowPanel(ggAdd, ggDelete)
 
       comp          = new BorderPanel {
-        add(scroll  , BorderPanel.Position.Center)
-        add(butPanel, BorderPanel.Position.South )
+        add(scroll, BorderPanel.Position.Center)
+        if (groupHOpt.isDefined) add(butPanel, BorderPanel.Position.South) // only add buttons if group is modifiable
       }
     }
 
@@ -136,6 +216,11 @@ object GlobalProcsViewImpl {
       val row   = procSeq.indexOf(proc)
       procSeq   = procSeq.patch(row, Vec.empty, 1)
       tm.fireTableRowsDeleted(row, row)
+    }
+
+    def updated(proc: ProcView[S]): Unit = {
+      val row   = procSeq.indexOf(proc)
+      tm.fireTableRowsUpdated(row, row)
     }
   }
 }

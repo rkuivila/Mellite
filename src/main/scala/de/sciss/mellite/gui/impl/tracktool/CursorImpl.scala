@@ -71,16 +71,6 @@ final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends R
       }
     }
 
-  protected def commitProc(drag: TrackTool.Cursor)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
-    val attr  = proc.attributes
-    val expr  = ExprImplicits[S]
-    import expr._
-    drag.name match {
-      case Some(n) => attr.apply[Attribute.String](ProcKeys.attrName) match {
-        case Some(Expr.Var(vr)) => vr() = n
-        case _                  => attr.put(ProcKeys.attrName, Attribute.String(Strings.newVar(n)))
-      }
-      case _ => attr.remove(ProcKeys.attrName)
-    }
-  }
+  protected def commitProc(drag: TrackTool.Cursor)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit =
+    ProcActions.rename(proc, drag.name)
 }

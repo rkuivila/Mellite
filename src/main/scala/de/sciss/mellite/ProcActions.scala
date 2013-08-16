@@ -29,13 +29,18 @@ package mellite
 import lucre.expr.Expr
 import span.{Span, SpanLike}
 import de.sciss.synth.proc.{Attribute, ProcKeys, Scan, Grapheme, Sys, Proc}
-import de.sciss.synth.expr.{SynthGraphs, Longs, Ints, Spans, ExprImplicits}
+import de.sciss.synth.expr.{Doubles, Booleans, Strings, SynthGraphs, Longs, Ints, Spans, ExprImplicits}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.audiowidgets.TimelineModel
-import de.sciss.lucre.stm
+import de.sciss.synth.proc
+import scala.util.control.NonFatal
+import collection.breakOut
 
 object ProcActions {
   private val MinDur    = 32
+
+  // scalac still has bug finding ProcGroup.Modifiable
+  private type ProcGroupMod[S <: Sys[S]] = BiGroup.Modifiable[S, Proc[S], Proc.Update[S]]
 
   final case class Resize(deltaStart: Long, deltaStop: Long)
 
@@ -99,8 +104,112 @@ object ProcActions {
     }
   }
 
+  /** Changes or removes the name of a process.
+    *
+    * @param proc the proc to rename
+    * @param name the new name or `None` to remove the name attribute
+    */
+  def rename[S <: Sys[S]](proc: Proc[S], name: Option[String])(implicit tx: S#Tx): Unit = {
+    val attr  = proc.attributes
+    val imp   = ExprImplicits[S]
+    import imp._
+    name match {
+      case Some(n) =>
+        attr.apply[Attribute.String](ProcKeys.attrName) match {
+          case Some(Expr.Var(vr)) => vr() = n
+          case _                  => attr.put(ProcKeys.attrName, Attribute.String(Strings.newVar(n)))
+        }
+
+      case _ => attr.remove(ProcKeys.attrName)
+    }
+  }
+
+  def setGain[S <: Sys[S]](proc: Proc[S], gain: Double)(implicit tx: S#Tx): Unit = {
+    val attr  = proc.attributes
+    val imp   = ExprImplicits[S]
+    import imp._
+
+    if (gain == 1.0) {
+      attr.remove(ProcKeys.attrGain)
+    } else {
+      attr.apply[Attribute.Double](ProcKeys.attrGain) match {
+        case Some(Expr.Var(vr)) => vr() = gain
+        case _                  => attr.put(ProcKeys.attrGain, Attribute.Double(Doubles.newVar(gain)))
+      }
+    }
+  }
+
+  def setBus[S <: Sys[S]](procs: Iterable[Proc[S]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
+    val attr    = Attribute.Int(intExpr)
+    procs.foreach { proc =>
+      proc.attributes.put(ProcKeys.attrBus, attr)
+    }
+  }
+
+  def toggleMute[S <: Sys[S]](proc: Proc[S])(implicit tx: S#Tx): Unit = {
+    val imp   = ExprImplicits[S]
+    import imp._
+
+    val attr = proc.attributes
+    attr[Attribute.Boolean](ProcKeys.attrMute) match {
+      // XXX TODO: Booleans should have `not` operator
+      case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld }
+      case _                  => attr.put(ProcKeys.attrMute, Attribute.Boolean(Booleans.newVar(true)))
+    }
+  }
+
+  def setSynthGraph[S <: Sys[S]](procs: Iterable[Proc[S]], codeElem: Element.Code[S])(implicit tx: S#Tx): Boolean = {
+    val code      = codeElem.entity.value
+    code match {
+      case csg: Code.SynthGraph =>
+        try {
+          val sg = csg.execute()  // XXX TODO: compilation blocks, not good!
+
+          val scanKeys: Set[String] = sg.sources.collect {
+            case proc.graph.scan.In (key, _) => key
+            case proc.graph.scan.Out(key, _) => key
+          } (breakOut)
+          // sg.sources.foreach(println)
+          if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
+
+          val attrName  = Attribute.String(codeElem.name)
+          procs.foreach { p =>
+            p.graph() = SynthGraphs.newConst(sg)  // XXX TODO: ideally would link to code updates
+            p.attributes.put(ProcKeys.attrName, attrName)
+            val toRemove = p.scans.iterator.collect {
+              case (key, scan) if !scanKeys.contains(key) && scan.sinks.isEmpty && scan.sources.isEmpty => key
+            }
+            toRemove.foreach(p.scans.remove) // unconnected scans which are not referred to from synth def
+            val existing = p.scans.iterator.collect {
+              case (key, _) if scanKeys contains key => key
+            }
+            val toAdd = scanKeys -- existing.toSet
+            toAdd.foreach(p.scans.add)
+          }
+          true
+
+        } catch {
+          case NonFatal(e) =>
+            e.printStackTrace()
+            false
+        }
+
+      case _ => false
+    }
+  }
+
+  /** Inserts a new audio region proc into a given group.
+    *
+    * @param group      the group to insert the proc into
+    * @param time       the time offset in the group
+    * @param track      the track to associate with the proc, or `-1` to have the track undefined
+    * @param grapheme   the grapheme carrying the underlying audio file
+    * @param selection  the selection with respect to the grapheme (e.g. the selection's start will be become `time` in the group).
+    * @param bus        an optional bus to assign
+    * @return           a tuple consisting of the span expression and the newly created proc.
+    */
   def insertAudioRegion[S <: Sys[S]](
-      group     : BiGroup.Modifiable[S, Proc[S], Proc.Update[S]],
+      group     : ProcGroupMod[S],
       time      : Long,
       track     : Int,
       grapheme  : Grapheme.Elem.Audio[S],
@@ -115,7 +224,7 @@ object ProcActions {
     val span    = Spans.newVar[S](spanV)
     val proc    = Proc[S]
     val attr    = proc.attributes
-    attr.put(ProcKeys.attrTrack, Attribute.Int(Ints.newVar(track)))
+    if (track >= 0) attr.put(ProcKeys.attrTrack, Attribute.Int(Ints.newVar(track)))
     bus.foreach { busEx =>
       val bus = Attribute.Int(busEx)
       attr.put(ProcKeys.attrBus, bus)
@@ -136,5 +245,23 @@ object ProcActions {
     group.add(span, proc)
 
     (span, proc)
+  }
+
+  def insertGlobalRegion[S <: Sys[S]](
+      group     : ProcGroupMod[S],
+      name      : String,
+      bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
+     (implicit tx: S#Tx): Proc[S] = {
+
+    val imp = ExprImplicits[S]
+    import imp._
+
+    val proc    = Proc[S]
+    val attr    = proc.attributes
+    val nameEx  = Strings.newVar(Strings.newConst(name))
+    attr.put(ProcKeys.attrName, Attribute.String(nameEx))
+
+    group.add(Span.All, proc) // constant span expression
+    proc
   }
 }

@@ -80,6 +80,7 @@ trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCa
     case FadeViewModeChanged  (change) => repaint()
     case RegionViewModeChanged(change) => repaint()
   }
+  trackTools.currentTool.adListener(toolListener)
 
   private val selectionListener: ProcSelectionModel.Listener[S] = {
     case ProcSelectionModel.Update(added, removed) =>

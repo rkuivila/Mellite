@@ -78,4 +78,6 @@ final class ToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
       _regionViewMode = value
       dispatch(RegionViewModeChanged(Change(oldMode, value)))
     }
+
+  _currentTool.install(canvas.canvasComponent)
 }

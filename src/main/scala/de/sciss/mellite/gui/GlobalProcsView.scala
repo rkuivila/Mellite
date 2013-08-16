@@ -40,6 +40,7 @@ object GlobalProcsView {
 trait GlobalProcsView[S <: Sys[S]] extends Disposable[S#Tx] {
   def component: Component
 
-  def add   (proc: ProcView[S]): Unit
-  def remove(proc: ProcView[S]): Unit
+  def add    (proc: ProcView[S]): Unit
+  def remove (proc: ProcView[S]): Unit
+  def updated(proc: ProcView[S]): Unit
 }

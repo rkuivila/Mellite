@@ -106,10 +106,11 @@ object ProcView {
     val mute    = attr[Attribute.Boolean ](ProcKeys.attrMute).exists(_.value)
     val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
     val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
+    val gain    = attr[Attribute.Double  ](ProcKeys.attrGain   ).map(_.value).getOrElse(1.0)
 
     val res = new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
       span = spanV, track = track, nameOption = name, muted = mute, audio = audio,
-      fadeIn = fadeIn, fadeOut = fadeOut)
+      fadeIn = fadeIn, fadeOut = fadeOut, gain = gain)
 
     import CommonSerializers.Identifier
     lazy val idH = tx.newHandle(timed.id)
@@ -158,7 +159,8 @@ object ProcView {
                                         var muted     : Boolean,
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var fadeIn    : FadeSpec.Value,
-                                        var fadeOut   : FadeSpec.Value)
+                                        var fadeOut   : FadeSpec.Value,
+                                        var gain      : Double)
     extends ProcView[S] { self =>
 
     override def toString = s"ProcView($name, $span, $audio)"
@@ -239,6 +241,10 @@ object ProcView {
 
     def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
       outputs = removeLink(outputs, thisKey, Link(thatView, thatKey))
+
+    def isGlobal = span == Span.All
+
+    def proc(implicit tx: S#Tx): Proc[S] = procSource()
   }
 
   implicit def span[S <: Sys[S]](view: ProcView[S]): (Long, Long) = {
@@ -265,9 +271,15 @@ sealed trait ProcView[S <: Sys[S]] {
   def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
   def procSource: stm.Source[S#Tx, Proc[S]]
 
+  /** Convenience for `procSource()` */
+  def proc(implicit tx: S#Tx): Proc[S]
+
   var span: SpanLike
   var track: Int
   var nameOption: Option[String]
+
+  /** Convenience check for `span == Span.All` */
+  def isGlobal: Boolean
 
   /** The proc's name or a place holder name if no name is set. */
   def name: String
@@ -291,6 +303,8 @@ sealed trait ProcView[S <: Sys[S]] {
 
   var fadeIn : FadeSpec.Value
   var fadeOut: FadeSpec.Value
+
+  var gain: Double
 
   /** Releases a sonogram view. If none had been acquired, this is a safe no-op.
     * Updates the `sono` variable.

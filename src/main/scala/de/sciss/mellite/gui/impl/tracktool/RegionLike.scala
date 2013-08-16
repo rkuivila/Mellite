@@ -62,6 +62,7 @@ trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackToo
 
   private val mia = new MouseAdapter {
     override def mousePressed(e: MouseEvent): Unit = {
+      e.getComponent.requestFocus()
       val pos       = canvas.screenToFrame(e.getX).toLong
       val hitTrack  = canvas.screenToTrack(e.getY)
       val regionOpt = canvas.findRegion(pos, hitTrack)  // procs span "two tracks". ouchilah...
