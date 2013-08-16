@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "soundprocesses"     % "1.9.+",
   "de.sciss" %% "scalacolliderswing" % "1.9.+",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.+",
-  "de.sciss" %% "desktop"            % "0.3.2+",
+  "de.sciss" %% "desktop"            % "0.3.3+",
   "de.sciss" %% "swingplus"          % "0.0.1+",
   "de.sciss" %% "audiowidgets-app"   % "1.3.+",
   "de.sciss" %% "sonogramoverview"   % "1.6.2+",  // bug in 1.6.1

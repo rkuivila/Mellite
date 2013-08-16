@@ -26,14 +26,14 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.Sys
+import de.sciss.synth.proc.{Sys, ProcGroup}
 import de.sciss.lucre.stm.Disposable
 import scala.swing.Component
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui.impl.timeline.{GlobalProcsViewImpl => Impl, ProcView}
 
 object GlobalProcsView {
-  def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
+  def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] =
       Impl(document, group)
 }

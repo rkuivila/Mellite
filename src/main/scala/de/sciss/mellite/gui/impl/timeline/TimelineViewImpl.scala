@@ -28,9 +28,8 @@ package gui
 package impl
 package timeline
 
-import scala.swing.{Swing, Slider, Action, BorderPanel, Orientation, BoxPanel, Component}
+import scala.swing.{Swing, Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.mellite.impl.InsertAudioRegion
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, LinearGradientPaint}
 import de.sciss.synth
 import de.sciss.desktop
@@ -140,7 +139,10 @@ object TimelineViewImpl {
     val auralView = proc.AuralPresentation.runTx[S](transp, aural)
     disp ::= auralView
 
-    val view    = new Impl(document, groupH, transp, procMap, scanMap, tlm, auralView)
+    val global  = GlobalProcsView(document, group)
+    disp ::= global
+
+    val view    = new Impl(document, groupH, transp, procMap, scanMap, tlm, auralView, global)
 
     val obsTransp = transp.react { implicit tx => {
       case proc.Transport.Play(t, time) => view.startedPlaying(time)
@@ -288,7 +290,8 @@ object TimelineViewImpl {
                                         procMap           : ProcView.ProcMap[S],
                                         scanMap           : ProcView.ScanMap[S],
                                         val timelineModel : TimelineModel,
-                                        auralView         : AuralPresentation[S])
+                                        auralView         : AuralPresentation[S],
+                                        globalView        : GlobalProcsView[S])
                                        (implicit cursor: Cursor[S])
     extends TimelineView[S] with ComponentHolder[Component] {
     impl =>
@@ -563,10 +566,15 @@ object TimelineViewImpl {
           transportStrip.button(GoToBegin).foreach(_.doClick())
       })
 
+      val pane2 = new SplitPane(Orientation.Vertical, globalView.component, view.component)
+      pane2.dividerSize = 4
+
       val pane = new BorderPanel {
+        import BorderPanel.Position._
         layoutManager.setVgap(2)
-        add(transportPane , BorderPanel.Position.North )
-        add(view.component, BorderPanel.Position.Center)
+        add(transportPane, North )
+        add(pane2        , Center)
+        // add(globalView.component, West  )
       }
 
       comp = pane
@@ -723,8 +731,9 @@ object TimelineViewImpl {
             val group = groupH()
             group.modifiableOption match {
               case Some(groupM) =>
-                InsertAudioRegion(groupM, time = drop.frame, track = view.screenToTrack(drop.y),
-                   /* document = ad.document, */ grapheme = ad.source().entity, selection = ad.selection, bus = ad.bus)
+                ProcActions.insertAudioRegion(groupM, time = drop.frame, track = view.screenToTrack(drop.y),
+                   /* document = ad.document, */ grapheme = ad.source().entity, selection = ad.selection,
+                  bus = ad.bus.map(_.apply().entity))
                 true
               case _ => false
             }

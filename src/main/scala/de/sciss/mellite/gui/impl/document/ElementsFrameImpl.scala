@@ -200,7 +200,7 @@ object ElementsFrameImpl {
     }
 
     private def actionAddPrimitive[A](tpe: String, ggValue: Component, prepare: => Option[A])
-                                     (create: S#Tx => (String, A) => Element[S]) {
+                                     (create: S#Tx => (String, A) => Element[S]): Unit = {
       val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe, window = Some(comp))
       nameOpt.foreach { name =>
         prepare.foreach { value =>

@@ -35,7 +35,6 @@ import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component
 import java.awt.Color
 import Swing._
 import de.sciss.span.Span
-import de.sciss.mellite.impl.InsertAudioRegion
 import de.sciss.sonogram
 import javax.swing.{TransferHandler, ImageIcon}
 import javax.swing.TransferHandler.TransferSupport
@@ -63,7 +62,7 @@ object ViewImpl {
     val iLoc          = Artifact.Location.Modifiable[I](artifDir)
     val iArtifact     = iLoc.add(artifact.value)
     val iGrapheme     = Grapheme.Elem.Audio[I](iArtifact, graphemeV.spec, graphemeV.offset, graphemeV.gain)
-    InsertAudioRegion[I](group, time = 0L, track = 0, grapheme = iGrapheme, selection = fullSpan,
+    ProcActions.insertAudioRegion[I](group, time = 0L, track = 0, grapheme = iGrapheme, selection = fullSpan,
       bus = None)
 
     import doc.inMemoryCursor

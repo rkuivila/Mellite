@@ -11,7 +11,6 @@ import de.sciss.strugatzki.{FeatureCorrelation, FeatureExtraction}
 import de.sciss.processor.Processor
 import de.sciss.synth.proc
 import de.sciss.mellite._
-import de.sciss.mellite.impl.InsertAudioRegion
 import de.sciss.synth.proc.{FadeSpec, Attribute, ProcKeys, Artifact, Grapheme}
 import de.sciss.synth.expr.ExprImplicits
 import de.sciss.file._
@@ -74,7 +73,8 @@ object MetaNull {
         import imp._
         val grapheme  = Grapheme.Elem.Audio(artifact, spec, offset, gain)
         val span      = m.punch
-        val (_, proc) = InsertAudioRegion(group = group, time = time, track = 0, grapheme = grapheme, selection = span, bus = None)
+        val (_, proc) = ProcActions.insertAudioRegion(group = group, time = time, track = 0, grapheme = grapheme,
+                                                      selection = span, bus = None)
         val fdIn      = FadeSpec.Elem.newConst[I](FadeSpec.Value(882))
         val fdOut     = FadeSpec.Elem.newConst[I](FadeSpec.Value(math.min(span.length - 882, 22050)))
         proc.attributes.put(ProcKeys.attrFadeIn , Attribute.FadeSpec(fdIn ))

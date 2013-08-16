@@ -29,14 +29,16 @@ package impl
 package timeline
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.Sys
-import scala.swing.{Table, Component}
+import de.sciss.synth.proc.{Proc, Sys, ProcGroup}
+import scala.swing.{Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
 import collection.immutable.{IndexedSeq => Vec}
-import javax.swing.table.AbstractTableModel
+import javax.swing.table.{TableColumnModel, AbstractTableModel}
 import scala.annotation.switch
+import Swing._
+import de.sciss.desktop.OptionPane
 
 object GlobalProcsViewImpl {
-  def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
+  def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] = {
 
     val view = new Impl[S]
@@ -44,7 +46,7 @@ object GlobalProcsViewImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]] extends GlobalProcsView[S] with ComponentHolder[Component] {
+  private final class Impl[S <: Sys[S]](implicit cursor: stm.Cursor[S]) extends GlobalProcsView[S] with ComponentHolder[Component] {
 
     private var procSeq = Vec.empty[ProcView[S]]
 
@@ -64,10 +66,62 @@ object GlobalProcsViewImpl {
       }
     }
 
+    private def addItemWithDialog(): Unit = {
+      // val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe)
+      val op    = OptionPane.textInput(message = "Name:", initial = "Bus")
+      op.title  = "Add Global Proc"
+      op.show(None).foreach { name =>
+        // println(s"Add proc: $name")
+
+        cursor.step { implicit tx =>
+          val proc = Proc[S]
+          ???
+        }
+      }
+    }
+
+    private def removeSelectedItem(): Unit = {
+      println("TODO: removeSelectedItem")
+    }
+
+    private def setColumnWidth(tcm: TableColumnModel, idx: Int, w: Int): Unit = {
+      val tc = tcm.getColumn(idx)
+      tc.setPreferredWidth(w)
+      // tc.setMaxWidth      (w)
+    }
+
     def guiInit(): Unit = {
-      val table   = new Table()
-      table.model = tm
-      comp        = table
+      val table         = new Table()
+      table.model       = tm
+      // table.background  = Color.darkGray
+      val jt            = table.peer
+      jt.setAutoCreateRowSorter(true)
+      //      val tcm = new DefaultTableColumnModel {
+      //
+      //      }
+      val tcm = jt.getColumnModel
+      setColumnWidth(tcm, 0, 48)
+      setColumnWidth(tcm, 1, 24)
+      setColumnWidth(tcm, 2, 16)
+      setColumnWidth(tcm, 3, 24)
+      table.peer.setPreferredScrollableViewportSize(116 -> 100)
+
+      val scroll    = new ScrollPane(table)
+      scroll.border = null
+
+      val ggAdd = Button("+")(addItemWithDialog())
+      ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
+
+      val ggDelete: Button = Button("\u2212")(removeSelectedItem())
+      ggDelete.enabled = false
+      ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
+
+      val butPanel  = new FlowPanel(ggAdd, ggDelete)
+
+      comp          = new BorderPanel {
+        add(scroll  , BorderPanel.Position.Center)
+        add(butPanel, BorderPanel.Position.South )
+      }
     }
 
     def dispose()(implicit tx: S#Tx) = ()

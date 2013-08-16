@@ -28,10 +28,11 @@ package mellite
 
 import lucre.expr.Expr
 import span.{Span, SpanLike}
-import de.sciss.synth.proc.{ProcKeys, Scan, Grapheme, Sys, Proc}
-import synth.expr.ExprImplicits
-import de.sciss.lucre.bitemp.BiExpr
+import de.sciss.synth.proc.{Attribute, ProcKeys, Scan, Grapheme, Sys, Proc}
+import de.sciss.synth.expr.{SynthGraphs, Longs, Ints, Spans, ExprImplicits}
+import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.audiowidgets.TimelineModel
+import de.sciss.lucre.stm
 
 object ProcActions {
   private val MinDur    = 32
@@ -96,5 +97,44 @@ object ProcActions {
           }
       }
     }
+  }
+
+  def insertAudioRegion[S <: Sys[S]](
+      group     : BiGroup.Modifiable[S, Proc[S], Proc.Update[S]],
+      time      : Long,
+      track     : Int,
+      grapheme  : Grapheme.Elem.Audio[S],
+      selection : Span,
+      bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
+     (implicit tx: S#Tx): (Expr[S, Span], Proc[S]) = {
+
+    val imp = ExprImplicits[S]
+    import imp._
+
+    val spanV   = Span(time, time + selection.length)
+    val span    = Spans.newVar[S](spanV)
+    val proc    = Proc[S]
+    val attr    = proc.attributes
+    attr.put(ProcKeys.attrTrack, Attribute.Int(Ints.newVar(track)))
+    bus.foreach { busEx =>
+      val bus = Attribute.Int(busEx)
+      attr.put(ProcKeys.attrBus, bus)
+    }
+
+    val scanIn  = proc.scans.add(ProcKeys.graphAudio)
+    /* val scanOut = */ proc.scans.add(ProcKeys.scanMainOut)
+    val grIn    = Grapheme.Modifiable[S]
+
+    // we preserve data.source(), i.e. the original audio file offset
+    // ; therefore the grapheme element must start `selection.start` frames
+    // before the insertion position `drop.frame`
+    val gStart  = Longs.newVar(time - selection.start)  // wooopa, could even be a bin op at some point
+    val bi: Grapheme.TimedElem[S] = BiExpr(gStart, grapheme)
+    grIn.add(bi)
+    scanIn addSource grIn
+    proc.graph() = SynthGraphs.tape
+    group.add(span, proc)
+
+    (span, proc)
   }
 }
