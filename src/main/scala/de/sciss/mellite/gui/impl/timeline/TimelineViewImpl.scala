@@ -56,6 +56,8 @@ import scala.swing.event.ValueChanged
 import de.sciss.synth.proc.{FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, Sys, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
+import de.sciss.synth.io.AudioFile
+import scala.util.Try
 
 object TimelineViewImpl {
   private val colrBg              = Color.darkGray
@@ -772,6 +774,18 @@ object TimelineViewImpl {
         srcView .removeOutput(srcKey , sinkView, sinkKey)
         sinkView.removeInput (sinkKey, srcView , srcKey )
       }
+
+    private def insertAudioRegion(drop: DnD.Drop[S], drag: DnD.AudioDragLike[S],
+                                  grapheme: Grapheme.Elem.Audio[S])(implicit tx: S#Tx): Boolean = {
+      val group = groupH()
+      group.modifiableOption match {
+        case Some(groupM) =>
+          ProcActions.insertAudioRegion(groupM, time = drop.frame, track = view.screenToTrack(drop.y),
+            grapheme = grapheme, selection = drag.selection, bus = None) // , bus = ad.bus.map(_.apply().entity))
+          true
+        case _ => false
+      }
+    }
     
     private def performDrop(drop: DnD.Drop[S]): Boolean = {
       def withRegions(fun: S#Tx => List[ProcView[S]] => Boolean): Boolean =
@@ -785,14 +799,28 @@ object TimelineViewImpl {
       drop.drag match {
         case ad: DnD.AudioDrag[S] =>
           step { implicit tx =>
-            val group = groupH()
-            group.modifiableOption match {
-              case Some(groupM) =>
-                ProcActions.insertAudioRegion(groupM, time = drop.frame, track = view.screenToTrack(drop.y),
-                   /* document = ad.document, */ grapheme = ad.source().entity, selection = ad.selection,
-                  bus = ad.bus.map(_.apply().entity))
-                true
-              case _ => false
+            insertAudioRegion(drop, ad, ad.source().entity)
+          }
+
+        case ed: DnD.ExtAudioRegionDrag[S] =>
+          val file = ed.file
+          val resOpt = step { implicit tx =>
+            ElementActions.findAudioFile(document.elements, file).map { grapheme =>
+              insertAudioRegion(drop, ed, grapheme.entity)
+            }
+          }
+
+          resOpt.getOrElse {
+            Try(AudioFile.readSpec(file)).toOption.fold(false) { spec =>
+              ActionArtifactLocation.query(document, file).fold(false) { src =>
+                step { implicit tx =>
+                  src().entity.modifiableOption.fold(false) { loc =>
+                    val elems = document.elements
+                    val elem  = ElementActions.addAudioFile(elems, elems.size, loc, file, spec)
+                    insertAudioRegion(drop, ed, elem.entity)
+                  }
+                }
+              }
             }
           }
 
@@ -910,8 +938,7 @@ object TimelineViewImpl {
           repaint()
         }
 
-        protected def acceptDnD(drop: DnD.Drop[S]): Boolean =
-          performDrop(drop)
+        protected def acceptDnD(drop: DnD.Drop[S]): Boolean = performDrop(drop)
 
         def imageObserver = peer
 
@@ -1160,7 +1187,7 @@ object TimelineViewImpl {
           // --- ongoing drag and drop / tools ---
           if (currentDrop.isDefined) currentDrop.foreach { drop =>
             drop.drag match {
-              case ad: DnD.AudioDrag[S] =>
+              case ad: DnD.AudioDragLike[S] =>
                 val track = screenToTrack(drop.y)
                 val span  = Span(drop.frame, drop.frame + ad.selection.length)
                 drawDropFrame(g, track, span)

@@ -38,20 +38,30 @@ import de.sciss.mellite.Element.AudioGrapheme
 import de.sciss.span.Span
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.mellite.Document
+import java.awt.datatransfer.{DataFlavor, Transferable}
+import de.sciss.file._
+import scala.util.Try
 
 object DnD {
   sealed trait Drag[S <: Sys[S]] {
     def document: Document[S]
     // def source: stm.Source[S#Tx, Element[S]]
   }
+  sealed trait AudioDragLike[S <: Sys[S]] extends Drag[S] {
+    def selection: Span
+  }
   final case class AudioDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, AudioGrapheme[S]],
                                           /* grapheme: Grapheme.Value.Audio, */ selection: Span,
                                           bus: Option[stm.Source[S#Tx, Element.Int[S]]])
-    extends Drag[S]
+    extends AudioDragLike[S]
 
   final case class IntDrag [S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Element.Int [S]]) extends Drag[S]
   final case class CodeDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Element.Code[S]]) extends Drag[S]
   final case class ProcDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Proc[S]])         extends Drag[S]
+
+  /** Drag and Drop from Eisenkraut */
+  final case class ExtAudioRegionDrag[S <: Sys[S]](document: Document[S], file: File, selection: Span)
+    extends AudioDragLike[S]
 
   final case class Drop[S <: Sys[S]](frame: Long, y: Int, drag: Drag[S])
 
@@ -73,7 +83,7 @@ trait DnD[S <: Sys[S]] {
     override def dragOver (e: DropTargetDragEvent): Unit = process(e)
     override def dragExit (e: DropTargetEvent    ): Unit = updateDnD(None)
 
-    private def abortDrag(e: DropTargetDragEvent): Unit = {
+    private def abortDrag (e: DropTargetDragEvent): Unit = {
       updateDnD(None)
       e.rejectDrag()
     }
@@ -86,42 +96,72 @@ trait DnD[S <: Sys[S]] {
       Drop(frame = frame, y = y, drag = d)
     }
 
-    private def process(e: DropTargetDragEvent): Unit = {
-      val t = e.getTransferable
-      if (!t.isDataFlavorSupported(DnD.flavor)) {
-        abortDrag(e)
-
-      } else t.getTransferData(DnD.flavor) match {
-        case d: DnD.Drag[_] if d.document == document =>
-          val loc     = e.getLocation
-          val drag    = d.asInstanceOf[DnD.Drag[S]]
-          val drop    = mkDrop(drag, loc)
-          updateDnD(Some(drop))
-          e.acceptDrag(COPY)
-
-        case _ =>
-          abortDrag(e)
+    private def mkExtStringDrag(t: Transferable, isDragging: Boolean): Option[DnD.ExtAudioRegionDrag[S]] = {
+      // stupid OS X doesn't give out the string data before drop actually happens
+      if (isDragging) {
+        return Some(ExtAudioRegionDrag(document, file(""), Span(0, 0)))
       }
+
+      val data  = t.getTransferData(DataFlavor.stringFlavor)
+      val str   = data.toString
+      val arr   = str.split(":")
+      if (arr.length == 3) {
+        Try {
+          val path = file(arr(0))
+          val span = Span(arr(1).toLong, arr(2).toLong)
+          ExtAudioRegionDrag(document, path, span)
+        } .toOption
+      } else None
     }
+
+    private def acceptAndUpdate(e: DropTargetDragEvent, drag: Drag[S]): Unit = {
+      val loc   = e.getLocation
+      val drop  = mkDrop(drag, loc)
+      updateDnD(Some(drop))
+      e.acceptDrag(COPY)
+    }
+
+    private def isSupported(t: Transferable): Boolean =
+      t.isDataFlavorSupported(DnD.flavor) ||
+      t.isDataFlavorSupported(DataFlavor.stringFlavor)
+
+    private def mkDrag(t: Transferable, isDragging: Boolean): Option[Drag[S]] =
+      if (t.isDataFlavorSupported(DnD.flavor)) {
+        t.getTransferData(DnD.flavor) match {
+          case d: DnD.Drag[_] if d.document == document => Some(d.asInstanceOf[DnD.Drag[S]])
+          case _ => None
+        }
+
+      } else if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+        mkExtStringDrag(t, isDragging = isDragging)
+
+      } else {
+        None
+      }
+
+    private def process(e: DropTargetDragEvent): Unit =
+      mkDrag(e.getTransferable, isDragging = true) match {
+        case Some(drag) => acceptAndUpdate(e, drag)
+        case _          => abortDrag(e)
+      }
 
     def drop(e: DropTargetDropEvent): Unit = {
       updateDnD(None)
 
       val t = e.getTransferable
-      if (!t.isDataFlavorSupported(DnD.flavor)) {
+      if (!isSupported(t)) {
         e.rejectDrop()
-
-      } else t.getTransferData(DnD.flavor) match {
-        case d: DnD.Drag[_] =>
-          val drag    = d.asInstanceOf[DnD.Drag[S]]
-          e.acceptDrop(COPY)
+        return
+      }
+      e.acceptDrop(COPY)
+      mkDrag(t, isDragging = false) match {
+        case Some(drag) =>
           val loc     = e.getLocation
           val drop    = mkDrop(drag, loc)
           val success = acceptDnD(drop)
           e.dropComplete(success)
 
-        case _ =>
-          e.rejectDrop()
+        case _ => e.rejectDrop()
       }
     }
   }

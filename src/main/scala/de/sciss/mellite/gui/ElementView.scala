@@ -220,7 +220,7 @@ object ElementView {
     /** The children of the folder. This variable _must only be accessed or updated_ on the event thread. */
     var children: Vec[ElementView[S]]
 
-    def value {}
+    def value = ()
   }
 
   // -------- Group --------

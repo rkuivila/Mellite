@@ -29,14 +29,12 @@ package gui
 
 import desktop.impl.WindowImpl
 import desktop.{Window, WindowHandler}
-import scala.swing.{FlowPanel, ToggleButton, Action, Button, Label, Slider, Component, Orientation, BoxPanel, Swing}
+import scala.swing.{FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
 import de.sciss.synth.proc.{TxnPeek, Server, AuralSystem}
 import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
 import de.sciss.synth.{addToTail, SynthDef, addToHead, AudioBus}
 import Swing._
-import javax.swing.UIManager
 import java.awt.{Color, Font}
-import java.util.Locale
 import scala.swing.event.ValueChanged
 import collection.breakOut
 import javax.swing.border.Border
@@ -80,7 +78,7 @@ final class MainFrame extends WindowImpl { me =>
     // else
       new Font("SansSerif", Font.PLAIN, 9)
 
-  private val tinyFont = new Font("SansSerif", Font.PLAIN, 7)
+  // private val tinyFont = new Font("SansSerif", Font.PLAIN, 7)
 
   private def started(s: Server): Unit = {
     // XXX TODO: dirty dirty
@@ -102,16 +100,17 @@ final class MainFrame extends WindowImpl { me =>
         val in        = In.ar(0, numOuts)
         val mainAmp   = Lag.ar(K2A.ar("amp".kr(1)))
         val mainIn    = in * mainAmp
-        val mainLim   = Limiter.ar(mainIn, level = -0.2.dbamp)
+        val ceil      = -0.2.dbamp
+        val mainLim   = Limiter.ar(mainIn, level = ceil)
         val lim       = Lag.ar(K2A.ar("limiter".kr(1) * 2 - 1))
         val mainOut   = LinXFade2.ar(mainIn, mainLim, pan = lim)
         val hpBusL    = "hp-bus".kr(0)
         val hpBusR    = hpBusL + 1
         val hpAmp     = Lag.ar(K2A.ar("hp-amp".kr(1)))
-        val hpInL     = Mix.tabulate(numOuts + 1 / 2)(i => in \ (i * 2))
-        val hpInR     = Mix.tabulate(numOuts     / 2)(i => in \ (i * 2 + 1))
-        val hpLimL    = Limiter.ar(hpInL * hpAmp, level = -0.2.dbamp)
-        val hpLimR    = Limiter.ar(hpInR * hpAmp, level = -0.2.dbamp)
+        val hpInL     = Mix.tabulate((numOuts + 1) / 2)(i => in \ (i * 2))
+        val hpInR     = Mix.tabulate( numOuts      / 2)(i => in \ (i * 2 + 1))
+        val hpLimL    = Limiter.ar(hpInL * hpAmp, level = ceil)
+        val hpLimR    = Limiter.ar(hpInR * hpAmp, level = ceil)
 
         val hpActive  = Lag.ar(K2A.ar("hp".kr(0)))
         val out       = (0 until numOuts).map { i =>
@@ -201,9 +200,6 @@ final class MainFrame extends WindowImpl { me =>
   }
 
   private def mkFader(fun: Int => Unit): Slider = {
-
-    println(s"Font is $smallFont")
-
     val zeroMark    = "0\u25C0"
     val lbMap: Map[Int, Label] = (-72 to 18 by 12).map { dec =>
       val txt = if (dec == -72) "-\u221E" else if (dec == 0) zeroMark else dec.toString
