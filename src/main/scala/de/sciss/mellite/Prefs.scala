@@ -25,12 +25,16 @@
 
 package de.sciss.mellite
 
-import de.sciss.desktop.Preferences
+import de.sciss.desktop.Preferences.Entry
 
 object Prefs {
   import Mellite.userPrefs
 
-  final val defaultAudioDevice = "<default>"
+  final val defaultAudioDevice      = "<default>"
+  final val defaultAudioNumOutputs  = 8
+  final val defaultHeadphonesBus    = 0
 
-  def audioDevice: Preferences.Entry[String] = userPrefs[String]("audio-device")
+  def audioDevice    : Entry[String] = userPrefs[String]("audio-device")
+  def audioNumOutputs: Entry[Int   ] = userPrefs[Int   ]("audio-num-outputs")
+  def headphonesBus  : Entry[Int   ] = userPrefs[Int   ]("headphones-bus")
 }

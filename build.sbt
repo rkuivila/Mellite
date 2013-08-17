@@ -14,7 +14,7 @@ scalaVersion := "2.10.2"
 
 libraryDependencies ++= Seq(
   "de.sciss" %% "soundprocesses"     % "1.9.+",
-  "de.sciss" %% "scalacolliderswing" % "1.9.+",
+  "de.sciss" %% "scalacolliderswing" % "1.9.1+",  // AudioBusMeter in 1.9.1
   "de.sciss" %% "lucrestm-bdb"       % "2.0.+",
   "de.sciss" %% "desktop"            % "0.3.3+",
   "de.sciss" %% "swingplus"          % "0.0.1+",
