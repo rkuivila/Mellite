@@ -47,6 +47,7 @@ object ActionOpenFile extends Action( "Open...") {
   // XXX TODO: should be in another place
   def openGUI[S <: Sys[S]](doc: Document[S]): Unit = {
     recentFiles.add(doc.folder)
+    Mellite.documentHandler.addDocument(doc)
     doc match {
       case cf: ConfluentDocument =>
         (cf: ConfluentDocument).system.durable.step { implicit tx =>

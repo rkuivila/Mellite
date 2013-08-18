@@ -32,6 +32,7 @@ import stm.store.BerkeleyDB
 import de.sciss.synth.proc.Confluent
 import de.sciss.serial.{DataInput, Serializer, DataOutput}
 import de.sciss.synth.expr.ExprImplicits
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 object DocumentImpl {
   private type S = Cf
@@ -113,5 +114,22 @@ object DocumentImpl {
     type I = system.I
     val inMemoryBridge = (tx: S#Tx) => Confluent.inMemory(tx)
     def inMemoryCursor: stm.Cursor[I] = system.inMemory
+
+    def collectElements[A](pf: PartialFunction[Element[S], A])(implicit tx: S#Tx): Vec[A] = {
+      var b   = Vec.newBuilder[A]
+      val fun = pf.lift
+
+      def loop(f: Folder[S]): Unit =
+        f.iterator.foreach { elem =>
+          fun(elem).foreach(b += _)
+          elem match {
+            case ef: Element.Folder[S] => loop(ef.entity)
+            case _ =>
+          }
+        }
+
+      loop(elements)
+      b.result()
+    }
   }
 }

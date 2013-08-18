@@ -44,14 +44,8 @@ object InterpreterFrame {
 
   /** The content of this object is imported into the REPL */
   object Bindings {
-    //    def document = {
-    //      //      val docs = DocumentHandler.instance.allDocuments.toIndexedSeq
-    //      //      if (docs.isEmpty) sys.error("No document open")
-    //      //      val doc = docs.last
-    //      //      if (docs.size > 1) println(s"WARNING: multiple documents open. Assuming '${doc.file.name}")
-    //      //      doc
-    //      DocumentViewHandler.instance.activeDocument.getOrElse(sys.error("No document open"))
-    //    }
+    def document =
+      Mellite.documentHandler.activeDocument.getOrElse(sys.error("No document open"))
   }
 }
 trait InterpreterFrame {

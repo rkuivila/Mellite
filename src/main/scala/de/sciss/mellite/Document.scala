@@ -34,6 +34,7 @@ import impl.{DocumentImpl => Impl}
 import de.sciss.synth.proc.{Proc, Sys}
 import de.sciss.synth.expr.SpanLikes
 import de.sciss.serial.Serializer
+import collection.immutable.{IndexedSeq => Vec}
 
 object Document {
   type Group       [S <: Sys[S]] = BiGroup.Modifiable   [S, Proc[S], Proc.Update[S]]
@@ -72,6 +73,8 @@ sealed trait Document[S <: Sys[S]] {
   implicit def inMemoryCursor: stm.Cursor[I]
 
   def elements(implicit tx: S#Tx): Folder[S]
+
+  def collectElements[A](pf: PartialFunction[Element[S], A])(implicit tx: S#Tx): Vec[A]
 
   implicit def systemType: reflect.runtime.universe.TypeTag[S]
 }

@@ -32,7 +32,7 @@ import desktop.Menu
 import synth.proc.AuralSystem
 
 object Mellite extends SwingApplicationImpl("Mellite") {
-  type Document = Unit
+  type Document = mellite.Document[_]
 
   // lucre.event    .showLog = true
   // lucre.confluent.showLog = true
