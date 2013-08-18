@@ -28,12 +28,11 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{ProcKeys, Attribute, Proc, Sys}
+import de.sciss.synth.proc.{Proc, Sys}
 import java.awt.{Point, Toolkit}
 import java.awt.event.MouseEvent
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
-import de.sciss.synth.expr.Booleans
 import de.sciss.mellite.gui.TrackTool.Mute
 
 object MuteImpl {

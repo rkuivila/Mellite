@@ -30,7 +30,7 @@ package gui
 import scala.swing.Swing._
 import scalaswingcontrib.group.GroupPanel
 import scala.swing.{AbstractButton, Swing, Dialog, Component, TextField, Label, Alignment}
-import java.awt.{Rectangle, EventQueue, GraphicsEnvironment}
+import java.awt.{Rectangle, GraphicsEnvironment}
 import javax.swing.Timer
 
 // XXX TODO: this stuff should go somewhere for re-use.

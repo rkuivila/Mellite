@@ -28,7 +28,7 @@ package gui
 
 import de.sciss.synth.proc.{AuralSystem, Sys}
 import scala.swing.{Action, Component}
-import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl, ProcView}
+import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Disposable
 import de.sciss.audiowidgets.TimelineModel

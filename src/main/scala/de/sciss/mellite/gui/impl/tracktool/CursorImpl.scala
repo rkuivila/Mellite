@@ -29,14 +29,13 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{Attribute, ProcKeys, Proc, Sys}
+import de.sciss.synth.proc.{Proc, Sys}
 import java.awt.event.MouseEvent
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.desktop.OptionPane
 import scala.swing.{Label, FlowPanel, TextField}
-import de.sciss.synth.expr.{ExprImplicits, Strings}
 
 final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends RegionImpl[S, TrackTool.Cursor] {
 

@@ -28,7 +28,6 @@ package mellite
 package impl
 
 import de.sciss.serial.{DataInput, DataOutput, ImmutableSerializer}
-import scala.annotation.switch
 import scala.concurrent._
 import scala.collection.mutable
 import java.io.{ObjectInputStream, ByteArrayInputStream, ObjectOutputStream, File}

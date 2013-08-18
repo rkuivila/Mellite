@@ -30,7 +30,6 @@ import de.sciss.synth.proc.{Grapheme, Sys}
 import de.sciss.synth.expr.{Doubles, Longs}
 import de.sciss.synth.io.AudioFileSpec
 import de.sciss.file._
-import de.sciss.lucre.stm
 
 object ElementActions {
   def addAudioFile[S <: Sys[S]](folder: Folder[S], index: Int, loc: Location.Modifiable[S],
