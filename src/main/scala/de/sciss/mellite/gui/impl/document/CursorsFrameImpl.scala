@@ -42,7 +42,7 @@ import de.sciss.mellite.gui._
 import de.sciss.mellite.gui.impl.ComponentHolder
 import de.sciss.desktop
 import de.sciss.treetable.TreeTableSelectionChanged
-import de.sciss.lucre.event.Change
+import de.sciss.model.Change
 
 object CursorsFrameImpl {
   type S = proc.Confluent

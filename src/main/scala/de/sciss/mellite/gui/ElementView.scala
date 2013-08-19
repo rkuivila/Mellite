@@ -37,7 +37,7 @@ import java.awt.Toolkit
 import javax.swing.{Icon, ImageIcon}
 import de.sciss.synth.expr.ExprImplicits
 import scala.util.Try
-import de.sciss.lucre.event.Change
+import de.sciss.model.Change
 
 object ElementView {
   import java.lang.{String => _String}

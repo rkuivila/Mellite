@@ -164,7 +164,7 @@ object RecursionImpl {
 
     // ---- event dorfer ----
 
-    def changed: evt.EventLike[S, Recursion.Update[S], Recursion[S]] = this
+    def changed: evt.EventLike[S, Recursion.Update[S]] = this
 
     protected def reader: evt.Reader[S, Recursion[S]] = serializer
 

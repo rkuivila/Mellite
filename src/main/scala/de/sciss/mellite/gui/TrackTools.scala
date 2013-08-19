@@ -29,8 +29,7 @@ package gui
 
 import java.awt.Cursor
 import annotation.switch
-import model.Model
-import de.sciss.lucre.event.Change
+import de.sciss.model.{Change, Model}
 import de.sciss.synth.proc.{FadeSpec, Sys}
 import scala.swing.Component
 import javax.swing.Icon

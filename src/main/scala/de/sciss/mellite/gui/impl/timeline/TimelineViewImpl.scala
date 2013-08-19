@@ -46,7 +46,6 @@ import scala.swing.Swing._
 import java.awt.event.{KeyEvent, ActionEvent}
 import de.sciss.desktop.FocusType
 import Predef.{any2stringadd => _, _}
-import de.sciss.lucre.event.Change
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
 import de.sciss.synth.expr.{Doubles, ExprImplicits, Longs, SpanLikes}
@@ -58,6 +57,7 @@ import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
+import de.sciss.model.Change
 
 object TimelineViewImpl {
   private val colrBg              = Color.darkGray

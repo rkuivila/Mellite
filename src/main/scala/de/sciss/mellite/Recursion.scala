@@ -70,5 +70,5 @@ trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] {
   /** Moves the product to deployed position. */
   def iterate()(implicit tx: S#Tx): Unit
 
-  def changed: EventLike[S, Recursion.Update[S], Recursion[S]]
+  def changed: EventLike[S, Recursion.Update[S]]
 }

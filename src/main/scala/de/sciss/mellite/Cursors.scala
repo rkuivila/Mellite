@@ -32,6 +32,7 @@ import lucre.event.{DurableLike => DSys}
 import lucre.confluent.reactive.{ConfluentReactiveLike => KSys}
 import impl.{CursorsImpl => Impl}
 import de.sciss.lucre.expr.Expr
+import de.sciss.{model => m}
 
 object Cursors {
   def apply[S <: KSys[S], D1 <: DSys[D1]](seminal: S#Acc)
@@ -44,12 +45,12 @@ object Cursors {
 
   final case class Update[S <: KSys[S], D <: DSys[D]](source: Cursors[S, D], changes: Vec[Change[S, D]])
 
-  // final case class Advanced[S <: Sys[S], D <: Sys[D]](source: Cursors[S, D], change: evt.Change[S#Acc])
+  // final case class Advanced[S <: Sys[S], D <: Sys[D]](source: Cursors[S, D], change: m.Change[S#Acc])
   //   extends Update[S, D]
 
   sealed trait Change[S <: KSys[S], D <: DSys[D]]
 
-  final case class Renamed     [S <: KSys[S], D <: DSys[D]](change: evt.Change[String])     extends Change[S, D]
+  final case class Renamed     [S <: KSys[S], D <: DSys[D]](change: m.Change[String])       extends Change[S, D]
   final case class ChildAdded  [S <: KSys[S], D <: DSys[D]](idx: Int, child: Cursors[S, D]) extends Change[S, D]
   final case class ChildRemoved[S <: KSys[S], D <: DSys[D]](idx: Int, child: Cursors[S, D]) extends Change[S, D]
   final case class ChildUpdate [S <: KSys[S], D <: DSys[D]](change: Update[S, D])           extends Change[S, D]
@@ -69,5 +70,5 @@ trait Cursors[S <: KSys[S], D <: DSys[D]] extends serial.Writable {
   def addChild(seminal: S#Acc)(implicit tx: D#Tx): Cursors[S, D]
   def removeChild(child: Cursors[S, D])(implicit tx: D#Tx): Unit
 
-  def changed: evt.EventLike[D, Cursors.Update[S, D], Cursors[S, D]]
+  def changed: evt.EventLike[D, Cursors.Update[S, D]]
 }

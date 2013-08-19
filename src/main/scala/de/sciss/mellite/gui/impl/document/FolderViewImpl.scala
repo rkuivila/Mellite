@@ -37,7 +37,6 @@ import de.sciss.lucre.stm.{Disposable, Cursor, IdentifierMap}
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.expr.ExprImplicits
 import scala.util.control.NonFatal
-import de.sciss.lucre.event.Change
 import javax.swing.{DropMode, JComponent, TransferHandler}
 import java.awt.datatransfer.{DataFlavor, Transferable}
 import javax.swing.TransferHandler.TransferSupport
@@ -47,6 +46,7 @@ import java.io.File
 import de.sciss.lucre.stm
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
+import de.sciss.model.Change
 
 object FolderViewImpl {
   private final val DEBUG = false

@@ -36,6 +36,7 @@ import evt.{EventLike, EventLikeSerializer}
 import collection.immutable.{IndexedSeq => Vec}
 import language.higherKinds
 import de.sciss.serial.{DataOutput, DataInput, Writable}
+import de.sciss.{model => m}
 
 object Element {
   import scala.{Int => _Int, Double => _Double}
@@ -49,7 +50,7 @@ object Element {
   final case class Update [S <: Sys[S]](element: Element[S], changes: Vec[Change[S]])
 
   sealed trait Change[S <: Sys[S]]
-  final case class Renamed[S <: Sys[S]](change: evt.Change[_String]) extends Change[S]
+  final case class Renamed[S <: Sys[S]](change: m.Change[_String]) extends Change[S]
   final case class Entity [S <: Sys[S]](change: Any) extends Change[S]
 
   sealed trait Companion[E[S <: Sys[S]] <: Writable ] {
@@ -433,7 +434,7 @@ object Element {
   private sealed trait PassiveImpl[S <: Sys[S]]
     extends Impl[S] {
 
-    def changed: EventLike[S, Element.Update[S], Element[S]] = NameChange
+    def changed: EventLike[S, Element.Update[S]] = NameChange
   }
 
   private sealed trait ActiveImpl[S <: Sys[S]]
@@ -442,7 +443,7 @@ object Element {
 
     // ---- events ----
 
-    protected def entityEvent: evt.EventLike[S, Any, _]
+    protected def entityEvent: evt.EventLike[S, Any]
 
     final protected def events = Vec(NameChange, EntityChange)
     final protected def changedSlot = 2
@@ -473,5 +474,5 @@ sealed trait Element[S <: Sys[S]] extends Mutable[S#ID, S#Tx] {
   /** An event for tracking element changes, which can be renaming
     * the element or forwarding changes from the underlying entity.
     */
-  def changed: EventLike[S, Element.Update[S], Element[S]]
+  def changed: EventLike[S, Element.Update[S]]
 }
