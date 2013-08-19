@@ -1,6 +1,6 @@
 name := "Mellite"
 
-version := "0.3.0-SNAPSHOT"
+version := "0.3.0"
 
 organization := "de.sciss"
 
@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "audiowidgets-app"   % "1.3.+",
   "de.sciss" %% "sonogramoverview"   % "1.6.2+",  // bug in 1.6.1
   "de.sciss" %% "serial"             % "1.0.1+",  // bug in 1.0.0
-  "de.sciss" %% "treetable-scala"    % "1.3.+",
+  "de.sciss" %% "treetable-scala"    % "1.3.1+",
   "de.sciss" %% "fscapejobs"         % "1.4.+",
   "de.sciss" %% "strugatzki"         % "2.1.+",
   "de.sciss" %% "fileutil"           % "1.0.+"
