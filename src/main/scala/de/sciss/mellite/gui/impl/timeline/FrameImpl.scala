@@ -28,29 +28,34 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{AuralSystem, Sys}
+import de.sciss.synth.proc.{AuralSystem, Sys, ProcGroup}
 import de.sciss.mellite.{Mellite, Element, Document}
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui._
-import de.sciss.desktop.Window
+import de.sciss.desktop.{OptionPane, Window}
 import de.sciss.desktop.impl.WindowImpl
 import scala.swing.event.WindowClosing
 import scala.swing.Action
+import de.sciss.lucre.bitemp.impl.BiGroupImpl
 
 object FrameImpl {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S],
                          aural: AuralSystem): TimelineFrame[S] = {
-    val tlv   = TimelineView(document, group)
-    val name  = group.name.value
-    val res   = new Impl(tlv, name)
+    val tlv     = TimelineView(document, group)
+    val name    = group.name.value
+    import ProcGroup.serializer
+    val groupH  = tx.newHandle(group.entity)
+    val res     = new Impl(tlv, name, groupH)
     guiFromTx {
       res.init()
     }
     res
   }
 
-  private final class Impl[S <: Sys[S]](val view: TimelineView[S], name: String)(implicit _cursor: stm.Cursor[S])
+  private final class Impl[S <: Sys[S]](val view: TimelineView[S], name: String,
+                                        groupH: stm.Source[S#Tx, ProcGroup[S]])
+                                       (implicit _cursor: stm.Cursor[S])
     extends TimelineFrame[S] {
 
     private var _window: Window = _
@@ -84,8 +89,26 @@ object FrameImpl {
           "actions.stopAllSound"  -> view.stopAllSoundAction,
           "timeline.splitObjects" -> view.splitObjectsAction,
           "actions.debugPrint"    -> Action(null) {
-            view.procSelectionModel.iterator.foreach { pv =>
-              println(pv.debugString)
+            val it = view.procSelectionModel.iterator
+            if (it.hasNext)
+              it.foreach { pv =>
+                println(pv.debugString)
+              }
+            else {
+              val opt = _cursor.step { implicit tx =>
+                // groupH().debugPrint
+                BiGroupImpl.debugSanitize(groupH(), reportOnly = true)
+              }
+              opt.foreach { info =>
+                println(info)
+                val pane = OptionPane.confirmation(message = "Correct the data structure?",
+                  optionType = OptionPane.Options.YesNo, messageType = OptionPane.Message.Warning)
+                pane.title = "Sanitize Timeline"
+                val sel = pane.show(Some(this))
+                if (sel == OptionPane.Result.Yes) _cursor.step { implicit tx =>
+                  BiGroupImpl.debugSanitize(groupH(), reportOnly = false)
+                }
+              }
             }
           }
         )

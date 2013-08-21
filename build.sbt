@@ -1,6 +1,6 @@
 name := "Mellite"
 
-version := "0.3.0"
+version := "0.3.1-SNAPSHOT"
 
 organization := "de.sciss"
 
@@ -13,7 +13,7 @@ licenses := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 scalaVersion := "2.10.2"
 
 libraryDependencies ++= Seq(
-  "de.sciss" %% "soundprocesses"     % "1.9.+",
+  "de.sciss" %% "soundprocesses"     % "1.9.1+",
   "de.sciss" %% "scalacolliderswing" % "1.9.1+",  // AudioBusMeter in 1.9.1
   "de.sciss" %% "lucrestm-bdb"       % "2.0.+",
   "de.sciss" %% "desktop"            % "0.3.3+",
