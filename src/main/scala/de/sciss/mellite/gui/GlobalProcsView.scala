@@ -33,9 +33,9 @@ import de.sciss.lucre.stm
 import de.sciss.mellite.gui.impl.timeline.{GlobalProcsViewImpl => Impl, ProcView}
 
 object GlobalProcsView {
-  def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S])
+  def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] =
-      Impl(document, group)
+      Impl(document, group, selectionModel)
 }
 trait GlobalProcsView[S <: Sys[S]] extends Disposable[S#Tx] {
   def component: Component

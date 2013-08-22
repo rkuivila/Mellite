@@ -40,7 +40,7 @@ import de.sciss.synth.{Curve, proc}
 import de.sciss.fingertree.RangedSeq
 import javax.swing.{KeyStroke, UIManager}
 import java.util.Locale
-import de.sciss.lucre.bitemp.{BiExpr, BiGroup}
+import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.audiowidgets.{TimelineModel, Transport}
 import scala.swing.Swing._
 import java.awt.event.{KeyEvent, ActionEvent}
@@ -137,10 +137,11 @@ object TimelineViewImpl {
     val auralView = proc.AuralPresentation.runTx[S](transp, aural)
     disp ::= auralView
 
-    val global  = GlobalProcsView(document, group)
+    val procSelectionModel = ProcSelectionModel[S]
+    val global  = GlobalProcsView(document, group, procSelectionModel)
     disp ::= global
 
-    val view    = new Impl(document, groupH, transp, procMap, scanMap, tlm, auralView, global)
+    val view    = new Impl(document, groupH, transp, procMap, scanMap, tlm, auralView, global, procSelectionModel)
 
     val obsTransp = transp.react { implicit tx => {
       case proc.Transport.Play(t, time) => view.startedPlaying(time)
@@ -303,7 +304,8 @@ object TimelineViewImpl {
                                         scanMap           : ProcView.ScanMap[S],
                                         val timelineModel : TimelineModel,
                                         auralView         : AuralPresentation[S],
-                                        globalView        : GlobalProcsView[S])
+                                        globalView        : GlobalProcsView[S],
+                                        val procSelectionModel: ProcSelectionModel[S])
                                        (implicit cursor: Cursor[S])
     extends TimelineView[S] with ComponentHolder[Component] {
     impl =>
@@ -323,7 +325,6 @@ object TimelineViewImpl {
     )
 
     private var transportStrip: Component with Transport.ButtonStrip = _
-    val procSelectionModel = ProcSelectionModel[S]
 
     private var view: View    = _
     val disposables           = Ref(List.empty[Disposable[S#Tx]])
@@ -417,7 +418,7 @@ object TimelineViewImpl {
             val imp = ExprImplicits[S]
             import imp._
             val leftProc  = pv.proc
-            val rightProc = copyProc(oldSpan, leftProc)
+            val rightProc = ProcActions.copy(leftProc, Some(oldSpan))
             val rightSpan = oldSpan.value match {
               case Span.HasStart(leftStart) =>
                 val _rightSpan = SpanLikes.newVar(oldSpan())
@@ -442,30 +443,6 @@ object TimelineViewImpl {
           case _ =>
         }
       }
-
-    def copyProc(parentSpan: Expr[S, SpanLike], parent: Proc[S])(implicit tx: S#Tx): Proc[S] = {
-      val res   = Proc[S]
-      res.graph() = parent.graph
-      parent.attributes.iterator.foreach { case (key, attr) =>
-        val attrOut = attr.mkCopy()
-        res.attributes.put(key, attrOut)
-      }
-      parent.scans.keys.foreach(res.scans.add)
-      ProcActions.getAudioRegion(parentSpan, parent).foreach { case (time, audio) =>
-        val imp = ExprImplicits[S]
-        import imp._
-        val scanw       = res.scans.add(ProcKeys.graphAudio)
-        val grw         = Grapheme.Modifiable[S]
-        val gStart      = Longs.newVar(time.value)
-        val audioOffset = Longs.newVar(audio.offset.value)  // XXX TODO
-        val audioGain   = Doubles.newVar(audio.gain.value)
-        val gElem       = Grapheme.Elem.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
-        val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
-        grw.add(bi)
-        scanw addSource grw
-      }
-      res
-    }
 
     // ---- transport ----
 

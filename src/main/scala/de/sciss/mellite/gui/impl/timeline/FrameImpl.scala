@@ -99,8 +99,8 @@ object FrameImpl {
                 // groupH().debugPrint
                 BiGroupImpl.debugSanitize(groupH(), reportOnly = true)
               }
-              opt.foreach { info =>
-                println(info)
+              println(opt getOrElse "No problems found!")
+              if (opt.isDefined) {
                 val pane = OptionPane.confirmation(message = "Correct the data structure?",
                   optionType = OptionPane.Options.YesNo, messageType = OptionPane.Message.Warning)
                 pane.title = "Sanitize Timeline"

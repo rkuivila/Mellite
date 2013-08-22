@@ -124,6 +124,53 @@ object ProcActions {
     }
   }
 
+  /** Makes a copy of a proc. Copies the graph and all attributes, creates scans with the same keys
+    * and connects _outgoing_ scans.
+    *
+    * @param proc the process to copy
+    * @param span the process span. if given, tries to copy the audio grapheme as well.
+    * @return
+    */
+  def copy[S <: Sys[S]](proc: Proc[S], span: Option[Expr[S, SpanLike]])(implicit tx: S#Tx): Proc[S] = {
+    val res     = Proc[S]
+    res.graph() = proc.graph
+    proc.attributes.iterator.foreach { case (key, attr) =>
+      val attrOut = attr.mkCopy()
+      res.attributes.put(key, attrOut)
+    }
+    proc.scans.keys.foreach(res.scans.add)
+    span.foreach { sp =>
+      ProcActions.getAudioRegion(sp, proc).foreach { case (time, audio) =>
+        val imp = ExprImplicits[S]
+        import imp._
+        val scanw       = res.scans.add(ProcKeys.graphAudio)
+        val grw         = Grapheme.Modifiable[S]
+        val gStart      = Longs  .newVar(time        .value)
+        val audioOffset = Longs  .newVar(audio.offset.value)  // XXX TODO
+        val audioGain   = Doubles.newVar(audio.gain  .value)
+        val gElem       = Grapheme.Elem.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
+        val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
+        grw.add(bi)
+        scanw addSource grw
+      }
+    }
+
+    // connect outgoing scans
+    proc.scans.iterator.foreach {
+      case (key, scan) =>
+        val sinks = scan.sinks
+        if (sinks.nonEmpty) {
+          res.scans.get(key).foreach { scan2 =>
+            scan.sinks.foreach { link =>
+              scan2.addSink(link)
+            }
+          }
+        }
+    }
+
+    res
+  }
+
   def setGain[S <: Sys[S]](proc: Proc[S], gain: Double)(implicit tx: S#Tx): Unit = {
     val attr  = proc.attributes
     val imp   = ExprImplicits[S]

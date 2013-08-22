@@ -44,24 +44,48 @@ import scala.swing.event.TableColumnsSelected
 import scala.util.Try
 
 object GlobalProcsViewImpl {
-  def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S])
+  def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] = {
 
     import ProcGroup.Modifiable.serializer
     val groupHOpt = group.modifiableOption.map(tx.newHandle(_))
-    val view      = new Impl[S](document, groupHOpt)
+    val view      = new Impl[S](document, groupHOpt, selectionModel)
     guiFromTx(view.guiInit())
     view
   }
 
   private final class Impl[S <: Sys[S]](document: Document[S],
-                                        groupHOpt: Option[stm.Source[S#Tx, ProcGroup.Modifiable[S]]])
+                                        groupHOpt: Option[stm.Source[S#Tx, ProcGroup.Modifiable[S]]],
+                                        selectionModel: ProcSelectionModel[S])
                                        (implicit cursor: stm.Cursor[S])
     extends GlobalProcsView[S] with ComponentHolder[Component] {
 
     private var procSeq = Vec.empty[ProcView[S]]
 
     private def atomic[A](block: S#Tx => A): A = cursor.step(block)
+
+    private var table: Table = _
+
+    private val selectionListener: ProcSelectionModel.Listener[S] = {
+      case ProcSelectionModel.Update(_, _) =>
+        val items = selectionModel.iterator.flatMap { pv =>
+          pv.outputs.flatMap {
+            case (_, links) =>
+              links.flatMap { link =>
+                val tgt = link.target
+                if (tgt.isGlobal) Some(tgt) else None
+              }
+          }
+        } .toSet
+
+        val indices   = items.map(procSeq.indexOf(_))
+        val rows      = table.selection.rows
+        val toAdd     = indices.filterNot(rows.contains)
+        val toRemove  = rows.filterNot(indices.contains)
+
+        if (toRemove.nonEmpty) rows --= toRemove
+        if (toAdd   .nonEmpty) rows ++= toAdd
+    }
 
     // columns: name, gain, muted, bus
     private val tm = new AbstractTableModel {
@@ -146,7 +170,7 @@ object GlobalProcsViewImpl {
     }
 
     def guiInit(): Unit = {
-      val table         = new Table()
+      table             = new Table()
       table.peer.putClientProperty("JComponent.sizeVariant", "small")
       table.model       = tm
       // table.background  = Color.darkGray
@@ -225,13 +249,17 @@ object GlobalProcsViewImpl {
 
       val butPanel  = new FlowPanel(ggAdd, ggDelete)
 
+      selectionModel addListener selectionListener
+
       comp          = new BorderPanel {
         add(scroll, BorderPanel.Position.Center)
         if (groupHOpt.isDefined) add(butPanel, BorderPanel.Position.South) // only add buttons if group is modifiable
       }
     }
 
-    def dispose()(implicit tx: S#Tx) = ()
+    def dispose()(implicit tx: S#Tx): Unit = guiFromTx {
+      selectionModel removeListener  selectionListener
+    }
 
     def add(proc: ProcView[S]): Unit = {
       val row   = procSeq.size
