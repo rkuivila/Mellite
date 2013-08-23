@@ -95,11 +95,19 @@ object FrameImpl {
                 println(pv.debugString)
               }
             else {
-              val opt = _cursor.step { implicit tx =>
-                // groupH().debugPrint
-                BiGroupImpl.debugSanitize(groupH(), reportOnly = true)
+              val (treeS, opt) = _cursor.step { implicit tx =>
+                val s1 = groupH().debugPrint
+                val s2 = BiGroupImpl.debugSanitize(groupH(), reportOnly = true)
+                (s1, s2)
               }
-              println(opt getOrElse "No problems found!")
+              opt match {
+                case Some(txt) =>
+                  println(treeS)
+                  println()
+                  println(txt)
+                case _ =>
+                  println("No problems found!")
+              }
               if (opt.isDefined) {
                 val pane = OptionPane.confirmation(message = "Correct the data structure?",
                   optionType = OptionPane.Options.YesNo, messageType = OptionPane.Message.Warning)

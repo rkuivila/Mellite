@@ -59,7 +59,7 @@ object MenuBar {
     ).add(
       Group("actions", "Actions")
         .add(Item("stopAllSound",       proxy("Stop All Sound",           menu1 + VK_PERIOD)))
-        .add(Item("debugPrint",         "Debug Print"))
+        .add(Item("debugPrint",         proxy("Debug Print",              menu2 + VK_P)))
     ).add(
       // --- timeline menu ---
       Group("timeline", "Timeline")
