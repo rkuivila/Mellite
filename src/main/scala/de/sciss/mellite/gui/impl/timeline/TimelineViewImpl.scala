@@ -58,6 +58,7 @@ import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
 import de.sciss.model.Change
+import de.sciss.lucre.bitemp.impl.BiGroupImpl
 
 object TimelineViewImpl {
   private val colrBg              = Color.darkGray
@@ -408,6 +409,15 @@ object TimelineViewImpl {
       if (flt.hasNext) step { implicit tx => fun(tx)(flt) }
     }
 
+    private def debugCheckConsistency(info: => String)(implicit tx: S#Tx): Unit = {
+      val check = BiGroupImpl.verifyConsistency(groupH(), reportOnly = true)
+      check.foreach { msg =>
+        println(info)
+        println(msg)
+        sys.error("Rollback")
+      }
+    }
+
     def splitObjects(time: Long)(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit =
       for {
         group             <- groupH().modifiableOption
@@ -419,19 +429,22 @@ object TimelineViewImpl {
             import imp._
             val leftProc  = pv.proc
             val rightProc = ProcActions.copy(leftProc, Some(oldSpan))
-            val rightSpan = oldSpan.value match {
+            val oldVal    = oldSpan.value
+            val rightSpan = oldVal match {
               case Span.HasStart(leftStart) =>
-                val _rightSpan = SpanLikes.newVar(oldSpan())
-                ProcActions.resize(_rightSpan, rightProc, ProcActions.Resize(time - leftStart, 0L), timelineModel)
+                val _rightSpan  = SpanLikes.newVar(oldSpan())
+                val resize      = ProcActions.Resize(time - leftStart, 0L)
+                ProcActions.resize(_rightSpan, rightProc, resize, timelineModel)
                 _rightSpan
 
               case Span.HasStop(rightStop) =>
                 SpanLikes.newVar(Span(time, rightStop))
             }
 
-            oldSpan.value match {
+            oldVal match {
               case Span.HasStop(rightStop) =>
-                ProcActions.resize(oldSpan, leftProc, ProcActions.Resize(0L, time - rightStop), timelineModel)
+                val resize = ProcActions.Resize(0L, time - rightStop)
+                ProcActions.resize(oldSpan, leftProc, resize, timelineModel)
 
               case Span.HasStart(leftStart) =>
                 val leftSpan = Span(leftStart, time)
@@ -439,6 +452,7 @@ object TimelineViewImpl {
             }
 
             group.add(rightSpan, rightProc)
+            debugCheckConsistency(s"Split left = $leftProc, oldSpan = $oldVal; right = $rightProc, rightSpan = ${rightSpan.value}")
 
           case _ =>
         }
@@ -847,8 +861,18 @@ object TimelineViewImpl {
         step { implicit tx =>
           value match {
             case t: TrackTool.Cursor    => toolCursor   commit t
-            case t: TrackTool.Move      => toolMove     commit t
-            case t: TrackTool.Resize    => toolResize   commit t
+            case t: TrackTool.Move      =>
+              // println("\n----BEFORE----")
+              // println(group.debugPrint)
+              toolMove     commit t
+              // println("\n----AFTER----")
+              // println(group.debugPrint)
+              debugCheckConsistency(s"Move $t")
+
+            case t: TrackTool.Resize    =>
+              toolResize   commit t
+              debugCheckConsistency(s"Resize $t")
+
             case t: TrackTool.Gain      => toolGain     commit t
             case t: TrackTool.Mute      => toolMute     commit t
             case t: TrackTool.Fade      => toolFade     commit t

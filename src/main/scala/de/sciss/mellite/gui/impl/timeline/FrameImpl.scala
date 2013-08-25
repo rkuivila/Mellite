@@ -97,24 +97,22 @@ object FrameImpl {
             else {
               val (treeS, opt) = _cursor.step { implicit tx =>
                 val s1 = groupH().debugPrint
-                val s2 = BiGroupImpl.debugSanitize(groupH(), reportOnly = true)
+                val s2 = BiGroupImpl.verifyConsistency(groupH(), reportOnly = true)
                 (s1, s2)
               }
-              opt match {
-                case Some(txt) =>
-                  println(treeS)
-                  println()
-                  println(txt)
-                case _ =>
-                  println("No problems found!")
-              }
-              if (opt.isDefined) {
+              if (opt.isEmpty) {
+                println("No problems found!")
+              } else {
+                println(treeS)
+                println()
+                opt.foreach(println)
+
                 val pane = OptionPane.confirmation(message = "Correct the data structure?",
                   optionType = OptionPane.Options.YesNo, messageType = OptionPane.Message.Warning)
                 pane.title = "Sanitize Timeline"
                 val sel = pane.show(Some(this))
                 if (sel == OptionPane.Result.Yes) _cursor.step { implicit tx =>
-                  BiGroupImpl.debugSanitize(groupH(), reportOnly = false)
+                  BiGroupImpl.verifyConsistency(groupH(), reportOnly = false)
                 }
               }
             }

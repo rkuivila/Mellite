@@ -35,6 +35,8 @@ import de.sciss.audiowidgets.TimelineModel
 import de.sciss.synth.proc
 import scala.util.control.NonFatal
 import collection.breakOut
+import de.sciss.lucre.bitemp.impl.BiGroupImpl
+import proc.ProcGroup
 
 object ProcActions {
   private val MinDur    = 32
