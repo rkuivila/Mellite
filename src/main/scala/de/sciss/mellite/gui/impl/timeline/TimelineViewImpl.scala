@@ -409,7 +409,7 @@ object TimelineViewImpl {
       if (flt.hasNext) step { implicit tx => fun(tx)(flt) }
     }
 
-    private def debugCheckConsistency(info: => String)(implicit tx: S#Tx): Unit = {
+    private def debugCheckConsistency(info: => String)(implicit tx: S#Tx): Unit = if (DEBUG) {
       val check = BiGroupImpl.verifyConsistency(groupH(), reportOnly = true)
       check.foreach { msg =>
         println(info)
