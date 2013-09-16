@@ -48,7 +48,7 @@ import scala.util.{Failure, Try}
 import de.sciss.processor.Processor
 import de.sciss.file._
 import de.sciss.swingplus.{Spinner, Labeled}
-import de.sciss.lucre.synth.{Server, Sys}
+import de.sciss.lucre.synth.{Server, Synth, Sys}
 import de.sciss.lucre.synth.expr.{Longs, Doubles}
 
 object ActionBounceTimeline {

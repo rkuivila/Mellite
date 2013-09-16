@@ -113,7 +113,7 @@ object ProcView {
       span = spanV, track = track, nameOption = name, muted = mute, audio = audio,
       fadeIn = fadeIn, fadeOut = fadeOut, gain = gain, busOption = bus)
 
-    import CommonSerializers.Identifier
+    import de.sciss.lucre.synth.expr.IdentifierSerializer
     lazy val idH = tx.newHandle(timed.id)
 
     proc.scans.iterator.foreach { case (key, scan) =>

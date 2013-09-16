@@ -28,7 +28,7 @@ package gui
 package impl
 package audiofile
 
-import de.sciss.synth.proc.{Artifact, AuralSystem, Grapheme}
+import de.sciss.synth.proc.{Artifact, AuralSystem, Grapheme, ExprImplicits}
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
