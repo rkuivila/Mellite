@@ -268,7 +268,8 @@ object ProcActions {
     * @param time       the time offset in the group
     * @param track      the track to associate with the proc, or `-1` to have the track undefined
     * @param grapheme   the grapheme carrying the underlying audio file
-    * @param selection  the selection with respect to the grapheme (e.g. the selection's start will be become `time` in the group).
+    * @param selection  the selection with respect to the grapheme. This is the span inside the underlying audio file,
+    *                   whereas the proc will be placed in the group aligned with `time`.
     * @param bus        an optional bus to assign
     * @return           a tuple consisting of the span expression and the newly created proc.
     */
