@@ -33,7 +33,8 @@ import scala.annotation.switch
 import confluent.reactive.{ConfluentReactiveLike => KSys}
 import evt.{DurableLike => DSys}
 import de.sciss.lucre.expr.Expr
-import de.sciss.synth.expr.{ExprImplicits, Strings}
+import de.sciss.synth.proc.ExprImplicits
+import de.sciss.lucre.synth.expr.Strings
 
 object CursorsImpl {
   private final val COOKIE = 0x43737273 // "Csrs"

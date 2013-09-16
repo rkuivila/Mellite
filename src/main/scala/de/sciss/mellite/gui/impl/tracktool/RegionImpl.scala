@@ -28,10 +28,11 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Proc, Sys}
+import de.sciss.synth.proc.Proc
 import java.awt.event.MouseEvent
 import de.sciss.span.SpanLike
 import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.synth.Sys
 
 trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
   tool =>

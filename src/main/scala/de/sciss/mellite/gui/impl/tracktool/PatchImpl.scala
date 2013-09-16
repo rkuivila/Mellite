@@ -29,7 +29,7 @@ package impl
 package tracktool
 
 import java.awt.{Color, RenderingHints, Point, Toolkit}
-import de.sciss.synth.proc.{Sys, Proc}
+import de.sciss.synth.proc.Proc
 import de.sciss.mellite.gui.TimelineProcCanvas
 import de.sciss.mellite.gui.TrackTool
 import de.sciss.lucre.expr.Expr
@@ -39,6 +39,7 @@ import java.awt.geom.{Ellipse2D, Area}
 import javax.swing.ImageIcon
 import java.awt.event.MouseEvent
 import de.sciss.mellite.gui.impl.timeline.ProcView
+import de.sciss.lucre.synth.Sys
 
 object PatchImpl {
   private lazy val image: BufferedImage = {

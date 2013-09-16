@@ -29,10 +29,11 @@ package impl
 package audiofile
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{AuralSystem, Sys}
+import de.sciss.synth.proc.AuralSystem
 import de.sciss.desktop.impl.WindowImpl
 import de.sciss.desktop.Window
 import de.sciss.file._
+import de.sciss.lucre.synth.Sys
 
 object FrameImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.AudioGrapheme[S])

@@ -26,12 +26,13 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.{AuralSystem, Sys}
+import de.sciss.synth.proc.AuralSystem
 import scala.swing.{Action, Component}
 import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Disposable
 import de.sciss.audiowidgets.TimelineModel
+import de.sciss.lucre.synth.Sys
 
 object TimelineView {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])

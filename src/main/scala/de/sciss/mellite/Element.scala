@@ -26,10 +26,9 @@
 package de.sciss.mellite
 
 import de.sciss.lucre.{stm, event => evt}
-import de.sciss.synth.proc.{ProcGroup => _ProcGroup, Artifact => _Artifact, Grapheme, InMemory, Sys}
+import de.sciss.synth.proc.{ProcGroup => _ProcGroup, Artifact => _Artifact, Grapheme}
 import de.sciss.lucre.expr.Expr
 import stm.{Disposable, Mutable}
-import de.sciss.synth.expr.{Doubles, Strings, Ints}
 import annotation.switch
 import de.sciss.{serial, mellite}
 import evt.{EventLike, EventLikeSerializer}
@@ -37,6 +36,8 @@ import collection.immutable.{IndexedSeq => Vec}
 import language.higherKinds
 import de.sciss.serial.{DataOutput, DataInput, Writable}
 import de.sciss.{model => m}
+import de.sciss.lucre.synth.{InMemory, Sys}
+import de.sciss.lucre.synth.expr.{Doubles, Ints, Strings}
 
 object Element {
   import scala.{Int => _Int, Double => _Double}

@@ -33,8 +33,8 @@ import javax.swing.{KeyStroke, ButtonGroup}
 import collection.immutable.{IndexedSeq => Vec}
 import java.awt.event.KeyEvent
 import de.sciss.desktop.FocusType
-import de.sciss.synth.proc.Sys
 import de.sciss.desktop
+import de.sciss.lucre.synth.Sys
 
 final class PaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackTool[S, _]])
   extends BoxPanel(Orientation.Horizontal) {

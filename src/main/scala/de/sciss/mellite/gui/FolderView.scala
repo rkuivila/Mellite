@@ -26,7 +26,6 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.Sys
 import swing.Component
 import impl.document.{FolderViewImpl => Impl}
 import collection.immutable.{IndexedSeq => Vec}
@@ -34,6 +33,7 @@ import de.sciss.lucre.stm.{Cursor, Disposable}
 import de.sciss.model.Model
 import de.sciss.lucre.stm
 import java.io.File
+import de.sciss.lucre.synth.Sys
 
 object FolderView {
   def apply[S <: Sys[S]](document: Document[S], root: Folder[S])

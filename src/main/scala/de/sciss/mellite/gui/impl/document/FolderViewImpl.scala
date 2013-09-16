@@ -28,14 +28,13 @@ package gui
 package impl
 package document
 
-import de.sciss.synth.proc.{Artifact, Sys}
+import de.sciss.synth.proc.{ExprImplicits, Artifact}
 import swing.{ScrollPane, Component}
 import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
 import scalaswingcontrib.tree.Tree
 import de.sciss.lucre.stm.{Disposable, Cursor, IdentifierMap}
 import de.sciss.model.impl.ModelImpl
-import de.sciss.synth.expr.ExprImplicits
 import scala.util.control.NonFatal
 import javax.swing.{DropMode, JComponent, TransferHandler}
 import java.awt.datatransfer.{DataFlavor, Transferable}
@@ -47,6 +46,7 @@ import de.sciss.lucre.stm
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
 import de.sciss.model.Change
+import de.sciss.lucre.synth.Sys
 
 object FolderViewImpl {
   private final val DEBUG = false

@@ -29,7 +29,7 @@ package gui
 import de.sciss.lucre.stm.Cursor
 import impl.{TransportPanelImpl => Impl}
 import swing.Component
-import de.sciss.synth.proc.Sys
+import de.sciss.lucre.synth.Sys
 
 object TransportPanel {
    def apply[ S <: Sys[ S ]]( transport: Document.Transport[ S ])

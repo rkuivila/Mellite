@@ -30,7 +30,7 @@ package impl
 
 import lucre.stm
 import synth.proc
-import proc.{AuralPresentation, AuralSystem, Sys, ProcGroup}
+import proc.{AuralPresentation, AuralSystem, ProcGroup}
 import java.awt.event.{KeyEvent, ActionEvent}
 import scala.swing.{Swing, Action, Orientation, BoxPanel, Component}
 import de.sciss.audiowidgets.{TimelineModel, Transport}
@@ -38,6 +38,7 @@ import span.Span
 import desktop.{FocusType, KeyStrokes}
 import stm.Disposable
 import Swing._
+import de.sciss.lucre.synth.Sys
 
 // XXX TODO: DRY - look at TimelineViewImpl
 object TransportViewImpl {

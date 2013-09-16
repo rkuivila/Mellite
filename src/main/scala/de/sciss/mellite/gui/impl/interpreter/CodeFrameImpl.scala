@@ -28,7 +28,6 @@ package gui
 package impl
 package interpreter
 
-import de.sciss.synth.proc.Sys
 import de.sciss.desktop.{OptionPane, Window}
 import de.sciss.scalainterpreter.CodePane
 import de.sciss.desktop.impl.WindowImpl
@@ -39,6 +38,7 @@ import scala.concurrent.Future
 import Swing._
 import scala.util.Failure
 import scala.util.Success
+import de.sciss.lucre.synth.Sys
 
 object CodeFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.Code[S])

@@ -28,18 +28,18 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{FadeSpec, ProcKeys, Attribute, Grapheme, Scan, Proc, TimedProc, Sys}
+import de.sciss.synth.proc.{FadeSpec, ProcKeys, Attribute, Grapheme, Scan, Proc, TimedProc}
 import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.sonogram.{Overview => SonoOverview}
 import expr.Expr
-import de.sciss.synth.expr.SpanLikes
 import language.implicitConversions
 import scala.util.control.NonFatal
 import de.sciss.file._
 import de.sciss.lucre.stm.IdentifierMap
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.synth.proc.impl.CommonSerializers
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.expr.SpanLikes
 
 object ProcView {
   type LinkMap[S <: Sys[S]] = Map[String, Vec[ProcView.Link[S]]]

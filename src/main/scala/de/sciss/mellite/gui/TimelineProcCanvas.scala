@@ -27,11 +27,11 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.Sys
 import de.sciss.span.Span
 import de.sciss.audiowidgets.TimelineCanvas
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.synth.proc
+import de.sciss.lucre.synth.Sys
 
 trait TimelineProcCanvas[S <: Sys[S]] extends TimelineCanvas {
   def group(implicit tx: S#Tx): proc.ProcGroup[S]

@@ -27,7 +27,7 @@ package de.sciss
 
 import lucre.expr
 import expr.LinkedList
-import synth.proc.{InMemory, Sys, Confluent}
+import synth.proc.Confluent
 import de.sciss.serial.{Serializer, DataInput}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import java.text.SimpleDateFormat
@@ -35,6 +35,7 @@ import java.util.{Date, Locale}
 import scala.annotation.elidable
 import scala.annotation.elidable.CONFIG
 import scala.concurrent.ExecutionContext
+import de.sciss.lucre.synth.{InMemory, Sys}
 
 package object mellite {
   type Cf = Confluent

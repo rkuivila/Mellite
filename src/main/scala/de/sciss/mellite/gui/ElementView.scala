@@ -27,7 +27,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{Artifact, Grapheme, Sys}
+import de.sciss.synth.proc.{ExprImplicits, Artifact, Grapheme}
 import lucre.stm
 import swing.Swing
 import collection.immutable.{IndexedSeq => Vec}
@@ -35,9 +35,9 @@ import de.sciss.lucre.expr.LinkedList
 import java.io.File
 import java.awt.Toolkit
 import javax.swing.{Icon, ImageIcon}
-import de.sciss.synth.expr.ExprImplicits
 import scala.util.Try
 import de.sciss.model.Change
+import de.sciss.lucre.synth.Sys
 
 object ElementView {
   import java.lang.{String => _String}

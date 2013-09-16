@@ -29,9 +29,8 @@ package impl
 import java.io.{IOException, FileNotFoundException, File}
 import de.sciss.lucre.{confluent, stm}
 import stm.store.BerkeleyDB
-import de.sciss.synth.proc.Confluent
+import de.sciss.synth.proc.{ExprImplicits, Confluent}
 import de.sciss.serial.{DataInput, Serializer, DataOutput}
-import de.sciss.synth.expr.ExprImplicits
 import scala.collection.immutable.{IndexedSeq => Vec}
 
 object DocumentImpl {

@@ -29,11 +29,11 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{Proc, Sys}
+import de.sciss.synth.proc.{ExprImplicits, Proc}
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
-import de.sciss.synth.expr.ExprImplicits
 import de.sciss.synth
+import de.sciss.lucre.synth.Sys
 
 final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Gain] {

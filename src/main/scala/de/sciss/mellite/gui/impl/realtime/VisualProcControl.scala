@@ -35,7 +35,7 @@ import java.awt.geom.Point2D
 import prefuse.Display
 import prefuse.visual.{EdgeItem, NodeItem, AggregateItem, VisualItem}
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.Sys
+import de.sciss.lucre.synth.Sys
 
 class VisualProcControl[S <: Sys[S]](cursor: Cursor[S]) extends ControlAdapter {
 

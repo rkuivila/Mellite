@@ -28,7 +28,7 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{AuralSystem, Sys, ProcGroup}
+import de.sciss.synth.proc.{AuralSystem, ProcGroup}
 import de.sciss.mellite.{Mellite, Element, Document}
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui._
@@ -37,6 +37,7 @@ import de.sciss.desktop.impl.WindowImpl
 import scala.swing.event.WindowClosing
 import scala.swing.Action
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
+import de.sciss.lucre.synth.Sys
 
 object FrameImpl {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])

@@ -28,12 +28,13 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Proc, Sys}
+import de.sciss.synth.proc.Proc
 import java.awt.{Point, Toolkit}
 import java.awt.event.MouseEvent
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
 import de.sciss.mellite.gui.TrackTool.Mute
+import de.sciss.lucre.synth.Sys
 
 object MuteImpl {
   private lazy val cursor = {

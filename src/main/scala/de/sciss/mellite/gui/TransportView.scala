@@ -28,12 +28,13 @@ package mellite
 package gui
 
 import synth.proc
-import proc.{AuralSystem, AuralPresentation, Sys, ProcGroup, ProcTransport}
+import proc.{AuralSystem, AuralPresentation, ProcGroup, ProcTransport}
 import lucre.stm
 import impl.{TransportViewImpl => Impl}
 import stm.Disposable
 import scala.swing.Component
 import de.sciss.audiowidgets.TimelineModel
+import de.sciss.lucre.synth.Sys
 
 object TransportView {
   def apply[S <: Sys[S], I <: stm.Sys[I]](group: ProcGroup[S], sampleRate: Double, timelineModel: TimelineModel)

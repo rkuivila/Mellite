@@ -28,8 +28,8 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.Sys
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
+import de.sciss.lucre.synth.Sys
 
 trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCanvas[S] {
   final val trackTools = TrackTools[S](this)

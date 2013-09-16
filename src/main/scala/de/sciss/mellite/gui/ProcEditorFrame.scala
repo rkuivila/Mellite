@@ -28,8 +28,9 @@ package gui
 
 import de.sciss.lucre.stm.{Disposable, Cursor}
 import swing.Frame
-import de.sciss.synth.proc.{Sys, Proc}
+import de.sciss.synth.proc.Proc
 import impl.{ProcEditorFrameImpl => Impl}
+import de.sciss.lucre.synth.Sys
 
 object ProcEditorFrame {
   def apply[S <: Sys[S]](proc: Proc[S])(implicit tx: S#Tx, cursor: Cursor[S]): ProcEditorFrame[S] =

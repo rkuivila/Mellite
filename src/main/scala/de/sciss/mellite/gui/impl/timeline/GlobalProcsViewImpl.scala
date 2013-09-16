@@ -29,7 +29,7 @@ package impl
 package timeline
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{Sys, ProcGroup}
+import de.sciss.synth.proc.ProcGroup
 import scala.swing.{Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
 import collection.immutable.{IndexedSeq => Vec}
 import javax.swing.table.{TableColumnModel, AbstractTableModel}
@@ -39,9 +39,10 @@ import de.sciss.desktop.OptionPane
 import javax.swing.{JComponent, TransferHandler, DropMode}
 import javax.swing.TransferHandler.TransferSupport
 import java.awt.datatransfer.Transferable
-import de.sciss.synth.expr.Ints
 import scala.swing.event.TableColumnsSelected
 import scala.util.Try
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.expr.Ints
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S], selectionModel: ProcSelectionModel[S])

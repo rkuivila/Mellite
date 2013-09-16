@@ -27,9 +27,10 @@ package de.sciss.mellite.gui
 
 import de.sciss.lucre.stm.Cursor
 import de.sciss.synth.proc
-import proc.{Sys, ProcTransport}
+import proc.ProcTransport
 import impl.realtime.{PanelImpl => Impl}
 import swing.Component
+import de.sciss.lucre.synth.Sys
 
 object InstantGroupPanel {
   def apply[S <: Sys[S]](transport: ProcTransport[S])

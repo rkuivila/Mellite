@@ -28,15 +28,15 @@ package gui
 package impl
 
 import de.sciss.lucre.stm.{Source, Disposable, Cursor}
-import de.sciss.synth.proc.{ProcKeys, Attribute, Sys, Proc}
+import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Attribute, Proc}
 import swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
 import javax.swing.WindowConstants
 import java.awt.event.{WindowEvent, WindowAdapter}
 import de.sciss.scalainterpreter.{Interpreter, CodePane}
 import java.awt.Dimension
 import de.sciss.synth.SynthGraph
-import de.sciss.synth.expr.ExprImplicits
 import de.sciss.mellite.impl.InterpreterSingleton
+import de.sciss.lucre.synth.Sys
 
 object ProcEditorFrameImpl {
   def apply[S <: Sys[S]](proc: Proc[S])(implicit tx: S#Tx, cursor: Cursor[S]): ProcEditorFrame[S] = {

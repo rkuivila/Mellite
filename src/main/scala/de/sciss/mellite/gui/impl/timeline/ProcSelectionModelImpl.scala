@@ -29,7 +29,7 @@ package impl
 package timeline
 
 import de.sciss.model.impl.ModelImpl
-import de.sciss.synth.proc.Sys
+import de.sciss.lucre.synth.Sys
 
 final class ProcSelectionModelImpl[S <: Sys[S]]
   extends ProcSelectionModel[S] with ModelImpl[ProcSelectionModel.Update[S]] {

@@ -30,8 +30,7 @@ package document
 
 import scala.swing.{ComboBox, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{ProcGroup, Sys}
-import de.sciss.synth.expr._
+import de.sciss.synth.proc.{ExprImplicits, ProcGroup}
 import de.sciss.desktop.{FileDialog, DialogSource, Window, Menu}
 import scalaswingcontrib.PopupMenu
 import de.sciss.desktop.impl.WindowImpl
@@ -39,6 +38,8 @@ import de.sciss.synth.io.AudioFile
 import javax.swing.SpinnerNumberModel
 import de.sciss.file._
 import de.sciss.swingplus.Spinner
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.expr.{Strings, Doubles, Ints}
 
 object ElementsFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx,

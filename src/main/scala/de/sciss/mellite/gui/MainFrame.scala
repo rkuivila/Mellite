@@ -30,7 +30,7 @@ package gui
 import desktop.impl.WindowImpl
 import desktop.{Window, WindowHandler}
 import scala.swing.{FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
-import de.sciss.synth.proc.{TxnPeek, Server, AuralSystem}
+import de.sciss.synth.proc.AuralSystem
 import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
 import de.sciss.synth.{addToTail, SynthDef, addToHead, AudioBus}
 import Swing._
@@ -38,6 +38,7 @@ import java.awt.{Color, Font}
 import scala.swing.event.ValueChanged
 import collection.breakOut
 import javax.swing.border.Border
+import de.sciss.lucre.synth.{Txn, Server}
 
 final class MainFrame extends WindowImpl { me =>
   import Mellite.auralSystem
@@ -82,7 +83,8 @@ final class MainFrame extends WindowImpl { me =>
 
   private def started(s: Server): Unit = {
     // XXX TODO: dirty dirty
-    TxnPeek { implicit tx =>
+    concurrent.stm.atomic { itx =>
+      implicit val tx = Txn.wrap(itx)
       for(_ <- 1 to 4) s.nextNodeID()
     }
     Swing.onEDT {

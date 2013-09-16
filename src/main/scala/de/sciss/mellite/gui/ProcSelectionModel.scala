@@ -27,9 +27,9 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.Sys
 import de.sciss.model.Model
 import de.sciss.mellite.gui.impl.timeline.{ProcSelectionModelImpl, ProcView}
+import de.sciss.lucre.synth.Sys
 
 object ProcSelectionModel {
   def apply[S <: Sys[S]]: ProcSelectionModel[S] = new ProcSelectionModelImpl[S]

@@ -29,10 +29,11 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{Attribute, ProcKeys, Proc, Sys}
+import de.sciss.synth.proc.{Attribute, ProcKeys, Proc}
 import de.sciss.span.Span
 import java.awt.event.MouseEvent
-import de.sciss.synth.expr.{Ints, Spans}
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.expr.{Ints, Spans}
 
 final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends RegionLike[S, TrackTool.Function] with Dragging[S, TrackTool.Function] {

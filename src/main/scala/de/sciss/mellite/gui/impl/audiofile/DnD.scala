@@ -30,7 +30,7 @@ package audiofile
 
 import de.sciss.span.Span
 import java.awt.datatransfer
-import de.sciss.synth.proc.{Grapheme, Sys}
+import de.sciss.synth.proc.{Grapheme}
 import de.sciss.lucre.stm
 import javax.swing.{JComponent, ImageIcon, TransferHandler}
 import java.awt.event.{MouseEvent, MouseAdapter}
@@ -38,6 +38,7 @@ import TransferHandler.COPY
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.mellite.gui.impl.timeline
 import de.sciss.mellite.Element.AudioGrapheme
+import de.sciss.lucre.synth.Sys
 
 object DnD {
   // XXX TODO: should carry document to avoid cross-document DnD without deep copy

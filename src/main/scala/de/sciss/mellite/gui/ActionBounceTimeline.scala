@@ -29,7 +29,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{Synth, Grapheme, Server, Artifact, Bounce, Sys}
+import de.sciss.synth.proc.{ExprImplicits, Grapheme, Artifact, Bounce}
 import de.sciss.desktop.{DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -46,9 +46,10 @@ import java.text.ParseException
 import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.util.{Failure, Try}
 import de.sciss.processor.Processor
-import de.sciss.synth.expr.{ExprImplicits, Doubles, Longs}
 import de.sciss.file._
 import de.sciss.swingplus.{Spinner, Labeled}
+import de.sciss.lucre.synth.{Server, Sys}
+import de.sciss.lucre.synth.expr.{Longs, Doubles}
 
 object ActionBounceTimeline {
 

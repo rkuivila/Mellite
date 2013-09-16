@@ -26,11 +26,12 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.{AuralSystem, Sys}
+import de.sciss.synth.proc.AuralSystem
 import swing.Component
 import Element.AudioGrapheme
 import impl.audiofile.{ViewImpl => Impl}
 import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.synth.Sys
 
 object AudioFileView {
   def apply[S <: Sys[S]](document: Document[S], element: AudioGrapheme[S])

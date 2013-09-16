@@ -30,7 +30,6 @@ package document
 
 import scala.swing._
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.synth.expr.ExprImplicits
 import de.sciss.lucre.{confluent, stm}
 import java.util.{Locale, Date}
 import java.text.SimpleDateFormat
@@ -43,6 +42,7 @@ import de.sciss.mellite.gui.impl.ComponentHolder
 import de.sciss.desktop
 import de.sciss.treetable.TreeTableSelectionChanged
 import de.sciss.model.Change
+import de.sciss.synth.proc.ExprImplicits
 
 object CursorsFrameImpl {
   type S = proc.Confluent

@@ -29,9 +29,10 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{Proc, Sys}
+import de.sciss.synth.proc.Proc
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.synth.Sys
 
 final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Resize] {

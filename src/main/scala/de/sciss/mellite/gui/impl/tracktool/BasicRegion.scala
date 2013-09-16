@@ -28,8 +28,8 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.Sys
 import java.awt.event.MouseEvent
+import de.sciss.lucre.synth.Sys
 
 object BasicRegion {
   final val MinDur  = 32

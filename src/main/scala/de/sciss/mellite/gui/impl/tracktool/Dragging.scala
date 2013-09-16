@@ -6,7 +6,7 @@ package tracktool
 import java.awt.event.{KeyListener, MouseEvent, KeyEvent}
 import javax.swing.event.MouseInputAdapter
 import de.sciss.mellite.gui.TrackTool.{DragAdjust, DragBegin, DragEnd, DragCancel}
-import de.sciss.synth.proc.Sys
+import de.sciss.lucre.synth.Sys
 
 trait Dragging[S <: Sys[S], A] {
   _: RegionLike[S, A] =>

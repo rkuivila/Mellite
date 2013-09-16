@@ -28,9 +28,9 @@ package mellite
 package gui
 
 import impl.document.{ElementsFrameImpl => Impl}
-import synth.proc.Sys
 import lucre.stm
 import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.synth.Sys
 
 object DocumentElementsFrame {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): DocumentElementsFrame[S] =

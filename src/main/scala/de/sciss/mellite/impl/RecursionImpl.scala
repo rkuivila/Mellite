@@ -28,13 +28,14 @@ package mellite
 package impl
 
 import de.sciss.synth.io.AudioFileSpec
-import de.sciss.synth.proc.{InMemory, Sys, ProcGroup, Artifact}
+import de.sciss.synth.proc.{ExprImplicits, ProcGroup, Artifact}
 import de.sciss.lucre.{expr, event => evt}
 import expr.Expr
 import de.sciss.span.SpanLike
-import de.sciss.synth.expr.{SpanLikes, ExprImplicits}
 import de.sciss.serial.{ImmutableSerializer, DataInput, DataOutput}
 import scala.annotation.switch
+import de.sciss.lucre.synth.{InMemory, Sys}
+import de.sciss.lucre.synth.expr.SpanLikes
 
 object RecursionImpl {
   import Recursion.Channels

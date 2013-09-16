@@ -28,7 +28,7 @@ package gui
 package impl
 package audiofile
 
-import de.sciss.synth.proc.{Artifact, AuralSystem, Grapheme, Sys}
+import de.sciss.synth.proc.{Artifact, AuralSystem, Grapheme}
 import de.sciss.lucre.stm
 import Element.AudioGrapheme
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
@@ -39,9 +39,9 @@ import de.sciss.sonogram
 import javax.swing.{TransferHandler, ImageIcon}
 import javax.swing.TransferHandler.TransferSupport
 import de.sciss.synth.proc
-import de.sciss.synth.expr.ExprImplicits
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.audiowidgets.TimelineModel
+import de.sciss.lucre.synth.Sys
 
 object ViewImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: AudioGrapheme[S])
@@ -66,19 +66,22 @@ object ViewImpl {
       bus = None)
 
     import doc.inMemoryCursor
-    val res           = new Impl[S, I] {
+
+    val res: Impl[S, I] = new Impl[S, I] {
       val timelineModel = new TimelineModelImpl(fullSpan, sampleRate)
       val document      = doc
       val holder        = tx.newHandle(elem)
-      val transportView = TransportView[I, I](group, sampleRate, timelineModel)
+      val transportView: TransportView[I] = TransportView[I, I](group, sampleRate, timelineModel)
     }
-    guiFromTx(res.guiInit(f))(tx)
+
+    guiFromTx {
+      res.guiInit(f)
+    } (tx)
     res
   }
 
   private abstract class Impl[S <: Sys[S], I <: Sys[I]]
-    extends AudioFileView[S] with ComponentHolder[Component] {
-    impl =>
+    extends AudioFileView[S] with ComponentHolder[Component] { impl =>
 
     protected def holder       : stm.Source[S#Tx, AudioGrapheme[S]]
     val document               : Document[S]
@@ -138,36 +141,32 @@ object ViewImpl {
 
     // private var item = Option.empty[stm.Source[S#Tx, Element.Int[S]]]
 
-    peer.setTransferHandler(new TransferHandler {
+    private val trns = new TransferHandler {
       // how to enforce a drop action: https://weblogs.java.net/blog/shan_man/archive/2006/02/choosing_the_dr.html
-      override def canImport(support: TransferSupport): Boolean = {
+      override def canImport(support: TransferSupport): Boolean =
         if (support.isDataFlavorSupported(FolderView.selectionFlavor) &&
            ((support.getSourceDropActions & TransferHandler.COPY) != 0)) {
           support.setDropAction(TransferHandler.COPY)
           true
         } else false
-      }
 
       override def importData(support: TransferSupport): Boolean = {
         val t     = support.getTransferable
         val data  = t.getTransferData(FolderView.selectionFlavor).asInstanceOf[FolderView.SelectionDnDData[S]]
-        if (data.document == view.document) {
+        (data.document == view.document) && {
           val ints = data.selection.collect {
             case (_, ev: ElementView.Int[S]) => (ev.name, ev.element)
           }
-          ints.headOption match {
-            case Some((name, it)) =>
-              export.bus  = Some(it)
-              text        = name
-              foreground  = null
-              repaint()
-              true
-            case _ => false
+          ints.headOption.exists { case (name, it) =>
+            export.bus  = Some(it)
+            text        = name
+            foreground  = null
+            repaint()
+            true
           }
-        } else {
-          false
         }
       }
-    })
+    }
+    peer.setTransferHandler(trns)
   }
 }

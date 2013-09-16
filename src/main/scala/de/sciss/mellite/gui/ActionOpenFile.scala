@@ -28,10 +28,10 @@ package gui
 
 import swing.{Dialog, Action}
 import java.awt.event.KeyEvent
-import de.sciss.synth.proc.Sys
 import de.sciss.desktop.{Menu, RecentFiles, FileDialog, KeyStrokes}
 import util.control.NonFatal
 import java.io.File
+import de.sciss.lucre.synth.Sys
 
 object ActionOpenFile extends Action( "Open...") {
   import KeyStrokes._

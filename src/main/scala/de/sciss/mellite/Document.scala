@@ -31,10 +31,11 @@ import expr.LinkedList
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
-import de.sciss.synth.proc.{Proc, Sys}
-import de.sciss.synth.expr.SpanLikes
+import de.sciss.synth.proc.Proc
 import de.sciss.serial.Serializer
 import collection.immutable.{IndexedSeq => Vec}
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.expr.SpanLikes
 
 object Document {
   type Group       [S <: Sys[S]] = BiGroup.Modifiable   [S, Proc[S], Proc.Update[S]]

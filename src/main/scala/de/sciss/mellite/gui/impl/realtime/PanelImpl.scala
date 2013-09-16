@@ -29,7 +29,7 @@ package impl
 package realtime
 
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{ProcKeys, Attribute, Sys, Proc, Param, ProcTransport}
+import de.sciss.synth.proc.{ProcKeys, Attribute, Proc, Param, ProcTransport}
 import de.sciss.lucre.bitemp.BiGroup
 import java.awt.{RenderingHints, Graphics2D, Color}
 import collection.immutable.{IndexedSeq => Vec}
@@ -47,6 +47,7 @@ import prefuse.render.DefaultRendererFactory
 import prefuse.util.force.{AbstractForce, ForceItem}
 import swing.Component
 import de.sciss.span.SpanLike
+import de.sciss.lucre.synth.Sys
 
 object PanelImpl {
   def apply[S <: Sys[S]](transport: ProcTransport[S])

@@ -27,7 +27,7 @@ package de.sciss
 package mellite
 
 import de.sciss.synth.io.AudioFileSpec
-import de.sciss.synth.proc.{Sys, Artifact, ProcGroup}
+import de.sciss.synth.proc.{Artifact, ProcGroup}
 import de.sciss.span.Span.SpanOrVoid
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.EventLike
@@ -35,6 +35,7 @@ import impl.{RecursionImpl => Impl}
 import de.sciss.span.SpanLike
 import de.sciss.lucre.stm.Disposable
 import de.sciss.serial.{DataInput, Writable}
+import de.sciss.lucre.synth.Sys
 
 object Recursion {
   type Channels = Vec[Range.Inclusive]

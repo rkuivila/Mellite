@@ -27,7 +27,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{Artifact, Sys}
+import de.sciss.synth.proc.Artifact
 import de.sciss.lucre.stm
 import de.sciss.mellite.Element.ArtifactLocation
 import collection.immutable.{IndexedSeq => Vec}
@@ -36,6 +36,7 @@ import de.sciss.desktop.{OptionPane, Window, FileDialog}
 import scala.swing.Dialog
 import de.sciss.file._
 import de.sciss.swingplus.Labeled
+import de.sciss.lucre.synth.Sys
 
 object ActionArtifactLocation {
   //  sealed trait QueryResult

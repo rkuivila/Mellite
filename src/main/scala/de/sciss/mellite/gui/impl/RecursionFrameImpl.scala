@@ -28,7 +28,7 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{AuralSystem, Artifact, Server, Sys}
+import de.sciss.synth.proc.{AuralSystem, Artifact}
 import lucre.stm
 import java.io.File
 import de.sciss.desktop.{DialogSource, Window}
@@ -46,6 +46,7 @@ import java.awt.{ComponentOrientation, Color}
 import scala.annotation.tailrec
 import de.sciss.lucre.stm.Disposable
 import de.sciss.file._
+import de.sciss.lucre.synth.{Server, Sys}
 
 object RecursionFrameImpl {
   private final case class View(name: String, deployed: File, product: File) {

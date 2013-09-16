@@ -1,7 +1,8 @@
 package de.sciss.mellite.gui.impl.realtime
 
-import de.sciss.synth.proc.{Sys, Proc}
+import de.sciss.synth.proc.Proc
 import de.sciss.lucre.stm.Source
+import de.sciss.lucre.synth.Sys
 
 object VisualProc {
   val COLUMN_DATA = "nuages.data"

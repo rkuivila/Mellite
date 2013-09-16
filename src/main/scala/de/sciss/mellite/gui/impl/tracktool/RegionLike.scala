@@ -28,10 +28,10 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.Sys
 import java.awt.event.{MouseAdapter, MouseEvent}
 import scala.swing.Component
 import de.sciss.model.impl.ModelImpl
+import de.sciss.lucre.synth.Sys
 
 trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackTool.Update[A]] {
   tool =>

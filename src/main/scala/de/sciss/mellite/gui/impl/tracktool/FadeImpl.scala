@@ -28,11 +28,12 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{FadeSpec, ProcKeys, Proc, Attribute, Sys}
+import de.sciss.synth.proc.{FadeSpec, ProcKeys, Proc, Attribute}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
 import de.sciss.synth.Curve
+import de.sciss.lucre.synth.Sys
 
 final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Fade] {

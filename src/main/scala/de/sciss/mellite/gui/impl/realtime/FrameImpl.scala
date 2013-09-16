@@ -32,12 +32,12 @@ import de.sciss.lucre.stm.{Source, Cursor}
 import swing.{Dialog, Action, Button, FlowPanel, BorderPanel, Frame}
 import javax.swing.{JComponent, WindowConstants}
 import de.sciss.synth
-import synth.expr.ExprImplicits
-import synth.proc.{Sys, Proc}
+import de.sciss.synth.proc.{ExprImplicits, Proc}
 import java.awt.event.KeyEvent
 import de.sciss.span.Span
 import de.sciss.desktop.KeyStrokes
 import de.sciss.swingplus.DoClickAction
+import de.sciss.lucre.synth.Sys
 
 object FrameImpl {
   def apply[S <: Sys[S]](group: Document.Group[S], transport: Document.Transport[S])

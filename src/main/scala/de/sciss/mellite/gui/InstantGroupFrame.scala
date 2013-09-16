@@ -29,7 +29,7 @@ package gui
 import swing.Frame
 import de.sciss.lucre.stm.Cursor
 import impl.realtime.{FrameImpl => Impl}
-import de.sciss.synth.proc.Sys
+import de.sciss.lucre.synth.Sys
 
 object InstantGroupFrame {
   def apply[S <: Sys[S]](group: Document.Group[S], transport: Document.Transport[S])

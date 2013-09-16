@@ -29,9 +29,9 @@ package impl
 package tracktool
 
 import de.sciss.model.impl.ModelImpl
-import de.sciss.synth.proc.Sys
 import javax.swing.ImageIcon
 import de.sciss.model.Change
+import de.sciss.lucre.synth.Sys
 
 object ToolsImpl {
   def getIcon(name: String) = new ImageIcon(Mellite.getClass.getResource(s"icon-$name.png"))

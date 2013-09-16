@@ -48,17 +48,18 @@ import de.sciss.desktop.FocusType
 import Predef.{any2stringadd => _, _}
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
-import de.sciss.synth.expr.{Doubles, ExprImplicits, Longs, SpanLikes}
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.ValueChanged
-import de.sciss.synth.proc.{FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, Sys, AuralSystem, ProcGroup, ProcTransport, TimedProc}
+import de.sciss.synth.proc.{ExprImplicits, FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
 import de.sciss.model.Change
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.expr.SpanLikes
 
 object TimelineViewImpl {
   private val colrBg              = Color.darkGray

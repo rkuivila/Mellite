@@ -11,9 +11,9 @@ import de.sciss.strugatzki.{FeatureCorrelation, FeatureExtraction}
 import de.sciss.processor.Processor
 import de.sciss.synth.proc
 import de.sciss.mellite._
-import de.sciss.synth.proc.{FadeSpec, Attribute, ProcKeys, Artifact, Grapheme}
-import de.sciss.synth.expr.ExprImplicits
+import de.sciss.synth.proc.{ExprImplicits, FadeSpec, Attribute, ProcKeys, Artifact, Grapheme}
 import de.sciss.file._
+import de.sciss.lucre.synth.InMemory
 
 object MetaNull {
   def perform(in: File, out: File, config: Nullstellen.Config): Unit = {
@@ -59,8 +59,8 @@ object MetaNull {
   }
 
   private def bounce(inSpec: AudioFileSpec, out: File, matches: Vec[Vec[(Long, FeatureCorrelation.Match)]]): Unit = {
-    type I            = proc.InMemory
-    implicit val sys  = proc.InMemory()
+    type I            = InMemory
+    implicit val sys  = InMemory()
     val p = sys.step { implicit tx =>
       val group = proc.ProcGroup.Modifiable[I]
       matches.foreach { case (time, m) +: _ =>    // just mono right now

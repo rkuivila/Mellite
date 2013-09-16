@@ -30,13 +30,14 @@ package gui
 import java.awt.Cursor
 import annotation.switch
 import de.sciss.model.{Change, Model}
-import de.sciss.synth.proc.{FadeSpec, Sys}
+import de.sciss.synth.proc.FadeSpec
 import scala.swing.Component
 import javax.swing.Icon
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.mellite.gui.impl.tracktool.{PatchImpl, FunctionImpl, CursorImpl, PaletteImpl, ToolsImpl, ResizeImpl, MuteImpl, MoveImpl, GainImpl, FadeImpl}
 import de.sciss.span.Span
 import de.sciss.mellite.gui.impl.timeline.ProcView
+import de.sciss.lucre.synth.Sys
 
 object TrackTools {
   sealed trait Update[S <: Sys[S]]

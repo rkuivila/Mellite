@@ -28,15 +28,14 @@ package mellite
 
 import lucre.expr.Expr
 import span.{Span, SpanLike}
-import de.sciss.synth.proc.{Attribute, ProcKeys, Scan, Grapheme, Sys, Proc}
-import de.sciss.synth.expr.{Doubles, Booleans, Strings, SynthGraphs, Longs, Ints, Spans, ExprImplicits}
+import de.sciss.synth.proc.{SynthGraphs, ExprImplicits, Attribute, ProcKeys, Scan, Grapheme, Proc}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.synth.proc
 import scala.util.control.NonFatal
 import collection.breakOut
-import de.sciss.lucre.bitemp.impl.BiGroupImpl
-import proc.ProcGroup
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.expr.{Ints, Spans, Booleans, Doubles, Longs, Strings}
 
 object ProcActions {
   private val MinDur    = 32

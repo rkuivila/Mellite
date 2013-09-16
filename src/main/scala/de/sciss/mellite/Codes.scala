@@ -25,9 +25,9 @@
 
 package de.sciss.mellite
 
-import de.sciss.synth.expr.BiTypeImpl
 import de.sciss.lucre.event.{Targets, Sys}
 import de.sciss.serial.{DataOutput, DataInput}
+import de.sciss.lucre.synth.expr.BiTypeImpl
 
 object Codes extends BiTypeImpl[Code] {
   final val typeID = 0x20001

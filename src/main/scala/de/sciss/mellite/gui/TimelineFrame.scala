@@ -28,10 +28,11 @@ package mellite
 package gui
 
 import desktop.Window
-import de.sciss.synth.proc.{AuralSystem, Sys}
+import de.sciss.synth.proc.AuralSystem
 import impl.timeline.{FrameImpl => Impl}
 import lucre.stm
 import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.synth.Sys
 
 object TimelineFrame {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])

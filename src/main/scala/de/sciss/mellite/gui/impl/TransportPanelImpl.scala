@@ -30,11 +30,11 @@ package impl
 import de.sciss.lucre.stm.Cursor
 import scala.swing.{Swing, Orientation, BoxPanel, Component}
 import de.sciss.audiowidgets.{Transport => GUITransport, LCDPanel}
-import de.sciss.synth.proc.Sys
 import java.awt.event.{ActionEvent, ActionListener}
 import javax.swing.event.{ChangeEvent, ChangeListener}
 import Swing._
 import de.sciss.mellite.gui.impl.component.TimeLabel
+import de.sciss.lucre.synth.Sys
 
 object TransportPanelImpl {
   def apply[S <: Sys[S]](transport: Document.Transport[S])

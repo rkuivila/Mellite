@@ -2,9 +2,10 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Proc, Sys, Scan}
+import de.sciss.synth.proc.{Proc, Scan}
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.bitemp.BiGroup
+import de.sciss.lucre.synth.Sys
 
 /** These actions require being executed on the EDT. */
 object ProcGUIActions {

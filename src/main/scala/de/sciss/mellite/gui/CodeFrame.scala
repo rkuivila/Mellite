@@ -27,10 +27,10 @@ package de.sciss
 package mellite
 package gui
 
-import synth.proc.Sys
 import lucre.stm
 import stm.Disposable
 import impl.interpreter.{CodeFrameImpl => Impl}
+import de.sciss.lucre.synth.Sys
 
 object CodeFrame {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.Code[S])

@@ -30,7 +30,7 @@ package timeline
 
 import javax.swing.TransferHandler._
 import java.awt.dnd.{DropTarget, DropTargetDropEvent, DropTargetEvent, DropTargetDragEvent, DropTargetAdapter}
-import de.sciss.synth.proc.{Proc, Sys}
+import de.sciss.synth.proc.Proc
 import scala.swing.Component
 import java.awt.Point
 import de.sciss.lucre.stm
@@ -41,6 +41,7 @@ import de.sciss.mellite.Document
 import java.awt.datatransfer.{DataFlavor, Transferable}
 import de.sciss.file._
 import scala.util.Try
+import de.sciss.lucre.synth.Sys
 
 object DnD {
   sealed trait Drag[S <: Sys[S]] {
