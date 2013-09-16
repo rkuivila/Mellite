@@ -114,11 +114,8 @@ object TimelineViewImpl {
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
     val group       = element.entity
     import ProcGroup.serializer
-    val groupH      = tx.newHandle[proc.ProcGroup[S]](group)
-    //    group.nearestEventBefore(Long.MaxValue) match {
-    //      case Some(stop) => Span(0L, stop)
-    //      case _          => Span.from(0L)
-    //    }
+    val groupH      = tx.newHandle[proc   .ProcGroup[S]](group  )
+    val groupEH     = tx.newHandle[Element.ProcGroup[S]](element)
 
     var disp = List.empty[Disposable[S#Tx]]
 
@@ -143,7 +140,7 @@ object TimelineViewImpl {
     val global  = GlobalProcsView(document, group, procSelectionModel)
     disp ::= global
 
-    val view    = new Impl(document, groupH, transp, procMap, scanMap, tlm, auralView, global, procSelectionModel)
+    val view    = new Impl(document, groupH, groupEH, transp, procMap, scanMap, tlm, auralView, global, procSelectionModel)
 
     val obsTransp = transp.react { implicit tx => {
       case proc.Transport.Play(t, time) => view.startedPlaying(time)
@@ -299,8 +296,9 @@ object TimelineViewImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]](document          : Document[S],
-                                        groupH            : stm.Source[S#Tx, ProcGroup[S]],
+  private final class Impl[S <: Sys[S]](val document      : Document[S],
+                                        groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
+                                        groupEH           : stm.Source[S#Tx, Element.ProcGroup[S]],
                                         transp            : ProcTransport[S],
                                         procMap           : ProcView.ProcMap[S],
                                         scanMap           : ProcView.ScanMap[S],
@@ -340,10 +338,14 @@ object TimelineViewImpl {
     private lazy val toolFunction = TrackTool.function[S](view)
     private lazy val toolPatch    = TrackTool.patch   [S](view)
 
+    def group     (implicit tx: S#Tx) = groupEH()
+    def plainGroup(implicit tx: S#Tx) = groupH()
+
     def dispose()(implicit tx: S#Tx): Unit = {
       timer.stop()  // save to call multiple times
       disposables.swap(Nil)(tx.peer).foreach(_.dispose())
       guiFromTx {
+        DocumentViewHandler.instance.remove(this)
         val pit     = procViews.iterator
         procViews   = RangedSeq.empty
         pit.foreach(_.disposeGUI())
@@ -381,7 +383,7 @@ object TimelineViewImpl {
     object deleteAction extends Action("Delete") {
       def apply(): Unit =
         withSelection { implicit tx => views =>
-          groupH().modifiableOption.foreach { mod =>
+          plainGroup.modifiableOption.foreach { mod =>
             ProcGUIActions.removeProcs(mod, views)
           }
         }
@@ -411,7 +413,7 @@ object TimelineViewImpl {
     }
 
     private def debugCheckConsistency(info: => String)(implicit tx: S#Tx): Unit = if (DEBUG) {
-      val check = BiGroupImpl.verifyConsistency(groupH(), reportOnly = true)
+      val check = BiGroupImpl.verifyConsistency(plainGroup, reportOnly = true)
       check.foreach { msg =>
         println(info)
         println(msg)
@@ -421,7 +423,7 @@ object TimelineViewImpl {
 
     def splitObjects(time: Long)(views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit =
       for {
-        group             <- groupH().modifiableOption
+        group             <- plainGroup.modifiableOption
         pv                <- views
       } {
         pv.spanSource() match {
@@ -581,6 +583,7 @@ object TimelineViewImpl {
       }
 
       comp = pane
+      DocumentViewHandler.instance.add(this)
     }
 
     private def repaintAll(): Unit = view.canvasComponent.repaint()
@@ -768,17 +771,15 @@ object TimelineViewImpl {
       }
 
     private def insertAudioRegion(drop: DnD.Drop[S], drag: DnD.AudioDragLike[S],
-                                  grapheme: Grapheme.Elem.Audio[S])(implicit tx: S#Tx): Boolean = {
-      val group = groupH()
-      group.modifiableOption match {
+                                  grapheme: Grapheme.Elem.Audio[S])(implicit tx: S#Tx): Boolean =
+      plainGroup.modifiableOption match {
         case Some(groupM) =>
           ProcActions.insertAudioRegion(groupM, time = drop.frame, track = view.screenToTrack(drop.y),
             grapheme = grapheme, selection = drag.selection, bus = None) // , bus = ad.bus.map(_.apply().entity))
           true
         case _ => false
       }
-    }
-    
+
     private def performDrop(drop: DnD.Drop[S]): Boolean = {
       def withRegions(fun: S#Tx => List[ProcView[S]] => Boolean): Boolean =
         view.findRegion(drop.frame, view.screenToTrack(drop.y)).exists { hitRegion =>
@@ -844,7 +845,7 @@ object TimelineViewImpl {
       // import AbstractTimelineView._
       def timelineModel             = impl.timelineModel
       def selectionModel            = impl.procSelectionModel
-      def group(implicit tx: S#Tx)  = impl.groupH()
+      def group(implicit tx: S#Tx)  = impl.plainGroup
 
       def intersect(span: Span): Iterator[ProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
 

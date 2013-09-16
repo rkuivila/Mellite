@@ -30,7 +30,7 @@ import de.sciss.desktop.{KeyStrokes, Menu}
 import java.awt.event.KeyEvent
 
 object MenuBar {
-  def apply(): Menu.Root = {
+  lazy val instance: Menu.Root = {
     import Menu._
     import KeyStrokes._
     import KeyEvent._
