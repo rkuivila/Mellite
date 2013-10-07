@@ -1,6 +1,6 @@
 name          := "Mellite"
 
-version       := "0.5.0-SNAPSHOT"
+version       := "0.5.0"
 
 organization  := "de.sciss"
 
@@ -10,7 +10,7 @@ description   := "An application based on SoundProcesses"
 
 licenses      := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 
-scalaVersion  := "2.10.2"
+scalaVersion  := "2.10.3"
 
 libraryDependencies ++= Seq(
   "de.sciss" %% "soundprocesses"     % "2.0.+",
