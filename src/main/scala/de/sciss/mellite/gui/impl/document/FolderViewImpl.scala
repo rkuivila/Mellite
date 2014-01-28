@@ -32,7 +32,6 @@ import de.sciss.synth.proc.{ExprImplicits, Artifact}
 import swing.{ScrollPane, Component}
 import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
-import scalaswingcontrib.tree.Tree
 import de.sciss.lucre.stm.{Disposable, Cursor, IdentifierMap}
 import de.sciss.model.impl.ModelImpl
 import scala.util.control.NonFatal
@@ -140,7 +139,7 @@ object FolderViewImpl {
         if (DEBUG) println(s"model.elemRemoved($parent, $idx)")
         require(idx >= 0 && idx < parent.children.size)
         val v       = parent.children(idx)
-        // this is frickin insane. the tree UI still accesses the model based on the previous assumption
+        // this is insane. the tree UI still accesses the model based on the previous assumption
         // about the number of children, it seems. therefore, we must not update children before
         // returning from fireNodesRemoved.
         fireNodesRemoved(v)
@@ -298,7 +297,7 @@ object FolderViewImpl {
                 val node = t.getNode(row)
                 component.icon = node.icon
               } catch {
-                case NonFatal(_) => // XXX TODO -- currently NPE probs; seems renderer is called before tree expansion with node missing
+                case NonFatal(_) => // XXX TODO -- currently NPE problems; seems renderer is called before tree expansion with node missing
               }
             case _ =>
           }
@@ -317,7 +316,7 @@ object FolderViewImpl {
         // case e => println(s"other: $e")
       }
       t.showsRootHandles  = true
-      t.expandPath(Tree.Path(_model.root))
+      t.expandPath(TreeTable.Path(_model.root))
       t.dragEnabled       = true
       t.dropMode          = DropMode.ON_OR_INSERT_ROWS
       t.peer.setTransferHandler(new TransferHandler {
@@ -483,7 +482,7 @@ object FolderViewImpl {
 
     def selection: FolderView.Selection[S] =
       t.selection.paths.collect({
-        case PathExtrator(path, child) => (path, child)
+        case PathExtractor(path, child) => (path, child)
       })(breakOut)
 
     def locations: Vec[ElementView.ArtifactLocation[S]] = selection.collect {
@@ -510,7 +509,7 @@ object FolderViewImpl {
       }
     }
 
-    object PathExtrator {
+    object PathExtractor {
       def unapply(path: Seq[Node]): Option[(Vec[ElementView.FolderLike[S]], ElementView[S])] =
         path match {
           case init :+ (last: ElementView[S]) =>

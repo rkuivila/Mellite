@@ -22,8 +22,6 @@
 17  IncompleteProduct (SoundDesigner)
 18  UGenSource (SoundDesigner)
 
-0x1000 | A.typeID   Option[A]
-
 :: non-expr elements (mutables) ::
 
 0x10000     Folder
@@ -35,3 +33,12 @@
 
 0x20000     Recursion
 0x20001     Code
+
+:: sysson ::
+
+NEIN   0x30000     Patch
+
+:: higher-order ::
+
+0x1000 | A.typeID   Option[A]
+0x2000 | A.typeID   Vec[A]

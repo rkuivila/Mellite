@@ -76,7 +76,7 @@ object ElementsFrameImpl {
     private def targetFolder(implicit tx: S#Tx): Folder[S] = {
       val sel = folderView.selection
       if (sel.isEmpty) document.elements else sel.head match {
-        case (_, _parent: ElementView.Folder[S])        => _parent.folder
+        case (_,    _parent: ElementView.Folder[S])     => _parent.folder
         case (_ :+ (_parent: ElementView.Folder[S]), _) => _parent.folder
         case _                                          => document.elements
       }
@@ -170,21 +170,21 @@ object ElementsFrameImpl {
       val ggValue = new ComboBox(Seq(Code.FileTransform.name, Code.SynthGraph.name))
       actionAddPrimitive(tpe = "Code", ggValue = ggValue, prepare = ggValue.selection.index match {
         case 0 => Some(Code.FileTransform(
-          """|val ain   = AudioFile.openRead(in)
-             |val aout  = AudioFile.openWrite(out, ain.spec)
+          """|val aIn   = AudioFile.openRead(in)
+             |val aOut  = AudioFile.openWrite(out, aIn.spec)
              |val bufSz = 8192
-             |val buf   = ain.buffer(bufSz)
-             |var rem   = ain.numFrames
+             |val buf   = aIn.buffer(bufSz)
+             |var rem   = aIn.numFrames
              |while (rem > 0) {
              |  val chunk = math.min(bufSz, rem).toInt
-             |  ain.read(buf, 0, chunk)
+             |  aIn .read (buf, 0, chunk)
              |  // ...
-             |  aout.write(buf, 0, chunk)
+             |  aOut.write(buf, 0, chunk)
              |  rem -= chunk
              |  // checkAbort()
              |}
-             |aout.close()
-             |ain .close()
+             |aOut.close()
+             |aIn .close()
              |""".stripMargin))
 
         case 1 => Some(Code.SynthGraph(
@@ -219,14 +219,14 @@ object ElementsFrameImpl {
       lazy val addPopup: PopupMenu = {
         import Menu._
         val pop = Popup()
-          .add(Item("folder",       Action("Folder"       )(actionAddFolder          ())))
-          .add(Item("procgroup",    Action("ProcGroup"    )(actionAddProcGroup       ())))
-          .add(Item("artifactstore",Action("ArtifactStore")(actionAddArtifactLocation())))
-          .add(Item("audiofile",    Action("Audio File"   )(actionAddAudioFile       ())))
-          .add(Item("string",       Action("String"       )(actionAddString          ())))
-          .add(Item("int",          Action("Int"          )(actionAddInt             ())))
-          .add(Item("double",       Action("Double"       )(actionAddDouble          ())))
-          .add(Item("code",         Action("Code"         )(actionAddCode            ())))
+          .add(Item("folder",        Action("Folder"       )(actionAddFolder          ())))
+          .add(Item("proc-group",    Action("ProcGroup"    )(actionAddProcGroup       ())))
+          .add(Item("artifact-store",Action("ArtifactStore")(actionAddArtifactLocation())))
+          .add(Item("audio-file",    Action("Audio File"   )(actionAddAudioFile       ())))
+          .add(Item("string",        Action("String"       )(actionAddString          ())))
+          .add(Item("int",           Action("Int"          )(actionAddInt             ())))
+          .add(Item("double",        Action("Double"       )(actionAddDouble          ())))
+          .add(Item("code",          Action("Code"         )(actionAddCode            ())))
         val res = pop.create(comp)
         res.peer.pack() // so we can read `size` correctly
         res

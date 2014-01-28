@@ -463,7 +463,7 @@ object Element {
 /** Elements are what a document is made from. They comprise heterogeneous objects from expressions (integer, double,
   * string etc. expressions), processes and groups of processes, as well as `Element.Group` which is a container
   * for nested elements.
- */
+  */
 sealed trait Element[S <: Sys[S]] extends Mutable[S#ID, S#Tx] {
   type A
 

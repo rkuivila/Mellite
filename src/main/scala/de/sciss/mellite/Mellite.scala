@@ -28,7 +28,6 @@ package mellite
 
 import de.sciss.mellite.gui.{LogFrame, MainFrame, MenuBar}
 import desktop.impl.SwingApplicationImpl
-import desktop.Menu
 import synth.proc.AuralSystem
 
 object Mellite extends SwingApplicationImpl("Mellite") {
