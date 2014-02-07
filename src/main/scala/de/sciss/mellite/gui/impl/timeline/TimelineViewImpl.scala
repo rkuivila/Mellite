@@ -32,7 +32,7 @@ import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.audiowidgets.{TimelineModel, Transport}
 import scala.swing.Swing._
 import java.awt.event.{KeyEvent, ActionEvent}
-import de.sciss.desktop.FocusType
+import de.sciss.desktop.{Window, FocusType}
 import Predef.{any2stringadd => _, _}
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
@@ -328,6 +328,8 @@ object TimelineViewImpl {
 
     def group     (implicit tx: S#Tx) = groupEH()
     def plainGroup(implicit tx: S#Tx) = groupH()
+
+    def window: Window = component.peer.getClientProperty("de.sciss.mellite.Window").asInstanceOf[Window]
 
     def dispose()(implicit tx: S#Tx): Unit = {
       timer.stop()  // save to call multiple times

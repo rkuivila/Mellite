@@ -71,11 +71,14 @@ object CursorsFrameImpl {
                                  val created: Long, var updated: Long)
 
   private final class Impl(val document: ConfluentDocument, _root: CursorView)(implicit cursor: stm.Cursor[D])
-    extends DocumentCursorsFrame with ComponentHolder[desktop.Window] {
+    extends DocumentCursorsFrame with ComponentHolder[desktop.Window] with DocumentCursorsView {
 
     type Node = CursorView
 
     private var mapViews = Map.empty[Cursors[S, D], Node]
+
+    def view   = this // wooop...
+    def window = component
 
     private class ElementTreeModel extends AbstractTreeModel[Node] {
       lazy val root: Node = _root // ! must be lazy. suckers....
@@ -298,6 +301,15 @@ object CursorsFrameImpl {
         GUI.placeWindow(this, 1f, 0f, 24)
         front()
         // add(folderPanel, BorderPanel.Position.Center)
+      }
+
+      DocumentViewHandler.instance.add(this)
+    }
+
+    def dispose()(implicit tx: S#Tx): Unit = {
+      guiFromTx {
+        component.dispose()
+        DocumentViewHandler.instance.remove(this)
       }
     }
   }

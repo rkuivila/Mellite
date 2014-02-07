@@ -12,6 +12,8 @@ Mellite builds with sbt 0.13 and Scala 2.10. The dependencies should be download
 
 Dependencies not found are all available from their respective [GitHub repositories](https://github.com/Sciss?tab=repositories), so in case you want to build a snapshot version, you may need to check out these projects and publish them yourself using `sbt publish-local`.
 
+To build an OS X standalone application, run `sbt appbundle`, for all other platforms `sbt assembly` will create a fat `.jar` file in the root directory that can be executed via double-click. There is also a tiny shell script `./mellite` that will launch this jar file.
+
 ## documentation
 
 Note that this project is in __highly experimental__ state. While I have been composing already pieces with it, I recommend anyone to approach this with extreme care. I cannot guarantee that the application is bug free, in particular you may end up with a corrupt session database (although unlikely), and also I might introduce changes that render it impossible for new versions to open sessions created with previous versions. You have been warned!

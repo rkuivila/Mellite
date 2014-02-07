@@ -14,12 +14,13 @@
 package de.sciss
 package mellite
 
-import de.sciss.mellite.gui.{LogFrame, MainFrame, MenuBar}
+import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import desktop.impl.SwingApplicationImpl
 import synth.proc.AuralSystem
+import de.sciss.lucre.event.Sys
 
 object Mellite extends SwingApplicationImpl("Mellite") {
-  type Document = mellite.Document[_]
+  type Document = mellite.Document[_ <: Sys[_]]
 
   // lucre.event    .showLog = true
   // lucre.confluent.showLog = true
@@ -35,7 +36,8 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   implicit def auralSystem: AuralSystem = _aural
 
   override protected def init(): Unit = {
-    LogFrame.instance
+    LogFrame           .instance    // init
+    DocumentViewHandler.instance    // init
     new MainFrame
   }
 }

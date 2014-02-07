@@ -16,10 +16,15 @@ package gui
 
 import de.sciss.lucre.synth.Sys
 import collection.immutable.{IndexedSeq => Vec}
+import de.sciss.desktop.Desktop
 
 object DocumentViewHandler {
   lazy val instance: DocumentViewHandler = new DocumentViewHandler {
     private var map = Map.empty[Document[_], Vec[DocumentView[_]]] withDefaultValue Vec.empty
+
+    Desktop.addListener {
+      case Desktop.OpenFiles(_, files) => files.foreach(ActionOpenFile.perform)
+    }
 
     def apply[S <: Sys[S]](document: Document[S]): Iterator[DocumentView[S]] = {
       requireEDT()

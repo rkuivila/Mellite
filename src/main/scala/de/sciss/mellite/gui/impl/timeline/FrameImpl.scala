@@ -116,6 +116,8 @@ object FrameImpl {
         GUI.placeWindow(this, 0f, 0.25f, 24)
         front()
       }
+
+      view.component.peer.putClientProperty("de.sciss.mellite.Window", _window)
     }
   }
 }

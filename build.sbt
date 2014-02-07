@@ -1,6 +1,8 @@
+import AssemblyKeys._
+
 name          := "Mellite"
 
-version       := "0.6.0-SNAPSHOT"
+version       := "0.6.0"
 
 organization  := "de.sciss"
 
@@ -13,10 +15,11 @@ licenses      := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt")
 scalaVersion  := "2.10.3"
 
 libraryDependencies ++= Seq(
-  "de.sciss" %% "soundprocesses"     % "2.1.+",
+  "de.sciss" %% "soundprocesses"     % "2.1.1+",
   "de.sciss" %% "scalacolliderswing" % "1.13.+",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.1+",
   "de.sciss" %% "audiowidgets-app"   % "1.4.+",
+  "de.sciss" %% "desktop-mac"        % "0.4.+",   // TODO: should be only added on OS X platforms
   "de.sciss" %% "sonogramoverview"   % "1.7.+",
   "de.sciss" %% "treetable-scala"    % "1.3.4+",
   "de.sciss" %% "fscapejobs"         % "1.4.+",
@@ -86,3 +89,10 @@ appbundle.documents += appbundle.Document(
   extensions = Seq("mllt"),
   isPackage  = true
 )
+
+assemblySettings
+
+target in assembly := baseDirectory.value
+
+jarName in assembly := s"${name.value}.jar"
+

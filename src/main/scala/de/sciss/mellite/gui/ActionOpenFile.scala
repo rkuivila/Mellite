@@ -20,6 +20,8 @@ import de.sciss.desktop.{Menu, RecentFiles, FileDialog, KeyStrokes}
 import util.control.NonFatal
 import java.io.File
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.{Mellite => App}
+import language.existentials
 
 object ActionOpenFile extends Action( "Open...") {
   import KeyStrokes._
@@ -58,7 +60,19 @@ object ActionOpenFile extends Action( "Open...") {
     dlg.show(None).foreach(perform)
   }
 
+  private def openView[S <: Sys[S]](doc: Document[S]): Unit =
+    DocumentViewHandler.instance(doc).collectFirst {
+      case dcv: DocumentCursorsView => dcv.window
+    } .foreach(_.front())
+
   def perform(folder: File): Unit =
+    App.documentHandler.documents.find(_.folder == folder).fold(doOpen(folder)) { doc =>
+
+      val doc1 = doc.asInstanceOf[Document[S] forSome { type S <: Sys[S] }]
+      openView(doc1)
+    }
+
+  private def doOpen(folder: File): Unit =
     try {
       val doc = Document.read(folder)
       openGUI(doc)
@@ -66,7 +80,7 @@ object ActionOpenFile extends Action( "Open...") {
     } catch {
       case NonFatal(e) =>
         Dialog.showMessage(
-          message     = "Unabled to create new document " + folder.getPath + "\n\n" + formatException(e),
+          message     = "Unable to create new document " + folder.getPath + "\n\n" + formatException(e),
           title       = fullTitle,
           messageType = Dialog.Message.Error
         )

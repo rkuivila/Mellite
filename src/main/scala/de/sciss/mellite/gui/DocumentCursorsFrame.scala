@@ -25,5 +25,8 @@ object DocumentCursorsFrame {
 }
 trait DocumentCursorsFrame /* [S <: Sys[S]] */ {
   def component: desktop.Window
+  def view: DocumentCursorsView
   def document : ConfluentDocument // Document[S]
 }
+
+trait DocumentCursorsView extends DocumentView[DocumentCursorsFrame.S]
