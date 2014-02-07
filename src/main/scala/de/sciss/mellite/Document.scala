@@ -2,21 +2,9 @@
  *  Document.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either
- *  version 2, june 1991 of the License, or (at your option) any later version.
- *
- *  This software is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public
- *  License (gpl.txt) along with this software; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  This software is published under the GNU General Public License v2+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -27,7 +15,6 @@ package de.sciss.mellite
 
 import java.io.File
 import de.sciss.lucre.{expr, event => evt, bitemp, stm}
-import expr.LinkedList
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
@@ -41,11 +28,11 @@ object Document {
   type Group       [S <: Sys[S]] = BiGroup.Modifiable   [S, Proc[S], Proc.Update[S]]
   type GroupUpdate [S <: Sys[S]] = BiGroup.Update       [S, Proc[S], Proc.Update[S]]
 
-  type Groups      [S <: Sys[S]] = LinkedList.Modifiable[S, Group[S], GroupUpdate[S]]
-  type GroupsUpdate[S <: Sys[S]] = LinkedList.Update    [S, Group[S], GroupUpdate[S]]
+  type Groups      [S <: Sys[S]] = expr.List.Modifiable[S, Group[S], GroupUpdate[S]]
+  type GroupsUpdate[S <: Sys[S]] = expr.List.Update    [S, Group[S], GroupUpdate[S]]
 
   type Transport   [S <: Sys[S]] = proc.ProcTransport[S]
-  type Transports  [S <: Sys[S]] = LinkedList.Modifiable[S, Transport[S], Unit] // Transport.Update[ S, Proc[ S ]]]
+  type Transports  [S <: Sys[S]] = expr.List.Modifiable[S, Transport[S], Unit] // Transport.Update[ S, Proc[ S ]]]
 
   def read (dir: File): ConfluentDocument = Impl.read (dir)
   def empty(dir: File): ConfluentDocument = Impl.empty(dir)

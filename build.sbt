@@ -1,6 +1,6 @@
 name          := "Mellite"
 
-version       := "0.5.1-SNAPSHOT"
+version       := "0.6.0-SNAPSHOT"
 
 organization  := "de.sciss"
 
@@ -13,18 +13,14 @@ licenses      := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt")
 scalaVersion  := "2.10.3"
 
 libraryDependencies ++= Seq(
-  "de.sciss" %% "soundprocesses"     % "2.0.+",
-  "de.sciss" %% "scalacolliderswing" % "1.10.+",
-  "de.sciss" %% "lucrestm-bdb"       % "2.0.+",
-  "de.sciss" %% "desktop"            % "0.3.3+",
-  "de.sciss" %% "swingplus"          % "0.0.1+",
-  "de.sciss" %% "audiowidgets-app"   % "1.3.1+",
-  "de.sciss" %% "sonogramoverview"   % "1.6.2+",  // bug in 1.6.1
-  "de.sciss" %% "serial"             % "1.0.1+",  // bug in 1.0.0
-  "de.sciss" %% "treetable-scala"    % "1.3.1+",
+  "de.sciss" %% "soundprocesses"     % "2.1.+",
+  "de.sciss" %% "scalacolliderswing" % "1.13.+",
+  "de.sciss" %% "lucrestm-bdb"       % "2.0.1+",
+  "de.sciss" %% "audiowidgets-app"   % "1.4.+",
+  "de.sciss" %% "sonogramoverview"   % "1.7.+",
+  "de.sciss" %% "treetable-scala"    % "1.3.4+",
   "de.sciss" %% "fscapejobs"         % "1.4.+",
-  "de.sciss" %% "strugatzki"         % "2.2.+",
-  "de.sciss" %% "fileutil"           % "1.0.+"
+  "de.sciss" %% "strugatzki"         % "2.3.+"
 )
 
 retrieveManaged := true

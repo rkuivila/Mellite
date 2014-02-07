@@ -2,21 +2,9 @@
  *  CursorsImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either
- *  version 2, june 1991 of the License, or (at your option) any later version.
- *
- *  This software is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public
- *  License (gpl.txt) along with this software; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  This software is published under the GNU General Public License v2+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -46,7 +34,7 @@ object CursorsImpl {
     val targets = evt.Targets[D1]
     val cursor  = confluent.Cursor[S, D1](seminal)
     val name    = Strings.newVar("branch")
-    val list    = expr.LinkedList.Modifiable[D1, Cursors[S, D1], Cursors.Update[S, D1]](_.changed)
+    val list    = expr.List.Modifiable[D1, Cursors[S, D1], Cursors.Update[S, D1]]
     log(s"Cursors.apply targets = $targets, list = $list")
     new Impl(targets, seminal, cursor, name, list)
   }
@@ -67,7 +55,7 @@ object CursorsImpl {
       val seminal: S#Acc = system.readPath(in)
       val cursor  = confluent.Cursor.read[S, D1](in)
       val name    = Strings.readVar[D1](in, access)
-      val list    = expr.LinkedList.Modifiable.read[D1, Cursors[S, D1], Cursors.Update[S, D1]](_.changed)(in, access)
+      val list    = expr.List.Modifiable.read[D1, Cursors[S, D1], Cursors.Update[S, D1]](in, access)
       log(s"Cursors.read targets = $targets, list = $list")
       new Impl(targets, seminal, cursor, name, list)
     }
@@ -77,7 +65,7 @@ object CursorsImpl {
       protected val targets: evt.Targets[D1], val seminal: S#Acc with serial.Writable,
       val cursor: confluent.Cursor[S, D1] with stm.Disposable[D1#Tx] with serial.Writable,
       nameVar: Expr.Var[D1, String],
-      list: expr.LinkedList.Modifiable[D1, Cursors[S, D1], Cursors.Update[S, D1]]
+      list: expr.List.Modifiable[D1, Cursors[S, D1], Cursors.Update[S, D1]]
     )(implicit tx: D1#Tx, system: S { type D = D1 })
     extends Cursors[S, D1] with evt.Node[D1] {
     impl =>
@@ -167,9 +155,9 @@ object CursorsImpl {
         val changes = listOpt match {
           case Some(listUpd) =>
             val childUpdates = listUpd.changes.collect {
-              case expr.LinkedList.Element(child, childUpd) => Cursors.ChildUpdate (childUpd)
-              case expr.LinkedList.Added  (idx, child)      => Cursors.ChildAdded  (idx, child)
-              case expr.LinkedList.Removed(idx, child)      => Cursors.ChildRemoved(idx, child)
+              case expr.List.Element(child, childUpd) => Cursors.ChildUpdate (childUpd)
+              case expr.List.Added  (idx, child)      => Cursors.ChildAdded  (idx, child)
+              case expr.List.Removed(idx, child)      => Cursors.ChildRemoved(idx, child)
             }
             flat1 ++ childUpdates
 

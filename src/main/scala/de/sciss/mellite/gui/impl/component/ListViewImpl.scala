@@ -2,21 +2,9 @@
  *  ListViewImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either
- *  version 2, june 1991 of the License, or (at your option) any later version.
- *
- *  This software is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public
- *  License (gpl.txt) along with this software; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  This software is published under the GNU General Public License v2+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -28,9 +16,9 @@ package gui
 package impl
 package component
 
-import de.sciss.lucre.{stm, expr}
-import stm.{Source, Cursor, Disposable, Sys}
-import expr.LinkedList
+import de.sciss.lucre.{stm, expr, event => evt}
+import evt.Sys
+import stm.{Source, Cursor, Disposable}
 import swing.{ScrollPane, Component}
 import javax.swing.DefaultListModel
 import collection.immutable.{IndexedSeq => Vec}
@@ -41,7 +29,7 @@ import de.sciss.serial.Serializer
 object ListViewImpl {
   def empty[S <: Sys[S], Elem, U](show: Elem => String)
                                  (implicit tx: S#Tx, cursor: Cursor[S],
-                                  serializer: Serializer[S#Tx, S#Acc, LinkedList[S, Elem, U]]): ListView[S, Elem, U] = {
+                                  serializer: Serializer[S#Tx, S#Acc, expr.List[S, Elem, U]]): ListView[S, Elem, U] = {
     val view = new Impl[S, Elem, U](show)
     guiFromTx {
       view.guiInit()
@@ -49,16 +37,16 @@ object ListViewImpl {
     view
   }
 
-  def apply[S <: Sys[S], Elem, U](list: LinkedList[S, Elem, U])(show: Elem => String)
+  def apply[S <: Sys[S], Elem, U](list: expr.List[S, Elem, U])(show: Elem => String)
                                  (implicit tx: S#Tx, cursor: Cursor[S],
-                                  serializer: Serializer[S#Tx, S#Acc, LinkedList[S, Elem, U]]): ListView[S, Elem, U] = {
+                                  serializer: Serializer[S#Tx, S#Acc, expr.List[S, Elem, U]]): ListView[S, Elem, U] = {
     val view = empty[S, Elem, U](show)
     view.list_=(Some(list))
     view
   }
 
   private final class Impl[S <: Sys[S], Elem, U](show: Elem => String)
-                                                (implicit cursor: Cursor[S], listSer: Serializer[S#Tx, S#Acc, LinkedList[S, Elem, U]])
+                                                (implicit cursor: Cursor[S], listSer: Serializer[S#Tx, S#Acc, expr.List[S, Elem, U]])
     extends ListView[S, Elem, U] {
     view =>
 
@@ -69,16 +57,16 @@ object ListViewImpl {
 
     private var viewObservers = Vec.empty[Observer]
 
-    // private val current = STMRef( Option.empty[ (S#Acc, LinkedList[ S, Elem, U ], Disposable[ S#Tx ])])
-    private val current = STMRef(Option.empty[(Source[S#Tx, LinkedList[S, Elem, U]], Disposable[S#Tx])])
+    // private val current = STMRef( Option.empty[ (S#Acc, expr.List[ S, Elem, U ], Disposable[ S#Tx ])])
+    private val current = STMRef(Option.empty[(Source[S#Tx, expr.List[S, Elem, U]], Disposable[S#Tx])])
 
-    def list(implicit tx: S#Tx): Option[LinkedList[S, Elem, U]] = {
+    def list(implicit tx: S#Tx): Option[expr.List[S, Elem, U]] = {
       current.get(tx.peer).map {
         case (h, _) => h()
       }
     }
 
-    def list_=(newOption: Option[LinkedList[S, Elem, U]])(implicit tx: S#Tx): Unit = {
+    def list_=(newOption: Option[expr.List[S, Elem, U]])(implicit tx: S#Tx): Unit = {
       current.get(tx.peer).foreach {
         case (_, obs) =>
           disposeObserver(obs)
@@ -112,7 +100,7 @@ object ListViewImpl {
       }
     }
 
-    private def createObserver(ll: LinkedList[S, Elem, U])(implicit tx: S#Tx): Disposable[S#Tx] = {
+    private def createObserver(ll: expr.List[S, Elem, U])(implicit tx: S#Tx): Disposable[S#Tx] = {
       val items = ll.iterator.toIndexedSeq
       guiFromTx {
         view.addAll(items.map(show))
@@ -120,9 +108,9 @@ object ListViewImpl {
       ll.changed.react {
         implicit tx => {
           upd =>
-          //            case LinkedList.Added(   _, idx, elem )   => guiFromTx( view.add( idx, show( elem )))
-          //            case LinkedList.Removed( _, idx, elem )   => guiFromTx( view.remove( idx ))
-          //            case LinkedList.Element( li, upd )        =>
+          //            case expr.List.Added(   _, idx, elem )   => guiFromTx( view.add( idx, show( elem )))
+          //            case expr.List.Removed( _, idx, elem )   => guiFromTx( view.remove( idx ))
+          //            case expr.List.Element( li, upd )        =>
           //               val ch = upd.foldLeft( Map.empty[ Int, String ]) { case (map0, (elem, _)) =>
           //                  val idx = li.indexOf( elem )
           //                  if( idx >= 0 ) {

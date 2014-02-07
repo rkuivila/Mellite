@@ -2,21 +2,9 @@
  *  ActionBounceTimeline.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either
- *  version 2, june 1991 of the License, or (at your option) any later version.
- *
- *  This software is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public
- *  License (gpl.txt) along with this software; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  This software is published under the GNU General Public License v2+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -30,7 +18,7 @@ package gui
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
 import de.sciss.synth.proc.{ExprImplicits, Grapheme, Artifact, Bounce}
-import de.sciss.desktop.{DialogSource, OptionPane, FileDialog, Window}
+import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
 import java.io.File
@@ -414,7 +402,7 @@ object ActionBounceTimeline {
           case _ =>
             println("WARNING: Code does not denote a file transform")
             defer(fDispose())
-            IO.revealInFinder(file)
+            Desktop.revealFile(file)
         }
 
       } else {
@@ -451,7 +439,7 @@ object ActionBounceTimeline {
           }
 
         case _ =>
-          IO.revealInFinder(file)
+          Desktop.revealFile(file)
       }
     }
 

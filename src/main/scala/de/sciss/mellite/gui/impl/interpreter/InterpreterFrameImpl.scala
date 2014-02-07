@@ -36,7 +36,7 @@ private[gui] object InterpreterFrameImpl {
     }
 
     val intpCfg = Interpreter.Config()
-    intpCfg.imports = Seq(
+    intpCfg.imports = List(
       "de.sciss.mellite._",
       "de.sciss.synth._",
       "Ops._",
@@ -52,12 +52,11 @@ private[gui] object InterpreterFrameImpl {
 
     val intp = InterpreterPane(interpreterConfig = intpCfg, codePaneConfig = codeCfg)
 
-
     new InterpreterFrame {
       val component = new WindowImpl {
         frame =>
 
-        def style = Window.Auxiliary
+        override def style = Window.Auxiliary
 
         def handler = Mellite.windowHandler
 

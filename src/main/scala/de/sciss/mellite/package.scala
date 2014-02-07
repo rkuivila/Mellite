@@ -2,21 +2,9 @@
  *  package.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either
- *  version 2, june 1991 of the License, or (at your option) any later version.
- *
- *  This software is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public
- *  License (gpl.txt) along with this software; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  This software is published under the GNU General Public License v2+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -26,7 +14,6 @@
 package de.sciss
 
 import lucre.expr
-import expr.LinkedList
 import synth.proc.Confluent
 import de.sciss.serial.{Serializer, DataInput}
 import scala.collection.immutable.{IndexedSeq => Vec}
@@ -55,36 +42,36 @@ package object mellite {
   object Folder {
     import mellite.{Element => _Element}
 
-    def apply[S <: Sys[S]](implicit tx: S#Tx): Folder[S] = LinkedList.Modifiable[S, _Element[S], _Element.Update[S]](_.changed)
+    def apply[S <: Sys[S]](implicit tx: S#Tx): Folder[S] = expr.List.Modifiable[S, _Element[S], _Element.Update[S]]
 
     def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Folder[S] =
-      LinkedList.Modifiable.read[S, _Element[S], _Element.Update[S]](_.changed)(in, access)
+      expr.List.Modifiable.read[S, _Element[S], _Element.Update[S]](in, access)
 
     //    object Update {
-    //      def unapply[S <: Sys[S]](upd: LinkedList.Update[ S, _Element[S], _Element.Update[S]]) = Some((upd.list, upd.changes))
+    //      def unapply[S <: Sys[S]](upd: expr.List.Update[ S, _Element[S], _Element.Update[S]]) = Some((upd.list, upd.changes))
     //    }
     //
     //    object Added {
-    //      def unapply[S <: Sys[S]](change: LinkedList.Change[S, _Element[S], _Element.Update[S]]) = change match {
-    //        case LinkedList.Added(idx, elem) => Some((idx, elem))
+    //      def unapply[S <: Sys[S]](change: expr.List.Change[S, _Element[S], _Element.Update[S]]) = change match {
+    //        case expr.List.Added(idx, elem) => Some((idx, elem))
     //        case _ => None
     //      }
-    ////      def unapply[S <: Sys[S]](change: LinkedList.Added[S, Element[S]]) = Some(change.index, change.elem)
+    ////      def unapply[S <: Sys[S]](change: expr.List.Added[S, Element[S]]) = Some(change.index, change.elem)
     //    }
     //    object Removed {
-    //      def unapply[S <: Sys[S]](change: LinkedList.Change[S, _Element[S], _Element.Update[S]]) = change match {
-    //        case LinkedList.Removed(idx, elem) => Some((idx, elem))
+    //      def unapply[S <: Sys[S]](change: expr.List.Change[S, _Element[S], _Element.Update[S]]) = change match {
+    //        case expr.List.Removed(idx, elem) => Some((idx, elem))
     //        case _ => None
     //      }
     //    }
     //    object Element {
-    //      def unapply[S <: Sys[S]](change: LinkedList.Change[S, _Element[S], _Element.Update[S]]) = change match {
-    //        case LinkedList.Element(elem, elemUpd) => Some((elem, elemUpd))
+    //      def unapply[S <: Sys[S]](change: expr.List.Change[S, _Element[S], _Element.Update[S]]) = change match {
+    //        case expr.List.Element(elem, elemUpd) => Some((elem, elemUpd))
     //        case _ => None
     //      }
     //    }
 
-    // private[Folder] type _Update[S <: Sys[S]] = LinkedList.Update[S, _Element[S], _Element.Update[S]]
+    // private[Folder] type _Update[S <: Sys[S]] = expr.List.Update[S, _Element[S], _Element.Update[S]]
     type Update[S <: Sys[S]] = Vec[Change[S]]
     sealed trait Change[S <: Sys[S]] { def elem: _Element[S] }
     final case class Added  [S <: Sys[S]](idx: Int, elem: _Element[S]) extends Change[S]
@@ -95,7 +82,7 @@ package object mellite {
       anySer.asInstanceOf[Serializer[S#Tx, S#Acc, Folder[S]]]
 
     private val anySer: Serializer[InMemory#Tx, InMemory#Acc, Folder[InMemory]] =
-      LinkedList.Modifiable.serializer[InMemory, _Element[InMemory], _Element.Update[InMemory]](_.changed)
+      expr.List.Modifiable.serializer[InMemory, _Element[InMemory], _Element.Update[InMemory]]
   }
-  type Folder[S <: Sys[S]] = LinkedList.Modifiable[S, Element[S], Element.Update[S]]
+  type Folder[S <: Sys[S]] = expr.List.Modifiable[S, Element[S], Element.Update[S]]
 }

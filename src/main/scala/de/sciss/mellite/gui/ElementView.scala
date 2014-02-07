@@ -2,21 +2,9 @@
  *  ElementView.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2013 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either
- *  version 2, june 1991 of the License, or (at your option) any later version.
- *
- *  This software is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- *  General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public
- *  License (gpl.txt) along with this software; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  This software is published under the GNU General Public License v2+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -28,10 +16,9 @@ package mellite
 package gui
 
 import de.sciss.synth.proc.{ExprImplicits, Artifact, Grapheme}
-import lucre.stm
+import de.sciss.lucre.{expr, stm}
 import swing.Swing
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.expr.LinkedList
 import java.io.File
 import java.awt.Toolkit
 import javax.swing.{Icon, ImageIcon}
@@ -205,16 +192,16 @@ object ElementView {
     def folder(implicit tx: S#Tx): _Folder[S]
 
     def tryConvert(upd: Any): _Folder.Update[S] = upd match {
-      case ll: LinkedList.Update[_, _, _] =>
-        convert(ll.asInstanceOf[LinkedList.Update[S, Element[S], Element.Update[S]]])
+      case ll: expr.List.Update[_, _, _] =>
+        convert(ll.asInstanceOf[expr.List.Update[S, Element[S], Element.Update[S]]])
       case _ => Vector.empty
     }
 
-    def convert(upd: LinkedList.Update[S, Element[S], Element.Update[S]]): _Folder.Update[S] =
+    def convert(upd: expr.List.Update[S, Element[S], Element.Update[S]]): _Folder.Update[S] =
       upd.changes.map {
-        case LinkedList.Added  (idx, elem)  => _Folder.Added  (idx, elem)
-        case LinkedList.Removed(idx, elem)  => _Folder.Removed(idx, elem)
-        case LinkedList.Element(elem, eu)   => _Folder.Element(elem, eu)
+        case expr.List.Added  (idx, elem)  => _Folder.Added  (idx, elem)
+        case expr.List.Removed(idx, elem)  => _Folder.Removed(idx, elem)
+        case expr.List.Element(elem, eu)   => _Folder.Element(elem, eu)
       }
 
     /** The children of the folder. This variable _must only be accessed or updated_ on the event thread. */
