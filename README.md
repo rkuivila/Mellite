@@ -18,6 +18,8 @@ To build an OS X standalone application, run `sbt appbundle`, for all other plat
 
 Note that this project is in __highly experimental__ state. While I have been composing already pieces with it, I recommend anyone to approach this with extreme care. I cannot guarantee that the application is bug free, in particular you may end up with a corrupt session database (although unlikely), and also I might introduce changes that render it impossible for new versions to open sessions created with previous versions. You have been warned!
 
+A short screencast is available on [Vimeo](https://vimeo.com/86202332).
+
 Otherwise, here are some hints:
 
 - Mellite uses a persistent database to store your session. It means it keeps track of the history of your composition process. The data structures have been developed to provide good performance even under extreme growth of the data base. You will still notice an occasional sluggishness or GC pauses during your work. If you want a more traditional approach, have a look at the predecessor project [Kontur](http://github.com/Sciss/Kontur). In particular, there is no undo-redo mechanism in place right now, although if you really mess up, you can still go to previous versions of your piece by creating a new _cursor_.
