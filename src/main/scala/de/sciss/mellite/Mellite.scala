@@ -18,6 +18,7 @@ import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import desktop.impl.SwingApplicationImpl
 import synth.proc.AuralSystem
 import de.sciss.lucre.event.Sys
+import javax.swing.UIManager
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = mellite.Document[_ <: Sys[_]]
@@ -36,6 +37,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   implicit def auralSystem: AuralSystem = _aural
 
   override protected def init(): Unit = {
+    // UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel") // UIManager.getSystemLookAndFeelClassName)
     LogFrame           .instance    // init
     DocumentViewHandler.instance    // init
     new MainFrame
