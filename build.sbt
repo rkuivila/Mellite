@@ -2,7 +2,7 @@ import AssemblyKeys._
 
 name          := "Mellite"
 
-version       := "0.6.0"
+version       := "0.6.1-SNAPSHOT"
 
 organization  := "de.sciss"
 
@@ -19,7 +19,7 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "scalacolliderswing" % "1.13.+",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.1+",
   "de.sciss" %% "audiowidgets-app"   % "1.4.+",
-  "de.sciss" %% "desktop-mac"        % "0.4.+",   // TODO: should be only added on OS X platforms
+  "de.sciss" %% "desktop-mac"        % "0.4.1+",  // TODO: should be only added on OS X platforms
   "de.sciss" %% "sonogramoverview"   % "1.7.+",
   "de.sciss" %% "treetable-scala"    % "1.3.4+",
   "de.sciss" %% "fscapejobs"         % "1.4.+",

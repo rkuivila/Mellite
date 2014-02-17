@@ -14,14 +14,17 @@
 package de.sciss.mellite
 
 import de.sciss.desktop.Preferences.Entry
+import de.sciss.file._
 
 object Prefs {
   import Mellite.userPrefs
 
+  final val defaultSuperCollider    = file("<SC_HOME>")
   final val defaultAudioDevice      = "<default>"
   final val defaultAudioNumOutputs  = 8
   final val defaultHeadphonesBus    = 0
 
+  def superCollider  : Entry[File  ] = userPrefs[File  ]("supercollider")
   def audioDevice    : Entry[String] = userPrefs[String]("audio-device")
   def audioNumOutputs: Entry[Int   ] = userPrefs[Int   ]("audio-num-outputs")
   def headphonesBus  : Entry[Int   ] = userPrefs[Int   ]("headphones-bus")

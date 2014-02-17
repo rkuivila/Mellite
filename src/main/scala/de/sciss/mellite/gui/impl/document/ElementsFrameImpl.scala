@@ -28,6 +28,7 @@ import de.sciss.file._
 import de.sciss.swingplus.Spinner
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.synth.expr.{Strings, Doubles, Ints}
+import scala.util.Try
 
 object ElementsFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx,
@@ -107,7 +108,7 @@ object ElementsFrameImpl {
     private def actionAddAudioFile(): Unit = {
       val locViews  = folderView.locations
       val dlg       = FileDialog.open(init = locViews.headOption.map(_.directory), title = "Add Audio File")
-      dlg.setFilter(AudioFile.identify(_).isDefined)
+      dlg.setFilter(f => Try(AudioFile.identify(f).isDefined).getOrElse(false))
       dlg.show(None).foreach { f =>
         val spec          = AudioFile.readSpec(f)
         val locSourceOpt  = folderView.findLocation(f)

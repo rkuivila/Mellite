@@ -27,6 +27,7 @@ import scala.swing.event.ValueChanged
 import collection.breakOut
 import javax.swing.border.Border
 import de.sciss.lucre.synth.{Txn, Server}
+import de.sciss.file._
 
 final class MainFrame extends WindowImpl { me =>
   import Mellite.auralSystem
@@ -48,6 +49,8 @@ final class MainFrame extends WindowImpl { me =>
 
   private def boot(): Unit = {
     val config        = Server.Config()
+    val programPath   = Prefs.superCollider.getOrElse(Prefs.defaultSuperCollider)
+    if (programPath != Prefs.defaultSuperCollider) config.programPath = programPath.path
     val audioDevice   = Prefs.audioDevice.getOrElse(Prefs.defaultAudioDevice)
     if (audioDevice != Prefs.defaultAudioDevice) config.deviceName = Some(audioDevice)
     config.outputBusChannels = Prefs.audioNumOutputs.getOrElse(Prefs.defaultAudioNumOutputs)
