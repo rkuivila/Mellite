@@ -2,7 +2,7 @@ import AssemblyKeys._
 
 name          := "Mellite"
 
-version       := "0.6.1-SNAPSHOT"
+version       := "0.6.1"
 
 organization  := "de.sciss"
 

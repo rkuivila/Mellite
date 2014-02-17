@@ -63,11 +63,11 @@ object ActionOpenFile extends Action("Open...") {
       val res = FileDialog.open(title = fullTitle)
       // "Filename filters do not function in Sun's reference implementation for Microsoft Windows"
       // ... and Linux neither. Suckers.
-//      res.setFilter { f =>
-//        val res = f.name.toLowerCase == "open" && f.parentOption.exists(_.ext.toLowerCase == "mllt")
-//        println(s"TEST '${f.path}' = $res")
-//        res
-//      }
+      //      res.setFilter { f =>
+      //        val res = f.name.toLowerCase == "open" && f.parentOption.exists(_.ext.toLowerCase == "mllt")
+      //        println(s"TEST '${f.path}' = $res")
+      //        res
+      //      }
       res
     }
     dlg.show(None).foreach { f =>

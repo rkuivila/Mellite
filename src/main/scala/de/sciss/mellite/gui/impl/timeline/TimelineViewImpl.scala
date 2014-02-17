@@ -779,7 +779,7 @@ object TimelineViewImpl {
           }
         }
 
-      println(s"performDrop($drop)")
+      // println(s"performDrop($drop)")
 
       drop.drag match {
         case ad: DnD.AudioDrag[S] =>
@@ -822,18 +822,13 @@ object TimelineViewImpl {
 
         case pd: DnD.ProcDrag[S] => withRegions { implicit tx => regions =>
           val in = pd.source()
-          println(s"REGIONS = $regions")
           regions.map { pv =>
             val out = pv.proc
-            val res = ProcActions.linkOrUnlink(out, in)
-            println(s"linkOrUnlink = $res")
-            res
+            ProcActions.linkOrUnlink(out, in)
           } .exists(identity)
         }
 
-        case _ =>
-          println("NOT ACCEPTED")
-          false
+        case _ => false
       }
     }
 
