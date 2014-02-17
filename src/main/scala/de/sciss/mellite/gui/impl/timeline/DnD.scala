@@ -107,7 +107,7 @@ trait DnD[S <: Sys[S]] {
       val loc   = e.getLocation
       val drop  = mkDrop(drag, loc)
       updateDnD(Some(drop))
-      e.acceptDrag(COPY)
+      e.acceptDrag(e.getDropAction) // COPY
     }
 
     private def isSupported(t: Transferable): Boolean =
@@ -128,11 +128,14 @@ trait DnD[S <: Sys[S]] {
         None
       }
 
-    private def process(e: DropTargetDragEvent): Unit =
-      mkDrag(e.getTransferable, isDragging = true) match {
+    private def process(e: DropTargetDragEvent): Unit = {
+      val d = mkDrag(e.getTransferable, isDragging = true)
+      // println(s"mkDrag = $d")
+      d match {
         case Some(drag) => acceptAndUpdate(e, drag)
         case _          => abortDrag(e)
       }
+    }
 
     def drop(e: DropTargetDropEvent): Unit = {
       updateDnD(None)
@@ -142,7 +145,7 @@ trait DnD[S <: Sys[S]] {
         e.rejectDrop()
         return
       }
-      e.acceptDrop(COPY)
+      e.acceptDrop(e.getDropAction)
       mkDrag(t, isDragging = false) match {
         case Some(drag) =>
           val loc     = e.getLocation
@@ -155,5 +158,5 @@ trait DnD[S <: Sys[S]] {
     }
   }
 
-  new DropTarget(peer, COPY, Adaptor)
+  new DropTarget(peer, COPY | LINK, Adaptor)
 }

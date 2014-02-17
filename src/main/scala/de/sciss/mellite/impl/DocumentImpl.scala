@@ -14,7 +14,8 @@
 package de.sciss.mellite
 package impl
 
-import java.io.{IOException, FileNotFoundException, File}
+import java.io.{FileOutputStream, IOException, FileNotFoundException}
+import de.sciss.file._
 import de.sciss.lucre.{confluent, stm}
 import stm.store.BerkeleyDB
 import de.sciss.synth.proc.{ExprImplicits, Confluent}
@@ -39,18 +40,19 @@ object DocumentImpl {
   }
 
   def read(dir: File): ConfluentDocument = {
-    if (!dir.isDirectory) throw new FileNotFoundException("Document " + dir.getPath + " does not exist")
+    if (!dir.isDirectory) throw new FileNotFoundException(s"Document ${dir.path} does not exist")
     apply(dir, create = false)
   }
 
   def empty(dir: File): ConfluentDocument = {
-    if (dir.exists()) throw new IOException("Document " + dir.getPath + " already exists")
+    if (dir.exists()) throw new IOException(s"Document ${dir.path} already exists")
     apply(dir, create = true)
   }
 
   private def apply(dir: File, create: Boolean): ConfluentDocument = {
     type S    = Cf
     val fact  = BerkeleyDB.factory(dir, createIfNecessary = create)
+    new FileOutputStream(dir / "open").close()
     implicit val system: S = Confluent(fact)
 
     val (access, cursors) = system.rootWithDurable[Data, Cursors[S, S#D]] { implicit tx =>
