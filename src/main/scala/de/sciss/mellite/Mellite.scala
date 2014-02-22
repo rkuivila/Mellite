@@ -15,10 +15,14 @@ package de.sciss
 package mellite
 
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
-import desktop.impl.SwingApplicationImpl
+import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
+import de.sciss.desktop.WindowHandler
 import synth.proc.AuralSystem
 import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
+import scala.util.control.NonFatal
+import com.alee.laf.WebLookAndFeel
+import scala.swing.Swing
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = mellite.Document[_ <: Sys[_]]
@@ -30,6 +34,12 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   // synth.proc.showTransportLog = true
   // showLog                     = true
 
+  override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
+    override lazy val usesInternalFrames = {
+      false
+    }
+  }
+
   protected def menuFactory = MenuBar.instance
 
   private lazy val _aural = AuralSystem()
@@ -37,9 +47,15 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   implicit def auralSystem: AuralSystem = _aural
 
   override protected def init(): Unit = {
-    // UIManager.setLookAndFeel("com.sun.java.swing.plaf.nimbus.NimbusLookAndFeel") // UIManager.getSystemLookAndFeelClassName)
+    try {
+      // WebLookAndFeel.install()
+      UIManager.installLookAndFeel("Web Look And Feel", classOf[WebLookAndFeel].getName)
+      UIManager.setLookAndFeel(Prefs.lookAndFeel.getOrElse(Prefs.defaultLookAndFeel).getClassName)
+    } catch {
+      case NonFatal(_) =>
+    }
     LogFrame           .instance    // init
     DocumentViewHandler.instance    // init
-    new MainFrame
+    Swing.onEDT(new MainFrame)
   }
 }

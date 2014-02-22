@@ -18,7 +18,7 @@ c.step { implicit tx =>
   tl.iterator.foreach { case (span, xs) =>
     xs.foreach { x =>
       val sv = x.span.value
-      if (sv != span) println(s"Disprepancy: $span - $sv - $x")
+      if (sv != span) println(s"Discrepancy: $span - $sv - $x")
     }
   }
 }

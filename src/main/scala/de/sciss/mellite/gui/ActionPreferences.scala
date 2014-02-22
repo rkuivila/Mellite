@@ -15,18 +15,19 @@ package de.sciss
 package mellite
 package gui
 
-import scala.swing.{FlowPanel, Button, TextField, Alignment, Label, Action}
 import java.awt.event.KeyEvent
 import de.sciss.desktop.{FileDialog, Preferences, OptionPane, KeyStrokes}
 import scalaswingcontrib.group.GroupPanel
-import scala.swing.Swing.EmptyIcon
-import scala.swing.event.{EditDone, ValueChanged}
-import de.sciss.swingplus.Spinner
-import javax.swing.{JPanel, SpinnerNumberModel}
+import de.sciss.swingplus.{Separator, Spinner}
+import javax.swing.{JPanel, SpinnerNumberModel, UIManager}
 import de.sciss.file._
+import scala.swing.{Action, Label, Alignment, Component, Swing, TextField, Button, FlowPanel, ComboBox}
+import scala.swing.event.{EditDone, SelectionChanged, ValueChanged}
+import Swing.EmptyIcon
 
 object ActionPreferences extends Action("Preferences...") {
   import KeyStrokes._
+
   accelerator = Some(menu1 + KeyEvent.VK_COMMA)
 
   def apply(): Unit = {
@@ -34,69 +35,104 @@ object ActionPreferences extends Action("Preferences...") {
 
     def label(text: String) = new Label(text + ":", EmptyIcon, Alignment.Right)
 
-    def spinner(prefs: Preferences.Entry[Int], default: => Int, min: Int = 0, max: Int = 65536,
-                step: Int = 1): Spinner = {
-      val m = new SpinnerNumberModel(prefs.getOrElse(default), min, max, step)
-      new Spinner(m) {
-        listenTo(this)
-        reactions += {
-          case ValueChanged(_) => value match{
-            case i: Int => prefs.put(i)
-            case _ => println(s"Unexpected value $value")
-          }
+    def intField(prefs: Preferences.Entry[Int], default: => Int, min: Int = 0, max: Int = 65536,
+                step: Int = 1): Component = {
+      val m  = new SpinnerNumberModel(prefs.getOrElse(default), min, max, step)
+      val gg = new Spinner(m)
+      gg.listenTo(gg)
+      gg.reactions += {
+        case ValueChanged(_) => gg.value match{
+          case i: Int => prefs.put(i)
+          case _ => println(s"Unexpected value ${gg.value}")
         }
       }
+      gg
     }
 
-    val box = new GroupPanel {
-      val lbSuperCollider = label("SuperCollider (scsynth)")
-      val txSuperCollider = new TextField(Prefs.superCollider.getOrElse(Prefs.defaultSuperCollider).path, 16) {
-        listenTo(this)
-        reactions += {
-          case EditDone(_) =>
-            if (text.isEmpty) text = Prefs.defaultSuperCollider.path
-            Prefs.superCollider.put(file(text))
-        }
+    def pathField(prefs: Preferences.Entry[File], default: => File, title: String): Component = {
+      def fixDefault: File = default  // XXX TODO: Scalac bug?
+      val tx = new TextField(prefs.getOrElse(default).path, 16)
+      tx.listenTo(tx)
+      tx.reactions += {
+        case EditDone(_) =>
+          if (tx.text.isEmpty) tx.text = fixDefault.path
+          prefs.put(file(tx.text))
       }
-      val btSuperCollider = Button("…") {
-        val dlg = FileDialog.open(init = Prefs.superCollider.get, title = "SuperCollider Server Location (scsynth)")
+      val bt = Button("…") {
+        val dlg = FileDialog.open(init = prefs.get, title = title)
         dlg.show(None).foreach { f =>
-          txSuperCollider.text = f.path
-          Prefs.superCollider.put(f)
+          tx.text = f.path
+          prefs.put(f)
         }
       }
-      btSuperCollider.peer.putClientProperty("JButton.buttonType", "square")
-      val ggSuperCollider = new FlowPanel(txSuperCollider, btSuperCollider) {
+      bt.peer.putClientProperty("JButton.buttonType", "square")
+      val gg = new FlowPanel(tx, bt) {
         override lazy val peer: JPanel =
           new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.TRAILING, 0, 0)) with SuperMixin {
             override def getBaseline(width: Int, height: Int): Int = {
-              val res = txSuperCollider.peer.getBaseline(width, height)
-              res + txSuperCollider.peer.getY
+              val res = tx.peer.getBaseline(width, height)
+              res + tx.peer.getY
             }
           }
       }
+      gg
+    }
+
+    def textField(prefs: Preferences.Entry[String], default: => String): Component = {
+      def fixDefault: String = default  // XXX TODO: Scalac bug?
+      val gg = new TextField(prefs.getOrElse(default), 16)
+      gg.listenTo(gg)
+      gg.reactions += {
+        case EditDone(_) =>
+          if (gg.text.isEmpty) gg.text = fixDefault
+          prefs.put(gg.text)
+      }
+      gg
+    }
+
+    def combo[A](prefs: Preferences.Entry[A], default: => A, values: Seq[A])(implicit view: A => String): Component = {
+      val gg = new ComboBox[A](values)
+      gg.renderer = scala.swing.ListView.Renderer(view)
+      gg.peer.putClientProperty("JComboBox.isSquare", true)
+      val idx0 = values.indexOf(prefs.getOrElse(default))
+      if (idx0 >= 0) gg.selection.index = idx0
+      gg.listenTo(gg.selection)
+      gg.reactions += {
+        case SelectionChanged(_) =>
+          val it = gg.selection.item
+          // println(s"put($it)")
+          prefs.put(it)
+      }
+      gg
+    }
+
+    val box = new GroupPanel {
+      val lbLookAndFeel   = label("Look-and-Feel")
+      val ggLookAndFeel   = combo(Prefs.lookAndFeel, Prefs.defaultLookAndFeel,
+        UIManager.getInstalledLookAndFeels)(_.getName)
+
+      val lbSuperCollider = label("SuperCollider (scsynth)")
+      val ggSuperCollider = pathField(Prefs.superCollider, Prefs.defaultSuperCollider,
+        title = "SuperCollider Server Location (scsynth)")
 
       val lbAudioDevice   = label("Audio Device")
-      val ggAudioDevice   = new TextField(Prefs.audioDevice.getOrElse(Prefs.defaultAudioDevice), 16) {
-        listenTo(this)
-        reactions += {
-          case EditDone(_) =>
-            if (text.isEmpty) text = Prefs.defaultAudioDevice
-            Prefs.audioDevice.put(text)
-        }
-      }
+      val ggAudioDevice   = textField(Prefs.audioDevice   , Prefs.defaultAudioDevice    )
       val lbNumOutputs    = label("Output Channels")
-      val ggNumOutputs    = spinner(Prefs.audioNumOutputs, Prefs.defaultAudioNumOutputs)
+      val ggNumOutputs    = intField(Prefs.audioNumOutputs, Prefs.defaultAudioNumOutputs)
 
       val lbHeadphones    = label("Headphones Bus")
-      val ggHeadphones    = spinner(Prefs.headphonesBus, Prefs.defaultHeadphonesBus)
+      val ggHeadphones    = intField(Prefs.headphonesBus  , Prefs.defaultHeadphonesBus  )
+
+      val sep1 = Separator()
 
       // val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
-      theHorizontalLayout is Sequential(
-        Parallel(lbSuperCollider, lbAudioDevice, lbNumOutputs, lbHeadphones),
-        Parallel(ggSuperCollider, ggAudioDevice, ggNumOutputs, ggHeadphones)
-      )
+      theHorizontalLayout is Parallel(sep1, Sequential(
+        Parallel(lbLookAndFeel, lbSuperCollider, lbAudioDevice, lbNumOutputs, lbHeadphones),
+        Parallel(ggLookAndFeel, ggSuperCollider, ggAudioDevice, ggNumOutputs, ggHeadphones)
+      ))
       theVerticalLayout is Sequential(
+        Parallel(Baseline)(lbLookAndFeel  , ggLookAndFeel  ),
+        sep1,
         Parallel(Baseline)(lbSuperCollider, ggSuperCollider),
         Parallel(Baseline)(lbAudioDevice  , ggAudioDevice  ),
         Parallel(Baseline)(lbNumOutputs   , ggNumOutputs   ),

@@ -19,20 +19,22 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "scalacolliderswing" % "1.13.+",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.1+",
   "de.sciss" %% "audiowidgets-app"   % "1.4.+",
-  "de.sciss" %% "desktop-mac"        % "0.4.1+",  // TODO: should be only added on OS X platforms
+  "de.sciss" %% "desktop-mac"        % "0.4.2+",  // TODO: should be only added on OS X platforms
   "de.sciss" %% "sonogramoverview"   % "1.7.+",
   "de.sciss" %% "treetable-scala"    % "1.3.4+",
   "de.sciss" %% "fscapejobs"         % "1.4.+",
   "de.sciss" %% "strugatzki"         % "2.3.+"
 )
 
-retrieveManaged := true
+// retrieveManaged := true
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
 scalacOptions += "-no-specialization"
 
 // scalacOptions ++= Seq("-Xelide-below", "INFO")
+
+javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
 
 initialCommands in console :=
   """import de.sciss.mellite._

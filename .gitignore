@@ -7,3 +7,4 @@ project/boot/
 _creation/
 *.app
 dependency-graph.sbt
+Mellite.jar
