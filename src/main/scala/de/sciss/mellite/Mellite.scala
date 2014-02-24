@@ -22,7 +22,6 @@ import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
 import scala.util.control.NonFatal
 import com.alee.laf.WebLookAndFeel
-import scala.swing.Swing
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = mellite.Document[_ <: Sys[_]]
@@ -36,7 +35,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
 
   override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
     override lazy val usesInternalFrames = {
-      false
+      false // XXX TODO: eventually a preferences entry
     }
   }
 
@@ -56,6 +55,6 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     }
     LogFrame           .instance    // init
     DocumentViewHandler.instance    // init
-    Swing.onEDT(new MainFrame)
+    new MainFrame
   }
 }
