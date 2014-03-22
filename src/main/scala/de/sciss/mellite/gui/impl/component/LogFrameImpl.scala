@@ -59,8 +59,8 @@ private[gui] final class LogFrameImpl extends LogFrame with WindowImpl {
   private val printObserver = new PrintStream(observer)
 
   def observe(): Unit = {
-    Console.setOut(observer)
-    Console.setErr(observer)
+    // Console.setOut(observer)
+    // Console.setErr(observer)
     System.setOut(printObserver)
     System.setErr(printObserver)
   }

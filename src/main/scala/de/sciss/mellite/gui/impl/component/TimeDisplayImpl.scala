@@ -57,7 +57,7 @@ final class TimeDisplayImpl(model: TimelineModel) extends TimeDisplay {
     //      }
     //    }
 
-    font        = LCDFont().deriveFont(11f)
+    font        = LCDFont() // .deriveFont(11.5f)
     foreground  = LCDColors.defaultFg
     text        = lcdFormat.format(0.0, decimals = 3, pad = 12)
 

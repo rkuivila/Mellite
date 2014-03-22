@@ -164,7 +164,7 @@ object TransportPanelImpl {
          }
        }
 
-       val actionRewind = Rewind()
+       val actionRewind = Rewind {}
 
          val actionPlay = Play {
             atomic { implicit tx =>
@@ -178,7 +178,7 @@ object TransportPanelImpl {
             }
          }
 
-         val actionFFwd = FastForward()
+         val actionFFwd = FastForward {}
 
        val actions  = Seq(actionRTZ, actionRewind, actionPlay, actionStop, actionFFwd)
        val strip    = GUITransport.makeButtonStrip(actions)

@@ -79,7 +79,6 @@ object DnD {
     private var dndInitY    = 0
     private var dndPressed  = false
     private var dndStarted  = false
-
     private object Mouse extends MouseAdapter {
       override def mousePressed(e: MouseEvent): Unit = {
         dndInitX	  = e.getX
@@ -103,4 +102,5 @@ object DnD {
     peer.addMouseListener      (Mouse)
     peer.addMouseMotionListener(Mouse)
   }
+
 }

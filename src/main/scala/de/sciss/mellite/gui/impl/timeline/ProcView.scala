@@ -27,7 +27,7 @@ import de.sciss.file._
 import de.sciss.lucre.stm.IdentifierMap
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.expr.SpanLikes
+import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 
 object ProcView {
   type LinkMap[S <: Sys[S]] = Map[String, Vec[ProcView.Link[S]]]
@@ -60,7 +60,7 @@ object ProcView {
     val span  = timed.span
     val proc  = timed.value
     val spanV = span.value
-    import SpanLikes._
+    import SpanLikeEx._
     // println("--- scan keys:")
     // proc.scans.keys.foreach(println)
 

@@ -37,7 +37,7 @@ import de.sciss.processor.Processor
 import de.sciss.file._
 import de.sciss.swingplus.{Spinner, Labeled}
 import de.sciss.lucre.synth.{Server, Synth, Sys}
-import de.sciss.lucre.synth.expr.{Longs, Doubles}
+import de.sciss.lucre.expr.{Long => LongEx, Double => DoubleEx}
 
 object ActionBounceTimeline {
 
@@ -426,8 +426,8 @@ object ActionBounceTimeline {
               // val artifact  = locM.add(file)
               // val depArtif  = Artifact.Modifiable(artifact)
               val depArtif  = locM.add(file)
-              val depOffset = Longs  .newVar(0L)
-              val depGain   = Doubles.newVar(1.0)
+              val depOffset = LongEx  .newVar(0L)
+              val depGain   = DoubleEx.newVar(1.0)
               val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
               val depElem   = Element.AudioGrapheme(file.base, deployed)
               val transfOpt = settings.transform.map(_.apply())

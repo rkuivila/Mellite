@@ -17,18 +17,11 @@ package impl
 package component
 
 import javax.swing.JComponent
-import java.awt.{Font, Graphics, Graphics2D, Dimension}
+import java.awt.{Graphics, Graphics2D, Dimension}
+import de.sciss.audiowidgets.LCDFont
 
 object TimeLabel {
-  //   private val prefSz   = new Dimension( 126, 20 )
   private val prefSz = new Dimension(112, 16)
-  private lazy val fnt = {
-    val is = Mellite.getClass.getResourceAsStream("Receiptional Receipt.ttf") // "LCDML___.TTF"
-    require(is != null, "Font resource not found") // fucking Java
-    val res = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(13f)
-    is.close()
-    res
-  }
 }
 
 class TimeLabel extends JComponent {
@@ -37,23 +30,17 @@ class TimeLabel extends JComponent {
   private var millisVar = 0L
   private var textVar   = ""
 
-  //   def text: String = textVar
-  //   def text_=( value: String ): Unit = {
-  //      textVar = value
-  //      repaint()
-  //   }
-
-  recalcText()
+  updateText()
 
   def millis: Long = millisVar
 
   def millis_=(value: Long): Unit = {
     millisVar = value
-    recalcText()
+    updateText()
     repaint()
   }
 
-  private def recalcText(): Unit = {
+  private def updateText(): Unit = {
     val neg     = millisVar < 0
     val millis0 = if( neg ) -millisVar else millisVar
     val millis  = millis0 % 1000
@@ -82,7 +69,7 @@ class TimeLabel extends JComponent {
 
   override def paintComponent(g: Graphics): Unit = {
     val g2 = g.asInstanceOf[Graphics2D]
-    g2.setFont(fnt)
+    g2.setFont(LCDFont())
     val x = ((getWidth - 112) >> 1) + 2
     val y = ((getHeight - 16) >> 1) + 16
     g2.drawString(textVar, x, y)

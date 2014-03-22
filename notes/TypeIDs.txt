@@ -29,6 +29,8 @@
 0x10002	    AudioGrapheme	XXX should be 13
 0x10003     ArtifactLocation
 
+0x10004     expr.List
+
 :: indeterminus ::
 
 0x20000     Recursion
@@ -37,6 +39,9 @@
 :: sysson ::
 
 NEIN   0x30000     Patch
+0x30001     Matrix
+0x30002     Reduce.Op
+0x30003     Dimension.Selection
 
 :: higher-order ::
 

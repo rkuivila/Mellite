@@ -17,10 +17,11 @@ import de.sciss.lucre.{event => evt}
 import evt.{Targets, Sys}
 import annotation.switch
 import de.sciss.serial.{DataOutput, DataInput}
-import de.sciss.lucre.synth.expr.{Strings, BiTypeImpl}
+import de.sciss.lucre.expr.{String => StringEx}
+import de.sciss.lucre.expr.impl.ExprTypeImplA
 
-object StringOptions extends BiTypeImpl[Option[String]] {
-  final val typeID = 0x1000 | Strings.typeID
+object StringOptions extends ExprTypeImplA[Option[String]] {
+  final val typeID = 0x1000 | StringEx.typeID
 
   /* protected */ def readValue(in: DataInput): Option[String] =
     (in.readUnsignedByte(): @switch) match {

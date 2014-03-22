@@ -25,7 +25,7 @@ import language.higherKinds
 import de.sciss.serial.{DataOutput, DataInput, Writable}
 import de.sciss.{model => m}
 import de.sciss.lucre.synth.{InMemory, Sys}
-import de.sciss.lucre.synth.expr.{Doubles, Ints, Strings}
+import de.sciss.lucre.expr.{Double => DoubleEx, Int => IntEx, String => StringEx}
 
 object Element {
   import scala.{Int => _Int, Double => _Double}
@@ -45,7 +45,7 @@ object Element {
   sealed trait Companion[E[S <: Sys[S]] <: Writable ] {
     final private[Element] def readIdentified[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S])
                                                     (implicit tx: S#Tx): E[S] with evt.Node[S] = {
-      val name = Strings.readVar(in, access)
+      val name = StringEx.readVar(in, access)
       read(in, access, targets, name)
     }
 
@@ -71,16 +71,16 @@ object Element {
   // ----------------- Int -----------------
 
   object Int extends Companion[Int] {
-    protected[Element] final val typeID = Ints.typeID
+    protected[Element] final val typeID = IntEx.typeID
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): Int[S] with evt.Node[S] = {
-      val entity = Ints.readVar(in, access)
+      val entity = IntEx.readVar(in, access)
       new Impl(targets, name, entity)
     }
 
     def apply[S <: Sys[S]](name: _String, init: Expr[S, _Int])(implicit tx: S#Tx): Int[S] = {
-      new Impl(evt.Targets[S], mkName(name), Ints.newVar(init))
+      new Impl(evt.Targets[S], mkName(name), IntEx.newVar(init))
     }
 
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Int])
@@ -94,16 +94,16 @@ object Element {
   // ----------------- Double -----------------
 
   object Double extends Companion[Double] {
-    protected[Element] final val typeID = Doubles.typeID
+    protected[Element] final val typeID = DoubleEx.typeID
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): Double[S] with evt.Node[S] = {
-      val entity = Doubles.readVar(in, access)
+      val entity = DoubleEx.readVar(in, access)
       new Impl(targets, name, entity)
     }
 
     def apply[S <: Sys[S]](name: _String, init: Expr[S, _Double])(implicit tx: S#Tx): Double[S] = {
-      new Impl(evt.Targets[S], mkName(name), Doubles.newVar(init))
+      new Impl(evt.Targets[S], mkName(name), DoubleEx.newVar(init))
     }
 
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _Double])
@@ -117,16 +117,16 @@ object Element {
   // ----------------- String -----------------
 
   object String extends Companion[String] {
-    protected[Element] final val typeID = Strings.typeID
+    protected[Element] final val typeID = StringEx.typeID
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): String[S] with evt.Node[S] = {
-      val entity = Strings.readVar(in, access)
+      val entity = StringEx.readVar(in, access)
       new Impl(targets, name, entity)
     }
 
     def apply[S <: Sys[S]](name: _String, init: Expr[S, _String])(implicit tx: S#Tx): String[S] = {
-      new Impl(evt.Targets[S], mkName(name), Strings.newVar(init))
+      new Impl(evt.Targets[S], mkName(name), StringEx.newVar(init))
     }
 
     private final class Impl[S <: Sys[S]](val targets: evt.Targets[S], val name: Name[S], val entity: Expr.Var[S, _String])
@@ -198,7 +198,7 @@ object Element {
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): AudioGrapheme[S] with evt.Node[S] = {
-      val entity = Grapheme.Elem.Audio.readExpr(in, access) match {
+      val entity = Grapheme.Elem.Audio.read(in, access) match {
         case a: Grapheme.Elem.Audio[S] => a
         case other => sys.error(s"Expected a Grapheme.Elem.Audio, but found $other")  // XXX TODO
       }
@@ -295,7 +295,7 @@ object Element {
 
     protected def read[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S], name: Name[S])
                                    (implicit tx: S#Tx): Code[S] with evt.Node[S] = {
-      val entity = Codes.readExpr(in, access)
+      val entity = Codes.read(in, access)
       new Impl(targets, name, entity)
     }
 
@@ -346,7 +346,7 @@ object Element {
   }
 
   private def mkName[S <: Sys[S]](name: _String)(implicit tx: S#Tx): Name[S] =
-    Strings.newVar[S](Strings.newConst(name))
+    StringEx.newVar[S](StringEx.newConst(name))
 
   //  // A[ ~ <: Sys[ ~ ] forSome { type ~ }]
   //  private def mkExpr[S <: Sys[S], A1](biType: BiType[A1], init: Expr[S, A1], name: Option[String])

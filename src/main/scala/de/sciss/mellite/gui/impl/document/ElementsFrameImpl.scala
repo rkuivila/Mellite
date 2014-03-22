@@ -20,14 +20,13 @@ import scala.swing.{ComboBox, TextField, Dialog, Component, FlowPanel, Action, B
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.{ExprImplicits, ProcGroup}
 import de.sciss.desktop.{FileDialog, DialogSource, Window, Menu}
-import scalaswingcontrib.PopupMenu
 import de.sciss.desktop.impl.WindowImpl
 import de.sciss.synth.io.AudioFile
 import javax.swing.SpinnerNumberModel
 import de.sciss.file._
-import de.sciss.swingplus.Spinner
+import de.sciss.swingplus.{PopupMenu, Spinner}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.expr.{Strings, Doubles, Ints}
+import de.sciss.lucre.expr.{String => StringEx, Double => DoubleEx, Int => IntEx}
 import scala.util.Try
 
 object ElementsFrameImpl {
@@ -130,7 +129,7 @@ object ElementsFrameImpl {
       val ggValue   = new Spinner(model)
       actionAddPrimitive(tpe = "Integer", ggValue = ggValue, prepare = Some(model.getNumber.intValue())) {
         implicit tx =>
-          (name, value) => Element.Int(name, Ints.newVar(value))
+          (name, value) => Element.Int(name, IntEx.newVar(value))
       }
     }
 
@@ -141,7 +140,7 @@ object ElementsFrameImpl {
       val ggValue   = new Spinner(model)
       actionAddPrimitive(tpe = "Double", ggValue = ggValue, prepare = Some(model.getNumber.doubleValue)) {
         implicit tx =>
-          (name, value) => Element.Double(name, Doubles.newVar(value))
+          (name, value) => Element.Double(name, DoubleEx.newVar(value))
       }
     }
 
@@ -151,7 +150,7 @@ object ElementsFrameImpl {
       val ggValue   = new TextField(20)
       ggValue.text  = "Value"
       actionAddPrimitive(tpe = "String", ggValue = ggValue, prepare = Some(ggValue.text)){ implicit tx =>
-        (name, value) => Element.String(name, Strings.newVar(value))
+        (name, value) => Element.String(name, StringEx.newVar(value))
       }
     }
 

@@ -22,7 +22,7 @@ import confluent.reactive.{ConfluentReactiveLike => KSys}
 import evt.{DurableLike => DSys}
 import de.sciss.lucre.expr.Expr
 import de.sciss.synth.proc.ExprImplicits
-import de.sciss.lucre.synth.expr.Strings
+import de.sciss.lucre.expr.{String => StringEx}
 
 object CursorsImpl {
   private final val COOKIE = 0x43737273 // "Csrs"
@@ -33,7 +33,7 @@ object CursorsImpl {
     import imp._
     val targets = evt.Targets[D1]
     val cursor  = confluent.Cursor[S, D1](seminal)
-    val name    = Strings.newVar("branch")
+    val name    = StringEx.newVar("branch")
     val list    = expr.List.Modifiable[D1, Cursors[S, D1], Cursors.Update[S, D1]]
     log(s"Cursors.apply targets = $targets, list = $list")
     new Impl(targets, seminal, cursor, name, list)
@@ -54,7 +54,7 @@ object CursorsImpl {
       require(cookie == COOKIE, s"Unexpected $cookie (should be $COOKIE)")
       val seminal: S#Acc = system.readPath(in)
       val cursor  = confluent.Cursor.read[S, D1](in)
-      val name    = Strings.readVar[D1](in, access)
+      val name    = StringEx.readVar[D1](in, access)
       val list    = expr.List.Modifiable.read[D1, Cursors[S, D1], Cursors.Update[S, D1]](in, access)
       log(s"Cursors.read targets = $targets, list = $list")
       new Impl(targets, seminal, cursor, name, list)

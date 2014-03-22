@@ -47,7 +47,7 @@ import scala.util.Try
 import de.sciss.model.Change
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.expr.SpanLikes
+import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 
 object TimelineViewImpl {
   private val colrBg              = Color.darkGray
@@ -425,13 +425,13 @@ object TimelineViewImpl {
             val oldVal    = oldSpan.value
             val rightSpan = oldVal match {
               case Span.HasStart(leftStart) =>
-                val _rightSpan  = SpanLikes.newVar(oldSpan())
+                val _rightSpan  = SpanLikeEx.newVar(oldSpan())
                 val resize      = ProcActions.Resize(time - leftStart, 0L)
                 ProcActions.resize(_rightSpan, rightProc, resize, timelineModel)
                 _rightSpan
 
               case Span.HasStop(rightStop) =>
-                SpanLikes.newVar(Span(time, rightStop))
+                SpanLikeEx.newVar(Span(time, rightStop))
             }
 
             oldVal match {

@@ -97,24 +97,23 @@ object CodeImpl2 {
   }
 
   def compileBody[I, O, Repr <: Code { type In = I; type Out = O }](code: Repr)
-                      (implicit w: Wrapper[I, O, Repr]): Future[Unit] = {
-    future {
+                      (implicit w: Wrapper[I, O, Repr]): Future[Unit] =
+    Future {
       blocking {
         compileThunk(code.source, w, execute = false)
       }
     }
-  }
 
-  private final class Intp(cset: nsc.Settings)
-    extends IMain(cset, new NewLinePrintWriter(new ConsoleWriter, autoFlush = true)) {
+  private final class Intp(cSet: nsc.Settings)
+    extends IMain(cSet, new NewLinePrintWriter(new ConsoleWriter, autoFlush = true)) {
 
     override protected def parentClassLoader = CodeImpl2.getClass.getClassLoader
   }
 
   private lazy val intp = {
-    val cset = new nsc.Settings()
-    cset.classpath.value += File.pathSeparator + sys.props("java.class.path")
-    val res = new Intp(cset)
+    val cSet = new nsc.Settings()
+    cSet.classpath.value += File.pathSeparator + sys.props("java.class.path")
+    val res = new Intp(cSet)
     res.initializeSynchronous()
     res
   }
@@ -155,7 +154,7 @@ object CodeImpl2 {
           FileTransformContext.contextVar.set(Bindings)
           try {
             fun()
-            prom.complete(Success())
+            prom.complete(Success {})
           } catch {
             case e: Exception =>
               e.printStackTrace()

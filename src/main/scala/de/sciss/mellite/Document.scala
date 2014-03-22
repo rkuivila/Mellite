@@ -22,7 +22,6 @@ import de.sciss.synth.proc.Proc
 import de.sciss.serial.Serializer
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.expr.SpanLikes
 
 object Document {
   type Group       [S <: Sys[S]] = BiGroup.Modifiable   [S, Proc[S], Proc.Update[S]]
@@ -39,7 +38,7 @@ object Document {
 
   object Serializers {
     implicit def group[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Group[S]] with evt.Reader[S, Group[S]] = {
-      implicit val spanType = SpanLikes
+      // implicit val spanType = SpanLikes
       BiGroup.Modifiable.serializer[S, Proc[S], Proc.Update[S]](_.changed)
     }
   }

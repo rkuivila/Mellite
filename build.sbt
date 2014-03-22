@@ -1,36 +1,38 @@
 import AssemblyKeys._
 
-name          := "Mellite"
+name               := "Mellite"
 
-version       := "0.6.1"
+version            := "0.7.0-SNAPSHOT"
 
-organization  := "de.sciss"
+organization       := "de.sciss"
 
-homepage      := Some(url("https://github.com/Sciss/" + name.value))
+homepage           := Some(url("https://github.com/Sciss/" + name.value))
 
-description   := "An application based on SoundProcesses"
+description        := "An application based on SoundProcesses"
 
-licenses      := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
+licenses           := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
 
-scalaVersion  := "2.10.3"
+scalaVersion       := "2.11.0-RC3"
+
+crossScalaVersions := Seq("2.11.0-RC3", "2.10.4")
 
 libraryDependencies ++= Seq(
-  "de.sciss" %% "soundprocesses"     % "2.1.1+",
-  "de.sciss" %% "scalacolliderswing" % "1.13.+",
-  "de.sciss" %% "lucrestm-bdb"       % "2.0.1+",
-  "de.sciss" %% "audiowidgets-app"   % "1.4.+",
-  "de.sciss" %% "desktop-mac"        % "0.4.2+",  // TODO: should be only added on OS X platforms
+  "de.sciss" %% "soundprocesses"     % "2.2.+",
+  "de.sciss" %% "scalacolliderswing" % "1.14.+",
+  "de.sciss" %% "lucrestm-bdb"       % "2.0.3+",
+  "de.sciss" %% "audiowidgets-app"   % "1.5.+",
+  "de.sciss" %% "desktop-mac"        % "0.5.+",  // TODO: should be only added on OS X platforms
   "de.sciss" %% "sonogramoverview"   % "1.7.+",
-  "de.sciss" %% "treetable-scala"    % "1.3.4+",
+  "de.sciss" %% "treetable-scala"    % "1.3.5+",
   "de.sciss" %% "fscapejobs"         % "1.4.+",
-  "de.sciss" %% "strugatzki"         % "2.3.+"
+  "de.sciss" %% "strugatzki"         % "2.4.+"
 )
 
 // retrieveManaged := true
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature")
 
-scalacOptions += "-no-specialization"
+// scalacOptions += "-no-specialization"
 
 // scalacOptions ++= Seq("-Xelide-below", "INFO")
 

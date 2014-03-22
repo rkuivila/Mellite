@@ -21,9 +21,7 @@ import lucre.stm
 import java.io.File
 import de.sciss.desktop.{Desktop, DialogSource, Window}
 import desktop.impl.WindowImpl
-import scalaswingcontrib.group.GroupPanel
 import scala.swing.{Component, BorderPanel, FlowPanel, ProgressBar, Button, Alignment, Label}
-import language.reflectiveCalls
 import de.sciss.synth.proc
 import de.sciss.processor.Processor
 import scala.util.{Success, Failure}
@@ -35,6 +33,7 @@ import scala.annotation.tailrec
 import de.sciss.lucre.stm.Disposable
 import de.sciss.file._
 import de.sciss.lucre.synth.{Server, Sys}
+import de.sciss.swingplus.GroupPanel
 
 object RecursionFrameImpl {
   private final case class View(name: String, deployed: File, product: File) {
@@ -330,16 +329,16 @@ object RecursionFrameImpl {
       updateDeployed.enabled = view.sameFiles
 
       val box = new GroupPanel {
-        theHorizontalLayout is Sequential(
-          Parallel(lbDeployed    , lbProduct    ),
-          Parallel(ggDeployed    , ggProduct    ),
-          Parallel(viewDeployed  , viewProduct  ),
-          Parallel(matchDeployed , dummyProduct ),
-          Parallel(updateDeployed, updateProduct)
+        horizontal = Seq(
+          Par(lbDeployed    , lbProduct    ),
+          Par(ggDeployed    , ggProduct    ),
+          Par(viewDeployed  , viewProduct  ),
+          Par(matchDeployed , dummyProduct ),
+          Par(updateDeployed, updateProduct)
         )
-        theVerticalLayout   is Sequential(
-          Parallel(Baseline)(lbDeployed, ggDeployed, viewDeployed, matchDeployed, updateDeployed),
-          Parallel(Baseline)(lbProduct , ggProduct , viewProduct , dummyProduct , updateProduct )
+        vertical = Seq(
+          Par(Baseline)(lbDeployed, ggDeployed, viewDeployed, matchDeployed, updateDeployed),
+          Par(Baseline)(lbProduct , ggProduct , viewProduct , dummyProduct , updateProduct )
         )
         linkHorizontalSize(viewDeployed, matchDeployed, updateDeployed, viewProduct, dummyProduct, updateProduct)
         linkHorizontalSize(lbDeployed, lbProduct)

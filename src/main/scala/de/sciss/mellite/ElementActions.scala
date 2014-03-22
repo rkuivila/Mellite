@@ -18,14 +18,14 @@ import de.sciss.synth.proc.Grapheme
 import de.sciss.synth.io.AudioFileSpec
 import de.sciss.file._
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.expr.{Doubles, Longs}
+import de.sciss.lucre.expr.{Double => DoubleEx, Long => LongEx}
 
 object ElementActions {
   def addAudioFile[S <: Sys[S]](folder: Folder[S], index: Int, loc: Location.Modifiable[S],
                                 f: File, spec: AudioFileSpec)
                                (implicit tx: S#Tx): Element.AudioGrapheme[S] = {
-    val offset    = Longs  .newVar[S](Longs  .newConst(0L))
-    val gain      = Doubles.newVar[S](Doubles.newConst(1.0))
+    val offset    = LongEx  .newVar[S](LongEx  .newConst(0L))
+    val gain      = DoubleEx.newVar[S](DoubleEx.newConst(1.0))
     val artifact  = loc.add(f)
     val audio     = Grapheme.Elem.Audio(artifact, spec, offset, gain)
     val name      = f.base

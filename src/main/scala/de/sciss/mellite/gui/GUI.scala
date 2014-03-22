@@ -16,10 +16,10 @@ package mellite
 package gui
 
 import scala.swing.Swing._
-import scalaswingcontrib.group.GroupPanel
 import scala.swing.{AbstractButton, Swing, Dialog, Component, TextField, Label, Alignment}
 import java.awt.{Rectangle, GraphicsEnvironment}
 import javax.swing.Timer
+import de.sciss.swingplus.GroupPanel
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
@@ -65,13 +65,11 @@ object GUI {
     val ggName  = new TextField(10)
     ggName.text = defaultName
 
-    import language.reflectiveCalls // why does GroupPanel need reflective calls?
-    // import desktop.Implicits._
     val box = new GroupPanel {
       val lbName  = new Label( "Name:", EmptyIcon, Alignment.Right)
       val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
-      theHorizontalLayout is Sequential(Parallel(Trailing)(lbName, lbValue), Parallel(ggName, value))
-      theVerticalLayout   is Sequential(Parallel(Baseline)(lbName, ggName ), Parallel(Baseline)(lbValue, value))
+      horizontal  = Seq(Par(Trailing)(lbName, lbValue), Par          (ggName , value))
+      vertical    = Seq(Par(Baseline)(lbName, ggName ), Par(Baseline)(lbValue, value))
     }
 
     val pane = desktop.OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,

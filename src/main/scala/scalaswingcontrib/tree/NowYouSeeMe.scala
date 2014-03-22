@@ -1,5 +1,5 @@
-package scalaswingcontrib.tree
-
-object NowYouSeeMe {
-  def hiddenRoot: AnyRef = TreeModel.hiddenRoot
-}
+//package scalaswingcontrib.tree
+//
+//object NowYouSeeMe {
+//  def hiddenRoot: AnyRef = TreeModel.hiddenRoot
+//}

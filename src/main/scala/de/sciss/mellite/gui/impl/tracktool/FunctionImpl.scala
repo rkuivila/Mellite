@@ -21,7 +21,8 @@ import de.sciss.synth.proc.{Attribute, ProcKeys, Proc}
 import de.sciss.span.Span
 import java.awt.event.MouseEvent
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.expr.{Ints, Spans}
+import de.sciss.lucre.expr.{Int => IntEx}
+import de.sciss.lucre.bitemp.{Span => SpanEx}
 
 final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends RegionLike[S, TrackTool.Function] with Dragging[S, TrackTool.Function] {
@@ -54,9 +55,9 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
 
   def commit(drag: Function)(implicit tx: S#Tx): Unit =
     canvas.group.modifiableOption.foreach { g =>
-      val span  = Spans.newVar(Spans.newConst(drag.span))
+      val span  = SpanEx.newVar(SpanEx.newConst(drag.span))
       val p     = Proc[S]
-      p.attributes.put(ProcKeys.attrTrack, Attribute.Int(Ints.newVar(Ints.newConst(drag.track))))
+      p.attributes.put(ProcKeys.attrTrack, Attribute.Int(IntEx.newVar(IntEx.newConst(drag.track))))
       g.add(span, p)
       log(s"Added function region $p, span = ${drag.span}, track = ${drag.track}")
 

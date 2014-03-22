@@ -87,7 +87,7 @@ object CodeImpl {
 
   def compile[I, O, Repr <: Code { type In = I; type Out = O }](code: Repr)
                       (implicit w: Wrapper[I, O, Repr]): I => O = (in: I) => {
-    val funFut = future {
+    val funFut = Future {
       blocking {
         sync.synchronized {
           codeMap.getOrElseUpdate(code.source, compileThunk(code.source, w))
@@ -100,7 +100,7 @@ object CodeImpl {
 
   def compileBody[I, O, Repr <: Code { type In = I; type Out = O }](code: Repr)
                       (implicit w: Wrapper[I, O, Repr]): Future[Unit] = {
-    future {
+    Future {
       blocking {
         compileThunk(code.source, w)
       }

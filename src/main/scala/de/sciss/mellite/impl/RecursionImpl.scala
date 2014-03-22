@@ -23,7 +23,7 @@ import de.sciss.span.SpanLike
 import de.sciss.serial.{ImmutableSerializer, DataInput, DataOutput}
 import scala.annotation.switch
 import de.sciss.lucre.synth.{InMemory, Sys}
-import de.sciss.lucre.synth.expr.SpanLikes
+import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 
 object RecursionImpl {
   import Recursion.Channels
@@ -66,7 +66,7 @@ object RecursionImpl {
       val cookie  = in.readShort()
       require(cookie == COOKIE, s"Unexpected cookie $cookie (requires $COOKIE)")
       val group       = ProcGroup.read(in, access)
-      val span        = SpanLikes.readVar(in, access)
+      val span        = SpanLikeEx.readVar(in, access)
       val id          = targets.id
       val gain        = tx.readVar[Gain    ](id, in)
       val channels    = tx.readVar[Channels](id, in)(ImmutableSerializer.indexedSeq[Range.Inclusive])
@@ -89,7 +89,7 @@ object RecursionImpl {
 
     val targets   = evt.Targets[S]
     val id        = targets.id
-    val _span     = SpanLikes.newVar(span)
+    val _span     = SpanLikeEx.newVar(span)
     val _gain     = tx.newVar(id, gain)
     val _channels = tx.newVar(id, channels)(ImmutableSerializer.indexedSeq[Range.Inclusive])
 
@@ -126,13 +126,13 @@ object RecursionImpl {
     def gain(implicit tx: S#Tx): Gain = _gain()
     def gain_=(value: Gain)(implicit tx: S#Tx): Unit = {
       _gain() = value
-      fire()
+      fire(())
     }
 
     def channels(implicit tx: S#Tx): Channels = _channels()
     def channels_=(value: Channels)(implicit tx: S#Tx): Unit = {
       _channels() = value
-      fire()
+      fire(())
     }
 
     //    def transform(implicit tx: S#Tx): Option[Element.Code[S]] = _transform()
@@ -151,31 +151,31 @@ object RecursionImpl {
       mod.child_=(prodC)
     }
 
-    // ---- event dorfer ----
+    // ---- event ----
 
     def changed: evt.EventLike[S, Recursion.Update[S]] = this
 
     protected def reader: evt.Reader[S, Recursion[S]] = serializer
 
     def pullUpdate(pull: evt.Pull[S])(implicit tx: S#Tx): Option[Recursion.Update[S]] = {
-      if (pull.isOrigin(this)) return Some()
+      if (pull.isOrigin(this)) return Some(())
 
       val spanEvt = _span.changed
       val spanUpd = if (pull.contains(spanEvt)) pull(spanEvt) else None
-      if (spanUpd.isDefined) return Some()
+      if (spanUpd.isDefined) return Some(())
 
       val depEvt = deployed.changed
       val depUpd = if (pull.contains(depEvt)) pull(depEvt) else None
-      if (depUpd.isDefined) return Some()
+      if (depUpd.isDefined) return Some(())
 
       val prodEvt = product.changed
       val prodUpd = if (pull.contains(prodEvt)) pull(prodEvt) else None
-      if (prodUpd.isDefined) return Some()
+      if (prodUpd.isDefined) return Some(())
 
       transform.foreach { t =>
         val tEvt = t.changed
         val tUpd = if (pull.contains(tEvt)) pull(tEvt) else None
-        if (tUpd.isDefined) return Some()
+        if (tUpd.isDefined) return Some(())
       }
 
       None

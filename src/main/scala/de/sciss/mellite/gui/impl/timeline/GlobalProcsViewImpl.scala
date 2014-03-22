@@ -30,7 +30,7 @@ import java.awt.datatransfer.Transferable
 import scala.swing.event.TableColumnsSelected
 import scala.util.Try
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.expr.Ints
+import de.sciss.lucre.expr.{Int => IntEx}
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
@@ -116,7 +116,7 @@ object GlobalProcsViewImpl {
           case (3, busS: String) =>   // XXX TODO: should use spinner for editing
             Try(busS.toInt).foreach { bus =>
               atomic { implicit tx =>
-                ProcActions.setBus(pv.proc :: Nil, Ints.newConst(bus))
+                ProcActions.setBus(pv.proc :: Nil, IntEx.newConst(bus))
               }
             }
 

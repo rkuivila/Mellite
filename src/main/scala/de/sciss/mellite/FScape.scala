@@ -31,7 +31,7 @@ object FScape {
     instance.flatMap { fsc =>
       val p = Promise[Unit]()
       fsc.process("mellite", job) { success =>
-        if (success) p.success() else p.failure(new Exception("FScape failed to process job"))
+        if (success) p.success {} else p.failure(new Exception("FScape failed to process job"))
       }
       p.future
     }

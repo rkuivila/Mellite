@@ -276,7 +276,7 @@ object FolderViewImpl {
         private val component = TreeTableCellRenderer.Default
         def getRendererComponent(treeTable: TreeTable[_, _], value: Any, row: Int, column: Int,
                                  state: TreeTableCellRenderer.State): Component = {
-          val value1 = if (value != ()) value else null
+          val value1 = if (value != {}) value else null
           val res = component.getRendererComponent(treeTable, value1, row = row, column = column, state = state)
           if (row >= 0) state.tree match {
             case Some(TreeState(false, true)) =>

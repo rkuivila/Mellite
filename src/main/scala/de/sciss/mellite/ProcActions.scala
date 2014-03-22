@@ -23,7 +23,8 @@ import de.sciss.synth.proc
 import scala.util.control.NonFatal
 import collection.breakOut
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.expr.{Ints, Spans, Booleans, Doubles, Longs, Strings}
+import de.sciss.lucre.expr.{Int => IntEx, Boolean => BooleanEx, Double => DoubleEx, Long => LongEx, String => StringEx}
+import de.sciss.lucre.bitemp.{Span => SpanEx}
 
 object ProcActions {
   private val MinDur    = 32
@@ -106,7 +107,7 @@ object ProcActions {
       case Some(n) =>
         attr.apply[Attribute.String](ProcKeys.attrName) match {
           case Some(Expr.Var(vr)) => vr() = n
-          case _                  => attr.put(ProcKeys.attrName, Attribute.String(Strings.newVar(n)))
+          case _                  => attr.put(ProcKeys.attrName, Attribute.String(StringEx.newVar(n)))
         }
 
       case _ => attr.remove(ProcKeys.attrName)
@@ -134,9 +135,9 @@ object ProcActions {
         import imp._
         val scanw       = res.scans.add(ProcKeys.graphAudio)
         val grw         = Grapheme.Modifiable[S]
-        val gStart      = Longs  .newVar(time        .value)
-        val audioOffset = Longs  .newVar(audio.offset.value)  // XXX TODO
-        val audioGain   = Doubles.newVar(audio.gain  .value)
+        val gStart      = LongEx  .newVar(time        .value)
+        val audioOffset = LongEx  .newVar(audio.offset.value)  // XXX TODO
+        val audioGain   = DoubleEx.newVar(audio.gain  .value)
         val gElem       = Grapheme.Elem.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
         val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
         grw.add(bi)
@@ -170,7 +171,7 @@ object ProcActions {
     } else {
       attr.apply[Attribute.Double](ProcKeys.attrGain) match {
         case Some(Expr.Var(vr)) => vr() = gain
-        case _                  => attr.put(ProcKeys.attrGain, Attribute.Double(Doubles.newVar(gain)))
+        case _                  => attr.put(ProcKeys.attrGain, Attribute.Double(DoubleEx.newVar(gain)))
       }
     }
   }
@@ -186,7 +187,7 @@ object ProcActions {
       case Some(Expr.Var(vr)) => vr.transform(_ * factor)
       case other =>
         val newGain = other.map(_.value).getOrElse(1.0) * factor
-        attr.put(ProcKeys.attrGain, Attribute.Double(Doubles.newVar(newGain)))
+        attr.put(ProcKeys.attrGain, Attribute.Double(DoubleEx.newVar(newGain)))
     }
   }
 
@@ -203,9 +204,9 @@ object ProcActions {
 
     val attr = proc.attributes
     attr[Attribute.Boolean](ProcKeys.attrMute) match {
-      // XXX TODO: Booleans should have `not` operator
+      // XXX TODO: BooleanEx should have `not` operator
       case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld }
-      case _                  => attr.put(ProcKeys.attrMute, Attribute.Boolean(Booleans.newVar(true)))
+      case _                  => attr.put(ProcKeys.attrMute, Attribute.Boolean(BooleanEx.newVar(true)))
     }
   }
 
@@ -214,7 +215,7 @@ object ProcActions {
     code match {
       case csg: Code.SynthGraph =>
         try {
-          val sg = csg.execute()  // XXX TODO: compilation blocks, not good!
+          val sg = csg.execute {}  // XXX TODO: compilation blocks, not good!
 
           val scanKeys: Set[String] = sg.sources.collect {
             case proc.graph.scan.In   (key, _) => key
@@ -274,10 +275,10 @@ object ProcActions {
     import imp._
 
     val spanV   = Span(time, time + selection.length)
-    val span    = Spans.newVar[S](spanV)
+    val span    = SpanEx.newVar[S](spanV)
     val proc    = Proc[S]
     val attr    = proc.attributes
-    if (track >= 0) attr.put(ProcKeys.attrTrack, Attribute.Int(Ints.newVar(track)))
+    if (track >= 0) attr.put(ProcKeys.attrTrack, Attribute.Int(IntEx.newVar(track)))
     bus.foreach { busEx =>
       val bus = Attribute.Int(busEx)
       attr.put(ProcKeys.attrBus, bus)
@@ -290,7 +291,7 @@ object ProcActions {
     // we preserve data.source(), i.e. the original audio file offset
     // ; therefore the grapheme element must start `selection.start` frames
     // before the insertion position `drop.frame`
-    val gStart  = Longs.newVar(time - selection.start)  // wooopa, could even be a bin op at some point
+    val gStart  = LongEx.newVar(time - selection.start)  // wooopa, could even be a bin op at some point
     val bi: Grapheme.TimedElem[S] = BiExpr(gStart, grapheme)
     grIn.add(bi)
     scanIn addSource grIn
@@ -311,7 +312,7 @@ object ProcActions {
 
     val proc    = Proc[S]
     val attr    = proc.attributes
-    val nameEx  = Strings.newVar(Strings.newConst(name))
+    val nameEx  = StringEx.newVar(StringEx.newConst(name))
     attr.put(ProcKeys.attrName, Attribute.String(nameEx))
 
     group.add(Span.All, proc) // constant span expression
