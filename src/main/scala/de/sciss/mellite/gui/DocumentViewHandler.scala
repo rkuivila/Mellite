@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -17,6 +17,7 @@ package gui
 import de.sciss.lucre.synth.Sys
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.desktop.Desktop
+import de.sciss.lucre.swing._
 
 object DocumentViewHandler {
   lazy val instance: DocumentViewHandler = new DocumentViewHandler {

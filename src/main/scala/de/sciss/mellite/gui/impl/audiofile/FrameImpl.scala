@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -18,10 +18,11 @@ package audiofile
 
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.AuralSystem
-import de.sciss.desktop.impl.WindowImpl
 import de.sciss.desktop.Window
 import de.sciss.file._
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing._
 
 object FrameImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.AudioGrapheme[S])
@@ -30,7 +31,7 @@ object FrameImpl {
     val name      = elem.name.value
     val file      = elem.entity.value.artifact
     val view      = new Impl(doc, afv, name, file)
-    guiFromTx {
+    deferTx {
       view.guiInit()
     }
     view
@@ -42,7 +43,7 @@ object FrameImpl {
 
     def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      guiFromTx(comp.dispose())
+      deferTx(component.dispose())
     }
 
     private def disposeData()(implicit tx: S#Tx): Unit =
@@ -55,8 +56,7 @@ object FrameImpl {
 
     def guiInit(): Unit = {
       val fileName = _file.base
-      comp = new WindowImpl {
-        def handler = Mellite.windowHandler
+      component = new WindowImpl {
         component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
         title       = if (name == fileName) name else s"$name - $fileName"
         file        = Some(_file)

@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -26,11 +26,12 @@ import de.sciss.treetable.{TreeTableCellRenderer, TreeColumnModel, TreeTable, Ab
 import de.sciss.synth.proc
 import de.sciss.mellite._
 import de.sciss.mellite.gui._
-import de.sciss.mellite.gui.impl.ComponentHolder
 import de.sciss.desktop
 import de.sciss.treetable.TreeTableSelectionChanged
 import de.sciss.model.Change
 import de.sciss.synth.proc.ExprImplicits
+import de.sciss.lucre.swing.deferTx
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 object CursorsFrameImpl {
   type S = proc.Confluent
@@ -47,7 +48,7 @@ object CursorsFrameImpl {
     }
     // XXX TODO: remember obs for disposal
 
-    guiFromTx {
+    deferTx {
       view.guiInit()
     }
 
@@ -121,7 +122,7 @@ object CursorsFrameImpl {
       val ggValue = new FormattedTextField(format)
       ggValue.peer.setValue(new Date(parent.updated))
       val nameOpt = GUI.keyValueDialog(value = ggValue, title = "Add New Cursor",
-        defaultName = "branch", window = Some(comp))
+        defaultName = "branch", window = Some(component))
       (nameOpt, ggValue.peer.getValue) match {
         case (Some(name), seminalDate: Date) =>
           val parentElem = parent.elem
@@ -147,7 +148,7 @@ object CursorsFrameImpl {
           elemRemoved(cv, cci, cc.elem)
         }
         mapViews -= child
-        guiFromTx {
+        deferTx {
           _model.elemRemoved(parent, idx)
         }
       }
@@ -165,7 +166,7 @@ object CursorsFrameImpl {
       // val idx1 = parent.children.size
       // require(idx == idx1, s"elemAdded: given idx is $idx, but should be $idx1")
       mapViews += child -> cv
-      guiFromTx {
+      deferTx {
         _model.elemAdded(parent, idx, cv)
       }
       addChildren(cv, child)
@@ -175,7 +176,7 @@ object CursorsFrameImpl {
       upd.foreach {
         case Cursors.ChildAdded  (idx, child) => elemAdded  (v, idx, child)
         case Cursors.ChildRemoved(idx, child) => elemRemoved(v, idx, child)
-        case Cursors.Renamed(Change(_, newName))  => guiFromTx {
+        case Cursors.Renamed(Change(_, newName))  => deferTx {
           v.name = newName
           _model.elemUpdated(v)
         }
@@ -186,9 +187,6 @@ object CursorsFrameImpl {
       }
 
     def guiInit(): Unit = {
-      requireEDT()
-      require(comp == null, "Initialization called twice")
-
       _model = new ElementTreeModel
 
       val colName = new TreeColumnModel.Column[Node, String]("Name") {
@@ -285,9 +283,7 @@ object CursorsFrameImpl {
       val scroll    = new ScrollPane(t)
       scroll.border = null
 
-      comp = new desktop.impl.WindowImpl {
-        def handler     = Mellite.windowHandler
-
+      component = new WindowImpl {
         title           = s"${document.folder.base} : Cursors"
         file            = Some(document.folder)
         closeOperation  = desktop.Window.CloseIgnore
@@ -307,7 +303,7 @@ object CursorsFrameImpl {
     }
 
     def dispose()(implicit tx: S#Tx): Unit = {
-      guiFromTx {
+      deferTx {
         component.dispose()
         DocumentViewHandler.instance.remove(this)
       }

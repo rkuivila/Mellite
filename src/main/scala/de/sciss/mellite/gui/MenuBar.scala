@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -55,6 +55,7 @@ object MenuBar {
     val mActions = Group("actions", "Actions")
       .add(Item("stopAllSound",       proxy("Stop All Sound",           menu1 + VK_PERIOD)))
       .add(Item("debugPrint",         proxy("Debug Print",              menu2 + VK_P)))
+      .add(Item("windowShot",         proxy("Export Window as PDF...")))
 
     // --- timeline menu ---
     val mTimeline = Group("timeline", "Timeline")

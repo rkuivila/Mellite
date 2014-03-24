@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -15,8 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import desktop.impl.WindowImpl
-import desktop.{Window, WindowHandler}
+import desktop.Window
 import scala.swing.{FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
 import de.sciss.synth.proc.AuralSystem
 import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
@@ -28,11 +27,10 @@ import collection.breakOut
 import javax.swing.border.Border
 import de.sciss.lucre.synth.{Txn, Server}
 import de.sciss.file._
+import de.sciss.mellite.gui.impl.WindowImpl
 
 final class MainFrame extends WindowImpl { me =>
   import Mellite.auralSystem
-
-  def handler: WindowHandler = Mellite.windowHandler
 
   private val serverPane = new ServerStatusPanel()
   serverPane.bootAction = Some(boot _)

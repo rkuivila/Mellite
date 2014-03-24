@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -42,7 +42,7 @@ class TimeLabel extends JComponent {
 
   private def updateText(): Unit = {
     val neg     = millisVar < 0
-    val millis0 = if( neg ) -millisVar else millisVar
+    val millis0 = if (neg) -millisVar else millisVar
     val millis  = millis0 % 1000
     val secs0   = millis0 / 1000
     val secs    = secs0 % 60
@@ -50,19 +50,19 @@ class TimeLabel extends JComponent {
     val mins    = mins0 % 60
     val hours   = math.min( 99, mins0 / 60 )
     val sb      = new StringBuilder( 12 )
-    sb.append( if( neg ) '-' else { if( hours <= 9 ) ' ' else ((hours / 10) + 48).toChar })
-    sb.append( ((hours % 10) + 48).toChar )
-    sb.append( ':' )
-    sb.append( ((mins / 10) + 48).toChar )
-    sb.append( ((mins % 10) + 48).toChar )
-    sb.append( ':' )
-    sb.append( ((secs / 10) + 48).toChar )
-    sb.append( ((secs % 10) + 48).toChar )
-    sb.append( '.' )
-    sb.append( ((millis / 100) + 48).toChar )
-    sb.append( (((millis / 10) % 10) + 48).toChar )
-    sb.append( ((millis % 10) + 48).toChar )
-    textVar     = sb.toString()
+    sb.append(if (neg) '-' else { if(hours <= 9) ' ' else ((hours / 10) + 48).toChar })
+    sb.append(((hours % 10) + 48).toChar)
+    sb.append(':')
+    sb.append(((mins / 10) + 48).toChar)
+    sb.append(((mins % 10) + 48).toChar)
+    sb.append(':')
+    sb.append(((secs / 10) + 48).toChar)
+    sb.append(((secs % 10) + 48).toChar)
+    sb.append('.')
+    sb.append(((millis / 100) + 48).toChar)
+    sb.append((((millis / 10) % 10) + 48).toChar)
+    sb.append(((millis % 10) + 48).toChar)
+    textVar = sb.toString()
   }
 
   override def getPreferredSize: Dimension = prefSz

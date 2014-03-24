@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -34,6 +34,8 @@ import de.sciss.synth.io.AudioFile
 import scala.util.Try
 import de.sciss.model.Change
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 object FolderViewImpl {
   private final val DEBUG = false
@@ -67,7 +69,7 @@ object FolderViewImpl {
         folderUpdated(rootView, c)
       }
 
-      guiFromTx {
+      deferTx {
         guiInit()
       }
     }
@@ -148,7 +150,7 @@ object FolderViewImpl {
       val v = ElementView(parent, elem)
       mapViews.put(elem.id, v)
 
-      guiFromTx {
+      deferTx {
         _model.elemAdded(parent, idx, v)
       }
 
@@ -183,7 +185,7 @@ object FolderViewImpl {
 
         mapViews.remove(elem.id)
 
-        guiFromTx {
+        deferTx {
           _model.elemRemoved(parent, idx)
         }
       }
@@ -197,7 +199,7 @@ object FolderViewImpl {
       viewOpt.foreach { v =>
         changes.foreach {
           case Element.Renamed(Change(_, newName)) =>
-            guiFromTx {
+            deferTx {
               v.name = newName
               _model.elemUpdated(v)
             }
@@ -210,7 +212,7 @@ object FolderViewImpl {
                 folderUpdated(fv, upd)
 
               case _ =>
-                if (v.checkUpdate(ch)) guiFromTx(_model.elemUpdated(v))
+                if (v.checkUpdate(ch)) deferTx(_model.elemUpdated(v))
             }
         }
       }
@@ -229,9 +231,6 @@ object FolderViewImpl {
     }
 
     protected def guiInit(): Unit = {
-      requireEDT()
-      require(comp == null, "Initialization called twice")
-
       _model = new ElementTreeModel
 
       val colName = new TreeColumnModel.Column[Node, String]("Name") {
@@ -465,7 +464,7 @@ object FolderViewImpl {
 
       val scroll    = new ScrollPane(t)
       scroll.border = null
-      comp          = scroll
+      component     = scroll
     }
 
     def selection: FolderView.Selection[S] =

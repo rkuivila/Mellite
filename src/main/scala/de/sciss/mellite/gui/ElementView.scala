@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -25,6 +25,7 @@ import javax.swing.{Icon, ImageIcon}
 import scala.util.Try
 import de.sciss.model.Change
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
 
 object ElementView {
   import java.lang.{String => _String}
@@ -89,7 +90,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Change(_, now: _String) =>
-          guiFromTx(value = now)
+          deferTx(value = now)
           true
         case _ => false
       }
@@ -131,7 +132,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Change(_, now: _Int) =>
-          guiFromTx(value = now)
+          deferTx(value = now)
           true
         case _ => false
       }
@@ -174,7 +175,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Change(_, now: _Double) =>
-          guiFromTx(value = now)
+          deferTx(value = now)
           true
         case _ => false
       }
@@ -272,7 +273,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Change(_, now: Grapheme.Value.Audio) =>
-          guiFromTx(value = now)
+          deferTx(value = now)
           true
         case _ => false
       }
@@ -301,7 +302,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Artifact.Location.Moved(_, Change(_, now)) =>
-          guiFromTx(directory = now)
+          deferTx(directory = now)
           true
         case _ => false
       }

@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -19,13 +19,14 @@ package realtime
 import de.sciss.lucre.stm.{Source, Cursor}
 import swing.{Dialog, Action, Button, FlowPanel, BorderPanel, Frame}
 import javax.swing.{JComponent, WindowConstants}
-import de.sciss.synth
 import de.sciss.synth.proc.{ExprImplicits, Proc}
 import java.awt.event.KeyEvent
 import de.sciss.span.Span
 import de.sciss.desktop.KeyStrokes
 import de.sciss.swingplus.DoClickAction
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 object FrameImpl {
   def apply[S <: Sys[S]](group: Document.Group[S], transport: Document.Transport[S])
@@ -35,7 +36,7 @@ object FrameImpl {
     implicit val groupSer = Document.Serializers.group[S]
     val groupH            = tx.newHandle(group)
     val view              = new Impl(prefusePanel, transpPanel, groupH, transport, cursor.position, group.id.toString)
-    guiFromTx {
+    deferTx {
       view.guiInit()
     }
     view
@@ -78,9 +79,6 @@ object FrameImpl {
       }
 
     def guiInit(): Unit = {
-      requireEDT()
-      require(comp == null, "Initialization called twice")
-
       import KeyStrokes._
 
       val ggTest = new Button {
@@ -95,7 +93,7 @@ object FrameImpl {
 
       val southPanel = new FlowPanel(transpPanel.component, ggTest)
 
-      comp = new Frame {
+      component = new Frame {
         title = "Timeline : " + name // staleGroup.id
         peer.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE)
         contents = new BorderPanel {

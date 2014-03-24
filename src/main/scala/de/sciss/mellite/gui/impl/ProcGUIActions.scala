@@ -6,6 +6,7 @@ import de.sciss.synth.proc.{Proc, Scan}
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
 
 /** These actions require being executed on the EDT. */
 object ProcGUIActions {

@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -13,37 +13,7 @@
 
 package de.sciss.mellite
 
-import concurrent.stm.TxnLocal
-import de.sciss.lucre.stm.Txn
-import java.awt.EventQueue
-import collection.immutable.{IndexedSeq => Vec}
-import scala.swing.Swing
-
 package object gui {
-  private val guiCode = TxnLocal(init = Vec.empty[() => Unit], afterCommit = handleGUI)
-  //   private lazy val primaryMod   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
-
-  private def handleGUI(seq: Vec[() => Unit]): Unit = {
-    def exec(): Unit =
-      seq.foreach { fun =>
-        try {
-          fun()
-        } catch {
-          case e: Throwable => e.printStackTrace()
-        }
-      }
-
-    defer(exec())
-  }
-
-  def requireEDT(): Unit = require(EventQueue.isDispatchThread)
-
-  def defer(thunk: => Unit): Unit =
-    if (EventQueue.isDispatchThread) thunk else Swing.onEDT(thunk)
-
-  def guiFromTx(body: => Unit)(implicit tx: Txn[_]): Unit =
-    guiCode.transform(_ :+ (() => body))(tx.peer)
-
   private def wordWrap(s: String, margin: Int = 80): String = {
     if (s == null) return "" // fuck java
     val sz = s.length
@@ -65,7 +35,4 @@ package object gui {
     e.getClass.toString + " :\n" + wordWrap(e.getMessage) + "\n" +
       e.getStackTrace.take(10).map("   at " + _).mkString("\n")
   }
-
- //   def primaryMenuKey( ch: Char )  : KeyStroke = KeyStroke.getKeyStroke( ch, primaryMod )
-  //   def primaryMenuKey( code: Int ) : KeyStroke = KeyStroke.getKeyStroke( code, primaryMod )
 }

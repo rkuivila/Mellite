@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -27,6 +27,8 @@ import desktop.{FocusType, KeyStrokes}
 import stm.Disposable
 import Swing._
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 // XXX TODO: DRY - look at TimelineViewImpl
 object TransportViewImpl {
@@ -47,7 +49,7 @@ object TransportViewImpl {
         case proc.Transport.Stop(t, time) => stoppedPlaying(time)
         case _ => // proc.Transport.Advance(t, time, isSeek, isPlaying, _, _, _) =>
       }}
-      guiFromTx(guiInit())
+      deferTx(guiInit())
     }
   }
 
@@ -81,7 +83,7 @@ object TransportViewImpl {
     // ---- transport ----
 
     def startedPlaying(time: Long)(implicit tx: S#Tx): Unit = {
-      guiFromTx {
+      deferTx {
         timer.stop()
         timerFrame  = time
         timerSys    = System.currentTimeMillis()
@@ -92,7 +94,7 @@ object TransportViewImpl {
     }
 
     def stoppedPlaying(time: Long)(implicit tx: S#Tx): Unit = {
-      guiFromTx {
+      deferTx {
         timer.stop()
         _timelineModel.modifiableOption.foreach(_.position = time) // XXX TODO if Cursor follows Playhead
         transportStrip.button(Transport.Play).foreach(_.selected = false)
@@ -168,7 +170,7 @@ object TransportViewImpl {
           transportStrip.button(GoToBegin).foreach(_.doClick())
       })
 
-      comp = transportPane
+      component = transportPane
     }
   }
 }

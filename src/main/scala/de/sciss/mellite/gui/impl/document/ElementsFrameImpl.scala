@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -20,7 +20,6 @@ import scala.swing.{ComboBox, TextField, Dialog, Component, FlowPanel, Action, B
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.{ExprImplicits, ProcGroup}
 import de.sciss.desktop.{FileDialog, DialogSource, Window, Menu}
-import de.sciss.desktop.impl.WindowImpl
 import de.sciss.synth.io.AudioFile
 import javax.swing.SpinnerNumberModel
 import de.sciss.file._
@@ -28,6 +27,8 @@ import de.sciss.swingplus.{PopupMenu, Spinner}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{String => StringEx, Double => DoubleEx, Int => IntEx}
 import scala.util.Try
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 object ElementsFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx,
@@ -36,7 +37,7 @@ object ElementsFrameImpl {
     val folderView      = FolderView(doc, doc.elements)
     val view            = new Impl(doc, folderView)
 
-    guiFromTx {
+    deferTx {
       view.guiInit()
     }
     view
@@ -50,7 +51,7 @@ object ElementsFrameImpl {
 
     def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      guiFromTx(comp.dispose())
+      deferTx(component.dispose())
     }
 
     private def disposeData()(implicit tx: S#Tx): Unit =
@@ -96,7 +97,7 @@ object ElementsFrameImpl {
     }
 
     private def actionAddArtifactLocation(): Unit = {
-      val query = ActionArtifactLocation.queryNew(window = Some(comp))
+      val query = ActionArtifactLocation.queryNew(window = Some(component))
       query.foreach { case (directory, name) =>
         atomic { implicit tx =>
           ActionArtifactLocation.create(directory, name, targetFolder)
@@ -190,7 +191,8 @@ object ElementsFrameImpl {
 
     private def actionAddPrimitive[A](tpe: String, ggValue: Component, prepare: => Option[A])
                                      (create: S#Tx => (String, A) => Element[S]): Unit = {
-      val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe, window = Some(comp))
+      val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe,
+        window = Some(component))
       nameOpt.foreach { name =>
         prepare.foreach { value =>
           atomic { implicit tx =>
@@ -201,9 +203,6 @@ object ElementsFrameImpl {
     }
 
     def guiInit(): Unit = {
-      requireEDT()
-      require(comp == null, "Initialization called twice")
-
       lazy val addPopup: PopupMenu = {
         import Menu._
         val pop = Popup()
@@ -215,7 +214,7 @@ object ElementsFrameImpl {
           .add(Item("int",           Action("Int"          )(actionAddInt             ())))
           .add(Item("double",        Action("Double"       )(actionAddDouble          ())))
           .add(Item("code",          Action("Code"         )(actionAddCode            ())))
-        val res = pop.create(comp)
+        val res = pop.create(component)
         res.peer.pack() // so we can read `size` correctly
         res
       }
@@ -282,7 +281,7 @@ object ElementsFrameImpl {
 
       // lazy val splitPane = new SplitPane(Orientation.Horizontal, folderPanel, Component.wrap(intp.component))
 
-      comp = new Frame(this,
+      component = new Frame(this,
         folderPanel
         //        new BorderPanel {
         //        //        add(splitPane, BorderPanel.Position.Center)
@@ -301,8 +300,6 @@ object ElementsFrameImpl {
   }
 
   private final class Frame[S <: Sys[S]](view: Impl[S], _contents: Component) extends WindowImpl {
-    def handler     = Mellite.windowHandler
-
     title           = s"${view.document.folder.base} : Elements"
     file            = Some(view.document.folder)
     closeOperation  = Window.CloseDispose

@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -30,6 +30,8 @@ import de.sciss.synth.proc
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 object ViewImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: AudioGrapheme[S])
@@ -62,7 +64,7 @@ object ViewImpl {
       val transportView: TransportView[I] = TransportView[I, I](group, sampleRate, timelineModel)
     }
 
-    guiFromTx {
+    deferTx {
       res.guiInit(f)
     } (tx)
     res
@@ -79,7 +81,7 @@ object ViewImpl {
     private var _sono: sonogram.Overview = _
 
     def dispose()(implicit tx: S#Tx): Unit =
-      guiFromTx {
+      deferTx {
         SonogramManager.release(_sono)
       }
 
@@ -112,7 +114,7 @@ object ViewImpl {
         add(sonoView.component, BorderPanel.Position.Center)
       }
 
-      comp = pane
+      component = pane
     }
 
     def element(implicit tx: S#Tx): AudioGrapheme[S] = holder()

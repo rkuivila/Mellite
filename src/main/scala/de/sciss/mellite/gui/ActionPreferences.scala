@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -12,8 +12,7 @@
  */
 
 package de.sciss
-package mellite
-package gui
+package mellite.gui
 
 import java.awt.event.KeyEvent
 import de.sciss.desktop.{FileDialog, Preferences, OptionPane, KeyStrokes}
@@ -23,6 +22,7 @@ import de.sciss.file._
 import scala.swing.{Action, Label, Alignment, Component, Swing, TextField, Button, FlowPanel, ComboBox}
 import scala.swing.event.{EditDone, SelectionChanged, ValueChanged}
 import Swing.EmptyIcon
+import de.sciss.mellite.Prefs
 
 object ActionPreferences extends Action("Preferences...") {
   import KeyStrokes._

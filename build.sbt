@@ -10,22 +10,24 @@ homepage           := Some(url("https://github.com/Sciss/" + name.value))
 
 description        := "An application based on SoundProcesses"
 
-licenses           := Seq("GPL v2+" -> url("http://www.gnu.org/licenses/gpl-2.0.txt"))
+licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt"))
 
-scalaVersion       := "2.11.0-RC3"
+scalaVersion       := "2.10.4" // "2.11.0-RC3"
 
 crossScalaVersions := Seq("2.11.0-RC3", "2.10.4")
 
 libraryDependencies ++= Seq(
   "de.sciss" %% "soundprocesses"     % "2.2.+",
   "de.sciss" %% "scalacolliderswing" % "1.14.+",
+  "de.sciss" %% "lucreswing"         % "0.1.+",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.3+",
   "de.sciss" %% "audiowidgets-app"   % "1.5.+",
   "de.sciss" %% "desktop-mac"        % "0.5.+",  // TODO: should be only added on OS X platforms
   "de.sciss" %% "sonogramoverview"   % "1.7.+",
   "de.sciss" %% "treetable-scala"    % "1.3.5+",
   "de.sciss" %% "fscapejobs"         % "1.4.+",
-  "de.sciss" %% "strugatzki"         % "2.4.+"
+  "de.sciss" %% "strugatzki"         % "2.4.+",
+  "de.sciss" %% "pdflitz"            % "1.0.2+"
 )
 
 // retrieveManaged := true

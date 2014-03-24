@@ -7,7 +7,6 @@ import de.sciss.scalainterpreter.{InterpreterPane, Interpreter, CodePane}
 import java.io.{IOException, FileInputStream, File}
 import swing.Component
 import de.sciss.desktop.Window
-import de.sciss.desktop.impl.WindowImpl
 
 // careful... tripping over SI-3809 "illegal cyclic reference involving class Array"...
 // actually SI-7481
@@ -57,8 +56,6 @@ private[gui] object InterpreterFrameImpl {
         frame =>
 
         override def style = Window.Auxiliary
-
-        def handler = Mellite.windowHandler
 
         title           = "Interpreter"
         contents        = Component.wrap(intp.component)

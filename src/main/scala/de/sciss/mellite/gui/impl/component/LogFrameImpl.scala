@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -21,18 +21,13 @@ import de.sciss.scalainterpreter.LogPane
 import java.io.{PrintStream, OutputStream}
 import javax.swing.BorderFactory
 import swing.event.WindowClosing
-import de.sciss.desktop.impl.WindowImpl
 import de.sciss.desktop.Window
 
 // lazy window - opens as soon as something goes to the console
 private[gui] final class LogFrameImpl extends LogFrame with WindowImpl {
   frame =>
 
-  //  peer.getRootPane.putClientProperty("Window.style", "small")
-
   override def style = Window.Auxiliary
-
-  def handler = Mellite.windowHandler
 
   component.peer.getRootPane.putClientProperty("Window.style", "small")
 

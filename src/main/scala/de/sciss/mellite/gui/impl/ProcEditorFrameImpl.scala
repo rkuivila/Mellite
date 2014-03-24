@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -17,7 +17,7 @@ package impl
 
 import de.sciss.lucre.stm.{Source, Disposable, Cursor}
 import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Attribute, Proc}
-import swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
+import scala.swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
 import javax.swing.WindowConstants
 import java.awt.event.{WindowEvent, WindowAdapter}
 import de.sciss.scalainterpreter.{Interpreter, CodePane}
@@ -25,6 +25,8 @@ import java.awt.Dimension
 import de.sciss.synth.SynthGraph
 import de.sciss.mellite.impl.InterpreterSingleton
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing.{defer, deferTx, requireEDT}
 
 object ProcEditorFrameImpl {
   def apply[S <: Sys[S]](proc: Proc[S])(implicit tx: S#Tx, cursor: Cursor[S]): ProcEditorFrame[S] = {
@@ -32,7 +34,7 @@ object ProcEditorFrameImpl {
       protected val observer = proc.changed.react { implicit tx => upd =>
         upd.changes.foreach {
           //               case Proc.Rename( Change( _, now )) =>
-          //                  guiFromTx( name = now )
+          //                  deferTx( name = now )
           case _ =>
         }
       }
@@ -42,7 +44,7 @@ object ProcEditorFrameImpl {
     val initName        = attr[Attribute.String](ProcKeys.attrName       ).map(_.value).getOrElse("<unnamed>")
     val initGraphSource = attr[Attribute.String](ProcKeys.attrGraphSource).map(_.value) // graph.source
 
-    guiFromTx {
+    deferTx {
       view.guiInit(initName, initGraphSource)
     }
     view
@@ -51,6 +53,7 @@ object ProcEditorFrameImpl {
   private abstract class Impl[S <: Sys[S]](/* csrPos: S#Acc, */ procH: Source[S#Tx, Proc[S]], title: String)
                                           (protected implicit val cursor: Cursor[S])
     extends ProcEditorFrame[S] with ComponentHolder[Frame] with CursorHolder[S] {
+
     protected def observer: Disposable[S#Tx]
 
     private var ggName: TextField = _
@@ -71,13 +74,10 @@ object ProcEditorFrameImpl {
 
     def dispose()(implicit tx: S#Tx): Unit = {
       observer.dispose()
-      guiFromTx(comp.dispose())
+      deferTx(component.dispose())
     }
 
     def guiInit(initName: String, initGraphSource: Option[String]): Unit = {
-      requireEDT()
-      require(comp == null, "Initialization called twice")
-
       val cCfg = CodePane.Config()
       initGraphSource.foreach(cCfg.text = _)
       //         cCfg.keyMap += KeyStroke.getKeyStroke( KeyEvent.VK_ENTER, InputEvent.SHIFT_MASK ) -> { () =>
@@ -147,7 +147,7 @@ object ProcEditorFrameImpl {
       val topPanel = new FlowPanel(lbName, ggName)
       val botPanel = new FlowPanel(ggCommit, lbStatus)
 
-      comp = new Frame {
+      component = new Frame {
         title = "Process : " + title // staleProc
         // f*** scala swing... how should this be written?
         peer.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE)

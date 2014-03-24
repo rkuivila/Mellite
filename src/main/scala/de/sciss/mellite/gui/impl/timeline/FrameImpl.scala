@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -21,11 +21,11 @@ import de.sciss.mellite.{Mellite, Element, Document}
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui._
 import de.sciss.desktop.{OptionPane, Window}
-import de.sciss.desktop.impl.WindowImpl
 import scala.swing.event.WindowClosing
 import scala.swing.Action
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
 
 object FrameImpl {
   def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
@@ -36,7 +36,7 @@ object FrameImpl {
     import ProcGroup.serializer
     val groupH  = tx.newHandle(group.entity)
     val res     = new Impl(tlv, name, groupH)
-    guiFromTx {
+    deferTx {
       res.init()
     }
     res
@@ -53,7 +53,7 @@ object FrameImpl {
 
     def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      guiFromTx(_window.dispose())
+      deferTx(_window.dispose())
     }
 
     private def disposeData()(implicit tx: S#Tx): Unit =
@@ -66,7 +66,6 @@ object FrameImpl {
 
     def init(): Unit = {
       _window = new WindowImpl {
-        def handler = Mellite.windowHandler
         component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
         title       = name
         contents    = view.component

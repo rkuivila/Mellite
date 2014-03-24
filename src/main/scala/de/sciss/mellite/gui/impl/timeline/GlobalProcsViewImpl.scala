@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -19,7 +19,7 @@ package timeline
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.ProcGroup
 import scala.swing.{Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
-import collection.immutable.{IndexedSeq => Vec}
+import scala.collection.immutable.{IndexedSeq => Vec}
 import javax.swing.table.{TableColumnModel, AbstractTableModel}
 import scala.annotation.switch
 import Swing._
@@ -31,6 +31,8 @@ import scala.swing.event.TableColumnsSelected
 import scala.util.Try
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{Int => IntEx}
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing._
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
@@ -39,7 +41,7 @@ object GlobalProcsViewImpl {
     import ProcGroup.Modifiable.serializer
     val groupHOpt = group.modifiableOption.map(tx.newHandle(_))
     val view      = new Impl[S](document, groupHOpt, selectionModel)
-    guiFromTx(view.guiInit())
+    deferTx(view.guiInit())
     view
   }
 
@@ -240,13 +242,13 @@ object GlobalProcsViewImpl {
 
       selectionModel addListener selectionListener
 
-      comp          = new BorderPanel {
+      component = new BorderPanel {
         add(scroll, BorderPanel.Position.Center)
         if (groupHOpt.isDefined) add(butPanel, BorderPanel.Position.South) // only add buttons if group is modifiable
       }
     }
 
-    def dispose()(implicit tx: S#Tx): Unit = guiFromTx {
+    def dispose()(implicit tx: S#Tx): Unit = deferTx {
       selectionModel removeListener  selectionListener
     }
 

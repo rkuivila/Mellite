@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -33,9 +33,11 @@ import prefuse.action.assignment.ColorAction
 import prefuse.util.ColorLib
 import prefuse.render.DefaultRendererFactory
 import prefuse.util.force.{AbstractForce, ForceItem}
-import swing.Component
+import scala.swing.Component
 import de.sciss.span.SpanLike
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 object PanelImpl {
   def apply[S <: Sys[S]](transport: ProcTransport[S])
@@ -49,7 +51,7 @@ object PanelImpl {
     val all = transport.iterator.toIndexedSeq
 
     //    def playStop(b: Boolean)(implicit tx: S#Tx): Unit =
-    //      guiFromTx(vis.playing = b)
+    //      deferTx(vis.playing = b)
 
     def advance(time: Long, added: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
                 removed: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
@@ -96,14 +98,14 @@ object PanelImpl {
       }
       val hasMod = vpMod.nonEmpty
 
-      if (hasAdd || hasRem || hasMod) guiFromTx {
+      if (hasAdd || hasRem || hasMod) deferTx {
         if (hasAdd) vis.add    (vpAdd: _*)
         if (hasRem) vis.remove (vpRem: _*)
         if (hasMod) vis.updated(vpMod: _*)
       }
     }
 
-      guiFromTx( vis.guiInit() )
+      deferTx( vis.guiInit() )
       advance( transport.time, all, Vec.empty, Vec.empty )   // after init!
       vis
    }
@@ -137,9 +139,6 @@ object PanelImpl {
     private var display: Display = _
 
     def guiInit(): Unit = {
-      requireEDT()
-      require(comp == null, "Initialization called twice")
-
       pVis = new Visualization()
       pVis.addGraph(GROUP_GRAPH, g)
 
@@ -235,7 +234,7 @@ object PanelImpl {
         def ancestorMoved(e: AncestorEvent) = ()
       })
 
-      comp = Component.wrap(display)
+      component = Component.wrap(display)
     }
 
     def add(vps: VisualProc[S]*): Unit =

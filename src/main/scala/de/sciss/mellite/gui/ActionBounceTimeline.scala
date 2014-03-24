@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -35,6 +35,7 @@ import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.util.{Failure, Try}
 import de.sciss.processor.Processor
 import de.sciss.file._
+import de.sciss.lucre.swing._
 import de.sciss.swingplus.{Spinner, Labeled}
 import de.sciss.lucre.synth.{Server, Synth, Sys}
 import de.sciss.lucre.expr.{Long => LongEx, Double => DoubleEx}

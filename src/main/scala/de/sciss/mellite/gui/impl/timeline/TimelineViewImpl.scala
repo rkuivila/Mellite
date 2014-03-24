@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -48,6 +48,8 @@ import de.sciss.model.Change
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 object TimelineViewImpl {
   private val colrBg              = Color.darkGray
@@ -280,7 +282,7 @@ object TimelineViewImpl {
 
     view.disposables.set(disp)(tx.peer)
 
-    guiFromTx(view.guiInit())
+    deferTx(view.guiInit())
     view
   }
 
@@ -334,7 +336,7 @@ object TimelineViewImpl {
     def dispose()(implicit tx: S#Tx): Unit = {
       timer.stop()  // save to call multiple times
       disposables.swap(Nil)(tx.peer).foreach(_.dispose())
-      guiFromTx {
+      deferTx {
         DocumentViewHandler.instance.remove(this)
         val pit     = procViews.iterator
         procViews   = RangedSeq.empty
@@ -454,7 +456,7 @@ object TimelineViewImpl {
     // ---- transport ----
 
     def startedPlaying(time: Long)(implicit tx: S#Tx): Unit =
-      guiFromTx {
+      deferTx {
         timer.stop()
         timerFrame  = time
         timerSys    = System.currentTimeMillis()
@@ -464,7 +466,7 @@ object TimelineViewImpl {
       }
 
     def stoppedPlaying(time: Long)(implicit tx: S#Tx): Unit =
-      guiFromTx {
+      deferTx {
         timer.stop()
         timelineModel.modifiableOption.foreach(_.position = time) // XXX TODO if Cursor follows Playhead
         transportStrip.button(Transport.Play).foreach(_.selected = false)
@@ -572,7 +574,7 @@ object TimelineViewImpl {
         // add(globalView.component, West  )
       }
 
-      comp = pane
+      component = pane
       DocumentViewHandler.instance.add(this)
     }
 
@@ -594,7 +596,7 @@ object TimelineViewImpl {
       }
 
       if (repaint)
-        guiFromTx(doAdd())
+        deferTx(doAdd())
       else
         doAdd()
     }
@@ -603,7 +605,7 @@ object TimelineViewImpl {
       log(s"removeProcProc($span, $timed)")
       procMap.get(timed.id).foreach { pv =>
         pv.disposeTx(timed, procMap, scanMap)
-        guiFromTx {
+        deferTx {
           if (pv.isGlobal)
             globalView.remove(pv)
           else
@@ -620,7 +622,7 @@ object TimelineViewImpl {
     // by using trackCh = Change(0,0), and vice versa
     def procMoved(timed: TimedProc[S], spanCh: Change[SpanLike], trackCh: Change[Int])(implicit tx: S#Tx): Unit =
       procMap.get(timed.id).foreach { pv =>
-        guiFromTx {
+        deferTx {
           if (pv.isGlobal)
             globalView.remove(pv)
           else
@@ -648,7 +650,7 @@ object TimelineViewImpl {
       val pvo = procMap.get(timed.id)
       log(s"procMuteChanged(newMute = $newMute, view = $pvo")
       pvo.foreach { pv =>
-        guiFromTx {
+        deferTx {
           pv.muted = newMute
           procUpdated(pv)
         }
@@ -659,7 +661,7 @@ object TimelineViewImpl {
       val pvo = procMap.get(timed.id)
       log(s"procNameChanged(newName = $newName, view = $pvo")
       pvo.foreach { pv =>
-        guiFromTx {
+        deferTx {
           pv.nameOption = newName
           procUpdated(pv)
         }
@@ -670,7 +672,7 @@ object TimelineViewImpl {
       val pvo = procMap.get(timed.id)
       log(s"procBusChanged(newBus = $newBus, view = $pvo")
       pvo.foreach { pv =>
-        guiFromTx {
+        deferTx {
           pv.busOption = newBus
           procUpdated(pv)
         }
@@ -681,7 +683,7 @@ object TimelineViewImpl {
       val pvo = procMap.get(timed.id)
       log(s"procGainChanged(newGain = $newGain, view = $pvo")
       pvo.foreach { pv =>
-        guiFromTx {
+        deferTx {
           pv.gain = newGain
           procUpdated(pv)
         }
@@ -692,7 +694,7 @@ object TimelineViewImpl {
       val pvo = procMap.get(timed.id)
       log(s"procFadeChanged(newFadeIn = $newFadeIn, newFadeOut = $newFadeOut, view = $pvo")
       pvo.foreach { pv =>
-        guiFromTx {
+        deferTx {
           pv.fadeIn   = newFadeIn
           pv.fadeOut  = newFadeOut
           repaintAll()  // XXX TODO: optimize dirty rectangle
@@ -704,7 +706,7 @@ object TimelineViewImpl {
       val pvo = procMap.get(timed.id)
       log(s"procAudioChanged(newAudio = $newAudio, view = $pvo")
       pvo.foreach { pv =>
-        guiFromTx {
+        deferTx {
           val newSono = (pv.audio, newAudio) match {
             case (Some(_), None)  => true
             case (None, Some(_))  => true
@@ -726,7 +728,7 @@ object TimelineViewImpl {
         (thatKey, thatIdH)  <- scanMap.get(that .id)
         thatView            <- procMap.get(thatIdH())
       } {
-        guiFromTx {
+        deferTx {
           fun(thisView, thatView, thatKey)
           repaintAll()
         }

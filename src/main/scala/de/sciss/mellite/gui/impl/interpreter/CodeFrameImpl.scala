@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -18,15 +18,15 @@ package interpreter
 
 import de.sciss.desktop.{OptionPane, Window}
 import de.sciss.scalainterpreter.CodePane
-import de.sciss.desktop.impl.WindowImpl
 import scala.swing.{FlowPanel, BorderPanel, Swing, Label, Button, Component}
 import de.sciss.lucre.stm
 import de.sciss.lucre.expr.Expr
 import scala.concurrent.Future
 import Swing._
-import scala.util.Failure
-import scala.util.Success
+import scala.util.{Failure, Success}
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 object CodeFrameImpl {
   def apply[S <: Sys[S]](doc: Document[S], elem: Element.Code[S])
@@ -59,7 +59,7 @@ object CodeFrameImpl {
       //        b.build
       //      }
 
-      guiFromTx(guiInit())
+      deferTx(guiInit())
     }
   }
 
@@ -92,7 +92,7 @@ object CodeFrameImpl {
         val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
           messageType = OptionPane.Message.Warning)
         opt.title = s"Close Code Editor - $name"
-        opt.show(Some(comp)) match {
+        opt.show(Some(component)) match {
           case OptionPane.Result.No =>
           case OptionPane.Result.Yes =>
             _cursor.step { implicit tx =>
@@ -112,13 +112,13 @@ object CodeFrameImpl {
       _cursor.step { implicit tx =>
         disposeData()
       }
-      comp.dispose()
+      component.dispose()
     }
 
     final def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      guiFromTx {
-        comp.dispose()
+      deferTx {
+        component.dispose()
         // intp.dispose()
       }
     }
@@ -164,12 +164,10 @@ object CodeFrameImpl {
 
       val panelBottom = new FlowPanel(FlowPanel.Alignment.Trailing)(HGlue, ggStatus, ggCompile, HStrut(16))
 
-      comp = new WindowImpl {
+      component = new WindowImpl {
         frame =>
 
         override def style = Window.Auxiliary
-
-        def handler = Mellite.windowHandler
 
         title           = s"$name : $contextName Code"
         contents        = new BorderPanel {

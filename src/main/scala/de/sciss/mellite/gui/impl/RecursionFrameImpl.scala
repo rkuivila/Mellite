@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -20,7 +20,6 @@ import de.sciss.synth.proc.{AuralSystem, Artifact}
 import lucre.stm
 import java.io.File
 import de.sciss.desktop.{Desktop, DialogSource, Window}
-import desktop.impl.WindowImpl
 import scala.swing.{Component, BorderPanel, FlowPanel, ProgressBar, Button, Alignment, Label}
 import de.sciss.synth.proc
 import de.sciss.processor.Processor
@@ -34,6 +33,8 @@ import de.sciss.lucre.stm.Disposable
 import de.sciss.file._
 import de.sciss.lucre.synth.{Server, Sys}
 import de.sciss.swingplus.GroupPanel
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing._
 
 object RecursionFrameImpl {
   private final case class View(name: String, deployed: File, product: File) {
@@ -67,13 +68,13 @@ object RecursionFrameImpl {
         case _ =>
           // println(s"Observed: $x")
           val v = mkView()
-          guiFromTx {
+          deferTx {
             _view = v
             guiUpdate()
           }
       }}
 
-      guiFromTx {
+      deferTx {
         guiInit()
       }
     }
@@ -132,7 +133,7 @@ object RecursionFrameImpl {
 
     final def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      guiFromTx(comp.dispose())
+      deferTx(component.dispose())
     }
 
     private def disposeData()(implicit tx: S#Tx): Unit =
@@ -296,7 +297,7 @@ object RecursionFrameImpl {
           case Failure(e: Exception) => // XXX TODO: Desktop should allow Throwable for DialogSource.Exception
             defer {
               processStopped()
-              DialogSource.Exception(e -> title).show(Some(comp))
+              DialogSource.Exception(e -> title).show(Some(component))
             }
           case Failure(e) =>
             defer(processStopped())
@@ -353,12 +354,10 @@ object RecursionFrameImpl {
       processStopped()
       GUI.centerOnScreen(frame)
       frame.front()
-      comp  = frame
+      component = frame
     }
 
     private class Frame(c: Component) extends WindowImpl {
-      def handler = Mellite.windowHandler
-      // component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
       contents    = c
       reactions += {
         case Window.Closing(_) => frameClosing()

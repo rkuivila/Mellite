@@ -4,7 +4,7 @@
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
  *
- *  This software is published under the GNU General Public License v2+
+ *  This software is published under the GNU General Public License v3+
  *
  *
  *  For further information, please contact Hanns Holger Rutz at
@@ -23,6 +23,8 @@ import javax.swing.event.{ChangeEvent, ChangeListener}
 import Swing._
 import de.sciss.mellite.gui.impl.component.TimeLabel
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
 
 object TransportPanelImpl {
   def apply[S <: Sys[S]](transport: Document.Transport[S])
@@ -49,7 +51,7 @@ object TransportPanelImpl {
     //      }}
     val initPlaying = transport.isPlaying // .playing.value
     val initMillis = (transport.time * srk).toLong
-    guiFromTx {
+    deferTx {
       view.guiInit(initPlaying, initMillis)
     }
     view
@@ -90,13 +92,6 @@ object TransportPanelImpl {
     private var playingVar = false
     private var cueDirection = 1
 
-    //      def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
-
-    //      def playing : Boolean = {
-    //         requireEDT()
-    //         buttons.button( GUITransport.Play ).map( _.selected ).getOrElse( false )
-    //      }
-
     def play(): Unit = {
       requireEDT()
       playing_=(value = true)
@@ -120,11 +115,6 @@ object TransportPanelImpl {
       }
     }
 
-    //      def millis : Long = {
-    //         requireEDT()
-    //         millisVar
-    //      }
-
     def cue(mils: Long): Unit = {
       requireEDT()
       millis_=(mils)
@@ -139,9 +129,6 @@ object TransportPanelImpl {
     }
 
     def guiInit(initPlaying: Boolean, initMillis: Long): Unit = {
-       requireEDT()
-       require(comp == null, "Initialization called twice")
-
        // use a prime number so that the visual milli update is nice
        playTimer = new javax.swing.Timer(47, new ActionListener {
          def actionPerformed(e: ActionEvent): Unit =
@@ -235,7 +222,7 @@ object TransportPanelImpl {
          //            }
        }
 
-       comp = pAll
+       component = pAll
      }
    }
 }
