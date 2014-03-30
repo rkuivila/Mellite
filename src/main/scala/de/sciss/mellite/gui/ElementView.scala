@@ -90,7 +90,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Change(_, now: _String) =>
-          deferTx(value = now)
+          deferTx { value = now }
           true
         case _ => false
       }
@@ -132,7 +132,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Change(_, now: _Int) =>
-          deferTx(value = now)
+          deferTx { value = now }
           true
         case _ => false
       }
@@ -175,7 +175,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Change(_, now: _Double) =>
-          deferTx(value = now)
+          deferTx { value = now }
           true
         case _ => false
       }
@@ -273,7 +273,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Change(_, now: Grapheme.Value.Audio) =>
-          deferTx(value = now)
+          deferTx { value = now }
           true
         case _ => false
       }
@@ -302,7 +302,7 @@ object ElementView {
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean = update match {
         case Artifact.Location.Moved(_, Change(_, now)) =>
-          deferTx(directory = now)
+          deferTx { directory = now }
           true
         case _ => false
       }

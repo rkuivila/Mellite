@@ -15,14 +15,14 @@ package de.sciss.mellite
 package gui
 
 import swing.{Dialog, Action}
-import java.awt.event.KeyEvent
 import java.io.File
 import de.sciss.desktop.{FileDialog, KeyStrokes}
 import util.control.NonFatal
+import scala.swing.event.Key
 
 object ActionNewFile extends Action("Session...") {
   import KeyStrokes._
-  accelerator = Some(menu1 + KeyEvent.VK_N)
+  accelerator = Some(menu1 + Key.N)
 
   private def deleteRecursive(f: File): Boolean = {
     if (f.isDirectory) {

@@ -15,13 +15,13 @@ package de.sciss.mellite
 package gui
 
 import swing.{Dialog, Action}
-import java.awt.event.KeyEvent
 import de.sciss.desktop.{Desktop, Menu, RecentFiles, FileDialog, KeyStrokes}
 import util.control.NonFatal
 import de.sciss.file._
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.{Mellite => App}
 import language.existentials
+import scala.swing.event.Key
 
 object ActionOpenFile extends Action("Open...") {
   import KeyStrokes._
@@ -30,7 +30,7 @@ object ActionOpenFile extends Action("Open...") {
     perform(folder)
   }
 
-  accelerator = Some(menu1 + KeyEvent.VK_O)
+  accelerator = Some(menu1 + Key.O)
 
   private def fullTitle = "Open Document"
 

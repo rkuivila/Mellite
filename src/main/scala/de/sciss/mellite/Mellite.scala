@@ -54,8 +54,6 @@ object Mellite extends SwingApplicationImpl("Mellite") {
       case NonFatal(_) =>
     }
 
-    UIManager.
-
     LogFrame           .instance    // init
     DocumentViewHandler.instance    // init
     new MainFrame

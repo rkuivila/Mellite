@@ -14,20 +14,19 @@
 package de.sciss
 package mellite.gui
 
-import java.awt.event.KeyEvent
 import de.sciss.desktop.{FileDialog, Preferences, OptionPane, KeyStrokes}
 import de.sciss.swingplus.{GroupPanel, Separator, Spinner}
 import javax.swing.{JPanel, SpinnerNumberModel, UIManager}
 import de.sciss.file._
 import scala.swing.{Action, Label, Alignment, Component, Swing, TextField, Button, FlowPanel, ComboBox}
-import scala.swing.event.{EditDone, SelectionChanged, ValueChanged}
+import scala.swing.event.{Key, EditDone, SelectionChanged, ValueChanged}
 import Swing.EmptyIcon
 import de.sciss.mellite.Prefs
 
 object ActionPreferences extends Action("Preferences...") {
   import KeyStrokes._
 
-  accelerator = Some(menu1 + KeyEvent.VK_COMMA)
+  accelerator = Some(menu1 + Key.Comma)
 
   def apply(): Unit = {
     def label(text: String) = new Label(text + ":", EmptyIcon, Alignment.Right)

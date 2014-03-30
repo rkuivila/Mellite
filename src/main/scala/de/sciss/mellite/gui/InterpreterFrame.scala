@@ -15,17 +15,16 @@ package de.sciss
 package mellite
 package gui
 
-import java.awt.event.KeyEvent
 import desktop.KeyStrokes
 import impl.interpreter.{InterpreterFrameImpl => Impl}
+import scala.swing.event.Key
 
 object InterpreterFrame {
   def apply(): InterpreterFrame = Impl()
 
   object Action extends swing.Action("Interpreter") {
     import KeyStrokes._
-    import KeyEvent._
-    accelerator = Some(menu1 + VK_R)
+    accelerator = Some(menu1 + Key.R)
 
     def apply(): Unit = InterpreterFrame()
   }

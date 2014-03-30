@@ -80,11 +80,6 @@ object ProcEditorFrameImpl {
     def guiInit(initName: String, initGraphSource: Option[String]): Unit = {
       val cCfg = CodePane.Config()
       initGraphSource.foreach(cCfg.text = _)
-      //         cCfg.keyMap += KeyStroke.getKeyStroke( KeyEvent.VK_ENTER, InputEvent.SHIFT_MASK ) -> { () =>
-      //            intOpt.foreach { in =>
-      //               println( in.interpret( ggSource.editor.getText ))
-      //            }
-      //         }
       ggSource = CodePane(cCfg)
       ggSource.editor.setEnabled(false)
       ggSource.editor.setPreferredSize(new Dimension(300, 300))

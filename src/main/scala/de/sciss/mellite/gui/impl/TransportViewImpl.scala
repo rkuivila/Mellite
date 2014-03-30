@@ -29,6 +29,7 @@ import Swing._
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
+import scala.swing.event.Key
 
 // XXX TODO: DRY - look at TimelineViewImpl
 object TransportViewImpl {
@@ -160,12 +161,12 @@ object TransportViewImpl {
 
       import desktop.Implicits._
 
-      transportPane.addAction("playstop", focus = FocusType.Window, action = new Action("playstop") {
-        accelerator = Some(plain + VK_SPACE)
+      transportPane.addAction("play-stop", focus = FocusType.Window, action = new Action("play-stop") {
+        accelerator = Some(plain + Key.Space)
         def apply(): Unit = playOrStop()
       })
       transportPane.addAction("rtz", focus = FocusType.Window, action = new Action("rtz") {
-        accelerator = Some(plain + VK_ENTER)
+        accelerator = Some(plain + Key.Enter)
         def apply(): Unit =
           transportStrip.button(GoToBegin).foreach(_.doClick())
       })

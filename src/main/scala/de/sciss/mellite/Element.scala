@@ -16,8 +16,7 @@ package de.sciss.mellite
 import de.sciss.lucre.{stm, event => evt}
 import de.sciss.synth.proc.{ProcGroup => _ProcGroup, Artifact => _Artifact, Grapheme}
 import de.sciss.lucre.expr.Expr
-import stm.{Disposable, Mutable}
-import annotation.switch
+import stm.Disposable
 import de.sciss.{serial, mellite}
 import evt.{EventLike, EventLikeSerializer}
 import collection.immutable.{IndexedSeq => Vec}
@@ -328,7 +327,7 @@ object Element {
 
     def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Element[S] with evt.Node[S] = {
       val typeID = in.readInt()
-      (typeID: @switch) match {
+      typeID /* : @switch */ match {
         case Int             .typeID => Int             .readIdentified(in, access, targets)
         case Double          .typeID => Double          .readIdentified(in, access, targets)
         case String          .typeID => String          .readIdentified(in, access, targets)

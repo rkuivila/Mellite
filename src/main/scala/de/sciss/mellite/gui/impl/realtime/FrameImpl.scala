@@ -18,24 +18,25 @@ package realtime
 
 import de.sciss.lucre.stm.{Source, Cursor}
 import swing.{Dialog, Action, Button, FlowPanel, BorderPanel, Frame}
-import javax.swing.{JComponent, WindowConstants}
+import javax.swing.WindowConstants
 import de.sciss.synth.proc.{ExprImplicits, Proc}
-import java.awt.event.KeyEvent
 import de.sciss.span.Span
-import de.sciss.desktop.KeyStrokes
+import de.sciss.desktop
+import de.sciss.desktop.{FocusType, KeyStrokes}
 import de.sciss.swingplus.DoClickAction
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
+import scala.swing.event.Key
 
 object FrameImpl {
   def apply[S <: Sys[S]](group: Document.Group[S], transport: Document.Transport[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupFrame[S] = {
     val prefusePanel      = InstantGroupPanel(transport)
-    val transpPanel       = TransportPanel   (transport)
+    val transportPanel    = TransportPanel   (transport)
     implicit val groupSer = Document.Serializers.group[S]
     val groupH            = tx.newHandle(group)
-    val view              = new Impl(prefusePanel, transpPanel, groupH, transport, cursor.position, group.id.toString)
+    val view              = new Impl(prefusePanel, transportPanel, groupH, transport, cursor.position, group.id.toString)
     deferTx {
       view.guiInit()
     }
@@ -43,7 +44,7 @@ object FrameImpl {
   }
 
   private final class Impl[S <: Sys[S]](prefusePanel:   InstantGroupPanel[S],
-                                        transpPanel:    TransportPanel[S],
+                                        transportPanel: TransportPanel[S],
                                         groupH:         Source[S#Tx, Document.Group[S]],
                                         val transport:  Document.Transport[S],
                                         csrPos:         S#Acc,
@@ -67,34 +68,28 @@ object FrameImpl {
         val pos = t.time
         val span = Span(pos, pos + 44100)
         val proc = Proc[S]
-        // proc.name_=(name)
-        //            proc.graph_=({
-        //               Out.ar( 0, Pan2.ar( SinOsc.ar( "freq".kr ) * 0.2 ))
-        //            })
-        //            val freq = (util.Random.nextInt( 20 ) + 60).midicps
-        //            proc.par( "freq" ).modifiableOption.foreach { bi =>
-        //               bi.add( 0L, freq )
-        //            }
         g.add(span, proc)
       }
 
     def guiInit(): Unit = {
       import KeyStrokes._
+      import desktop.Implicits._
 
       val ggTest = new Button {
         private val actionKey = "de.sciss.mellite.NewProc"
-        peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(menu1 + KeyEvent.VK_1, actionKey)
-        peer.getActionMap.put(actionKey, DoClickAction(this).peer)
+        this.addAction(actionKey, new DoClickAction(this) {
+          accelerator = Some(menu1 + Key.Key1)
+        }, FocusType.Window)
         focusable = false
         action = Action("New Proc") {
           newProc()
         }
       }
 
-      val southPanel = new FlowPanel(transpPanel.component, ggTest)
+      val southPanel = new FlowPanel(transportPanel.component, ggTest)
 
       component = new Frame {
-        title = "Timeline : " + name // staleGroup.id
+        title = s"Timeline : $name" // staleGroup.id
         peer.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE)
         contents = new BorderPanel {
           add(prefusePanel.component, BorderPanel.Position.Center)
