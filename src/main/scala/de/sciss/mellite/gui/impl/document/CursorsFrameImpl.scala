@@ -18,7 +18,7 @@ package document
 
 import scala.swing._
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.{confluent, stm}
+import de.sciss.lucre.{Escape, confluent, stm}
 import java.util.{Locale, Date}
 import java.text.SimpleDateFormat
 import de.sciss.file._
@@ -78,7 +78,7 @@ object CursorsFrameImpl {
 
     private var mapViews = Map.empty[Cursors[S, D], Node]
 
-    def view   = this // wooop...
+    def view   = this
     def window = component
 
     private class ElementTreeModel extends AbstractTreeModel[Node] {
@@ -104,7 +104,7 @@ object CursorsFrameImpl {
         // if (DEBUG) println(s"model.elemRemoved($parent, $idx)")
         require(idx >= 0 && idx < parent.children.size)
         val v = parent.children(idx)
-        // this is frickin insane. the tree UI still accesses the model based on the previous assumption
+        // this is insane. the tree UI still accesses the model based on the previous assumption
         // about the number of children, it seems. therefore, we must not update children before
         // returning from fireNodesRemoved.
         fireNodesRemoved(v)
@@ -220,9 +220,9 @@ object CursorsFrameImpl {
         def getParent(node: Node): Option[Node] = node.parent
       }
 
-      t = new TreeTable(_model, tcm)
+      t = new TreeTable[Node, TreeColumnModel[Node]](_model, tcm)
       t.showsRootHandles    = true
-      t.autoCreateRowSorter = true  // XXX TODO: hmmm, not sufficient for sorters. what to do?
+      t.autoCreateRowSorter = true  // XXX TODO: not sufficient for sorters. what to do?
       t.renderer = new TreeTableCellRenderer {
         private val dateFormat = new SimpleDateFormat("E d MMM yy | HH:mm:ss", Locale.US)
 
@@ -262,7 +262,8 @@ object CursorsFrameImpl {
           val elem = path.last.elem
           implicit val cursor = elem.cursor
           cursor.step { implicit tx =>
-            DocumentElementsFrame(document)
+            implicit val dtx = Escape.durableTx(document.system)
+            DocumentElementsFrame(document, name = Some(elem.name))
           }
         }
       }

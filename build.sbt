@@ -18,7 +18,7 @@ crossScalaVersions := Seq("2.11.0-RC3", "2.10.4")
 
 libraryDependencies ++= Seq(
   "de.sciss" %% "soundprocesses"     % "2.2.+",
-  "de.sciss" %% "scalacolliderswing-interpreter" % "1.14.+",
+  "de.sciss" %% "scalacolliderswing-interpreter" % "1.15.1+",
   "de.sciss" %% "lucreswing"         % "0.2.+",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.2+",
   "de.sciss" %% "audiowidgets-app"   % "1.6.+",

@@ -25,39 +25,60 @@ import javax.swing.SpinnerNumberModel
 import de.sciss.file._
 import de.sciss.swingplus.{PopupMenu, Spinner}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.{String => StringEx, Double => DoubleEx, Int => IntEx}
+import de.sciss.lucre.expr.{String => StringEx, Double => DoubleEx, Int => IntEx, Expr}
 import scala.util.Try
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
 
 object ElementsFrameImpl {
-  def apply[S <: Sys[S]](doc: Document[S])(implicit tx: S#Tx,
-                                           cursor: stm.Cursor[S]): DocumentElementsFrame[S] = {
+  def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Document[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
+                                        cursor: stm.Cursor[S], bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] = {
     // implicit val csr  = doc.cursor
     val folderView      = FolderView(doc, doc.elements)
-    val view            = new Impl(doc, folderView)
+    val name0           = nameOpt.map(_.value(bridge(tx)))
+    val view            = new Impl[S, S1](doc, folderView) {
+      protected val nameObserver = nameOpt.map { name =>
+        name.changed.react { implicit tx => upd =>
+          deferTx(nameUpdate(Some(upd.now)))
+        } (bridge(tx))
+      }
 
-    deferTx {
-      view.guiInit()
+      deferTx {
+        guiInit()
+        nameUpdate(name0)
+        component.front()
+      }
     }
+
     view
   }
 
-  private final class Impl[S <: Sys[S]](val document: Document[S], folderView: FolderView[S])
-                                       (implicit val cursor: stm.Cursor[S])
+  private abstract class Impl[S <: Sys[S], S1 <: Sys[S1]](val document: Document[S], folderView: FolderView[S])
+                                       (implicit val cursor: stm.Cursor[S], bridge: S#Tx => S1#Tx)
     extends DocumentElementsFrame[S] with ComponentHolder[Frame[S]] with CursorHolder[S] {
 
     // protected implicit def cursor: Cursor[S] = document.cursor
+
+    protected def nameObserver: Option[stm.Disposable[S1#Tx]]
 
     def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
       deferTx(component.dispose())
     }
 
-    private def disposeData()(implicit tx: S#Tx): Unit =
-      folderView.dispose()
+    final protected def nameUpdate(name: Option[String]): Unit = {
+      requireEDT()
+      component.title = mkTitle(name)
+    }
 
-    def frameClosing(): Unit =
+    private def mkTitle(sOpt: Option[String]) = s"${document.folder.base}${sOpt.fold("")(s => s"/$s")} : Elements"
+
+    private def disposeData()(implicit tx: S#Tx): Unit = {
+      folderView  .dispose()
+      nameObserver.foreach(_.dispose()(bridge(tx)))
+    }
+
+    final def frameClosing(): Unit =
       cursor.step { implicit tx =>
         disposeData()
       }
@@ -98,9 +119,9 @@ object ElementsFrameImpl {
 
     private def actionAddArtifactLocation(): Unit = {
       val query = ActionArtifactLocation.queryNew(window = Some(component))
-      query.foreach { case (directory, name) =>
+      query.foreach { case (directory, _name) =>
         atomic { implicit tx =>
-          ActionArtifactLocation.create(directory, name, targetFolder)
+          ActionArtifactLocation.create(directory, _name, targetFolder)
         }
       }
     }
@@ -202,7 +223,7 @@ object ElementsFrameImpl {
       }
     }
 
-    def guiInit(): Unit = {
+    final protected def guiInit(): Unit = {
       lazy val addPopup: PopupMenu = {
         import Menu._
         val pop = Popup()
@@ -281,14 +302,7 @@ object ElementsFrameImpl {
 
       // lazy val splitPane = new SplitPane(Orientation.Horizontal, folderPanel, Component.wrap(intp.component))
 
-      component = new Frame(this,
-        folderPanel
-        //        new BorderPanel {
-        //        //        add(splitPane, BorderPanel.Position.Center)
-        //        add(folderPanel,                BorderPanel.Position.Center)
-        //        add(Component.wrap(serverPane), BorderPanel.Position.South )
-        //        }
-      )
+      component = new Frame(this, folderPanel)
 
       folderView.addListener {
         case FolderView.SelectionChanged(_, sel) =>
@@ -299,8 +313,7 @@ object ElementsFrameImpl {
     }
   }
 
-  private final class Frame[S <: Sys[S]](view: Impl[S], _contents: Component) extends WindowImpl {
-    title           = s"${view.document.folder.base} : Elements"
+  private final class Frame[S <: Sys[S]](view: Impl[S, _], _contents: Component) extends WindowImpl {
     file            = Some(view.document.folder)
     closeOperation  = Window.CloseDispose
     reactions += {
@@ -312,7 +325,6 @@ object ElementsFrameImpl {
     pack()
     // centerOnScreen()
     GUI.placeWindow(this, 0.5f, 0f, 24)
-    front()
 
     def show[A](source: DialogSource[A]): A = showDialog(source)
   }

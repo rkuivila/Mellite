@@ -28,6 +28,8 @@ import javax.swing.border.Border
 import de.sciss.lucre.synth.{Txn, Server}
 import de.sciss.file._
 import de.sciss.mellite.gui.impl.WindowImpl
+import scala.concurrent.stm.atomic
+import de.sciss.lucre.swing.deferTx
 
 final class MainFrame extends WindowImpl { me =>
   import Mellite.auralSystem
@@ -54,7 +56,11 @@ final class MainFrame extends WindowImpl { me =>
     config.outputBusChannels = Prefs.audioNumOutputs.getOrElse(Prefs.defaultAudioNumOutputs)
     config.transport  = osc.TCP
     config.pickPort()
-    auralSystem.start(config)
+
+    atomic { implicit itx =>
+      implicit val tx = Txn.wrap(itx)
+      auralSystem.start(config)
+    }
   }
 
   private var meter       = Option.empty[AudioBusMeter]
@@ -68,13 +74,12 @@ final class MainFrame extends WindowImpl { me =>
 
   // private val tinyFont = new Font("SansSerif", Font.PLAIN, 7)
 
-  private def started(s: Server): Unit = {
+  private def started(s: Server)(implicit tx: Txn): Unit = {
+    log("MainFrame: AuralSystem started")
     // XXX TODO: dirty dirty
-    concurrent.stm.atomic { itx =>
-      implicit val tx = Txn.wrap(itx)
-      for(_ <- 1 to 4) s.nextNodeID()
-    }
-    Swing.onEDT {
+    for(_ <- 1 to 4) s.nextNodeID()
+
+    deferTx {
       import synth.Ops._
 
       serverPane.server = Some(s.peer)
@@ -236,24 +241,31 @@ final class MainFrame extends WindowImpl { me =>
     sl
   }
 
-  private def stopped(): Unit = Swing.onEDT {
-    serverPane.server = None
-    meter.foreach { m =>
-      meter = None
-      // m.dispose()
-    }
-    onlinePane.foreach { p =>
-      onlinePane = None
-      boxPane.contents.remove(boxPane.contents.indexOf(p))
-      // resizable = false
-      pack()
+  private def stopped()(implicit tx: Txn): Unit = {
+    log("MainFrame: AuralSystem stopped")
+    deferTx {
+      serverPane.server = None
+      meter.foreach { m =>
+        meter = None
+        // m.dispose()
+      }
+      onlinePane.foreach { p =>
+        onlinePane = None
+        boxPane.contents.remove(boxPane.contents.indexOf(p))
+        // resizable = false
+        pack()
+      }
     }
   }
 
-  auralSystem.addClient(new AuralSystem.Client {
-    def started(s: Server): Unit = me.started(s)
-    def stopped()         : Unit = me.stopped()
-  })
+  atomic {
+    implicit itx =>
+      implicit val tx = Txn.wrap(itx)
+      auralSystem.addClient(new AuralSystem.Client {
+        def started(s: Server)(implicit tx: Txn): Unit = me.started(s)
+        def stopped()         (implicit tx: Txn): Unit = me.stopped()
+      })
+  }
   // XXX TODO: removeClient
 
   title           = "Aural System" // Mellite.name

@@ -22,6 +22,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.{Mellite => App}
 import language.existentials
 import scala.swing.event.Key
+import de.sciss.synth.proc
 
 object ActionOpenFile extends Action("Open...") {
   import KeyStrokes._
@@ -46,7 +47,7 @@ object ActionOpenFile extends Action("Open...") {
       case eph: EphemeralDocument =>
         implicit val csr = eph.cursor
         csr.step { implicit tx =>
-          DocumentElementsFrame(eph)
+          DocumentElementsFrame[proc.Durable, proc.Durable](eph, None)
         }
     }
   }

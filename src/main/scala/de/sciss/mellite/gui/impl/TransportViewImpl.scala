@@ -37,7 +37,7 @@ object TransportViewImpl {
                                          (implicit tx: S#Tx, cursor: stm.Cursor[S],
                                           bridge: S#Tx => I#Tx, aural: AuralSystem): TransportView[S] = {
     val transp    = proc.Transport[S, I](group, sampleRate)
-    val auralPres = AuralPresentation.runTx[S](transp, aural)
+    val auralPres = AuralPresentation.run[S](transp, aural)
 
     new Impl[S] {
       val transport         = transp

@@ -21,7 +21,6 @@ import synth.proc.AuralSystem
 import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
 import scala.util.control.NonFatal
-import com.alee.laf.WebLookAndFeel
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = mellite.Document[_ <: Sys[_]]
@@ -37,6 +36,8 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     override lazy val usesInternalFrames = {
       false // XXX TODO: eventually a preferences entry
     }
+
+    override lazy val usesNativeDecoration = Prefs.nativeWindowDecoration.getOrElse(true)
   }
 
   protected def menuFactory = MenuBar.instance
@@ -47,8 +48,8 @@ object Mellite extends SwingApplicationImpl("Mellite") {
 
   override protected def init(): Unit = {
     try {
-      // WebLookAndFeel.install()
-      UIManager.installLookAndFeel("Web Look And Feel", classOf[WebLookAndFeel].getName)
+      val web = "com.alee.laf.WebLookAndFeel"
+      UIManager.installLookAndFeel("Web Look And Feel", web)
       UIManager.setLookAndFeel(Prefs.lookAndFeel.getOrElse(Prefs.defaultLookAndFeel).getClassName)
     } catch {
       case NonFatal(_) =>
