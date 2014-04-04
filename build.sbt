@@ -28,7 +28,8 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "fscapejobs"         % "1.4.+",
   "de.sciss" %% "strugatzki"         % "2.3.+",
   "de.sciss" %% "raphael-icons"      % "1.0.+",
-  "de.sciss" %% "pdflitz"            % "1.0.1+"
+  "de.sciss" %% "pdflitz"            % "1.0.1+",
+  "de.sciss" %  "weblaf"             % "1.27"
 )
 
 retrieveManaged := true
