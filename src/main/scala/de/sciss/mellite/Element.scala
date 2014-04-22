@@ -58,7 +58,7 @@ object Element {
     private final class Serializer[S <: Sys[S]] extends serial.Serializer[S#Tx, S#Acc, E[S]] {
       def write(v: E[S], out: DataOutput): Unit = v.write(out)
 
-      def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): E[S] = {
+      def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): E[S] with evt.Node[S] = {
         val targets = evt.Targets.read[S](in, access)
         val cookie  = in.readInt()
         require(cookie == typeID, s"Cookie $cookie does not match expected value $typeID")
@@ -276,6 +276,8 @@ object Element {
     }
   }
   sealed trait Recursion[S <: Sys[S]] extends Element[S] { type A = _Recursion[S] }
+
+  // ----------------- Code -----------------
 
   object Code extends Companion[Code] {
     protected[Element] final val typeID = Codes.typeID // 0x20001
