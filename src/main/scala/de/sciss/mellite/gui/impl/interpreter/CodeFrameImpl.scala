@@ -39,7 +39,7 @@ object CodeFrameImpl {
       protected val name      = _name
       protected val contextName = _code.contextName
       protected val _cursor   = cursor
-      protected val codeH     = tx.newHandle(elem.entity)(Codes.serializer)
+      protected val codeH     = tx.newHandle(elem.entity)(Codes.serializer[S])
       protected val codeID    = _code.id
 
       protected val codeCfg = {

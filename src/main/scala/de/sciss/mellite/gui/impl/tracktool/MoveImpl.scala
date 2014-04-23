@@ -16,7 +16,7 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Proc, Attribute}
+import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Proc, Attr}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
@@ -69,7 +69,7 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       // lucre.event.showLog = true
       // lucre.bitemp.impl.BiGroupImpl.showLog = true
 
-      for (Expr.Var(t) <- attr[Attribute.Int](ProcKeys.attrTrack)) t.transform(_ + deltaTrack)
+      for (Expr.Var(t) <- attr[Attr.Int](ProcKeys.attrTrack)) t.transform(_ + deltaTrack)
 
       // lucre.event.showLog = false
       // lucre.bitemp.impl.BiGroupImpl.showLog = false

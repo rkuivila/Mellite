@@ -77,7 +77,7 @@ object RecursionImpl {
       val deployed    = Element.AudioGrapheme.serializer[S].read(in, access)
       val product     = Artifact.Modifiable.read(in, access)
       val productSpec = AudioFileSpec.Serializer.read(in)
-      new Impl(targets, group, span, gain, channels, transform, deployed, product, productSpec)
+      new Impl[S](targets, group, span, gain, channels, transform, deployed, product, productSpec)
     }
   }
 
@@ -102,7 +102,7 @@ object RecursionImpl {
     val product   = Artifact.Modifiable.copy(depGraph.artifact)
     val spec      = depGraph.value.spec  // XXX TODO: should that be a method on entity?
 
-    new Impl(targets, group, _span, _gain, _channels, transform, deployed, product = product, productSpec = spec)
+    new Impl[S](targets, group, _span, _gain, _channels, transform, deployed, product = product, productSpec = spec)
   }
 
   private final class Impl[S <: Sys[S]](protected val targets: evt.Targets[S], val group: ProcGroup[S],

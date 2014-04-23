@@ -164,7 +164,7 @@ object CodeImpl {
       def out: File = process.out
       def checkAborted(): Unit = process.checkAborted()
       def progress(f: Double): Unit = {
-        process.progress(f.toFloat)
+        process.progress = f
         process.checkAborted()
       }
     }
@@ -198,11 +198,10 @@ object CodeImpl {
     val i = intp
 
     val impS  = w.imports.map(i => s"  import $i\n").mkString
-    val bindS = w.binding.map(i =>
-     s"""  val __context__ = de.sciss.mellite.impl.CodeImpl.$i.__context__
-        |  import __context__._
-      """.stripMargin
-    ).getOrElse("")
+    val bindS = w.binding.fold("")(i =>
+      s"""  val __context__ = de.sciss.mellite.impl.CodeImpl.$i.__context__
+         |  import __context__._
+         |""".stripMargin)
     val aTpe  = w.blockTag.tpe.toString
     val synth =
      s"""de.sciss.mellite.impl.CodeImpl.Capture[$aTpe] {

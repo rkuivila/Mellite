@@ -46,36 +46,28 @@ object Nullstellen extends ProcessorFactory {
       case NEcology   .name => NEcology
     }
 
-    /**
-     * Imitation between all channels
-     */
+    /** Imitation between all channels */
     case object Imitation extends Strategy {
       val name        = "imitation"
       val isImitative = true
       val isLocal     = false
     }
 
-    /**
-     * Distinction between all channels
-     */
+    /** Distinction between all channels */
     case object Ecology extends Strategy {
       val name        = "ecology"
       val isImitative = false
       val isLocal     = false
     }
 
-    /**
-     * Imitation between neighbouring channels
-     */
+    /** Imitation between neighbouring channels */
     case object NImitation extends Strategy {
       val name        = "n-imitation"
       val isImitative = true
       val isLocal     = true
     }
 
-    /**
-     * Distinction between neighbouring channels
-     */
+    /** Distinction between neighbouring channels */
     case object NEcology extends Strategy {
       val name        = "n-ecology"
       val isImitative = false
@@ -218,7 +210,7 @@ object Nullstellen extends ProcessorFactory {
   type Updater = Vec[(Long, Match)] => Unit
 
   //  /**
-  //   * @param   settings the settings that control how the material generation is perfored
+  //   * @param   settings the settings that control how the material generation is performed
   //   * @param   updater  a function which is called _on the event dispatch thread_ each time a new
   //   *                   piece of material has been generated for each of the required channels
   //   * @param   observer a partial function receiving notifications about the progress of the
@@ -241,7 +233,7 @@ class Nullstellen private(config: Nullstellen.Config)
 
   private var progressFactor = 1.0f
 
-  private def progressed(f: Float): Unit = progress(f * progressFactor)
+  private def progressed(f: Double): Unit = progress = f * progressFactor
 
   private def featureFolder = config.materialFolder // XXX TODO -- good idea or not?
 
@@ -735,7 +727,7 @@ class Nullstellen private(config: Nullstellen.Config)
 
       case None =>
         checkAborted()
-        progress(perc)
+        progress = perc
         None
     }
   }

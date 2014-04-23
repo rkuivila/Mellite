@@ -16,7 +16,7 @@ package mellite
 
 import lucre.expr.Expr
 import span.{Span, SpanLike}
-import de.sciss.synth.proc.{SynthGraphs, ExprImplicits, Attribute, ProcKeys, Scan, Grapheme, Proc}
+import de.sciss.synth.proc.{SynthGraphs, ExprImplicits, Attr, ProcKeys, Scan, Grapheme, Proc}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.synth.proc
@@ -82,8 +82,8 @@ object ProcActions {
         case Expr.Var(s) =>
           s.transform { oldSpan =>
             oldSpan.value match {
-              case Span.From(start)   => Span.From(start + dStartCC)
-              case Span.Until(stop)   => Span.Until(stop  + dStopCC)
+              case Span.From (start)  => Span.From (start + dStartCC)
+              case Span.Until(stop )  => Span.Until(stop  + dStopCC )
               case Span(start, stop)  =>
                 val newStart = start + dStartCC
                 Span(newStart, math.max(newStart + MinDur, stop + dStopCC))
@@ -105,9 +105,9 @@ object ProcActions {
     import imp._
     name match {
       case Some(n) =>
-        attr.apply[Attribute.String](ProcKeys.attrName) match {
+        attr.apply[Attr.String](ProcKeys.attrName) match {
           case Some(Expr.Var(vr)) => vr() = n
-          case _                  => attr.put(ProcKeys.attrName, Attribute.String(StringEx.newVar(n)))
+          case _                  => attr.put(ProcKeys.attrName, Attr.String(StringEx.newVar(n)))
         }
 
       case _ => attr.remove(ProcKeys.attrName)
@@ -169,9 +169,9 @@ object ProcActions {
     if (gain == 1.0) {
       attr.remove(ProcKeys.attrGain)
     } else {
-      attr.apply[Attribute.Double](ProcKeys.attrGain) match {
+      attr.apply[Attr.Double](ProcKeys.attrGain) match {
         case Some(Expr.Var(vr)) => vr() = gain
-        case _                  => attr.put(ProcKeys.attrGain, Attribute.Double(DoubleEx.newVar(gain)))
+        case _                  => attr.put(ProcKeys.attrGain, Attr.Double(DoubleEx.newVar(gain)))
       }
     }
   }
@@ -183,16 +183,16 @@ object ProcActions {
     val imp   = ExprImplicits[S]
     import imp._
 
-    attr.apply[Attribute.Double](ProcKeys.attrGain) match {
+    attr.apply[Attr.Double](ProcKeys.attrGain) match {
       case Some(Expr.Var(vr)) => vr.transform(_ * factor)
       case other =>
         val newGain = other.map(_.value).getOrElse(1.0) * factor
-        attr.put(ProcKeys.attrGain, Attribute.Double(DoubleEx.newVar(newGain)))
+        attr.put(ProcKeys.attrGain, Attr.Double(DoubleEx.newVar(newGain)))
     }
   }
 
   def setBus[S <: Sys[S]](procs: Iterable[Proc[S]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
-    val attr    = Attribute.Int(intExpr)
+    val attr    = Attr.Int(intExpr)
     procs.foreach { proc =>
       proc.attributes.put(ProcKeys.attrBus, attr)
     }
@@ -203,10 +203,10 @@ object ProcActions {
     import imp._
 
     val attr = proc.attributes
-    attr[Attribute.Boolean](ProcKeys.attrMute) match {
+    attr[Attr.Boolean](ProcKeys.attrMute) match {
       // XXX TODO: BooleanEx should have `not` operator
       case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld }
-      case _                  => attr.put(ProcKeys.attrMute, Attribute.Boolean(BooleanEx.newVar(true)))
+      case _                  => attr.put(ProcKeys.attrMute, Attr.Boolean(BooleanEx.newVar(true)))
     }
   }
 
@@ -225,14 +225,14 @@ object ProcActions {
           // sg.sources.foreach(println)
           if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
 
-          val attrName  = Attribute.String(codeElem.name)
+          val attrName  = Attr.String(codeElem.name)
           procs.foreach { p =>
-            p.graph() = SynthGraphs.newConst(sg)  // XXX TODO: ideally would link to code updates
+            p.graph() = SynthGraphs.newConst[S](sg)  // XXX TODO: ideally would link to code updates
             p.attributes.put(ProcKeys.attrName, attrName)
             val toRemove = p.scans.iterator.collect {
               case (key, scan) if !scanKeys.contains(key) && scan.sinks.isEmpty && scan.sources.isEmpty => key
             }
-            toRemove.foreach(p.scans.remove) // unconnected scans which are not referred to from synth def
+            toRemove.foreach(p.scans.remove(_)) // unconnected scans which are not referred to from synth def
             val existing = p.scans.iterator.collect {
               case (key, _) if scanKeys contains key => key
             }
@@ -278,9 +278,9 @@ object ProcActions {
     val span    = SpanEx.newVar[S](spanV)
     val proc    = Proc[S]
     val attr    = proc.attributes
-    if (track >= 0) attr.put(ProcKeys.attrTrack, Attribute.Int(IntEx.newVar(track)))
+    if (track >= 0) attr.put(ProcKeys.attrTrack, Attr.Int(IntEx.newVar(track)))
     bus.foreach { busEx =>
-      val bus = Attribute.Int(busEx)
+      val bus = Attr.Int(busEx)
       attr.put(ProcKeys.attrBus, bus)
     }
 
@@ -312,8 +312,8 @@ object ProcActions {
 
     val proc    = Proc[S]
     val attr    = proc.attributes
-    val nameEx  = StringEx.newVar(StringEx.newConst(name))
-    attr.put(ProcKeys.attrName, Attribute.String(nameEx))
+    val nameEx  = StringEx.newVar[S](StringEx.newConst(name))
+    attr.put(ProcKeys.attrName, Attr.String(nameEx))
 
     group.add(Span.All, proc) // constant span expression
     proc

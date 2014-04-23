@@ -17,7 +17,7 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{Attribute, ProcKeys, Proc}
+import de.sciss.synth.proc.{Attr, ProcKeys, Proc}
 import de.sciss.span.Span
 import java.awt.event.MouseEvent
 import de.sciss.lucre.synth.Sys
@@ -55,9 +55,9 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
 
   def commit(drag: Function)(implicit tx: S#Tx): Unit =
     canvas.group.modifiableOption.foreach { g =>
-      val span  = SpanEx.newVar(SpanEx.newConst(drag.span))
+      val span  = SpanEx.newVar[S](SpanEx.newConst(drag.span))
       val p     = Proc[S]
-      p.attributes.put(ProcKeys.attrTrack, Attribute.Int(IntEx.newVar(IntEx.newConst(drag.track))))
+      p.attributes.put(ProcKeys.attrTrack, Attr.Int(IntEx.newVar(IntEx.newConst(drag.track))))
       g.add(span, p)
       log(s"Added function region $p, span = ${drag.span}, track = ${drag.track}")
 

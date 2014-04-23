@@ -63,7 +63,7 @@ final class NodeRenderer[S <: Sys[S]](val dataColumn: String) extends AbstractSh
 
   protected def getRawShape(vi: VisualItem): Shape = {
     val w       = 100.0
-    val numPar  = getData(vi).map(_.par.size).getOrElse(0)
+    val numPar  = getData(vi).fold(0)(_.par.size)
     val h       = 30.0 + numPar * 15
     calcAlignedPoint(pt, vi, w, h, Constants.CENTER, Constants.CENTER)
     shape.setRoundRect(pt.x, pt.y, w, h, 4.0, 4.0)

@@ -16,7 +16,7 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{FadeSpec, ProcKeys, Attribute, Grapheme, Scan, Proc, TimedProc}
+import de.sciss.synth.proc.{FadeSpec, ProcKeys, Attr, Grapheme, Scan, Proc, TimedProc}
 import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.sonogram.{Overview => SonoOverview}
@@ -89,13 +89,13 @@ object ProcView {
 
     val attr    = proc.attributes
 
-    val track   = attr[Attribute.Int     ](ProcKeys.attrTrack  ).map(_.value).getOrElse(0)
-    val name    = attr[Attribute.String  ](ProcKeys.attrName   ).map(_.value)
-    val mute    = attr[Attribute.Boolean ](ProcKeys.attrMute).exists(_.value)
-    val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
-    val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
-    val gain    = attr[Attribute.Double  ](ProcKeys.attrGain   ).map(_.value).getOrElse(1.0)
-    val bus     = attr[Attribute.Int     ](ProcKeys.attrBus    ).map(_.value)
+    val track   = attr[Attr.Int     ](ProcKeys.attrTrack  ).map(_.value).getOrElse(0)
+    val name    = attr[Attr.String  ](ProcKeys.attrName   ).map(_.value)
+    val mute    = attr[Attr.Boolean ](ProcKeys.attrMute).exists(_.value)
+    val fadeIn  = attr[Attr.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
+    val fadeOut = attr[Attr.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
+    val gain    = attr[Attr.Double  ](ProcKeys.attrGain   ).map(_.value).getOrElse(1.0)
+    val bus     = attr[Attr.Int     ](ProcKeys.attrBus    ).map(_.value)
 
     val res = new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
       span = spanV, track = track, nameOption = name, muted = mute, audio = audio,

@@ -39,8 +39,8 @@ trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackToo
         }
       }
     } else {
-      if (regionOpt.map(region => !selm.contains(region)) getOrElse true) {
-        // either hitten a region which wasn't selected, or hitting an empty area
+      if (!regionOpt.exists(region => selm.contains(region))) {
+        // either hitting a region which wasn't selected, or hitting an empty area
         // --> deselect all
         selm.clear()
         regionOpt.foreach(selm += _)

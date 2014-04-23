@@ -121,7 +121,7 @@ object ActionPreferences extends Action("Preferences...") {
         UIManager.getInstalledLookAndFeels)(_.getName)
 
       val lbNativeDecoration = label("Native Window Decoration")
-      val ggNativeDecoration = checkBox(Prefs.nativeWindowDecoration, true)
+      val ggNativeDecoration = checkBox(Prefs.nativeWindowDecoration, default = true)
 
       val lbSuperCollider = label("SuperCollider (scsynth)")
       val ggSuperCollider = pathField(Prefs.superCollider, Prefs.defaultSuperCollider,

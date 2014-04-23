@@ -2,7 +2,7 @@ import AssemblyKeys._
 
 name               := "Mellite"
 
-version            := "0.7.0-SNAPSHOT"
+version            := "0.7.0"
 
 organization       := "de.sciss"
 
@@ -26,9 +26,9 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "sonogramoverview"   % "1.7.1",
   "de.sciss" %% "treetable-scala"    % "1.3.5",
   "de.sciss" %% "fscapejobs"         % "1.4.1",
-  "de.sciss" %% "strugatzki"         % "2.3.1",
+  "de.sciss" %% "strugatzki"         % "2.4.1",
   "de.sciss" %% "raphael-icons"      % "1.0.1",
-  "de.sciss" %% "pdflitz"            % "1.0.2",
+  "de.sciss" %% "pdflitz"            % "1.1.0",
   "de.sciss" %  "weblaf"             % "1.27"
 )
 

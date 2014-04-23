@@ -141,7 +141,7 @@ object CodeImpl2 {
       def out: File = process.out
       def checkAborted(): Unit = process.checkAborted()
       def progress(f: Double): Unit = {
-        process.progress(f.toFloat)
+        process.progress = f
         process.checkAborted()
       }
     }
@@ -175,11 +175,10 @@ object CodeImpl2 {
     val i = intp
 
     val impS  = w.imports.map(i => s"  import $i\n").mkString
-    val bindS = w.binding.map(i =>
-     s"""  val __context__ = $pkg.$i.__context__
+    val bindS = w.binding.fold("")(i =>
+      s"""  val __context__ = $pkg.$i.__context__
         |  import __context__._
-      """.stripMargin
-    ).getOrElse("")
+        |""".stripMargin)
     val aTpe  = w.blockTag.tpe.toString
     val synth =
      s"""$pkg.Run[$aTpe]($execute) {

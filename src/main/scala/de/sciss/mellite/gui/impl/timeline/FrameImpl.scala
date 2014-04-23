@@ -17,7 +17,7 @@ package impl
 package timeline
 
 import de.sciss.synth.proc.{AuralSystem, ProcGroup}
-import de.sciss.mellite.{Mellite, Element, Document}
+import de.sciss.mellite.{Element, Document}
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui._
 import de.sciss.desktop.{OptionPane, Window}

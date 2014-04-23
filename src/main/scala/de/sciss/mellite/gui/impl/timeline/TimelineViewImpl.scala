@@ -39,7 +39,7 @@ import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{ExprImplicits, FadeSpec, AuralPresentation, Attribute, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
+import de.sciss.synth.proc.{ExprImplicits, FadeSpec, AuralPresentation, Attr, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -147,32 +147,32 @@ object TimelineViewImpl {
 
     def muteChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attributes
-      val muted   = attr[Attribute.Boolean](ProcKeys.attrMute).exists(_.value)
+      val muted   = attr[Attr.Boolean](ProcKeys.attrMute).exists(_.value)
       view.procMuteChanged(timed, muted)
     }
 
     def nameChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attributes
-      val nameOpt = attr[Attribute.String](ProcKeys.attrName).map(_.value)
+      val nameOpt = attr[Attr.String](ProcKeys.attrName).map(_.value)
       view.procNameChanged(timed, nameOpt)
     }
 
     def gainChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr  = timed.value.attributes
-      val gain  = attr[Attribute.Double](ProcKeys.attrGain).map(_.value).getOrElse(1.0)
+      val gain  = attr[Attr.Double](ProcKeys.attrGain).map(_.value).getOrElse(1.0)
       view.procGainChanged(timed, gain)
     }
 
     def busChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attributes
-      val busOpt  = attr[Attribute.Int](ProcKeys.attrBus).map(_.value)
+      val busOpt  = attr[Attr.Int](ProcKeys.attrBus).map(_.value)
       view.procBusChanged(timed, busOpt)
     }
 
     def fadeChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attributes
-      val fadeIn  = attr[Attribute.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
-      val fadeOut = attr[Attribute.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
+      val fadeIn  = attr[Attr.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
+      val fadeOut = attr[Attr.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
       view.procFadeChanged(timed, fadeIn, fadeOut)
     }
 
@@ -234,15 +234,15 @@ object TimelineViewImpl {
         procUpd.changes.foreach {
           case Proc.AssociationAdded  (key) =>
             key match {
-              case Proc.AttributeKey(name) => attrChanged(timed, name)
-              case Proc.ScanKey     (name) => scanAdded  (timed, name)
+              case Proc.AttrKey(name) => attrChanged(timed, name)
+              case Proc.ScanKey(name) => scanAdded  (timed, name)
             }
           case Proc.AssociationRemoved(key) =>
             key match {
-              case Proc.AttributeKey(name) => attrChanged(timed, name)
-              case Proc.ScanKey     (name) => scanRemoved(timed, name)
+              case Proc.AttrKey(name) => attrChanged(timed, name)
+              case Proc.ScanKey(name) => scanRemoved(timed, name)
             }
-          case Proc.AttributeChange(name, attr, ach) =>
+          case Proc.AttrChange(name, attr, ach) =>
             (name, ach) match {
               case (ProcKeys.attrTrack, Change(before: Int, now: Int)) =>
                 view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
@@ -586,14 +586,13 @@ object TimelineViewImpl {
       // val proc = timed.value
       val pv = ProcView(timed, procMap, scanMap)
 
-      def doAdd() {
+      def doAdd(): Unit =
         if (pv.isGlobal) {
           globalView.add(pv)
         } else {
           procViews += pv
           if (repaint) repaintAll()    // XXX TODO: optimize dirty rectangle
         }
-      }
 
       if (repaint)
         deferTx(doAdd())

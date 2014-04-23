@@ -18,7 +18,7 @@ package audiofile
 
 import de.sciss.span.Span
 import java.awt.datatransfer
-import de.sciss.synth.proc.{Grapheme}
+import de.sciss.synth.proc.Grapheme
 import de.sciss.lucre.stm
 import javax.swing.{JComponent, ImageIcon, TransferHandler}
 import java.awt.event.{MouseEvent, MouseAdapter}

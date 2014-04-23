@@ -245,7 +245,7 @@ object ElementView {
       extends ProcGroup[S] with ElementView.Impl[S] {
 
       def prefix = "ProcGroup"
-      def value {}
+      def value = ()
       def icon = ProcGroup.icon
 
       def tryUpdate  (value : Any)(implicit tx: S#Tx): Boolean = false

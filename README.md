@@ -8,7 +8,7 @@ Mellite is a graphical front end for [SoundProcesses](http://github.com/Sciss/So
 
 ## building
 
-Mellite builds with sbt 0.13 and Scala 2.10. The dependencies should be downloaded automatically from maven central repository, except for snapshots during development.
+Mellite builds with sbt 0.13 and Scala 2.11, 2.10. The dependencies should be downloaded automatically from maven central repository, except for snapshots during development.
 
 Dependencies not found are all available from their respective [GitHub repositories](https://github.com/Sciss?tab=repositories), so in case you want to build a snapshot version, you may need to check out these projects and publish them yourself using `sbt publish-local`.
 
