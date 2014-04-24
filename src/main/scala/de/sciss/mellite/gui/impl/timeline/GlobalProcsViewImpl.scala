@@ -204,7 +204,7 @@ object GlobalProcsViewImpl {
               drag match {
                 case timeline.DnD.IntDrag (`document`, source) =>
                   atomic { implicit tx =>
-                    val intExpr = source().entity
+                    val intExpr = source().elem.peer
                     ProcActions.setBus(pv.proc :: Nil, intExpr)
                   }
                   true

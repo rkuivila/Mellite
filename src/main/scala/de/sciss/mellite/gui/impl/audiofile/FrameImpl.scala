@@ -17,19 +17,21 @@ package impl
 package audiofile
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.AuralSystem
+import de.sciss.synth.proc
+import proc.{AudioGraphemeElem, Obj, AuralSystem}
 import de.sciss.desktop.Window
 import de.sciss.file._
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing._
+import proc.Implicits._
 
 object FrameImpl {
-  def apply[S <: Sys[S]](doc: Document[S], elem: Element.AudioGrapheme[S])
+  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, AudioGraphemeElem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): AudioFileFrame[S] = {
-    val afv       = AudioFileView(doc, elem)
-    val name      = elem.name.value
-    val file      = elem.entity.value.artifact
+    val afv       = AudioFileView(doc, obj)
+    val name      = obj.attr.name
+    val file      = obj.elem.peer.value.artifact
     val view      = new Impl(doc, afv, name, file)
     deferTx {
       view.guiInit()

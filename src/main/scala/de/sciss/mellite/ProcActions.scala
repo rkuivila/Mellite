@@ -16,7 +16,7 @@ package mellite
 
 import lucre.expr.Expr
 import span.{Span, SpanLike}
-import de.sciss.synth.proc.{SynthGraphs, ExprImplicits, Attr, ProcKeys, Scan, Grapheme, Proc}
+import de.sciss.synth.proc.{Obj, SynthGraphs, ExprImplicits, Elem, ProcKeys, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.synth.proc
@@ -25,6 +25,7 @@ import collection.breakOut
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{Int => IntEx, Boolean => BooleanEx, Double => DoubleEx, Long => LongEx, String => StringEx}
 import de.sciss.lucre.bitemp.{Span => SpanEx}
+import proc.Implicits._
 
 object ProcActions {
   private val MinDur    = 32
@@ -100,14 +101,14 @@ object ProcActions {
     * @param name the new name or `None` to remove the name attribute
     */
   def rename[S <: Sys[S]](proc: Proc[S], name: Option[String])(implicit tx: S#Tx): Unit = {
-    val attr  = proc.attributes
+    val attr  = proc.attr
     val imp   = ExprImplicits[S]
     import imp._
     name match {
       case Some(n) =>
-        attr.apply[Attr.String](ProcKeys.attrName) match {
+        attr.expr[String](ProcKeys.attrName) match {
           case Some(Expr.Var(vr)) => vr() = n
-          case _                  => attr.put(ProcKeys.attrName, Attr.String(StringEx.newVar(n)))
+          case _                  => attr.put(ProcKeys.attrName, StringElem(StringEx.newVar(n)))
         }
 
       case _ => attr.remove(ProcKeys.attrName)
@@ -124,9 +125,9 @@ object ProcActions {
   def copy[S <: Sys[S]](proc: Proc[S], span: Option[Expr[S, SpanLike]])(implicit tx: S#Tx): Proc[S] = {
     val res     = Proc[S]
     res.graph() = proc.graph
-    proc.attributes.iterator.foreach { case (key, attr) =>
+    proc.attr.iterator.foreach { case (key, attr) =>
       val attrOut = attr.mkCopy()
-      res.attributes.put(key, attrOut)
+      res.attr.put(key, attrOut)
     }
     proc.scans.keys.foreach(res.scans.add)
     span.foreach { sp =>
@@ -162,16 +163,16 @@ object ProcActions {
   }
 
   def setGain[S <: Sys[S]](proc: Proc[S], gain: Double)(implicit tx: S#Tx): Unit = {
-    val attr  = proc.attributes
+    val attr  = proc.attr
     val imp   = ExprImplicits[S]
     import imp._
 
     if (gain == 1.0) {
       attr.remove(ProcKeys.attrGain)
     } else {
-      attr.apply[Attr.Double](ProcKeys.attrGain) match {
+      attr.expr[Double](ProcKeys.attrGain) match {
         case Some(Expr.Var(vr)) => vr() = gain
-        case _                  => attr.put(ProcKeys.attrGain, Attr.Double(DoubleEx.newVar(gain)))
+        case _                  => attr.put(ProcKeys.attrGain, DoubleElem(DoubleEx.newVar(gain)))
       }
     }
   }
@@ -179,22 +180,22 @@ object ProcActions {
   def adjustGain[S <: Sys[S]](proc: Proc[S], factor: Double)(implicit tx: S#Tx): Unit = {
     if (factor == 1.0) return
 
-    val attr  = proc.attributes
+    val attr  = proc.attr
     val imp   = ExprImplicits[S]
     import imp._
 
-    attr.apply[Attr.Double](ProcKeys.attrGain) match {
+    attr.expr[Double](ProcKeys.attrGain) match {
       case Some(Expr.Var(vr)) => vr.transform(_ * factor)
       case other =>
         val newGain = other.map(_.value).getOrElse(1.0) * factor
-        attr.put(ProcKeys.attrGain, Attr.Double(DoubleEx.newVar(newGain)))
+        attr.put(ProcKeys.attrGain, DoubleElem(DoubleEx.newVar(newGain)))
     }
   }
 
   def setBus[S <: Sys[S]](procs: Iterable[Proc[S]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
-    val attr    = Attr.Int(intExpr)
+    val attr    = IntElem(intExpr)
     procs.foreach { proc =>
-      proc.attributes.put(ProcKeys.attrBus, attr)
+      proc.attr.put(ProcKeys.attrBus, attr)
     }
   }
 
@@ -202,16 +203,16 @@ object ProcActions {
     val imp   = ExprImplicits[S]
     import imp._
 
-    val attr = proc.attributes
-    attr[Attr.Boolean](ProcKeys.attrMute) match {
+    val attr = proc.attr
+    attr.expr[Boolean](ProcKeys.attrMute) match {
       // XXX TODO: BooleanEx should have `not` operator
       case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld }
-      case _                  => attr.put(ProcKeys.attrMute, Attr.Boolean(BooleanEx.newVar(true)))
+      case _                  => attr.put(ProcKeys.attrMute, BooleanElem(BooleanEx.newVar(true)))
     }
   }
 
-  def setSynthGraph[S <: Sys[S]](procs: Iterable[Proc[S]], codeElem: Element.Code[S])(implicit tx: S#Tx): Boolean = {
-    val code      = codeElem.entity.value
+  def setSynthGraph[S <: Sys[S]](procs: Iterable[Proc[S]], codeElem: Obj.T[S, Code.Elem])(implicit tx: S#Tx): Boolean = {
+    val code = codeElem.elem.peer // .value
     code match {
       case csg: Code.SynthGraph =>
         try {
@@ -225,10 +226,10 @@ object ProcActions {
           // sg.sources.foreach(println)
           if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
 
-          val attrName  = Attr.String(codeElem.name)
+          val attrNameOpt = codeElem.attr.get(ProcKeys.attrName)
           procs.foreach { p =>
             p.graph() = SynthGraphs.newConst[S](sg)  // XXX TODO: ideally would link to code updates
-            p.attributes.put(ProcKeys.attrName, attrName)
+            attrNameOpt.foreach(attrName => p.attr.put(ProcKeys.attrName, attrName))
             val toRemove = p.scans.iterator.collect {
               case (key, scan) if !scanKeys.contains(key) && scan.sinks.isEmpty && scan.sources.isEmpty => key
             }
@@ -277,10 +278,10 @@ object ProcActions {
     val spanV   = Span(time, time + selection.length)
     val span    = SpanEx.newVar[S](spanV)
     val proc    = Proc[S]
-    val attr    = proc.attributes
-    if (track >= 0) attr.put(ProcKeys.attrTrack, Attr.Int(IntEx.newVar(track)))
+    val attr    = proc.attr
+    if (track >= 0) attr.put(ProcKeys.attrTrack, IntElem(IntEx.newVar(track)))
     bus.foreach { busEx =>
-      val bus = Attr.Int(busEx)
+      val bus = IntElem(busEx)
       attr.put(ProcKeys.attrBus, bus)
     }
 
@@ -311,9 +312,9 @@ object ProcActions {
     import imp._
 
     val proc    = Proc[S]
-    val attr    = proc.attributes
+    val attr    = proc.attr
     val nameEx  = StringEx.newVar[S](StringEx.newConst(name))
-    attr.put(ProcKeys.attrName, Attr.String(nameEx))
+    attr.put(ProcKeys.attrName, StringElem(nameEx))
 
     group.add(Span.All, proc) // constant span expression
     proc

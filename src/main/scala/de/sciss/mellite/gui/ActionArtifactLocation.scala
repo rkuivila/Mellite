@@ -15,16 +15,17 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.Artifact
+import de.sciss.synth.proc.{ArtifactLocationElem, Obj, Folder, Artifact}
 import de.sciss.lucre.stm
-import de.sciss.mellite.Element.ArtifactLocation
 import collection.immutable.{IndexedSeq => Vec}
 import scala.util.Try
 import de.sciss.desktop.{OptionPane, Window, FileDialog}
 import scala.swing.Dialog
 import de.sciss.file._
 import de.sciss.swingplus.Labeled
-import de.sciss.lucre.synth.Sys
+import de.sciss.synth.proc
+import proc.Implicits._
+import de.sciss.lucre.event.Sys
 
 object ActionArtifactLocation {
   //  sealed trait QueryResult
@@ -33,36 +34,41 @@ object ActionArtifactLocation {
 
   def query[S <: Sys[S]](
          document: Document[S], file: File,
-         folder: Option[stm.Source[S#Tx, Element.Folder[S]]] = None,
+         folder: Option[stm.Source[S#Tx, Obj.T[S, Folder]]] = None,
          window: Option[desktop.Window] = None)
-        (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, ArtifactLocation[S]]] = {
+        (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
 
-    type LocSource = stm.Source[S#Tx, ArtifactLocation[S]]
+    type LocSource = stm.Source[S#Tx, ArtifactLocationElem[S]]
 
     val options = cursor.step { implicit tx =>
-      /* @tailrec */ def loop(xs: List[Element[S]], res: Vec[Labeled[LocSource]]): Vec[Labeled[LocSource]] =
+      /* @tailrec */ def loop(xs: List[Obj[S]], res: Vec[Labeled[LocSource]]): Vec[Labeled[LocSource]] =
         xs match {
-          case (a: ArtifactLocation[S]) :: tail =>
-            val parent  = a.entity.directory
-            val res1    = if (Try(Artifact.relativize(parent, file)).isSuccess) {
-              res :+ Labeled(tx.newHandle(a))(a.name.value)
-            } else res
-            loop(tail, res1)
-          case (f: Element.Folder[S]) :: tail =>
-            val res1 = loop(f.entity.iterator.toList, res)
+          case head :: tail =>
+            val res1 = head.elem match {
+              case a: ArtifactLocationElem[S] =>
+                val parent = a.peer.directory
+                if (Try(Artifact.relativize(parent, file)).isSuccess) {
+                  res :+ Labeled(tx.newHandle(a))(head.attr.name)
+                } else res
+
+              case f: Folder[S] =>
+                loop(f.peer.iterator.toList, res)
+
+              case _ => res
+            }
             loop(tail, res1)
           case _ :: tail  => loop(tail, res)
           case Nil        => res
       }
 
-      val _options = loop(document.elements.iterator.toList, Vector.empty)
+      val _options = loop(document.root.peer.iterator.toList, Vector.empty)
       _options
     }
 
     def createNew() = {
       queryNew(child = Some(file), window = window).map { case (dir, name) =>
         cursor.step { implicit tx =>
-          val loc = create(dir, name, folder.map(_.apply().entity).getOrElse(document.elements))
+          val loc = create(dir, name, folder.map(_.apply().elem).getOrElse(document.root))
           tx.newHandle(loc)
         }
       }
@@ -108,9 +114,12 @@ object ActionArtifactLocation {
   }
 
   def create[S <: Sys[S]](directory: File, name: String, parent: Folder[S])
-                         (implicit tx: S#Tx): Element.ArtifactLocation[S] = {
-    val res = Element.ArtifactLocation(name, Artifact.Location.Modifiable(directory))
-    parent.addLast(res)
-    res
+                         (implicit tx: S#Tx): Obj.T[S, ArtifactLocationElem] = {
+    val peer  = Artifact.Location.Modifiable[S](directory)
+    val elem  = ArtifactLocationElem(peer)
+    val obj   = Obj(elem)
+    obj.attr.name = name
+    parent.peer.addLast(obj)
+    obj
   }
 }

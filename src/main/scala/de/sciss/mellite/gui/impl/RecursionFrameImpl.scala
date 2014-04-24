@@ -170,11 +170,11 @@ object RecursionFrameImpl {
       GUI.fixWidth(ggProgress, 480)
       GUI.round   (ggStopProcess)
 
-      val lbDeployed    = new Label("Deployed Artifact:"   , ElementView.AudioGrapheme.icon, Alignment.Right)
+      val lbDeployed    = new Label("Deployed Artifact:"   , ObjView.AudioGrapheme.icon, Alignment.Right)
       lbDeployed.peer.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT)
       ggDeployed        = new Label("---") // don't use `null`, it will stick to a width of zero
       GUI.fixWidth(ggDeployed, 128)
-      val lbProduct     = new Label("Most Recent Artifact:", ElementView.AudioGrapheme.icon, Alignment.Right)
+      val lbProduct     = new Label("Most Recent Artifact:", ObjView.AudioGrapheme.icon, Alignment.Right)
       lbProduct.peer.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT)
       ggProduct         = new Label("---")
       GUI.fixWidth(ggProduct, 128)
@@ -197,7 +197,7 @@ object RecursionFrameImpl {
         }
 
         val ftOpt = _cursor.step { implicit tx =>
-          recH().transform.map(_.entity.value) match {
+          recH().transform.map(_.elem.peer) match {
             case Some(ft: Code.FileTransform) => Some(ft)
             case _ => None
           }
@@ -240,7 +240,7 @@ object RecursionFrameImpl {
           val _groupH   = tx.newHandle(e.group)
           val _gain     = e.gain
           val _span     = e.span
-          val _audio    = e.deployed.entity.value
+          val _audio    = e.deployed.elem.peer.value
           val _channels = e.channels
           (_groupH, _gain, _span, _channels, _audio)
         }

@@ -18,7 +18,7 @@ import de.sciss.lucre.{expr, event => evt, bitemp, stm}
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
-import de.sciss.synth.proc.Proc
+import de.sciss.synth.proc.{Elem, Folder, Proc}
 import de.sciss.serial.Serializer
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.synth.Sys
@@ -59,9 +59,9 @@ sealed trait Document[S <: Sys[S]] {
   implicit def inMemoryBridge: S#Tx => I#Tx
   implicit def inMemoryCursor: stm.Cursor[I]
 
-  def elements(implicit tx: S#Tx): Folder[S]
+  def root(implicit tx: S#Tx): Folder[S]
 
-  def collectElements[A](pf: PartialFunction[Element[S], A])(implicit tx: S#Tx): Vec[A]
+  def collectObjects[A](pf: PartialFunction[Elem[S], A])(implicit tx: S#Tx): Vec[A]
 
   implicit def systemType: reflect.runtime.universe.TypeTag[S]
 }

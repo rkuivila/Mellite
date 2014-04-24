@@ -17,7 +17,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{ExprImplicits, Grapheme, Artifact, Bounce}
+import de.sciss.synth.proc.{ArtifactLocationElem, Obj, ExprImplicits, Grapheme, Artifact, Bounce}
 import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -28,7 +28,6 @@ import Swing._
 import de.sciss.audiowidgets.{TimelineModel, AxisFormat}
 import de.sciss.span.Span.SpanOrVoid
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.mellite.Element.ArtifactLocation
 import scala.util.control.NonFatal
 import java.text.ParseException
 import scala.swing.event.{ButtonClicked, SelectionChanged}
@@ -61,8 +60,8 @@ object ActionBounceTimeline {
     span: SpanOrVoid    = Span.Void,
     channels: Vec[Range.Inclusive] = Vector(0 to 0 /* 1 */),
     importFile: Boolean = false,
-    location:  Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None,
-    transform: Option[stm.Source[S#Tx, Element.Code    [S]]] = None
+    location:  Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = None,
+    transform: Option[stm.Source[S#Tx, Obj.T[S, Code.Elem           ]]] = None
   ) {
     def prepare(group: stm.Source[S#Tx, proc.ProcGroup[S]], f: File): PerformSettings[S] = {
       val server                = Server.Config()
@@ -88,7 +87,7 @@ object ActionBounceTimeline {
     config.outputBusChannels  = spec.numChannels
   }
 
-  type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Element.Code[S]]
+  type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Code.Elem[S]]
 
   def findTransforms[S <: Sys[S]](document: Document[S])(implicit tx: S#Tx): Vec[Labeled[CodeSource[S]]] = {
     type Res = Vec[Labeled[CodeSource[S]]]
@@ -107,7 +106,7 @@ object ActionBounceTimeline {
         case Nil        => res
       }
 
-    loop(document.elements.iterator.toList, Vector.empty)
+    loop(document.root.peer.iterator.toList, Vector.empty)
   }
 
   def query[S <: Sys[S]](init: QuerySettings[S], document: Document[S], timelineModel: TimelineModel,
@@ -207,7 +206,7 @@ object ActionBounceTimeline {
         case ButtonClicked(_) => updateTransformEnabled()
       }
     }
-    lazy val ggTransform = new ComboBox[Labeled[stm.Source[S#Tx, Element.Code[S]]]](Nil) // lazy filling
+    lazy val ggTransform = new ComboBox[Labeled[stm.Source[S#Tx, Obj.T[S, Code.Elem]]]](Nil) // lazy filling
     val pTransform  = new BoxPanel(Orientation.Horizontal) {
       contents ++= Seq(checkTransform, HStrut(4), ggTransform)
     }
@@ -420,7 +419,7 @@ object ActionBounceTimeline {
           val spec      = AudioFile.readSpec(file)
           cursor.step { implicit tx =>
             val loc       = locSource()
-            loc.entity.modifiableOption.foreach { locM =>
+            loc.elem.peer.modifiableOption.foreach { locM =>
               val imp = ExprImplicits[S]
               import imp._
               // val fileR     = Artifact.relativize(locM.directory, file)
@@ -434,8 +433,8 @@ object ActionBounceTimeline {
               val transfOpt = settings.transform.map(_.apply())
               val recursion = Recursion(group(), settings.span, depElem, settings.gain, settings.channels, transfOpt)
               val recElem   = Element.Recursion(elemName, recursion)
-              document.elements.addLast(depElem)
-              document.elements.addLast(recElem)
+              document.root.peer.addLast(depElem)
+              document.root.peer.addLast(recElem)
             }
           }
 

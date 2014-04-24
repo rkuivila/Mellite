@@ -14,20 +14,19 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.AuralSystem
+import de.sciss.synth.proc.{Obj, AudioGraphemeElem, AuralSystem}
 import swing.Component
-import Element.AudioGrapheme
 import impl.audiofile.{ViewImpl => Impl}
 import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.synth.Sys
 
 object AudioFileView {
-  def apply[S <: Sys[S]](document: Document[S], element: AudioGrapheme[S])
+  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, AudioGraphemeElem])
                         (implicit tx: S#Tx, aural: AuralSystem): AudioFileView[S] =
-    Impl(document, element)
+    Impl(document, obj)
 }
 trait AudioFileView[S <: Sys[S]] extends Disposable[S#Tx] {
   def document: Document[S]
   def component: Component
-  def element(implicit tx: S#Tx): AudioGrapheme[S]
+  def element(implicit tx: S#Tx): AudioGraphemeElem[S]
 }

@@ -16,9 +16,8 @@ package gui
 package impl
 package audiofile
 
-import de.sciss.synth.proc.{Artifact, AuralSystem, Grapheme, ExprImplicits}
+import de.sciss.synth.proc.{Obj, AudioGraphemeElem, Artifact, AuralSystem, Grapheme, ExprImplicits}
 import de.sciss.lucre.stm
-import Element.AudioGrapheme
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
 import java.awt.Color
 import Swing._
@@ -32,11 +31,12 @@ import de.sciss.audiowidgets.TimelineModel
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.mellite.gui.ObjView.AudioGrapheme
 
 object ViewImpl {
-  def apply[S <: Sys[S]](doc: Document[S], elem: AudioGrapheme[S])
+  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, AudioGraphemeElem])
                         (implicit tx: S#Tx, aural: AuralSystem): AudioFileView[S] = {
-    val f             = elem.entity.value // .artifact // store.resolve(element.entity.value.artifact)
+    val f             = obj.elem.peer.value // .artifact // store.resolve(element.entity.value.artifact)
     val sampleRate    = f.spec.sampleRate
     type I            = doc.I
     implicit val itx  = doc.inMemoryBridge(tx)
@@ -44,10 +44,10 @@ object ViewImpl {
     val fullSpan      = Span(0L, f.spec.numFrames)
 
     // ---- we go through a bit of a mess here to convert S -> I ----
-    val graphemeV     = elem.entity.value
+    val graphemeV     = f // elem.entity.value
     val imp = ExprImplicits[I]
     import imp._
-    val artifact      = elem.entity.artifact
+    val artifact      = obj.elem.peer.artifact
     val artifDir      = artifact.location.directory
     val iLoc          = Artifact.Location.Modifiable[I](artifDir)
     val iArtifact     = iLoc.add(artifact.value)
@@ -60,7 +60,7 @@ object ViewImpl {
     val res: Impl[S, I] = new Impl[S, I] {
       val timelineModel = new TimelineModelImpl(fullSpan, sampleRate)
       val document      = doc
-      val holder        = tx.newHandle(elem)
+      val holder        = tx.newHandle(obj)
       val transportView: TransportView[I] = TransportView[I, I](group, sampleRate, timelineModel)
     }
 
@@ -73,7 +73,7 @@ object ViewImpl {
   private abstract class Impl[S <: Sys[S], I <: Sys[I]]
     extends AudioFileView[S] with ComponentHolder[Component] { impl =>
 
-    protected def holder       : stm.Source[S#Tx, AudioGrapheme[S]]
+    protected def holder       : stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
     val document               : Document[S]
     protected def transportView: TransportView[I]
     protected def timelineModel: TimelineModel
@@ -117,7 +117,7 @@ object ViewImpl {
       component = pane
     }
 
-    def element(implicit tx: S#Tx): AudioGrapheme[S] = holder()
+    def element(implicit tx: S#Tx): AudioGraphemeElem[S] = holder()
   }
 
   private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: DnD.Button[S])
@@ -145,7 +145,7 @@ object ViewImpl {
         val data  = t.getTransferData(FolderView.selectionFlavor).asInstanceOf[FolderView.SelectionDnDData[S]]
         (data.document == view.document) && {
           val ints = data.selection.collect {
-            case (_, ev: ElementView.Int[S]) => (ev.name, ev.element)
+            case (_, ev: ObjView.Int[S]) => (ev.name, ev.obj)
           }
           ints.headOption.exists { case (name, it) =>
             export.bus  = Some(it)

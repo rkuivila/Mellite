@@ -16,7 +16,7 @@ package gui
 package impl
 
 import de.sciss.lucre.stm.{Source, Disposable, Cursor}
-import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Attr, Proc}
+import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Proc, StringElem}
 import scala.swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
 import javax.swing.WindowConstants
 import java.awt.event.{WindowEvent, WindowAdapter}
@@ -40,9 +40,9 @@ object ProcEditorFrameImpl {
       }
     }
 
-    val attr            = proc.attributes
-    val initName        = attr[Attr.String](ProcKeys.attrName).fold("<unnamed>")(_.value)
-    val initGraphSource = attr[Attr.String](ProcKeys.attrGraphSource).map(_.value) // graph.source
+    val attr            = proc.attr
+    val initName        = attr.expr[String](ProcKeys.attrName).fold("<unnamed>")(_.value)
+    val initGraphSource = attr.expr[String](ProcKeys.attrGraphSource).map(_.value) // graph.source
 
     deferTx {
       view.guiInit(initName, initGraphSource)
@@ -124,7 +124,7 @@ object ProcEditorFrameImpl {
                     atomic { implicit tx =>
                       val imp = ExprImplicits[S]
                       import imp._
-                      proc.attributes.put(ProcKeys.attrGraphSource, Attr.String(code)) // XXX TODO: should update the var
+                      proc.attr.put(ProcKeys.attrGraphSource, StringElem(code)) // XXX TODO: should update the var
                       proc.graph() = sg
                     }
                   case _ =>

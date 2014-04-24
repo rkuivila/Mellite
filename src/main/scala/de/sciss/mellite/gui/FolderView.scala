@@ -21,7 +21,8 @@ import de.sciss.lucre.stm.{Cursor, Disposable}
 import de.sciss.model.Model
 import de.sciss.lucre.stm
 import java.io.File
-import de.sciss.lucre.synth.Sys
+import de.sciss.synth.proc.{Folder, ArtifactLocationElem, Obj}
+import de.sciss.lucre.event.Sys
 
 object FolderView {
   def apply[S <: Sys[S]](document: Document[S], root: Folder[S])
@@ -30,7 +31,7 @@ object FolderView {
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
     */
-  type Selection[S <: Sys[S]] = Vec[(Vec[ElementView.FolderLike[S]], ElementView[S])]
+  type Selection[S <: Sys[S]] = Vec[(Vec[ObjView.FolderLike[S]], ObjView[S])]
 
   final case class SelectionDnDData[S <: Sys[S]](document: Document[S], selection: Selection[S])
 
@@ -45,7 +46,7 @@ trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with Disposabl
   def component: Component
   def selection: FolderView.Selection[S]
 
-  def locations: Vec[ElementView.ArtifactLocation[S]]
+  def locations: Vec[ObjView.ArtifactLocation[S]]
 
-  def findLocation(f: File): Option[stm.Source[S#Tx, Element.ArtifactLocation[S]]]
+  def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]]
 }

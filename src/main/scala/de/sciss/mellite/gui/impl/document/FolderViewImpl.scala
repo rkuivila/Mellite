@@ -16,7 +16,7 @@ package gui
 package impl
 package document
 
-import de.sciss.synth.proc.{ExprImplicits, Artifact}
+import de.sciss.synth.proc.{Folder, ExprImplicits, Artifact, Obj, ArtifactLocationElem}
 import swing.{ScrollPane, Component}
 import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
@@ -33,9 +33,11 @@ import de.sciss.lucre.stm
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
 import de.sciss.model.Change
-import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.synth.proc
+import proc.Implicits._
+import de.sciss.lucre.event.Sys
 
 object FolderViewImpl {
   private final val DEBUG = false
@@ -46,17 +48,17 @@ object FolderViewImpl {
     val _cursor = cursor
     new Impl[S] {
       val cursor    = _cursor
-      val mapViews  = tx.newInMemoryIDMap[ElementView[S]]  // folder IDs to renderers
-      val rootView  = ElementView.Root(root)
+      val mapViews  = tx.newInMemoryIDMap[ObjView[S]]  // folder IDs to renderers
+      val rootView  = ObjView.Root(root)
       val document  = _doc
 
-      private def buildMapView(f: Folder[S], fv: ElementView.FolderLike[S]): Unit = {
-        val tup = f.iterator.map(c => c -> ElementView(fv, c)(tx)).toIndexedSeq
+      private def buildMapView(f: Folder[S], fv: ObjView.FolderLike[S]): Unit = {
+        val tup = f.peer.iterator.map(c => c -> ObjView(fv, c)(tx)).toIndexedSeq
         fv.children = tup.map(_._2)
         tup.foreach { case (c, cv) =>
           mapViews.put(c.id, cv)
           (c, cv) match {
-            case (cf: Element.Folder[S], cfv: ElementView.Folder[S]) =>
+            case (cf: Element.Folder[S], cfv: ObjView.Folder[S]) =>
               buildMapView(cf.entity, cfv)
             case _ =>
           }
@@ -79,12 +81,12 @@ object FolderViewImpl {
     extends ComponentHolder[Component] with FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
-    type Node   = ElementView.Renderer[S]
-    type Branch = ElementView.FolderLike[S]
+    type Node   = ObjView.Renderer[S]
+    type Branch = ObjView.FolderLike[S]
     type Path   = TreeTable.Path[Branch]
 
-    protected def rootView: ElementView.Root[S]
-    protected def mapViews: IdentifierMap[S#ID, S#Tx, ElementView[S]]
+    protected def rootView: ObjView.Root[S]
+    protected def mapViews: IdentifierMap[S#ID, S#Tx, ObjView[S]]
     protected implicit def cursor: Cursor[S]
     protected def observer: Disposable[S#Tx]
     protected def document: Document[S]
@@ -93,22 +95,22 @@ object FolderViewImpl {
       lazy val root: Node = rootView // ! must be lazy. suckers....
 
       def getChildCount(parent: Node): Int = parent match {
-        case b: ElementView.FolderLike[S] => b.children.size
+        case b: ObjView.FolderLike[S] => b.children.size
         case _ => 0
       }
 
-      def getChild(parent: Node, index: Int): ElementView[S] = parent match {
-        case b: ElementView.FolderLike[S] => b.children(index)
+      def getChild(parent: Node, index: Int): ObjView[S] = parent match {
+        case b: ObjView.FolderLike[S] => b.children(index)
         case _ => sys.error(s"parent $parent is not a branch")
       }
 
       def isLeaf(node: Node): Boolean = node match {
-        case b: ElementView.FolderLike[S] => false // b.children.nonEmpty
+        case b: ObjView.FolderLike[S] => false // b.children.nonEmpty
         case _ => true
       }
 
       def getIndexOfChild(parent: Node, child: Node): Int = parent match {
-        case b: ElementView.FolderLike[S] => b.children.indexOf(child)
+        case b: ObjView.FolderLike[S] => b.children.indexOf(child)
         case _ => sys.error(s"parent $parent is not a branch")
       }
 
@@ -117,7 +119,7 @@ object FolderViewImpl {
       def valueForPathChanged(path: TreeTable.Path[Node], newValue: Node): Unit =
         println(s"valueForPathChanged($path, $newValue)")
 
-      def elemAdded(parent: ElementView.FolderLike[S], idx: Int, view: ElementView[S]): Unit = {
+      def elemAdded(parent: ObjView.FolderLike[S], idx: Int, view: ObjView[S]): Unit = {
         if (DEBUG) println(s"model.elemAdded($parent, $idx, $view)")
         val g       = parent  // Option.getOrElse(_root)
         require(idx >= 0 && idx <= g.children.size)
@@ -125,7 +127,7 @@ object FolderViewImpl {
         fireNodesInserted(view)
       }
 
-      def elemRemoved(parent: ElementView.FolderLike[S], idx: Int): Unit = {
+      def elemRemoved(parent: ObjView.FolderLike[S], idx: Int): Unit = {
         if (DEBUG) println(s"model.elemRemoved($parent, $idx)")
         require(idx >= 0 && idx < parent.children.size)
         val v       = parent.children(idx)
@@ -136,7 +138,7 @@ object FolderViewImpl {
         parent.children  = parent.children.patch(idx, Vector.empty, 1)
       }
 
-      def elemUpdated(view: ElementView[S]): Unit = {
+      def elemUpdated(view: ObjView[S]): Unit = {
         if (DEBUG) println(s"model.elemUpdated($view)")
         fireNodesChanged(view)
       }
@@ -145,18 +147,18 @@ object FolderViewImpl {
     private var _model: ElementTreeModel  = _
     private var t: TreeTable[Node, TreeColumnModel[Node]] = _
 
-    def elemAdded(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx): Unit = {
-      if (DEBUG) println(s"elemAdded($parent, $idx $elem)")
-      val v = ElementView(parent, elem)
-      mapViews.put(elem.id, v)
+    def elemAdded(parent: ObjView.FolderLike[S], idx: Int, obj: Obj[S])(implicit tx: S#Tx): Unit = {
+      if (DEBUG) println(s"elemAdded($parent, $idx $obj)")
+      val v = ObjView(parent, obj)
+      mapViews.put(obj.id, v)
 
       deferTx {
         _model.elemAdded(parent, idx, v)
       }
 
-      (elem, v) match {
-        case (f: Element.Folder[S], fv: ElementView.Folder[S]) =>
-          val fe    = f.entity
+      (obj.elem, v) match {
+        case (f: Folder[S], fv: ObjView.Folder[S]) =>
+          val fe    = f.peer
           // val path  = parent :+ gv
           // branchAdded(path, gv)
           if (!fe.isEmpty) {
@@ -169,13 +171,13 @@ object FolderViewImpl {
       }
     }
 
-    def elemRemoved(parent: ElementView.FolderLike[S], idx: Int, elem: Element[S])(implicit tx: S#Tx): Unit = {
-      if (DEBUG) println(s"elemRemoved($parent, $idx, $elem)")
-      mapViews.get(elem.id).foreach { v =>
-        (elem, v) match {
-          case (f: Element.Folder[S], fv: ElementView.Folder[S]) =>
+    def elemRemoved(parent: ObjView.FolderLike[S], idx: Int, obj: Obj[S])(implicit tx: S#Tx): Unit = {
+      if (DEBUG) println(s"elemRemoved($parent, $idx, $obj)")
+      mapViews.get(obj.id).foreach { v =>
+        (obj.elem, v) match {
+          case (f: Folder[S], fv: ObjView.Folder[S]) =>
             // val path = parent :+ gl
-            val fe = f.entity
+            val fe = f.peer
             if (fe.nonEmpty) fe.iterator.toList.zipWithIndex.reverse.foreach { case (c, ci) =>
               elemRemoved(fv, ci, c)
             }
@@ -183,7 +185,7 @@ object FolderViewImpl {
           case _ =>
         }
 
-        mapViews.remove(elem.id)
+        mapViews.remove(obj.id)
 
         deferTx {
           _model.elemRemoved(parent, idx)
@@ -206,7 +208,7 @@ object FolderViewImpl {
 
           case Element.Entity(ch) =>
             v match {
-              case fv: ElementView.Folder[S] =>
+              case fv: ObjView.Folder[S] =>
                 val upd = fv.tryConvert(ch)
                 if (upd.isEmpty) println(s"WARNING: unhandled $elem -> $ch")
                 folderUpdated(fv, upd)
@@ -218,7 +220,7 @@ object FolderViewImpl {
       }
     }
 
-    def folderUpdated(fv: ElementView.FolderLike[S], upd: Folder.Update[S])(implicit tx: S#Tx): Unit =
+    def folderUpdated(fv: ObjView.FolderLike[S], upd: Folder.Update[S])(implicit tx: S#Tx): Unit =
       upd.foreach {
         case Folder.Added  (idx, elem)      => elemAdded  (fv, idx, elem)
         case Folder.Removed(idx, elem)      => elemRemoved(fv, idx, elem)
@@ -238,17 +240,15 @@ object FolderViewImpl {
 
         def update(node: Node, value: String): Unit =
           node match {
-            case v: ElementView[S] if value != v.name =>
+            case v: ObjView[S] if value != v.name =>
               cursor.step { implicit tx =>
-                val expr = ExprImplicits[S]
-                import expr._
-                v.element().name() = value
+                v.obj().attr.name = value
               }
             case _ =>
           }
 
         def isEditable(node: Node) = node match {
-          case b: ElementView[S] => true
+          case b: ObjView[S] => true
           case _ => false // i.e. Root
         }
       }
@@ -260,7 +260,7 @@ object FolderViewImpl {
           cursor.step { implicit tx => node.tryUpdate(value) }
 
         def isEditable(node: Node) = node match {
-          case b: ElementView.FolderLike[S] => false
+          case b: ObjView.FolderLike[S] => false
           case _ => true
         }
       }
@@ -320,15 +320,15 @@ object FolderViewImpl {
           // except for the general selection flavour, see if there is more specific types
           // (current Int and Code are supported)
           sel.headOption match {
-            case Some((_, elemView: ElementView.Int[S])) =>
-              val elem  = elemView.element
+            case Some((_, elemView: ObjView.Int[S])) =>
+              val elem  = elemView.obj
               val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
                 timeline.DnD.IntDrag[S](document, elem)
               }
               DragAndDrop.Transferable.seq(tSel, tElem)
 
-            case Some((_, elemView: ElementView.Code[S])) /* if elemView.value.id == Code.SynthGraph.id */ =>
-              val elem  = elemView.element
+            case Some((_, elemView: ObjView.Code[S])) /* if elemView.value.id == Code.SynthGraph.id */ =>
+              val elem  = elemView.obj
               val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
                 timeline.DnD.CodeDrag[S](document, elem)
               }
@@ -344,7 +344,7 @@ object FolderViewImpl {
             case Some(tdl) =>
               // println(s"last = ${tdl.path.last}; column ${tdl.column}; isLeaf? ${t.treeModel.isLeaf(tdl.path.last)}")
               val locOk = tdl.index >= 0 || (tdl.column == 0 && (tdl.path.last match {
-                case _: ElementView.Folder[_] => true
+                case _: ObjView.Folder[_] => true
                 case _                        => false
               }))
 
@@ -372,12 +372,12 @@ object FolderViewImpl {
 
           def isNested(pv: Branch, cv: Branch): Boolean =
             pv == cv || pv.children.collect {
-              case pcv: ElementView.Folder[S] => pcv
+              case pcv: ObjView.Folder[S] => pcv
             }.exists(isNested(_, cv))
 
           // make sure we are not moving a folder within itself (it will magically disappear :)
           val sel1 = sel.filter {
-            case (_, cv: ElementView.Folder[S]) if isNested(cv, newParentView) => false
+            case (_, cv: ObjView.Folder[S]) if isNested(cv, newParentView) => false
             case _ => true
           }
 
@@ -393,18 +393,18 @@ object FolderViewImpl {
 
           cursor.step { implicit tx =>
             val tup = sel1.map {
-              case (_ :+ pv, cv) => pv.folder -> cv.element()
+              case (_ :+ pv, cv) => pv.folder -> cv.obj()
             }
 
             val newParent = newParentView.folder
-            tup             .foreach { case  (oldParent, c)       => oldParent.remove(            c) }
-            tup.zipWithIndex.foreach { case ((_        , c), off) => newParent.insert(idx1 + off, c) }
+            tup             .foreach { case  (oldParent, c)       => oldParent.peer.remove(            c) }
+            tup.zipWithIndex.foreach { case ((_        , c), off) => newParent.peer.insert(idx1 + off, c) }
           }
 
           true
         }
 
-        private def importSelection(support: TransferSupport, parent: ElementView.FolderLike[S], index: Int): Boolean = {
+        private def importSelection(support: TransferSupport, parent: ObjView.FolderLike[S], index: Int): Boolean = {
           val data = support.getTransferable.getTransferData(FolderView.selectionFlavor)
             .asInstanceOf[FolderView.SelectionDnDData[S]]
           if (data.document == document) {
@@ -415,7 +415,7 @@ object FolderViewImpl {
           }
         }
 
-        private def importFiles(support: TransferSupport, parent: ElementView.FolderLike[S], index: Int): Boolean = {
+        private def importFiles(support: TransferSupport, parent: ObjView.FolderLike[S], index: Int): Boolean = {
           import JavaConversions._
           val data  = support.getTransferable.getTransferData(DataFlavor.javaFileListFlavor)
             .asInstanceOf[java.util.List[File]].toList
@@ -431,8 +431,8 @@ object FolderViewImpl {
               trip.foreach {
                 case (f, spec, locS) =>
                   val loc = locS()
-                  loc.entity.modifiableOption.foreach { locM =>
-                    ElementActions.addAudioFile(parent.folder, index, locM, f, spec)
+                  loc.elem.peer.modifiableOption.foreach { locM =>
+                    ObjectActions.addAudioFile(parent.folder, index, locM, f, spec)
                   }
               }
             }
@@ -447,7 +447,7 @@ object FolderViewImpl {
           t.dropLocation match {
             case Some(tdl) =>
               tdl.path.last match {
-                case parent: ElementView.FolderLike[S] =>
+                case parent: ObjView.FolderLike[S] =>
                   val idx = tdl.index
                   if      (support.isDataFlavorSupported(FolderView.selectionFlavor   ))
                     importSelection(support, parent, idx)
@@ -472,11 +472,11 @@ object FolderViewImpl {
         case PathExtractor(path, child) => (path, child)
       })(breakOut)
 
-    def locations: Vec[ElementView.ArtifactLocation[S]] = selection.collect {
-      case (_, view: ElementView.ArtifactLocation[S]) => view
+    def locations: Vec[ObjView.ArtifactLocation[S]] = selection.collect {
+      case (_, view: ObjView.ArtifactLocation[S]) => view
     }
 
-    def findLocation(f: File): Option[stm.Source[S#Tx, Element.ArtifactLocation[S]]] = {
+    def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
       val locsOk = locations.flatMap { view =>
         try {
           Artifact.relativize(view.directory, f)
@@ -487,21 +487,21 @@ object FolderViewImpl {
       } .headOption
 
       locsOk match {
-        case Some(loc)  => Some(loc.element)
+        case Some(loc)  => Some(loc.obj)
         case _          =>
           val parent = selection.collect {
-            case (_, f: ElementView.Folder[S]) => f.element
+            case (_, f: ObjView.Folder[S]) => f.obj
           } .headOption
           ActionArtifactLocation.query(document, file = f, folder = parent) // , window = Some(comp))
       }
     }
 
     object PathExtractor {
-      def unapply(path: Seq[Node]): Option[(Vec[ElementView.FolderLike[S]], ElementView[S])] =
+      def unapply(path: Seq[Node]): Option[(Vec[ObjView.FolderLike[S]], ObjView[S])] =
         path match {
-          case init :+ (last: ElementView[S]) =>
-            val pre: Vec[ElementView.FolderLike[S]] = init.map({
-              case g: ElementView.FolderLike[S] => g
+          case init :+ (last: ObjView[S]) =>
+            val pre: Vec[ObjView.FolderLike[S]] = init.map({
+              case g: ObjView.FolderLike[S] => g
               case _ => return None
             })(breakOut)
             Some((/* _root +: */ pre, last))

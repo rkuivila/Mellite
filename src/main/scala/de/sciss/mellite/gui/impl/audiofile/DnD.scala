@@ -18,14 +18,13 @@ package audiofile
 
 import de.sciss.span.Span
 import java.awt.datatransfer
-import de.sciss.synth.proc.Grapheme
+import de.sciss.synth.proc.{Obj, IntElem, AudioGraphemeElem, Grapheme}
 import de.sciss.lucre.stm
 import javax.swing.{JComponent, ImageIcon, TransferHandler}
 import java.awt.event.{MouseEvent, MouseAdapter}
 import TransferHandler.COPY
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.mellite.gui.impl.timeline
-import de.sciss.mellite.Element.AudioGrapheme
 import de.sciss.lucre.synth.Sys
 
 object DnD {
@@ -49,13 +48,13 @@ object DnD {
 
   // final val flavor = DragAndDrop.internalFlavor[Drag[_]]
 
-  final class Button[S <: Sys[S]](document: Document[S], val source: stm.Source[S#Tx, AudioGrapheme[S]],
+  final class Button[S <: Sys[S]](document: Document[S], val source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                   snapshot0: Grapheme.Value.Audio,
                                   timelineModel: TimelineModel)
     extends swing.Button("Region") {
 
     var snapshot  = snapshot0
-    var bus       = Option.empty[stm.Source[S#Tx, Element.Int[S]]]
+    var bus       = Option.empty[stm.Source[S#Tx, IntElem[S]]]
 
     private object Transfer extends TransferHandler {
       override def getSourceActions(c: JComponent): Int =

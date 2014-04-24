@@ -18,7 +18,7 @@ package document
 
 import scala.swing.{ComboBox, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{ExprImplicits, ProcGroup}
+import de.sciss.synth.proc.{Obj, ProcKeys, Folder, ExprImplicits, ProcGroup, StringElem, ProcGroupElem}
 import de.sciss.desktop.{FileDialog, DialogSource, Window, Menu}
 import de.sciss.synth.io.AudioFile
 import javax.swing.SpinnerNumberModel
@@ -29,12 +29,14 @@ import de.sciss.lucre.expr.{String => StringEx, Double => DoubleEx, Int => IntEx
 import scala.util.Try
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.synth.proc
+import proc.Implicits._
 
 object ElementsFrameImpl {
   def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Document[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
                                         cursor: stm.Cursor[S], bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] = {
     // implicit val csr  = doc.cursor
-    val folderView      = FolderView(doc, doc.elements)
+    val folderView      = FolderView(doc, doc.root)
     val name0           = nameOpt.map(_.value(bridge(tx)))
     val view            = new Impl[S, S1](doc, folderView) {
       protected val nameObserver = nameOpt.map { name =>
@@ -85,16 +87,16 @@ object ElementsFrameImpl {
 
     private def targetFolder(implicit tx: S#Tx): Folder[S] = {
       val sel = folderView.selection
-      if (sel.isEmpty) document.elements else sel.head match {
-        case (_,    _parent: ElementView.Folder[S])     => _parent.folder
-        case (_ :+ (_parent: ElementView.Folder[S]), _) => _parent.folder
-        case _                                          => document.elements
+      if (sel.isEmpty) document.root else sel.head match {
+        case (_,    _parent: ObjView.Folder[S])     => _parent.folder
+        case (_ :+ (_parent: ObjView.Folder[S]), _) => _parent.folder
+        case _                                          => document.root
       }
     }
 
-    private def addElement(elem: Element[S])(implicit tx: S#Tx): Unit = {
+    private def addObject(obj: Obj[S])(implicit tx: S#Tx): Unit = {
       val parent = targetFolder
-      parent.addLast(elem)
+      parent.peer.addLast(obj)
     }
 
     private def actionAddFolder(): Unit = {
@@ -102,7 +104,12 @@ object ElementsFrameImpl {
         Dialog.Message.Question, initial = "Folder")
       res.foreach { name =>
         atomic { implicit tx =>
-          addElement(Element.Folder(name, Folder[S]))
+          val elem  = Folder.empty[S]
+          val obj   = Obj(elem)
+          val imp   = ExprImplicits[S]
+          import imp._
+          obj.attr.put(ProcKeys.attrName, StringElem(name))
+          addObject(obj)
         }
       }
     }
@@ -112,7 +119,11 @@ object ElementsFrameImpl {
         Dialog.Message.Question, initial = "Timeline")
       res.foreach { name =>
         atomic { implicit tx =>
-          addElement(Element.ProcGroup(name, ProcGroup.Modifiable[S]))
+          val peer  = ProcGroup.Modifiable[S]
+          val elem  = ProcGroupElem(peer)
+          val obj   = Obj(elem)
+          obj.attr.name = name
+          addObject(obj)
         }
       }
     }
@@ -136,8 +147,8 @@ object ElementsFrameImpl {
         locSourceOpt.foreach { locSource =>
           atomic { implicit tx =>
             val loc = locSource()
-            loc.entity.modifiableOption.foreach { locM =>
-              ElementActions.addAudioFile(targetFolder, -1, locM, f, spec)
+            loc.elem.peer.modifiableOption.foreach { locM =>
+              ObjectActions.addAudioFile(targetFolder, -1, locM, f, spec)
             }
           }
         }
@@ -206,18 +217,23 @@ object ElementsFrameImpl {
 
         case _  => None
       }) { implicit tx =>
-        (name, value) => Element.Code(name, Codes.newVar(Codes.newConst(value)))
+        (name, value) =>
+          val peer  = Codes.newVar(Codes.newConst(value))
+          val elem  = Code.Elem(peer)
+          val obj   = Obj(elem)
+          obj.attr.name = name
+          obj
       }
     }
 
     private def actionAddPrimitive[A](tpe: String, ggValue: Component, prepare: => Option[A])
-                                     (create: S#Tx => (String, A) => Element[S]): Unit = {
+                                     (create: S#Tx => (String, A) => Obj[S]): Unit = {
       val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe,
         window = Some(component))
       nameOpt.foreach { name =>
         prepare.foreach { value =>
           atomic { implicit tx =>
-            addElement(create(tx)(name, value))
+            addObject(create(tx)(name, value))
           }
         }
       }
@@ -250,8 +266,8 @@ object ElementsFrameImpl {
         val views = folderView.selection.map { case (p, view) => (p.last, view) }
         if (views.nonEmpty) atomic { implicit tx =>
           views.foreach {
-            case (parent: ElementView.FolderLike[S], child) =>
-              parent.folder.remove(child.element())
+            case (parent: ObjView.FolderLike[S], child) =>
+              parent.folder.peer.remove(child.obj())
             case _ =>
           }
         }
@@ -264,19 +280,19 @@ object ElementsFrameImpl {
         if (views.nonEmpty) atomic { implicit tx =>
           import Mellite.auralSystem
           views.foreach {
-            case view: ElementView.ProcGroup[S] =>
+            case view: ObjView.ProcGroup[S] =>
               // val e   = view.element()
               // import document.inMemory
-              TimelineFrame(document, view.element())
+              TimelineFrame(document, view.obj())
 
-            case view: ElementView.AudioGrapheme[S] =>
-              AudioFileFrame(document, view.element())
+            case view: ObjView.AudioGrapheme[S] =>
+              AudioFileFrame(document, view.obj())
 
-            case view: ElementView.Recursion[S] =>
-              RecursionFrame(document, view.element())
+            case view: ObjView.Recursion[S] =>
+              RecursionFrame(document, view.obj())
 
-            case view: ElementView.Code[S] =>
-              CodeFrame(document, view.element())
+            case view: ObjView.Code[S] =>
+              CodeFrame(document, view.obj())
 
             case _ => // ...
           }

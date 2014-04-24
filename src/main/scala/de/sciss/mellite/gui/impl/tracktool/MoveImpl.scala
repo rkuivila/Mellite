@@ -16,7 +16,7 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Proc, Attr}
+import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Proc, Elem}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
@@ -58,7 +58,7 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       // var, check the value stored in the var, and update the var
       // instead (recursion). otherwise, it will be some combinatory
       // expression, and we could decide to construct a binary op instead!
-      val attr = proc.attributes
+      val attr = proc.attr
       val expr = ExprImplicits[S]
       import expr._
       // attr[Attribute.Int[S]](ProcKeys.track).foreach {
@@ -69,7 +69,7 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       // lucre.event.showLog = true
       // lucre.bitemp.impl.BiGroupImpl.showLog = true
 
-      for (Expr.Var(t) <- attr[Attr.Int](ProcKeys.attrTrack)) t.transform(_ + deltaTrack)
+      for (Expr.Var(t) <- attr.expr[Int](ProcKeys.attrTrack)) t.transform(_ + deltaTrack)
 
       // lucre.event.showLog = false
       // lucre.bitemp.impl.BiGroupImpl.showLog = false

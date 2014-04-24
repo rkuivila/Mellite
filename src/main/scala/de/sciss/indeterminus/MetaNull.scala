@@ -24,7 +24,7 @@ import de.sciss.strugatzki.{FeatureCorrelation, FeatureExtraction}
 import de.sciss.processor.Processor
 import de.sciss.synth.proc
 import de.sciss.mellite._
-import de.sciss.synth.proc.{ExprImplicits, FadeSpec, Attr, ProcKeys, Artifact, Grapheme}
+import de.sciss.synth.proc.{ExprImplicits, FadeSpec, FadeSpecElem, ProcKeys, Artifact, Grapheme}
 import de.sciss.file._
 import de.sciss.lucre.synth.InMemory
 
@@ -90,8 +90,8 @@ object MetaNull {
                                                       selection = span, bus = None)
         val fdIn      = FadeSpec.Elem.newConst[I](FadeSpec.Value(882))
         val fdOut     = FadeSpec.Elem.newConst[I](FadeSpec.Value(math.min(span.length - 882, 22050)))
-        proc.attributes.put(ProcKeys.attrFadeIn , Attr.FadeSpec(fdIn ))
-        proc.attributes.put(ProcKeys.attrFadeOut, Attr.FadeSpec(fdOut))
+        proc.attr.put(ProcKeys.attrFadeIn , FadeSpecElem(fdIn ))
+        proc.attr.put(ProcKeys.attrFadeOut, FadeSpecElem(fdOut))
       }
 
       val bnc   = proc.Bounce[I, I]

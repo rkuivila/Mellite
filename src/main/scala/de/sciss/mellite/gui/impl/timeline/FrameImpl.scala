@@ -16,8 +16,8 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{AuralSystem, ProcGroup}
-import de.sciss.mellite.{Element, Document}
+import de.sciss.synth.proc.{Obj, ProcGroupElem, AuralSystem, ProcGroup}
+import de.sciss.mellite.Document
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui._
 import de.sciss.desktop.{OptionPane, Window}
@@ -26,15 +26,17 @@ import scala.swing.Action
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
+import de.sciss.synth.proc
+import proc.Implicits._
 
 object FrameImpl {
-  def apply[S <: Sys[S]](document: Document[S], group: Element.ProcGroup[S])
+  def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroupElem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S],
                          aural: AuralSystem): TimelineFrame[S] = {
     val tlv     = TimelineView(document, group)
-    val name    = group.name.value
+    val name    = group.attr.name
     import ProcGroup.serializer
-    val groupH  = tx.newHandle(group.entity)
+    val groupH  = tx.newHandle(group.elem.peer)
     val res     = new Impl(tlv, name, groupH)
     deferTx {
       res.init()

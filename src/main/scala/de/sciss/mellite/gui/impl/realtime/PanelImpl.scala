@@ -17,7 +17,7 @@ package impl
 package realtime
 
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{ProcKeys, Attr, Proc, Param, ProcTransport}
+import de.sciss.synth.proc.{ProcKeys, Elem, Proc, Param, ProcTransport}
 import de.sciss.lucre.bitemp.BiGroup
 import java.awt.{RenderingHints, Graphics2D, Color}
 import collection.immutable.{IndexedSeq => Vec}
@@ -76,7 +76,7 @@ object PanelImpl {
         case (span, timed) =>
           val id    = timed.id
           val proc  = timed.value
-          val n     = proc.attributes[Attr.String](ProcKeys.attrName).fold("<unnamed>")(_.value)
+          val n     = proc.attr.expr[String](ProcKeys.attrName).fold("<unnamed>")(_.value)
           // val n = proc.name.value
           //            val par  = proc.par.entriesAt( time )
           val par = Map.empty[String, Double]

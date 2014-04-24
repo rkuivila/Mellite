@@ -16,7 +16,7 @@ package mellite
 package impl
 
 import de.sciss.synth.io.AudioFileSpec
-import de.sciss.synth.proc.{ExprImplicits, ProcGroup, Artifact}
+import de.sciss.synth.proc.{Obj, AudioGraphemeElem, ExprImplicits, ProcGroup, Artifact}
 import de.sciss.lucre.{expr, event => evt}
 import expr.Expr
 import de.sciss.span.SpanLike
@@ -70,7 +70,7 @@ object RecursionImpl {
       val id          = targets.id
       val gain        = tx.readVar[Gain    ](id, in)
       val channels    = tx.readVar[Channels](id, in)(ImmutableSerializer.indexedSeq[Range.Inclusive])
-      val transform   = serial.Serializer.option[S#Tx, S#Acc, Element.Code[S]].read(in, access)
+      val transform   = serial.Serializer.option[S#Tx, S#Acc, Obj.T[S, Code.Elem]].read(in, access)
       //      val deployed    = Grapheme.Elem.Audio.readExpr(in, access) match {
       //        case ja: Grapheme.Elem.Audio[S] => ja // XXX TODO sucky shit
       //      }
@@ -81,8 +81,8 @@ object RecursionImpl {
     }
   }
 
-  def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanLike, deployed: Element.AudioGrapheme[S],
-                         gain: Gain, channels: Channels, transform: Option[Element.Code[S]])
+  def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanLike, deployed: Obj.T[S, AudioGraphemeElem],
+                         gain: Gain, channels: Channels, transform: Option[Obj.T[S, Code.Elem]])
                         (implicit tx: S#Tx): Recursion[S] = {
     val imp = ExprImplicits[S]
     import imp._

@@ -20,6 +20,8 @@ import scala.concurrent.Future
 import de.sciss.processor.Processor
 import de.sciss.synth
 import scala.annotation.switch
+import de.sciss.synth.proc
+import de.sciss.lucre.event.Sys
 
 object Code {
   final case class CompilationFailed() extends Exception
@@ -64,6 +66,15 @@ object Code {
     def execute(in: In): Out = Impl2.execute[In, Out, SynthGraph](this, in)
 
     def contextName = SynthGraph.name
+  }
+
+  // ---- element ----
+  def Elem[S <: Sys[S]](peer: Code)(implicit tx: S#Tx): Elem[S] = ???
+
+  trait Elem[S <: Sys[S]] extends proc.Elem[S] {
+    type Peer = Code
+
+    def mkCopy()(implicit tx: S#Tx): Elem[S]
   }
 }
 sealed trait Code extends Writable {

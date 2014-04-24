@@ -15,16 +15,16 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.AuralSystem
+import de.sciss.synth.proc.{Obj, AudioGraphemeElem, AuralSystem}
 import lucre.stm
 import stm.Disposable
 import impl.audiofile.{FrameImpl => Impl}
 import de.sciss.lucre.synth.Sys
 
 object AudioFileFrame {
-  def apply[S <: Sys[S]](doc: Document[S], elem: Element.AudioGrapheme[S])
+  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, AudioGraphemeElem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): AudioFileFrame[S] =
-    Impl(doc, elem)
+    Impl(doc, obj)
 }
 
 trait AudioFileFrame[S <: Sys[S]] extends Disposable[S#Tx] {

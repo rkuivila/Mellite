@@ -39,7 +39,7 @@ import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{ExprImplicits, FadeSpec, AuralPresentation, Attr, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
+import de.sciss.synth.proc.{Obj, ProcGroupElem, ExprImplicits, FadeSpec, AuralPresentation, Elem, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -97,15 +97,15 @@ object TimelineViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  def apply[S <: Sys[S]](document: Document[S], element: Element.ProcGroup[S])
+  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroupElem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
-    val group       = element.entity
+    val group       = obj.elem.peer
     import ProcGroup.serializer
-    val groupH      = tx.newHandle[proc   .ProcGroup[S]](group  )
-    val groupEH     = tx.newHandle[Element.ProcGroup[S]](element)
+    val groupH      = tx.newHandle(group)
+    val groupEH     = tx.newHandle(obj  )
 
     var disposables = List.empty[Disposable[S#Tx]]
 
@@ -146,33 +146,33 @@ object TimelineViewImpl {
     }
 
     def muteChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
-      val attr    = timed.value.attributes
-      val muted   = attr[Attr.Boolean](ProcKeys.attrMute).exists(_.value)
+      val attr    = timed.value.attr
+      val muted   = attr.expr[Boolean](ProcKeys.attrMute).exists(_.value)
       view.procMuteChanged(timed, muted)
     }
 
     def nameChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
-      val attr    = timed.value.attributes
-      val nameOpt = attr[Attr.String](ProcKeys.attrName).map(_.value)
+      val attr    = timed.value.attr
+      val nameOpt = attr.expr[String](ProcKeys.attrName).map(_.value)
       view.procNameChanged(timed, nameOpt)
     }
 
     def gainChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
-      val attr  = timed.value.attributes
-      val gain  = attr[Attr.Double](ProcKeys.attrGain).map(_.value).getOrElse(1.0)
+      val attr  = timed.value.attr
+      val gain  = attr.expr[Double](ProcKeys.attrGain).fold(1.0)(_.value)
       view.procGainChanged(timed, gain)
     }
 
     def busChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
-      val attr    = timed.value.attributes
-      val busOpt  = attr[Attr.Int](ProcKeys.attrBus).map(_.value)
+      val attr    = timed.value.attr
+      val busOpt  = attr.expr[Int](ProcKeys.attrBus).map(_.value)
       view.procBusChanged(timed, busOpt)
     }
 
     def fadeChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
-      val attr    = timed.value.attributes
-      val fadeIn  = attr[Attr.FadeSpec](ProcKeys.attrFadeIn ).map(_.value).getOrElse(TrackTool.EmptyFade)
-      val fadeOut = attr[Attr.FadeSpec](ProcKeys.attrFadeOut).map(_.value).getOrElse(TrackTool.EmptyFade)
+      val attr    = timed.value.attr
+      val fadeIn  = attr.expr[FadeSpec.Value](ProcKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
+      val fadeOut = attr.expr[FadeSpec.Value](ProcKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
       view.procFadeChanged(timed, fadeIn, fadeOut)
     }
 
@@ -288,7 +288,7 @@ object TimelineViewImpl {
 
   private final class Impl[S <: Sys[S]](val document      : Document[S],
                                         groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
-                                        groupEH           : stm.Source[S#Tx, Element.ProcGroup[S]],
+                                        groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
                                         transport         : ProcTransport[S],
                                         procMap           : ProcView.ProcMap[S],
                                         scanMap           : ProcView.ScanMap[S],
@@ -785,14 +785,14 @@ object TimelineViewImpl {
       drop.drag match {
         case ad: DnD.AudioDrag[S] =>
           step { implicit tx =>
-            insertAudioRegion(drop, ad, ad.source().entity)
+            insertAudioRegion(drop, ad, ad.source().elem.peer)
           }
 
         case ed: DnD.ExtAudioRegionDrag[S] =>
           val file = ed.file
           val resOpt = step { implicit tx =>
-            ElementActions.findAudioFile(document.elements, file).map { grapheme =>
-              insertAudioRegion(drop, ed, grapheme.entity)
+            ObjectActions.findAudioFile(document.root, file).map { grapheme =>
+              insertAudioRegion(drop, ed, grapheme.elem.peer)
             }
           }
 
@@ -800,10 +800,10 @@ object TimelineViewImpl {
             Try(AudioFile.readSpec(file)).toOption.fold(false) { spec =>
               ActionArtifactLocation.query(document, file).fold(false) { src =>
                 step { implicit tx =>
-                  src().entity.modifiableOption.fold(false) { loc =>
-                    val elems = document.elements
-                    val elem  = ElementActions.addAudioFile(elems, elems.size, loc, file, spec)
-                    insertAudioRegion(drop, ed, elem.entity)
+                  src().elem.peer.modifiableOption.fold(false) { loc =>
+                    val elems = document.root
+                    val obj   = ObjectActions.addAudioFile(elems, elems.peer.size, loc, file, spec)
+                    insertAudioRegion(drop, ed, obj.elem.peer)
                   }
                 }
               }
@@ -811,7 +811,7 @@ object TimelineViewImpl {
           }
 
         case id: DnD.IntDrag[S] => withRegions { implicit tx => regions =>
-          val intExpr = id.source().entity
+          val intExpr = id.source().elem.peer
           ProcActions.setBus(regions.map(_.proc), intExpr)
           true
         }

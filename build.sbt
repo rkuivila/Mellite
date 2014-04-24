@@ -2,7 +2,7 @@ import AssemblyKeys._
 
 name               := "Mellite"
 
-version            := "0.7.0"
+version            := "0.8.0-SNAPSHOT"
 
 organization       := "de.sciss"
 
@@ -17,7 +17,7 @@ scalaVersion       := "2.11.0"
 crossScalaVersions := Seq("2.11.0", "2.10.4")
 
 libraryDependencies ++= Seq(
-  "de.sciss" %% "soundprocesses"     % "2.2.0",
+  "de.sciss" %% "soundprocesses"     % "2.3.+",
   "de.sciss" %% "scalacolliderswing-interpreter" % "1.16.0",
   "de.sciss" %% "lucreswing"         % "0.2.1",
   "de.sciss" %% "lucrestm-bdb"       % "2.0.4",

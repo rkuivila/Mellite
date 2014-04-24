@@ -18,18 +18,17 @@ package timeline
 
 import javax.swing.TransferHandler._
 import java.awt.dnd.{DropTarget, DropTargetDropEvent, DropTargetEvent, DropTargetDragEvent, DropTargetAdapter}
-import de.sciss.synth.proc.Proc
+import de.sciss.synth.proc.{Obj, AudioGraphemeElem, IntElem, Proc}
 import scala.swing.Component
 import java.awt.Point
 import de.sciss.lucre.stm
-import de.sciss.mellite.Element.AudioGrapheme
 import de.sciss.span.Span
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.mellite.Document
 import java.awt.datatransfer.{DataFlavor, Transferable}
 import de.sciss.file._
 import scala.util.Try
-import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.event.Sys
 
 object DnD {
   sealed trait Drag[S <: Sys[S]] {
@@ -39,14 +38,14 @@ object DnD {
   sealed trait AudioDragLike[S <: Sys[S]] extends Drag[S] {
     def selection: Span
   }
-  final case class AudioDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, AudioGrapheme[S]],
+  final case class AudioDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                           /* grapheme: Grapheme.Value.Audio, */ selection: Span,
-                                          bus: Option[stm.Source[S#Tx, Element.Int[S]]])
+                                          bus: Option[stm.Source[S#Tx, IntElem[S]]])
     extends AudioDragLike[S]
 
-  final case class IntDrag [S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Element.Int [S]]) extends Drag[S]
-  final case class CodeDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Element.Code[S]]) extends Drag[S]
-  final case class ProcDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Proc[S]])         extends Drag[S]
+  final case class IntDrag [S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]
+  final case class CodeDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, Code.Elem]]) extends Drag[S]
+  final case class ProcDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Proc     [S]]) extends Drag[S]
 
   /** Drag and Drop from Eisenkraut */
   final case class ExtAudioRegionDrag[S <: Sys[S]](document: Document[S], file: File, selection: Span)
