@@ -28,5 +28,5 @@ object AudioFileView {
 trait AudioFileView[S <: Sys[S]] extends Disposable[S#Tx] {
   def document: Document[S]
   def component: Component
-  def element(implicit tx: S#Tx): AudioGraphemeElem[S]
+  def obj(implicit tx: S#Tx): Obj.T[S, AudioGraphemeElem]
 }

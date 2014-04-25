@@ -802,7 +802,7 @@ object TimelineViewImpl {
                 step { implicit tx =>
                   src().elem.peer.modifiableOption.fold(false) { loc =>
                     val elems = document.root
-                    val obj   = ObjectActions.addAudioFile(elems, elems.peer.size, loc, file, spec)
+                    val obj   = ObjectActions.addAudioFile(elems, elems.size, loc, file, spec)
                     insertAudioRegion(drop, ed, obj.elem.peer)
                   }
                 }

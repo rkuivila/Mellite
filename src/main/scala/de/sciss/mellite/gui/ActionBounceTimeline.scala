@@ -17,7 +17,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{ArtifactLocationElem, Obj, ExprImplicits, Grapheme, Artifact, Bounce}
+import de.sciss.synth.proc.{AudioGraphemeElem, ArtifactLocationElem, Obj, ExprImplicits, Grapheme, Artifact, Bounce, Folder, FolderElem}
 import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -38,6 +38,7 @@ import de.sciss.lucre.swing._
 import de.sciss.swingplus.{Spinner, Labeled}
 import de.sciss.lucre.synth.{Server, Synth, Sys}
 import de.sciss.lucre.expr.{Long => LongEx, Double => DoubleEx}
+import proc.Implicits._
 
 object ActionBounceTimeline {
 
@@ -87,26 +88,26 @@ object ActionBounceTimeline {
     config.outputBusChannels  = spec.numChannels
   }
 
-  type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Code.Elem[S]]
+  type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Obj.T[S, Code.Elem]]
 
   def findTransforms[S <: Sys[S]](document: Document[S])(implicit tx: S#Tx): Vec[Labeled[CodeSource[S]]] = {
     type Res = Vec[Labeled[CodeSource[S]]]
-    def loop(xs: List[Element[S]], res: Res): Res =
+    def loop(xs: List[Obj[S]], res: Res): Res =
       xs match {
-        case (elem: Element.Code[S]) :: tail =>
-          val res1 = elem.entity.value match {
-            case ft: Code.FileTransform => res :+ Labeled(tx.newHandle(elem))(elem.name.value)
+        case Code.Elem.Obj(objT) :: tail =>
+          val res1 = objT.elem.peer.value match {
+            case ft: Code.FileTransform => res :+ Labeled(tx.newHandle(objT))(objT.attr.name)
             case _ => res
           }
           loop(tail, res1)
-        case (f: Element.Folder[S]) :: tail =>
-          val res1 = loop(f.entity.iterator.toList, res)
+        case FolderElem.Obj(objT) :: tail =>
+          val res1 = loop(objT.elem.peer.iterator.toList, res)
           loop(tail, res1)
         case _ :: tail  => loop(tail, res)
         case Nil        => res
       }
 
-    loop(document.root.peer.iterator.toList, Vector.empty)
+    loop(document.root.iterator.toList, Vector.empty)
   }
 
   def query[S <: Sys[S]](init: QuerySettings[S], document: Document[S], timelineModel: TimelineModel,
@@ -304,7 +305,7 @@ object ActionBounceTimeline {
       case Some(f) if importFile =>
         init.location match {
           case Some(source) if cursor.step { implicit tx =>
-              val parent = source().entity.directory
+              val parent = source().elem.peer.directory
               Try(Artifact.relativize(parent, f)).isSuccess
             } =>  // ok, keep previous location
 
@@ -382,7 +383,7 @@ object ActionBounceTimeline {
       if (DEBUG) println(s"bounceDone(). hasTransform? $hasTransform")
       if (hasTransform) {
         val ftOpt = cursor.step { implicit tx =>
-          settings.transform.flatMap(_.apply().entity.value match {
+          settings.transform.flatMap(_.apply().elem.peer.value match {
             case ft: Code.FileTransform => Some(ft)
             case _ => None
           })
@@ -428,13 +429,17 @@ object ActionBounceTimeline {
               val depArtif  = locM.add(file)
               val depOffset = LongEx  .newVar(0L)
               val depGain   = DoubleEx.newVar(1.0)
-              val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
-              val depElem   = Element.AudioGrapheme(file.base, deployed)
+              val deployed  = Grapheme.Elem.Audio(depArtif, spec, depOffset, depGain)
+              val depElem   = AudioGraphemeElem(deployed)
+              val depObj    = Obj(depElem)
+              depObj.attr.name = file.base
               val transfOpt = settings.transform.map(_.apply())
-              val recursion = Recursion(group(), settings.span, depElem, settings.gain, settings.channels, transfOpt)
-              val recElem   = Element.Recursion(elemName, recursion)
-              document.root.peer.addLast(depElem)
-              document.root.peer.addLast(recElem)
+              val recursion = Recursion(group(), settings.span, depObj, settings.gain, settings.channels, transfOpt)
+              val recElem   = Recursion.Elem(recursion)
+              val recObj    = Obj(recElem)
+              recObj.attr.name = elemName
+              document.root.addLast(depObj)
+              document.root.addLast(recObj)
             }
           }
 

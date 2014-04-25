@@ -117,7 +117,7 @@ object ViewImpl {
       component = pane
     }
 
-    def element(implicit tx: S#Tx): AudioGraphemeElem[S] = holder()
+    def obj(implicit tx: S#Tx): Obj.T[S, AudioGraphemeElem] = holder()
   }
 
   private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: DnD.Button[S])

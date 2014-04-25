@@ -54,7 +54,7 @@ object DnD {
     extends swing.Button("Region") {
 
     var snapshot  = snapshot0
-    var bus       = Option.empty[stm.Source[S#Tx, IntElem[S]]]
+    var bus       = Option.empty[stm.Source[S#Tx, Obj.T[S, IntElem]]]
 
     private object Transfer extends TransferHandler {
       override def getSourceActions(c: JComponent): Int =

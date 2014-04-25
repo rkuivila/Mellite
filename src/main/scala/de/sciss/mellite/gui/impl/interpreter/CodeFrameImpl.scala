@@ -27,19 +27,23 @@ import scala.util.{Failure, Success}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.synth.proc
+import proc.Implicits._
+import de.sciss.synth.proc.Obj
 
 object CodeFrameImpl {
-  def apply[S <: Sys[S]](doc: Document[S], elem: Element.Code[S])
+  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, Code.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): CodeFrame[S] = {
-    val _name = elem.name.value
-    val _code = elem.entity.value
+    val _name   = obj.attr.name
+    val _codeEx = obj.elem.peer
+    val _code   = _codeEx.value
 
     new Impl[S] {
       val document = doc
       protected val name      = _name
       protected val contextName = _code.contextName
       protected val _cursor   = cursor
-      protected val codeH     = tx.newHandle(elem.entity)(Codes.serializer[S])
+      protected val codeH     = tx.newHandle(_codeEx)(Codes.serializer[S])
       protected val codeID    = _code.id
 
       protected val codeCfg = {

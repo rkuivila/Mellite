@@ -18,7 +18,7 @@ import java.io.{FileOutputStream, IOException, FileNotFoundException}
 import de.sciss.file._
 import de.sciss.lucre.{confluent, stm}
 import stm.store.BerkeleyDB
-import de.sciss.synth.proc.{Obj, Folder, ExprImplicits, Confluent}
+import de.sciss.synth.proc.{FolderElem, Obj, Folder, ExprImplicits, Confluent}
 import de.sciss.serial.{DataInput, Serializer, DataOutput}
 import scala.collection.immutable.{IndexedSeq => Vec}
 
@@ -33,7 +33,7 @@ object DocumentImpl {
       val cookie = in.readLong()
       require(cookie == COOKIE, s"Unexpected cookie $cookie (should be $COOKIE)")
       new Data {
-        val elements  = Folder.read[S](in, access)
+        val root = Folder.read[S](in, access)
       // val cursor    = ... // tx.readCursor(in, access)
       }
     }
@@ -57,7 +57,7 @@ object DocumentImpl {
 
     val (access, cursors) = system.rootWithDurable[Data, Cursors[S, S#D]] { implicit tx =>
       val data: Data = new Data {
-        val elements  = Folder[S](tx)
+        val root = Folder[S](tx)
         // val cursor    = system.newCursor()
       }
       data
@@ -77,19 +77,19 @@ object DocumentImpl {
   private final val COOKIE = 0x4D656C6C69746500L  // "Mellite\0"
 
   private abstract class Data {
-    def elements: Folder[S]
+    def root: Folder[S]
     // def cursor: confluent.Cursor[S, S#D]
 
     final def write(out: DataOutput): Unit = {
       out.writeLong(COOKIE)
-      elements.write(out)
+      root.write(out)
       // cursor  .write(out)
     }
 
     final def dispose()(implicit tx: S#Tx): Unit =
-      elements.dispose()
+      root.dispose()
 
-    override def toString = s"Data ($elements)"
+    override def toString = s"Data ($root)"
   }
 
   private final class Impl(val folder: File, val system: S, access: stm.Source[S#Tx, Data],
@@ -98,7 +98,7 @@ object DocumentImpl {
     extends ConfluentDocument {
     override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
-    def root(implicit tx: S#Tx): Folder[S] = access().elements
+    def root(implicit tx: S#Tx): Folder[S] = access().root
 
     type I = system.I
     val inMemoryBridge = (tx: S#Tx) => Confluent.inMemory(tx)
@@ -109,10 +109,10 @@ object DocumentImpl {
       val fun = pf.lift
 
       def loop(f: Folder[S]): Unit =
-        f.peer.iterator.foreach { obj =>
+        f.iterator.foreach { obj =>
           fun(obj).foreach(b += _)
           obj.elem match {
-            case ef: Folder[S] => loop(ef)
+            case ef: FolderElem[S] => loop(ef.peer)
             case _ =>
           }
         }

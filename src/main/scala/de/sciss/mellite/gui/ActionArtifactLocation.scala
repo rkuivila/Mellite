@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{ArtifactLocationElem, Obj, Folder, Artifact}
+import de.sciss.synth.proc.{ArtifactLocationElem, Obj, Folder, Artifact, FolderElem}
 import de.sciss.lucre.stm
 import collection.immutable.{IndexedSeq => Vec}
 import scala.util.Try
@@ -38,21 +38,21 @@ object ActionArtifactLocation {
          window: Option[desktop.Window] = None)
         (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
 
-    type LocSource = stm.Source[S#Tx, ArtifactLocationElem[S]]
+    type LocSource = stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]
 
     val options = cursor.step { implicit tx =>
       /* @tailrec */ def loop(xs: List[Obj[S]], res: Vec[Labeled[LocSource]]): Vec[Labeled[LocSource]] =
         xs match {
           case head :: tail =>
-            val res1 = head.elem match {
-              case a: ArtifactLocationElem[S] =>
-                val parent = a.peer.directory
+            val res1 = head match {
+              case ArtifactLocationElem.Obj(objT) =>
+                val parent = objT.elem.peer.directory
                 if (Try(Artifact.relativize(parent, file)).isSuccess) {
-                  res :+ Labeled(tx.newHandle(a))(head.attr.name)
+                  res :+ Labeled(tx.newHandle(objT))(objT.attr.name)
                 } else res
 
-              case f: Folder[S] =>
-                loop(f.peer.iterator.toList, res)
+              case FolderElem.Obj(objT) =>
+                loop(objT.elem.peer.iterator.toList, res)
 
               case _ => res
             }
@@ -61,7 +61,7 @@ object ActionArtifactLocation {
           case Nil        => res
       }
 
-      val _options = loop(document.root.peer.iterator.toList, Vector.empty)
+      val _options = loop(document.root.iterator.toList, Vector.empty)
       _options
     }
 
@@ -119,7 +119,7 @@ object ActionArtifactLocation {
     val elem  = ArtifactLocationElem(peer)
     val obj   = Obj(elem)
     obj.attr.name = name
-    parent.peer.addLast(obj)
+    parent.addLast(obj)
     obj
   }
 }

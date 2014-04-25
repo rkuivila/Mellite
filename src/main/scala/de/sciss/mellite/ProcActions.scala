@@ -212,7 +212,7 @@ object ProcActions {
   }
 
   def setSynthGraph[S <: Sys[S]](procs: Iterable[Proc[S]], codeElem: Obj.T[S, Code.Elem])(implicit tx: S#Tx): Boolean = {
-    val code = codeElem.elem.peer // .value
+    val code = codeElem.elem.peer.value
     code match {
       case csg: Code.SynthGraph =>
         try {

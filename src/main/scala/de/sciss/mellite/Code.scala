@@ -13,7 +13,7 @@
 
 package de.sciss.mellite
 
-import de.sciss.serial.{Writable, DataInput, DataOutput, ImmutableSerializer}
+import de.sciss.serial.{Serializer, Writable, DataInput, DataOutput, ImmutableSerializer}
 import impl.{CodeImpl => Impl, CodeImpl2 => Impl2}
 import java.io.File
 import scala.concurrent.Future
@@ -22,6 +22,8 @@ import de.sciss.synth
 import scala.annotation.switch
 import de.sciss.synth.proc
 import de.sciss.lucre.event.Sys
+import de.sciss.lucre.expr.Expr
+import de.sciss.synth.proc.Obj
 
 object Code {
   final case class CompilationFailed() extends Exception
@@ -69,10 +71,22 @@ object Code {
   }
 
   // ---- element ----
-  def Elem[S <: Sys[S]](peer: Code)(implicit tx: S#Tx): Elem[S] = ???
+  object Elem {
+    def apply[S <: Sys[S]](peer: Expr[S, Code])(implicit tx: S#Tx): Elem[S] = ???
+
+    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Code.Elem[S]] = ???
+
+    object Obj {
+      def unapply[S <: Sys[S]](obj: Obj[S]): Option[proc.Obj.T[S, Code.Elem]] =
+        if (obj.elem.isInstanceOf[Code.Elem[S]]) Some(obj.asInstanceOf[proc.Obj.T[S, Code.Elem]])
+        else None
+    }
+
+    // implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Folder[S]] = ...
+  }
 
   trait Elem[S <: Sys[S]] extends proc.Elem[S] {
-    type Peer = Code
+    type Peer = Expr[S, Code]
 
     def mkCopy()(implicit tx: S#Tx): Elem[S]
   }

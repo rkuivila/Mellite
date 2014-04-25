@@ -15,16 +15,16 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.AuralSystem
+import de.sciss.synth.proc.{Obj, AuralSystem}
 import lucre.stm
 import stm.Disposable
 import impl.{RecursionFrameImpl => Impl}
 import de.sciss.lucre.synth.Sys
 
 object RecursionFrame {
-  def apply[S <: Sys[S]](doc: Document[S], elem: Element.Recursion[S])
+  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, Recursion.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): RecursionFrame[S] =
-    Impl(doc, elem)
+    Impl(doc, obj)
 }
 
 trait RecursionFrame[S <: Sys[S]] extends Disposable[S#Tx] {

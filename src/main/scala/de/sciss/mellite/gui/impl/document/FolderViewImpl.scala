@@ -16,7 +16,7 @@ package gui
 package impl
 package document
 
-import de.sciss.synth.proc.{Folder, ExprImplicits, Artifact, Obj, ArtifactLocationElem}
+import de.sciss.synth.proc.{Folder, ExprImplicits, Artifact, Obj, ArtifactLocationElem, FolderElem}
 import swing.{ScrollPane, Component}
 import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
@@ -53,13 +53,13 @@ object FolderViewImpl {
       val document  = _doc
 
       private def buildMapView(f: Folder[S], fv: ObjView.FolderLike[S]): Unit = {
-        val tup = f.peer.iterator.map(c => c -> ObjView(fv, c)(tx)).toIndexedSeq
+        val tup = f.iterator.map(c => c -> ObjView(fv, c)(tx)).toIndexedSeq
         fv.children = tup.map(_._2)
         tup.foreach { case (c, cv) =>
           mapViews.put(c.id, cv)
           (c, cv) match {
-            case (cf: Element.Folder[S], cfv: ObjView.Folder[S]) =>
-              buildMapView(cf.entity, cfv)
+            case (FolderElem.Obj(cf), cfv: ObjView.Folder[S]) =>
+              buildMapView(cf.elem.peer, cfv)
             case _ =>
           }
         }
@@ -156,9 +156,9 @@ object FolderViewImpl {
         _model.elemAdded(parent, idx, v)
       }
 
-      (obj.elem, v) match {
-        case (f: Folder[S], fv: ObjView.Folder[S]) =>
-          val fe    = f.peer
+      (obj, v) match {
+        case (FolderElem.Obj(f), fv: ObjView.Folder[S]) =>
+          val fe    = f.elem.peer
           // val path  = parent :+ gv
           // branchAdded(path, gv)
           if (!fe.isEmpty) {
@@ -174,10 +174,10 @@ object FolderViewImpl {
     def elemRemoved(parent: ObjView.FolderLike[S], idx: Int, obj: Obj[S])(implicit tx: S#Tx): Unit = {
       if (DEBUG) println(s"elemRemoved($parent, $idx, $obj)")
       mapViews.get(obj.id).foreach { v =>
-        (obj.elem, v) match {
-          case (f: Folder[S], fv: ObjView.Folder[S]) =>
+        (obj, v) match {
+          case (FolderElem.Obj(f), fv: ObjView.Folder[S]) =>
             // val path = parent :+ gl
-            val fe = f.peer
+            val fe = f.elem.peer
             if (fe.nonEmpty) fe.iterator.toList.zipWithIndex.reverse.foreach { case (c, ci) =>
               elemRemoved(fv, ci, c)
             }
@@ -397,8 +397,8 @@ object FolderViewImpl {
             }
 
             val newParent = newParentView.folder
-            tup             .foreach { case  (oldParent, c)       => oldParent.peer.remove(            c) }
-            tup.zipWithIndex.foreach { case ((_        , c), off) => newParent.peer.insert(idx1 + off, c) }
+            tup             .foreach { case  (oldParent, c)       => oldParent.remove(            c) }
+            tup.zipWithIndex.foreach { case ((_        , c), off) => newParent.insert(idx1 + off, c) }
           }
 
           true

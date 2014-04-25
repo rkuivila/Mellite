@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{AudioGraphemeElem, ProcGroupElem, Obj, ArtifactLocationElem, DoubleElem, IntElem, StringElem, ProcKeys, Elem, ExprImplicits, Artifact, Grapheme}
+import de.sciss.synth.proc.{AudioGraphemeElem, ProcGroupElem, Obj, ArtifactLocationElem, DoubleElem, IntElem, StringElem, ProcKeys, Elem, ExprImplicits, Artifact, Grapheme, FolderElem}
 import de.sciss.lucre.{expr, stm}
 import swing.Swing
 import collection.immutable.{IndexedSeq => Vec}
@@ -33,41 +33,41 @@ import de.sciss.lucre.event.Sys
 object ObjView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
-  import mellite.{Code => _Code} // , Recursion => _Recursion}
+  import mellite.{Code => _Code, Recursion => _Recursion}
   import proc.{Folder => _Folder}
 
   private[gui] def apply[S <: Sys[S]](parent: FolderLike[S], obj: Obj[S])
                                      (implicit tx: S#Tx): ObjView[S] = {
     // val name = obj.name.value
     val name: _String = obj.attr.name
-    obj.elem match {
-      case e: IntElem[S] =>
-        val value = e.peer.value
-        new Int.Impl(parent, tx.newHandle(e), name, value)
-      case e: DoubleElem[S] =>
-        val value = e.peer.value
-        new Double.Impl(parent, tx.newHandle(e), name, value)
-      case e: StringElem[S] =>
-        val value = e.peer.value
-        new String.Impl(parent, tx.newHandle(e), name, value)
-      case e: Folder[S] =>
-        val res = new Folder.Impl(parent, tx.newHandle(e), name)
+    obj match {
+      case IntElem.Obj(objT) =>
+        val value = objT.elem.peer.value
+        new Int.Impl(parent, tx.newHandle(objT), name, value)
+      case DoubleElem.Obj(objT) =>
+        val value = objT.elem.peer.value
+        new Double.Impl(parent, tx.newHandle(objT), name, value)
+      case StringElem.Obj(objT) =>
+        val value = objT.elem.peer.value
+        new String.Impl(parent, tx.newHandle(objT), name, value)
+      case FolderElem.Obj(objT) =>
+        val res = new Folder.Impl(parent, tx.newHandle(objT), name)
         // res.children = e.entity.iterator.map(apply(res, _)(tx)).toIndexedSeq
         res
-      case e: ProcGroupElem[S] =>
-        new ProcGroup.Impl(parent, tx.newHandle(e), name)
-      case e: AudioGraphemeElem[S] =>
-        val value = e.peer.value
-        new AudioGrapheme.Impl(parent, tx.newHandle(e), name, value)
-      case e: ArtifactLocationElem[S] =>
-        val value = e.peer.directory
-        new ArtifactLocation.Impl(parent, tx.newHandle(e), name, value)
-      case e: Elem.Recursion[S] =>
-        val value = e.peer.deployed.entity.artifact.value
-        new Recursion.Impl(parent, tx.newHandle(e), name, value)
-      case e: Code.Elem[S] =>
-        val value = e.peer.value
-        new Code.Impl(parent, tx.newHandle(e), name, value)
+      case ProcGroupElem.Obj(objT) =>
+        new ProcGroup.Impl(parent, tx.newHandle(objT), name)
+      case AudioGraphemeElem.Obj(objT) =>
+        val value = objT.elem.peer.value
+        new AudioGrapheme.Impl(parent, tx.newHandle(objT), name, value)
+      case ArtifactLocationElem.Obj(objT) =>
+        val value = objT.elem.peer.directory
+        new ArtifactLocation.Impl(parent, tx.newHandle(objT), name, value)
+      case _Recursion.Elem.Obj(objT) =>
+        val value = objT.elem.peer.deployed.elem.peer.artifact.value
+        new Recursion.Impl(parent, tx.newHandle(objT), name, value)
+      case _Code.Elem.Obj(objT) =>
+        val value = objT.elem.peer.value
+        new Code.Impl(parent, tx.newHandle(objT), name, value)
     }
   }
 
@@ -94,6 +94,7 @@ object ObjView {
                   val imp = ExprImplicits[S]
                   import imp._
                   vr() = s
+                  true
               }
 
             case _ => false
@@ -169,8 +170,8 @@ object ObjView {
     private val icon = imageIcon("float")
 
     private[ObjView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
-                                                       val element: stm.Source[S#Tx, DoubleElem[S]],
-                                                       var name: _String, var value: _Double)
+                                                   val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]],
+                                                   var name: _String, var value: _Double)
       extends Double[S] with ObjView.Impl[S] {
 
       def prefix = "Double"
@@ -181,15 +182,22 @@ object ObjView {
           case num: _Double => Some(num)
           case s: _String => Try(s.toDouble).toOption
         }
+        // XXX TODO: DRY (see Int)
         numOpt.exists { num =>
-          val expr = element().entity
-          val changed = expr.value != num
-          if (changed) {
-            val imp = ExprImplicits[S]
-            import imp._
-            expr() = num
+          obj().elem.peer match {
+            case Expr.Var(vr) =>
+              vr() match {
+                case Expr.Const(x) if x != num =>
+                  val imp = ExprImplicits[S]
+                  import imp._
+                  vr() = num
+                  true
+
+                case _ => false
+              }
+
+            case _ => false
           }
-          changed
         }
       }
 
@@ -214,15 +222,15 @@ object ObjView {
 
     def tryConvert(upd: Any): _Folder.Update[S] = upd match {
       case ll: expr.List.Update[_, _, _] =>
-        convert(ll.asInstanceOf[expr.List.Update[S, Elem[S], Elem.Update[S]]])
+        convert(ll.asInstanceOf[expr.List.Update[S, Obj[S], Obj.Update[S]]])
       case _ => Vector.empty
     }
 
-    def convert(upd: expr.List.Update[S, Elem[S], Elem.Update[S]]): _Folder.Update[S] =
+    def convert(upd: expr.List.Update[S, Obj[S], Obj.Update[S]]): _Folder.Update[S] =
       upd.changes.map {
-        case expr.List.Added  (idx, elem)  => _Folder.Added  (idx, elem)
-        case expr.List.Removed(idx, elem)  => _Folder.Removed(idx, elem)
-        case expr.List.Element(elem, eu)   => _Folder.Element(elem, eu)
+        case expr.List.Added  (idx, obj)  => _Folder.Added  (idx, obj)
+        case expr.List.Removed(idx, obj)  => _Folder.Removed(idx, obj)
+        case expr.List.Element(obj, ou)   => _Folder.Element(obj, ou)
       }
 
     /** The children of the folder. This variable _must only be accessed or updated_ on the event thread. */
@@ -235,13 +243,13 @@ object ObjView {
 
   object Folder {
     private[ObjView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
-                                                       val obj: stm.Source[S#Tx, Obj.T[S, proc.Folder]],
-                                                       var name: _String)
+                                                   val obj: stm.Source[S#Tx, Obj.T[S, FolderElem]],
+                                                   var name: _String)
       extends Folder[S] with ObjView.Impl[S] {
 
       var children = Vec.empty[ObjView[S]]
 
-      def folder(implicit tx: S#Tx): _Folder[S] = obj().elem
+      def folder(implicit tx: S#Tx): _Folder[S] = obj().elem.peer
 
       def prefix = "Folder"
       def icon = Swing.EmptyIcon
@@ -339,7 +347,7 @@ object ObjView {
     private val icon = imageIcon("recursion")
 
     private[ObjView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
-                                                       val obj: stm.Source[S#Tx, Obj.T[S, mellite.Recursion.Elem[S]]],
+                                                       val obj: stm.Source[S#Tx, Obj.T[S, mellite.Recursion.Elem]],
                                                        var name: _String, var deployed: File)
       extends Recursion[S] with ObjView.Impl[S] {
 

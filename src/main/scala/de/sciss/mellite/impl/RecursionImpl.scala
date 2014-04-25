@@ -22,8 +22,9 @@ import expr.Expr
 import de.sciss.span.SpanLike
 import de.sciss.serial.{ImmutableSerializer, DataInput, DataOutput}
 import scala.annotation.switch
-import de.sciss.lucre.synth.{InMemory, Sys}
+import de.sciss.lucre.synth.InMemory
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.lucre.event.Sys
 
 object RecursionImpl {
   import Recursion.Channels
@@ -74,7 +75,7 @@ object RecursionImpl {
       //      val deployed    = Grapheme.Elem.Audio.readExpr(in, access) match {
       //        case ja: Grapheme.Elem.Audio[S] => ja // XXX TODO sucky shit
       //      }
-      val deployed    = Element.AudioGrapheme.serializer[S].read(in, access)
+      val deployed    = Obj.readT[S, AudioGraphemeElem](in, access)
       val product     = Artifact.Modifiable.read(in, access)
       val productSpec = AudioFileSpec.Serializer.read(in)
       new Impl[S](targets, group, span, gain, channels, transform, deployed, product, productSpec)
@@ -98,7 +99,7 @@ object RecursionImpl {
     //    val depGain   = Doubles.newVar(1.0)
     //    val deployed  = Grapheme.Elem.Audio.apply(depArtif, spec, depOffset, depGain)
 
-    val depGraph  = deployed.entity
+    val depGraph  = deployed.elem.peer
     val product   = Artifact.Modifiable.copy(depGraph.artifact)
     val spec      = depGraph.value.spec  // XXX TODO: should that be a method on entity?
 
@@ -109,8 +110,9 @@ object RecursionImpl {
       _span          : Expr.Var[S, SpanLike],
       _gain          : S#Var[Gain],
       _channels      : S#Var[Channels],
-      val transform  : /* S#Var[ */ Option[Element.Code[S]] /* ] */,
-      val deployed   : Element.AudioGrapheme[S] /* Grapheme.Elem.Audio[S] */, val product: Artifact[S],
+      val transform  : /* S#Var[ */ Option[Obj.T[S, Code.Elem]],
+      val deployed   : Obj.T[S, AudioGraphemeElem],
+      val product    : Artifact[S],
       val productSpec: AudioFileSpec)
     extends Recursion[S]
     with evt.impl.Generator     [S, Recursion.Update[S], Recursion[S]]
@@ -143,7 +145,7 @@ object RecursionImpl {
 
     /** Moves the product to deployed position. */
     def iterate()(implicit tx: S#Tx): Unit = {
-      val mod = deployed.entity.artifact.modifiableOption.getOrElse(
+      val mod = deployed.elem.peer.artifact.modifiableOption.getOrElse(
         sys.error("Can't iterate - deployed artifact not modifiable")
       )
       val prodF = product.value
@@ -187,7 +189,7 @@ object RecursionImpl {
       _span    .write(out)
       _gain    .write(out)
       _channels.write(out)
-      serial.Serializer.option[S#Tx, S#Acc, Element.Code[S]].write(transform, out)
+      serial.Serializer.option[S#Tx, S#Acc, Obj.T[S, Code.Elem]].write(transform, out)
       deployed .write(out)
       product  .write(out)
       AudioFileSpec.Serializer.write(productSpec, out)

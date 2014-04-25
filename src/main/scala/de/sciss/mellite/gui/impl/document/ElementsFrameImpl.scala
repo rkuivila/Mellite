@@ -18,7 +18,7 @@ package document
 
 import scala.swing.{ComboBox, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{Obj, ProcKeys, Folder, ExprImplicits, ProcGroup, StringElem, ProcGroupElem}
+import de.sciss.synth.proc.{FolderElem, Elem, IntElem, DoubleElem, Obj, ProcKeys, Folder, ExprImplicits, ProcGroup, StringElem, ProcGroupElem}
 import de.sciss.desktop.{FileDialog, DialogSource, Window, Menu}
 import de.sciss.synth.io.AudioFile
 import javax.swing.SpinnerNumberModel
@@ -96,7 +96,7 @@ object ElementsFrameImpl {
 
     private def addObject(obj: Obj[S])(implicit tx: S#Tx): Unit = {
       val parent = targetFolder
-      parent.peer.addLast(obj)
+      parent.addLast(obj)
     }
 
     private def actionAddFolder(): Unit = {
@@ -104,11 +104,11 @@ object ElementsFrameImpl {
         Dialog.Message.Question, initial = "Folder")
       res.foreach { name =>
         atomic { implicit tx =>
-          val elem  = Folder.empty[S]
+          val elem  = FolderElem(Folder[S])
           val obj   = Obj(elem)
           val imp   = ExprImplicits[S]
           import imp._
-          obj.attr.put(ProcKeys.attrName, StringElem(name))
+          obj.attr.name = name
           addObject(obj)
         }
       }
@@ -162,7 +162,7 @@ object ElementsFrameImpl {
       val ggValue   = new Spinner(model)
       actionAddPrimitive(tpe = "Integer", ggValue = ggValue, prepare = Some(model.getNumber.intValue())) {
         implicit tx =>
-          (name, value) => Element.Int(name, IntEx.newVar(value))
+          value => IntElem(IntEx.newVar(value))
       }
     }
 
@@ -173,7 +173,7 @@ object ElementsFrameImpl {
       val ggValue   = new Spinner(model)
       actionAddPrimitive(tpe = "Double", ggValue = ggValue, prepare = Some(model.getNumber.doubleValue)) {
         implicit tx =>
-          (name, value) => Element.Double(name, DoubleEx.newVar(value))
+          value => DoubleElem(DoubleEx.newVar(value))
       }
     }
 
@@ -183,7 +183,7 @@ object ElementsFrameImpl {
       val ggValue   = new TextField(20)
       ggValue.text  = "Value"
       actionAddPrimitive(tpe = "String", ggValue = ggValue, prepare = Some(ggValue.text)){ implicit tx =>
-        (name, value) => Element.String(name, StringEx.newVar(value))
+        value => StringElem(StringEx.newVar(value))
       }
     }
 
@@ -217,23 +217,23 @@ object ElementsFrameImpl {
 
         case _  => None
       }) { implicit tx =>
-        (name, value) =>
+        value =>
           val peer  = Codes.newVar(Codes.newConst(value))
-          val elem  = Code.Elem(peer)
-          val obj   = Obj(elem)
-          obj.attr.name = name
-          obj
+          Code.Elem(peer)
       }
     }
 
     private def actionAddPrimitive[A](tpe: String, ggValue: Component, prepare: => Option[A])
-                                     (create: S#Tx => (String, A) => Obj[S]): Unit = {
+                                     (create: S#Tx => A => Elem[S]): Unit = {
       val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe,
         window = Some(component))
       nameOpt.foreach { name =>
         prepare.foreach { value =>
           atomic { implicit tx =>
-            addObject(create(tx)(name, value))
+            val elem  = create(tx)(value)
+            val obj   = Obj(elem)
+            obj.attr.name = name
+            addObject(obj)
           }
         }
       }
@@ -267,7 +267,7 @@ object ElementsFrameImpl {
         if (views.nonEmpty) atomic { implicit tx =>
           views.foreach {
             case (parent: ObjView.FolderLike[S], child) =>
-              parent.folder.peer.remove(child.obj())
+              parent.folder.remove(child.obj())
             case _ =>
           }
         }

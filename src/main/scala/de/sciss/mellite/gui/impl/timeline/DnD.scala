@@ -40,7 +40,7 @@ object DnD {
   }
   final case class AudioDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                           /* grapheme: Grapheme.Value.Audio, */ selection: Span,
-                                          bus: Option[stm.Source[S#Tx, IntElem[S]]])
+                                          bus: Option[stm.Source[S#Tx, Obj.T[S, IntElem]]])
     extends AudioDragLike[S]
 
   final case class IntDrag [S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]

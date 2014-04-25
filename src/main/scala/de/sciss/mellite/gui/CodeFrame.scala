@@ -19,11 +19,12 @@ import lucre.stm
 import stm.Disposable
 import impl.interpreter.{CodeFrameImpl => Impl}
 import de.sciss.lucre.synth.Sys
+import de.sciss.synth.proc.Obj
 
 object CodeFrame {
-  def apply[S <: Sys[S]](doc: Document[S], elem: Element.Code[S])
+  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, Code.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): CodeFrame[S] =
-    Impl(doc, elem)
+    Impl(doc, obj)
 }
 
 trait CodeFrame[S <: Sys[S]] extends Disposable[S#Tx] {

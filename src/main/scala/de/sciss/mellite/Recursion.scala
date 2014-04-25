@@ -18,12 +18,11 @@ import de.sciss.synth.io.AudioFileSpec
 import de.sciss.synth.proc.{Obj, AudioGraphemeElem, Artifact, ProcGroup}
 import de.sciss.span.Span.SpanOrVoid
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.event.EventLike
+import de.sciss.lucre.event.{Sys, EventLike}
 import impl.{RecursionImpl => Impl}
 import de.sciss.span.SpanLike
 import de.sciss.lucre.stm.Disposable
-import de.sciss.serial.{DataInput, Writable}
-import de.sciss.lucre.synth.Sys
+import de.sciss.serial.{Serializer, DataInput, Writable}
 import de.sciss.synth.proc
 
 object Recursion {
@@ -41,6 +40,19 @@ object Recursion {
   implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Recursion[S]] = Impl.serializer
 
   // ---- element ----
+  object Elem {
+    def apply[S <: Sys[S]](peer: Recursion[S])(implicit tx: S#Tx): Recursion.Elem[S] = ???
+
+    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Recursion.Elem[S]] = ???
+
+    object Obj {
+      def unapply[S <: Sys[S]](obj: Obj[S]): Option[proc.Obj.T[S, Recursion.Elem]] =
+        if (obj.elem.isInstanceOf[Recursion.Elem[S]]) Some(obj.asInstanceOf[proc.Obj.T[S, Recursion.Elem]])
+        else None
+    }
+
+    // implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Folder[S]] = ...
+  }
   trait Elem[S <: Sys[S]] extends proc.Elem[S] {
     type Peer = Recursion[S]
 

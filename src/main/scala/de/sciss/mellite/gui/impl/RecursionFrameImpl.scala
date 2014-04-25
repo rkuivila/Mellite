@@ -16,7 +16,7 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{AuralSystem, Artifact}
+import de.sciss.synth.proc.{Obj, AuralSystem, Artifact}
 import lucre.stm
 import java.io.File
 import de.sciss.desktop.{Desktop, DialogSource, Window}
@@ -35,26 +35,27 @@ import de.sciss.lucre.synth.{Server, Sys}
 import de.sciss.swingplus.GroupPanel
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing._
+import proc.Implicits._
 
 object RecursionFrameImpl {
   private final case class View(name: String, deployed: File, product: File) {
     def sameFiles: Boolean = deployed != product
   }
 
-  def apply[S <: Sys[S]](doc: Document[S], elem: Element.Recursion[S])
+  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, Recursion.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): RecursionFrame[S] = {
     new Impl[S] {
       val document  = doc
-      val recH      = tx.newHandle(elem.entity)
-      val _spec     = elem.entity.productSpec
+      val recH      = tx.newHandle(obj)
+      val _spec     = obj.elem.peer.productSpec
       val _cursor   = cursor
       val _aural    = aural
 
       private def mkView()(implicit tx: S#Tx): View = {
-        val name      = elem.name.value
+        val name      = obj.attr.name
         val rec       = recH()
-        val deployed  = rec.deployed.entity.artifact.value
-        val product   = rec.product.value
+        val deployed  = rec.elem.peer.deployed.elem.peer.artifact.value
+        val product   = rec.elem.peer.product.value
         val _depFile  = deployed
         val _prodFile = product
         View(name, deployed = _depFile, product = _prodFile)
@@ -64,7 +65,7 @@ object RecursionFrameImpl {
 
       def view: View = _view
 
-      val observer  = elem.changed.react { implicit tx => {
+      val observer  = obj.elem.changed.react { implicit tx => {
         case _ =>
           // println(s"Observed: $x")
           val v = mkView()
@@ -197,13 +198,13 @@ object RecursionFrameImpl {
         }
 
         val ftOpt = _cursor.step { implicit tx =>
-          recH().transform.map(_.elem.peer) match {
+          recH().transform.map(_.elem.peer.value) match {
             case Some(ft: Code.FileTransform) => Some(ft)
             case _ => None
           }
         }
         val newFile     = loopFile(1)
-        val bounceFile  = if (ftOpt.isDefined) File.createTempFile("bounce", "." + _spec.fileType.extension) else newFile
+        val bounceFile  = if (ftOpt.isDefined) File.createTempFile("bounce", s".${_spec.fileType.extension}") else newFile
 
         def embed(): Unit = {
           processStopped()

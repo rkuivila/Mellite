@@ -14,7 +14,7 @@
 package de.sciss.mellite
 
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{Artifact, Obj, ExprImplicits, ProcKeys, Folder, AudioGraphemeElem, Grapheme, StringElem}
+import de.sciss.synth.proc.{Artifact, Obj, ExprImplicits, Folder, AudioGraphemeElem, Grapheme, FolderElem}
 import de.sciss.synth.io.AudioFileSpec
 import de.sciss.file._
 import de.sciss.lucre.expr.{Double => DoubleEx, Long => LongEx}
@@ -35,16 +35,16 @@ object ObjectActions {
     val elem      = AudioGraphemeElem[S](audio)
     val obj       = Obj(elem)
     obj.attr.name = name
-    if (index == -1) folder.peer.addLast(obj) else folder.peer.insert(index, obj)
+    if (index == -1) folder.addLast(obj) else folder.insert(index, obj)
     obj
   }
 
   def findAudioFile[S <: Sys[S]](root: Folder[S], file: File)
                                 (implicit tx: S#Tx): Option[Obj.T[S, AudioGraphemeElem]] = {
     def loop(folder: Folder[S]): Option[Obj.T[S, AudioGraphemeElem]] =
-      folder.peer.iterator.flatMap {
-        case a: AudioGraphemeElem[S] if a.peer.value.artifact == file => Some(a.asInstanceOf[Obj.T[S, AudioGraphemeElem]])
-        case f: Folder           [S] => loop(f)
+      folder.iterator.flatMap {
+        case AudioGraphemeElem.Obj(objT) if objT.elem.peer.value.artifact == file => Some(objT)
+        case FolderElem.Obj(objT) => loop(objT.elem.peer)
         case _ => None
       } .toList.headOption
 
