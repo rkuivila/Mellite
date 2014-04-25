@@ -14,7 +14,7 @@
 package de.sciss.mellite
 
 import de.sciss.serial.{Serializer, Writable, DataInput, DataOutput, ImmutableSerializer}
-import impl.{CodeImpl => Impl, CodeImpl2 => Impl2}
+import impl.{/* CodeImpl => Impl, */ CodeImpl2 => Impl2}
 import java.io.File
 import scala.concurrent.Future
 import de.sciss.processor.Processor
@@ -29,7 +29,7 @@ object Code {
   final case class CompilationFailed() extends Exception
   final case class CodeIncomplete()    extends Exception
 
-  implicit def serializer: ImmutableSerializer[Code] = Impl.serializer
+  implicit def serializer: ImmutableSerializer[Code] = Impl2.serializer
 
   def read(in: DataInput): Code = serializer.read(in)
 
@@ -81,8 +81,6 @@ object Code {
         if (obj.elem.isInstanceOf[Code.Elem[S]]) Some(obj.asInstanceOf[proc.Obj.T[S, Code.Elem]])
         else None
     }
-
-    // implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Folder[S]] = ...
   }
 
   trait Elem[S <: Sys[S]] extends proc.Elem[S] {

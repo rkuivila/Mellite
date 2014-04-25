@@ -26,8 +26,25 @@ import collection.immutable.{Seq => ISeq}
 import reflect.runtime.universe.{typeTag, TypeTag}
 import scala.util.{Success, Failure}
 import scala.concurrent.duration.Duration
+import de.sciss.serial.{DataInput, DataOutput, ImmutableSerializer}
 
 object CodeImpl2 {
+  private final val COOKIE  = 0x436F6465  // "Code"
+  implicit object serializer extends ImmutableSerializer[Code] {
+    def write(v: Code, out: DataOutput): Unit = {
+      out.writeInt(COOKIE)
+      out.writeInt(v.id)
+      out.writeUTF(v.source)
+    }
+
+    def read(in: DataInput): Code = {
+      val cookie = in.readInt()
+      require(cookie == COOKIE, s"Unexpected cookie $cookie (requires $COOKIE)")
+      val id      = in.readInt()
+      val source  = in.readUTF()
+      Code.apply(id, source)
+    }
+  }
 
   // ---- internals ----
 
