@@ -57,8 +57,8 @@ object ActionArtifactLocation {
               case _ => res
             }
             loop(tail, res1)
-          case _ :: tail  => loop(tail, res)
-          case Nil        => res
+
+          case Nil => res
       }
 
       val _options = loop(document.root.iterator.toList, Vector.empty)

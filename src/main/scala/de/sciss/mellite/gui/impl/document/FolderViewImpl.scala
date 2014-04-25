@@ -16,7 +16,7 @@ package gui
 package impl
 package document
 
-import de.sciss.synth.proc.{Folder, ExprImplicits, Artifact, Obj, ArtifactLocationElem, FolderElem}
+import de.sciss.synth.proc.{ProcKeys, Folder, ExprImplicits, Artifact, Obj, ArtifactLocationElem, FolderElem, StringElem}
 import swing.{ScrollPane, Component}
 import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
@@ -193,29 +193,35 @@ object FolderViewImpl {
       }
     }
 
-    def elemUpdated(elem: Element[S], changes: Vec[Element.Change[S]])(implicit tx: S#Tx): Unit = {
-      val viewOpt = mapViews.get(elem.id)
+    def elemUpdated(obj: Obj[S], changes: Vec[Obj.Change[S]])(implicit tx: S#Tx): Unit = {
+      val viewOpt = mapViews.get(obj.id)
       if (viewOpt.isEmpty) {
-        println(s"WARNING: No view for elem $elem")
+        println(s"WARNING: No view for elem $obj")
       }
       viewOpt.foreach { v =>
-        changes.foreach {
-          case Element.Renamed(Change(_, newName)) =>
-            deferTx {
-              v.name = newName
-              _model.elemUpdated(v)
-            }
+        def updateName(n: String): Unit =
+          deferTx {
+            v.name = n
+            _model.elemUpdated(v)
+          }
 
-          case Element.Entity(ch) =>
+        changes.foreach {
+          case Obj.AttrRemoved(ProcKeys.attrName, _)                             => updateName("<Unnamed>")
+          case Obj.AttrAdded  (ProcKeys.attrName, s: StringElem[S])              => updateName(s.peer.value)
+          case Obj.AttrChange (ProcKeys.attrName, _, Change(_, newName: String)) => updateName(newName)
+
+          case Obj.ElemChange(ch) =>
             v match {
               case fv: ObjView.Folder[S] =>
                 val upd = fv.tryConvert(ch)
-                if (upd.isEmpty) println(s"WARNING: unhandled $elem -> $ch")
+                if (upd.isEmpty) println(s"WARNING: unhandled $obj -> $ch")
                 folderUpdated(fv, upd)
 
               case _ =>
                 if (v.checkUpdate(ch)) deferTx(_model.elemUpdated(v))
             }
+
+          case _ =>
         }
       }
     }

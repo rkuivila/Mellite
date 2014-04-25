@@ -22,10 +22,10 @@ import de.sciss.audiowidgets.TimelineModel
 import de.sciss.synth.proc
 import scala.util.control.NonFatal
 import collection.breakOut
-import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{Int => IntEx, Boolean => BooleanEx, Double => DoubleEx, Long => LongEx, String => StringEx}
 import de.sciss.lucre.bitemp.{Span => SpanEx}
 import proc.Implicits._
+import de.sciss.lucre.event.Sys
 
 object ProcActions {
   private val MinDur    = 32
