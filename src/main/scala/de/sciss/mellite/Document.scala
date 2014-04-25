@@ -18,10 +18,11 @@ import de.sciss.lucre.{expr, event => evt, bitemp, stm}
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{DocumentImpl => Impl}
-import de.sciss.synth.proc.{Elem, Folder, Proc}
+import de.sciss.synth.proc.{Obj, Elem, Folder, Proc}
 import de.sciss.serial.Serializer
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.Sys
+import de.sciss.lucre.synth.{Sys => SSys}
 
 object Document {
   type Group       [S <: Sys[S]] = BiGroup.Modifiable   [S, Proc[S], Proc.Update[S]]
@@ -55,13 +56,13 @@ sealed trait Document[S <: Sys[S]] {
 
   // def masterCursor: stm.Cursor[S]
 
-  type I <: Sys[I]
+  type I <: SSys[I]
   implicit def inMemoryBridge: S#Tx => I#Tx
   implicit def inMemoryCursor: stm.Cursor[I]
 
   def root(implicit tx: S#Tx): Folder[S]
 
-  def collectObjects[A](pf: PartialFunction[Elem[S], A])(implicit tx: S#Tx): Vec[A]
+  def collectObjects[A](pf: PartialFunction[Obj[S], A])(implicit tx: S#Tx): Vec[A]
 
   implicit def systemType: reflect.runtime.universe.TypeTag[S]
 }

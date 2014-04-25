@@ -125,7 +125,7 @@ object RecursionFrameImpl {
   private abstract class Impl[S <: Sys[S]]
     extends RecursionFrame[S] with ComponentHolder[Window] {
 
-    protected def recH      : stm.Source[S#Tx, Recursion[S]]
+    protected def recH      : stm.Source[S#Tx, Obj.T[S, Recursion.Elem]]
     protected def view      : View
     protected def _spec     : AudioFileSpec
     protected implicit def _cursor   : stm.Cursor[S]
@@ -198,7 +198,7 @@ object RecursionFrameImpl {
         }
 
         val ftOpt = _cursor.step { implicit tx =>
-          recH().transform.map(_.elem.peer.value) match {
+          recH().elem.peer.transform.map(_.elem.peer.value) match {
             case Some(ft: Code.FileTransform) => Some(ft)
             case _ => None
           }
@@ -209,7 +209,7 @@ object RecursionFrameImpl {
         def embed(): Unit = {
           processStopped()
           _cursor.step { implicit tx =>
-            val product = recH().product
+            val product = recH().elem.peer.product
             product.modifiableOption match {
               case (/* Some(locM), */ Some(artM)) =>
                 val newChild  = Artifact.relativize(artM.location.directory, newFile)
@@ -237,7 +237,7 @@ object RecursionFrameImpl {
       def performBounce(file: File)(success: => Unit): Unit = {
         val (groupH, gain, span, channels, audio) = _cursor.step { implicit tx =>
           import proc.ProcGroup.serializer
-          val e         = recH()
+          val e         = recH().elem.peer
           val _groupH   = tx.newHandle(e.group)
           val _gain     = e.gain
           val _span     = e.span
@@ -308,7 +308,7 @@ object RecursionFrameImpl {
 
       lazy val viewDeployed: Button = Button("View") {
         _cursor.step { implicit tx =>
-          AudioFileFrame(document, recH().deployed)
+          AudioFileFrame(document, recH().elem.peer.deployed)
         }
       }
       lazy val matchDeployed: Button = Button("Match") {
@@ -316,7 +316,7 @@ object RecursionFrameImpl {
       }
       updateDeployed = Button("Update \u2713") {
         _cursor.step { implicit tx =>
-          recH().iterate()
+          recH().elem.peer.iterate()
         }
       }
       lazy val viewProduct: Button = Button("View") {

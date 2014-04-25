@@ -77,7 +77,7 @@ object ObjView {
     private val icon = imageIcon("string")
 
     private[ObjView] final class Impl[S <: Sys[S]](protected val _parent: FolderLike[S],
-                                                   val element: stm.Source[S#Tx, Obj.T[S, StringElem]],
+                                                   val obj: stm.Source[S#Tx, Obj.T[S, StringElem]],
                                                    var name: _String, var value: _String)
       extends String[S] with ObjView.Impl[S] {
 
@@ -259,7 +259,7 @@ object ObjView {
     }
   }
   sealed trait Folder[S <: Sys[S]] extends FolderLike[S] with ObjView[S] /* Branch[S] */ {
-    def obj: stm.Source[S#Tx, Obj.T[S, proc.Folder]]
+    def obj: stm.Source[S#Tx, Obj.T[S, FolderElem]]
   }
 
   // -------- ProcGroup --------

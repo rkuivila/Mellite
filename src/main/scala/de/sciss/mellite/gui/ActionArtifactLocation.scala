@@ -34,7 +34,7 @@ object ActionArtifactLocation {
 
   def query[S <: Sys[S]](
          document: Document[S], file: File,
-         folder: Option[stm.Source[S#Tx, Obj.T[S, Folder]]] = None,
+         folder: Option[stm.Source[S#Tx, Obj.T[S, FolderElem]]] = None,
          window: Option[desktop.Window] = None)
         (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
 
@@ -68,7 +68,7 @@ object ActionArtifactLocation {
     def createNew() = {
       queryNew(child = Some(file), window = window).map { case (dir, name) =>
         cursor.step { implicit tx =>
-          val loc = create(dir, name, folder.map(_.apply().elem).getOrElse(document.root))
+          val loc = create(dir, name, folder.map(_.apply().elem.peer).getOrElse(document.root))
           tx.newHandle(loc)
         }
       }
