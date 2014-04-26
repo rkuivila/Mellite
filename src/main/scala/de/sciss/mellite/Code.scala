@@ -72,7 +72,7 @@ object Code {
 
   // ---- element ----
   object Elem {
-    def apply[S <: Sys[S]](peer: Expr[S, Code])(implicit tx: S#Tx): Elem[S] = ???
+    def apply[S <: Sys[S]](peer: Expr[S, Code])(implicit tx: S#Tx): Code.Elem[S] = ???
 
     implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Code.Elem[S]] = ???
 

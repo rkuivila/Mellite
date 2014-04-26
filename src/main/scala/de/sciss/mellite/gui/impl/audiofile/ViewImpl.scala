@@ -34,9 +34,9 @@ import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.mellite.gui.ObjView.AudioGrapheme
 
 object ViewImpl {
-  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, AudioGraphemeElem])
+  def apply[S <: Sys[S]](doc: Document[S], obj0: Obj.T[S, AudioGraphemeElem])
                         (implicit tx: S#Tx, aural: AuralSystem): AudioFileView[S] = {
-    val f             = obj.elem.peer.value // .artifact // store.resolve(element.entity.value.artifact)
+    val f             = obj0.elem.peer.value // .artifact // store.resolve(element.entity.value.artifact)
     val sampleRate    = f.spec.sampleRate
     type I            = doc.I
     implicit val itx  = doc.inMemoryBridge(tx)
@@ -47,7 +47,7 @@ object ViewImpl {
     val graphemeV     = f // elem.entity.value
     val imp = ExprImplicits[I]
     import imp._
-    val artifact      = obj.elem.peer.artifact
+    val artifact      = obj0.elem.peer.artifact
     val artifDir      = artifact.location.directory
     val iLoc          = Artifact.Location.Modifiable[I](artifDir)
     val iArtifact     = iLoc.add(artifact.value)
@@ -60,7 +60,7 @@ object ViewImpl {
     val res: Impl[S, I] = new Impl[S, I] {
       val timelineModel = new TimelineModelImpl(fullSpan, sampleRate)
       val document      = doc
-      val holder        = tx.newHandle(obj)
+      val holder        = tx.newHandle(obj0)
       val transportView: TransportView[I] = TransportView[I, I](group, sampleRate, timelineModel)
     }
 
