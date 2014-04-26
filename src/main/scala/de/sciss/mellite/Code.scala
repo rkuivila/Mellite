@@ -14,7 +14,7 @@
 package de.sciss.mellite
 
 import de.sciss.serial.{Serializer, Writable, DataInput, DataOutput, ImmutableSerializer}
-import impl.{/* CodeImpl => Impl, */ CodeImpl2 => Impl2}
+import impl.{CodeImpl => Impl}
 import java.io.File
 import scala.concurrent.Future
 import de.sciss.processor.Processor
@@ -29,7 +29,7 @@ object Code {
   final case class CompilationFailed() extends Exception
   final case class CodeIncomplete()    extends Exception
 
-  implicit def serializer: ImmutableSerializer[Code] = Impl2.serializer
+  implicit def serializer: ImmutableSerializer[Code] = Impl.serializer
 
   def read(in: DataInput): Code = serializer.read(in)
 
@@ -47,9 +47,9 @@ object Code {
     type Out    = Future[Unit]
     def id      = FileTransform.id
 
-    def compileBody(): Future[Unit] = Impl2.compileBody[In, Out, FileTransform](this)
+    def compileBody(): Future[Unit] = Impl.compileBody[In, Out, FileTransform](this)
 
-    def execute(in: In): Out = Impl2.execute[In, Out, FileTransform](this, in)
+    def execute(in: In): Out = Impl.execute[In, Out, FileTransform](this, in)
 
     def contextName = FileTransform.name
   }
@@ -63,18 +63,18 @@ object Code {
     type Out    = synth.SynthGraph
     def id      = SynthGraph.id
 
-    def compileBody(): Future[Unit] = Impl2.compileBody[In, Out, SynthGraph](this)
+    def compileBody(): Future[Unit] = Impl.compileBody[In, Out, SynthGraph](this)
 
-    def execute(in: In): Out = Impl2.execute[In, Out, SynthGraph](this, in)
+    def execute(in: In): Out = Impl.execute[In, Out, SynthGraph](this, in)
 
     def contextName = SynthGraph.name
   }
 
   // ---- element ----
   object Elem {
-    def apply[S <: Sys[S]](peer: Expr[S, Code])(implicit tx: S#Tx): Code.Elem[S] = ???
+    def apply[S <: Sys[S]](peer: Expr[S, Code])(implicit tx: S#Tx): Code.Elem[S] = Impl.CodeElemImpl(peer)
 
-    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Code.Elem[S]] = ???
+    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Code.Elem[S]] = Impl.CodeElemImpl.serializer
 
     object Obj {
       def unapply[S <: Sys[S]](obj: Obj[S]): Option[proc.Obj.T[S, Code.Elem]] =

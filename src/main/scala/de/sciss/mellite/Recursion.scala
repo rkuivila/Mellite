@@ -18,7 +18,8 @@ import de.sciss.synth.io.AudioFileSpec
 import de.sciss.synth.proc.{Obj, AudioGraphemeElem, Artifact, ProcGroup}
 import de.sciss.span.Span.SpanOrVoid
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.event.{Sys, EventLike}
+import de.sciss.lucre.{event => evt}
+import evt.Sys
 import impl.{RecursionImpl => Impl}
 import de.sciss.span.SpanLike
 import de.sciss.lucre.stm.Disposable
@@ -35,15 +36,16 @@ object Recursion {
     Impl(group, span, deployed, gain, channels, transform)
 
   def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Recursion[S] =
-    Impl.serializer.read(in, access)
+    Impl.serializer[S].read(in, access)
 
   implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Recursion[S]] = Impl.serializer
 
   // ---- element ----
   object Elem {
-    def apply[S <: Sys[S]](peer: Recursion[S])(implicit tx: S#Tx): Recursion.Elem[S] = ???
+    def apply[S <: Sys[S]](peer: Recursion[S])(implicit tx: S#Tx): Recursion.Elem[S] = Impl.RecursionElemImpl(peer)
 
-    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Recursion.Elem[S]] = ???
+    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Recursion.Elem[S]] =
+      Impl.RecursionElemImpl.serializer
 
     object Obj {
       def unapply[S <: Sys[S]](obj: Obj[S]): Option[proc.Obj.T[S, Recursion.Elem]] =
@@ -59,7 +61,7 @@ object Recursion {
     def mkCopy()(implicit tx: S#Tx): Elem[S]
   }
 }
-trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] {
+trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] with evt.Publisher[S, Recursion.Update[S]] {
   import Recursion.Channels
 
   def group: ProcGroup[S]
@@ -78,6 +80,4 @@ trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] {
 
   /** Moves the product to deployed position. */
   def iterate()(implicit tx: S#Tx): Unit
-
-  def changed: EventLike[S, Recursion.Update[S]]
 }

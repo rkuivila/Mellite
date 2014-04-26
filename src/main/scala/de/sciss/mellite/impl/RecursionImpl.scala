@@ -25,6 +25,7 @@ import scala.annotation.switch
 import de.sciss.lucre.synth.InMemory
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.event.Sys
+import de.sciss.synth.proc.impl.ElemImpl
 
 object RecursionImpl {
   import Recursion.Channels
@@ -33,6 +34,50 @@ object RecursionImpl {
 
   implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Recursion[S]] with evt.Reader[S, Recursion[S]] =
     anySer.asInstanceOf[Ser[S]]
+
+  // ---- elem ----
+
+  object RecursionElemImpl extends ElemImpl.Companion[Recursion.Elem] {
+    final val typeID = 0x20000
+
+    def apply[S <: Sys[S]](peer: Recursion[S])(implicit tx: S#Tx): Recursion.Elem[S] = {
+      val targets = evt.Targets[S]
+      new Impl[S](targets, peer)
+    }
+
+    def read[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Recursion.Elem[S] =
+      serializer[S].read(in, access)
+
+    // ---- Elem.Extension ----
+
+    /** Read identified active element */
+    def readIdentified[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S])
+                                   (implicit tx: S#Tx): Recursion.Elem[S] with evt.Node[S] = {
+      val peer = Recursion.read(in, access)
+      new Impl[S](targets, peer)
+    }
+
+    /** Read identified constant element */
+    def readIdentifiedConstant[S <: Sys[S]](in: DataInput)(implicit tx: S#Tx): Recursion.Elem[S] =
+      sys.error("Constant Recursion not supported")
+
+    // ---- implementation ----
+
+    private final class Impl[S <: Sys[S]](protected val targets: evt.Targets[S],
+                                          val peer: Recursion[S])
+      extends Recursion.Elem[S]
+      with ElemImpl.Active[S] {
+
+      def typeID = RecursionElemImpl.typeID
+      def prefix = "Recursion"
+
+      override def toString() = s"$prefix$id"
+
+      def mkCopy()(implicit tx: S#Tx): Recursion.Elem[S] = Recursion.Elem(peer)
+    }
+  }
+
+  // ---- impl ----
 
   private val anySer = new Ser[InMemory]
 
