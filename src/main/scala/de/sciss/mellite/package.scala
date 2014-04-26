@@ -14,7 +14,7 @@
 package de.sciss
 
 import lucre.expr
-import synth.proc.Confluent
+import de.sciss.synth.proc.{Elem, Confluent}
 import de.sciss.serial.{Serializer, DataInput}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import java.text.SimpleDateFormat
@@ -23,6 +23,8 @@ import scala.annotation.elidable
 import scala.annotation.elidable.CONFIG
 import scala.concurrent.ExecutionContext
 import de.sciss.lucre.synth.{InMemory, Sys}
+import de.sciss.mellite.impl.CodeImpl.CodeElemImpl
+import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
 
 package object mellite {
   type Cf = Confluent
@@ -38,6 +40,11 @@ package object mellite {
     if (showTimelineLog) println(s"${logHeader.format(new Date())} <timeline> $what")
 
   implicit val executionContext: ExecutionContext = ExecutionContext.Implicits.global
+
+  def initTypes(): Unit = {
+    CodeElemImpl
+    RecursionElemImpl
+  }
 
   //  object Folder {
   //    import mellite.{Element => _Element}

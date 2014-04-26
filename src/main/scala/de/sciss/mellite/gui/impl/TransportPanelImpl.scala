@@ -84,12 +84,12 @@ object TransportPanelImpl {
 
     import GUITransport.{GoToBegin, Rewind, FastForward, Stop, Play}
 
-    private var buttons: GUITransport.ButtonStrip = _
+    private var buttons  : GUITransport.ButtonStrip = _
     private var millisVar: Long = 0L
-    private var lbTime: TimeLabel = _
+    private var lbTime   : TimeLabel = _
     private var playTimer: javax.swing.Timer = _
-    private var cueTimer: javax.swing.Timer = _
-    private var playingVar = false
+    private var cueTimer : javax.swing.Timer = _
+    private var playingVar   = false
     private var cueDirection = 1
 
     def play(): Unit = {

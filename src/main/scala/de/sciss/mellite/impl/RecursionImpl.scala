@@ -16,7 +16,7 @@ package mellite
 package impl
 
 import de.sciss.synth.io.AudioFileSpec
-import de.sciss.synth.proc.{Obj, AudioGraphemeElem, ExprImplicits, ProcGroup, Artifact}
+import de.sciss.synth.proc.{Elem, Obj, AudioGraphemeElem, ExprImplicits, ProcGroup, Artifact}
 import de.sciss.lucre.{expr, event => evt}
 import expr.Expr
 import de.sciss.span.SpanLike
@@ -39,6 +39,8 @@ object RecursionImpl {
 
   object RecursionElemImpl extends ElemImpl.Companion[Recursion.Elem] {
     final val typeID = 0x20000
+
+    Elem.registerExtension(this)
 
     def apply[S <: Sys[S]](peer: Recursion[S])(implicit tx: S#Tx): Recursion.Elem[S] = {
       val targets = evt.Targets[S]

@@ -31,6 +31,7 @@ import de.sciss.lucre.{event => evt}
 import evt.Sys
 import de.sciss.synth.proc.impl.ElemImpl
 import de.sciss.lucre.expr.Expr
+import de.sciss.synth.proc.Elem
 
 object CodeImpl {
   private final val COOKIE  = 0x436F6465  // "Code"
@@ -54,6 +55,8 @@ object CodeImpl {
 
   object CodeElemImpl extends ElemImpl.Companion[Code.Elem] {
     final val typeID = Codes.typeID // 0x20001
+
+    Elem.registerExtension(this)
 
     def apply[S <: Sys[S]](peer: Expr[S, Code])(implicit tx: S#Tx): Code.Elem[S] = {
       val targets = evt.Targets[S]

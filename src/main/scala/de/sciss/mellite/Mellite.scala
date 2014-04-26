@@ -17,7 +17,7 @@ package mellite
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.WindowHandler
-import synth.proc.AuralSystem
+import de.sciss.synth.proc.AuralSystem
 import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
 import scala.util.control.NonFatal
@@ -47,6 +47,13 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   implicit def auralSystem: AuralSystem = _aural
 
   override protected def init(): Unit = {
+    // ---- type extensions ----
+
+    mellite.initTypes()
+    de.sciss.lucre.synth.expr.initTypes()
+
+    // ---- look and feel
+
     try {
       val web = "com.alee.laf.WebLookAndFeel"
       UIManager.installLookAndFeel("Web Look And Feel", web)

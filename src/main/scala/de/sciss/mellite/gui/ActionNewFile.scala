@@ -65,7 +65,7 @@ object ActionNewFile extends Action("Session...") {
       } catch {
         case NonFatal(e) =>
           Dialog.showMessage(
-            message     = s"Unabled to create new document ${folder.getPath} \n\n${formatException(e)}",
+            message     = s"Unable to create new document ${folder.getPath} \n\n${formatException(e)}",
             title       = fullTitle,
             messageType = Dialog.Message.Error
           )
