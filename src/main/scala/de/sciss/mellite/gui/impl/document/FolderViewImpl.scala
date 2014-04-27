@@ -42,7 +42,7 @@ import de.sciss.lucre.event.Sys
 object FolderViewImpl {
   private final val DEBUG = false
 
-  def apply[S <: Sys[S]](document: Document[S], root: Folder[S])
+  def apply[S <: Sys[S]](document: File, root: Folder[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = {
     val _doc    = document
     val _cursor = cursor
@@ -89,7 +89,7 @@ object FolderViewImpl {
     protected def mapViews: IdentifierMap[S#ID, S#Tx, ObjView[S]]
     protected implicit def cursor: Cursor[S]
     protected def observer: Disposable[S#Tx]
-    protected def document: Document[S]
+    protected def document: File // Document[S]
 
     private class ElementTreeModel extends AbstractTreeModel[Node] {
       lazy val root: Node = rootView // ! must be lazy. suckers....
@@ -399,10 +399,10 @@ object FolderViewImpl {
 
           cursor.step { implicit tx =>
             val tup = sel1.map {
-              case (_ :+ pv, cv) => pv.folder -> cv.obj()
+              case (_ :+ pv, cv) => pv.folder() -> cv.obj()
             }
 
-            val newParent = newParentView.folder
+            val newParent = newParentView.folder()
             tup             .foreach { case  (oldParent, c)       => oldParent.remove(            c) }
             tup.zipWithIndex.foreach { case ((_        , c), off) => newParent.insert(idx1 + off, c) }
           }
@@ -438,7 +438,7 @@ object FolderViewImpl {
                 case (f, spec, locS) =>
                   val loc = locS()
                   loc.elem.peer.modifiableOption.foreach { locM =>
-                    ObjectActions.addAudioFile(parent.folder, index, locM, f, spec)
+                    ObjectActions.addAudioFile(parent.folder(), index, locM, f, spec)
                   }
               }
             }
@@ -498,7 +498,7 @@ object FolderViewImpl {
           val parent = selection.collect {
             case (_, f: ObjView.Folder[S]) => f.obj
           } .headOption
-          ActionArtifactLocation.query(document, file = f, folder = parent) // , window = Some(comp))
+          ActionArtifactLocation.query(rootView.folder, file = f, folder = parent) // , window = Some(comp))
       }
     }
 

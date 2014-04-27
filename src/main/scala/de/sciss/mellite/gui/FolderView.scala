@@ -25,7 +25,7 @@ import de.sciss.synth.proc.{Folder, ArtifactLocationElem, Obj}
 import de.sciss.lucre.event.Sys
 
 object FolderView {
-  def apply[S <: Sys[S]](document: Document[S], root: Folder[S])
+  def apply[S <: Sys[S]](document: File, root: Folder[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = Impl(document, root)
 
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
@@ -33,7 +33,7 @@ object FolderView {
     */
   type Selection[S <: Sys[S]] = Vec[(Vec[ObjView.FolderLike[S]], ObjView[S])]
 
-  final case class SelectionDnDData[S <: Sys[S]](document: Document[S], selection: Selection[S])
+  final case class SelectionDnDData[S <: Sys[S]](document: File, selection: Selection[S])
 
   // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
   val selectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]

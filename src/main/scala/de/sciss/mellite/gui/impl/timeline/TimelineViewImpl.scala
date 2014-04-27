@@ -127,7 +127,7 @@ object TimelineViewImpl {
     disposables ::= auralView
 
     val procSelectionModel = ProcSelectionModel[S]
-    val global  = GlobalProcsView(document, group, procSelectionModel)
+    val global  = GlobalProcsView(document.folder, group, procSelectionModel)
     disposables ::= global
 
     val view    = new Impl(document, groupH, groupEH, transport, procMap, scanMap, tlm, auralView, global, procSelectionModel)
@@ -790,17 +790,17 @@ object TimelineViewImpl {
         case ed: DnD.ExtAudioRegionDrag[S] =>
           val file = ed.file
           val resOpt = step { implicit tx =>
-            ObjectActions.findAudioFile(document.root, file).map { grapheme =>
+            ObjectActions.findAudioFile(document.root(), file).map { grapheme =>
               insertAudioRegion(drop, ed, grapheme.elem.peer)
             }
           }
 
           resOpt.getOrElse {
             Try(AudioFile.readSpec(file)).toOption.fold(false) { spec =>
-              ActionArtifactLocation.query(document, file).fold(false) { src =>
+              ActionArtifactLocation.query(document.root, file).fold(false) { src =>
                 step { implicit tx =>
                   src().elem.peer.modifiableOption.fold(false) { loc =>
-                    val elems = document.root
+                    val elems = document.root()
                     val obj   = ObjectActions.addAudioFile(elems, elems.size, loc, file, spec)
                     insertAudioRegion(drop, ed, obj.elem.peer)
                   }
@@ -909,7 +909,7 @@ object TimelineViewImpl {
 
       object canvasComponent extends Component with DnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
-        protected def document      = impl.document
+        protected def document      = impl.document.folder
 
         private var currentDrop = Option.empty[DnD.Drop[S]]
 

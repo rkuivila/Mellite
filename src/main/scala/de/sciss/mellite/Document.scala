@@ -60,7 +60,9 @@ sealed trait Document[S <: Sys[S]] {
   implicit def inMemoryBridge: S#Tx => I#Tx
   implicit def inMemoryCursor: stm.Cursor[I]
 
-  def root(implicit tx: S#Tx): Folder[S]
+  // def root(implicit tx: S#Tx): Folder[S]
+
+  def root: stm.Source[S#Tx, Folder[S]]
 
   def collectObjects[A](pf: PartialFunction[Obj[S], A])(implicit tx: S#Tx): Vec[A]
 

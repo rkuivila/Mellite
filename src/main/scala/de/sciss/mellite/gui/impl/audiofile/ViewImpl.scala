@@ -32,6 +32,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.mellite.gui.ObjView.AudioGrapheme
+import de.sciss.file.File
 
 object ViewImpl {
   def apply[S <: Sys[S]](doc: Document[S], obj0: Obj.T[S, AudioGraphemeElem])
@@ -59,7 +60,7 @@ object ViewImpl {
 
     val res: Impl[S, I] = new Impl[S, I] {
       val timelineModel = new TimelineModelImpl(fullSpan, sampleRate)
-      val document      = doc
+      val document      = doc.folder
       val holder        = tx.newHandle(obj0)
       val transportView: TransportView[I] = TransportView[I, I](group, sampleRate, timelineModel)
     }
@@ -74,7 +75,7 @@ object ViewImpl {
     extends AudioFileView[S] with ComponentHolder[Component] { impl =>
 
     protected def holder       : stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
-    val document               : Document[S]
+    val document               : File // Document[S]
     protected def transportView: TransportView[I]
     protected def timelineModel: TimelineModel
 

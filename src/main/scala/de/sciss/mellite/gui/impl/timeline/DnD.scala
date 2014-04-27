@@ -32,23 +32,23 @@ import de.sciss.lucre.event.Sys
 
 object DnD {
   sealed trait Drag[S <: Sys[S]] {
-    def document: Document[S]
+    def document: File // Document[S]
     // def source: stm.Source[S#Tx, Element[S]]
   }
   sealed trait AudioDragLike[S <: Sys[S]] extends Drag[S] {
     def selection: Span
   }
-  final case class AudioDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
+  final case class AudioDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                           /* grapheme: Grapheme.Value.Audio, */ selection: Span,
                                           bus: Option[stm.Source[S#Tx, Obj.T[S, IntElem]]])
     extends AudioDragLike[S]
 
-  final case class IntDrag [S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]
-  final case class CodeDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, Code.Elem]]) extends Drag[S]
-  final case class ProcDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, ProcElem ]]) extends Drag[S]
+  final case class IntDrag [S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]
+  final case class CodeDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Code.Elem]]) extends Drag[S]
+  final case class ProcDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, ProcElem ]]) extends Drag[S]
 
   /** Drag and Drop from Eisenkraut */
-  final case class ExtAudioRegionDrag[S <: Sys[S]](document: Document[S], file: File, selection: Span)
+  final case class ExtAudioRegionDrag[S <: Sys[S]](document: File, file: File, selection: Span)
     extends AudioDragLike[S]
 
   final case class Drop[S <: Sys[S]](frame: Long, y: Int, drag: Drag[S])
@@ -60,7 +60,7 @@ trait DnD[S <: Sys[S]] {
 
   import DnD._
 
-  protected def document: Document[S]
+  protected def document: File // Document[S]
   protected def timelineModel: TimelineModel
 
   protected def updateDnD(drop: Option[Drop[S]]): Unit
@@ -97,7 +97,7 @@ trait DnD[S <: Sys[S]] {
         Try {
           val path = file(arr(0))
           val span = Span(arr(1).toLong, arr(2).toLong)
-          ExtAudioRegionDrag(document, path, span)
+          ExtAudioRegionDrag[S](document, path, span)
         } .toOption
       } else None
     }

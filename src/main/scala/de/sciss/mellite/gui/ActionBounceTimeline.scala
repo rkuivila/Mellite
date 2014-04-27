@@ -107,7 +107,7 @@ object ActionBounceTimeline {
         case Nil        => res
       }
 
-    loop(document.root.iterator.toList, Vector.empty)
+    loop(document.root().iterator.toList, Vector.empty)
   }
 
   def query[S <: Sys[S]](init: QuerySettings[S], document: Document[S], timelineModel: TimelineModel,
@@ -310,7 +310,7 @@ object ActionBounceTimeline {
             } =>  // ok, keep previous location
 
           case _ => // either no location was set, or it's not parent of the file
-            ActionArtifactLocation.query(document, f) match {
+            ActionArtifactLocation.query(document.root, f) match {
               case res @ Some(_)  => settings = settings.copy(location = res)
               case _              => return (settings, false)
             }
@@ -438,8 +438,8 @@ object ActionBounceTimeline {
               val recElem   = Recursion.Elem(recursion)
               val recObj    = Obj(recElem)
               recObj.attr.name = elemName
-              document.root.addLast(depObj)
-              document.root.addLast(recObj)
+              document.root().addLast(depObj)
+              document.root().addLast(recObj)
             }
           }
 

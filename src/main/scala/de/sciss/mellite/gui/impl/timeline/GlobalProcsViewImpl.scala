@@ -33,9 +33,10 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{Int => IntEx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing._
+import de.sciss.file.File
 
 object GlobalProcsViewImpl {
-  def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
+  def apply[S <: Sys[S]](document: File /* Document[S] */, group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] = {
 
     import ProcGroup.Modifiable.serializer
@@ -45,7 +46,7 @@ object GlobalProcsViewImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]](document: Document[S],
+  private final class Impl[S <: Sys[S]](document: File /* Document[S] */,
                                         groupHOpt: Option[stm.Source[S#Tx, ProcGroup.Modifiable[S]]],
                                         selectionModel: ProcSelectionModel[S])
                                        (implicit cursor: stm.Cursor[S])

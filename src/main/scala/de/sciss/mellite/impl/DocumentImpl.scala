@@ -98,7 +98,9 @@ object DocumentImpl {
     extends ConfluentDocument {
     override def toString = "Document<" + folder.getName + ">" // + hashCode().toHexString
 
-    def root(implicit tx: S#Tx): Folder[S] = access().root
+    val root: stm.Source[S#Tx, Folder[S]] = stm.Source.map(access)(_.root)
+
+    // def root(implicit tx: S#Tx): Folder[S] = access().root
 
     type I = system.I
     val inMemoryBridge = (tx: S#Tx) => Confluent.inMemory(tx)
@@ -117,7 +119,7 @@ object DocumentImpl {
           }
         }
 
-      loop(root)
+      loop(root())
       b.result()
     }
   }

@@ -19,6 +19,7 @@ import swing.Component
 import impl.audiofile.{ViewImpl => Impl}
 import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.synth.Sys
+import de.sciss.file.File
 
 object AudioFileView {
   def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, AudioGraphemeElem])
@@ -26,7 +27,7 @@ object AudioFileView {
     Impl(document, obj)
 }
 trait AudioFileView[S <: Sys[S]] extends Disposable[S#Tx] {
-  def document: Document[S]
+  def document: File // Document[S]
   def component: Component
   def obj(implicit tx: S#Tx): Obj.T[S, AudioGraphemeElem]
 }

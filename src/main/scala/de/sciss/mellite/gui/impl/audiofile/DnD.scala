@@ -26,6 +26,7 @@ import TransferHandler.COPY
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.mellite.gui.impl.timeline
 import de.sciss.lucre.synth.Sys
+import de.sciss.file.File
 
 object DnD {
   // XXX TODO: should carry document to avoid cross-document DnD without deep copy
@@ -48,7 +49,7 @@ object DnD {
 
   // final val flavor = DragAndDrop.internalFlavor[Drag[_]]
 
-  final class Button[S <: Sys[S]](document: Document[S], val source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
+  final class Button[S <: Sys[S]](document: File, val source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                   snapshot0: Grapheme.Value.Audio,
                                   timelineModel: TimelineModel)
     extends swing.Button("Region") {

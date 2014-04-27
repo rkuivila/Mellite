@@ -39,10 +39,11 @@
 
 :: sysson ::
 
-NEIN   0x30000     Patch
+0x30000     Patch
 0x30001     Matrix
 0x30002     Reduce.Op
 0x30003     Dimension.Selection
+0x30004     Sonification
 
 :: higher-order ::
 

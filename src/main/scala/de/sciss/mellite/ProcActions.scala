@@ -31,7 +31,8 @@ object ProcActions {
   private val MinDur    = 32
 
   // scalac still has bug finding ProcGroup.Modifiable
-  private type ProcGroupMod[S <: Sys[S]] = ProcGroup.Modifiable[S] // BiGroup.Modifiable[S, Proc[S], Proc.Update[S]]
+  // private type ProcGroupMod[S <: Sys[S]] = ProcGroup.Modifiable[S] // BiGroup.Modifiable[S, Proc[S], Proc.Update[S]]
+  private type ProcGroupMod[S <: Sys[S]] = BiGroup.Modifiable[S, Obj.T[S, ProcElem], Obj.UpdateT[S, ProcElem[S]]]
 
   final case class Resize(deltaStart: Long, deltaStop: Long)
 

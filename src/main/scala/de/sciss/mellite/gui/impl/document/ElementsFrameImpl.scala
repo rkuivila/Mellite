@@ -36,7 +36,7 @@ object ElementsFrameImpl {
   def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Document[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
                                         cursor: stm.Cursor[S], bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] = {
     // implicit val csr  = doc.cursor
-    val folderView      = FolderView(doc, doc.root)
+    val folderView      = FolderView(doc.folder, doc.root())
     val name0           = nameOpt.map(_.value(bridge(tx)))
     val view            = new Impl[S, S1](doc, folderView) {
       protected val nameObserver = nameOpt.map { name =>
@@ -87,10 +87,10 @@ object ElementsFrameImpl {
 
     private def targetFolder(implicit tx: S#Tx): Folder[S] = {
       val sel = folderView.selection
-      if (sel.isEmpty) document.root else sel.head match {
-        case (_,    _parent: ObjView.Folder[S])     => _parent.folder
-        case (_ :+ (_parent: ObjView.Folder[S]), _) => _parent.folder
-        case _                                          => document.root
+      if (sel.isEmpty) document.root() else sel.head match {
+        case (_,    _parent: ObjView.Folder[S])     => _parent.folder()
+        case (_ :+ (_parent: ObjView.Folder[S]), _) => _parent.folder()
+        case _                                      => document.root()
       }
     }
 
@@ -267,7 +267,7 @@ object ElementsFrameImpl {
         if (views.nonEmpty) atomic { implicit tx =>
           views.foreach {
             case (parent: ObjView.FolderLike[S], child) =>
-              parent.folder.remove(child.obj())
+              parent.folder().remove(child.obj())
             case _ =>
           }
         }

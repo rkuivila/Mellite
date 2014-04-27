@@ -20,9 +20,10 @@ import scala.swing.Component
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui.impl.timeline.{GlobalProcsViewImpl => Impl, ProcView}
 import de.sciss.lucre.synth.Sys
+import de.sciss.file.File
 
 object GlobalProcsView {
-  def apply[S <: Sys[S]](document: Document[S], group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
+  def apply[S <: Sys[S]](document: File /* Document[S] */, group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] =
       Impl(document, group, selectionModel)
 }

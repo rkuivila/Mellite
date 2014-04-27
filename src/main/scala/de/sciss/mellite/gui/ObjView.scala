@@ -216,9 +216,9 @@ object ObjView {
   // -------- FolderLike --------
 
   sealed trait FolderLike[S <: Sys[S]] extends Renderer[S] {
-    def branchID(implicit tx: S#Tx) = folder.id
+    def branchID(implicit tx: S#Tx) = folder().id
 
-    def folder(implicit tx: S#Tx): _Folder[S]
+    def folder: stm.Source[S#Tx, _Folder[S]]
 
     def tryConvert(upd: Any): _Folder.Changes[S] = upd match {
       case ll: expr.List.Update[_, _, _] =>
@@ -249,7 +249,8 @@ object ObjView {
 
       var children = Vec.empty[ObjView[S]]
 
-      def folder(implicit tx: S#Tx): _Folder[S] = obj().elem.peer
+      // def folder(implicit tx: S#Tx): _Folder[S] = obj().elem.peer
+      def folder: stm.Source[S#Tx, _Folder[S]] = stm.Source.map(obj)(_.elem.peer)
 
       def prefix = "Folder"
       def icon = Swing.EmptyIcon
@@ -396,11 +397,10 @@ object ObjView {
       res
     }
 
-    private final class Impl[S <: Sys[S]](handle: stm.Source[S#Tx, _Folder[S]])
+    private final class Impl[S <: Sys[S]](val folder: stm.Source[S#Tx, _Folder[S]])
       extends Root[S] {
 
       var children = Vec.empty[ObjView[S]]
-      def folder(implicit tx: S#Tx): _Folder[S] = handle()
       def name = "root"
       def parent: Option[FolderLike[S]] = None
       def icon = Swing.EmptyIcon

@@ -30,10 +30,10 @@ import de.sciss.lucre.event.Sys
 object ActionArtifactLocation {
   //  sealed trait QueryResult
   //  case class Cancel extends QueryResult
-  //  case class Select(elem: )
+  //  case clstm.Source[S#Tx, Folder[S]]ass Select(elem: )
 
   def query[S <: Sys[S]](
-         document: Document[S], file: File,
+         root: stm.Source[S#Tx, Folder[S]], file: File,
          folder: Option[stm.Source[S#Tx, Obj.T[S, FolderElem]]] = None,
          window: Option[desktop.Window] = None)
         (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
@@ -61,14 +61,14 @@ object ActionArtifactLocation {
           case Nil => res
       }
 
-      val _options = loop(document.root.iterator.toList, Vector.empty)
+      val _options = loop(root().iterator.toList, Vector.empty)
       _options
     }
 
     def createNew() = {
       queryNew(child = Some(file), window = window).map { case (dir, name) =>
         cursor.step { implicit tx =>
-          val loc = create(dir, name, folder.map(_.apply().elem.peer).getOrElse(document.root))
+          val loc = create(dir, name, folder.map(_.apply().elem.peer).getOrElse(root()))
           tx.newHandle(loc)
         }
       }
