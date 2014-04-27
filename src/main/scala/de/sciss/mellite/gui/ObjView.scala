@@ -220,13 +220,13 @@ object ObjView {
 
     def folder(implicit tx: S#Tx): _Folder[S]
 
-    def tryConvert(upd: Any): _Folder.Update[S] = upd match {
+    def tryConvert(upd: Any): _Folder.Changes[S] = upd match {
       case ll: expr.List.Update[_, _, _] =>
         convert(ll.asInstanceOf[expr.List.Update[S, Obj[S], Obj.Update[S]]])
       case _ => Vector.empty
     }
 
-    def convert(upd: expr.List.Update[S, Obj[S], Obj.Update[S]]): _Folder.Update[S] =
+    def convert(upd: expr.List.Update[S, Obj[S], Obj.Update[S]]): _Folder.Changes[S] =
       upd.changes.map {
         case expr.List.Added  (idx, obj)  => _Folder.Added  (idx, obj)
         case expr.List.Removed(idx, obj)  => _Folder.Removed(idx, obj)

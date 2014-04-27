@@ -187,7 +187,8 @@ object TimelineViewImpl {
       }
 
     def scanAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      timed.value.scans.get(name).foreach { scan =>
+      val proc = timed.value.elem.peer
+      proc.scans.get(name).foreach { scan =>
         scan.sources.foreach {
           case Scan.Link.Scan(peer) =>
             view.scanSourceAdded(timed, name, scan, peer)
@@ -202,7 +203,8 @@ object TimelineViewImpl {
     }
 
     def scanRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      timed.value.scans.get(name).foreach { scan =>
+      val proc = timed.value.elem.peer
+      proc.scans.get(name).foreach { scan =>
         scan.sources.foreach {
           case Scan.Link.Scan(peer) =>
             view.scanSourceRemoved(timed, name, scan, peer)
@@ -232,50 +234,47 @@ object TimelineViewImpl {
       case BiGroup.ElementMutated(timed, procUpd) =>
         if (DEBUG) println(s"Mutated $timed, $procUpd")
         procUpd.changes.foreach {
-          case Proc.AssociationAdded  (key) =>
-            key match {
-              case Proc.AttrKey(name) => attrChanged(timed, name)
-              case Proc.ScanKey(name) => scanAdded  (timed, name)
+          case Obj.ElemChange(updP) =>
+            updP.changes.foreach {
+              case Proc.ScanAdded  (key, _) => scanAdded  (timed, key)
+              case Proc.ScanRemoved(key, _) => scanRemoved(timed, key)
+              case Proc.ScanChange(name, scan, scanUpdates) =>
+                scanUpdates.foreach {
+                  case Scan.GraphemeChange(grapheme, segments) =>
+                    if (name == ProcKeys.graphAudio) {
+                      timed.span.value match {
+                        case Span.HasStart(startFrame) =>
+                          val segmOpt = segments.find(_.span.contains(startFrame)) match {
+                            case Some(segm: Grapheme.Segment.Audio) => Some(segm)
+                            case _ => None
+                          }
+                          view.procAudioChanged(timed, segmOpt)
+                        case _ =>
+                      }
+                    }
+
+                  case Scan.SinkAdded    (Scan.Link.Scan(peer)) =>
+                    val test: Scan[S] = scan
+                    view.scanSinkAdded    (timed, name, test, peer)
+                  case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => view.scanSinkRemoved  (timed, name, scan, peer)
+                  case Scan.SourceAdded  (Scan.Link.Scan(peer)) => view.scanSourceAdded  (timed, name, scan, peer)
+                  case Scan.SourceRemoved(Scan.Link.Scan(peer)) => view.scanSourceRemoved(timed, name, scan, peer)
+
+                  case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
+                }
+              case Proc.GraphChange(_)      =>
             }
-          case Proc.AssociationRemoved(key) =>
-            key match {
-              case Proc.AttrKey(name) => attrChanged(timed, name)
-              case Proc.ScanKey(name) => scanRemoved(timed, name)
-            }
-          case Proc.AttrChange(name, attr, ach) =>
+
+          case Obj.AttrAdded  (key, _) => attrChanged(timed, key)
+          case Obj.AttrRemoved(key, _) => attrChanged(timed, key)
+
+          case Obj.AttrChange(name, attr, ach) =>
             (name, ach) match {
               case (ProcKeys.attrTrack, Change(before: Int, now: Int)) =>
                 view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
 
               case _ => attrChanged(timed, name)
             }
-
-          case Proc.ScanChange(name, scan, scanUpdates) =>
-            scanUpdates.foreach {
-              case Scan.GraphemeChange(grapheme, segments) =>
-                if (name == ProcKeys.graphAudio) {
-                  timed.span.value match {
-                    case Span.HasStart(startFrame) =>
-                      val segmOpt = segments.find(_.span.contains(startFrame)) match {
-                        case Some(segm: Grapheme.Segment.Audio) => Some(segm)
-                        case _ => None
-                      }
-                      view.procAudioChanged(timed, segmOpt)
-                    case _ =>
-                  }
-                }
-
-              case Scan.SinkAdded    (Scan.Link.Scan(peer)) =>
-                val test: Scan[S] = scan
-                view.scanSinkAdded    (timed, name, test, peer)
-              case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => view.scanSinkRemoved  (timed, name, scan, peer)
-              case Scan.SourceAdded  (Scan.Link.Scan(peer)) => view.scanSourceAdded  (timed, name, scan, peer)
-              case Scan.SourceRemoved(Scan.Link.Scan(peer)) => view.scanSourceRemoved(timed, name, scan, peer)
-
-              case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
-            }
-
-          case Proc.GraphChange(ch) =>
         }
     }}
     disposables ::= obsGroup

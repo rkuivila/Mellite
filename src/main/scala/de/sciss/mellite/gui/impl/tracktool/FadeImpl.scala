@@ -16,7 +16,7 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{FadeSpec, ProcKeys, Proc, Elem, FadeSpecElem}
+import de.sciss.synth.proc.{Obj, ProcElem, FadeSpec, ProcKeys, Proc, Elem, FadeSpecElem}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
@@ -61,7 +61,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     result
   }
 
-  protected def commitProc(drag: Fade)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
+  protected def commitProc(drag: Fade)(span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem])(implicit tx: S#Tx): Unit = {
     import drag._
 
     val attr    = proc.attr

@@ -17,7 +17,7 @@ package impl
 package realtime
 
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{ProcKeys, Elem, Proc, Param, ProcTransport}
+import de.sciss.synth.proc.{ProcGroup, Obj, ProcElem, ProcKeys, Elem, Proc, Param, ProcTransport}
 import de.sciss.lucre.bitemp.BiGroup
 import java.awt.{RenderingHints, Graphics2D, Color}
 import collection.immutable.{IndexedSeq => Vec}
@@ -53,9 +53,10 @@ object PanelImpl {
     //    def playStop(b: Boolean)(implicit tx: S#Tx): Unit =
     //      deferTx(vis.playing = b)
 
-    def advance(time: Long, added: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
-                removed: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]])],
-                params: Vec[(SpanLike, BiGroup.TimedElem[S, Proc[S]], Map[String, Param])])(implicit tx: S#Tx): Unit = {
+    def advance(time: Long, added: Vec[(SpanLike, BiGroup.TimedElem[S, Obj.T[S, ProcElem]])],
+                removed: Vec[(SpanLike, BiGroup.TimedElem[S, Obj.T[S, ProcElem]])],
+                params : Vec[(SpanLike, BiGroup.TimedElem[S, Obj.T[S, ProcElem]], Map[String, Param])])
+               (implicit tx: S#Tx): Unit = {
       val vpRem = removed.flatMap {
         case (span, timed) =>
           map.get(timed.id).flatMap { vpm =>

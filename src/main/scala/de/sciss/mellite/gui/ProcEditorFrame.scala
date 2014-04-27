@@ -16,17 +16,17 @@ package gui
 
 import de.sciss.lucre.stm.{Disposable, Cursor}
 import swing.Frame
-import de.sciss.synth.proc.Proc
+import de.sciss.synth.proc.{ProcElem, Obj}
 import impl.{ProcEditorFrameImpl => Impl}
 import de.sciss.lucre.synth.Sys
 
 object ProcEditorFrame {
-  def apply[S <: Sys[S]](proc: Proc[S])(implicit tx: S#Tx, cursor: Cursor[S]): ProcEditorFrame[S] =
+  def apply[S <: Sys[S]](proc: Obj.T[S, ProcElem])(implicit tx: S#Tx, cursor: Cursor[S]): ProcEditorFrame[S] =
     Impl(proc)
 }
 
 trait ProcEditorFrame[S <: Sys[S]] extends Disposable[S#Tx] {
   def component: Frame
 
-  def proc(implicit tx: S#Tx): Proc[S]
+  def proc(implicit tx: S#Tx): Obj.T[S, ProcElem]
 }

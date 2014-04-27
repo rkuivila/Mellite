@@ -30,6 +30,7 @@
 0x10003     ArtifactLocation
 
 0x10004     expr.List
+0x10005     Proc
 
 :: indeterminus ::
 

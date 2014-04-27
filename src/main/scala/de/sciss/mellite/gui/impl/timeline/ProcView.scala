@@ -16,7 +16,7 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{FadeSpec, ProcKeys, Elem, Grapheme, Scan, Proc, TimedProc}
+import de.sciss.synth.proc.{Obj, ProcElem, FadeSpec, ProcKeys, Elem, Grapheme, Scan, Proc, TimedProc}
 import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.sonogram.{Overview => SonoOverview}
@@ -65,7 +65,8 @@ object ProcView {
     // proc.scans.keys.foreach(println)
 
     // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
-    val audio = proc.scans.get(ProcKeys.graphAudio).flatMap { scanw =>
+    val scans = proc.elem.peer.scans
+    val audio = scans.get(ProcKeys.graphAudio).flatMap { scanw =>
       // println("--- has scan")
       scanw.sources.flatMap {
         case Scan.Link.Grapheme(g) =>
@@ -104,7 +105,7 @@ object ProcView {
     import de.sciss.lucre.synth.expr.IdentifierSerializer
     lazy val idH = tx.newHandle(timed.id)
 
-    proc.scans.iterator.foreach { case (key, scan) =>
+    scans.iterator.foreach { case (key, scan) =>
       def findLinks(inp: Boolean): Unit = {
         val it = if (inp) scan.sources else scan.sinks
         it.foreach {
@@ -141,7 +142,7 @@ object ProcView {
   }
 
   private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
-                                        val procSource: stm.Source[S#Tx, Proc[S]],
+                                        val procSource: stm.Source[S#Tx, Obj.T[S, ProcElem]],
                                         var span      : SpanLike,
                                         var track     : Int,
                                         var nameOption: Option[String],
@@ -198,7 +199,7 @@ object ProcView {
                   procMap: ProcMap[S],
                   scanMap: ScanMap[S])(implicit tx: S#Tx): Unit = {
       procMap.remove(timed.id)
-      val proc = timed.value
+      val proc = timed.value.elem.peer
       proc.scans.iterator.foreach { case (_, scan) =>
         scanMap.remove(scan.id)
       }
@@ -240,7 +241,7 @@ object ProcView {
 
     def isGlobal = span == Span.All
 
-    def proc(implicit tx: S#Tx): Proc[S] = procSource()
+    def proc(implicit tx: S#Tx): Obj.T[S, ProcElem] = procSource()
   }
 
   implicit def span[S <: Sys[S]](view: ProcView[S]): (Long, Long) = {
@@ -265,10 +266,10 @@ sealed trait ProcView[S <: Sys[S]] {
   import ProcView.{LinkMap, ProcMap, ScanMap}
   
   def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
-  def procSource: stm.Source[S#Tx, Proc[S]]
+  def procSource: stm.Source[S#Tx, Obj.T[S, ProcElem]]
 
   /** Convenience for `procSource()` */
-  def proc(implicit tx: S#Tx): Proc[S]
+  def proc(implicit tx: S#Tx): Obj.T[S, ProcElem]
 
   var span: SpanLike
   var track: Int

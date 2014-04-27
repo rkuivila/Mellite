@@ -193,7 +193,7 @@ object FolderViewImpl {
       }
     }
 
-    def elemUpdated(obj: Obj[S], changes: Vec[Obj.Change[S]])(implicit tx: S#Tx): Unit = {
+    def elemUpdated(obj: Obj[S], changes: Vec[Obj.Change[S, Any]])(implicit tx: S#Tx): Unit = {
       val viewOpt = mapViews.get(obj.id)
       if (viewOpt.isEmpty) {
         println(s"WARNING: No view for elem $obj")
@@ -226,7 +226,7 @@ object FolderViewImpl {
       }
     }
 
-    def folderUpdated(fv: ObjView.FolderLike[S], upd: Folder.Update[S])(implicit tx: S#Tx): Unit =
+    def folderUpdated(fv: ObjView.FolderLike[S], upd: Folder.Changes[S])(implicit tx: S#Tx): Unit =
       upd.foreach {
         case Folder.Added  (idx, elem)      => elemAdded  (fv, idx, elem)
         case Folder.Removed(idx, elem)      => elemRemoved(fv, idx, elem)

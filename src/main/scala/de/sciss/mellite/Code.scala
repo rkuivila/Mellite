@@ -24,10 +24,11 @@ import de.sciss.synth.proc
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.expr.Expr
 import de.sciss.synth.proc.Obj
+import de.sciss.model
 
 object Code {
   final case class CompilationFailed() extends Exception
-  final case class CodeIncomplete()    extends Exception
+  final case class CodeIncomplete   () extends Exception
 
   implicit def serializer: ImmutableSerializer[Code] = Impl.serializer
 
@@ -84,7 +85,8 @@ object Code {
   }
 
   trait Elem[S <: Sys[S]] extends proc.Elem[S] {
-    type Peer = Expr[S, Code]
+    type Peer         = Expr[S, Code]
+    type PeerUpdate   = model.Change[Code]
 
     def mkCopy()(implicit tx: S#Tx): Elem[S]
   }

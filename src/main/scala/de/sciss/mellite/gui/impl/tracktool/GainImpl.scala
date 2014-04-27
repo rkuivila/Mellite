@@ -17,7 +17,7 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{ExprImplicits, Proc}
+import de.sciss.synth.proc.{Obj, ProcElem, ExprImplicits, Proc}
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
 import de.sciss.synth
@@ -45,10 +45,10 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Gain(factor)
   }
 
-  protected def commitProc(drag: Gain)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit =
+  protected def commitProc(drag: Gain)(span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem])(implicit tx: S#Tx): Unit =
     ProcActions.adjustGain(proc, drag.factor)
 
-  private def commitOld(drag: Gain)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
+  private def commitOld(drag: Gain)(span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem])(implicit tx: S#Tx): Unit = {
     import drag._
     val imp = ExprImplicits[S]
     import imp._

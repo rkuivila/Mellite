@@ -17,7 +17,7 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.Proc
+import de.sciss.synth.proc.{Obj, ProcElem}
 import java.awt.event.MouseEvent
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.expr.Expr
@@ -59,6 +59,7 @@ final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends R
       }
     }
 
-  protected def commitProc(drag: TrackTool.Cursor)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit =
+  protected def commitProc(drag: TrackTool.Cursor)(span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem])
+                          (implicit tx: S#Tx): Unit =
     ProcActions.rename(proc, drag.name)
 }

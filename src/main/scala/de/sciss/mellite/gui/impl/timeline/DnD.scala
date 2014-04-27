@@ -18,7 +18,7 @@ package timeline
 
 import javax.swing.TransferHandler._
 import java.awt.dnd.{DropTarget, DropTargetDropEvent, DropTargetEvent, DropTargetDragEvent, DropTargetAdapter}
-import de.sciss.synth.proc.{Obj, AudioGraphemeElem, IntElem, Proc}
+import de.sciss.synth.proc.{ProcElem, Obj, AudioGraphemeElem, IntElem}
 import scala.swing.Component
 import java.awt.Point
 import de.sciss.lucre.stm
@@ -45,7 +45,7 @@ object DnD {
 
   final case class IntDrag [S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]
   final case class CodeDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, Code.Elem]]) extends Drag[S]
-  final case class ProcDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Proc     [S]]) extends Drag[S]
+  final case class ProcDrag[S <: Sys[S]](document: Document[S], source: stm.Source[S#Tx, Obj.T[S, ProcElem ]]) extends Drag[S]
 
   /** Drag and Drop from Eisenkraut */
   final case class ExtAudioRegionDrag[S <: Sys[S]](document: Document[S], file: File, selection: Span)

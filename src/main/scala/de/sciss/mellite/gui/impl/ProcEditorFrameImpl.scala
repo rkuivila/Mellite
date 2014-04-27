@@ -16,7 +16,7 @@ package gui
 package impl
 
 import de.sciss.lucre.stm.{Source, Disposable, Cursor}
-import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Proc, StringElem}
+import de.sciss.synth.proc.{Obj, ProcElem, ExprImplicits, ProcKeys, Proc, StringElem}
 import scala.swing.{Button, FlowPanel, Component, Label, TextField, BorderPanel, Action, Frame}
 import javax.swing.WindowConstants
 import java.awt.event.{WindowEvent, WindowAdapter}
@@ -29,7 +29,7 @@ import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{defer, deferTx, requireEDT}
 
 object ProcEditorFrameImpl {
-  def apply[S <: Sys[S]](proc: Proc[S])(implicit tx: S#Tx, cursor: Cursor[S]): ProcEditorFrame[S] = {
+  def apply[S <: Sys[S]](proc: Obj.T[S, ProcElem])(implicit tx: S#Tx, cursor: Cursor[S]): ProcEditorFrame[S] = {
     val view = new Impl(/* cursor.position, */ tx.newHandle(proc), proc.toString()) {
       protected val observer = proc.changed.react { implicit tx => upd =>
         upd.changes.foreach {
@@ -50,7 +50,7 @@ object ProcEditorFrameImpl {
     view
   }
 
-  private abstract class Impl[S <: Sys[S]](/* csrPos: S#Acc, */ procH: Source[S#Tx, Proc[S]], title: String)
+  private abstract class Impl[S <: Sys[S]](/* csrPos: S#Acc, */ procH: Source[S#Tx, Obj.T[S, ProcElem]], title: String)
                                           (protected implicit val cursor: Cursor[S])
     extends ProcEditorFrame[S] with ComponentHolder[Frame] with CursorHolder[S] {
 
@@ -70,7 +70,7 @@ object ProcEditorFrameImpl {
       ggName.text = value
     }
 
-    def proc(implicit tx: S#Tx): Proc[S] = procH() // tx.refresh( csrPos, staleProc )
+    def proc(implicit tx: S#Tx): Obj.T[S, ProcElem] = procH() // tx.refresh( csrPos, staleProc )
 
     def dispose()(implicit tx: S#Tx): Unit = {
       observer.dispose()
@@ -125,10 +125,10 @@ object ProcEditorFrameImpl {
                       val imp = ExprImplicits[S]
                       import imp._
                       proc.attr.put(ProcKeys.attrGraphSource, StringElem(code)) // XXX TODO: should update the var
-                      proc.graph() = sg
+                      proc.elem.peer.graph() = sg
                     }
                   case _ =>
-                    lbStatus.text = "! Invalid result: " + value + " !"
+                    lbStatus.text = s"! Invalid result: $value !"
                 }
               case Interpreter.Error(_) =>
                 lbStatus.text = "! Error !"

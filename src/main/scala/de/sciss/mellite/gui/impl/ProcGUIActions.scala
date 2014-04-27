@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Proc, Scan}
+import de.sciss.synth.proc.{ProcGroup, Proc, Scan}
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.lucre.synth.Sys
@@ -11,7 +11,7 @@ import de.sciss.lucre.swing._
 /** These actions require being executed on the EDT. */
 object ProcGUIActions {
   // scalac still has bug finding ProcGroup.Modifiable
-  private type ProcGroupMod[S <: Sys[S]] = BiGroup.Modifiable[S, Proc[S], Proc.Update[S]]
+  private type ProcGroupMod[S <: Sys[S]] = ProcGroup.Modifiable[S] //  BiGroup.Modifiable[S, Proc[S], Proc.Update[S]]
 
   def removeProcs[S <: Sys[S]](group: ProcGroupMod[S], views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit = {
     requireEDT()
@@ -23,8 +23,8 @@ object ProcGUIActions {
         for {
           (thisKey, links)                  <- map
           ProcView.Link(thatView, thatKey)  <- links
-          thisScan                          <- proc.scans.get(thisKey)
-          thatScan                          <- thatView.proc.scans.get(thatKey)
+          thisScan                          <- proc.elem.peer.scans.get(thisKey)
+          thatScan                          <- thatView.proc.elem.peer.scans.get(thatKey)
         } {
           fun(thisKey, thisScan, thatKey, thatScan)
         }

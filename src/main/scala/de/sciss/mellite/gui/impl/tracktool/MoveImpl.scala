@@ -16,7 +16,7 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{ExprImplicits, ProcKeys, Proc, Elem}
+import de.sciss.synth.proc.{Obj, ProcElem, ExprImplicits, ProcKeys, Proc, Elem}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
@@ -50,7 +50,7 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Move(deltaTime = dtim, deltaTrack = dtrk, copy = d.currentEvent.isAltDown)
   }
 
-  protected def commitProc(drag: Move)(span: Expr[S, SpanLike], proc: Proc[S])(implicit tx: S#Tx): Unit = {
+  protected def commitProc(drag: Move)(span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem])(implicit tx: S#Tx): Unit = {
     import drag._
     if (deltaTrack != 0) {
       // XXX TODO: could check for Expr.Const here and Expr.Var.
