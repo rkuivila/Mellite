@@ -31,6 +31,7 @@ import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.synth.proc
 import proc.Implicits._
+import de.sciss.icons.raphael
 
 object ElementsFrameImpl {
   def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Document[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
@@ -85,14 +86,7 @@ object ElementsFrameImpl {
         disposeData()
       }
 
-    private def targetFolder(implicit tx: S#Tx): Folder[S] = {
-      val sel = folderView.selection
-      if (sel.isEmpty) document.root() else sel.head match {
-        case (_,    _parent: ObjView.Folder[S])     => _parent.folder()
-        case (_ :+ (_parent: ObjView.Folder[S]), _) => _parent.folder()
-        case _                                      => document.root()
-      }
-    }
+    private def targetFolder(implicit tx: S#Tx): Folder[S] = folderView.insertionPoint._1
 
     private def addObject(obj: Obj[S])(implicit tx: S#Tx): Unit = {
       val parent = targetFolder
@@ -256,50 +250,55 @@ object ElementsFrameImpl {
         res
       }
 
-      lazy val ggAdd: Button = Button("+") {
+      lazy val actionAdd: Action = Action(null) {
         val bp = ggAdd
         addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
       }
-      ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
 
-      lazy val ggDelete: Button = Button("\u2212") {
-        val views = folderView.selection.map { case (p, view) => (p.last, view) }
-        if (views.nonEmpty) atomic { implicit tx =>
-          views.foreach {
-            case (parent: ObjView.FolderLike[S], child) =>
-              parent.folder().remove(child.obj())
-            case _ =>
-          }
-        }
+      lazy val ggAdd: Button = GUI.toolButton(actionAdd, raphael.Shapes.Plus, "Add Element")
+
+      val actionDelete = Action(null) {
+        ???
+//        val views = folderView.selection.map { case (p, view) => (p.last, view) }
+//        if (views.nonEmpty) atomic { implicit tx =>
+//          views.foreach {
+//            case (parent: ObjView.FolderLike[S], child) =>
+//              parent.folder().remove(child.obj())
+//            case _ =>
+//          }
+//        }
       }
-      ggDelete.enabled = false
-      ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
+      actionDelete.enabled = false
 
-      lazy val ggView: Button = Button("View") {
-        val views = folderView.selection.map { case (_, view) => view }
-        if (views.nonEmpty) atomic { implicit tx =>
-          import Mellite.auralSystem
-          views.foreach {
-            case view: ObjView.ProcGroup[S] =>
-              // val e   = view.element()
-              // import document.inMemory
-              TimelineFrame(document, view.obj())
+      lazy val ggDelete: Button = GUI.toolButton(actionDelete, raphael.Shapes.Minus, "Remove Selected Element")
 
-            case view: ObjView.AudioGrapheme[S] =>
-              AudioFileFrame(document, view.obj())
-
-            case view: ObjView.Recursion[S] =>
-              RecursionFrame(document, view.obj())
-
-            case view: ObjView.Code[S] =>
-              CodeFrame(document, view.obj())
-
-            case _ => // ...
-          }
-        }
+      val actionView = Action(null) {
+        ???
+//        val views = folderView.selection.map { case (_, view) => view }
+//        if (views.nonEmpty) atomic { implicit tx =>
+//          import Mellite.auralSystem
+//          views.foreach {
+//            case view: ObjView.ProcGroup[S] =>
+//              // val e   = view.element()
+//              // import document.inMemory
+//              TimelineFrame(document, view.obj())
+//
+//            case view: ObjView.AudioGrapheme[S] =>
+//              AudioFileFrame(document, view.obj())
+//
+//            case view: ObjView.Recursion[S] =>
+//              RecursionFrame(document, view.obj())
+//
+//            case view: ObjView.Code[S] =>
+//              CodeFrame(document, view.obj())
+//
+//            case _ => // ...
+//          }
+//        }
       }
-      ggView.enabled = false
-      ggView.peer.putClientProperty("JButton.buttonType", "roundRect")
+      actionView.enabled = false
+
+      lazy val ggView: Button = GUI.toolButton(actionView, raphael.Shapes.View, "View Selected Element")
 
       lazy val folderButPanel = new FlowPanel(ggAdd, ggDelete, ggView)
 
@@ -322,9 +321,9 @@ object ElementsFrameImpl {
 
       folderView.addListener {
         case FolderView.SelectionChanged(_, sel) =>
-          ggAdd   .enabled  = sel.size < 2
-          ggDelete.enabled  = sel.nonEmpty
-          ggView  .enabled  = sel.nonEmpty
+          actionAdd   .enabled  = sel.size < 2
+          actionDelete.enabled  = sel.nonEmpty
+          ggView      .enabled  = sel.nonEmpty
       }
     }
   }

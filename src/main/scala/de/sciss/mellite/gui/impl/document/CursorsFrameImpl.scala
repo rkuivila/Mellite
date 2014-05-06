@@ -32,6 +32,7 @@ import de.sciss.model.Change
 import de.sciss.synth.proc.ExprImplicits
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.icons.raphael
 
 object CursorsFrameImpl {
   type S = proc.Confluent
@@ -117,11 +118,13 @@ object CursorsFrameImpl {
     private var _model: ElementTreeModel  = _
     private var t: TreeTable[Node, TreeColumnModel[Node]] = _
 
-    private def actionAdd(parent: Node): Unit = {
+    private def nameAdd = "Add New Cursor"
+
+    private def performAdd(parent: Node): Unit = {
       val format  = new SimpleDateFormat("yyyy MM dd MM | HH:mm:ss", Locale.US) // don't bother user with alpha characters
       val ggValue = new FormattedTextField(format)
       ggValue.peer.setValue(new Date(parent.updated))
-      val nameOpt = GUI.keyValueDialog(value = ggValue, title = "Add New Cursor",
+      val nameOpt = GUI.keyValueDialog(value = ggValue, title = nameAdd,
         defaultName = "branch", window = Some(component))
       (nameOpt, ggValue.peer.getValue) match {
         case (Some(name), seminalDate: Date) =>
@@ -242,22 +245,22 @@ object CursorsFrameImpl {
       tabCM.getColumn(1).setPreferredWidth(184)
       tabCM.getColumn(2).setPreferredWidth(184)
 
-      val ggAdd = Button("+") {
+      val actionAdd = Action(null) {
         t.selection.paths.headOption.foreach { path =>
           val v = path.last
-          actionAdd(parent = v)
+          performAdd(parent = v)
         }
       }
-      ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
-      ggAdd.enabled = false
+      actionAdd.enabled = false
+      val ggAdd: Button = GUI.toolButton(actionAdd, raphael.Shapes.Plus, nameAdd)
 
-      val ggDelete: Button = Button("\u2212") {
-        println("Delete")
+      val actionDelete = Action(null) {
+        println("TODO: Delete")
       }
-      ggDelete.enabled = false
-      ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
+      actionDelete.enabled = false
+      val ggDelete: Button = GUI.toolButton(actionDelete, raphael.Shapes.Minus, "Delete Selected Cursor")
 
-      lazy val ggView: Button = Button("View") {
+      val actionView = Action(null) {
         t.selection.paths.foreach { path =>
           val elem = path.last.elem
           implicit val cursor = elem.cursor
@@ -267,16 +270,16 @@ object CursorsFrameImpl {
           }
         }
       }
-      ggView.enabled = false
-      ggView.peer.putClientProperty("JButton.buttonType", "roundRect")
+      actionView.enabled = false
+      val ggView: Button = GUI.toolButton(actionView, raphael.Shapes.View, "View Document At Cursor Position")
 
       t.listenTo(t.selection)
       t.reactions += {
         case e: TreeTableSelectionChanged[_, _] =>  // this crappy untyped event doesn't help us at all
           val selSize = t.selection.paths.size
-          ggAdd   .enabled  = selSize == 1
-          // ggDelete.enabled  = selSize > 0
-          ggView  .enabled  = selSize == 1 // > 0
+          actionAdd .enabled  = selSize == 1
+          // actionDelete.enabled  = selSize > 0
+          actionView.enabled  = selSize == 1 // > 0
       }
 
       lazy val folderButPanel = new FlowPanel(ggAdd, ggDelete, ggView)

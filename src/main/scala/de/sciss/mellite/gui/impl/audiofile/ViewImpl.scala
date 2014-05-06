@@ -145,15 +145,17 @@ object ViewImpl {
         val t     = support.getTransferable
         val data  = t.getTransferData(FolderView.selectionFlavor).asInstanceOf[FolderView.SelectionDnDData[S]]
         (data.document == view.document) && {
-          val ints = data.selection.collect {
-            case (_, ev: ObjView.Int[S]) => (ev.name, ev.obj)
-          }
-          ints.headOption.exists { case (name, it) =>
-            export.bus  = Some(it)
-            text        = name
-            foreground  = null
-            repaint()
-            true
+          data.selection.exists { nodeView =>
+            nodeView.renderData match {
+              case ev: ObjView.Int[S] =>
+                export.bus  = Some(ev.obj)
+                text        = ev.name
+                foreground  = null
+                repaint()
+                true
+
+              case _ => false
+            }
           }
         }
       }

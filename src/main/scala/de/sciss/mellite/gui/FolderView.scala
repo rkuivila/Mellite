@@ -23,6 +23,7 @@ import de.sciss.lucre.stm
 import java.io.File
 import de.sciss.synth.proc.{Folder, ArtifactLocationElem, Obj}
 import de.sciss.lucre.event.Sys
+import de.sciss.lucre.swing.TreeTableView
 
 object FolderView {
   def apply[S <: Sys[S]](document: File, root: Folder[S])
@@ -31,7 +32,9 @@ object FolderView {
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
     */
-  type Selection[S <: Sys[S]] = Vec[(Vec[ObjView.FolderLike[S]], ObjView[S])]
+  // type Selection[S <: Sys[S]] = Vec[(Vec[ObjView.FolderLike[S]], ObjView[S])]
+  type Selection[S <: Sys[S]] = List[TreeTableView.NodeView[S, Obj[S], ObjView[S]]]
+  // type Selection[S <: Sys[S]] = Vec[stm.Source[S#Tx, Obj[S]]]
 
   final case class SelectionDnDData[S <: Sys[S]](document: File, selection: Selection[S])
 
@@ -47,6 +50,8 @@ trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with Disposabl
   def selection: FolderView.Selection[S]
 
   def locations: Vec[ObjView.ArtifactLocation[S]]
+
+  def insertionPoint(implicit tx: S#Tx): (Folder[S], Int)
 
   def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]]
 }
