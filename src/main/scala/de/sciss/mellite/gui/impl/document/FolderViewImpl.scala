@@ -41,6 +41,7 @@ import de.sciss.lucre.event.Sys
 import de.sciss.synth.proc.Folder.Update
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.lucre.data.Iterator
+import de.sciss.treetable.j.DefaultTreeTableCellEditor
 
 object FolderViewImpl {
   // private final val DEBUG = false
@@ -125,8 +126,17 @@ object FolderViewImpl {
         changes.flatMap {
           case Folder.Added  (idx, obj) => Vec(TreeTableView.NodeAdded  (parent, idx, obj): MUpdate)
           case Folder.Removed(idx, obj) => Vec(TreeTableView.NodeRemoved(parent, idx, obj): MUpdate)
-          case Folder.Element(obj, upd) if updateObject(obj, upd) =>
-            Vec(TreeTableView.NodeChanged(obj): MUpdate)  // XXX TODO: must nest
+          case Folder.Element(obj, upd) =>
+            val isDirty = updateObject(obj, upd)
+            val v1: Vec[MUpdate] = obj match {
+              case FolderElem.Obj(objT) =>
+                upd.changes.flatMap {
+                  case Obj.ElemChange(f) => updateBranch(objT.elem.peer, f.asInstanceOf[Folder.Update[S]].changes)
+                  case _ => Vec.empty
+                }
+              case _ => Vec.empty
+            }
+            if (isDirty) (TreeTableView.NodeChanged(obj): MUpdate) +: v1 else v1
         }
 
       private lazy val component = TreeTableCellRenderer.Default
@@ -148,6 +158,15 @@ object FolderViewImpl {
           case _ =>
         }
         res // component
+      }
+
+      private val defaultEditor = new DefaultTreeTableCellEditor(new javax.swing.JTextField)
+
+      def editor(view: TreeTableView[S, Obj[S], Folder[S], Data], data: Data, row: Int, column: Int,
+                 selected: Boolean): Component = {
+        val value = if (column == 0) data.name else "?!"
+        val c = defaultEditor.getTreeTableCellEditorComponent(view.treeTable.peer, value, selected, row, column)
+        Component.wrap(c.asInstanceOf[javax.swing.JComponent])
       }
 
       lazy val columns: TreeColumnModel[Data] = {
