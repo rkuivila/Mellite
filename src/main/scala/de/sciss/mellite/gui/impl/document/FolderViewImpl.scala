@@ -163,10 +163,7 @@ object FolderViewImpl {
               case _ =>
             }
 
-          def isEditable(data: Data) = data match {
-            case b: ObjView[S] => true
-            case _ => false // i.e. Root
-          }
+          def isEditable(data: Data) = true
         }
 
         val colValue = new TreeColumnModel.Column[Data, Any]("Value") {

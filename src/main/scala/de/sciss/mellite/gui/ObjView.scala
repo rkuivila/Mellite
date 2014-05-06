@@ -44,14 +44,29 @@ object ObjView {
     val name: _String = obj.attr.name
     obj match {
       case IntElem.Obj(objT) =>
-        val value = objT.elem.peer.value
-        new Int.Impl(/* parent, */ tx.newHandle(objT), name, value)
+        val ex          = objT.elem.peer
+        val value       = ex.value
+        val isEditable  = ex match {
+          case Expr.Var(_)  => true
+          case _            => false
+        }
+        new Int.Impl(/* parent, */ tx.newHandle(objT), name, value, isEditable = isEditable)
       case DoubleElem.Obj(objT) =>
-        val value = objT.elem.peer.value
-        new Double.Impl(/* parent, */ tx.newHandle(objT), name, value)
+        val ex          = objT.elem.peer
+        val value       = ex.value
+        val isEditable  = ex match {
+          case Expr.Var(_)  => true
+          case _            => false
+        }
+        new Double.Impl(/* parent, */ tx.newHandle(objT), name, value, isEditable = isEditable)
       case StringElem.Obj(objT) =>
-        val value = objT.elem.peer.value
-        new String.Impl(/* parent, */ tx.newHandle(objT), name, value)
+        val ex          = objT.elem.peer
+        val value       = ex.value
+        val isEditable  = ex match {
+          case Expr.Var(_)  => true
+          case _            => false
+        }
+        new String.Impl(/* parent, */ tx.newHandle(objT), name, value, isEditable = isEditable)
       case FolderElem.Obj(objT) =>
         val res = new Folder.Impl[S](/* parent, */ tx.newHandle(objT), name)
         // res.children = e.entity.iterator.map(apply(res, _)(tx)).toIndexedSeq
@@ -79,7 +94,8 @@ object ObjView {
     private val icon = raphaelIcon(raphael.Shapes.Font)
 
     private[ObjView] final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, StringElem]],
-                                                   var name: _String, var value: _String)
+                                                   var name: _String, var value: _String,
+                                                   override val isEditable: _Boolean)
       extends String[S] with ObjView.Impl[S] {
 
       def prefix = "String"
@@ -122,7 +138,8 @@ object ObjView {
     private val icon = raphaelIcon(Shapes.IntegerNumbers)
 
     private[ObjView] final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, IntElem]],
-                                                   var name: _String, var value: _Int)
+                                                   var name: _String, var value: _Int,
+                                                   override val isEditable: _Boolean)
       extends Int[S] with ObjView.Impl[S] {
 
       def prefix = "Int"
@@ -170,7 +187,8 @@ object ObjView {
     private val icon = raphaelIcon(Shapes.RealNumbers)
 
     private[ObjView] final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]],
-                                                   var name: _String, var value: _Double)
+                                                   var name: _String, var value: _Double,
+                                                   override val isEditable: _Boolean)
       extends Double[S] with ObjView.Impl[S] {
 
       def prefix = "Double"
