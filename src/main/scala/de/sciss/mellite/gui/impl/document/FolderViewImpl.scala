@@ -34,7 +34,7 @@ import de.sciss.synth.io.AudioFile
 import scala.util.Try
 import de.sciss.model.Change
 import de.sciss.lucre.swing._
-import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing.impl.{TreeTableViewImpl, ComponentHolder}
 import de.sciss.synth.proc
 import proc.Implicits._
 import de.sciss.lucre.event.Sys
@@ -43,7 +43,9 @@ import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.lucre.data.Iterator
 
 object FolderViewImpl {
-  private final val DEBUG = false
+  // private final val DEBUG = false
+
+  // TreeTableViewImpl.DEBUG = true
 
   def apply[S <: Sys[S]](document: File, root: Folder[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = {
@@ -117,11 +119,14 @@ object FolderViewImpl {
       private type MUpdate = ModelUpdate[Obj[S], Folder[S]]
 
       def update(update: Update[S])(implicit tx: S#Tx): Vec[MUpdate] =
-        update.changes.collect {
-          case Folder.Added  (idx, obj) => TreeTableView.NodeAdded  (update.list, idx, obj): MUpdate
-          case Folder.Removed(idx, obj) => TreeTableView.NodeRemoved(update.list, idx, obj): MUpdate
+        updateBranch(treeView.root(), update.changes)
+
+      private def updateBranch(parent: Folder[S], changes: Vec[Folder.Change[S]])(implicit tx: S#Tx): Vec[MUpdate] =
+        changes.flatMap {
+          case Folder.Added  (idx, obj) => Vec(TreeTableView.NodeAdded  (parent, idx, obj): MUpdate)
+          case Folder.Removed(idx, obj) => Vec(TreeTableView.NodeRemoved(parent, idx, obj): MUpdate)
           case Folder.Element(obj, upd) if updateObject(obj, upd) =>
-            TreeTableView.NodeChanged(obj): MUpdate
+            Vec(TreeTableView.NodeChanged(obj): MUpdate)  // XXX TODO: must nest
         }
 
       def renderer(view: TreeTableView[S, Obj[S], Folder[S], Data], data: Data, row: Int, column: Int,
