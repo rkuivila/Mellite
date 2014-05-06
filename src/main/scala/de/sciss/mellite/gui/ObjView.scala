@@ -48,28 +48,28 @@ object ObjView {
         new Int.Impl(/* parent, */ tx.newHandle(objT), name, value)
       case DoubleElem.Obj(objT) =>
         val value = objT.elem.peer.value
-        new Double.Impl(/* parent, tx.newHandle(objT), */ name, value)
+        new Double.Impl(/* parent, */ tx.newHandle(objT), name, value)
       case StringElem.Obj(objT) =>
         val value = objT.elem.peer.value
-        new String.Impl(/* parent, tx.newHandle(objT), */ name, value)
+        new String.Impl(/* parent, */ tx.newHandle(objT), name, value)
       case FolderElem.Obj(objT) =>
         val res = new Folder.Impl[S](/* parent, */ tx.newHandle(objT), name)
         // res.children = e.entity.iterator.map(apply(res, _)(tx)).toIndexedSeq
         res
       case ProcGroupElem.Obj(objT) =>
-        new ProcGroup.Impl(/* parent, tx.newHandle(objT), */ name)
+        new ProcGroup.Impl(/* parent, */ tx.newHandle(objT), name)
       case AudioGraphemeElem.Obj(objT) =>
         val value = objT.elem.peer.value
-        new AudioGrapheme.Impl(/* parent, tx.newHandle(objT), */ name, value)
+        new AudioGrapheme.Impl(/* parent, */ tx.newHandle(objT), name, value)
       case ArtifactLocationElem.Obj(objT) =>
         val value = objT.elem.peer.directory
         new ArtifactLocation.Impl(/* parent, */ tx.newHandle(objT), name, value)
       case _Recursion.Elem.Obj(objT) =>
         val value = objT.elem.peer.deployed.elem.peer.artifact.value
-        new Recursion.Impl(/* parent, tx.newHandle(objT), */ name, value)
+        new Recursion.Impl(/* parent, */ tx.newHandle(objT), name, value)
       case _Code.Elem.Obj(objT) =>
         val value = objT.elem.peer.value
-        new Code.Impl(/* parent, tx.newHandle(objT), */ name, value)
+        new Code.Impl(/* parent, */ tx.newHandle(objT), name, value)
     }
   }
 
@@ -78,15 +78,16 @@ object ObjView {
   object String {
     private val icon = raphaelIcon(raphael.Shapes.Font)
 
-    private[ObjView] final class Impl[S <: Sys[S]](var name: _String, var value: _String)
+    private[ObjView] final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, StringElem]],
+                                                   var name: _String, var value: _String)
       extends String[S] with ObjView.Impl[S] {
 
       def prefix = "String"
       def icon = String.icon
 
-      def tryUpdate(obj: Obj[S], value: Any)(implicit tx: S#Tx): _Boolean = (obj, value) match {
-        case (StringElem.Obj(objT), s: _String) =>
-          objT.elem.peer match {
+      def tryUpdate(value: Any)(implicit tx: S#Tx): _Boolean = value match {
+        case s: _String =>
+          obj().elem.peer match {
             case Expr.Var(vr) =>
               vr() match {
                 case Expr.Const(x) if x == s => false
@@ -112,7 +113,7 @@ object ObjView {
     }
   }
   sealed trait String[S <: Sys[S]] extends ObjView[S] {
-    // def obj: stm.Source[S#Tx, Obj.T[S, StringElem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, StringElem]]
   }
 
   // -------- Int --------
@@ -127,29 +128,26 @@ object ObjView {
       def prefix = "Int"
       def icon   = Int.icon
 
-      def tryUpdate(obj: Obj[S], value: Any)(implicit tx: S#Tx): _Boolean = {
+      def tryUpdate(value: Any)(implicit tx: S#Tx): _Boolean = {
         val numOpt: Option[_Int] = value match {
           case num: _Int  => Some(num)
           case s: _String => Try(s.toInt).toOption
         }
-        (obj, numOpt) match {
-          case (IntElem.Obj(objT), Some(num)) =>
-            objT.elem.peer match {
-              case Expr.Var(vr) =>
-                vr() match {
-                  case Expr.Const(x) if x != num =>
-                    val imp = ExprImplicits[S]
-                    import imp._
-                    vr() = num
-                    true
+        numOpt.exists { num =>
+          obj().elem.peer match {
+            case Expr.Var(vr) =>
+              vr() match {
+                case Expr.Const(x) if x != num =>
+                  val imp = ExprImplicits[S]
+                  import imp._
+                  vr() = num
+                  true
 
-                  case _ => false
-                }
+                case _ => false
+              }
 
-              case _ => false
-            }
-
-          case _ => false
+            case _ => false
+          }
         }
       }
 
@@ -171,21 +169,22 @@ object ObjView {
   object Double {
     private val icon = raphaelIcon(Shapes.RealNumbers)
 
-    private[ObjView] final class Impl[S <: Sys[S]](var name: _String, var value: _Double)
+    private[ObjView] final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]],
+                                                   var name: _String, var value: _Double)
       extends Double[S] with ObjView.Impl[S] {
 
       def prefix = "Double"
       def icon = Double.icon
 
-      def tryUpdate(obj: Obj[S], value: Any)(implicit tx: S#Tx): _Boolean = {
+      def tryUpdate(value: Any)(implicit tx: S#Tx): _Boolean = {
         val numOpt = value match {
           case num: _Double => Some(num)
           case s: _String => Try(s.toDouble).toOption
         }
         // XXX TODO: DRY (see Int)
-        (obj, numOpt) match {
-          case (DoubleElem.Obj(objT), Some(num)) =>
-            objT.elem.peer match {
+        numOpt.exists {
+          num =>
+            obj().elem.peer match {
               case Expr.Var(vr) =>
                 vr() match {
                   case Expr.Const(x) if x != num =>
@@ -199,8 +198,6 @@ object ObjView {
 
               case _ => false
             }
-
-          case _ => false
         }
       }
 
@@ -213,7 +210,7 @@ object ObjView {
     }
   }
   sealed trait Double[S <: Sys[S]] extends ObjView[S] {
-    // def obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]]
   }
 
   //  // -------- FolderLike --------
@@ -259,7 +256,7 @@ object ObjView {
       def prefix = "Folder"
       def icon = Swing.EmptyIcon
 
-      def tryUpdate  (obj: Obj[S], value : Any)(implicit tx: S#Tx): _Boolean = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): _Boolean = false
       def checkUpdate(update: Any)(implicit tx: S#Tx): _Boolean = false  // element addition and removal is handled by folder view
     }
   }
@@ -272,19 +269,20 @@ object ObjView {
   object ProcGroup {
     private val icon = raphaelIcon(raphael.Shapes.Ruler)
 
-    private[ObjView] final class Impl[S <: Sys[S]](var name: _String)
+    private[ObjView] final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
+                                                   var name: _String)
       extends ProcGroup[S] with ObjView.Impl[S] {
 
       def prefix = "ProcGroup"
       def value = ()
       def icon = ProcGroup.icon
 
-      def tryUpdate  (obj: Obj[S], value : Any)(implicit tx: S#Tx): _Boolean = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): _Boolean = false
       def checkUpdate(update: Any)(implicit tx: S#Tx): _Boolean = false
     }
   }
   sealed trait ProcGroup[S <: Sys[S]] extends ObjView[S] {
-    // def obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]]
   }
 
   // -------- AudioGrapheme --------
@@ -292,13 +290,14 @@ object ObjView {
   object AudioGrapheme {
     val icon: Icon = raphaelIcon(raphael.Shapes.Music)
 
-    private[ObjView] final class Impl[S <: Sys[S]](var name: _String, var value: Grapheme.Value.Audio)
+    private[ObjView] final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
+                                                   var name: _String, var value: Grapheme.Value.Audio)
       extends AudioGrapheme[S] with ObjView.Impl[S] {
 
       def prefix = "String"
       def icon = AudioGrapheme.icon
 
-      def tryUpdate  (obj: Obj[S], value : Any)(implicit tx: S#Tx): _Boolean = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): _Boolean = false
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): _Boolean = update match {
         case Change(_, now: Grapheme.Value.Audio) =>
@@ -309,7 +308,7 @@ object ObjView {
     }
   }
   sealed trait AudioGrapheme[S <: Sys[S]] extends ObjView[S] {
-    // def obj: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
     var value: Grapheme.Value.Audio
   }
 
@@ -326,7 +325,7 @@ object ObjView {
       def value   = directory
       def icon    = ArtifactLocation.icon
 
-      def tryUpdate  (obj: Obj[S], value : Any)(implicit tx: S#Tx): _Boolean = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): _Boolean = false
 
       def checkUpdate(update: Any)(implicit tx: S#Tx): _Boolean = update match {
         case Artifact.Location.Moved(_, Change(_, now)) =>
@@ -346,19 +345,20 @@ object ObjView {
   object Recursion {
     private val icon = raphaelIcon(raphael.Shapes.Quote)
 
-    private[ObjView] final class Impl[S <: Sys[S]](var name: _String, var deployed: File)
+    private[ObjView] final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, mellite.Recursion.Elem]],
+                                                   var name: _String, var deployed: File)
       extends Recursion[S] with ObjView.Impl[S] {
 
       def prefix  = "Recursion"
       def value   = deployed
       def icon    = Recursion.icon
 
-      def tryUpdate  (obj: Obj[S], value : Any)(implicit tx: S#Tx): _Boolean = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): _Boolean = false
       def checkUpdate(update: Any)(implicit tx: S#Tx): _Boolean = false
     }
   }
   sealed trait Recursion[S <: Sys[S]] extends ObjView[S] {
-    // def obj: stm.Source[S#Tx, Obj.T[S, mellite.Recursion.Elem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, mellite.Recursion.Elem]]
     var deployed: File
   }
 
@@ -367,18 +367,19 @@ object ObjView {
   object Code {
     private val icon = raphaelIcon(raphael.Shapes.Code)
 
-    private[ObjView] final class Impl[S <: Sys[S]](var name: _String, var value: _Code)
+    private[ObjView] final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, mellite.Code.Elem]],
+                                                   var name: _String, var value: _Code)
       extends Code[S] with ObjView.Impl[S] {
 
       def prefix  = "Code"
       def icon    = Code.icon
 
-      def tryUpdate  (obj: Obj[S], value : Any)(implicit tx: S#Tx): _Boolean = false
+      def tryUpdate  (value : Any)(implicit tx: S#Tx): _Boolean = false
       def checkUpdate(update: Any)(implicit tx: S#Tx): _Boolean = false
     }
   }
   sealed trait Code[S <: Sys[S]] extends ObjView[S] {
-    // def obj: stm.Source[S#Tx, Obj.T[S, mellite.Code.Elem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, mellite.Code.Elem]]
     var value: _Code
   }
 
@@ -412,16 +413,23 @@ object ObjView {
     override def toString = s"ElementView.$prefix(name = $name)"
   }
 
-  sealed trait Renderer[S <: Sys[S]] {
-    // private[gui] def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component
-    def name: _String
-    def value: Any
-    def tryUpdate(node: Obj[S], value: Any)(implicit tx: S#Tx): _Boolean
-    def icon: Icon
-  }
+  //  sealed trait Renderer[S <: Sys[S]] {
+  //    // private[gui] def componentFor(tree: Tree[_], info: Tree.Renderer.CellInfo): Component
+  //    def name: _String
+  //    def value: Any
+  //    def tryUpdate(value: Any)(implicit tx: S#Tx): _Boolean
+  //    def icon: Icon
+  //  }
 }
-sealed trait ObjView[S <: Sys[S]] extends ObjView.Renderer[S] {
+/* sealed */ trait ObjView[S <: Sys[S]] /* extends ObjView.Renderer[S] */ {
   var name: String
   def checkUpdate(update: Any)(implicit tx: S#Tx): Boolean
   def isEditable: Boolean = false
+
+  def obj: stm.Source[S#Tx, Obj[S]]
+
+  // formerly Renderer
+  def value: Any
+  def tryUpdate(value: Any)(implicit tx: S#Tx): Boolean
+  def icon: Icon
 }

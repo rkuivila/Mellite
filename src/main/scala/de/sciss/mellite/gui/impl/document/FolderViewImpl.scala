@@ -68,7 +68,7 @@ object FolderViewImpl {
     extends ComponentHolder[Component] with FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
-    type Node   = ObjView.Renderer[S]
+    // type Node   = ObjView.Renderer[S]
     // type Branch = ObjView.FolderLike[S]
     // type Path   = TreeTable.Path[Branch]
 
@@ -80,28 +80,65 @@ object FolderViewImpl {
 
       type Data = ObjView[S]
 
-      def branchOption(node: Obj[S]): Option[Folder[S]] = ???
+      def branchOption(node: Obj[S]): Option[Folder[S]] = node.elem match {
+        case fe: FolderElem[S] => Some(fe.peer)
+        case _ => None
+      }
 
-      def children(branch: Folder[S])(implicit tx: S#Tx): de.sciss.lucre.data.Iterator[S#Tx, Obj[S]] = ???
+      def children(branch: Folder[S])(implicit tx: S#Tx): de.sciss.lucre.data.Iterator[S#Tx, Obj[S]] =
+        branch.iterator
 
-      def update(update: Update[S])(implicit tx: S#Tx): Vec[ModelUpdate[Obj[S], Folder[S]]] = ???
+      private def updateObjectName(obj: Obj[S], name: String)(implicit tx: S#Tx): Boolean = {
+        treeView.nodeView(obj).exists { nv =>
+          val objView = nv.renderData
+          deferTx {
+            objView.name = name
+          }
+          true
+        }
+      }
+
+      private def updateObject(obj: Obj[S], upd: Obj.Update[S])(implicit tx: S#Tx): Boolean =
+        (false /: upd.changes) { (p, ch) =>
+          val p1 = ch match {
+            case Obj.ElemChange(p) =>
+              treeView.nodeView(obj).exists { nv =>
+                val objView = nv.renderData
+                objView.checkUpdate(p)
+              }
+            case Obj.AttrAdded  (ProcKeys.attrName, e: StringElem[S]) => updateObjectName(obj, e.peer.value)
+            case Obj.AttrRemoved(ProcKeys.attrName, _) => updateObjectName(obj, "<unnamed>")
+            case Obj.AttrChange (ProcKeys.attrName, _, Change(_, name: String)) => updateObjectName(obj, name)
+            case _ => false
+          }
+          p | p1
+        }
+
+      private type MUpdate = ModelUpdate[Obj[S], Folder[S]]
+
+      def update(update: Update[S])(implicit tx: S#Tx): Vec[MUpdate] =
+        update.changes.collect {
+          case Folder.Added  (idx, obj) => TreeTableView.NodeAdded  (update.list, idx, obj): MUpdate
+          case Folder.Removed(idx, obj) => TreeTableView.NodeRemoved(update.list, idx, obj): MUpdate
+          case Folder.Element(obj, upd) if updateObject(obj, upd) =>
+            TreeTableView.NodeChanged(obj): MUpdate
+        }
 
       def renderer(view: TreeTableView[S, Obj[S], Folder[S], Data], data: Data, row: Int, column: Int,
                    state: State): Component = ???
 
       lazy val columns: TreeColumnModel[Data] = {
         val colName = new TreeColumnModel.Column[Data, String]("Name") {
-          def apply(node: Data): String = ??? // node.name
+          def apply(node: Data): String = node.name
 
           def update(data: Data, value: String): Unit =
-          ???
-//            data match {
-//              case v: ObjView[S] if value != v.name =>
-//                cursor.step { implicit tx =>
-//                  v.obj().attr.name = value
-//                }
-//              case _ =>
-//            }
+            data match {
+              case v if value != v.name =>
+                cursor.step { implicit tx =>
+                  v.obj().attr.name = value
+                }
+              case _ =>
+            }
 
           def isEditable(data: Data) = data match {
             case b: ObjView[S] => true
@@ -110,33 +147,25 @@ object FolderViewImpl {
         }
 
         val colValue = new TreeColumnModel.Column[Data, Any]("Value") {
-          def apply(node: Data): Any = ??? // node.value
+          def apply(node: Data): Any = node.value
 
           def update(node: Data, value: Any): Unit =
-            ??? // cursor.step { implicit tx => node.tryUpdate(value) }
+            cursor.step { implicit tx =>
+              node.tryUpdate(value)
+            }
 
           def isEditable(data: Data) = data.isEditable
         }
 
         new TreeColumnModel.Tuple2[Data, String, Any](colName, colValue) {
-          def getParent(node: Data): Option[Data] = ??? // node.parent
+          def getParent(node: Data): Option[Data] = throw new UnsupportedOperationException
         }
       }
 
-      def data(node: Obj[S])(implicit tx: S#Tx): Data = ???
+      def data(node: Obj[S])(implicit tx: S#Tx): Data = ObjView(node)
     }
 
     protected def treeView: TreeTableView[S, Obj[S], Folder[S], ObjView[S]]
-
-//        def updateName(n: String): Unit =
-//          deferTx {
-//            v.name = n
-//            _model.elemUpdated(v)
-//          }
-//
-//          case Obj.AttrRemoved(ProcKeys.attrName, _)                             => updateName("<Unnamed>")
-//          case Obj.AttrAdded  (ProcKeys.attrName, s: StringElem[S])              => updateName(s.peer.value)
-//          case Obj.AttrChange (ProcKeys.attrName, _, Change(_, newName: String)) => updateName(newName)
 
     def dispose()(implicit tx: S#Tx): Unit = {
       treeView.dispose()
@@ -145,26 +174,28 @@ object FolderViewImpl {
     protected def guiInit(): Unit = {
       val t = treeView.treeTable
       t.rootVisible = false
-      t.renderer    = new TreeTableCellRenderer {
-        private val component = TreeTableCellRenderer.Default
-        def getRendererComponent(treeTable: TreeTable[_, _], value: Any, row: Int, column: Int,
-                                 state: TreeTableCellRenderer.State): Component = {
-          val value1 = if (value != {}) value else null
-          val res = component.getRendererComponent(treeTable, value1, row = row, column = column, state = state)
-          if (row >= 0) state.tree match {
-            case Some(TreeState(false, true)) =>
-              // println(s"row = $row, col = $column")
-              try {
-                val node = t.getNode(row)
-                component.icon = ??? // node.icon
-              } catch {
-                case NonFatal(_) => // XXX TODO -- currently NPE problems; seems renderer is called before tree expansion with node missing
-              }
-            case _ =>
-          }
-          res // component
-        }
-      }
+
+//      t.renderer    = new TreeTableCellRenderer {
+//        private val component = TreeTableCellRenderer.Default
+//        def getRendererComponent(treeTable: TreeTable[_, _], value: Any, row: Int, column: Int,
+//                                 state: TreeTableCellRenderer.State): Component = {
+//          val value1 = if (value != {}) value else null
+//          val res = component.getRendererComponent(treeTable, value1, row = row, column = column, state = state)
+//          if (row >= 0) state.tree match {
+//            case Some(TreeState(false, true)) =>
+//              // println(s"row = $row, col = $column")
+//              try {
+//                val node = t.getNode(row)
+//                component.icon = node.icon
+//              } catch {
+//                case NonFatal(_) => // XXX TODO -- currently NPE problems; seems renderer is called before tree expansion with node missing
+//              }
+//            case _ =>
+//          }
+//          res // component
+//        }
+//      }
+
     //      val tabCM = t.peer.getColumnModel
     //      tabCM.getColumn(0).setPreferredWidth(176)
     //      tabCM.getColumn(1).setPreferredWidth(256)
@@ -373,18 +404,5 @@ object FolderViewImpl {
           ActionArtifactLocation.query(treeView.root, file = f, folder = parent) // , window = Some(comp))
       }
     }
-
-    //    object PathExtractor {
-    //      def unapply(path: Seq[Node]): Option[(Vec[ObjView.FolderLike[S]], ObjView[S])] =
-    //        path match {
-    //          case init :+ (last: ObjView[S]) =>
-    //            val pre: Vec[ObjView.FolderLike[S]] = init.map({
-    //              case g: ObjView.FolderLike[S] => g
-    //              case _ => return None
-    //            })(breakOut)
-    //            Some((/* _root +: */ pre, last))
-    //          case _ => None
-    //        }
-    //    }
   }
 }
