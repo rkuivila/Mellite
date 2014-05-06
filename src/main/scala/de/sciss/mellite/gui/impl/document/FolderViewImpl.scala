@@ -58,7 +58,7 @@ object FolderViewImpl {
       val cursor    = _cursor
       val mapViews  = tx.newInMemoryIDMap[ObjView[S]]  // folder IDs to renderers
       val document  = _doc
-      val treeView  = TreeTableView(root, TTHandler)
+      val treeView  = TreeTableView[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]](root, TTHandler)
 
       deferTx {
         guiInit()
@@ -129,8 +129,26 @@ object FolderViewImpl {
             Vec(TreeTableView.NodeChanged(obj): MUpdate)  // XXX TODO: must nest
         }
 
+      private lazy val component = TreeTableCellRenderer.Default
+
       def renderer(view: TreeTableView[S, Obj[S], Folder[S], Data], data: Data, row: Int, column: Int,
-                   state: State): Component = ???
+                   state: State): Component = {
+        val value   = if (column == 0) data.name else data.value
+        val value1  = if (value != {}) value else null
+        val res = component.getRendererComponent(view.treeTable, value1, row = row, column = column, state = state)
+        if (row >= 0) state.tree match {
+          case Some(TreeState(false, true)) =>
+            // println(s"row = $row, col = $column")
+            try {
+              // val node = t.getNode(row)
+              component.icon = data.icon
+            } catch {
+              case NonFatal(_) => // XXX TODO -- currently NPE problems; seems renderer is called before tree expansion with node missing
+            }
+          case _ =>
+        }
+        res // component
+      }
 
       lazy val columns: TreeColumnModel[Data] = {
         val colName = new TreeColumnModel.Column[Data, String]("Name") {
@@ -180,30 +198,9 @@ object FolderViewImpl {
       val t = treeView.treeTable
       t.rootVisible = false
 
-//      t.renderer    = new TreeTableCellRenderer {
-//        private val component = TreeTableCellRenderer.Default
-//        def getRendererComponent(treeTable: TreeTable[_, _], value: Any, row: Int, column: Int,
-//                                 state: TreeTableCellRenderer.State): Component = {
-//          val value1 = if (value != {}) value else null
-//          val res = component.getRendererComponent(treeTable, value1, row = row, column = column, state = state)
-//          if (row >= 0) state.tree match {
-//            case Some(TreeState(false, true)) =>
-//              // println(s"row = $row, col = $column")
-//              try {
-//                val node = t.getNode(row)
-//                component.icon = node.icon
-//              } catch {
-//                case NonFatal(_) => // XXX TODO -- currently NPE problems; seems renderer is called before tree expansion with node missing
-//              }
-//            case _ =>
-//          }
-//          res // component
-//        }
-//      }
-
-    //      val tabCM = t.peer.getColumnModel
-    //      tabCM.getColumn(0).setPreferredWidth(176)
-    //      tabCM.getColumn(1).setPreferredWidth(256)
+      val tabCM = t.peer.getColumnModel
+      tabCM.getColumn(0).setPreferredWidth(176)
+      tabCM.getColumn(1).setPreferredWidth(256)
 
       t.listenTo(t.selection)
       t.reactions += {
