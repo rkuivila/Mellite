@@ -16,32 +16,33 @@ package gui
 package impl
 package document
 
-import de.sciss.synth.proc.{ProcKeys, Folder, ExprImplicits, Artifact, Obj, ArtifactLocationElem, FolderElem, StringElem}
-import swing.{ScrollPane, Component}
-import scala.collection.{JavaConversions, breakOut}
+import de.sciss.synth.proc.{Elem, ProcKeys, Folder, Artifact, Obj, ArtifactLocationElem, FolderElem, StringElem}
+import swing.Component
+import scala.collection.breakOut
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.stm.{Disposable, Cursor, IdentifierMap}
 import de.sciss.model.impl.ModelImpl
 import scala.util.control.NonFatal
-import javax.swing.{DropMode, JComponent, TransferHandler}
-import java.awt.datatransfer.{DataFlavor, Transferable}
+import javax.swing.{CellEditor, DropMode, JComponent, TransferHandler}
+import java.awt.datatransfer.DataFlavor
 import javax.swing.TransferHandler.TransferSupport
-import de.sciss.treetable.{TreeTableSelectionChanged, TreeTableCellRenderer, TreeColumnModel, AbstractTreeModel, TreeTable}
-import de.sciss.treetable.TreeTableCellRenderer.{State, TreeState}
+import de.sciss.treetable.TreeTableSelectionChanged
+import de.sciss.treetable.TreeTableCellRenderer
 import java.io.File
-import de.sciss.lucre.{data, stm}
-import de.sciss.synth.io.AudioFile
-import scala.util.Try
+import de.sciss.lucre.stm
 import de.sciss.model.Change
 import de.sciss.lucre.swing._
-import de.sciss.lucre.swing.impl.{TreeTableViewImpl, ComponentHolder}
+import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.synth.proc
 import proc.Implicits._
 import de.sciss.lucre.event.Sys
 import de.sciss.synth.proc.Folder.Update
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
-import de.sciss.lucre.data.Iterator
-import de.sciss.treetable.j.DefaultTreeTableCellEditor
+import de.sciss.treetable.j.{TreeTableCellEditor, DefaultTreeTableCellEditor}
+import javax.swing.event.{ChangeEvent, CellEditorListener}
+import de.sciss.desktop.UndoManager
+import de.sciss.desktop.impl.UndoManagerImpl
+import de.sciss.mellite.gui.edit.EditAttrMap
+import de.sciss.lucre
 
 object FolderViewImpl {
   // private final val DEBUG = false
@@ -49,14 +50,12 @@ object FolderViewImpl {
   // TreeTableViewImpl.DEBUG = true
 
   def apply[S <: Sys[S]](document: File, root: Folder[S])
-                        (implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = {
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S], undoManager: UndoManager): FolderView[S] = {
     val _doc    = document
-    val _cursor = cursor
 
     implicit val folderSer = Folder.serializer[S]
 
     new Impl[S] {
-      val cursor    = _cursor
       val mapViews  = tx.newInMemoryIDMap[ObjView[S]]  // folder IDs to renderers
       val document  = _doc
       val treeView  = TreeTableView[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]](root, TTHandler)
@@ -67,15 +66,10 @@ object FolderViewImpl {
     }
   }
 
-  private abstract class Impl[S <: Sys[S]]
+  private abstract class Impl[S <: Sys[S]](implicit val undoManager: UndoManager, val cursor: stm.Cursor[S])
     extends ComponentHolder[Component] with FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
-    // type Node   = ObjView.Renderer[S]
-    // type Branch = ObjView.FolderLike[S]
-    // type Path   = TreeTable.Path[Branch]
-
-    protected implicit def cursor: Cursor[S]
     protected def document: File // Document[S]
 
     protected object TTHandler
@@ -88,7 +82,7 @@ object FolderViewImpl {
         case _ => None
       }
 
-      def children(branch: Folder[S])(implicit tx: S#Tx): de.sciss.lucre.data.Iterator[S#Tx, Obj[S]] =
+      def children(branch: Folder[S])(implicit tx: S#Tx): lucre.data.Iterator[S#Tx, Obj[S]] =
         branch.iterator
 
       private def updateObjectName(obj: Obj[S], name: String)(implicit tx: S#Tx): Boolean = {
@@ -104,10 +98,10 @@ object FolderViewImpl {
       private def updateObject(obj: Obj[S], upd: Obj.Update[S])(implicit tx: S#Tx): Boolean =
         (false /: upd.changes) { (p, ch) =>
           val p1 = ch match {
-            case Obj.ElemChange(p) =>
+            case Obj.ElemChange(u1) =>
               treeView.nodeView(obj).exists { nv =>
                 val objView = nv.renderData
-                objView.checkUpdate(p)
+                objView.isUpdateVisible(u1)
               }
             case Obj.AttrAdded  (ProcKeys.attrName, e: StringElem[S]) => updateObjectName(obj, e.peer.value)
             case Obj.AttrRemoved(ProcKeys.attrName, _) => updateObjectName(obj, "<unnamed>")
@@ -119,7 +113,7 @@ object FolderViewImpl {
 
       private type MUpdate = ModelUpdate[Obj[S], Folder[S]]
 
-      def update(update: Update[S])(implicit tx: S#Tx): Vec[MUpdate] =
+      def mapUpdate(update: Update[S])(implicit tx: S#Tx): Vec[MUpdate] =
         updateBranch(treeView.root(), update.changes)
 
       private def updateBranch(parent: Folder[S], changes: Vec[Folder.Change[S]])(implicit tx: S#Tx): Vec[MUpdate] =
@@ -141,13 +135,16 @@ object FolderViewImpl {
 
       private lazy val component = TreeTableCellRenderer.Default
 
-      def renderer(view: TreeTableView[S, Obj[S], Folder[S], Data], data: Data, row: Int, column: Int,
-                   state: State): Component = {
+      type NodeView = TreeTableView.NodeView[S, Obj[S], Data]
+
+      def renderer(tt: TreeTableView[S, Obj[S], Folder[S], Data], node: NodeView, row: Int, column: Int,
+                   state: TreeTableCellRenderer.State): Component = {
+        val data    = node.renderData
         val value   = if (column == 0) data.name else data.value
         val value1  = if (value != {}) value else null
-        val res = component.getRendererComponent(view.treeTable, value1, row = row, column = column, state = state)
+        val res = component.getRendererComponent(tt.treeTable, value1, row = row, column = column, state = state)
         if (row >= 0) state.tree match {
-          case Some(TreeState(false, true)) =>
+          case Some(TreeTableCellRenderer.TreeState(false, true)) =>
             // println(s"row = $row, col = $column")
             try {
               // val node = t.getNode(row)
@@ -160,45 +157,47 @@ object FolderViewImpl {
         res // component
       }
 
-      private val defaultEditor = new DefaultTreeTableCellEditor(new javax.swing.JTextField)
+      private var editView    = Option.empty[ObjView[S]]
+      private var editColumn  = 0
 
-      def editor(view: TreeTableView[S, Obj[S], Folder[S], Data], data: Data, row: Int, column: Int,
-                 selected: Boolean): Component = {
-        val value = if (column == 0) data.name else "?!"
-        val c = defaultEditor.getTreeTableCellEditorComponent(view.treeTable.peer, value, selected, row, column)
-        Component.wrap(c.asInstanceOf[javax.swing.JComponent])
-      }
-
-      lazy val columns: TreeColumnModel[Data] = {
-        val colName = new TreeColumnModel.Column[Data, String]("Name") {
-          def apply(node: Data): String = node.name
-
-          def update(data: Data, value: String): Unit =
-            data match {
-              case v if value != v.name =>
-                cursor.step { implicit tx =>
-                  v.obj().attr.name = value
+      private lazy val defaultEditorJ = new javax.swing.JTextField
+      private lazy val defaultEditor: TreeTableCellEditor = {
+        val res = new DefaultTreeTableCellEditor(defaultEditorJ)
+        res.addCellEditorListener(new CellEditorListener {
+          def editingCanceled(e: ChangeEvent) = ()
+          def editingStopped (e: ChangeEvent): Unit = editView.foreach { objView =>
+            editView = None
+            val editOpt = cursor.step { implicit tx =>
+              val text = defaultEditorJ.getText
+              if (editColumn == 0) {
+                val valueOpt: Option[Elem[S]] = if (text.isEmpty || text.toLowerCase == "<unnamed>") None else {
+                  Some(StringElem(lucre.expr.String.newConst[S](text)))
                 }
-              case _ =>
+                val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ProcKeys.attrName, valueOpt)
+                Some(ed)
+              } else {
+                objView.tryEdit(text)
+              }
             }
+            editOpt.foreach(undoManager.add)
+          }
+        })
+        res
+      }
+      private lazy val defaultEditorC = Component.wrap(defaultEditorJ)
 
-          def isEditable(data: Data) = true
-        }
+      def isEditable(data: Data, column: Int): Boolean = column == 0 || data.isEditable
 
-        val colValue = new TreeColumnModel.Column[Data, Any]("Value") {
-          def apply(node: Data): Any = node.value
+      val columnNames = Vec[String]("Name", "Value")
 
-          def update(node: Data, value: Any): Unit =
-            cursor.step { implicit tx =>
-              node.tryUpdate(value)
-            }
-
-          def isEditable(data: Data) = data.isEditable
-        }
-
-        new TreeColumnModel.Tuple2[Data, String, Any](colName, colValue) {
-          def getParent(node: Data): Option[Data] = throw new UnsupportedOperationException
-        }
+      def editor(tt: TreeTableView[S, Obj[S], Folder[S], Data], node: NodeView, row: Int, column: Int,
+                 selected: Boolean): (Component, CellEditor) = {
+        val data    = node.renderData
+        editView    = Some(data)
+        editColumn  = column
+        val value   = if (column == 0) data.name else data.value.toString
+        defaultEditor.getTreeTableCellEditorComponent(tt.treeTable.peer, value, selected, row, column)
+        (defaultEditorC, defaultEditor)
       }
 
       def data(node: Obj[S])(implicit tx: S#Tx): Data = ObjView(node)

@@ -40,8 +40,12 @@ object MenuBar {
       // .add(Item("bounce-transform",   proxy("Bounce And Transform...",  (menu1 + shift + Key.B))))
     if (itQuit.visible) mFile.addLine().add(itQuit)
 
+    val keyRedo = if (Desktop.isWindows) menu1 + Key.Y else menu1 + shift + Key.Z
+
     val mEdit = Group("edit", "Edit")
-      // eventually Undo / Redo here
+      .add(Item("undo",               proxy("Undo",                     menu1 + Key.Z)))
+      .add(Item("redo",               proxy("Redo",                     keyRedo)))
+      .addLine()
       .add(Item("cut",                proxy("Cut",                      menu1 + Key.X)))
       .add(Item("copy",               proxy("Copy",                     menu1 + Key.C)))
       .add(Item("paste",              proxy("Paste",                    menu1 + Key.V)))

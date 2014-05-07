@@ -23,11 +23,13 @@ import de.sciss.lucre.stm
 import java.io.File
 import de.sciss.synth.proc.{Folder, ArtifactLocationElem, Obj}
 import de.sciss.lucre.event.Sys
-import de.sciss.lucre.swing.TreeTableView
+import de.sciss.lucre.swing.{View, TreeTableView}
+import de.sciss.desktop.UndoManager
 
 object FolderView {
   def apply[S <: Sys[S]](document: File, root: Folder[S])
-                        (implicit tx: S#Tx, cursor: Cursor[S]): FolderView[S] = Impl(document, root)
+                        (implicit tx: S#Tx, cursor: Cursor[S], undoManager: UndoManager): FolderView[S] =
+    Impl(document, root)
 
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
@@ -45,8 +47,7 @@ object FolderView {
   final case class SelectionChanged[S <: Sys[S]](view: FolderView[S], selection: Selection[S])
     extends Update[S]
 }
-trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with Disposable[S#Tx] {
-  def component: Component
+trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with View.Editable[S] {
   def selection: FolderView.Selection[S]
 
   def locations: Vec[ObjView.ArtifactLocation[S]]
