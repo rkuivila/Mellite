@@ -25,8 +25,7 @@ import scala.concurrent.Future
 import Swing._
 import scala.util.{Failure, Success}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing._
-import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing.{deferTx, defer, requireEDT}
 import de.sciss.synth.proc
 import proc.Implicits._
 import de.sciss.synth.proc.Obj
@@ -67,7 +66,7 @@ object CodeFrameImpl {
     }
   }
 
-  private abstract class Impl[S <: Sys[S]] extends CodeFrame[S] with ComponentHolder[Window] {
+  private abstract class Impl[S <: Sys[S]] extends CodeFrame[S] with WindowHolder[Window] {
     // protected def intpCfg: Interpreter.Config
     protected def codeCfg: CodePane.Config
     protected def name: String
@@ -77,12 +76,19 @@ object CodeFrameImpl {
     protected def codeID: Int
 
     private var codePane: CodePane        = _
+    private var codePaneC: Component = _
     // private var intp    : Interpreter     = _
     // private var intpPane: InterpreterPane = _
     private var futCompile = Option.empty[Future[Unit]]
     private var ggStatus: Label = _
 
     private def currentText: String = codePane.editor.getText
+
+    def component: Component = {
+      requireEDT()
+      if (codePaneC == null) throw new IllegalStateException("Component not yet initialized")
+      codePaneC
+    }
 
     private def checkClose(): Unit = {
       if (futCompile.isDefined) {
@@ -96,12 +102,12 @@ object CodeFrameImpl {
         val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
           messageType = OptionPane.Message.Warning)
         opt.title = s"Close Code Editor - $name"
-        opt.show(Some(component)) match {
+        opt.show(Some(window)) match {
           case OptionPane.Result.No =>
           case OptionPane.Result.Yes =>
             _cursor.step { implicit tx =>
               codeH() match {
-                case Expr.Var(vr) => vr() = Codes.newConst(Code(codeID, newText))
+                case Expr.Var(vr) => vr() = Codes.newConst[S](Code(codeID, newText))
               }
             }
 
@@ -116,13 +122,13 @@ object CodeFrameImpl {
       _cursor.step { implicit tx =>
         disposeData()
       }
-      component.dispose()
+      window.dispose()
     }
 
     final def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
       deferTx {
-        component.dispose()
+        window.dispose()
         // intp.dispose()
       }
     }
@@ -168,14 +174,16 @@ object CodeFrameImpl {
 
       val panelBottom = new FlowPanel(FlowPanel.Alignment.Trailing)(HGlue, ggStatus, ggCompile, HStrut(16))
 
-      component = new WindowImpl {
+      codePaneC = Component.wrap(codePane.component)
+
+      window = new WindowImpl {
         frame =>
 
         override def style = Window.Auxiliary
 
         title           = s"$name : $contextName Code"
         contents        = new BorderPanel {
-          add(Component.wrap(codePane.component), BorderPanel.Position.Center)
+          add(codePaneC, BorderPanel.Position.Center)
           add(panelBottom, BorderPanel.Position.South)
         }
         closeOperation  = Window.CloseIgnore

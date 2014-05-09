@@ -15,7 +15,6 @@ package de.sciss.mellite
 package gui
 
 import de.sciss.desktop.{Desktop, KeyStrokes, Menu}
-import de.sciss.mellite.{Mellite => App}
 import scala.swing.event.Key
 
 object MenuBar {
@@ -23,8 +22,8 @@ object MenuBar {
     import Menu._
     import KeyStrokes._
 
-    val itPrefs = Item.Preferences(App)(ActionPreferences())
-    val itQuit  = Item.Quit(App)
+    val itPrefs = Item.Preferences(Application)(ActionPreferences())
+    val itQuit  = Item.Quit(Application)
 
     val mFile = Group("file", "File")
       .add(Group("new", "New")

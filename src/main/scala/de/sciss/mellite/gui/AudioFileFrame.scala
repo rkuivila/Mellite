@@ -20,14 +20,16 @@ import lucre.stm
 import stm.Disposable
 import impl.audiofile.{FrameImpl => Impl}
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing.View
 
 object AudioFileFrame {
   def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, AudioGraphemeElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): AudioFileFrame[S] =
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): AudioFileFrame[S] =
     Impl(doc, obj)
 }
 
-trait AudioFileFrame[S <: Sys[S]] extends Disposable[S#Tx] {
-  def component: desktop.Window
+trait AudioFileFrame[S <: Sys[S]] extends View[S] {
+  def window   : desktop.Window
+  def contents : AudioFileView[S]
   def document : Document[S]
 }

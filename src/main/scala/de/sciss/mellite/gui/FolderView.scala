@@ -14,21 +14,19 @@
 package de.sciss.mellite
 package gui
 
-import swing.Component
 import impl.document.{FolderViewImpl => Impl}
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.stm.{Cursor, Disposable}
 import de.sciss.model.Model
 import de.sciss.lucre.stm
 import java.io.File
 import de.sciss.synth.proc.{Folder, ArtifactLocationElem, Obj}
-import de.sciss.lucre.event.Sys
+import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.{View, TreeTableView}
 import de.sciss.desktop.UndoManager
 
 object FolderView {
   def apply[S <: Sys[S]](document: File, root: Folder[S])
-                        (implicit tx: S#Tx, cursor: Cursor[S], undoManager: UndoManager): FolderView[S] =
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S], undoManager: UndoManager): FolderView[S] =
     Impl(document, root)
 
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.

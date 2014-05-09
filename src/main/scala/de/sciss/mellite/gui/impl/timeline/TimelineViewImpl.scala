@@ -98,7 +98,7 @@ object TimelineViewImpl {
   import de.sciss.mellite.{logTimeline => logT}
 
   def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroupElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): TimelineView[S] = {
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
@@ -123,7 +123,7 @@ object TimelineViewImpl {
     disposables ::= scanMap
     val transport = proc.Transport[S, document.I](group, sampleRate = sampleRate)
     disposables ::= transport
-    val auralView = proc.AuralPresentation.run[S](transport, aural)
+    val auralView = proc.AuralPresentation.run[S](transport, Mellite.auralSystem)
     disposables ::= auralView
 
     val procSelectionModel = ProcSelectionModel[S]

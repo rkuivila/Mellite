@@ -33,8 +33,7 @@ import de.sciss.lucre.stm.Disposable
 import de.sciss.file._
 import de.sciss.lucre.synth.{Server, Sys}
 import de.sciss.swingplus.GroupPanel
-import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.{defer, deferTx}
 import proc.Implicits._
 
 object RecursionFrameImpl {
@@ -43,13 +42,13 @@ object RecursionFrameImpl {
   }
 
   def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, Recursion.Elem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): RecursionFrame[S] = {
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] = {
     new Impl[S] {
       val document  = doc
       val recH      = tx.newHandle(obj)
       val _spec     = obj.elem.peer.productSpec
       val _cursor   = cursor
-      val _aural    = aural
+      val _aural    = Mellite.auralSystem
 
       private def mkView()(implicit tx: S#Tx): View = {
         val name      = obj.attr.name
@@ -123,7 +122,7 @@ object RecursionFrameImpl {
   }
 
   private abstract class Impl[S <: Sys[S]]
-    extends RecursionFrame[S] with ComponentHolder[Window] {
+    extends RecursionFrame[S] with WindowHolder[Frame[S]] {
 
     protected def recH      : stm.Source[S#Tx, Obj.T[S, Recursion.Elem]]
     protected def view      : View
@@ -132,15 +131,17 @@ object RecursionFrameImpl {
     protected implicit def _aural    : AuralSystem
     protected def observer  : Disposable[S#Tx]
 
+    def component: Component = window.c
+
     final def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      deferTx(component.dispose())
+      deferTx(window.dispose())
     }
 
     private def disposeData()(implicit tx: S#Tx): Unit =
       observer.dispose()
 
-    private def frameClosing(): Unit =
+    def frameClosing(): Unit =
       _cursor.step { implicit tx =>
         disposeData()
       }
@@ -148,15 +149,14 @@ object RecursionFrameImpl {
     private var ggDeployed: Label = _
     private var ggProduct : Label = _
     private var updateDeployed: Button = _
-    private var frame     : Frame = _
     private var currentProc = Option.empty[Processor[Any, _]]
 
     final protected def guiUpdate(): Unit = {
       ggDeployed.text = view.deployed.name
       ggProduct .text = view.product .name
       // println(s"view.deployed = ${view.deployed}, product = ${view.product}")
-      frame.setTitle(view.name)
-      frame.file_=     (Some(view.deployed))
+      window.setTitle(view.name)
+      window.file_=     (Some(view.deployed))
       val enabled = currentProc.isEmpty
       updateDeployed.enabled  = enabled && view.sameFiles
     }
@@ -298,7 +298,7 @@ object RecursionFrameImpl {
           case Failure(e: Exception) => // XXX TODO: Desktop should allow Throwable for DialogSource.Exception
             defer {
               processStopped()
-              DialogSource.Exception(e -> title).show(Some(component))
+              DialogSource.Exception(e -> title).show(Some(window))
             }
           case Failure(e) =>
             defer(processStopped())
@@ -350,24 +350,24 @@ object RecursionFrameImpl {
         add(box, BorderPanel.Position.Center)
         add(panelProgress, BorderPanel.Position.South)
       }
-      frame = new Frame(panel)
+      val frame = new Frame(this, panel)
       guiUpdate()
       processStopped()
       GUI.centerOnScreen(frame)
       frame.front()
-      component = frame
+      window = frame
     }
+  }
 
-    private class Frame(c: Component) extends WindowImpl {
-      contents    = c
-      reactions += {
-        case Window.Closing(_) => frameClosing()
-      }
-      resizable   = false
-      pack()
-
-      def setTitle(n: String): Unit = title_=(n)
-      // def setFile (f: File  ): Unit = file_=(Some(f))
+  private class Frame[S <: Sys[S]](impl: Impl[S], val c: Component) extends WindowImpl {
+    contents    = c
+    reactions += {
+      case Window.Closing(_) => impl.frameClosing()
     }
+    resizable   = false
+    pack()
+
+    def setTitle(n: String): Unit = title_=(n)
+    // def setFile (f: File  ): Unit = file_=(Some(f))
   }
 }

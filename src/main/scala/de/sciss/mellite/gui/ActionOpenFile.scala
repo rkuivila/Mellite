@@ -19,7 +19,6 @@ import de.sciss.desktop.{Desktop, Menu, RecentFiles, FileDialog, KeyStrokes}
 import util.control.NonFatal
 import de.sciss.file._
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.{Mellite => App}
 import language.existentials
 import scala.swing.event.Key
 import de.sciss.synth.proc
@@ -27,7 +26,7 @@ import de.sciss.synth.proc
 object ActionOpenFile extends Action("Open...") {
   import KeyStrokes._
 
-  private val _recent = RecentFiles(Mellite.userPrefs("recent-docs")) { folder =>
+  private val _recent = RecentFiles(Application.userPrefs("recent-docs")) { folder =>
     perform(folder)
   }
 
@@ -38,7 +37,7 @@ object ActionOpenFile extends Action("Open...") {
   // XXX TODO: should be in another place
   def openGUI[S <: Sys[S]](doc: Document[S]): Unit = {
     recentFiles.add(doc.folder)
-    Mellite.documentHandler.addDocument(doc)
+    Application.documentHandler.addDocument(doc)
     doc match {
       case cf: ConfluentDocument =>
         (cf: ConfluentDocument).system.durable.step { implicit tx =>
@@ -83,7 +82,7 @@ object ActionOpenFile extends Action("Open...") {
     } .foreach(_.front())
 
   def perform(folder: File): Unit =
-    App.documentHandler.documents.find(_.folder == folder).fold(doOpen(folder)) { doc =>
+    Application.documentHandler.documents.find(_.folder == folder).fold(doOpen(folder)) { doc =>
 
       val doc1 = doc.asInstanceOf[Document[S] forSome { type S <: Sys[S] }]
       openView(doc1)

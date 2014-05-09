@@ -8,7 +8,7 @@ organization       := "de.sciss"
 
 homepage           := Some(url("https://github.com/Sciss/" + name.value))
 
-description        := "An application based on SoundProcesses"
+description        := "A computer music application based on SoundProcesses"
 
 licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt"))
 
@@ -35,8 +35,6 @@ libraryDependencies ++= Seq(
 // retrieveManaged := true
 
 scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xfuture")
-
-// scalacOptions += "-no-specialization"
 
 // scalacOptions ++= Seq("-Xelide-below", "INFO")
 

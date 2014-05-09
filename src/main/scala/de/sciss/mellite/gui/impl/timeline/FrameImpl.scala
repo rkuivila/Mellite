@@ -16,23 +16,21 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{Obj, ProcGroupElem, AuralSystem, ProcGroup}
+import de.sciss.synth.proc.{Obj, ProcGroupElem, ProcGroup}
 import de.sciss.mellite.Document
 import de.sciss.lucre.stm
-import de.sciss.mellite.gui._
 import de.sciss.desktop.{OptionPane, Window}
 import scala.swing.event.WindowClosing
-import scala.swing.Action
+import scala.swing.{Component, Action}
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.deferTx
 import de.sciss.synth.proc
 import proc.Implicits._
 
 object FrameImpl {
   def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroupElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S],
-                         aural: AuralSystem): TimelineFrame[S] = {
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineFrame[S] = {
     val tlv     = TimelineView(document, group)
     val name    = group.attr.name
     import ProcGroup.serializer
@@ -44,18 +42,14 @@ object FrameImpl {
     res
   }
 
-  private final class Impl[S <: Sys[S]](val view: TimelineView[S], name: String,
+  private final class Impl[S <: Sys[S]](view: TimelineView[S], name: String,
                                         groupH: stm.Source[S#Tx, ProcGroup[S]])
                                        (implicit _cursor: stm.Cursor[S])
-    extends TimelineFrame[S] {
-
-    private var _window: Window = _
-
-    def window = _window
+    extends TimelineFrame[S] with WindowHolder[Window] {
 
     def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      deferTx(_window.dispose())
+      deferTx(window.dispose())
     }
 
     private def disposeData()(implicit tx: S#Tx): Unit =
@@ -66,8 +60,12 @@ object FrameImpl {
         disposeData()
       }
 
+    def contents: TimelineView[S] = view
+
+    def component: Component = view.component
+
     def init(): Unit = {
-      _window = new WindowImpl {
+      val frame = new WindowImpl {
         component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
         title       = name
         contents    = view.component
@@ -118,7 +116,9 @@ object FrameImpl {
         front()
       }
 
-      view.component.peer.putClientProperty("de.sciss.mellite.Window", _window)
+      view.component.peer.putClientProperty("de.sciss.mellite.Window", frame)
+
+      window = frame
     }
   }
 }

@@ -20,7 +20,7 @@ import javax.swing.UIManager
 import UIManager.LookAndFeelInfo
 
 object Prefs {
-  import Mellite.userPrefs
+  import Application.userPrefs
 
   implicit object LookAndFeelType extends Type[LookAndFeelInfo] {
     def toString(value: LookAndFeelInfo): String = value.getClassName

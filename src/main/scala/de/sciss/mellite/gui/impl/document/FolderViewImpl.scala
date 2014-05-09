@@ -34,13 +34,12 @@ import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.synth.proc
 import proc.Implicits._
-import de.sciss.lucre.event.Sys
+import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc.Folder.Update
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.treetable.j.{TreeTableCellEditor, DefaultTreeTableCellEditor}
 import javax.swing.event.{ChangeEvent, CellEditorListener}
 import de.sciss.desktop.UndoManager
-import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.lucre
 

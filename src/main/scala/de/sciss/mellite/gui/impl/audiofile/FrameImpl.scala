@@ -25,10 +25,12 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing._
 import proc.Implicits._
+import scala.swing.Component
 
 object FrameImpl {
   def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, AudioGraphemeElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): AudioFileFrame[S] = {
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): AudioFileFrame[S] = {
+    implicit val aural = Mellite.auralSystem
     val afv       = AudioFileView(doc, obj)
     val name      = obj.attr.name
     val file      = obj.elem.peer.value.artifact
@@ -41,11 +43,15 @@ object FrameImpl {
 
   private final class Impl[S <: Sys[S]](val document: Document[S], afv: AudioFileView[S], name: String, _file: File)
                                        (implicit cursor: stm.Cursor[S])
-    extends AudioFileFrame[S] with ComponentHolder[Window] {
+    extends AudioFileFrame[S] with WindowHolder[Window] {
+
+    def component: Component = contents.component
+
+    def contents: AudioFileView[S] = afv
 
     def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      deferTx(component.dispose())
+      deferTx(window.dispose())
     }
 
     private def disposeData()(implicit tx: S#Tx): Unit =
@@ -58,7 +64,7 @@ object FrameImpl {
 
     def guiInit(): Unit = {
       val fileName = _file.base
-      component = new WindowImpl {
+      window = new WindowImpl {
         component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
         title       = if (name == fileName) name else s"$name - $fileName"
         file        = Some(_file)

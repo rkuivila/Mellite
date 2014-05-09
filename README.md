@@ -4,7 +4,7 @@
 
 ## statement
 
-Mellite is a graphical front end for [SoundProcesses](http://github.com/Sciss/SoundProcesses). It is (C)opyright 2012&ndash;2014 by Hanns Holger Rutz. All rights reserved. Mellite is released under the [GNU General Public License](http://github.com/Sciss/Mellite/blob/master/licenses/Mellite-License.txt) v3+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
+Mellite is a computer music application, implemented as a graphical front end for [SoundProcesses](http://github.com/Sciss/SoundProcesses). It is (C)opyright 2012&ndash;2014 by Hanns Holger Rutz. All rights reserved. Mellite is released under the [GNU General Public License](http://github.com/Sciss/Mellite/blob/master/licenses/Mellite-License.txt) v3+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
 
 ## building
 
@@ -14,11 +14,13 @@ Dependencies not found are all available from their respective [GitHub repositor
 
 To build an OS X standalone application, run `sbt appbundle`, for all other platforms `sbt assembly` will create a fat `.jar` file in the root directory that can be executed via double-click. There is also a tiny shell script `./mellite` that will launch this jar file.
 
+On Linux, you can copy `Mellite.desktop` into `~/.local/share/applications` and edit this file to use the correct installation paths. You can then add Mellite to your desktop manager (GNOME, KDE, etc.)
+
 ## documentation
 
 Note that this project is in __highly experimental__ state. While I have been composing already pieces with it, I recommend anyone to approach this with extreme care. I cannot guarantee that the application is bug free, in particular you may end up with a corrupt session database (although unlikely), and also I might introduce changes that render it impossible for new versions to open sessions created with previous versions. You have been warned!
 
-A short screencast is available on [Vimeo](https://vimeo.com/86202332).
+A short screen cast is available on [Vimeo](https://vimeo.com/86202332).
 
 Otherwise, here are some hints:
 

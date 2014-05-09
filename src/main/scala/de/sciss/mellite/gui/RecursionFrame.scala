@@ -20,14 +20,15 @@ import lucre.stm
 import stm.Disposable
 import impl.{RecursionFrameImpl => Impl}
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing.View
 
 object RecursionFrame {
   def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, Recursion.Elem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], aural: AuralSystem): RecursionFrame[S] =
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] =
     Impl(doc, obj)
 }
 
-trait RecursionFrame[S <: Sys[S]] extends Disposable[S#Tx] {
-  def component: desktop.Window
+trait RecursionFrame[S <: Sys[S]] extends View[S] {
+  def window   : desktop.Window
   def document : Document[S]
 }

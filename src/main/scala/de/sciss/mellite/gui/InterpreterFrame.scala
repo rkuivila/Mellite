@@ -32,7 +32,7 @@ object InterpreterFrame {
   /** The content of this object is imported into the REPL */
   object Bindings {
     def document =
-      Mellite.documentHandler.activeDocument.getOrElse(sys.error("No document open"))
+      Application.documentHandler.activeDocument.getOrElse(sys.error("No document open"))
   }
 }
 trait InterpreterFrame {

@@ -5,17 +5,16 @@ package impl
 import de.sciss.synth.proc.{Elem, ExprImplicits, Artifact, ArtifactLocationElem, ProcGroupElem, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.expr._
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.expr.{Expr, ExprType}
 import de.sciss.lucre.stm
 import de.sciss.{desktop, mellite, lucre}
 import scala.util.Try
 import de.sciss.icons.raphael
 import de.sciss.synth.proc
-import proc.Implicits._
 import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.{deferTx, View}
 import de.sciss.file.File
 import scala.swing.{ComboBox, TextField, Component, Swing}
 import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
@@ -26,6 +25,8 @@ import java.awt.geom.Path2D
 import de.sciss.desktop.{OptionPane, FileDialog}
 import de.sciss.synth.io.AudioFile
 import de.sciss.mellite.gui.edit.EditInsertObj
+import de.sciss.lucre.{event => evt}
+import proc.Implicits._
 
 object ObjViewImpl {
   import ObjView.Factory
@@ -64,7 +65,7 @@ object ObjViewImpl {
   // -------- String --------
 
   object String extends Factory {
-    type E[S <: Sys[S]] = StringElem[S]
+    type E[S <: evt.Sys[S]] = StringElem[S]
     val icon            = raphaelIcon(raphael.Shapes.Font)
     val prefix          = "String"
     def typeID          = ElemImpl.String.typeID
@@ -95,7 +96,7 @@ object ObjViewImpl {
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, StringElem]],
                                                    var name: _String, var value: _String,
                                                    override val isEditable: _Boolean)
-      extends ObjView.String[S] with ObjViewImpl.Impl[S] with ExprLike[S, _String] {
+      extends ObjView.String[S] with ObjViewImpl.Impl[S] with ExprLike[S, _String] with NonViewable[S] {
 
       def prefix  = String.prefix
       def icon    = String.icon
@@ -116,7 +117,7 @@ object ObjViewImpl {
   // -------- Int --------
 
   object Int extends Factory {
-    type E[S <: Sys[S]] = IntElem[S]
+    type E[S <: evt.Sys[S]] = IntElem[S]
     val icon            = raphaelIcon(Shapes.IntegerNumbers)
     val prefix          = "Int"
     def typeID          = ElemImpl.Int.typeID
@@ -148,7 +149,7 @@ object ObjViewImpl {
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, IntElem]],
                                                    var name: _String, var value: _Int,
                                                    override val isEditable: _Boolean)
-      extends ObjView.Int[S] with ObjViewImpl.Impl[S] with ExprLike[S, _Int] {
+      extends ObjView.Int[S] with ObjViewImpl.Impl[S] with ExprLike[S, _Int] with NonViewable[S] {
 
       def prefix = Int.prefix
       def icon   = Int.icon
@@ -172,7 +173,7 @@ object ObjViewImpl {
   // -------- Double --------
 
   object Double extends Factory {
-    type E[S <: Sys[S]] = DoubleElem[S]
+    type E[S <: evt.Sys[S]] = DoubleElem[S]
     val icon            = raphaelIcon(Shapes.RealNumbers)
     val prefix          = "Double"
     def typeID          = ElemImpl.Double.typeID
@@ -204,7 +205,7 @@ object ObjViewImpl {
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]],
                                                    var name: _String, var value: _Double,
                                                    override val isEditable: _Boolean)
-      extends ObjView.Double[S] with ObjViewImpl.Impl[S] with ExprLike[S, _Double] {
+      extends ObjView.Double[S] with ObjViewImpl.Impl[S] with ExprLike[S, _Double] with NonViewable[S] {
 
       def prefix  = Double.prefix
       def icon    = Double.icon
@@ -228,7 +229,7 @@ object ObjViewImpl {
   // -------- AudioGrapheme --------
 
   object AudioGrapheme extends Factory {
-    type E[S <: Sys[S]] = AudioGraphemeElem[S]
+    type E[S <: evt.Sys[S]] = AudioGraphemeElem[S]
     val icon            = raphaelIcon(raphael.Shapes.Music)
     val prefix          = "AudioGrapheme"
     def typeID          = ElemImpl.AudioGrapheme.typeID
@@ -275,13 +276,20 @@ object ObjViewImpl {
           true
         case _ => false
       }
+
+      def isViewable = true
+
+      def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
+        val frame = AudioFileFrame(document, obj())
+        Some(frame)
+      }
     }
   }
 
     // -------- ArtifactLocation --------
 
     object ArtifactLocation extends Factory {
-      type E[S <: Sys[S]] = ArtifactLocationElem[S]
+      type E[S <: evt.Sys[S]] = ArtifactLocationElem[S]
       val icon            = raphaelIcon(raphael.Shapes.Location)
       val prefix          = "ArtifactStore"
       def typeID          = ElemImpl.ArtifactLocation.typeID
@@ -310,7 +318,7 @@ object ObjViewImpl {
 
       final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]],
                                                      var name: _String, var directory: File)
-        extends ObjView.ArtifactLocation[S] with ObjViewImpl.Impl[S] with NonEditable[S] {
+        extends ObjView.ArtifactLocation[S] with ObjViewImpl.Impl[S] with NonEditable[S] with NonViewable[S] {
 
         def icon    = ArtifactLocation.icon
         def prefix  = ArtifactLocation.prefix
@@ -328,7 +336,7 @@ object ObjViewImpl {
   // -------- Recursion --------
 
   object Recursion extends Factory {
-    type E[S <: Sys[S]] = _Recursion.Elem[S]
+    type E[S <: evt.Sys[S]] = _Recursion.Elem[S]
     val icon            = raphaelIcon(raphael.Shapes.Quote)
     val prefix          = "Recursion"
     def typeID          = RecursionElemImpl.typeID
@@ -352,13 +360,20 @@ object ObjViewImpl {
       def value   = deployed
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
+
+      def isViewable = true
+
+      def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
+        val frame = RecursionFrame(document, obj())
+        Some(frame)
+      }
     }
   }
 
   // -------- Folder --------
 
   object Folder extends Factory {
-    type E[S <: Sys[S]] = FolderElem[S]
+    type E[S <: evt.Sys[S]] = FolderElem[S]
     val icon            = Swing.EmptyIcon
     val prefix          = "Folder"
     def typeID          = FolderElemImpl.typeID
@@ -387,8 +402,9 @@ object ObjViewImpl {
       }
     }
 
+    // XXX TODO: could be viewed as a new folder view with this folder as root
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, FolderElem]], var name: _String)
-      extends ObjView.Folder[S] with ObjViewImpl.Impl[S] with NonEditable[S] {
+      extends ObjView.Folder[S] with ObjViewImpl.Impl[S] with NonEditable[S] with NonViewable[S] {
 
       def value = ()
 
@@ -402,7 +418,7 @@ object ObjViewImpl {
   // -------- ProcGroup --------
 
   object ProcGroup extends Factory {
-    type E[S <: Sys[S]] = ProcGroupElem[S]
+    type E[S <: evt.Sys[S]] = ProcGroupElem[S]
     val icon            = raphaelIcon(raphael.Shapes.Ruler)
     val prefix          = "ProcGroup"
     def typeID          = ElemImpl.ProcGroup.typeID
@@ -438,13 +454,20 @@ object ObjViewImpl {
       def prefix  = ProcGroup.prefix
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
+
+      def isViewable = true
+
+      def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
+        val frame = TimelineFrame(document, obj())
+        Some(frame)
+      }
     }
   }
 
   // -------- Code --------
 
   object Code extends Factory {
-    type E[S <: Sys[S]] = _Code.Elem[S]
+    type E[S <: evt.Sys[S]] = _Code.Elem[S]
     val icon            = raphaelIcon(raphael.Shapes.Code)
     val prefix          = "Code"
     def typeID          = CodeElemImpl.typeID
@@ -501,6 +524,13 @@ object ObjViewImpl {
       def prefix  = Code.prefix
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
+
+      def isViewable = true
+
+      def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
+        val frame = CodeFrame(document, obj())
+        Some(frame)
+      }
     }
   }
 
@@ -538,10 +568,18 @@ object ObjViewImpl {
     override def toString = s"ElementView.$prefix(name = $name)"
   }
 
+  /** A trait that when mixed in provides `isEditable` and `tryEdit` as non-op methods. */
   trait NonEditable[S <: Sys[S]] {
     def isEditable: Boolean = false
 
     def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = None
+  }
+
+  /** A trait that when mixed in provides `isViewable` and `openView` as non-op methods. */
+  trait NonViewable[S <: Sys[S]] {
+    def isViewable: Boolean = false
+
+    def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = None
   }
 
   trait ExprLike[S <: Sys[S], A] {

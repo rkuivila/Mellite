@@ -47,6 +47,8 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   implicit def auralSystem: AuralSystem = _aural
 
   override protected def init(): Unit = {
+    Application.init(this)
+
     // ---- type extensions ----
 
     mellite.initTypes()

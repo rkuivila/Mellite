@@ -16,17 +16,14 @@ package gui
 package impl
 package document
 
-import scala.swing.{ComboBox, TextField, Dialog, Component, FlowPanel, Action, Button, BorderPanel}
+import scala.swing.{Component, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{FolderElem, Elem, IntElem, DoubleElem, Obj, Folder, ExprImplicits, ProcGroup, StringElem, ProcGroupElem}
-import de.sciss.desktop.{UndoManager, FileDialog, DialogSource, Window, Menu}
-import de.sciss.synth.io.AudioFile
-import javax.swing.SpinnerNumberModel
+import de.sciss.synth.proc. Folder
+import de.sciss.desktop.{UndoManager, DialogSource, Window, Menu}
 import de.sciss.file._
-import de.sciss.swingplus.{PopupMenu, Spinner}
+import de.sciss.swingplus.PopupMenu
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.{String => StringEx, Double => DoubleEx, Int => IntEx, Expr}
-import scala.util.Try
+import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.synth.proc
@@ -63,8 +60,6 @@ object ElementsFrameImpl {
                                        (implicit val cursor: stm.Cursor[S], val undoManager: UndoManager,
                                         bridge: S#Tx => S1#Tx)
     extends DocumentElementsFrame[S] with ComponentHolder[Frame[S]] with CursorHolder[S] {
-
-    // protected implicit def cursor: Cursor[S] = document.cursor
 
     protected def nameObserver: Option[stm.Disposable[S1#Tx]]
 
@@ -107,15 +102,6 @@ object ElementsFrameImpl {
         ObjView.factories.toList.sortBy(_.prefix).foreach { f =>
           pop.add(Item(f.prefix, new AddAction(f)))
         }
-
-//          .add(Item("folder",        Action("Folder"       )(actionAddFolder          ())))
-//          .add(Item("proc-group",    Action("ProcGroup"    )(actionAddProcGroup       ())))
-//          .add(Item("artifact-store",Action("ArtifactStore")(actionAddArtifactLocation())))
-//          .add(Item("audio-file",    Action("Audio File"   )(actionAddAudioFile       ())))
-//          .add(Item("string",        Action("String"       )(actionAddString          ())))
-//          .add(Item("int",           Action("Int"          )(actionAddInt             ())))
-//          .add(Item("double",        Action("Double"       )(actionAddDouble          ())))
-//          .add(Item("code",          Action("Code"         )(actionAddCode            ())))
         val res = pop.create(component)
         res.peer.pack() // so we can read `size` correctly
         res
@@ -144,28 +130,12 @@ object ElementsFrameImpl {
       lazy val ggDelete: Button = GUI.toolButton(actionDelete, raphael.Shapes.Minus, "Remove Selected Element")
 
       val actionView = Action(null) {
-        ???
-//        val views = folderView.selection.map { case (_, view) => view }
-//        if (views.nonEmpty) atomic { implicit tx =>
-//          import Mellite.auralSystem
-//          views.foreach {
-//            case view: ObjView.ProcGroup[S] =>
-//              // val e   = view.element()
-//              // import document.inMemory
-//              TimelineFrame(document, view.obj())
-//
-//            case view: ObjView.AudioGrapheme[S] =>
-//              AudioFileFrame(document, view.obj())
-//
-//            case view: ObjView.Recursion[S] =>
-//              RecursionFrame(document, view.obj())
-//
-//            case view: ObjView.Code[S] =>
-//              CodeFrame(document, view.obj())
-//
-//            case _ => // ...
-//          }
-//        }
+        val sel = folderView.selection.collect {
+          case nv if nv.renderData.isViewable => nv.renderData
+        }
+        if (sel.nonEmpty) cursor.step { implicit tx =>
+          sel.foreach(_.openView(document))
+        }
       }
       actionView.enabled = false
 
@@ -184,7 +154,7 @@ object ElementsFrameImpl {
         case FolderView.SelectionChanged(_, sel) =>
           actionAdd   .enabled  = sel.size < 2
           actionDelete.enabled  = sel.nonEmpty
-          ggView      .enabled  = sel.nonEmpty
+          actionView  .enabled  = sel.exists(_.renderData.isViewable)
       }
     }
   }

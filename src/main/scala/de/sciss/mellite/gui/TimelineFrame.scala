@@ -21,14 +21,14 @@ import impl.timeline.{FrameImpl => Impl}
 import lucre.stm
 import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing.View
 
 object TimelineFrame {
   def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroupElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S],
-                         aural: AuralSystem): TimelineFrame[S] =
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineFrame[S] =
     Impl(document, group)
 }
-trait TimelineFrame[S <: Sys[S]] extends Disposable[S#Tx] {
-  def window: Window
-  def view: TimelineView[S]
+trait TimelineFrame[S <: Sys[S]] extends View[S] {
+  def window  : Window
+  def contents: TimelineView[S]
 }
