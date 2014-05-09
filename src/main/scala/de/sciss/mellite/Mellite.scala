@@ -21,6 +21,10 @@ import de.sciss.synth.proc.AuralSystem
 import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
 import scala.util.control.NonFatal
+import com.alee.laf.checkbox.WebCheckBoxStyle
+import com.alee.laf.progressbar.WebProgressBarStyle
+import java.awt.Color
+import de.sciss.mellite.sensor.SensorSystem
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = mellite.Document[_ <: Sys[_]]
@@ -42,9 +46,11 @@ object Mellite extends SwingApplicationImpl("Mellite") {
 
   protected def menuFactory = MenuBar.instance
 
-  private lazy val _aural = AuralSystem()
+  private lazy val _aural   = AuralSystem ()
+  private lazy val _sensor  = SensorSystem()
 
-  implicit def auralSystem: AuralSystem = _aural
+  implicit def auralSystem : AuralSystem  = _aural
+  implicit def sensorSystem: SensorSystem = _sensor
 
   override protected def init(): Unit = {
     Application.init(this)
@@ -63,6 +69,15 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     } catch {
       case NonFatal(_) =>
     }
+    // work-around for web-laf bug #118
+    new javax.swing.JSpinner
+    // some custom web-laf settings
+    WebCheckBoxStyle   .animated            = false
+    WebProgressBarStyle.progressTopColor    = Color.lightGray
+    WebProgressBarStyle.progressBottomColor = Color.gray
+    // XXX TODO: how to really turn of animation?
+    WebProgressBarStyle.highlightWhite      = new Color(255, 255, 255, 0)
+    WebProgressBarStyle.highlightDarkWhite  = new Color(255, 255, 255, 0)
 
     LogFrame           .instance    // init
     DocumentViewHandler.instance    // init

@@ -18,6 +18,8 @@ import Preferences.{Entry, Type}
 import de.sciss.file._
 import javax.swing.UIManager
 import UIManager.LookAndFeelInfo
+import de.sciss.osc
+import scala.util.{Success, Try}
 
 object Prefs {
   import Application.userPrefs
@@ -26,6 +28,15 @@ object Prefs {
     def toString(value: LookAndFeelInfo): String = value.getClassName
     def valueOf(string: String): Option[LookAndFeelInfo] =
       UIManager.getInstalledLookAndFeels.find(_.getClassName == string)
+  }
+
+  implicit object OSCProtocolType extends Type[osc.Transport.Net] {
+    def toString(value: osc.Transport.Net): String = value.name
+    def valueOf(string: String): Option[osc.Transport.Net] =
+      Try(osc.Transport(string)) match {
+        case Success(net: osc.Transport.Net) => Some(net)
+        case _ => None
+      }
   }
 
   // ---- gui ----
@@ -50,4 +61,12 @@ object Prefs {
   def audioDevice    : Entry[String] = userPrefs("audio-device"     )
   def audioNumOutputs: Entry[Int   ] = userPrefs("audio-num-outputs")
   def headphonesBus  : Entry[Int   ] = userPrefs("headphones-bus"   )
+
+  // ---- sensor ----
+
+  final val defaultSensorProtocol = osc.UDP: osc.Transport.Net
+  final val defaultSensorPort     = 0x4D6C  // "Ml"
+
+  def sensorProtocol : Entry[osc.Transport.Net] = userPrefs("sensor-protocol")
+  def sensorPort     : Entry[Int              ] = userPrefs("sensor-port"    )
 }

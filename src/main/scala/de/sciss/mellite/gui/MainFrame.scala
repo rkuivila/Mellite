@@ -16,13 +16,13 @@ package mellite
 package gui
 
 import desktop.Window
-import scala.swing.{FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
+import scala.swing.{CheckBox, Button, FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
 import de.sciss.synth.proc.AuralSystem
 import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
 import de.sciss.synth.{addToTail, SynthDef, addToHead, AudioBus}
 import Swing._
 import java.awt.{Color, Font}
-import scala.swing.event.ValueChanged
+import scala.swing.event.{ButtonClicked, ValueChanged}
 import collection.breakOut
 import javax.swing.border.Border
 import de.sciss.lucre.synth.{Txn, Server}
@@ -30,24 +30,79 @@ import de.sciss.file._
 import de.sciss.mellite.gui.impl.WindowImpl
 import scala.concurrent.stm.atomic
 import de.sciss.lucre.swing.deferTx
+import de.sciss.mellite.sensor.SensorSystem
+import de.sciss.lucre.stm.TxnLike
 
 final class MainFrame extends WindowImpl { me =>
-  import Mellite.auralSystem
+  import Mellite.{auralSystem, sensorSystem}
 
-  private val serverPane = new ServerStatusPanel()
-  serverPane.bootAction = Some(boot _)
+  private val lbSensors = new Label("Sensors:")
+  private val lbAudio   = new Label("Audio:")
+
+  locally {
+    val p1 = lbSensors.preferredSize
+    val p2 = lbAudio  .preferredSize
+    p1.width = math.max(p1.width, p2.width)
+    p2.width = p1.width
+    lbSensors.preferredSize = p1
+    lbAudio  .preferredSize = p2
+  }
+
+  private val ggDumpSensors: CheckBox = new CheckBox("Dump") {
+    listenTo(this)
+    reactions += {
+      case ButtonClicked(_) =>
+        val dumpMode = if (selected) osc.Dump.Text else osc.Dump.Off
+        atomic { implicit itx =>
+          implicit val tx = TxnLike.wrap(itx)
+          sensorSystem.serverOption.foreach { s =>
+            // println(s"dump($dumpMode)")
+            s.dump(dumpMode)
+          }
+        }
+    }
+    enabled = false
+  }
+
+  private val actionStartStopSensors: Action = new Action("Start") {
+    def apply(): Unit = {
+      val isRunning = atomic { implicit itx =>
+        implicit val tx = TxnLike.wrap(itx)
+        sensorSystem.serverOption.isDefined
+      }
+      if (isRunning) stopSensorSystem() else startSensorSystem()
+    }
+  }
+
+  private val sensorServerPane = new BoxPanel(Orientation.Horizontal) {
+    contents += HStrut(4)
+    contents += lbSensors
+    contents += HStrut(4)
+    contents += new Button(actionStartStopSensors) {
+      focusable = false
+    }
+    contents += HStrut(16)
+    contents += ggDumpSensors
+    contents += HGlue
+  }
+
+  private val audioServerPane = new ServerStatusPanel()
+  audioServerPane.bootAction = Some(startAuralSystem _)
 
   private val boxPane = new BoxPanel(Orientation.Vertical)
-  boxPane.contents += serverPane
+  boxPane.contents += sensorServerPane
+  boxPane.contents += new BoxPanel(Orientation.Horizontal) {
+    contents += HStrut(4)
+    contents += lbAudio
+    contents += audioServerPane
+  }
 
-  //  def setServer(s: Option[Server]): Unit serverPane.server = s.map(_.peer)
-
-  component.peer.getRootPane.putClientProperty("Window.style", "small")
+  // component.peer.getRootPane.putClientProperty("Window.style", "small")
   component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
   resizable = false
   contents  = boxPane
 
-  private def boot(): Unit = {
+  def startAuralSystem(): Unit = {
     val config        = Server.Config()
     val programPath   = Prefs.superCollider.getOrElse(Prefs.defaultSuperCollider)
     if (programPath != Prefs.defaultSuperCollider) config.program = programPath.path
@@ -74,7 +129,7 @@ final class MainFrame extends WindowImpl { me =>
 
   // private val tinyFont = new Font("SansSerif", Font.PLAIN, 7)
 
-  private def started(s: Server)(implicit tx: Txn): Unit = {
+  private def auralSystemStarted(s: Server)(implicit tx: Txn): Unit = {
     log("MainFrame: AuralSystem started")
     // XXX TODO: dirty dirty
     for(_ <- 1 to 4) s.nextNodeID()
@@ -82,7 +137,7 @@ final class MainFrame extends WindowImpl { me =>
     deferTx {
       import synth.Ops._
 
-      serverPane.server = Some(s.peer)
+      audioServerPane.server = Some(s.peer)
       val numOuts = s.peer.config.outputBusChannels
       val outBus  = AudioBus(s.peer, 0, numOuts)
       // val hpBus   = RichBus.audio(s, 2)
@@ -241,10 +296,10 @@ final class MainFrame extends WindowImpl { me =>
     sl
   }
 
-  private def stopped()(implicit tx: Txn): Unit = {
+  private def auralSystemStopped()(implicit tx: Txn): Unit = {
     log("MainFrame: AuralSystem stopped")
     deferTx {
-      serverPane.server = None
+      audioServerPane.server = None
       meter.foreach { m =>
         meter = None
         // m.dispose()
@@ -258,17 +313,50 @@ final class MainFrame extends WindowImpl { me =>
     }
   }
 
-  atomic {
-    implicit itx =>
-      implicit val tx = Txn.wrap(itx)
-      auralSystem.addClient(new AuralSystem.Client {
-        def started(s: Server)(implicit tx: Txn): Unit = me.started(s)
-        def stopped()         (implicit tx: Txn): Unit = me.stopped()
-      })
+  def stopSensorSystem(): Unit =
+    atomic { implicit itx =>
+      sensorSystem.stop()
+    }
+
+  def startSensorSystem(): Unit = {
+    val config = SensorSystem.defaultConfig
+    atomic { implicit itx =>
+      implicit val tx = TxnLike.wrap(itx)
+      sensorSystem.start(config)
+    }
+  }
+
+  private def sensorSystemStarted(s: SensorSystem.Server)(implicit tx: TxnLike): Unit = {
+    log("MainFrame: SensorSystem started")
+    deferTx {
+      actionStartStopSensors.title = "Stop"
+      ggDumpSensors.enabled = true
+    }
+  }
+
+  private def sensorSystemStopped()(implicit tx: TxnLike): Unit = {
+    log("MainFrame: SensorSystem stopped")
+    deferTx {
+      actionStartStopSensors.title = "Start"
+      ggDumpSensors.enabled   = false
+      ggDumpSensors.selected  = false
+    }
+  }
+
+  atomic { implicit itx =>
+    implicit val tx = Txn.wrap(itx)
+    auralSystem.addClient(new AuralSystem.Client {
+      def started(s: Server)(implicit tx: Txn): Unit = me.auralSystemStarted(s)
+      def stopped()         (implicit tx: Txn): Unit = me.auralSystemStopped()
+    })
+    sensorSystem.addClient(new SensorSystem.Client {
+      def started(s: SensorSystem.Server)(implicit tx: TxnLike): Unit = me.sensorSystemStarted(s)
+      def stopped()                      (implicit tx: TxnLike): Unit = me.sensorSystemStopped()
+    })
   }
   // XXX TODO: removeClient
 
-  title           = "Aural System" // Mellite.name
+  title           = Mellite.name
   closeOperation  = Window.CloseIgnore
 
   pack()

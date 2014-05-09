@@ -22,7 +22,7 @@ libraryDependencies ++= Seq(
   "de.sciss" %% "lucreswing"                      % "0.2.2-SNAPSHOT",  // reactive Swing components
   "de.sciss" %% "lucrestm-bdb"                    % "2.0.4",  // database backend
   "de.sciss" %% "audiowidgets-app"                % "1.6.2",  // audio application widgets
-  "de.sciss" %% "desktop-mac"                     % "0.5.2",  // desktop framework; TODO: should be only added on OS X platforms
+  "de.sciss" %% "desktop-mac"                     % "0.5.3",  // desktop framework; TODO: should be only added on OS X platforms
   "de.sciss" %% "sonogramoverview"                % "1.7.1",  // sonogram component
   "de.sciss" %% "treetable-scala"                 % "1.3.6",  // tree-table component
   "de.sciss" %% "fscapejobs"                      % "1.4.1",  // remote FScape invocation
