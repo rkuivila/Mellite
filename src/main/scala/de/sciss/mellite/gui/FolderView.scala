@@ -53,4 +53,6 @@ trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with View.Edit
   def insertionPoint(implicit tx: S#Tx): (Folder[S], Int)
 
   def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]]
+
+  def root: stm.Source[S#Tx, Folder[S]]
 }

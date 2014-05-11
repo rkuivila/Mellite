@@ -18,7 +18,7 @@ package document
 
 import scala.swing.{Component, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm
-import de.sciss.synth.proc. Folder
+import de.sciss.synth.proc.{FolderElem, Folder}
 import de.sciss.desktop.{UndoManager, DialogSource, Window, Menu}
 import de.sciss.file._
 import de.sciss.swingplus.PopupMenu
@@ -30,6 +30,8 @@ import de.sciss.synth.proc
 import proc.Implicits._
 import de.sciss.icons.raphael
 import de.sciss.desktop.impl.UndoManagerImpl
+import de.sciss.mellite.gui.edit.EditRemoveObj
+import javax.swing.undo.{CompoundEdit, UndoableEdit}
 
 object ElementsFrameImpl {
   def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Document[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
@@ -115,15 +117,32 @@ object ElementsFrameImpl {
       lazy val ggAdd: Button = GUI.toolButton(actionAdd, raphael.Shapes.Plus, "Add Element")
 
       val actionDelete = Action(null) {
-        ???
-//        val views = folderView.selection.map { case (p, view) => (p.last, view) }
-//        if (views.nonEmpty) atomic { implicit tx =>
-//          views.foreach {
-//            case (parent: ObjView.FolderLike[S], child) =>
-//              parent.folder().remove(child.obj())
-//            case _ =>
-//          }
-//        }
+        val sel = folderView.selection
+        val edits: List[UndoableEdit] = atomic { implicit tx =>
+          sel.map { nodeView =>
+            val parent = nodeView.parentOption.flatMap { pView =>
+              pView.modelData() match {
+                case FolderElem.Obj(objT) => Some(objT.elem.peer)
+                case _ => None
+              }
+            }.getOrElse(folderView.root())
+            val childH  = nodeView.modelData
+            val child   = childH()
+            val idx     = parent.indexOf(child)
+            implicit val folderSer = Folder.serializer[S]
+            val parentH = tx.newHandle(parent)
+            EditRemoveObj[S](nodeView.renderData.prefix, parentH, idx, childH)
+          }
+        }
+        edits match {
+          case single :: Nil => undoManager.add(single)
+          case Nil =>
+          case several =>
+            val ce = new CompoundEdit
+            several.foreach(ce.addEdit)
+            ce.end()
+            undoManager.add(ce)
+        }
       }
       actionDelete.enabled = false
 

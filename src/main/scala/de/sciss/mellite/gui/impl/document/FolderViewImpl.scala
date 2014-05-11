@@ -48,7 +48,7 @@ object FolderViewImpl {
 
   // TreeTableViewImpl.DEBUG = true
 
-  def apply[S <: Sys[S]](document: File, root: Folder[S])
+  def apply[S <: Sys[S]](document: File, root0: Folder[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], undoManager: UndoManager): FolderView[S] = {
     val _doc    = document
 
@@ -57,7 +57,7 @@ object FolderViewImpl {
     new Impl[S] {
       val mapViews  = tx.newInMemoryIDMap[ObjView[S]]  // folder IDs to renderers
       val document  = _doc
-      val treeView  = TreeTableView[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]](root, TTHandler)
+      val treeView  = TreeTableView[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]](root0, TTHandler)
 
       deferTx {
         guiInit()
@@ -207,6 +207,8 @@ object FolderViewImpl {
     def dispose()(implicit tx: S#Tx): Unit = {
       treeView.dispose()
     }
+
+    def root = treeView.root
 
     protected def guiInit(): Unit = {
       val t = treeView.treeTable
