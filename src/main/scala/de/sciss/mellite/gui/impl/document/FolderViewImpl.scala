@@ -139,21 +139,22 @@ object FolderViewImpl {
       def renderer(tt: TreeTableView[S, Obj[S], Folder[S], Data], node: NodeView, row: Int, column: Int,
                    state: TreeTableCellRenderer.State): Component = {
         val data    = node.renderData
-        val value   = if (column == 0) data.name else data.value
-        val value1  = if (value != {}) value else null
+        val value1  = if (column == 0) data.name else "" // data.value
+        // val value1  = if (value != {}) value else null
         val res = component.getRendererComponent(tt.treeTable, value1, row = row, column = column, state = state)
-        if (row >= 0) state.tree match {
-          case Some(TreeTableCellRenderer.TreeState(false, true)) =>
-            // println(s"row = $row, col = $column")
+        if (column == 0) {
+          if (row >= 0 && node.isLeaf) {
             try {
               // val node = t.getNode(row)
               component.icon = data.icon
             } catch {
               case NonFatal(_) => // XXX TODO -- currently NPE problems; seems renderer is called before tree expansion with node missing
             }
-          case _ =>
+          }
+          res // component
+        } else {
+          data.configureRenderer(component)
         }
-        res // component
       }
 
       private var editView    = Option.empty[ObjView[S]]
@@ -401,7 +402,7 @@ object FolderViewImpl {
     } (breakOut)
 
     def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
-      val locsOk = locations.flatMap { view =>
+      val locationsOk = locations.flatMap { view =>
         try {
           Artifact.relativize(view.directory, f)
           Some(view)
@@ -410,7 +411,7 @@ object FolderViewImpl {
         }
       } .headOption
 
-      locsOk match {
+      locationsOk match {
         case Some(loc)  => Some(loc.obj)
         case _          =>
           val parent = selection.flatMap { nodeView =>
@@ -419,7 +420,7 @@ object FolderViewImpl {
               case _ => None
             }
           } .headOption
-          ActionArtifactLocation.query(treeView.root, file = f, folder = parent) // , window = Some(comp))
+          ActionArtifactLocation.query[S](treeView.root, file = f, folder = parent) // , window = Some(comp))
       }
     }
   }

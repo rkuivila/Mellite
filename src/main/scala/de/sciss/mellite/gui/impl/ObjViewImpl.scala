@@ -15,18 +15,19 @@ import de.sciss.synth.proc
 import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{deferTx, View}
-import de.sciss.file.File
-import scala.swing.{ComboBox, TextField, Component, Swing}
+import de.sciss.file._
+import scala.swing.{Label, ComboBox, TextField, Component, Swing}
 import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
 import de.sciss.mellite.impl.CodeImpl.CodeElemImpl
 import de.sciss.swingplus.Spinner
 import de.sciss.model.Change
 import java.awt.geom.Path2D
 import de.sciss.desktop.{OptionPane, FileDialog}
-import de.sciss.synth.io.AudioFile
+import de.sciss.synth.io.{SampleFormat, AudioFile}
 import de.sciss.mellite.gui.edit.EditInsertObj
 import de.sciss.lucre.{event => evt}
 import proc.Implicits._
+import de.sciss.audiowidgets.{AxisFormat, Axis}
 
 object ObjViewImpl {
   import ObjView.Factory
@@ -96,7 +97,11 @@ object ObjViewImpl {
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, StringElem]],
                                                    var name: _String, var value: _String,
                                                    override val isEditable: _Boolean)
-      extends ObjView.String[S] with ObjViewImpl.Impl[S] with ExprLike[S, _String] with NonViewable[S] {
+      extends ObjView.String[S]
+      with ObjViewImpl.Impl[S]
+      with ExprLike[S, _String]
+      with StringRenderer
+      with NonViewable[S] {
 
       def prefix  = String.prefix
       def icon    = String.icon
@@ -149,7 +154,11 @@ object ObjViewImpl {
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, IntElem]],
                                                    var name: _String, var value: _Int,
                                                    override val isEditable: _Boolean)
-      extends ObjView.Int[S] with ObjViewImpl.Impl[S] with ExprLike[S, _Int] with NonViewable[S] {
+      extends ObjView.Int[S]
+      with ObjViewImpl.Impl[S]
+      with ExprLike[S, _Int]
+      with StringRenderer
+      with NonViewable[S] {
 
       def prefix = Int.prefix
       def icon   = Int.icon
@@ -205,7 +214,11 @@ object ObjViewImpl {
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]],
                                                    var name: _String, var value: _Double,
                                                    override val isEditable: _Boolean)
-      extends ObjView.Double[S] with ObjViewImpl.Impl[S] with ExprLike[S, _Double] with NonViewable[S] {
+      extends ObjView.Double[S]
+      with ObjViewImpl.Impl[S]
+      with ExprLike[S, _Double]
+      with StringRenderer
+      with NonViewable[S] {
 
       def prefix  = Double.prefix
       def icon    = Double.icon
@@ -263,6 +276,8 @@ object ObjViewImpl {
       }
     }
 
+    private val timeFmt = AxisFormat.Time(hours = false, millis = true)
+
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                   var name: _String, var value: Grapheme.Value.Audio)
       extends ObjView.AudioGrapheme[S] with ObjViewImpl.Impl[S] with NonEditable[S] {
@@ -282,6 +297,28 @@ object ObjViewImpl {
       def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
         val frame = AudioFileFrame(document, obj())
         Some(frame)
+      }
+
+      def configureRenderer(label: Label): Component = {
+        // ex. AIFF, stereo 16-bit int 44.1 kHz, 0:49.492
+        val spec    = value.spec
+        val smp     = spec.sampleFormat
+        val isFloat = smp match {
+          case SampleFormat.Float | SampleFormat.Double => "float"
+          case _ => "int"
+        }
+        val chans   = spec.numChannels match {
+          case 1 => "mono"
+          case 2 => "stereo"
+          case n => s"$n-chan."
+        }
+        val sr  = f"${spec.sampleRate/1000}%1.1f"
+        val dur = timeFmt.format(spec.numFrames.toDouble / spec.sampleRate)
+
+        // XXX TODO: add offset and gain information if they are non-default
+        val txt    = s"${spec.fileType.name}, $chans ${smp.bitsPerSample}-$isFloat $sr kHz, $dur"
+        label.text = txt
+        label
       }
     }
   }
@@ -318,7 +355,11 @@ object ObjViewImpl {
 
       final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]],
                                                      var name: _String, var directory: File)
-        extends ObjView.ArtifactLocation[S] with ObjViewImpl.Impl[S] with NonEditable[S] with NonViewable[S] {
+        extends ObjView.ArtifactLocation[S]
+        with ObjViewImpl.Impl[S]
+        with StringRenderer
+        with NonEditable[S]
+        with NonViewable[S] {
 
         def icon    = ArtifactLocation.icon
         def prefix  = ArtifactLocation.prefix
@@ -367,6 +408,11 @@ object ObjViewImpl {
         val frame = RecursionFrame(document, obj())
         Some(frame)
       }
+
+      def configureRenderer(label: Label): Component = {
+        label.text = deployed.name
+        label
+      }
     }
   }
 
@@ -404,7 +450,11 @@ object ObjViewImpl {
 
     // XXX TODO: could be viewed as a new folder view with this folder as root
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, FolderElem]], var name: _String)
-      extends ObjView.Folder[S] with ObjViewImpl.Impl[S] with NonEditable[S] with NonViewable[S] {
+      extends ObjView.Folder[S]
+      with ObjViewImpl.Impl[S]
+      with EmptyRenderer
+      with NonEditable[S]
+      with NonViewable[S] {
 
       def value = ()
 
@@ -447,7 +497,10 @@ object ObjViewImpl {
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]], var name: _String)
-      extends ObjView.ProcGroup[S] with ObjViewImpl.Impl[S] with NonEditable[S] {
+      extends ObjView.ProcGroup[S]
+      with ObjViewImpl.Impl[S]
+      with EmptyRenderer
+      with NonEditable[S] {
 
       def value   = ()
       def icon    = ProcGroup.icon
@@ -518,7 +571,9 @@ object ObjViewImpl {
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Code.Elem]],
                                                    var name: _String, var value: _Code)
-      extends ObjView.Code[S] with ObjViewImpl.Impl[S] with NonEditable[S] {
+      extends ObjView.Code[S]
+      with ObjViewImpl.Impl[S]
+      with NonEditable[S] {
 
       def icon    = Code.icon
       def prefix  = Code.prefix
@@ -530,6 +585,11 @@ object ObjViewImpl {
       def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
         val frame = CodeFrame(document, obj())
         Some(frame)
+      }
+
+      def configureRenderer(label: Label): Component = {
+        label.text = value.contextName
+        label
       }
     }
   }
@@ -580,6 +640,19 @@ object ObjViewImpl {
     def isViewable: Boolean = false
 
     def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = None
+  }
+
+  trait EmptyRenderer {
+    def configureRenderer(label: Label): Component = label
+  }
+
+  trait StringRenderer {
+    def value: Any
+
+    def configureRenderer(label: Label): Component = {
+      label.text = value.toString
+      label
+    }
   }
 
   trait ExprLike[S <: Sys[S], A] {

@@ -26,6 +26,7 @@ import impl.{ObjViewImpl => Impl}
 import scala.language.higherKinds
 import de.sciss.lucre.swing.View
 import de.sciss.lucre.{event => evt}
+import scala.swing.{Component, Label}
 
 object ObjView {
   import java.lang.{String => _String}
@@ -137,6 +138,12 @@ trait ObjView[S <: Sys[S]] {
 
   /** The opaque view value passed into the renderer. */
   def value: Any
+
+  /** Configures the value cell renderer. The simplest case would be
+    * `label.text = value.toString`. In order to leave the cell blank, just return the label.
+    * One can also set its icon.
+    */
+  def configureRenderer(label: Label): Component
 
   /** Whether the opaque value part of the view can be edited in-place (inside the table itself). */
   def isEditable: Boolean
