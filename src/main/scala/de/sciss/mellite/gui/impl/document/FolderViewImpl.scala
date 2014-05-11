@@ -16,14 +16,14 @@ package gui
 package impl
 package document
 
-import de.sciss.synth.proc.{Elem, ProcKeys, Folder, Artifact, Obj, ArtifactLocationElem, FolderElem, StringElem}
+import de.sciss.synth.proc.{IntElem, Elem, ProcKeys, Folder, Artifact, Obj, ArtifactLocationElem, FolderElem, StringElem}
 import swing.Component
-import scala.collection.breakOut
+import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.model.impl.ModelImpl
 import scala.util.control.NonFatal
 import javax.swing.{CellEditor, DropMode, JComponent, TransferHandler}
-import java.awt.datatransfer.DataFlavor
+import java.awt.datatransfer.{Transferable, DataFlavor}
 import javax.swing.TransferHandler.TransferSupport
 import de.sciss.treetable.TreeTableSelectionChanged
 import de.sciss.treetable.TreeTableCellRenderer
@@ -40,8 +40,11 @@ import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.treetable.j.{TreeTableCellEditor, DefaultTreeTableCellEditor}
 import javax.swing.event.{ChangeEvent, CellEditorListener}
 import de.sciss.desktop.UndoManager
-import de.sciss.mellite.gui.edit.EditAttrMap
+import de.sciss.mellite.gui.edit.{CompoundEdit, EditInsertObj, EditRemoveObj, EditAttrMap}
 import de.sciss.lucre
+import de.sciss.synth.io.AudioFile
+import scala.util.Try
+import javax.swing.undo.UndoableEdit
 
 object FolderViewImpl {
   // private final val DEBUG = false
@@ -69,12 +72,13 @@ object FolderViewImpl {
     extends ComponentHolder[Component] with FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
+    private type Data     = ObjView[S]
+    private type NodeView = TreeTableView.NodeView[S, Obj[S], Data]
+
     protected def document: File // Document[S]
 
     protected object TTHandler
       extends TreeTableView.Handler[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]] {
-
-      type Data = ObjView[S]
 
       def branchOption(node: Obj[S]): Option[Folder[S]] = node.elem match {
         case fe: FolderElem[S] => Some(fe.peer)
@@ -133,8 +137,6 @@ object FolderViewImpl {
         }
 
       private lazy val component = TreeTableCellRenderer.Default
-
-      type NodeView = TreeTableView.NodeView[S, Obj[S], Data]
 
       def renderer(tt: TreeTableView[S, Obj[S], Folder[S], Data], node: NodeView, row: Int, column: Int,
                    state: TreeTableCellRenderer.State): Component = {
@@ -236,42 +238,41 @@ object FolderViewImpl {
         override def getSourceActions(c: JComponent): Int =
           TransferHandler.COPY | TransferHandler.MOVE // dragging only works when MOVE is included. Why?
 
-      //        override def createTransferable(c: JComponent): Transferable = {
-      //          val sel   = selection
-      //          val tSel  = DragAndDrop.Transferable(FolderView.selectionFlavor) {
-      //            new FolderView.SelectionDnDData(document, selection)
-      //          }
-      //          // except for the general selection flavour, see if there is more specific types
-      //          // (current Int and Code are supported)
-      //          sel.headOption match {
-      //            case Some((_, elemView: ObjView.Int[S])) =>
-      //              val elem  = elemView.obj
-      //              val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
-      //                timeline.DnD.IntDrag[S](document, elem)
-      //              }
-      //              DragAndDrop.Transferable.seq(tSel, tElem)
-      //
-      //            case Some((_, elemView: ObjView.Code[S])) /* if elemView.value.id == Code.SynthGraph.id */ =>
-      //              val elem  = elemView.obj
-      //              val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
-      //                timeline.DnD.CodeDrag[S](document, elem)
-      //              }
-      //              DragAndDrop.Transferable.seq(tSel, tElem)
-      //
-      //            case _ => tSel
-      //          }
-      //        }
+        override def createTransferable(c: JComponent): Transferable = {
+          val sel   = selection
+          val tSel  = DragAndDrop.Transferable(FolderView.selectionFlavor) {
+            new FolderView.SelectionDnDData(document, selection)
+          }
+          // except for the general selection flavour, see if there is more specific types
+          // (current Int and Code are supported)
+          cursor.step { implicit tx =>
+            sel.headOption.fold(tSel) { nodeView =>
+              nodeView.modelData() match {
+                case IntElem.Obj(objT) =>
+                  val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
+                    timeline.DnD.IntDrag[S](document, tx.newHandle(objT))
+                  }
+                  DragAndDrop.Transferable.seq(tSel, tElem)
+
+                case Code.Elem.Obj(objT) /* if elemView.value.id == Code.SynthGraph.id */ =>
+                  val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
+                    timeline.DnD.CodeDrag[S](document, tx.newHandle(objT))
+                  }
+                  DragAndDrop.Transferable.seq(tSel, tElem)
+
+                case _ => tSel
+              }
+            }
+          }
+        }
 
         // ---- import ----
         override def canImport(support: TransferSupport): Boolean =
-          t.dropLocation match {
+          treeView.dropLocation match {
             case Some(tdl) =>
-              // println(s"last = ${tdl.path.last}; column ${tdl.column}; isLeaf? ${t.treeModel.isLeaf(tdl.path.last)}")
-              val locOk = tdl.index >= 0 || (tdl.column == 0 && (tdl.path.last match {
-                case _: ObjView.Folder[_] => true
-                case _                    => false
-              }))
-
+              // println(tdl.path)
+              // println(s"last = ${tdl.path.lastOption}; column ${tdl.column}") // ; isLeaf? ${t.treeModel.isLeaf(tdl.path.last)}")
+              val locOk = tdl.index >= 0 || (tdl.column == 0 && !tdl.path.lastOption.exists(_.isLeaf))
               if (locOk) {
                 // println("Supported flavours:")
                 // support.getDataFlavors.foreach(println)
@@ -290,101 +291,120 @@ object FolderViewImpl {
             case _ => false
           }
 
-//        // XXX TODO: not sure whether removal should be in exportDone or something
-//        private def insertData(sel: FolderView.Selection[S], newParentView: Branch, idx: Int): Boolean = {
-//          // println(s"insert into $parent at index $idx")
-//
-//          def isNested(pv: Branch, cv: Branch): Boolean =
-//            pv == cv || pv.children.collect {
-//              case pcv: ObjView.Folder[S] => pcv
-//            }.exists(isNested(_, cv))
-//
-//          // make sure we are not moving a folder within itself (it will magically disappear :)
-//          val sel1 = sel.filter {
-//            case (_, cv: ObjView.Folder[S]) if isNested(cv, newParentView) => false
-//            case _ => true
-//          }
-//
-//          // if we move children within the same folder, adjust the insertion index by
-//          // decrementing it for any child which is above the insertion index, because
-//          // we will first remove all children, then re-insert them.
-//          val idx0 = if (idx >= 0) idx else newParentView.children.size
-//          val idx1 = idx0 - sel1.count {
-//            case (_ :+ `newParentView`, cv) => newParentView.children.indexOf(cv) <= idx0
-//            case _ => false
-//          }
-//          // println(s"idx0 $idx0 idx1 $idx1")
-//
-//          cursor.step { implicit tx =>
-//            val tup = sel1.map {
-//              case (_ :+ pv, cv) => pv.folder() -> cv.obj()
-//            }
-//
-//            val newParent = newParentView.folder()
-//            tup             .foreach { case  (oldParent, c)       => oldParent.remove(            c) }
-//            tup.zipWithIndex.foreach { case ((_        , c), off) => newParent.insert(idx1 + off, c) }
-//          }
-//
-//          true
-//        }
-//
-//        private def importSelection(support: TransferSupport, parent: ObjView.FolderLike[S], index: Int): Boolean = {
-//          val data = support.getTransferable.getTransferData(FolderView.selectionFlavor)
-//            .asInstanceOf[FolderView.SelectionDnDData[S]]
-//          if (data.document == document) {
-//            val sel = data.selection
-//            insertData(sel, parent, index)
-//          } else {
-//            false
-//          }
-//        }
-//
-//        private def importFiles(support: TransferSupport, parent: ObjView.FolderLike[S], index: Int): Boolean = {
-//          import JavaConversions._
-//          val data  = support.getTransferable.getTransferData(DataFlavor.javaFileListFlavor)
-//            .asInstanceOf[java.util.List[File]].toList
-//          val tup   = data.flatMap { f =>
-//            Try(AudioFile.readSpec(f)).toOption.map(f -> _)
-//          }
-//          val trip  = tup.flatMap { case (f, spec) =>
-//            findLocation(f).map { loc => (f, spec, loc) }
-//          }
-//
-//          if (trip.nonEmpty) {
-//            cursor.step { implicit tx =>
-//              trip.foreach {
-//                case (f, spec, locS) =>
-//                  val loc = locS()
-//                  loc.elem.peer.modifiableOption.foreach { locM =>
-//                    ObjectActions.addAudioFile(parent.folder(), index, locM, f, spec)
-//                  }
-//              }
-//            }
-//            true
-//
-//          } else {
-//            false
-//          }
-//        }
+        // XXX TODO: not sure whether removal should be in exportDone or something
+        private def insertData(sel: FolderView.Selection[S], newParent: Folder[S], idx: Int)
+                              (implicit tx: S#Tx): Option[UndoableEdit] = {
+          // println(s"insert into $parent at index $idx")
+
+          def isNested(c: Obj[S]): Boolean = c match {
+            case FolderElem.Obj(objT) =>
+              objT.elem.peer == newParent || objT.elem.peer.iterator.toList.exists(isNested)
+            case _ => false
+          }
+
+          // make sure we are not moving a folder within itself (it will magically disappear :)
+          val sel1 = sel.filterNot(nv => isNested(nv.modelData()))
+
+          // if we move children within the same folder, adjust the insertion index by
+          // decrementing it for any child which is above the insertion index, because
+          // we will first remove all children, then re-insert them.
+          val idx0 = if (idx >= 0) idx else newParent /* .children */.size
+          val idx1 = idx0 - sel1.count { nv =>
+            val isInNewParent = nv.parentOption.map(_.modelData()) == Some(newParent)
+            val child = nv.modelData()
+            isInNewParent && newParent.indexOf(child) <= idx0
+          }
+          // println(s"idx0 $idx0 idx1 $idx1")
+
+          implicit val folderSer = Folder.serializer[S]
+
+          val editRemove = sel1.map { nv =>
+            val parent: Folder[S] = nv.parentOption.flatMap { pv =>
+              pv.modelData() match {
+                case FolderElem.Obj(objT) => Some(objT.elem.peer)
+                case _ => None
+              }
+            } .getOrElse(treeView.root())
+
+            val childH  = nv.modelData
+            val idx     = parent.indexOf(childH())
+            val parentH = tx.newHandle(parent)
+            EditRemoveObj[S](nv.renderData.prefix, parentH, idx, childH)
+          }
+
+          val newParentH = tx.newHandle(newParent)
+
+          val editInsert = sel1.zipWithIndex.map { case (nv, off) =>
+            val childH = nv.modelData
+            EditInsertObj[S](nv.renderData.prefix, newParentH, idx1 + off, childH)
+          }
+          val edits: List[UndoableEdit] = editRemove ++ editInsert
+          val name = sel1 match {
+            case single :: Nil  => single.renderData.prefix
+            case _              => "Elements"
+          }
+          CompoundEdit(edits, s"Move $name")
+        }
+
+        private def importSelection(support: TransferSupport, parent: Folder[S], index: Int)
+                                   (implicit tx: S#Tx): Option[UndoableEdit] = {
+          val data = support.getTransferable.getTransferData(FolderView.selectionFlavor)
+            .asInstanceOf[FolderView.SelectionDnDData[S]]
+          if (data.document == document) {
+            val sel     = data.selection
+            insertData(sel, parent, index)
+          } else {
+            None
+          }
+        }
+
+        private def importFiles(support: TransferSupport, parent: Folder[S], index: Int)
+                               (implicit tx: S#Tx): Option[UndoableEdit] = {
+          import JavaConversions._
+          val data  = support.getTransferable.getTransferData(DataFlavor.javaFileListFlavor)
+            .asInstanceOf[java.util.List[File]].toList
+          val tup   = data.flatMap { f =>
+            Try(AudioFile.readSpec(f)).toOption.map(f -> _)
+          }
+          val trip  = tup.flatMap { case (f, spec) =>
+            findLocation(f).map { loc => (f, spec, loc) }
+          }
+
+          implicit val folderSer = Folder.serializer[S]
+          val parentH = tx.newHandle(parent)
+          val edits: List[UndoableEdit] = trip.flatMap {
+            case (f, spec, locS) =>
+              val loc = locS()
+              loc.elem.peer.modifiableOption.map { locM =>
+                val obj     = ObjectActions.mkAudioFile(locM, f, spec)
+                val childH  = tx.newHandle(obj)
+                EditInsertObj[S]("Audio File", parentH, index, childH)
+              }
+          }
+          CompoundEdit(edits, "Insert Audio Files")
+        }
 
         override def importData(support: TransferSupport): Boolean =
-        ???
-//          t.dropLocation match {
-//            case Some(tdl) =>
-//              tdl.path.last match {
-//                case parent: ObjView.FolderLike[S] =>
-//                  val idx = tdl.index
-//                  if      (support.isDataFlavorSupported(FolderView.selectionFlavor   ))
-//                    importSelection(support, parent, idx)
-//                  else if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
-//                    importFiles    (support, parent, idx)
-//                  else false
-//
-//                case _ => false
-//              }
-//
-//            case _ => false
-//          }
+          treeView.dropLocation.exists { tdl =>
+            val editOpt = cursor.step { implicit tx =>
+              val parentOpt = tdl.path.lastOption.fold(Option(treeView.root())) { nodeView =>
+                nodeView.modelData() match {
+                  case FolderElem.Obj(objT) => Some(objT.elem.peer)
+                  case _ => None
+                }
+              }
+              parentOpt.flatMap { parent =>
+                val idx = tdl.index
+                if (support.isDataFlavorSupported(FolderView.selectionFlavor))
+                  importSelection(support, parent, idx)
+                else if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
+                  importFiles(support, parent, idx)
+                else None
+              }
+            }
+            editOpt.foreach(undoManager.add)
+            editOpt.isDefined
+          }
       })
 
       component     = treeView.component

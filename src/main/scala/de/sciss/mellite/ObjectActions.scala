@@ -22,9 +22,8 @@ import proc.Implicits._
 import de.sciss.lucre.event.Sys
 
 object ObjectActions {
-  def addAudioFile[S <: Sys[S]](folder: Folder[S], index: Int, loc: Artifact.Location.Modifiable[S],
-                                f: File, spec: AudioFileSpec)
-                               (implicit tx: S#Tx): Obj.T[S, AudioGraphemeElem] = {
+  def mkAudioFile[S <: Sys[S]](loc: Artifact.Location.Modifiable[S], f: File, spec: AudioFileSpec)
+                              (implicit tx: S#Tx): Obj.T[S, AudioGraphemeElem] = {
     val imp       = ExprImplicits[S]
     import imp._
     val offset    = LongEx  .newVar[S](0L )
@@ -35,7 +34,7 @@ object ObjectActions {
     val elem      = AudioGraphemeElem[S](audio)
     val obj       = Obj(elem)
     obj.attr.name = name
-    if (index == -1) folder.addLast(obj) else folder.insert(index, obj)
+    // if (index == -1) folder.addLast(obj) else folder.insert(index, obj)
     obj
   }
 

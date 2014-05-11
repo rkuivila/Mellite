@@ -19,7 +19,7 @@ crossScalaVersions := Seq("2.11.0", "2.10.4")
 libraryDependencies ++= Seq(
   "de.sciss" %% "soundprocesses"                  % "2.4.0-SNAPSHOT",  // computer-music framework
   "de.sciss" %% "scalacolliderswing-interpreter"  % "1.16.0", // REPL
-  "de.sciss" %% "lucreswing"                      % "0.2.2-SNAPSHOT",  // reactive Swing components
+  "de.sciss" %% "lucreswing"                      % "0.3.0",  // reactive Swing components
   "de.sciss" %% "lucrestm-bdb"                    % "2.0.4",  // database backend
   "de.sciss" %% "audiowidgets-app"                % "1.6.2",  // audio application widgets
   "de.sciss" %% "desktop-mac"                     % "0.5.3",  // desktop framework; TODO: should be only added on OS X platforms
