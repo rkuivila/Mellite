@@ -16,7 +16,7 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Obj, ProcElem, FadeSpec, ProcKeys, Proc, Elem, FadeSpecElem}
+import de.sciss.synth.proc.{Obj, FadeSpec, ProcKeys, Proc}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
@@ -61,12 +61,12 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     result
   }
 
-  protected def commitProc(drag: Fade)(span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem])(implicit tx: S#Tx): Unit = {
+  protected def commitProc(drag: Fade)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit = {
     import drag._
 
     val attr    = proc.attr
-    val exprIn  = attr.expr[FadeSpec.Value](ProcKeys.attrFadeIn )
-    val exprOut = attr.expr[FadeSpec.Value](ProcKeys.attrFadeOut)
+    val exprIn  = attr.expr[FadeSpec](ProcKeys.attrFadeIn )
+    val exprOut = attr.expr[FadeSpec](ProcKeys.attrFadeOut)
     val valIn   = exprIn .fold(EmptyFade)(_.value)
     val valOut  = exprOut.fold(EmptyFade)(_.value)
     val total   = span.value match {
@@ -86,16 +86,16 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       val newInC  = valInC + dInC
       val curve   = if (newInC == 0f) Curve.linear else Curve.parametric(newInC)
       val fr      = valIn.numFrames + dIn
-      val res     = FadeSpec.Value(fr, curve, valIn.floor)
-      val elem    = FadeSpec.Elem.newConst[S](res)
+      val res     = FadeSpec(fr, curve, valIn.floor)
+      val elem    = FadeSpec.Expr.newConst[S](res)
       exprIn match {
         case Some(Expr.Var(vr)) =>
           vr() = elem
           res
 
         case None =>
-          val vr = FadeSpec.Elem.newVar(elem)
-          attr.put(ProcKeys.attrFadeIn, FadeSpecElem(vr))
+          val vr = FadeSpec.Expr.newVar(elem)
+          attr.put(ProcKeys.attrFadeIn, FadeSpec.Elem(vr))
           res
 
         case _ =>
@@ -116,15 +116,15 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       val newOutC = valOutC + dOutC
       val curve   = if (newOutC == 0f) Curve.linear else Curve.parametric(newOutC)
       val fr      = valOut.numFrames + dOut
-      val res     = FadeSpec.Value(fr, curve, valOut.floor)
-      val elem    = FadeSpec.Elem.newConst[S](res)
+      val res     = FadeSpec(fr, curve, valOut.floor)
+      val elem    = FadeSpec.Expr.newConst[S](res)
       exprOut match {
         case Some(Expr.Var(vr)) =>
           vr() = elem
 
         case None =>
-          val vr  = FadeSpec.Elem.newVar(elem)
-          attr.put(ProcKeys.attrFadeOut, FadeSpecElem(vr))
+          val vr  = FadeSpec.Expr.newVar(elem)
+          attr.put(ProcKeys.attrFadeOut, FadeSpec.Elem(vr))
 
         case _ =>
       }

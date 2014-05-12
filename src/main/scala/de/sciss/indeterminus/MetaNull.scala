@@ -24,7 +24,7 @@ import de.sciss.strugatzki.{FeatureCorrelation, FeatureExtraction}
 import de.sciss.processor.Processor
 import de.sciss.synth.proc
 import de.sciss.mellite._
-import de.sciss.synth.proc.{ExprImplicits, FadeSpec, FadeSpecElem, ProcKeys, Artifact, Grapheme}
+import de.sciss.synth.proc.{ExprImplicits, FadeSpec, ProcKeys, ArtifactLocation, Grapheme}
 import de.sciss.file._
 import de.sciss.lucre.synth.InMemory
 
@@ -77,21 +77,21 @@ object MetaNull {
     val p = sys.step { implicit tx =>
       val group = proc.ProcGroup.Modifiable[I]
       matches.foreach { case (time, m) +: _ =>    // just mono right now
-        val loc       = Artifact.Location.Modifiable[I](m.file.parent.parent) // XXX TODO: bug in Artifact.Location -- needs one sub-level at least
+        val loc       = ArtifactLocation.Modifiable[I](m.file.parent.parent) // XXX TODO: bug in ArtifactLocation -- needs one sub-level at least
         val artifact  = loc.add(m.file)
         val spec      = AudioFile.readSpec(m.file)
         val offset    = 0L
         val gain      = math.sqrt(m.boostIn * m.boostOut)
         val imp = ExprImplicits[I]
         import imp._
-        val grapheme  = Grapheme.Elem.Audio(artifact, spec, offset, gain)
+        val grapheme  = Grapheme.Expr.Audio(artifact, spec, offset, gain)
         val span      = m.punch
         val (_, proc) = ProcActions.insertAudioRegion(group = group, time = time, track = 0, grapheme = grapheme,
                                                       selection = span, bus = None)
-        val fdIn      = FadeSpec.Elem.newConst[I](FadeSpec.Value(882))
-        val fdOut     = FadeSpec.Elem.newConst[I](FadeSpec.Value(math.min(span.length - 882, 22050)))
-        proc.attr.put(ProcKeys.attrFadeIn , FadeSpecElem(fdIn ))
-        proc.attr.put(ProcKeys.attrFadeOut, FadeSpecElem(fdOut))
+        val fdIn      = FadeSpec.Expr.newConst[I](FadeSpec(882))
+        val fdOut     = FadeSpec.Expr.newConst[I](FadeSpec(math.min(span.length - 882, 22050)))
+        proc.attr.put(ProcKeys.attrFadeIn , FadeSpec.Elem(fdIn ))
+        proc.attr.put(ProcKeys.attrFadeOut, FadeSpec.Elem(fdOut))
       }
 
       val bnc   = proc.Bounce[I, I]

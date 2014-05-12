@@ -16,7 +16,7 @@ package mellite
 
 import lucre.expr.Expr
 import span.{Span, SpanLike}
-import de.sciss.synth.proc.{ProcGroup, Obj, SynthGraphs, ExprImplicits, Elem, ProcKeys, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem, ProcElem}
+import de.sciss.synth.proc.{Obj, SynthGraphs, ExprImplicits, ProcKeys, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.synth.proc
@@ -32,26 +32,26 @@ object ProcActions {
 
   // scalac still has bug finding ProcGroup.Modifiable
   // private type ProcGroupMod[S <: Sys[S]] = ProcGroup.Modifiable[S] // BiGroup.Modifiable[S, Proc[S], Proc.Update[S]]
-  private type ProcGroupMod[S <: Sys[S]] = BiGroup.Modifiable[S, Obj.T[S, ProcElem], Obj.UpdateT[S, ProcElem[S]]]
+  private type ProcGroupMod[S <: Sys[S]] = BiGroup.Modifiable[S, Obj.T[S, Proc.Elem], Obj.UpdateT[S, Proc.Elem[S]]]
 
   final case class Resize(deltaStart: Long, deltaStop: Long)
 
   /** Queries the audio region's grapheme segment start and audio element. */
-  def getAudioRegion[S <: Sys[S]](span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem])
-                                 (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme.Elem.Audio[S])] = {
+  def getAudioRegion[S <: Sys[S]](span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])
+                                 (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme.Expr.Audio[S])] = {
     span.value match {
       case Span.HasStart(frame) =>
         for {
           scan <- proc.elem.peer.scans.get(ProcKeys.graphAudio)
           Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
-          BiExpr(time, audio: Grapheme.Elem.Audio[S]) <- g.at(frame)
+          BiExpr(time, audio: Grapheme.Expr.Audio[S]) <- g.at(frame)
         } yield (time, audio)
 
       case _ => None
     }
   }
 
-  def resize[S <: Sys[S]](span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem],
+  def resize[S <: Sys[S]](span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem],
                           amount: Resize, timelineModel: TimelineModel)
                          (implicit tx: S#Tx): Unit = {
     import amount._
@@ -102,7 +102,7 @@ object ProcActions {
     * @param proc the proc to rename
     * @param name the new name or `None` to remove the name attribute
     */
-  def rename[S <: Sys[S]](proc: Obj.T[S, ProcElem], name: Option[String])(implicit tx: S#Tx): Unit = {
+  def rename[S <: Sys[S]](proc: Obj.T[S, Proc.Elem], name: Option[String])(implicit tx: S#Tx): Unit = {
     val attr  = proc.attr
     val imp   = ExprImplicits[S]
     import imp._
@@ -124,10 +124,10 @@ object ProcActions {
     * @param span the process span. if given, tries to copy the audio grapheme as well.
     * @return
     */
-  def copy[S <: Sys[S]](proc: Obj.T[S, ProcElem], span: Option[Expr[S, SpanLike]])
-                       (implicit tx: S#Tx): Obj.T[S, ProcElem] = {
+  def copy[S <: Sys[S]](proc: Obj.T[S, Proc.Elem], span: Option[Expr[S, SpanLike]])
+                       (implicit tx: S#Tx): Obj.T[S, Proc.Elem] = {
     val pNew    = Proc[S]
-    val res     = Obj(ProcElem(pNew))
+    val res     = Obj(Proc.Elem(pNew))
     pNew.graph() = proc.elem.peer.graph
     proc.attr.iterator.foreach { case (key, attr) =>
       val attrOut = attr.mkCopy()
@@ -143,7 +143,7 @@ object ProcActions {
         val gStart      = LongEx  .newVar(time        .value)
         val audioOffset = LongEx  .newVar(audio.offset.value)  // XXX TODO
         val audioGain   = DoubleEx.newVar(audio.gain  .value)
-        val gElem       = Grapheme.Elem.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
+        val gElem       = Grapheme.Expr.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
         val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
         grw.add(bi)
         scanw addSource grw
@@ -166,7 +166,7 @@ object ProcActions {
     res
   }
 
-  def setGain[S <: Sys[S]](proc: Obj.T[S, ProcElem], gain: Double)(implicit tx: S#Tx): Unit = {
+  def setGain[S <: Sys[S]](proc: Obj.T[S, Proc.Elem], gain: Double)(implicit tx: S#Tx): Unit = {
     val attr  = proc.attr
     val imp   = ExprImplicits[S]
     import imp._
@@ -181,7 +181,7 @@ object ProcActions {
     }
   }
 
-  def adjustGain[S <: Sys[S]](proc: Obj.T[S, ProcElem], factor: Double)(implicit tx: S#Tx): Unit = {
+  def adjustGain[S <: Sys[S]](proc: Obj.T[S, Proc.Elem], factor: Double)(implicit tx: S#Tx): Unit = {
     if (factor == 1.0) return
 
     val attr  = proc.attr
@@ -191,19 +191,19 @@ object ProcActions {
     attr.expr[Double](ProcKeys.attrGain) match {
       case Some(Expr.Var(vr)) => vr.transform(_ * factor)
       case other =>
-        val newGain = other.map(_.value).getOrElse(1.0) * factor
+        val newGain = other.fold(1.0)(_.value) * factor
         attr.put(ProcKeys.attrGain, DoubleElem(DoubleEx.newVar(newGain)))
     }
   }
 
-  def setBus[S <: Sys[S]](procs: Iterable[Obj.T[S, ProcElem]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
+  def setBus[S <: Sys[S]](procs: Iterable[Obj.T[S, Proc.Elem]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
     val attr    = IntElem(intExpr)
     procs.foreach { proc =>
       proc.attr.put(ProcKeys.attrBus, attr)
     }
   }
 
-  def toggleMute[S <: Sys[S]](proc: Obj.T[S, ProcElem])(implicit tx: S#Tx): Unit = {
+  def toggleMute[S <: Sys[S]](proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit = {
     val imp   = ExprImplicits[S]
     import imp._
 
@@ -215,7 +215,7 @@ object ProcActions {
     }
   }
 
-  def setSynthGraph[S <: Sys[S]](procs: Iterable[Obj.T[S, ProcElem]], codeElem: Obj.T[S, Code.Elem])
+  def setSynthGraph[S <: Sys[S]](procs: Iterable[Obj.T[S, Proc.Elem]], codeElem: Obj.T[S, Code.Elem])
                                 (implicit tx: S#Tx): Boolean = {
     val code = codeElem.elem.peer.value
     code match {
@@ -273,10 +273,10 @@ object ProcActions {
       group     : ProcGroupMod[S],
       time      : Long,
       track     : Int,
-      grapheme  : Grapheme.Elem.Audio[S],
+      grapheme  : Grapheme.Expr.Audio[S],
       selection : Span,
       bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
-     (implicit tx: S#Tx): (Expr[S, Span], Obj.T[S, ProcElem]) = {
+     (implicit tx: S#Tx): (Expr[S, Span], Obj.T[S, Proc.Elem]) = {
 
     val imp = ExprImplicits[S]
     import imp._
@@ -284,7 +284,7 @@ object ProcActions {
     val spanV   = Span(time, time + selection.length)
     val span    = SpanEx.newVar[S](spanV)
     val proc    = Proc[S]
-    val obj     = Obj(ProcElem(proc))
+    val obj     = Obj(Proc.Elem(proc))
     val attr    = obj.attr
     if (track >= 0) attr.put(ProcKeys.attrTrack, IntElem(IntEx.newVar(track)))
     bus.foreach { busEx =>
@@ -313,13 +313,13 @@ object ProcActions {
       group     : ProcGroupMod[S],
       name      : String,
       bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
-     (implicit tx: S#Tx): Obj.T[S, ProcElem] = {
+     (implicit tx: S#Tx): Obj.T[S, Proc.Elem] = {
 
     val imp = ExprImplicits[S]
     import imp._
 
     val proc    = Proc[S]
-    val obj     = Obj(ProcElem(proc))
+    val obj     = Obj(Proc.Elem(proc))
     val attr    = obj.attr
     val nameEx  = StringEx.newVar[S](StringEx.newConst(name))
     attr.put(ProcKeys.attrName, StringElem(nameEx))
@@ -341,7 +341,7 @@ object ProcActions {
     source.removeSink(Scan.Link.Scan(sink))
   }
 
-  def linkOrUnlink[S <: Sys[S]](out: Obj.T[S, ProcElem], in: Obj.T[S, ProcElem])(implicit tx: S#Tx): Boolean = {
+  def linkOrUnlink[S <: Sys[S]](out: Obj.T[S, Proc.Elem], in: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Boolean = {
     val outsIt  = out.elem.peer.scans.iterator // .toList
     val insSeq0 = in .elem.peer.scans.iterator.toIndexedSeq
 

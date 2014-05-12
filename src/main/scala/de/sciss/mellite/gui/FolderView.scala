@@ -19,7 +19,7 @@ import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.model.Model
 import de.sciss.lucre.stm
 import java.io.File
-import de.sciss.synth.proc.{Folder, ArtifactLocationElem, Obj}
+import de.sciss.synth.proc.{ArtifactLocation, Folder, Obj}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.{View, TreeTableView}
 import de.sciss.desktop.UndoManager
@@ -52,7 +52,7 @@ trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with View.Edit
 
   def insertionPoint(implicit tx: S#Tx): (Folder[S], Int)
 
-  def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]]
+  def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]]
 
   def root: stm.Source[S#Tx, Folder[S]]
 }

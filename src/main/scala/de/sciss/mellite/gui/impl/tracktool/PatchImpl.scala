@@ -17,7 +17,7 @@ package impl
 package tracktool
 
 import java.awt.{Color, RenderingHints, Point, Toolkit}
-import de.sciss.synth.proc.{ProcElem, Obj, Proc}
+import de.sciss.synth.proc.{Obj, Proc}
 import de.sciss.mellite.gui.TimelineProcCanvas
 import de.sciss.mellite.gui.TrackTool
 import de.sciss.lucre.expr.Expr
@@ -74,7 +74,7 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: ProcView[S]): Unit =
     /* if (region.outputs.nonEmpty) */ new Drag(e, hitTrack, pos, region)  // region.outputs only carries linked ones!
 
-  protected def commitProc(drag: Patch[S])(span: Expr[S, SpanLike], out: Obj.T[S, ProcElem])(implicit tx: S#Tx): Unit =
+  protected def commitProc(drag: Patch[S])(span: Expr[S, SpanLike], out: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit =
     drag.sink match {
       case Patch.Linked(view) =>
         val in = view.procSource()

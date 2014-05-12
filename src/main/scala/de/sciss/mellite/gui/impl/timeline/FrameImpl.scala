@@ -16,7 +16,7 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{Obj, ProcGroupElem, ProcGroup}
+import de.sciss.synth.proc.{Obj, ProcGroup}
 import de.sciss.mellite.Document
 import de.sciss.lucre.stm
 import de.sciss.desktop.{OptionPane, Window}
@@ -29,9 +29,9 @@ import de.sciss.synth.proc
 import proc.Implicits._
 
 object FrameImpl {
-  def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroup.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineFrame[S] = {
-    val tlv     = TimelineView(document, group)
+    val tlv     = TimelineView[S](document, group)
     val name    = group.attr.name
     import ProcGroup.serializer
     val groupH  = tx.newHandle(group.elem.peer)

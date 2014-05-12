@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{Elem, AudioGraphemeElem, ProcGroupElem, Obj, ArtifactLocationElem, DoubleElem, IntElem, StringElem, Grapheme, FolderElem}
+import de.sciss.synth.proc.{Elem, AudioGraphemeElem, Obj, DoubleElem, IntElem, StringElem, Grapheme}
 import de.sciss.lucre.stm
 import java.io.File
 import javax.swing.Icon
@@ -32,7 +32,7 @@ object ObjView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
   import mellite.{Code => _Code, Recursion => _Recursion}
-  import proc.{Folder => _Folder}
+  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, ProcGroup => _ProcGroup}
 
   trait Factory {
     def prefix: _String
@@ -81,11 +81,11 @@ object ObjView {
     def value: Grapheme.Value.Audio
   }
 
-  val ArtifactLocation: Factory { type E[S <: evt.Sys[S]] = ArtifactLocationElem[S] /* ; type Init = File */ } =
+  val ArtifactLocation: Factory { type E[S <: evt.Sys[S]] = _ArtifactLocation.Elem[S] /* ; type Init = File */ } =
     Impl.ArtifactLocation
 
   trait ArtifactLocation[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, _ArtifactLocation.Elem]]
     def directory: File
   }
 
@@ -95,14 +95,14 @@ object ObjView {
     def deployed: File
   }
 
-  val Folder: Factory { type E[S <: evt.Sys[S]] = FolderElem[S] /* ; type Init = _String */ } = Impl.Folder
+  val Folder: Factory { type E[S <: evt.Sys[S]] = _Folder.Elem[S] /* ; type Init = _String */ } = Impl.Folder
   trait Folder[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, FolderElem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, _Folder.Elem]]
   }
 
-  val ProcGroup: Factory { type E[S <: evt.Sys[S]] = ProcGroupElem[S] /* ; type Init = _String */ } = Impl.ProcGroup
+  val ProcGroup: Factory { type E[S <: evt.Sys[S]] = _ProcGroup.Elem[S] /* ; type Init = _String */ } = Impl.ProcGroup
   trait ProcGroup[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, _ProcGroup.Elem]]
   }
 
   val Code: Factory { type E[S <: evt.Sys[S]] = _Code.Elem[S] } = Impl.Code

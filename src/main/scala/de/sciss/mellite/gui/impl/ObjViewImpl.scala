@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Elem, ExprImplicits, Artifact, ArtifactLocationElem, ProcGroupElem, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
+import de.sciss.synth.proc.{Elem, ExprImplicits, Artifact, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -34,7 +34,7 @@ object ObjViewImpl {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
   import mellite.{Recursion => _Recursion, Code => _Code}
-  import proc.{Folder => _Folder, ProcGroup => _ProcGroup}
+  import proc.{Folder => _Folder, ProcGroup => _ProcGroup, ArtifactLocation => _ArtifactLocation}
 
   private val sync = new AnyRef
 
@@ -263,7 +263,7 @@ object ObjViewImpl {
       val fOpt = dlg.show(window)
       for {
         f         <- fOpt
-        locSource <- (/* folderView.findLocation(f) */ ??? : Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]])
+        locSource <- (/* folderView.findLocation(f) */ ??? : Option[stm.Source[S#Tx, Obj.T[S, _ArtifactLocation.Elem]]])
       } yield {
         val spec          = AudioFile.readSpec(f)
         cursor.step { implicit tx =>
@@ -326,13 +326,13 @@ object ObjViewImpl {
     // -------- ArtifactLocation --------
 
     object ArtifactLocation extends Factory {
-      type E[S <: evt.Sys[S]] = ArtifactLocationElem[S]
+      type E[S <: evt.Sys[S]] = _ArtifactLocation.Elem[S]
       val icon            = raphaelIcon(raphael.Shapes.Location)
       val prefix          = "ArtifactStore"
       def typeID          = ElemImpl.ArtifactLocation.typeID
       type Init           = File
 
-      def apply[S <: Sys[S]](obj: Obj.T[S, ArtifactLocationElem])(implicit tx: S#Tx): ObjView[S] = {
+      def apply[S <: Sys[S]](obj: Obj.T[S, _ArtifactLocation.Elem])(implicit tx: S#Tx): ObjView[S] = {
         val name      = obj.attr.name
         val value     = obj.elem.peer.directory
         new ArtifactLocation.Impl(tx.newHandle(obj), name, value)
@@ -344,8 +344,8 @@ object ObjViewImpl {
         query.map { case (directory, _name) =>
           cursor.step { implicit tx =>
             // ActionArtifactLocation.create(directory, _name, targetFolder)
-            val peer  = Artifact.Location.Modifiable[S](directory)
-            val elem  = ArtifactLocationElem(peer)
+            val peer  = _ArtifactLocation.Modifiable[S](directory)
+            val elem  = _ArtifactLocation.Elem(peer)
             val obj   = Obj(elem)
             obj.attr.name = _name
             addObject(prefix, folderH(), obj)
@@ -353,7 +353,7 @@ object ObjViewImpl {
         }
       }
 
-      final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]],
+      final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _ArtifactLocation.Elem]],
                                                      var name: _String, var directory: File)
         extends ObjView.ArtifactLocation[S]
         with ObjViewImpl.Impl[S]
@@ -366,7 +366,7 @@ object ObjViewImpl {
         def value   = directory
 
         def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
-          case Artifact.Location.Moved(_, Change(_, now)) =>
+          case _ArtifactLocation.Moved(_, Change(_, now)) =>
             deferTx { directory = now }
             true
           case _ => false
@@ -419,13 +419,13 @@ object ObjViewImpl {
   // -------- Folder --------
 
   object Folder extends Factory {
-    type E[S <: evt.Sys[S]] = FolderElem[S]
+    type E[S <: evt.Sys[S]] = _Folder.Elem[S]
     val icon            = Swing.EmptyIcon
     val prefix          = "Folder"
     def typeID          = FolderElemImpl.typeID
     type Init           = _String
 
-    def apply[S <: Sys[S]](obj: Obj.T[S, FolderElem])(implicit tx: S#Tx): ObjView[S] = {
+    def apply[S <: Sys[S]](obj: Obj.T[S, _Folder.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
       new Folder.Impl(tx.newHandle(obj), name)
     }
@@ -438,7 +438,7 @@ object ObjViewImpl {
       val res = opt.show(window)
       res.map { name =>
         cursor.step { implicit tx =>
-          val elem  = FolderElem(_Folder[S])
+          val elem  = _Folder.Elem(_Folder[S])
           val obj   = Obj(elem)
           val imp   = ExprImplicits[S]
           import imp._
@@ -449,7 +449,7 @@ object ObjViewImpl {
     }
 
     // XXX TODO: could be viewed as a new folder view with this folder as root
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, FolderElem]], var name: _String)
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Folder.Elem]], var name: _String)
       extends ObjView.Folder[S]
       with ObjViewImpl.Impl[S]
       with EmptyRenderer
@@ -468,13 +468,13 @@ object ObjViewImpl {
   // -------- ProcGroup --------
 
   object ProcGroup extends Factory {
-    type E[S <: evt.Sys[S]] = ProcGroupElem[S]
+    type E[S <: evt.Sys[S]] = _ProcGroup.Elem[S]
     val icon            = raphaelIcon(raphael.Shapes.Ruler)
     val prefix          = "ProcGroup"
     def typeID          = ElemImpl.ProcGroup.typeID
     type Init           = _String
 
-    def apply[S <: Sys[S]](obj: Obj.T[S, ProcGroupElem])(implicit tx: S#Tx): ObjView[S] = {
+    def apply[S <: Sys[S]](obj: Obj.T[S, _ProcGroup.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
       new ProcGroup.Impl(tx.newHandle(obj), name)
     }
@@ -488,7 +488,7 @@ object ObjViewImpl {
       res.map { name =>
         cursor.step { implicit tx =>
           val peer  = _ProcGroup.Modifiable[S]
-          val elem  = ProcGroupElem(peer)
+          val elem  = _ProcGroup.Elem(peer)
           val obj   = Obj(elem)
           obj.attr.name = name
           addObject(prefix, folderH(), obj)
@@ -496,7 +496,7 @@ object ObjViewImpl {
       }
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]], var name: _String)
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _ProcGroup.Elem]], var name: _String)
       extends ObjView.ProcGroup[S]
       with ObjViewImpl.Impl[S]
       with EmptyRenderer
@@ -511,7 +511,7 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
-        val frame = TimelineFrame(document, obj())
+        val frame = TimelineFrame[S](document, obj())
         Some(frame)
       }
     }

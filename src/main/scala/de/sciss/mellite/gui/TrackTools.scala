@@ -105,7 +105,7 @@ object TrackTool {
   }
   final case class Patch[S <: Sys[S]](source: ProcView[S], sink: Patch.Sink[S])
 
-  final val EmptyFade = FadeSpec.Value(numFrames = 0L)
+  final val EmptyFade = FadeSpec(numFrames = 0L)
 
   type Listener = Model.Listener[Update[Any]]
 

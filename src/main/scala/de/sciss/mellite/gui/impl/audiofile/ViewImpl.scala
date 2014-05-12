@@ -16,7 +16,7 @@ package gui
 package impl
 package audiofile
 
-import de.sciss.synth.proc.{Obj, AudioGraphemeElem, Artifact, AuralSystem, Grapheme, ExprImplicits}
+import de.sciss.synth.proc.{ArtifactLocation, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
 import de.sciss.lucre.stm
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
 import java.awt.Color
@@ -31,7 +31,6 @@ import de.sciss.audiowidgets.TimelineModel
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.mellite.gui.ObjView.AudioGrapheme
 import de.sciss.file.File
 
 object ViewImpl {
@@ -50,9 +49,9 @@ object ViewImpl {
     import imp._
     val artifact      = obj0.elem.peer.artifact
     val artifDir      = artifact.location.directory
-    val iLoc          = Artifact.Location.Modifiable[I](artifDir)
+    val iLoc          = ArtifactLocation.Modifiable[I](artifDir)
     val iArtifact     = iLoc.add(artifact.value)
-    val iGrapheme     = Grapheme.Elem.Audio[I](iArtifact, graphemeV.spec, graphemeV.offset, graphemeV.gain)
+    val iGrapheme     = Grapheme.Expr.Audio[I](iArtifact, graphemeV.spec, graphemeV.offset, graphemeV.gain)
     ProcActions.insertAudioRegion[I](group, time = 0L, track = 0, grapheme = iGrapheme, selection = fullSpan,
       bus = None)
 

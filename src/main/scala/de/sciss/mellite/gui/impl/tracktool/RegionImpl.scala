@@ -16,7 +16,7 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Obj, ProcElem, Proc}
+import de.sciss.synth.proc.{Obj, Proc}
 import java.awt.event.MouseEvent
 import de.sciss.span.SpanLike
 import de.sciss.lucre.expr.Expr
@@ -40,7 +40,7 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
       commitProc(drag)(span, proc)
     }
 
-  protected def commitProc(drag: A)(span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem])(implicit tx: S#Tx): Unit
+  protected def commitProc(drag: A)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit
 
   protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: timeline.ProcView[S]): Unit
 }

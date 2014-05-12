@@ -17,7 +17,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{AudioGraphemeElem, ArtifactLocationElem, Obj, ExprImplicits, Grapheme, Artifact, Bounce, Folder, FolderElem}
+import de.sciss.synth.proc.{ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, Grapheme, Artifact, Bounce, Folder}
 import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -61,8 +61,8 @@ object ActionBounceTimeline {
     span: SpanOrVoid    = Span.Void,
     channels: Vec[Range.Inclusive] = Vector(0 to 0 /* 1 */),
     importFile: Boolean = false,
-    location:  Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = None,
-    transform: Option[stm.Source[S#Tx, Obj.T[S, Code.Elem           ]]] = None
+    location:  Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]] = None,
+    transform: Option[stm.Source[S#Tx, Obj.T[S, Code.Elem            ]]] = None
   ) {
     def prepare(group: stm.Source[S#Tx, proc.ProcGroup[S]], f: File): PerformSettings[S] = {
       val server                = Server.Config()
@@ -100,7 +100,7 @@ object ActionBounceTimeline {
             case _ => res
           }
           loop(tail, res1)
-        case FolderElem.Obj(objT) :: tail =>
+        case Folder.Elem.Obj(objT) :: tail =>
           val res1 = loop(objT.elem.peer.iterator.toList, res)
           loop(tail, res1)
         case _ :: tail  => loop(tail, res)
@@ -247,7 +247,7 @@ object ActionBounceTimeline {
           } .mkString(", ")
         }
       } catch {
-        case NonFatal(_) => throw new ParseException(Option(value).map(_.toString).getOrElse("null"), 0)
+        case NonFatal(_) => throw new ParseException(Option(value).fold("null")(_.toString), 0)
       }
     }
 
@@ -310,7 +310,7 @@ object ActionBounceTimeline {
             } =>  // ok, keep previous location
 
           case _ => // either no location was set, or it's not parent of the file
-            ActionArtifactLocation.query(document.root, f) match {
+            ActionArtifactLocation.query[S](document.root, f) match {
               case res @ Some(_)  => settings = settings.copy(location = res)
               case _              => return (settings, false)
             }
@@ -429,7 +429,7 @@ object ActionBounceTimeline {
               val depArtif  = locM.add(file)
               val depOffset = LongEx  .newVar(0L)
               val depGain   = DoubleEx.newVar(1.0)
-              val deployed  = Grapheme.Elem.Audio(depArtif, spec, depOffset, depGain)
+              val deployed  = Grapheme.Expr.Audio(depArtif, spec, depOffset, depGain)
               val depElem   = AudioGraphemeElem(deployed)
               val depObj    = Obj(depElem)
               depObj.attr.name = file.base

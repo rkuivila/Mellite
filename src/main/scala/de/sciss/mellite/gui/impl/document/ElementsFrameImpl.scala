@@ -18,7 +18,7 @@ package document
 
 import scala.swing.{Component, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{FolderElem, Folder}
+import de.sciss.synth.proc.Folder
 import de.sciss.desktop.{UndoManager, DialogSource, Window, Menu}
 import de.sciss.file._
 import de.sciss.swingplus.PopupMenu
@@ -122,7 +122,7 @@ object ElementsFrameImpl {
           sel.map { nodeView =>
             val parent = nodeView.parentOption.flatMap { pView =>
               pView.modelData() match {
-                case FolderElem.Obj(objT) => Some(objT.elem.peer)
+                case Folder.Elem.Obj(objT) => Some(objT.elem.peer)
                 case _ => None
               }
             }.getOrElse(folderView.root())

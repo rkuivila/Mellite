@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Obj, ProcElem, ProcGroup, Proc, Scan}
+import de.sciss.synth.proc.{Obj, ProcGroup, Proc, Scan}
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.lucre.synth.Sys
@@ -12,7 +12,7 @@ import de.sciss.lucre.swing._
 object ProcGUIActions {
   // scalac still has bug finding ProcGroup.Modifiable
   // private type ProcGroupMod[S <: Sys[S]] = ProcGroup.Modifiable[S]
-  private type ProcGroupMod[S <: Sys[S]] = BiGroup.Modifiable[S, Obj.T[S, ProcElem], Obj.UpdateT[S, ProcElem[S]]]
+  private type ProcGroupMod[S <: Sys[S]] = BiGroup.Modifiable[S, Obj.T[S, Proc.Elem], Obj.UpdateT[S, Proc.Elem[S]]]
 
   def removeProcs[S <: Sys[S]](group: ProcGroupMod[S], views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit = {
     requireEDT()

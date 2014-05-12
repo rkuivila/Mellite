@@ -16,7 +16,7 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{Obj, ProcElem, FadeSpec, ProcKeys, Elem, Grapheme, Scan, Proc, TimedProc}
+import de.sciss.synth.proc.{Obj, FadeSpec, ProcKeys, Grapheme, Scan, Proc, TimedProc}
 import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.sonogram.{Overview => SonoOverview}
@@ -93,8 +93,8 @@ object ProcView {
     val track   = attr.expr[Int     ](ProcKeys.attrTrack  ).fold(0)(_.value)
     val name    = attr.expr[String  ](ProcKeys.attrName   ).map(_.value)
     val mute    = attr.expr[Boolean ](ProcKeys.attrMute).exists(_.value)
-    val fadeIn  = attr.expr[FadeSpec.Value](ProcKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-    val fadeOut = attr.expr[FadeSpec.Value](ProcKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
+    val fadeIn  = attr.expr[FadeSpec](ProcKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
+    val fadeOut = attr.expr[FadeSpec](ProcKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
     val gain    = attr.expr[Double  ](ProcKeys.attrGain   ).fold(1.0)(_.value)
     val bus     = attr.expr[Int     ](ProcKeys.attrBus    ).map(_.value)
 
@@ -142,14 +142,14 @@ object ProcView {
   }
 
   private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
-                                        val procSource: stm.Source[S#Tx, Obj.T[S, ProcElem]],
+                                        val procSource: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
                                         var span      : SpanLike,
                                         var track     : Int,
                                         var nameOption: Option[String],
                                         var muted     : Boolean,
                                         var audio     : Option[Grapheme.Segment.Audio],
-                                        var fadeIn    : FadeSpec.Value,
-                                        var fadeOut   : FadeSpec.Value,
+                                        var fadeIn    : FadeSpec,
+                                        var fadeOut   : FadeSpec,
                                         var gain      : Double,
                                         var busOption : Option[Int])
     extends ProcView[S] { self =>
@@ -175,7 +175,7 @@ object ProcView {
       }
 
     def name = nameOption.getOrElse {
-      audio.map(_.value.artifact.base).getOrElse(Unnamed)
+      audio.fold(Unnamed)(_.value.artifact.base)
     }
 
     def acquireSonogram(): Option[SonoOverview] = {
@@ -241,7 +241,7 @@ object ProcView {
 
     def isGlobal = span == Span.All
 
-    def proc(implicit tx: S#Tx): Obj.T[S, ProcElem] = procSource()
+    def proc(implicit tx: S#Tx): Obj.T[S, Proc.Elem] = procSource()
   }
 
   implicit def span[S <: Sys[S]](view: ProcView[S]): (Long, Long) = {
@@ -266,10 +266,10 @@ sealed trait ProcView[S <: Sys[S]] {
   import ProcView.{LinkMap, ProcMap, ScanMap}
   
   def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
-  def procSource: stm.Source[S#Tx, Obj.T[S, ProcElem]]
+  def procSource: stm.Source[S#Tx, Obj.T[S, Proc.Elem]]
 
   /** Convenience for `procSource()` */
-  def proc(implicit tx: S#Tx): Obj.T[S, ProcElem]
+  def proc(implicit tx: S#Tx): Obj.T[S, Proc.Elem]
 
   var span: SpanLike
   var track: Int
@@ -300,8 +300,8 @@ sealed trait ProcView[S <: Sys[S]] {
 
   var sonogram: Option[SonoOverview]
 
-  var fadeIn : FadeSpec.Value
-  var fadeOut: FadeSpec.Value
+  var fadeIn : FadeSpec
+  var fadeOut: FadeSpec
 
   var gain: Double
 

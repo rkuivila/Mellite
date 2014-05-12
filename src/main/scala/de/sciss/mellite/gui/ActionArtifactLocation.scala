@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{ArtifactLocationElem, Obj, Folder, Artifact, FolderElem}
+import de.sciss.synth.proc.{ArtifactLocation, Obj, Folder, Artifact}
 import de.sciss.lucre.stm
 import collection.immutable.{IndexedSeq => Vec}
 import scala.util.Try
@@ -34,24 +34,24 @@ object ActionArtifactLocation {
 
   def query[S <: Sys[S]](
          root: stm.Source[S#Tx, Folder[S]], file: File,
-         folder: Option[stm.Source[S#Tx, Obj.T[S, FolderElem]]] = None,
+         folder: Option[stm.Source[S#Tx, Obj.T[S, Folder.Elem]]] = None,
          window: Option[desktop.Window] = None)
-        (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
+        (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]] = {
 
-    type LocSource = stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]
+    type LocSource = stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]
 
     val options = cursor.step { implicit tx =>
       /* @tailrec */ def loop(xs: List[Obj[S]], res: Vec[Labeled[LocSource]]): Vec[Labeled[LocSource]] =
         xs match {
           case head :: tail =>
             val res1 = head match {
-              case ArtifactLocationElem.Obj(objT) =>
+              case ArtifactLocation.Elem.Obj(objT) =>
                 val parent = objT.elem.peer.directory
                 if (Try(Artifact.relativize(parent, file)).isSuccess) {
                   res :+ Labeled(tx.newHandle(objT))(objT.attr.name)
                 } else res
 
-              case FolderElem.Obj(objT) =>
+              case Folder.Elem.Obj(objT) =>
                 loop(objT.elem.peer.iterator.toList, res)
 
               case _ => res
@@ -68,7 +68,7 @@ object ActionArtifactLocation {
     def createNew() = {
       queryNew(child = Some(file), window = window).map { case (dir, name) =>
         cursor.step { implicit tx =>
-          val loc = create(dir, name, folder.map(_.apply().elem.peer).getOrElse(root()))
+          val loc = create(dir, name, folder.fold(root())(_.apply().elem.peer))
           tx.newHandle(loc)
         }
       }
@@ -114,9 +114,9 @@ object ActionArtifactLocation {
   }
 
   def create[S <: Sys[S]](directory: File, name: String, parent: Folder[S])
-                         (implicit tx: S#Tx): Obj.T[S, ArtifactLocationElem] = {
-    val peer  = Artifact.Location.Modifiable[S](directory)
-    val elem  = ArtifactLocationElem(peer)
+                         (implicit tx: S#Tx): Obj.T[S, ArtifactLocation.Elem] = {
+    val peer  = ArtifactLocation.Modifiable[S](directory)
+    val elem  = ArtifactLocation.Elem(peer)
     val obj   = Obj(elem)
     obj.attr.name = name
     parent.addLast(obj)

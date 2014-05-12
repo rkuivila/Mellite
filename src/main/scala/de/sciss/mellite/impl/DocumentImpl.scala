@@ -18,7 +18,7 @@ import java.io.{FileOutputStream, IOException, FileNotFoundException}
 import de.sciss.file._
 import de.sciss.lucre.{confluent, stm}
 import stm.store.BerkeleyDB
-import de.sciss.synth.proc.{FolderElem, Obj, Folder, ExprImplicits, Confluent}
+import de.sciss.synth.proc.{Obj, Folder, ExprImplicits, Confluent}
 import de.sciss.serial.{DataInput, Serializer, DataOutput}
 import scala.collection.immutable.{IndexedSeq => Vec}
 
@@ -114,7 +114,7 @@ object DocumentImpl {
         f.iterator.foreach { obj =>
           fun(obj).foreach(b += _)
           obj.elem match {
-            case ef: FolderElem[S] => loop(ef.peer)
+            case ef: Folder.Elem[S] => loop(ef.peer)
             case _ =>
           }
         }

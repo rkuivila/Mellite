@@ -16,7 +16,7 @@ package gui
 package impl
 package document
 
-import de.sciss.synth.proc.{IntElem, Elem, ProcKeys, Folder, Artifact, Obj, ArtifactLocationElem, FolderElem, StringElem}
+import de.sciss.synth.proc.{ArtifactLocation, IntElem, Elem, ProcKeys, Folder, Artifact, Obj, StringElem}
 import swing.Component
 import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
@@ -81,7 +81,7 @@ object FolderViewImpl {
       extends TreeTableView.Handler[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]] {
 
       def branchOption(node: Obj[S]): Option[Folder[S]] = node.elem match {
-        case fe: FolderElem[S] => Some(fe.peer)
+        case fe: Folder.Elem[S] => Some(fe.peer)
         case _ => None
       }
 
@@ -126,7 +126,7 @@ object FolderViewImpl {
           case Folder.Element(obj, upd) =>
             val isDirty = updateObject(obj, upd)
             val v1: Vec[MUpdate] = obj match {
-              case FolderElem.Obj(objT) =>
+              case Folder.Elem.Obj(objT) =>
                 upd.changes.flatMap {
                   case Obj.ElemChange(f) => updateBranch(objT.elem.peer, f.asInstanceOf[Folder.Update[S]].changes)
                   case _ => Vec.empty
@@ -297,7 +297,7 @@ object FolderViewImpl {
           // println(s"insert into $parent at index $idx")
 
           def isNested(c: Obj[S]): Boolean = c match {
-            case FolderElem.Obj(objT) =>
+            case Folder.Elem.Obj(objT) =>
               objT.elem.peer == newParent || objT.elem.peer.iterator.toList.exists(isNested)
             case _ => false
           }
@@ -321,7 +321,7 @@ object FolderViewImpl {
           val editRemove = sel1.map { nv =>
             val parent: Folder[S] = nv.parentOption.flatMap { pv =>
               pv.modelData() match {
-                case FolderElem.Obj(objT) => Some(objT.elem.peer)
+                case Folder.Elem.Obj(objT) => Some(objT.elem.peer)
                 case _ => None
               }
             } .getOrElse(treeView.root())
@@ -389,7 +389,7 @@ object FolderViewImpl {
             val editOpt = cursor.step { implicit tx =>
               val parentOpt = tdl.path.lastOption.fold(Option(treeView.root())) { nodeView =>
                 nodeView.modelData() match {
-                  case FolderElem.Obj(objT) => Some(objT.elem.peer)
+                  case Folder.Elem.Obj(objT) => Some(objT.elem.peer)
                   case _ => None
                 }
               }
@@ -421,7 +421,7 @@ object FolderViewImpl {
       }
     } (breakOut)
 
-    def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
+    def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]] = {
       val locationsOk = locations.flatMap { view =>
         try {
           Artifact.relativize(view.directory, f)

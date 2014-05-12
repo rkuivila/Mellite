@@ -16,15 +16,14 @@ package mellite
 package gui
 
 import desktop.Window
-import de.sciss.synth.proc.{Obj, ProcGroupElem, AuralSystem}
+import de.sciss.synth.proc.{ProcGroup, Obj}
 import impl.timeline.{FrameImpl => Impl}
 import lucre.stm
-import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.View
 
 object TimelineFrame {
-  def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroup.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineFrame[S] =
     Impl(document, group)
 }

@@ -16,7 +16,7 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Obj, ProcElem, Proc}
+import de.sciss.synth.proc.{Obj, Proc}
 import java.awt.{Point, Toolkit}
 import java.awt.event.MouseEvent
 import de.sciss.lucre.expr.Expr
@@ -38,7 +38,7 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   val name          = "Mute"
   val icon          = ToolsImpl.getIcon("mute")
 
-  protected def commitProc(mute: Mute)(span: Expr[S, SpanLike], proc: Obj.T[S, ProcElem])(implicit tx: S#Tx): Unit =
+  protected def commitProc(mute: Mute)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit =
     ProcActions.toggleMute(proc)
 
   protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: timeline.ProcView[S]): Unit =

@@ -39,7 +39,7 @@ import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{Obj, ProcGroupElem, ExprImplicits, FadeSpec, AuralPresentation, Elem, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
+import de.sciss.synth.proc.{Obj, ExprImplicits, FadeSpec, AuralPresentation, Elem, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -97,7 +97,7 @@ object TimelineViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroup.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
@@ -171,8 +171,8 @@ object TimelineViewImpl {
 
     def fadeChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val fadeIn  = attr.expr[FadeSpec.Value](ProcKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-      val fadeOut = attr.expr[FadeSpec.Value](ProcKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
+      val fadeIn  = attr.expr[FadeSpec](ProcKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
+      val fadeOut = attr.expr[FadeSpec](ProcKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
       view.procFadeChanged(timed, fadeIn, fadeOut)
     }
 
@@ -287,7 +287,7 @@ object TimelineViewImpl {
 
   private final class Impl[S <: Sys[S]](val document      : Document[S],
                                         groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
-                                        groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
+                                        groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroup.Elem]],
                                         transport         : ProcTransport[S],
                                         procMap           : ProcView.ProcMap[S],
                                         scanMap           : ProcView.ScanMap[S],
@@ -422,7 +422,7 @@ object TimelineViewImpl {
             val imp = ExprImplicits[S]
             import imp._
             val leftProc  = pv.proc
-            val rightProc = ProcActions.copy(leftProc, Some(oldSpan))
+            val rightProc = ProcActions.copy[S](leftProc, Some(oldSpan))
             val oldVal    = oldSpan.value
             val rightSpan = oldVal match {
               case Span.HasStart(leftStart) =>
@@ -688,7 +688,7 @@ object TimelineViewImpl {
       }
     }
 
-    def procFadeChanged(timed: TimedProc[S], newFadeIn: FadeSpec.Value, newFadeOut: FadeSpec.Value)(implicit tx: S#Tx): Unit = {
+    def procFadeChanged(timed: TimedProc[S], newFadeIn: FadeSpec, newFadeOut: FadeSpec)(implicit tx: S#Tx): Unit = {
       val pvo = procMap.get(timed.id)
       logT(s"procFadeChanged(newFadeIn = $newFadeIn, newFadeOut = $newFadeOut, view = $pvo")
       pvo.foreach { pv =>
@@ -761,7 +761,7 @@ object TimelineViewImpl {
       }
 
     private def insertAudioRegion(drop: DnD.Drop[S], drag: DnD.AudioDragLike[S],
-                                  grapheme: Grapheme.Elem.Audio[S])(implicit tx: S#Tx): Boolean =
+                                  grapheme: Grapheme.Expr.Audio[S])(implicit tx: S#Tx): Boolean =
       plainGroup.modifiableOption match {
         case Some(groupM) =>
           ProcActions.insertAudioRegion(groupM, time = drop.frame, track = view.screenToTrack(drop.y),
@@ -797,7 +797,7 @@ object TimelineViewImpl {
 
           resOpt.getOrElse {
             Try(AudioFile.readSpec(file)).toOption.fold(false) { spec =>
-              ActionArtifactLocation.query(document.root, file).fold(false) { src =>
+              ActionArtifactLocation.query[S](document.root, file).fold(false) { src =>
                 step { implicit tx =>
                   src().elem.peer.modifiableOption.fold(false) { loc =>
                     val elems = document.root()
@@ -813,20 +813,20 @@ object TimelineViewImpl {
 
         case id: DnD.IntDrag[S] => withRegions { implicit tx => regions =>
           val intExpr = id.source().elem.peer
-          ProcActions.setBus(regions.map(_.proc), intExpr)
+          ProcActions.setBus[S](regions.map(_.proc), intExpr)
           true
         }
 
         case cd: DnD.CodeDrag[S] => withRegions { implicit tx => regions =>
           val codeElem  = cd.source()
-          ProcActions.setSynthGraph(regions.map(_.proc), codeElem)
+          ProcActions.setSynthGraph[S](regions.map(_.proc), codeElem)
         }
 
         case pd: DnD.ProcDrag[S] => withRegions { implicit tx => regions =>
           val in = pd.source()
           regions.map { pv =>
             val out = pv.proc
-            ProcActions.linkOrUnlink(out, in)
+            ProcActions.linkOrUnlink[S](out, in)
           } .exists(identity)
         }
 
