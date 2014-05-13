@@ -26,12 +26,12 @@ import de.sciss.sonogram
 import de.sciss.lucre.stm.{Disposable, Cursor}
 import de.sciss.synth.{Curve, proc}
 import de.sciss.fingertree.RangedSeq
-import javax.swing.{KeyStroke, UIManager}
+import javax.swing.UIManager
 import java.util.Locale
 import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.audiowidgets.{TimelineModel, Transport}
 import scala.swing.Swing._
-import java.awt.event.{KeyEvent, ActionEvent}
+import java.awt.event.ActionEvent
 import de.sciss.desktop.{KeyStrokes, Window, FocusType}
 import Predef.{any2stringadd => _, _}
 import scala.concurrent.stm.Ref
@@ -39,7 +39,7 @@ import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{Obj, ExprImplicits, FadeSpec, AuralPresentation, Elem, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
+import de.sciss.synth.proc.{ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Elem, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -97,7 +97,7 @@ object TimelineViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroup.Elem])
+  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroupElem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
@@ -287,7 +287,7 @@ object TimelineViewImpl {
 
   private final class Impl[S <: Sys[S]](val document      : Document[S],
                                         groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
-                                        groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroup.Elem]],
+                                        groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
                                         transport         : ProcTransport[S],
                                         procMap           : ProcView.ProcMap[S],
                                         scanMap           : ProcView.ScanMap[S],

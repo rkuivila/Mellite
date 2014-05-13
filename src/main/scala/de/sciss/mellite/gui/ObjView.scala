@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{Elem, AudioGraphemeElem, Obj, DoubleElem, IntElem, StringElem, Grapheme}
+import de.sciss.synth.proc.{ProcGroupElem, Elem, AudioGraphemeElem, Obj, DoubleElem, IntElem, StringElem, Grapheme}
 import de.sciss.lucre.stm
 import java.io.File
 import javax.swing.Icon
@@ -100,9 +100,9 @@ object ObjView {
     def obj: stm.Source[S#Tx, Obj.T[S, _Folder.Elem]]
   }
 
-  val ProcGroup: Factory { type E[S <: evt.Sys[S]] = _ProcGroup.Elem[S] /* ; type Init = _String */ } = Impl.ProcGroup
+  val ProcGroup: Factory { type E[S <: evt.Sys[S]] = ProcGroupElem[S] /* ; type Init = _String */ } = Impl.ProcGroup
   trait ProcGroup[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, _ProcGroup.Elem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]]
   }
 
   val Code: Factory { type E[S <: evt.Sys[S]] = _Code.Elem[S] } = Impl.Code

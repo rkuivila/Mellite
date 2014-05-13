@@ -2,7 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Elem, ExprImplicits, Artifact, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
+import de.sciss.synth.proc.{ProcGroupElem, Elem, ExprImplicits, Artifact, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -468,13 +468,13 @@ object ObjViewImpl {
   // -------- ProcGroup --------
 
   object ProcGroup extends Factory {
-    type E[S <: evt.Sys[S]] = _ProcGroup.Elem[S]
+    type E[S <: evt.Sys[S]] = ProcGroupElem[S]
     val icon            = raphaelIcon(raphael.Shapes.Ruler)
     val prefix          = "ProcGroup"
     def typeID          = ElemImpl.ProcGroup.typeID
     type Init           = _String
 
-    def apply[S <: Sys[S]](obj: Obj.T[S, _ProcGroup.Elem])(implicit tx: S#Tx): ObjView[S] = {
+    def apply[S <: Sys[S]](obj: Obj.T[S, ProcGroupElem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
       new ProcGroup.Impl(tx.newHandle(obj), name)
     }
@@ -488,7 +488,7 @@ object ObjViewImpl {
       res.map { name =>
         cursor.step { implicit tx =>
           val peer  = _ProcGroup.Modifiable[S]
-          val elem  = _ProcGroup.Elem(peer)
+          val elem  = ProcGroupElem(peer)
           val obj   = Obj(elem)
           obj.attr.name = name
           addObject(prefix, folderH(), obj)
@@ -496,7 +496,7 @@ object ObjViewImpl {
       }
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _ProcGroup.Elem]], var name: _String)
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]], var name: _String)
       extends ObjView.ProcGroup[S]
       with ObjViewImpl.Impl[S]
       with EmptyRenderer
