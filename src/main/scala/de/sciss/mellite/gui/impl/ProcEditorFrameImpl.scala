@@ -124,7 +124,7 @@ object ProcEditorFrameImpl {
                     atomic { implicit tx =>
                       val imp = ExprImplicits[S]
                       import imp._
-                      proc.attr.put(ProcKeys.attrGraphSource, StringElem(code)) // XXX TODO: should update the var
+                      proc.attr.put(ProcKeys.attrGraphSource, Obj(StringElem(code))) // XXX TODO: should update the var
                       proc.elem.peer.graph() = sg
                     }
                   case _ =>

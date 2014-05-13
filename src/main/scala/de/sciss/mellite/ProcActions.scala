@@ -26,6 +26,7 @@ import de.sciss.lucre.expr.{Int => IntEx, Boolean => BooleanEx, Double => Double
 import de.sciss.lucre.bitemp.{Span => SpanEx}
 import proc.Implicits._
 import de.sciss.lucre.event.Sys
+import scala.language.existentials
 
 object ProcActions {
   private val MinDur    = 32
@@ -110,7 +111,7 @@ object ProcActions {
       case Some(n) =>
         attr.expr[String](ProcKeys.attrName) match {
           case Some(Expr.Var(vr)) => vr() = n
-          case _                  => attr.put(ProcKeys.attrName, StringElem(StringEx.newVar(n)))
+          case _                  => attr.put(ProcKeys.attrName, Obj(StringElem(StringEx.newVar(n))))
         }
 
       case _ => attr.remove(ProcKeys.attrName)
@@ -128,9 +129,9 @@ object ProcActions {
                        (implicit tx: S#Tx): Obj.T[S, Proc.Elem] = {
     val pNew    = Proc[S]
     val res     = Obj(Proc.Elem(pNew))
-    pNew.graph() = proc.elem.peer.graph
+    pNew.graph() = proc.elem.peer.graph()
     proc.attr.iterator.foreach { case (key, attr) =>
-      val attrOut = attr.mkCopy()
+      val attrOut = Obj.copy(attr)
       res.attr.put(key, attrOut)
     }
     proc.elem.peer.scans.keys.foreach(pNew.scans.add)
@@ -176,7 +177,7 @@ object ProcActions {
     } else {
       attr.expr[Double](ProcKeys.attrGain) match {
         case Some(Expr.Var(vr)) => vr() = gain
-        case _                  => attr.put(ProcKeys.attrGain, DoubleElem(DoubleEx.newVar(gain)))
+        case _                  => attr.put(ProcKeys.attrGain, Obj(DoubleElem(DoubleEx.newVar(gain))))
       }
     }
   }
@@ -192,14 +193,14 @@ object ProcActions {
       case Some(Expr.Var(vr)) => vr.transform(_ * factor)
       case other =>
         val newGain = other.fold(1.0)(_.value) * factor
-        attr.put(ProcKeys.attrGain, DoubleElem(DoubleEx.newVar(newGain)))
+        attr.put(ProcKeys.attrGain, Obj(DoubleElem(DoubleEx.newVar(newGain))))
     }
   }
 
   def setBus[S <: Sys[S]](procs: Iterable[Obj.T[S, Proc.Elem]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
     val attr    = IntElem(intExpr)
     procs.foreach { proc =>
-      proc.attr.put(ProcKeys.attrBus, attr)
+      proc.attr.put(ProcKeys.attrBus, Obj(attr))
     }
   }
 
@@ -211,7 +212,7 @@ object ProcActions {
     attr.expr[Boolean](ProcKeys.attrMute) match {
       // XXX TODO: BooleanEx should have `not` operator
       case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld }
-      case _                  => attr.put(ProcKeys.attrMute, BooleanElem(BooleanEx.newVar(true)))
+      case _                  => attr.put(ProcKeys.attrMute, Obj(BooleanElem(BooleanEx.newVar(true))))
     }
   }
 
@@ -286,10 +287,10 @@ object ProcActions {
     val proc    = Proc[S]
     val obj     = Obj(Proc.Elem(proc))
     val attr    = obj.attr
-    if (track >= 0) attr.put(ProcKeys.attrTrack, IntElem(IntEx.newVar(track)))
+    if (track >= 0) attr.put(ProcKeys.attrTrack, Obj(IntElem(IntEx.newVar(track))))
     bus.foreach { busEx =>
       val bus = IntElem(busEx)
-      attr.put(ProcKeys.attrBus, bus)
+      attr.put(ProcKeys.attrBus, Obj(bus))
     }
 
     val scanIn  = proc.scans.add(ProcKeys.graphAudio)
@@ -322,7 +323,7 @@ object ProcActions {
     val obj     = Obj(Proc.Elem(proc))
     val attr    = obj.attr
     val nameEx  = StringEx.newVar[S](StringEx.newConst(name))
-    attr.put(ProcKeys.attrName, StringElem(nameEx))
+    attr.put(ProcKeys.attrName, Obj(StringElem(nameEx)))
 
     group.add(Span.All, obj) // constant span expression
     obj

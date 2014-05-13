@@ -108,7 +108,12 @@ object FolderViewImpl {
               }
             case Obj.AttrAdded  (ProcKeys.attrName, e: StringElem[S]) => updateObjectName(obj, e.peer.value)
             case Obj.AttrRemoved(ProcKeys.attrName, _) => updateObjectName(obj, "<unnamed>")
-            case Obj.AttrChange (ProcKeys.attrName, _, Change(_, name: String)) => updateObjectName(obj, name)
+            case Obj.AttrChange (ProcKeys.attrName, _, changes) =>
+              (false /: changes) {
+                case (res, Obj.ElemChange(Change(_, name: String))) =>
+                  res | updateObjectName(obj, name)
+                case (res, _) => res
+              }
             case _ => false
           }
           p | p1
@@ -172,8 +177,8 @@ object FolderViewImpl {
             val editOpt = cursor.step { implicit tx =>
               val text = defaultEditorJ.getText
               if (editColumn == 0) {
-                val valueOpt: Option[Elem[S]] = if (text.isEmpty || text.toLowerCase == "<unnamed>") None else {
-                  Some(StringElem(lucre.expr.String.newConst[S](text)))
+                val valueOpt: Option[Obj[S]] = if (text.isEmpty || text.toLowerCase == "<unnamed>") None else {
+                  Some(Obj(StringElem(lucre.expr.String.newConst[S](text))))
                 }
                 val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ProcKeys.attrName, valueOpt)
                 Some(ed)

@@ -18,10 +18,10 @@ package edit
 import de.sciss.lucre.{stm, event => evt}
 import evt.Sys
 import javax.swing.undo.{UndoableEdit, AbstractUndoableEdit}
-import de.sciss.synth.proc.{Obj, Elem}
+import de.sciss.synth.proc.Obj
 
 object EditAttrMap {
-  def apply[S <: Sys[S]](name: String, obj: Obj[S], key: String, value: Option[Elem[S]])
+  def apply[S <: Sys[S]](name: String, obj: Obj[S], key: String, value: Option[Obj[S]])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val before    = obj.attr.get(key)
     val objH      = tx.newHandle(obj)
@@ -34,8 +34,8 @@ object EditAttrMap {
 
   private[edit] final class Impl[S <: Sys[S]](name: String, key: String,
                                               objH   : stm.Source[S#Tx, Obj[S]],
-                                              beforeH: stm.Source[S#Tx, Option[Elem[S]]],
-                                              nowH   : stm.Source[S#Tx, Option[Elem[S]]])(implicit cursor: stm.Cursor[S])
+                                              beforeH: stm.Source[S#Tx, Option[Obj[S]]],
+                                              nowH   : stm.Source[S#Tx, Option[Obj[S]]])(implicit cursor: stm.Cursor[S])
     extends AbstractUndoableEdit {
 
     override def undo(): Unit = {
@@ -48,13 +48,13 @@ object EditAttrMap {
       cursor.step { implicit tx => perform() }
     }
 
-    private def perform(exprH: stm.Source[S#Tx, Option[Elem[S]]])(implicit tx: S#Tx): Unit =
+    private def perform(valueH: stm.Source[S#Tx, Option[Obj[S]]])(implicit tx: S#Tx): Unit =
       cursor.step { implicit tx =>
         val map = objH().attr
-        exprH().fold[Unit] {
+        valueH().fold[Unit] {
           map.remove(key)
-        } { expr =>
-          map.put(key, expr)
+        } { obj =>
+          map.put(key, obj)
         }
       }
 

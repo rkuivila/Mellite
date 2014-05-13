@@ -95,7 +95,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
         case None =>
           val vr = FadeSpec.Expr.newVar(elem)
-          attr.put(ProcKeys.attrFadeIn, FadeSpec.Elem(vr))
+          attr.put(ProcKeys.attrFadeIn, Obj(FadeSpec.Elem(vr)))
           res
 
         case _ =>
@@ -124,7 +124,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
         case None =>
           val vr  = FadeSpec.Expr.newVar(elem)
-          attr.put(ProcKeys.attrFadeOut, FadeSpec.Elem(vr))
+          attr.put(ProcKeys.attrFadeOut, Obj(FadeSpec.Elem(vr)))
 
         case _ =>
       }

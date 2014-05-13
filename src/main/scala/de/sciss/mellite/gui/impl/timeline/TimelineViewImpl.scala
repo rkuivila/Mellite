@@ -39,7 +39,7 @@ import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Elem, Grapheme, ProcKeys, Proc, Scan, AuralSystem, ProcGroup, ProcTransport, TimedProc}
+import de.sciss.synth.proc.{ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, ProcTransport, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -270,8 +270,12 @@ object TimelineViewImpl {
 
           case Obj.AttrChange(name, attr, ach) =>
             (name, ach) match {
-              case (ProcKeys.attrTrack, Change(before: Int, now: Int)) =>
-                view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
+              case (ProcKeys.attrTrack, changes) =>
+                changes.foreach {
+                  case Obj.ElemChange(Change(before: Int, now: Int)) =>
+                    view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
+                  case _ =>
+                }
 
               case _ => attrChanged(timed, name)
             }

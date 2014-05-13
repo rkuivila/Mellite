@@ -58,7 +58,7 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
       val span  = SpanEx.newVar[S](SpanEx.newConst(drag.span))
       val p     = Proc[S]
       val obj   = Obj(Proc.Elem(p))
-      obj.attr.put(ProcKeys.attrTrack, IntElem(IntEx.newVar(IntEx.newConst(drag.track))))
+      obj.attr.put(ProcKeys.attrTrack, Obj(IntElem(IntEx.newVar(IntEx.newConst(drag.track)))))
       g.add(span, obj)
       log(s"Added function region $p, span = ${drag.span}, track = ${drag.track}")
 

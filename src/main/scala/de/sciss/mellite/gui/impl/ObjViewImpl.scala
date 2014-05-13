@@ -28,6 +28,8 @@ import de.sciss.mellite.gui.edit.EditInsertObj
 import de.sciss.lucre.{event => evt}
 import proc.Implicits._
 import de.sciss.audiowidgets.{AxisFormat, Axis}
+import scala.Some
+import de.sciss.model.Change
 
 object ObjViewImpl {
   import ObjView.Factory
@@ -261,17 +263,17 @@ object ObjViewImpl {
       val dlg       = FileDialog.open(init = None /* locViews.headOption.map(_.directory) */, title = "Add Audio File")
       dlg.setFilter(f => Try(AudioFile.identify(f).isDefined).getOrElse(false))
       val fOpt = dlg.show(window)
-      for {
-        f         <- fOpt
-        locSource <- (/* folderView.findLocation(f) */ ??? : Option[stm.Source[S#Tx, Obj.T[S, _ArtifactLocation.Elem]]])
-      } yield {
-        val spec          = AudioFile.readSpec(f)
-        cursor.step { implicit tx =>
-          ???
-//          val loc = locSource()
-//          loc.elem.peer.modifiableOption.foreach { locM =>
-//            ObjectActions.addAudioFile(folderH, -1, locM, f, spec)
-//          }
+
+      fOpt.flatMap { f =>
+        ActionArtifactLocation.query[S](folderH, file = f, folder = None, window = window).flatMap { locSource =>
+          val spec = AudioFile.readSpec(f)
+          cursor.step { implicit tx =>
+            val loc = locSource()
+            loc.elem.peer.modifiableOption.map { locM =>
+              val obj = ObjectActions.mkAudioFile(locM, f, spec)
+              addObject(prefix, folderH(), obj)
+            }
+          }
         }
       }
     }
