@@ -1,0 +1,33 @@
+Sensor
+AuralSensor = Scan
+
+global proc
+
+::::::::::::::::::
+
+sensor client
+-> action = { p =>
+     ...
+     synth.set(ctrl, p)
+
+...
+
+::::::::::::::::::
+
+- there is a global proc
+- for each sensor we define an attribute input
+  and a scan output
+- the attribute value will be a special sensor
+  object; the aural presentation will run
+  an aural sensor for that object which directly
+  feeds the bus associated with the synth control
+
+(then indeed, we don't need a global proc necessarily)
+
+::::::::::::::::::
+
+- what we do need is a attr editor
+- can we wrap Elem inside Obj for free? if not, attrmap keys should be obj instead
+- answer: no! because of the skiplist.map obviously
+- anyway, making attrmap use obj makes sense because the structure becomes fully recursive
+

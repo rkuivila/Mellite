@@ -123,7 +123,7 @@ object TimelineViewImpl {
     disposables ::= scanMap
     val transport = proc.Transport[S, document.I](group, sampleRate = sampleRate)
     disposables ::= transport
-    val auralView = proc.AuralPresentation.run[S](transport, Mellite.auralSystem)
+    val auralView = proc.AuralPresentation.run[S](transport, Mellite.auralSystem, Some(Mellite.sensorSystem))
     disposables ::= auralView
 
     val procSelectionModel = ProcSelectionModel[S]
