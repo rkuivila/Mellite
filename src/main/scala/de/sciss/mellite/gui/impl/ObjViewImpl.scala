@@ -1,8 +1,21 @@
+/*
+ *  ObjViewImpl.scala
+ *  (Mellite)
+ *
+ *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
+ *
+ *  This software is published under the GNU General Public License v3+
+ *
+ *
+ *  For further information, please contact Hanns Holger Rutz at
+ *  contact@sciss.de
+ */
+
 package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{ProcGroupElem, Elem, ExprImplicits, Artifact, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
+import de.sciss.synth.proc.{ProcGroupElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -20,14 +33,13 @@ import scala.swing.{Label, ComboBox, TextField, Component, Swing}
 import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
 import de.sciss.mellite.impl.CodeImpl.CodeElemImpl
 import de.sciss.swingplus.Spinner
-import de.sciss.model.Change
 import java.awt.geom.Path2D
 import de.sciss.desktop.{OptionPane, FileDialog}
 import de.sciss.synth.io.{SampleFormat, AudioFile}
 import de.sciss.mellite.gui.edit.EditInsertObj
 import de.sciss.lucre.{event => evt}
 import proc.Implicits._
-import de.sciss.audiowidgets.{AxisFormat, Axis}
+import de.sciss.audiowidgets.AxisFormat
 import scala.Some
 import de.sciss.model.Change
 
@@ -421,13 +433,13 @@ object ObjViewImpl {
   // -------- Folder --------
 
   object Folder extends Factory {
-    type E[S <: evt.Sys[S]] = _Folder.Elem[S]
+    type E[S <: evt.Sys[S]] = FolderElem[S]
     val icon            = Swing.EmptyIcon
     val prefix          = "Folder"
     def typeID          = FolderElemImpl.typeID
     type Init           = _String
 
-    def apply[S <: Sys[S]](obj: Obj.T[S, _Folder.Elem])(implicit tx: S#Tx): ObjView[S] = {
+    def apply[S <: Sys[S]](obj: Obj.T[S, FolderElem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
       new Folder.Impl(tx.newHandle(obj), name)
     }
@@ -440,7 +452,7 @@ object ObjViewImpl {
       val res = opt.show(window)
       res.map { name =>
         cursor.step { implicit tx =>
-          val elem  = _Folder.Elem(_Folder[S])
+          val elem  = FolderElem(_Folder[S])
           val obj   = Obj(elem)
           val imp   = ExprImplicits[S]
           import imp._
@@ -451,7 +463,7 @@ object ObjViewImpl {
     }
 
     // XXX TODO: could be viewed as a new folder view with this folder as root
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Folder.Elem]], var name: _String)
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, FolderElem]], var name: _String)
       extends ObjView.Folder[S]
       with ObjViewImpl.Impl[S]
       with EmptyRenderer

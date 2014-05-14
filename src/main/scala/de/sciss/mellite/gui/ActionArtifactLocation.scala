@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{ArtifactLocation, Obj, Folder, Artifact}
+import de.sciss.synth.proc.{ArtifactLocation, Obj, Folder, FolderElem, Artifact}
 import de.sciss.lucre.stm
 import collection.immutable.{IndexedSeq => Vec}
 import scala.util.Try
@@ -34,7 +34,7 @@ object ActionArtifactLocation {
 
   def query[S <: Sys[S]](
          root: stm.Source[S#Tx, Folder[S]], file: File,
-         folder: Option[stm.Source[S#Tx, Obj.T[S, Folder.Elem]]] = None,
+         folder: Option[stm.Source[S#Tx, Obj.T[S, FolderElem]]] = None,
          window: Option[desktop.Window] = None)
         (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]] = {
 
@@ -51,7 +51,7 @@ object ActionArtifactLocation {
                   res :+ Labeled(tx.newHandle(objT))(objT.attr.name)
                 } else res
 
-              case Folder.Elem.Obj(objT) =>
+              case FolderElem.Obj(objT) =>
                 loop(objT.elem.peer.iterator.toList, res)
 
               case _ => res

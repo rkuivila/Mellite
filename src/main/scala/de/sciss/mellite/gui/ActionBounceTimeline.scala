@@ -17,7 +17,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, Grapheme, Artifact, Bounce, Folder}
+import de.sciss.synth.proc.{ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Artifact, Bounce, Folder}
 import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -100,7 +100,7 @@ object ActionBounceTimeline {
             case _ => res
           }
           loop(tail, res1)
-        case Folder.Elem.Obj(objT) :: tail =>
+        case FolderElem.Obj(objT) :: tail =>
           val res1 = loop(objT.elem.peer.iterator.toList, res)
           loop(tail, res1)
         case _ :: tail  => loop(tail, res)

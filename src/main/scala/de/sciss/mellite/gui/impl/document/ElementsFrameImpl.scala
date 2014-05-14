@@ -32,6 +32,7 @@ import de.sciss.icons.raphael
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.mellite.gui.edit.EditRemoveObj
 import javax.swing.undo.{CompoundEdit, UndoableEdit}
+import proc.FolderElem
 
 object ElementsFrameImpl {
   def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Document[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
@@ -122,7 +123,7 @@ object ElementsFrameImpl {
           sel.map { nodeView =>
             val parent = nodeView.parentOption.flatMap { pView =>
               pView.modelData() match {
-                case Folder.Elem.Obj(objT) => Some(objT.elem.peer)
+                case FolderElem.Obj(objT) => Some(objT.elem.peer)
                 case _ => None
               }
             }.getOrElse(folderView.root())

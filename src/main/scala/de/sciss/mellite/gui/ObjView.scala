@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{ProcGroupElem, Elem, AudioGraphemeElem, Obj, DoubleElem, IntElem, StringElem, Grapheme}
+import de.sciss.synth.proc.{ProcGroupElem, Elem, FolderElem, AudioGraphemeElem, Obj, DoubleElem, IntElem, StringElem, Grapheme}
 import de.sciss.lucre.stm
 import java.io.File
 import javax.swing.Icon
@@ -95,9 +95,9 @@ object ObjView {
     def deployed: File
   }
 
-  val Folder: Factory { type E[S <: evt.Sys[S]] = _Folder.Elem[S] /* ; type Init = _String */ } = Impl.Folder
+  val Folder: Factory { type E[S <: evt.Sys[S]] = FolderElem[S] /* ; type Init = _String */ } = Impl.Folder
   trait Folder[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, _Folder.Elem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, FolderElem]]
   }
 
   val ProcGroup: Factory { type E[S <: evt.Sys[S]] = ProcGroupElem[S] /* ; type Init = _String */ } = Impl.ProcGroup

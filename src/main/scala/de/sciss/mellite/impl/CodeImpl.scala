@@ -253,7 +253,20 @@ object CodeImpl {
         |
         |""".stripMargin + code + "\n}"
 
-    val res = i.interpret(synth)
+    // work-around for SI-8521 (Scala 2.11.0)
+    def interpret(line: String) = {
+      val th = Thread.currentThread()
+      val cl = th.getContextClassLoader
+      try {
+        i.interpret(line)
+      } finally {
+        th.setContextClassLoader(cl)
+      }
+    }
+
+    // val res = i.interpret(synth)
+    val res = interpret(synth)
+
     // commented out to chase ClassNotFoundException
     // i.reset()
     res match {
