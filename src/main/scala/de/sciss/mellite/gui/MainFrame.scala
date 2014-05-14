@@ -17,7 +17,7 @@ package gui
 
 import desktop.Window
 import scala.swing.{CheckBox, Button, FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
-import de.sciss.synth.proc.AuralSystem
+import de.sciss.synth.proc.{SensorSystem, AuralSystem}
 import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
 import de.sciss.synth.{addToTail, SynthDef, addToHead, AudioBus}
 import Swing._
@@ -30,8 +30,9 @@ import de.sciss.file._
 import de.sciss.mellite.gui.impl.WindowImpl
 import scala.concurrent.stm.atomic
 import de.sciss.lucre.swing.deferTx
-import de.sciss.mellite.sensor.SensorSystem
 import de.sciss.lucre.stm.TxnLike
+import scala.collection.immutable.{IndexedSeq => Vec}
+import de.sciss.synth.proc.impl.SensorSystemImpl
 
 final class MainFrame extends WindowImpl { me =>
   import Mellite.{auralSystem, sensorSystem}
@@ -319,10 +320,19 @@ final class MainFrame extends WindowImpl { me =>
     }
 
   def startSensorSystem(): Unit = {
-    val config = SensorSystem.defaultConfig
+    // val config = SensorSystem.defaultConfig
+    val config = Prefs.defaultSensorProtocol match {
+      case osc.UDP => osc.UDP.Config()
+      case osc.TCP => osc.TCP.Config()
+    }
+    config.localPort = Prefs.defaultSensorPort
+    // builder.localIsLoopback = true
+
+    SensorSystemImpl.dumpOSC = true
+
     atomic { implicit itx =>
       implicit val tx = TxnLike.wrap(itx)
-      sensorSystem.start(config)
+      sensorSystem.start(config.build)
     }
   }
 
@@ -343,15 +353,22 @@ final class MainFrame extends WindowImpl { me =>
     }
   }
 
+  private def updateSensorMeter(value: Vec[Float]): Unit = {
+    // XXX TODO
+  }
+
   atomic { implicit itx =>
     implicit val tx = Txn.wrap(itx)
     auralSystem.addClient(new AuralSystem.Client {
-      def started(s: Server)(implicit tx: Txn): Unit = me.auralSystemStarted(s)
-      def stopped()         (implicit tx: Txn): Unit = me.auralSystemStopped()
+      def auralStarted(s: Server)(implicit tx: Txn): Unit = me.auralSystemStarted(s)
+      def auralStopped()         (implicit tx: Txn): Unit = me.auralSystemStopped()
     })
     sensorSystem.addClient(new SensorSystem.Client {
-      def started(s: SensorSystem.Server)(implicit tx: TxnLike): Unit = me.sensorSystemStarted(s)
-      def stopped()                      (implicit tx: TxnLike): Unit = me.sensorSystemStopped()
+      def sensorsStarted(s: SensorSystem.Server)(implicit tx: TxnLike): Unit = me.sensorSystemStarted(s)
+      def sensorsStopped()                      (implicit tx: TxnLike): Unit = me.sensorSystemStopped()
+      def sensorsUpdate(values: Vec[Float])     (implicit tx: TxnLike): Unit = {
+        deferTx(updateSensorMeter(values))
+      }
     })
   }
   // XXX TODO: removeClient

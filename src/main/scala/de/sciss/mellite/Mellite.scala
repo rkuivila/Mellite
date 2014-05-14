@@ -17,14 +17,13 @@ package mellite
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.WindowHandler
-import de.sciss.synth.proc.AuralSystem
+import de.sciss.synth.proc.{SensorSystem, AuralSystem}
 import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
 import scala.util.control.NonFatal
 import com.alee.laf.checkbox.WebCheckBoxStyle
 import com.alee.laf.progressbar.WebProgressBarStyle
 import java.awt.Color
-import de.sciss.mellite.sensor.SensorSystem
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = mellite.Document[_ <: Sys[_]]
@@ -47,7 +46,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   protected def menuFactory = MenuBar.instance
 
   private lazy val _aural   = AuralSystem ()
-  private lazy val _sensor  = SensorSystem()
+  private lazy val _sensor: SensorSystem = SensorSystem()
 
   implicit def auralSystem : AuralSystem  = _aural
   implicit def sensorSystem: SensorSystem = _sensor
