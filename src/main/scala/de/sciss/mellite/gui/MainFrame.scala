@@ -32,7 +32,7 @@ import scala.concurrent.stm.atomic
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.stm.TxnLike
 import scala.collection.immutable.{IndexedSeq => Vec}
-import de.sciss.synth.proc.impl.SensorSystemImpl
+import de.sciss.audiowidgets.PeakMeter
 
 final class MainFrame extends WindowImpl { me =>
   import Mellite.{auralSystem, sensorSystem}
@@ -40,11 +40,21 @@ final class MainFrame extends WindowImpl { me =>
   private val lbSensors = new Label("Sensors:")
   private val lbAudio   = new Label("Audio:")
 
+  private lazy val ggSensors = {
+    val res = new PeakMeter
+    res.orientation   = Orientation.Horizontal
+    res.numChannels   = 16
+    res.holdPainted   = false
+    res.rmsPainted    = false
+    res.preferredSize = (260, 64 + 2)
+    res
+  }
+
   locally {
-    val p1 = lbSensors.preferredSize
-    val p2 = lbAudio  .preferredSize
-    p1.width = math.max(p1.width, p2.width)
-    p2.width = p1.width
+    val p1    = lbSensors.preferredSize
+    val p2    = lbAudio  .preferredSize
+    p1.width  = math.max(p1.width, p2.width)
+    p2.width  = p1.width
     lbSensors.preferredSize = p1
     lbAudio  .preferredSize = p2
   }
@@ -328,7 +338,7 @@ final class MainFrame extends WindowImpl { me =>
     config.localPort = Prefs.defaultSensorPort
     // builder.localIsLoopback = true
 
-    SensorSystemImpl.dumpOSC = true
+    // de.sciss.synth.proc.impl.SensorSystemImpl.dumpOSC = true
 
     atomic { implicit itx =>
       implicit val tx = TxnLike.wrap(itx)
@@ -341,6 +351,8 @@ final class MainFrame extends WindowImpl { me =>
     deferTx {
       actionStartStopSensors.title = "Stop"
       ggDumpSensors.enabled = true
+      sensorServerPane.contents += ggSensors
+      pack()
     }
   }
 
@@ -350,11 +362,21 @@ final class MainFrame extends WindowImpl { me =>
       actionStartStopSensors.title = "Start"
       ggDumpSensors.enabled   = false
       ggDumpSensors.selected  = false
+      sensorServerPane.contents.remove(sensorServerPane.contents.size - 1)
+      pack()
     }
   }
 
   private def updateSensorMeter(value: Vec[Float]): Unit = {
-    // XXX TODO
+    val b = Vec.newBuilder[Float]
+    import de.sciss.numbers.Implicits._
+    b.sizeHint(32)
+    value.foreach { peak =>
+      b += peak.pow(0.65f).linexp(0f, 1f, 0.99e-3f, 1f) // XXX TODO roughly linearized
+      b += 0f
+    }
+    ggSensors.clearMeter()    // XXX TODO: should have option to switch off ballistics
+    ggSensors.update(b.result())
   }
 
   atomic { implicit itx =>
