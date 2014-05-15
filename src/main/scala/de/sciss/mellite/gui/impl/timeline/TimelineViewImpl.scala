@@ -29,17 +29,16 @@ import de.sciss.fingertree.RangedSeq
 import javax.swing.UIManager
 import java.util.Locale
 import de.sciss.lucre.bitemp.BiGroup
-import de.sciss.audiowidgets.{TimelineModel, Transport}
+import de.sciss.audiowidgets.{TimelineModel, Transport => GUITransport}
 import scala.swing.Swing._
 import java.awt.event.ActionEvent
 import de.sciss.desktop.{KeyStrokes, Window, FocusType}
-import Predef.{any2stringadd => _, _}
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, ProcTransport, TimedProc}
+import de.sciss.synth.proc.{Transport, ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -133,8 +132,8 @@ object TimelineViewImpl {
     val view    = new Impl(document, groupH, groupEH, transport, procMap, scanMap, tlm, auralView, global, procSelectionModel)
 
     val obsTransport = transport.react { implicit tx => {
-      case proc.Transport.Play(t, time) => view.startedPlaying(time)
-      case proc.Transport.Stop(t, time) => view.stoppedPlaying(time)
+      case Transport.Play(t, time) => view.startedPlaying(time)
+      case Transport.Stop(t, time) => view.stoppedPlaying(time)
       case _ => // proc.Transport.Advance(t, time, isSeek, isPlaying, _, _, _) =>
     }}
     disposables ::= obsTransport
@@ -292,7 +291,7 @@ object TimelineViewImpl {
   private final class Impl[S <: Sys[S]](val document      : Document[S],
                                         groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
                                         groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
-                                        transport         : ProcTransport[S],
+                                        transport         : Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],
                                         procMap           : ProcView.ProcMap[S],
                                         scanMap           : ProcView.ScanMap[S],
                                         val timelineModel : TimelineModel,
@@ -317,7 +316,7 @@ object TimelineViewImpl {
       })
     )
 
-    private var transportStrip: Component with Transport.ButtonStrip = _
+    private var transportStrip: Component with GUITransport.ButtonStrip = _
 
     private var view: View    = _
     val disposables           = Ref(List.empty[Disposable[S#Tx]])
@@ -464,16 +463,16 @@ object TimelineViewImpl {
         timerFrame  = time
         timerSys    = System.currentTimeMillis()
         timer.start()
-        transportStrip.button(Transport.Play).foreach(_.selected = true )
-        transportStrip.button(Transport.Stop).foreach(_.selected = false)
+        transportStrip.button(GUITransport.Play).foreach(_.selected = true )
+        transportStrip.button(GUITransport.Stop).foreach(_.selected = false)
       }
 
     def stoppedPlaying(time: Long)(implicit tx: S#Tx): Unit =
       deferTx {
         timer.stop()
         timelineModel.modifiableOption.foreach(_.position = time) // XXX TODO if Cursor follows play-head
-        transportStrip.button(Transport.Play).foreach(_.selected = false)
-        transportStrip.button(Transport.Stop).foreach(_.selected = true )
+        transportStrip.button(GUITransport.Play).foreach(_.selected = false)
+        transportStrip.button(GUITransport.Stop).foreach(_.selected = true )
       }
 
     private def rtz(): Unit = {
@@ -507,6 +506,16 @@ object TimelineViewImpl {
 
     private def fastForward() = ()
 
+    private def toggleLoop(): Unit = {
+      val sel       = timelineModel.selection
+      val isLooping = step { implicit tx =>
+        val loopSpan = if (transport.loop == Span.Void) sel else Span.Void
+        transport.loop  = loopSpan
+        !loopSpan.isEmpty
+      }
+      transportStrip.button(GUITransport.Loop).foreach(_.selected = isLooping)
+    }
+
     def guiInit(): Unit = {
       import desktop.Implicits._
 
@@ -528,14 +537,14 @@ object TimelineViewImpl {
       }
       GUI.fixWidth(ggVisualBoost)
 
-      import Transport.{Action => _, _}
-      transportStrip = Transport.makeButtonStrip(Seq(
-        GoToBegin   { rtz()    },
-        Rewind      { rewind() },
-        Stop        { stop()   },
-        Play        { play()   },
-        FastForward { fastForward()   },
-        Loop        {}
+      import GUITransport.{Action => _, _}
+      transportStrip = GUITransport.makeButtonStrip(Seq(
+        GoToBegin   { rtz         () },
+        Rewind      { rewind      () },
+        Stop        { stop        () },
+        Play        { play        () },
+        FastForward { fastForward () },
+        Loop        { toggleLoop  () }
       ))
       transportStrip.button(Stop).foreach(_.selected = true)
 
