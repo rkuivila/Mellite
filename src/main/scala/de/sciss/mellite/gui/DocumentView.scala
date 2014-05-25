@@ -20,5 +20,5 @@ import de.sciss.desktop.Window
 
 trait DocumentView[S <: Sys[S]] extends Disposable[S#Tx] {
   def document: Document[S]
-  def window: Window
+  def window  : Window
 }

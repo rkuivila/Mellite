@@ -42,6 +42,7 @@ import proc.Implicits._
 import de.sciss.audiowidgets.AxisFormat
 import scala.Some
 import de.sciss.model.Change
+import scala.annotation.switch
 
 object ObjViewImpl {
   import ObjView.Factory
@@ -81,10 +82,10 @@ object ObjViewImpl {
 
   object String extends Factory {
     type E[S <: evt.Sys[S]] = StringElem[S]
-    val icon            = raphaelIcon(raphael.Shapes.Font)
-    val prefix          = "String"
-    def typeID          = ElemImpl.String.typeID
-    type Init           = (_String, _String)
+    val icon    = raphaelIcon(raphael.Shapes.Font)
+    val prefix  = "String"
+    def typeID  = ElemImpl.String.typeID
+    type Init   = (_String, _String)
 
     def apply[S <: Sys[S]](obj: Obj.T[S, StringElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.attr.name
@@ -137,10 +138,10 @@ object ObjViewImpl {
 
   object Int extends Factory {
     type E[S <: evt.Sys[S]] = IntElem[S]
-    val icon            = raphaelIcon(Shapes.IntegerNumbers)
-    val prefix          = "Int"
-    def typeID          = ElemImpl.Int.typeID
-    type Init           = (_String, _Int)
+    val icon    = raphaelIcon(Shapes.IntegerNumbers)
+    val prefix  = "Int"
+    def typeID  = ElemImpl.Int.typeID
+    type Init   = (_String, _Int)
 
     def apply[S <: Sys[S]](obj: Obj.T[S, IntElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.attr.name
@@ -197,10 +198,10 @@ object ObjViewImpl {
 
   object Double extends Factory {
     type E[S <: evt.Sys[S]] = DoubleElem[S]
-    val icon            = raphaelIcon(Shapes.RealNumbers)
-    val prefix          = "Double"
-    def typeID          = ElemImpl.Double.typeID
-    type Init           = (_String, _Double)
+    val icon    = raphaelIcon(Shapes.RealNumbers)
+    val prefix  = "Double"
+    def typeID  = ElemImpl.Double.typeID
+    type Init   = (_String, _Double)
 
     def apply[S <: Sys[S]](obj: Obj.T[S, DoubleElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.attr.name
@@ -257,13 +258,13 @@ object ObjViewImpl {
 
   object AudioGrapheme extends Factory {
     type E[S <: evt.Sys[S]] = AudioGraphemeElem[S]
-    val icon            = raphaelIcon(raphael.Shapes.Music)
-    val prefix          = "AudioGrapheme"
-    def typeID          = ElemImpl.AudioGrapheme.typeID
-    type Init           = File
+    val icon    = raphaelIcon(raphael.Shapes.Music)
+    val prefix  = "AudioGrapheme"
+    def typeID  = ElemImpl.AudioGrapheme.typeID
+    type Init   = File
 
     def apply[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])(implicit tx: S#Tx): ObjView[S] = {
-      val name        = obj.attr.name
+      val name  = obj.attr.name
       val value = obj.elem.peer.value
       new AudioGrapheme.Impl(tx.newHandle(obj), name, value)
     }
@@ -341,14 +342,14 @@ object ObjViewImpl {
 
     object ArtifactLocation extends Factory {
       type E[S <: evt.Sys[S]] = _ArtifactLocation.Elem[S]
-      val icon            = raphaelIcon(raphael.Shapes.Location)
-      val prefix          = "ArtifactStore"
-      def typeID          = ElemImpl.ArtifactLocation.typeID
-      type Init           = File
+      val icon    = raphaelIcon(raphael.Shapes.Location)
+      val prefix  = "ArtifactStore"
+      def typeID  = ElemImpl.ArtifactLocation.typeID
+      type Init   = File
 
       def apply[S <: Sys[S]](obj: Obj.T[S, _ArtifactLocation.Elem])(implicit tx: S#Tx): ObjView[S] = {
-        val name      = obj.attr.name
-        val value     = obj.elem.peer.directory
+        val name  = obj.attr.name
+        val value = obj.elem.peer.directory
         new ArtifactLocation.Impl(tx.newHandle(obj), name, value)
       }
 
@@ -392,10 +393,10 @@ object ObjViewImpl {
 
   object Recursion extends Factory {
     type E[S <: evt.Sys[S]] = _Recursion.Elem[S]
-    val icon            = raphaelIcon(raphael.Shapes.Quote)
-    val prefix          = "Recursion"
-    def typeID          = RecursionElemImpl.typeID
-    type Init           = Unit
+    val icon    = raphaelIcon(raphael.Shapes.Quote)
+    val prefix  = "Recursion"
+    def typeID  = RecursionElemImpl.typeID
+    type Init   = Unit
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Recursion.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name      = obj.attr.name
@@ -434,10 +435,10 @@ object ObjViewImpl {
 
   object Folder extends Factory {
     type E[S <: evt.Sys[S]] = FolderElem[S]
-    val icon            = Swing.EmptyIcon
-    val prefix          = "Folder"
-    def typeID          = FolderElemImpl.typeID
-    type Init           = _String
+    val icon    = Swing.EmptyIcon
+    val prefix  = "Folder"
+    def typeID  = FolderElemImpl.typeID
+    type Init   = _String
 
     def apply[S <: Sys[S]](obj: Obj.T[S, FolderElem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
@@ -483,10 +484,10 @@ object ObjViewImpl {
 
   object ProcGroup extends Factory {
     type E[S <: evt.Sys[S]] = ProcGroupElem[S]
-    val icon            = raphaelIcon(raphael.Shapes.Ruler)
-    val prefix          = "ProcGroup"
-    def typeID          = ElemImpl.ProcGroup.typeID
-    type Init           = _String
+    val icon    = raphaelIcon(raphael.Shapes.Ruler)
+    val prefix  = "ProcGroup"
+    def typeID  = ElemImpl.ProcGroup.typeID
+    type Init   = _String
 
     def apply[S <: Sys[S]](obj: Obj.T[S, ProcGroupElem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
@@ -525,8 +526,20 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
-        val frame = TimelineFrame[S](document, obj())
-        Some(frame)
+        val message = s"<html><b>Select View Type for $name:</b></html>"
+        val entries = Seq("Timeline View", "Real-time View", "Cancel")
+        val opt = OptionPane(message = message, optionType = OptionPane.Options.YesNoCancel,
+          messageType = OptionPane.Message.Question, entries = entries)
+        opt.title = s"View $name"
+        (opt.show(None).id: @switch) match {
+          case 0 =>
+            val frame = TimelineFrame[S](document, obj())
+            Some(frame)
+          case 1 =>
+            val frame = InstantGroupFrame[S](document, obj())
+            Some(frame)
+          case _ => None
+        }
       }
     }
   }

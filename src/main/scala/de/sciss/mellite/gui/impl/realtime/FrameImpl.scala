@@ -17,59 +17,87 @@ package impl
 package realtime
 
 import de.sciss.lucre.stm.{Source, Cursor}
-import swing.{Dialog, Action, Button, FlowPanel, BorderPanel, Frame}
-import javax.swing.WindowConstants
-import de.sciss.synth.proc.{ExprImplicits, Proc}
+import scala.swing.{Component, Dialog, Action, Button, FlowPanel, BorderPanel}
+import de.sciss.synth.proc.{ProcGroupElem, Obj, ProcGroup, ExprImplicits, Proc}
 import de.sciss.span.Span
 import de.sciss.desktop
 import de.sciss.desktop.{FocusType, KeyStrokes}
 import de.sciss.swingplus.DoClickAction
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
-import de.sciss.lucre.swing.impl.ComponentHolder
 import scala.swing.event.Key
+import de.sciss.synth.proc
+import proc.Implicits._
 
 object FrameImpl {
-  def apply[S <: Sys[S]](group: Document.Group[S], transport: Document.Transport[S])
+  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroupElem] /*, transport: Document.Transport[S] */)
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupFrame[S] = {
-    val prefusePanel      = InstantGroupPanel(transport)
+    val sampleRate        = 44100.0   // XXX TODO
+    val group             = obj.elem.peer
+    import document.inMemoryBridge
+    val transport         = proc.Transport[S, document.I](group, sampleRate = sampleRate)
+    val prefusePanel      = InstantGroupPanel(document, transport)
     val transportPanel    = TransportPanel   (transport)
-    implicit val groupSer = Document.Serializers.group[S]
+    import ProcGroup.serializer
     val groupH            = tx.newHandle(group)
-    val view              = new Impl(prefusePanel, transportPanel, groupH, transport, cursor.position, group.id.toString)
+    val name              = obj.attr.name
+    val view              = new Impl(prefusePanel, transportPanel, groupH, transport, name = name)
     deferTx {
       view.guiInit()
     }
     view
   }
 
-  private final class Impl[S <: Sys[S]](prefusePanel:   InstantGroupPanel[S],
+  private final class Impl[S <: Sys[S]](val view      : InstantGroupPanel[S],
                                         transportPanel: TransportPanel[S],
-                                        groupH:         Source[S#Tx, Document.Group[S]],
-                                        val transport:  Document.Transport[S],
-                                        csrPos:         S#Acc,
-                                        name:           String)
+                                        groupH        : Source[S#Tx, ProcGroup[S]], // Document.Group[S]],
+                                        val transport : Document.Transport[S],
+                                        name          : String)
                                        (implicit protected val cursor: Cursor[S])
-    extends InstantGroupFrame[S] with ComponentHolder[Frame] with CursorHolder[S] {
-    def group(implicit tx: S#Tx): Document.Group[S] = groupH() // tx.refresh( csrPos, staleGroup )( Document.Serializers.group[ S ])
+    extends InstantGroupFrame[S] with WindowHolder[desktop.Window] with CursorHolder[S] {
+
+    def group(implicit tx: S#Tx): ProcGroup[S] = groupH() // tx.refresh( csrPos, staleGroup )( Document.Serializers.group[ S ])
     //      def transport( implicit tx: S#Tx ) : Document.Transport[ S ] = tx.refresh( csrPos, staleTransport )
 
     private def newProc(): Unit =
-      Dialog.showInput(parent = prefusePanel.component, message = "Name for new process:", title = "New Process",
+      Dialog.showInput(parent = view.component, message = "Name for new process:", title = "New Process",
         messageType = Dialog.Message.Question, initial = "Unnamed").foreach(newProc)
+
+    def contents: InstantGroupPanel[S] = view
+
+    def component: Component = view.component
 
     private def newProc(name: String): Unit =
       atomic { implicit tx =>
         // import synth._; import ugen._
         val imp = ExprImplicits[S]
         import imp._
-        val g = group
-        val t = transport
-        val pos = t.time
-        val span = Span(pos, pos + 44100)
-        val proc = Proc[S]
-        g.add(span, proc)
+        group.modifiableOption.foreach { g =>
+          val t = transport
+          val pos = t.time
+          val span = Span(pos, pos + 44100)
+          val proc = Proc[S]
+          ??? // g.add(span, proc)
+        }
       }
+
+    private def frameClosing(): Unit =
+      cursor.step { implicit tx =>
+        disposeData()
+      }
+
+    def dispose()(implicit tx: S#Tx): Unit = {
+      disposeData()
+      deferTx {
+        // DocumentViewHandler.instance.remove(this)
+        window.dispose()
+      }
+    }
+
+    private def disposeData()(implicit tx: S#Tx): Unit = {
+      view.dispose()
+      transport.dispose()
+    }
 
     def guiInit(): Unit = {
       import KeyStrokes._
@@ -88,17 +116,25 @@ object FrameImpl {
 
       val southPanel = new FlowPanel(transportPanel.component, ggTest)
 
-      component = new Frame {
+      val f = new WindowImpl {
         title = s"Timeline : $name" // staleGroup.id
-        peer.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE)
+        // peer.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE)
         contents = new BorderPanel {
-          add(prefusePanel.component, BorderPanel.Position.Center)
+          add(view.component, BorderPanel.Position.Center)
           add(southPanel, BorderPanel.Position.South)
         }
+
+        reactions += {
+          case desktop.Window.Closing(_) => frameClosing()
+        }
+
         pack()
-        centerOnScreen()
-        open()
+        // centerOnScreen()
+        GUI.centerOnScreen(this)
+        front()
       }
+
+      window = f
     }
   }
 }

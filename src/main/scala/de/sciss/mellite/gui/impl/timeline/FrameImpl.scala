@@ -66,7 +66,7 @@ object FrameImpl {
 
     def init(): Unit = {
       val frame = new WindowImpl {
-        component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
+        // component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
         title       = name
         contents    = view.component
 
@@ -107,7 +107,7 @@ object FrameImpl {
         )
 
         reactions += {
-          case WindowClosing(_) => frameClosing()
+          case Window.Closing(_) => frameClosing()
         }
 
         pack()

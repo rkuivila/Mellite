@@ -11,20 +11,20 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite.gui
+package de.sciss.mellite
+package gui
 
 import de.sciss.lucre.stm.Cursor
 import de.sciss.synth.proc
 import proc.ProcTransport
 import impl.realtime.{PanelImpl => Impl}
-import swing.Component
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.swing.View
 
 object InstantGroupPanel {
-  def apply[S <: Sys[S]](transport: ProcTransport[S])
-                        (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] = Impl(transport)
+  def apply[S <: Sys[S]](document: Document[S], transport: ProcTransport[S])
+                        (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] =
+    Impl(document, transport)
 }
 
-trait InstantGroupPanel[S <: Sys[S]] {
-  def component: Component
-}
+trait InstantGroupPanel[S <: Sys[S]] extends View[S]

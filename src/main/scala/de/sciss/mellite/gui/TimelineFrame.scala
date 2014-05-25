@@ -16,7 +16,7 @@ package mellite
 package gui
 
 import desktop.Window
-import de.sciss.synth.proc.{ProcGroupElem, ProcGroup, Obj}
+import de.sciss.synth.proc.{ProcGroupElem, Obj}
 import impl.timeline.{FrameImpl => Impl}
 import lucre.stm
 import de.sciss.lucre.synth.Sys

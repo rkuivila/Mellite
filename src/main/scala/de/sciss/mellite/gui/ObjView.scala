@@ -160,6 +160,8 @@ trait ObjView[S <: Sys[S]] {
   /** If the object is viewable, this method is invoked when the user pressed the eye button.
     * The method should return an appropriate view for this object, or `None` if no editor or viewer window
     * can be produced.
+    *
+    * TODO: should have optional window argument
     */
   def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]]
 }
