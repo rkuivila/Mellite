@@ -67,7 +67,7 @@ object FrameImpl {
     def init(): Unit = {
       val frame = new WindowImpl {
         // component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
-        title       = name
+        title       = s"$name : Timeline"
         contents    = view.component
 
         bindMenus(

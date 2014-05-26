@@ -16,7 +16,7 @@ package gui
 package impl
 package audiofile
 
-import de.sciss.synth.proc.{ArtifactLocation, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
+import de.sciss.synth.proc.{Transport, ArtifactLocation, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
 import de.sciss.lucre.stm
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
 import java.awt.Color
@@ -41,6 +41,7 @@ object ViewImpl {
     type I            = doc.I
     implicit val itx  = doc.inMemoryBridge(tx)
     val group         = proc.ProcGroup.Modifiable[I]
+    // val groupObj      = Obj(ProcGroupElem(group))
     val fullSpan      = Span(0L, f.spec.numFrames)
 
     // ---- we go through a bit of a mess here to convert S -> I ----
@@ -56,12 +57,14 @@ object ViewImpl {
       bus = None)
 
     import doc.inMemoryCursor
+    val transport     = Transport[I, I](group, sampleRate = sampleRate)
 
+    import doc.inMemoryBridge
     val res: Impl[S, I] = new Impl[S, I] {
       val timelineModel = new TimelineModelImpl(fullSpan, sampleRate)
       val document      = doc.folder
       val holder        = tx.newHandle(obj0)
-      val transportView: TransportView[I] = TransportView[I, I](group, sampleRate, timelineModel)
+      val transportView: TransportView[I] = TransportView[I](transport, timelineModel, hasMillis = true, hasLoop = true)
     }
 
     deferTx {
@@ -70,7 +73,7 @@ object ViewImpl {
     res
   }
 
-  private abstract class Impl[S <: Sys[S], I <: Sys[I]]
+  private abstract class Impl[S <: Sys[S], I <: Sys[I]](implicit inMemoryBridge: S#Tx => I#Tx)
     extends AudioFileView[S] with ComponentHolder[Component] { impl =>
 
     protected def holder       : stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
@@ -80,10 +83,14 @@ object ViewImpl {
 
     private var _sono: sonogram.Overview = _
 
-    def dispose()(implicit tx: S#Tx): Unit =
+    def dispose()(implicit tx: S#Tx): Unit = {
+      val itx: I#Tx = tx
+      transportView.transport.dispose()(itx)
+      transportView.dispose()(itx)
       deferTx {
         SonogramManager.release(_sono)
       }
+    }
 
     def guiInit(snapshot: Grapheme.Value.Audio): Unit = {
       // println("AudioFileView guiInit")

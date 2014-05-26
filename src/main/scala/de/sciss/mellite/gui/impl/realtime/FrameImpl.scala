@@ -28,6 +28,7 @@ import de.sciss.lucre.swing._
 import scala.swing.event.Key
 import de.sciss.synth.proc
 import proc.Implicits._
+import de.sciss.audiowidgets.impl.TimelineModelImpl
 
 object FrameImpl {
   def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroupElem] /*, transport: Document.Transport[S] */)
@@ -37,7 +38,9 @@ object FrameImpl {
     import document.inMemoryBridge
     val transport         = proc.Transport[S, document.I](group, sampleRate = sampleRate)
     val prefusePanel      = InstantGroupPanel(document, transport)
-    val transportPanel    = TransportPanel   (transport)
+    // note: the transport only reads and updates the position, as well as reading span start for return-to-zero
+    val tlm               = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
+    val transportPanel    = TransportView(transport, tlm, hasMillis = false, hasLoop = false)
     import ProcGroup.serializer
     val groupH            = tx.newHandle(group)
     val name              = obj.attr.name
@@ -49,7 +52,7 @@ object FrameImpl {
   }
 
   private final class Impl[S <: Sys[S]](val view      : InstantGroupPanel[S],
-                                        transportPanel: TransportPanel[S],
+                                        transportPanel: TransportView[S],
                                         groupH        : Source[S#Tx, ProcGroup[S]], // Document.Group[S]],
                                         val transport : Document.Transport[S],
                                         name          : String)
@@ -117,7 +120,7 @@ object FrameImpl {
       val southPanel = new FlowPanel(transportPanel.component, ggTest)
 
       val f = new WindowImpl {
-        title = s"Timeline : $name" // staleGroup.id
+        title = s"$name : Real-time" // staleGroup.id
         // peer.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE)
         contents = new BorderPanel {
           add(view.component, BorderPanel.Position.Center)

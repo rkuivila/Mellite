@@ -19,7 +19,7 @@ import de.sciss.audiowidgets.TimelineModel
 import impl.component.{TimeDisplayImpl => Impl}
 
 object TimeDisplay {
-  def apply(model: TimelineModel): TimeDisplay = new Impl(model)
+  def apply(model: TimelineModel, hasMillis: Boolean): TimeDisplay = new Impl(model, hasMillis = hasMillis)
 }
 trait TimeDisplay {
   def component: Component

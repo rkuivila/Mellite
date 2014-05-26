@@ -21,14 +21,17 @@ import scala.swing.{Swing, Orientation, BoxPanel, Component, Label}
 import Swing._
 import de.sciss.model.Change
 
-final class TimeDisplayImpl(model: TimelineModel) extends TimeDisplay {
-  private val lcdFormat = AxisFormat.Time(hours = true, millis = true)
-  private val lcd       = new Label with DynamicComponentImpl {
+final class TimeDisplayImpl(model: TimelineModel, hasMillis: Boolean) extends TimeDisplay {
+  private val lcdFormat = AxisFormat.Time(hours = true, millis = hasMillis)
+  private val lcd: Label = new Label with DynamicComponentImpl {
     protected def component: Component = this
+
+    private val decimals  = if (hasMillis)  3 else 0
+    private val pad       = if (hasMillis) 12 else 8
 
     private def updateText(frame: Long): Unit = {
       val secs = frame / model.sampleRate
-      text = lcdFormat.format(secs, decimals = 3, pad = 12)
+      text = lcdFormat.format(secs, decimals = decimals, pad = pad)
     }
 
     private val tlmListener: TimelineModel.Listener = {
@@ -59,7 +62,7 @@ final class TimeDisplayImpl(model: TimelineModel) extends TimeDisplay {
 
     font        = LCDFont() // .deriveFont(11.5f)
     foreground  = LCDColors.defaultFg
-    text        = lcdFormat.format(0.0, decimals = 3, pad = 12)
+    updateText(model.position)
 
     maximumSize = preferredSize
     minimumSize = preferredSize

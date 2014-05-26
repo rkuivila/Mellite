@@ -16,7 +16,7 @@ package gui
 package impl
 package timeline
 
-import scala.swing.{Swing, Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
+import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
 import de.sciss.span.{Span, SpanLike}
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, LinearGradientPaint}
 import de.sciss.synth
@@ -29,15 +29,14 @@ import de.sciss.fingertree.RangedSeq
 import javax.swing.UIManager
 import java.util.Locale
 import de.sciss.lucre.bitemp.BiGroup
-import de.sciss.audiowidgets.{TimelineModel, Transport => GUITransport}
+import de.sciss.audiowidgets.TimelineModel
 import scala.swing.Swing._
-import java.awt.event.ActionEvent
-import de.sciss.desktop.{KeyStrokes, Window, FocusType}
+import de.sciss.desktop.Window
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
-import scala.swing.event.{Key, ValueChanged}
+import scala.swing.event.ValueChanged
 import de.sciss.synth.proc.{Transport, ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
@@ -129,14 +128,10 @@ object TimelineViewImpl {
     val global  = GlobalProcsView(document.folder, group, procSelectionModel)
     disposables ::= global
 
-    val view    = new Impl(document, groupH, groupEH, transport, procMap, scanMap, tlm, auralView, global, procSelectionModel)
+    val transportView = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
 
-    val obsTransport = transport.react { implicit tx => {
-      case Transport.Play(t, time) => view.startedPlaying(time)
-      case Transport.Stop(t, time) => view.stoppedPlaying(time)
-      case _ => // proc.Transport.Advance(t, time, isSeek, isPlaying, _, _, _) =>
-    }}
-    disposables ::= obsTransport
+    val view    = new Impl(document, groupH, groupEH, transport, procMap, scanMap, tlm, auralView, global,
+      transportView, procSelectionModel)
 
     group.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>
@@ -297,6 +292,7 @@ object TimelineViewImpl {
                                         val timelineModel : TimelineModel,
                                         auralView         : AuralPresentation[S],
                                         globalView        : GlobalProcsView[S],
+                                        transportView     : TransportView[S],
                                         val procSelectionModel: ProcSelectionModel[S])
                                        (implicit cursor: Cursor[S])
     extends TimelineView[S] with ComponentHolder[Component] {
@@ -305,18 +301,6 @@ object TimelineViewImpl {
     import cursor.step
 
     private var procViews = RangedSeq.empty[ProcView[S], Long]
-
-    private var timerFrame  = 0L
-    private var timerSys    = 0L
-    private val srm         = 0.001 * transport.sampleRate
-    private val timer       = new javax.swing.Timer(31,
-      Swing.ActionListener(timelineModel.modifiableOption.fold((_: ActionEvent) => ()) { mod => (e: ActionEvent) =>
-        val elapsed   = ((System.currentTimeMillis() - timerSys) * srm).toLong
-        mod.position  = timerFrame + elapsed
-      })
-    )
-
-    private var transportStrip: Component with GUITransport.ButtonStrip = _
 
     private var view: View    = _
     val disposables           = Ref(List.empty[Disposable[S#Tx]])
@@ -336,7 +320,6 @@ object TimelineViewImpl {
     def window: Window = component.peer.getClientProperty("de.sciss.mellite.Window").asInstanceOf[Window]
 
     def dispose()(implicit tx: S#Tx): Unit = {
-      timer.stop()  // save to call multiple times
       disposables.swap(Nil)(tx.peer).foreach(_.dispose())
       deferTx {
         DocumentViewHandler.instance.remove(this)
@@ -455,79 +438,16 @@ object TimelineViewImpl {
         }
       }
 
-    // ---- transport ----
-
-    def startedPlaying(time: Long)(implicit tx: S#Tx): Unit =
-      deferTx {
-        timer.stop()
-        timerFrame  = time
-        timerSys    = System.currentTimeMillis()
-        timer.start()
-        transportStrip.button(GUITransport.Play).foreach(_.selected = true )
-        transportStrip.button(GUITransport.Stop).foreach(_.selected = false)
-      }
-
-    def stoppedPlaying(time: Long)(implicit tx: S#Tx): Unit =
-      deferTx {
-        timer.stop()
-        timelineModel.modifiableOption.foreach(_.position = time) // XXX TODO if Cursor follows play-head
-        transportStrip.button(GUITransport.Play).foreach(_.selected = false)
-        transportStrip.button(GUITransport.Stop).foreach(_.selected = true )
-      }
-
-    private def rtz(): Unit = {
-      stop()
-      timelineModel.modifiableOption.foreach { mod =>
-        val start = mod.bounds.start
-        mod.position  = start
-        mod.visible   = Span(start, start + mod.visible.length)
-      }
-    }
-
-    private def rewind() = ()
-
-    private def playOrStop(): Unit =
-      step { implicit tx =>
-        if (transport.isPlaying) transport.stop() else {
-          transport.seek(timelineModel.position)
-          transport.play()
-        }
-      }
-
-    private def stop(): Unit =
-      step { implicit tx => transport.stop() }
-
-    private def play(): Unit =
-      step { implicit tx =>
-        transport.stop()
-        transport.seek(timelineModel.position)
-        transport.play()
-      }
-
-    private def fastForward() = ()
-
-    private def toggleLoop(): Unit = {
-      val sel       = timelineModel.selection
-      val isLooping = step { implicit tx =>
-        val loopSpan = if (transport.loop == Span.Void) sel else Span.Void
-        transport.loop  = loopSpan
-        !loopSpan.isEmpty
-      }
-      transportStrip.button(GUITransport.Loop).foreach(_.selected = isLooping)
-    }
-
     def guiInit(): Unit = {
       import desktop.Implicits._
 
-      val timeDisplay = TimeDisplay(timelineModel)
-      view            = new View
-
+      view = new View
       val ggVisualBoost = new Slider {
         min       = 0
         max       = 64
         value     = 0
         focusable = false
-        peer.putClientProperty( "JComponent.sizeVariant", "small" )
+        peer.putClientProperty("JComponent.sizeVariant", "small")
         listenTo(this)
         reactions += {
           case ValueChanged(_) =>
@@ -536,17 +456,6 @@ object TimelineViewImpl {
         }
       }
       GUI.fixWidth(ggVisualBoost)
-
-      import GUITransport.{Action => _, _}
-      transportStrip = GUITransport.makeButtonStrip(Seq(
-        GoToBegin   { rtz         () },
-        Rewind      { rewind      () },
-        Stop        { stop        () },
-        Play        { play        () },
-        FastForward { fastForward () },
-        Loop        { toggleLoop  () }
-      ))
-      transportStrip.button(Stop).foreach(_.selected = true)
 
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
@@ -558,21 +467,10 @@ object TimelineViewImpl {
           ggVisualBoost,
           HGlue,
           HStrut(4),
-          timeDisplay.component,
-          HStrut(8),
-          transportStrip,
+          transportView.component,
           HStrut(4)
         )
       }
-      transportPane.addAction("play-stop", focus = FocusType.Window, action = new Action("play-stop") {
-        accelerator = Some(KeyStrokes.plain + Key.Space)
-        def apply(): Unit = playOrStop()
-      })
-      transportPane.addAction("rtz", focus = FocusType.Window, action = new Action("rtz") {
-        accelerator = Some(KeyStrokes.plain + Key.Enter)
-        def apply(): Unit =
-          transportStrip.button(GoToBegin).foreach(_.doClick())
-      })
 
       val pane2 = new SplitPane(Orientation.Vertical, globalView.component, view.component)
       pane2.dividerSize = 4
