@@ -37,7 +37,8 @@ final class PaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackToo
     val b     = new ToggleButton()
     val name  = tool.name
     b.action  = new Action(null) {
-      icon = tool.icon
+      icon    = tool.icon
+      toolTip = tool.name
       def apply(): Unit = control.currentTool = tool // println(name)
     }
     b.focusable = false

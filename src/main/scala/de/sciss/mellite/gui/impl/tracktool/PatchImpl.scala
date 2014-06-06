@@ -28,6 +28,8 @@ import javax.swing.ImageIcon
 import java.awt.event.MouseEvent
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.impl.component.PaddedIcon
+import scala.swing.Insets
 
 object PatchImpl {
   private lazy val image: BufferedImage = {
@@ -56,7 +58,7 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   def defaultCursor = PatchImpl.cursor
   val name          = "Patch"
-  val icon          = new ImageIcon(PatchImpl.image)
+  val icon          = new PaddedIcon(new ImageIcon(PatchImpl.image), new Insets(1, 1, 2, 2)) // make it 20x20
 
   protected type Initial = ProcView[S]
 

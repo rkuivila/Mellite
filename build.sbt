@@ -12,9 +12,9 @@ description        := "A computer music application based on SoundProcesses"
 
 licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt"))
 
-scalaVersion       := "2.11.0"
+scalaVersion       := "2.11.1"
 
-crossScalaVersions := Seq("2.11.0", "2.10.4")
+crossScalaVersions := Seq("2.11.1", "2.10.4")
 
 libraryDependencies ++= Seq(
   "de.sciss" %% "soundprocesses"                  % "2.4.0-SNAPSHOT",  // computer-music framework

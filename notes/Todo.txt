@@ -1,0 +1,23 @@
+AttrMapView
+
+- FadeSpec -> 'missing view'
+- Value updates not reflected (e.g. gain change)
+- Drag-and-drop
+- Title
+- Icon/Type
+- custom ObjView renderers
+- editable
+- sortable columns
+
+ElementsView
+
+- rename yields 'unnamed'
+
+Cursors
+
+- rename master produces error
+
+TimelineView
+
+- rename not reflected
+

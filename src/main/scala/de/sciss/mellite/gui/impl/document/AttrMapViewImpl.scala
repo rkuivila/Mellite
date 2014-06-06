@@ -179,8 +179,10 @@ object AttrMapViewImpl {
       component   = scroll
       tab.listenTo(tab.selection)
       tab.reactions += {
-        case TableColumnsSelected(_, range, adjusting) =>
-          val sel = range.toList.sorted.map(model.apply)
+        case TableColumnsSelected(_, _, _) => // note: range is range of _changes_ rows, not current selection
+          val indices = tab.selection.rows /* range */.toList.sorted
+          // println(s"indices = $indices")
+          val sel     = indices.map(model.apply)
           dispatch(AttrMapView.SelectionChanged(impl, sel))
       }
     }

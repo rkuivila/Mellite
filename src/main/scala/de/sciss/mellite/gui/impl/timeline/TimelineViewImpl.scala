@@ -48,6 +48,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.icons.raphael
 
 object TimelineViewImpl {
   private val colrBg              = Color.darkGray
@@ -457,12 +458,24 @@ object TimelineViewImpl {
       }
       GUI.fixWidth(ggVisualBoost)
 
+      val actionAttr: Action = Action(null) {
+        withSelection { implicit tx =>
+          seq => seq.foreach { view =>
+            AttrMapFrame(document, view.proc)
+          }
+        }
+      }
+      val ggAttr = GUI.toolButton(actionAttr, raphael.Shapes.Wrench, "Attributes Editor")
+      ggAttr.focusable = false
+
       val transportPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
           HStrut(4),
           TrackTools.palette(view.trackTools, Vector(
             toolCursor, toolMove, toolResize, toolGain, toolFade /* , toolSlide*/ ,
             toolMute /* , toolAudition */, toolFunction, toolPatch)),
+          HStrut(4),
+          ggAttr,
           HStrut(4),
           ggVisualBoost,
           HGlue,
