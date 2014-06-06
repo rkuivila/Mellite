@@ -17,9 +17,9 @@ package gui
 
 import impl.document.{ElementsFrameImpl => Impl}
 import lucre.stm
-import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.swing.View
 
 object DocumentElementsFrame {
   def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Document[S], name: Option[Expr[S1, String]])
@@ -27,7 +27,8 @@ object DocumentElementsFrame {
     Impl(doc, nameOpt = name)
 }
 
-trait DocumentElementsFrame[S <: Sys[S]] extends Disposable[S#Tx] {
-  def component: desktop.Window
-  def document : Document[S]
+trait DocumentElementsFrame[S <: Sys[S]] extends View[S] {
+  def window  : desktop.Window
+  def document: Document[S]
+  def contents: FolderView[S]
 }
