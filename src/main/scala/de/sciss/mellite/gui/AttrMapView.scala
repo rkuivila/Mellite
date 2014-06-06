@@ -13,16 +13,20 @@
 
 package de.sciss.mellite.gui
 
-import de.sciss.lucre.event.Sys
 import de.sciss.lucre.swing.View
 import de.sciss.synth.proc.Obj
 import de.sciss.lucre.stm
 import impl.document.{AttrMapViewImpl => Impl}
 import de.sciss.desktop.UndoManager
+import de.sciss.lucre.synth.Sys
 
 object AttrMapView {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
                                       undoManager: UndoManager): AttrMapView[S] =
     Impl(obj)
+
+  type Selection[S <: Sys[S]] = List[(String, ObjView[S])]
 }
-trait AttrMapView[S <: Sys[S]] extends View.Editable[S]
+trait AttrMapView[S <: Sys[S]] extends View.Editable[S] {
+  def selection: AttrMapView.Selection[S]
+}

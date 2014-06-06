@@ -51,17 +51,17 @@ abstract class CollectionFrameImpl[S <: Sys[S], S1 <: Sys[S1]](val document: Doc
 
   // ---- implemented ----
 
+  lazy final protected val actionAttr: Action = Action(null) {
+    val sel = selectedObjects
+    if (sel.nonEmpty) cursor.step { implicit tx =>
+      sel.foreach(n => AttrMapFrame(document, n.obj()))
+    }
+  }
+
   lazy final protected val actionView: Action = Action(null) {
     val sel = selectedObjects.filter(_.isViewable)
     if (sel.nonEmpty) cursor.step { implicit tx =>
       sel.foreach(_.openView(document))
-    }
-  }
-
-  lazy final protected val actionAttr: Action = Action(null) {
-    val sel = selectedObjects
-    if (sel.nonEmpty) cursor.step { implicit tx =>
-      sel.foreach(n => AttrMapFrame(n.obj()))
     }
   }
 
@@ -102,7 +102,7 @@ abstract class CollectionFrameImpl[S <: Sys[S], S1 <: Sys[S1]](val document: Doc
   final protected var ggView  : Button = _
   final protected var ggAttr  : Button = _
 
-  final protected def guiInit(): Unit = {
+  final def guiInit(): Unit = {
     //    lazy val addPopup: PopupMenu = {
     //      import Menu._
     //      val pop = Popup()
@@ -150,10 +150,10 @@ abstract class CollectionFrameImpl[S <: Sys[S], S1 <: Sys[S1]](val document: Doc
 
     ggAdd    = GUI.toolButton(actionAdd   , raphael.Shapes.Plus  , "Add Element"            )
     ggDelete = GUI.toolButton(actionDelete, raphael.Shapes.Minus , "Remove Selected Element")
-    ggView   = GUI.toolButton(actionView  , raphael.Shapes.View  , "View Selected Element"  )
     ggAttr   = GUI.toolButton(actionAttr  , raphael.Shapes.Wrench, "Attributes Editor"      )
+    ggView   = GUI.toolButton(actionView  , raphael.Shapes.View  , "View Selected Element"  )
 
-    lazy val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggView, ggAttr)
+    lazy val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggAttr, ggView)
 
     lazy val compoundPanel = new BorderPanel {
       add(impl.contents.component, BorderPanel.Position.Center)

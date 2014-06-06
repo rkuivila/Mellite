@@ -17,41 +17,49 @@ package document
 
 import de.sciss.synth.proc.Obj
 import de.sciss.lucre.stm
-import de.sciss.lucre.event.Sys
-import scala.swing.Component
-import de.sciss.desktop.{DialogSource, Window}
+
+import scala.swing.Action
+import de.sciss.mellite.Document
+import de.sciss.mellite.gui.impl.component.CollectionFrameImpl
+import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.swing.deferTx
+import de.sciss.desktop.impl.UndoManagerImpl
+import de.sciss.desktop.UndoManager
+import de.sciss.lucre.synth.Sys
 
 object AttrMapFrameImpl {
-  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): AttrMapFrame[S] = {
-    ???
+  def apply[S <: Sys[S]](document: Document[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): AttrMapFrame[S] = {
+    implicit val undoMgr  = new UndoManagerImpl {
+      protected var dirty: Boolean = false
+    }
+    val contents  = AttrMapView(obj)
+    val res       = new Impl(document, contents)
+    deferTx {
+      res.guiInit()
+      res.window.front()
+    }
+    res
   }
-//
-//  private final class Impl[S <: Sys[S]] extends AttrMapFrame[S] with WindowHolder[Frame[S]] {
-//
-//
-//    def frameClosing(): Unit = {
-//      ???
-//    }
-//  }
-//
-//  private final class Frame[S <: Sys[S]](view: Impl[S], _contents: Component) extends WindowImpl {
-//    // file            = Some(view.document.folder)
-//    closeOperation  = Window.CloseDispose
-//    reactions += {
-//      case Window.Closing(_) => view.frameClosing()
-//    }
-//
-//    bindMenus(
-//      "edit.undo" -> view.contents.undoManager.undoAction,
-//      "edit.redo" -> view.contents.undoManager.redoAction
-//    )
-//
-//    contents = _contents
-//
-//    pack()
-//    // centerOnScreen()
-//    GUI.placeWindow(this, 0.5f, 0.25f, 24)
-//
-//    def show[A](source: DialogSource[A]): A = showDialog(source)
-//  }
+
+  private final class Impl[S <: Sys[S]](document: Document[S], val contents: AttrMapView[S])
+                                       (implicit cursor: stm.Cursor[S], undoManager: UndoManager)
+    extends CollectionFrameImpl[S, S](document)
+    with AttrMapFrame[S] {
+
+    protected def nameObserver: Option[Disposable[S#Tx]] = None
+
+    protected def mkTitle(sOpt: Option[String]): String = sOpt.getOrElse("<Untitled>")
+
+    protected def selectedObjects: List[ObjView[S]] = contents.selection.map(_._2)
+
+    protected lazy val actionAdd: Action = Action(null) {
+      println("TODO: add")
+    }
+
+    protected lazy val actionDelete: Action = Action(null) {
+      println("TODO: delete")
+    }
+
+    protected def initGUI2(): Unit = ()
+  }
 }
