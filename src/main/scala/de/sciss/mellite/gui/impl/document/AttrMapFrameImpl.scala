@@ -60,6 +60,11 @@ object AttrMapFrameImpl {
       println("TODO: delete")
     }
 
-    protected def initGUI2(): Unit = ()
+    protected def initGUI2(): Unit = {
+      contents.addListener {
+        case AttrMapView.SelectionChanged(_, sel) =>
+          selectionChanged(sel.map(_._2))
+      }
+    }
   }
 }

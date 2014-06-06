@@ -19,6 +19,7 @@ import de.sciss.lucre.stm
 import impl.document.{AttrMapViewImpl => Impl}
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.synth.Sys
+import de.sciss.model.Model
 
 object AttrMapView {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
@@ -26,7 +27,11 @@ object AttrMapView {
     Impl(obj)
 
   type Selection[S <: Sys[S]] = List[(String, ObjView[S])]
+
+  sealed trait Update[S <: Sys[S]] { def view: AttrMapView[S] }
+  final case class SelectionChanged[S <: Sys[S]](view: AttrMapView[S], selection: Selection[S])
+    extends Update[S]
 }
-trait AttrMapView[S <: Sys[S]] extends View.Editable[S] {
+trait AttrMapView[S <: Sys[S]] extends View.Editable[S] with Model[AttrMapView.Update[S]] {
   def selection: AttrMapView.Selection[S]
 }

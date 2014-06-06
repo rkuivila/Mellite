@@ -15,7 +15,7 @@ package de.sciss.mellite.gui
 package impl
 package document
 
-import de.sciss.synth.proc.Obj
+import de.sciss.synth.proc.{StringElem, ProcKeys, Obj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.impl.ComponentHolder
 import scala.swing.{ScrollPane, Table}
@@ -25,6 +25,11 @@ import de.sciss.lucre.synth.Sys
 import javax.swing.table.AbstractTableModel
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.annotation.switch
+import de.sciss.lucre.stm.Disposable
+import scala.concurrent.stm.TMap
+import de.sciss.model.Change
+import scala.swing.event.TableColumnsSelected
+import de.sciss.model.impl.ModelImpl
 
 object AttrMapViewImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
@@ -34,48 +39,153 @@ object AttrMapViewImpl {
 
     val list0 = map.iterator.map {
       case (key, value) =>
-        val view = ObjView(obj)
+        val view = ObjView(value)
         (key, view)
     } .toIndexedSeq
 
-    val res   = new Impl(objH, list0)
+    val res = new Impl(objH, list0) {
+      val observer = obj.changed.react { implicit tx => upd =>
+        upd.changes.foreach {
+          case Obj.AttrAdded  (key, value) =>
+            val view = ObjView(value)
+            attrAdded(key, view)
+          case Obj.AttrRemoved(key, value) =>
+            attrRemoved(key)
+          case Obj.AttrChange (key, value, changes) =>
+            attrChange(key, value, changes)
+          case _ =>
+        }
+      }
 
-    deferTx {
-      res.guiInit()
+      deferTx {
+        guiInit()
+      }
     }
+
     res
   }
 
-  private final class Impl[S <: Sys[S]](mapH: stm.Source[S#Tx, Obj[S]],
-                                        list0: Vec[(String, ObjView[S])])(implicit val cursor: stm.Cursor[S],
-                                        val undoManager: UndoManager)
-    extends AttrMapView[S] with ComponentHolder[ScrollPane] {
+  // private final class EntryView[S <: Sys[S]](var name: String, val obj: ObjView[S])
+
+  private abstract class Impl[S <: Sys[S]](mapH: stm.Source[S#Tx, Obj[S]],
+                                           list0: Vec[(String, ObjView[S])])(implicit val cursor: stm.Cursor[S],
+                                           val undoManager: UndoManager)
+    extends AttrMapView[S] with ComponentHolder[ScrollPane] with ModelImpl[AttrMapView.Update[S]] {
+    impl =>
 
     def dispose()(implicit tx: S#Tx): Unit = {
-      // ???
-      println("NOT YET IMPLEMENTED: AttrMapViewImpl dispose")
+      observer.dispose()
+      // viewMap.clear()
     }
+
+    protected def observer: Disposable[S#Tx]
 
     private var model = list0
 
     private var tab: Table = _
 
-    def guiInit(): Unit = {
-      tab = new Table
-      tab.model = new AbstractTableModel {
-        def getRowCount   : Int = model.size
-        def getColumnCount: Int = 2
+    private val viewMap = TMap(list0: _*)
 
-        def getValueAt(row: Int, col: Int): AnyRef = (col: @switch) match {
-          case 0 => model(row)._1
-          case 1 => model(row)._2.name
-        }
+    final protected def attrAdded(key: String, view: ObjView[S])(implicit tx: S#Tx): Unit = {
+      viewMap.+=(key -> view)(tx.peer)
+      deferTx {
+        val row = model.size
+        model :+= key -> view
+        tableModel.fireTableRowsInserted(row, row)
       }
-      val scroll  = new ScrollPane(tab)
-      component   = scroll
     }
 
-    def selection: List[(String, ObjView[S])] =
+    final protected def attrRemoved(key: String)(implicit tx: S#Tx): Unit = {
+      viewMap.-=(key)(tx.peer)
+      deferTx {
+        val row = model.indexWhere(_._1 == key)
+        if (row < 0) {
+          warnNoView(key)
+        } else {
+          model = model.patch(row, Nil, 1)
+          tableModel.fireTableRowsDeleted(row, row)
+        }
+      }
+    }
+
+    private def warnNoView(key: String): Unit = println(s"Warning: AttrMapView - no view found for $key")
+
+    private def updateObjectName(objView: ObjView[S], name: String)(implicit tx: S#Tx): Unit =
+      deferTx { objView.name = name }
+
+    private def updateObject(obj: Obj[S], objView: ObjView[S], changes: Vec[Obj.Change[S, Any]])
+                            (implicit tx: S#Tx): Boolean =
+      (false /: changes) { (p, ch) =>
+        val p1 = ch match {
+          case Obj.ElemChange(u1) =>
+            objView.isUpdateVisible(u1)
+          case Obj.AttrAdded  (ProcKeys.attrName, e: StringElem[S]) =>
+            updateObjectName(objView, e.peer.value)
+            true
+          case Obj.AttrRemoved(ProcKeys.attrName, _) =>
+            updateObjectName(objView, "<unnamed>")
+            true
+          case Obj.AttrChange (ProcKeys.attrName, _, nameChanges) =>
+            (false /: nameChanges) {
+              case (_, Obj.ElemChange(Change(_, name: String))) =>
+                updateObjectName(objView, name)
+                true
+              case (res, _) => res
+            }
+          case _ => false
+        }
+        p | p1
+      }
+
+    final protected def attrChange(key: String, value: Obj[S], changes: Vec[Obj.Change[S, Any]])
+                                  (implicit tx: S#Tx): Unit = {
+      val viewOpt = viewMap.get(key)(tx.peer)
+      viewOpt.fold {
+        warnNoView(key)
+      } { view =>
+        val isDirty = updateObject(value, view, changes)
+        if (isDirty) deferTx {
+          val row = model.indexWhere(_._1 == key)
+          if (row < 0) {
+            warnNoView(key)
+          } else {
+            tableModel.fireTableRowsUpdated(row, row)
+          }
+        }
+      }
+    }
+
+    private object tableModel extends AbstractTableModel {
+      def getRowCount   : Int = model.size
+      def getColumnCount: Int = 3
+
+      override def getColumnName(col: Int): String = (col: @switch) match {
+        case 0 => "Key"
+        case 1 => "Name"
+        case 2 => "Value"
+      }
+
+      def getValueAt(row: Int, col: Int): AnyRef = (col: @switch) match {
+        case 0 => model(row)._1
+        case 1 => model(row)._2.name
+        case 2 => model(row)._2.value.asInstanceOf[AnyRef]
+      }
+    }
+
+    final protected def guiInit(): Unit = {
+      tab         = new Table
+      tab.model   = tableModel
+      val scroll  = new ScrollPane(tab)
+      component   = scroll
+      tab.listenTo(tab.selection)
+      tab.reactions += {
+        case TableColumnsSelected(_, range, adjusting) =>
+          val sel = range.toList.sorted.map(model.apply)
+          dispatch(AttrMapView.SelectionChanged(impl, sel))
+      }
+    }
+
+    final def selection: List[(String, ObjView[S])] =
       tab.selection.rows.toList.sorted.map(model.apply)
   }
 }
