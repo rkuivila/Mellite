@@ -285,7 +285,7 @@ object ObjViewImpl {
 
   object Boolean extends Factory {
     type E[S <: evt.Sys[S]] = BooleanElem[S]
-    val icon    = raphaelIcon(Shapes.IntegerNumbers)
+    val icon    = raphaelIcon(Shapes.BooleanNumbers)
     val prefix  = "Boolean"
     def typeID  = ElemImpl.Boolean.typeID
     type Init   = (_String, _Boolean)

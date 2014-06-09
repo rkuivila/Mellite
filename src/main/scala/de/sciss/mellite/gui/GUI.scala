@@ -16,9 +16,9 @@ package mellite
 package gui
 
 import scala.swing.Swing._
-import scala.swing.{Action, Color, Button, AbstractButton, Swing, Dialog, Component, TextField, Label, Alignment}
+import scala.swing.{Table, Action, Color, Button, AbstractButton, Swing, Dialog, Component, TextField, Label, Alignment}
 import java.awt.{Rectangle, GraphicsEnvironment}
-import javax.swing.{Icon, Timer}
+import javax.swing.{SortOrder, RowSorter, Icon, Timer}
 import de.sciss.swingplus.GroupPanel
 import de.sciss.icons.raphael
 import java.awt.geom.Path2D
@@ -100,5 +100,16 @@ object GUI {
     res.peer.putClientProperty("JButton.buttonType", "textured")
     if (!tooltip.isEmpty) res.tooltip = tooltip
     res
+  }
+
+  /** Programmatically sets the sorted column of a table view. */
+  def sortTable(tab: Table, column: Int, ascending: Boolean = true): Unit = {
+    val sorter = tab.peer.getRowSorter
+    if (sorter != null) {
+      val list = new java.util.ArrayList[RowSorter.SortKey](1)
+      list.add(new RowSorter.SortKey(column, if (ascending) SortOrder.ASCENDING else SortOrder.DESCENDING))
+      sorter.setSortKeys(list)
+      // sorter.asInstanceOf[DefaultRowSorter].sort()
+    }
   }
 }

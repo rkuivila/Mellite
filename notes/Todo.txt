@@ -2,26 +2,31 @@ AttrMapView
 
 [OK]    - FadeSpec -> missing view
 [OK]    - Boolean  -> missing view
-        - Value updates not reflected (e.g. gain change)
+[OK]    - Value updates not reflected (e.g. gain change)
         - Drag-and-drop
         - Title
 [OK]    - Icon/Type
 [OK]    - custom ObjView renderers
-        - editable
+[OK]    - editable
 [OK]    - sortable columns
 
 ElementsView
 
-- rename yields 'unnamed'
+        - rename yields 'unnamed'
 
 Cursors
 
-- rename master produces error
+        - rename master produces error
 
 TimelineView
 
-- rename not reflected
+[OK]    - rename not reflected
+        - use undo manager
 
 General
 
-- use sample rate 14112000 throughout
+        - use sample rate 14112000 throughout
+
+ObjView
+
+        - allow custom editors

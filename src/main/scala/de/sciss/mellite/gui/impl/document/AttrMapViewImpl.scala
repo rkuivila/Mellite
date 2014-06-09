@@ -18,11 +18,11 @@ package document
 import de.sciss.synth.proc.{StringElem, ProcKeys, Obj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.impl.ComponentHolder
-import scala.swing.{Label, Component, Swing, ScrollPane, Table}
+import scala.swing.{TextField, Label, Swing, ScrollPane, Table}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.synth.Sys
-import javax.swing.table.{DefaultTableCellRenderer, TableColumnModel, AbstractTableModel}
+import javax.swing.table.{TableCellEditor, DefaultTableCellRenderer, AbstractTableModel}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.annotation.switch
 import de.sciss.lucre.stm.Disposable
@@ -31,7 +31,8 @@ import de.sciss.model.Change
 import scala.swing.event.TableColumnsSelected
 import de.sciss.model.impl.ModelImpl
 import Swing._
-import javax.swing.JTable
+import javax.swing.{AbstractCellEditor, JTable}
+import de.sciss.mellite.gui.edit.{CompoundEdit, EditAttrMap}
 
 object AttrMapViewImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
@@ -182,13 +183,35 @@ object AttrMapViewImpl {
         case 2 => classOf[ObjView[S]]
       }
 
-      // override def isCellEditable(row: Int, col: Int): Boolean = col == 0 || model(row)._2.isEditable
-    }
+      override def isCellEditable(row: Int, col: Int): Boolean = {
+        val res = col == 0 || model(row)._2.isEditable
+        // println(s"isCellEditable(row = $row, col = $col) -> $res")
+        res
+      }
 
-    private def setColumnWidth(tcm: TableColumnModel, idx: Int, w: Int): Unit = {
-      val tc = tcm.getColumn(idx)
-      tc.setPreferredWidth(w)
-      // tc.setMaxWidth(w)
+      // println(s"setValueAt(value = $value, row = $row, col = $col")
+      override def setValueAt(editValue: Any, row: Int, col: Int): Unit = (col: @switch) match {
+        case 0 =>
+          val (oldKey, view) = model(row)
+          val newKey  = editValue.toString
+          if (oldKey != newKey) {
+            val editOpt = cursor.step { implicit tx =>
+              val value = view.obj()
+              val obj   = mapH()
+              val ed1   = EditAttrMap(name = "Remove", obj, key = oldKey, value = None)
+              val ed2   = EditAttrMap(name = "Insert", obj, key = newKey, value = Some(value))
+              CompoundEdit(ed1 :: ed2 :: Nil, s"Rename Attribute Key")
+            }
+            editOpt.foreach(undoManager.add)
+          }
+
+        case 2 =>
+          val view    = model(row)._2
+          val editOpt = cursor.step { implicit tx => view.tryEdit(editValue) }
+          editOpt.foreach(undoManager.add)
+
+        case _ =>
+      }
     }
 
     final protected def guiInit(): Unit = {
@@ -200,11 +223,18 @@ object AttrMapViewImpl {
       val jt        = tab.peer
       jt.setAutoCreateRowSorter(true)
       val tcm       = jt.getColumnModel
-      setColumnWidth(tcm, 0, 48)
-      setColumnWidth(tcm, 1, 64)
-      setColumnWidth(tcm, 2, 128)
-      jt.setPreferredScrollableViewportSize(240 -> 160)
-      tcm.getColumn(1).setCellRenderer(new DefaultTableCellRenderer {
+      val colName   = tcm.getColumn(0)
+      val colTpe    = tcm.getColumn(1)
+      val colValue  = tcm.getColumn(2)
+      colName .setPreferredWidth( 72)
+      colTpe  .setPreferredWidth( 64)
+      colValue.setPreferredWidth(176)
+      jt.setPreferredScrollableViewportSize(312 -> 160)
+      // val colName = tcm.getColumn(0)
+      //      colName.setCellEditor(new DefaultTreeTableCellEditor() {
+      //        override def stopCellEditing(): Boolean = super.stopCellEditing()
+      //      })
+      colTpe.setCellRenderer(new DefaultTableCellRenderer {
         outer =>
         private val wrap = new Label { override lazy val peer = outer }
 
@@ -227,7 +257,7 @@ object AttrMapViewImpl {
         //          outer
         //        }
       })
-      tcm.getColumn(2).setCellRenderer(new DefaultTableCellRenderer {
+      colValue.setCellRenderer(new DefaultTableCellRenderer {
         outer =>
         private val wrap = new Label { override lazy val peer = outer }
         override def getTableCellRendererComponent(table: JTable, value: Any, isSelected: Boolean,
@@ -239,6 +269,23 @@ object AttrMapViewImpl {
           }
         }
       })
+      colValue.setCellEditor(new AbstractCellEditor with TableCellEditor {
+        // private var currentValue: Any = null
+        private val editor = new TextField(10)
+
+        def getCellEditorValue: AnyRef = editor.text // currentValue.asInstanceOf[AnyRef]
+
+        def getTableCellEditorComponent(table: JTable, value: Any, isSelected: Boolean, row: Int,
+                                        col: Int): java.awt.Component = {
+          // println("AQUI")
+          val view      = model(row)._2
+          // currentValue  = view.value
+          editor.text   = view.value.toString
+          editor.peer
+        }
+      })
+      GUI.sortTable(tab, 0)
+
       val scroll    = new ScrollPane(tab)
       scroll.border = null
       component     = scroll
