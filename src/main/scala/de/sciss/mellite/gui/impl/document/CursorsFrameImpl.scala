@@ -242,8 +242,8 @@ object CursorsFrameImpl {
       }
       val tabCM = t.peer.getColumnModel
       tabCM.getColumn(0).setPreferredWidth(128)
-      tabCM.getColumn(1).setPreferredWidth(176)
-      tabCM.getColumn(2).setPreferredWidth(176)
+      tabCM.getColumn(1).setPreferredWidth(184)
+      tabCM.getColumn(2).setPreferredWidth(184)
 
       val actionAdd = Action(null) {
         t.selection.paths.headOption.foreach { path =>

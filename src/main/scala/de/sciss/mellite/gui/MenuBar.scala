@@ -27,7 +27,7 @@ object MenuBar {
 
     val mFile = Group("file", "File")
       .add(Group("new", "New")
-        .add(Item("new-doc", ActionNewFile))
+        .add(Item("new-doc", ActionNewWorkspace))
         .add(Item("repl",    InterpreterFrame.Action))
       )
       .add(Item("open", ActionOpenWorkspace))

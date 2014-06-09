@@ -44,6 +44,7 @@
 0x30002     Reduce.Op
 0x30003     Dimension.Selection
 0x30004     Sonification
+0x30005     DataSource
 
 :: higher-order ::
 

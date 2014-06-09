@@ -1,5 +1,5 @@
 /*
- *  ActionNewFile.scala
+ *  ActionNewWorkspace.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
@@ -14,14 +14,16 @@
 package de.sciss.mellite
 package gui
 
-import swing.{Dialog, Action}
-import de.sciss.desktop.{FileDialog, KeyStrokes}
+import scala.swing.{Label, Dialog, Action}
+import de.sciss.desktop.{OptionPane, FileDialog, KeyStrokes}
 import util.control.NonFatal
 import scala.swing.event.Key
 import de.sciss.file._
 
-object ActionNewFile extends Action("Workspace...") {
+object ActionNewWorkspace extends Action("Workspace...") {
+
   import KeyStrokes._
+
   accelerator = Some(menu1 + Key.N)
 
   private def deleteRecursive(f: File): Boolean = {
@@ -33,10 +35,25 @@ object ActionNewFile extends Action("Workspace...") {
     f.delete()
   }
 
-  private def fullTitle = "New Document"
+  private def fullTitle = "New Workspace"
 
-  def apply(): Unit =
-    FileDialog.save(title = "Location for New Document").show(None).foreach { folder0 =>
+  def apply(): Unit = {
+    val tpeMessage = new Label( """<HTML><BODY><B>Workspaces can be confluent or ephemeral.</B><P><br>
+        |A <I>confluent</I> workspace keeps a trace of its history.<P><br>
+        |An <I>ephemeral</I> workspace does not remember its history.
+        |""".stripMargin
+    )
+
+    val tpeEntries  = Seq("Confluent", "Ephemeral")
+    val tpeInitial  = tpeEntries.headOption
+    val tpeDlg      = OptionPane(message = tpeMessage, entries = tpeEntries, initial = tpeInitial)
+    tpeDlg.title    = fullTitle
+    val tpeRes      = tpeDlg.show().id
+    if (tpeRes < 0) return
+    val confluent   = tpeRes != 1
+
+    val fileDlg = FileDialog.save(title = "Location for New Workspace")
+    fileDlg.show(None).foreach { folder0 =>
       val name    = folder0.getName
       val folder  = if (name.endsWith(s".${Workspace.ext}")) folder0 else folder0.parent / s"$name.${Workspace.ext}"
       if (folder.exists()) {
@@ -58,9 +75,14 @@ object ActionNewFile extends Action("Workspace...") {
       }
 
       try {
-        val doc = Workspace.Confluent.empty(folder)
-        // XXX TODO: SetFile -a E <folder>
-        ActionOpenWorkspace.openGUI(doc)
+        if (confluent) {
+          val doc = Workspace.Confluent.empty(folder)
+          // XXX TODO: SetFile -a E <folder>
+          ActionOpenWorkspace.openGUI(doc)
+        } else {
+          val doc = Workspace.Ephemeral.empty(folder)
+          ActionOpenWorkspace.openGUI(doc)
+        }
 
       } catch {
         case NonFatal(e) =>
@@ -71,4 +93,5 @@ object ActionNewFile extends Action("Workspace...") {
           )
       }
     }
+  }
 }

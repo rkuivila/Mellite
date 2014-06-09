@@ -90,8 +90,12 @@ object ActionOpenWorkspace extends Action("Open...") {
 
   private def doOpen(folder: File): Unit =
     try {
-      val doc = Workspace.Confluent.read(folder)
-      openGUI(doc)
+      val doc = Workspace /* .Confluent */ .read(folder)
+      doc match {
+        case cf : Workspace.Confluent => openGUI(cf )
+        case dur: Workspace.Ephemeral => openGUI(dur)
+      }
+      // openGUI(doc)
 
     } catch {
       case NonFatal(e) =>

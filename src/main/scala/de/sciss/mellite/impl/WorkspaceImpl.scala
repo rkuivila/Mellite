@@ -14,7 +14,7 @@
 package de.sciss.mellite
 package impl
 
-import java.io.{FileOutputStream, IOException, FileNotFoundException}
+import java.io.{FileInputStream, FileOutputStream, IOException, FileNotFoundException}
 import de.sciss.file._
 import de.sciss.lucre.{confluent, stm}
 import stm.store.BerkeleyDB
@@ -22,9 +22,11 @@ import de.sciss.synth.proc.{Durable => Dur, Confluent, Obj, Folder, FolderElem, 
 import de.sciss.serial.{DataInput, Serializer, DataOutput}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.Sys
+import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.lucre.stm.{DataStoreFactory, Disposable}
 import scala.concurrent.stm.Ref
-import de.sciss.synth.proc
+import java.util.Properties
+import scala.language.existentials
 
 object WorkspaceImpl {
   private final class Ser[S <: Sys[S]] extends Serializer[S#Tx, S#Acc, Data[S]] {
@@ -49,6 +51,21 @@ object WorkspaceImpl {
   private def requireExistsNot(dir: File): Unit =
     if (dir.exists()) throw new IOException(s"Workspace ${dir.path} already exists")
 
+  def read(dir: File): Workspace[_] /* [~ forSome { type ~ <: SSys[~] }] */ = {
+    requireExists(dir)
+    val fis   = new FileInputStream(dir / "open")
+    val prop  = new Properties
+    prop.load(fis)
+    fis.close()
+    val confluent = prop.getProperty("type") match {
+      case "confluent"  => true
+      case "ephemeral"  => false
+      case other        => sys.error(s"Invalid property 'type': $other")
+    }
+    val res = if (confluent) readConfluent(dir) else readEphemeral(dir)
+    res // .asInstanceOf[Workspace[~ forSome { type ~ <: SSys[~] }]]
+  }
+
   def readConfluent(dir: File): Workspace.Confluent = {
     requireExists(dir)
     applyConfluent(dir, create = false)
@@ -69,15 +86,19 @@ object WorkspaceImpl {
     applyEphemeral(dir, create = true)
   }
 
-  private def openDataStore(dir: File, create: Boolean): DataStoreFactory[BerkeleyDB] = {
-    val res = BerkeleyDB.factory(dir, createIfNecessary = create)
-    new FileOutputStream(dir / "open").close()
+  private def openDataStore(dir: File, create: Boolean, confluent: Boolean): DataStoreFactory[BerkeleyDB] = {
+    val res   = BerkeleyDB.factory(dir, createIfNecessary = create)
+    val fos   = new FileOutputStream(dir / "open")
+    val prop  = new Properties()
+    prop.setProperty("type", if (confluent) "confluent" else "ephemeral")
+    prop.store(fos, "Mellite Workspace Meta-Info")
+    fos.close()
     res
   }
 
   private def applyConfluent(dir: File, create: Boolean): Workspace.Confluent = {
     type S    = Cf
-    val fact  = openDataStore(dir, create = create)
+    val fact  = openDataStore(dir, create = create, confluent = true)
     implicit val system: S = Confluent(fact)
 
     val (access, cursors) = system.rootWithDurable[Data[S], Cursors[S, S#D]] { implicit tx =>
@@ -99,7 +120,7 @@ object WorkspaceImpl {
 
   private def applyEphemeral(dir: File, create: Boolean): Workspace.Ephemeral = {
     type S    = Dur
-    val fact  = openDataStore(dir, create = create)
+    val fact  = openDataStore(dir, create = create, confluent = false)
     implicit val system: S = Dur(fact)
 
     val access = system.root[Data[S]] { implicit tx =>

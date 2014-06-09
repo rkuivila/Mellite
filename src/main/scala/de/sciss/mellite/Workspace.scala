@@ -38,10 +38,13 @@ object Workspace {
   type Transport   [S <: Sys[S]] = proc.ProcTransport[S]
   type Transports  [S <: Sys[S]] = expr.List.Modifiable[S, Transport[S], Unit] // Transport.Update[ S, Proc[ S ]]]
 
+  def read (dir: File): Workspace[_] /* [~ forSome { type ~ <: SSys[~] }] */ = Impl.read(dir)
+
   object Confluent {
     def read (dir: File): Confluent = Impl.readConfluent (dir)
     def empty(dir: File): Confluent = Impl.emptyConfluent(dir)
   }
+
   trait Confluent extends Workspace[proc.Confluent] {
     type S = proc.Confluent
 
@@ -74,6 +77,8 @@ object Workspace {
 
 sealed trait Workspace[S <: Sys[S]] {
   import Workspace.{Group => _}
+
+  // type S1 = S
 
   implicit def system: S
   // implicit def cursor: Cursor[S]
