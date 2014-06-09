@@ -15,7 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{ProcGroupElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
+import de.sciss.synth.proc.{BooleanElem, ProcGroupElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -24,12 +24,12 @@ import de.sciss.lucre.stm
 import de.sciss.{desktop, mellite, lucre}
 import scala.util.Try
 import de.sciss.icons.raphael
-import de.sciss.synth.proc
+import de.sciss.synth.{Curve, proc}
 import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{deferTx, View}
 import de.sciss.file._
-import scala.swing.{Label, ComboBox, TextField, Component, Swing}
+import scala.swing.{CheckBox, Label, ComboBox, TextField, Component, Swing}
 import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
 import de.sciss.mellite.impl.CodeImpl.CodeElemImpl
 import de.sciss.swingplus.Spinner
@@ -40,7 +40,6 @@ import de.sciss.mellite.gui.edit.EditInsertObj
 import de.sciss.lucre.{event => evt}
 import proc.Implicits._
 import de.sciss.audiowidgets.AxisFormat
-import scala.Some
 import de.sciss.model.Change
 import scala.annotation.switch
 
@@ -49,7 +48,7 @@ object ObjViewImpl {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
   import mellite.{Recursion => _Recursion, Code => _Code}
-  import proc.{Folder => _Folder, ProcGroup => _ProcGroup, ArtifactLocation => _ArtifactLocation}
+  import proc.{Folder => _Folder, ProcGroup => _ProcGroup, ArtifactLocation => _ArtifactLocation, FadeSpec => _FadeSpec}
 
   private val sync = new AnyRef
 
@@ -62,21 +61,49 @@ object ObjViewImpl {
   def factories: Iterable[Factory] = map.values
 
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ObjView[S] = {
-    val f = map.get(obj.elem.typeID).getOrElse(sys.error(s"No view for object $obj")) // XXX TODO: provide generic view
-    f(obj.asInstanceOf[Obj.T[S, f.E]])
+    val tid = obj.elem.typeID
+    // getOrElse(sys.error(s"No view for type $tid"))
+    map.get(tid).fold(Generic(obj))(f => f(obj.asInstanceOf[Obj.T[S, f.E]]))
   }
 
   private var map = scala.Predef.Map[_Int, Factory](
     String          .typeID -> String,
     Int             .typeID -> Int,
     Double          .typeID -> Double,
+    Boolean         .typeID -> Boolean,
     AudioGrapheme   .typeID -> AudioGrapheme,
     ArtifactLocation.typeID -> ArtifactLocation,
     Recursion       .typeID -> Recursion,
     Folder          .typeID -> Folder,
     ProcGroup       .typeID -> ProcGroup,
-    Code            .typeID -> Code
+    Code            .typeID -> Code,
+    FadeSpec        .typeID -> FadeSpec
   )
+
+  // -------- Generic --------
+
+  object Generic {
+    val icon = raphaelIcon(raphael.Shapes.No)
+
+    def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ObjView[S] = {
+      val name = obj.attr.name
+      new Generic.Impl(tx.newHandle(obj), name)
+    }
+
+    private final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj[S]], var name: _String)
+      extends ObjView[S] with NonEditable[S] with NonViewable[S] {
+
+      def prefix: String = "Generic"
+
+      def value: Any = ()
+
+      def configureRenderer(label: Label): Component = label
+
+      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
+
+      def icon: Icon = Generic.icon
+    }
+  }
 
   // -------- String --------
 
@@ -254,6 +281,73 @@ object ObjViewImpl {
     }
   }
 
+  // -------- Boolean --------
+
+  object Boolean extends Factory {
+    type E[S <: evt.Sys[S]] = BooleanElem[S]
+    val icon    = raphaelIcon(Shapes.IntegerNumbers)
+    val prefix  = "Boolean"
+    def typeID  = ElemImpl.Boolean.typeID
+    type Init   = (_String, _Boolean)
+
+    def apply[S <: Sys[S]](obj: Obj.T[S, BooleanElem])(implicit tx: S#Tx): ObjView[S] = {
+      val name        = obj.attr.name
+      val ex          = obj.elem.peer
+      val value       = ex.value
+      val isEditable  = ex match {
+        case Expr.Var(_)  => true
+        case _            => false
+      }
+      new Boolean.Impl(tx.newHandle(obj), name, value, isEditable = isEditable)
+    }
+
+    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+      val expr      = ExprImplicits[S]
+      import expr._
+      val ggValue   = new CheckBox()
+      actionAddPrimitive[S, _Boolean](folderH, window, tpe = prefix, ggValue = ggValue,
+        prepare = Some(ggValue.selected)) { implicit tx =>
+        value => BooleanElem(lucre.expr.Boolean.newVar(value))
+      }
+    }
+
+    private final val ggCheckBox = new CheckBox()
+
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, BooleanElem]],
+                                  var name: _String, var value: _Boolean,
+                                  override val isEditable: _Boolean)
+      extends ObjView.Boolean[S]
+      with ObjViewImpl.Impl[S]
+      with ExprLike[S, _Boolean]
+      // with StringRenderer
+      with NonViewable[S] {
+
+      def prefix = Boolean.prefix
+      def icon   = Boolean.icon
+
+      def exprType = lucre.expr.Boolean
+
+      def expr(implicit tx: S#Tx) = obj().elem.peer
+
+      def convertEditValue(v: Any): Option[_Boolean] = v match {
+        case num: _Boolean  => Some(num)
+        case s: _String     => Try(s.toBoolean).toOption
+      }
+
+      def testValue(v: Any): Option[_Boolean] = v match {
+        case i: _Boolean  => Some(i)
+        case _            => None
+      }
+
+      def configureRenderer(label: Label): Component = {
+        ggCheckBox.selected   = value
+        ggCheckBox.background = label.background
+        ggCheckBox
+      }
+    }
+  }
+
   // -------- AudioGrapheme --------
 
   object AudioGrapheme extends Factory {
@@ -415,7 +509,7 @@ object ObjViewImpl {
       def prefix  = Recursion.prefix
       def value   = deployed
 
-      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
+      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false  // XXX TODO
 
       def isViewable = true
 
@@ -616,6 +710,66 @@ object ObjViewImpl {
 
       def configureRenderer(label: Label): Component = {
         label.text = value.contextName
+        label
+      }
+    }
+  }
+
+  // -------- FadeSpec --------
+
+  object FadeSpec extends Factory {
+    type E[S <: evt.Sys[S]] = _FadeSpec.Elem[S]
+    val icon            = raphaelIcon(raphael.Shapes.Up)
+    val prefix          = "FadeSpec"
+    def typeID          = ElemImpl.FadeSpec.typeID
+    type Init           = Unit
+
+    def apply[S <: Sys[S]](obj: Obj.T[S, _FadeSpec.Elem])(implicit tx: S#Tx): ObjView[S] = {
+      val name    = obj.attr.name
+      val value   = obj.elem.peer.value
+      new FadeSpec.Impl(tx.newHandle(obj), name, value)
+    }
+
+    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+      None
+//      val ggShape = new ComboBox()
+//      Curve.cubed
+//      val ggValue = new ComboBox(Seq(_Code.FileTransform.name, _Code.SynthGraph.name))
+//      actionAddPrimitive(folderH, window, tpe = prefix, ggValue = ggValue, prepare = ???
+//      ) { implicit tx =>
+//        value =>
+//          val peer = _FadeSpec.Expr(numFrames, shape, floor)
+//          _FadeSpec.Elem(peer)
+//      }
+    }
+
+    private val timeFmt = AxisFormat.Time(hours = false, millis = true)
+
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]],
+                                  var name: _String, var value: _FadeSpec)
+      extends ObjView.FadeSpec[S]
+      with ObjViewImpl.Impl[S]
+      with NonEditable[S]
+      with NonViewable[S] {
+
+      def icon    = FadeSpec.icon
+      def prefix  = FadeSpec.prefix
+
+      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
+        case Change(_, valueNew: _FadeSpec) =>
+          deferTx {
+            value = valueNew
+          }
+          true
+        case _ => false
+      }
+
+
+      def configureRenderer(label: Label): Component = {
+        val sr = 44100.0 // XXX TODO - damn, how to determine this?
+        val dur = timeFmt.format(value.numFrames.toDouble / sr)
+        label.text = s"$dur, ${value.curve}"
         label
       }
     }

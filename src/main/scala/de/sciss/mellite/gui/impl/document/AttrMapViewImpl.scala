@@ -18,11 +18,11 @@ package document
 import de.sciss.synth.proc.{StringElem, ProcKeys, Obj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.impl.ComponentHolder
-import scala.swing.{ScrollPane, Table}
+import scala.swing.{Label, Component, Swing, ScrollPane, Table}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.synth.Sys
-import javax.swing.table.AbstractTableModel
+import javax.swing.table.{DefaultTableCellRenderer, TableColumnModel, AbstractTableModel}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.annotation.switch
 import de.sciss.lucre.stm.Disposable
@@ -30,6 +30,8 @@ import scala.concurrent.stm.TMap
 import de.sciss.model.Change
 import scala.swing.event.TableColumnsSelected
 import de.sciss.model.impl.ModelImpl
+import Swing._
+import javax.swing.JTable
 
 object AttrMapViewImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
@@ -165,18 +167,81 @@ object AttrMapViewImpl {
         case 2 => "Value"
       }
 
-      def getValueAt(row: Int, col: Int): AnyRef = (col: @switch) match {
-        case 0 => model(row)._1
-        case 1 => model(row)._2.name
-        case 2 => model(row)._2.value.asInstanceOf[AnyRef]
+      def getValueAt(row /* rowView */: Int, col: Int): AnyRef = {
+        // val row = tab.peer.convertRowIndexToModel(rowView)
+        (col: @switch) match {
+          case 0 => model(row)._1
+          case 1 => model(row)._2 // .name
+          case 2 => model(row)._2 // .value.asInstanceOf[AnyRef]
+        }
       }
+
+      override def getColumnClass(col: Int): Class[_] = (col: @switch) match {
+        case 0 => classOf[String]
+        case 1 => classOf[ObjView[S]]
+        case 2 => classOf[ObjView[S]]
+      }
+
+      // override def isCellEditable(row: Int, col: Int): Boolean = col == 0 || model(row)._2.isEditable
+    }
+
+    private def setColumnWidth(tcm: TableColumnModel, idx: Int, w: Int): Unit = {
+      val tc = tcm.getColumn(idx)
+      tc.setPreferredWidth(w)
+      // tc.setMaxWidth(w)
     }
 
     final protected def guiInit(): Unit = {
-      tab         = new Table
-      tab.model   = tableModel
-      val scroll  = new ScrollPane(tab)
-      component   = scroll
+      tab = new Table {
+        // Table default has idiotic renderer/editor handling
+        override lazy val peer: JTable = new JTable /* with Table.JTableMixin */ with SuperMixin
+      }
+      tab.model     = tableModel
+      val jt        = tab.peer
+      jt.setAutoCreateRowSorter(true)
+      val tcm       = jt.getColumnModel
+      setColumnWidth(tcm, 0, 48)
+      setColumnWidth(tcm, 1, 64)
+      setColumnWidth(tcm, 2, 128)
+      jt.setPreferredScrollableViewportSize(240 -> 160)
+      tcm.getColumn(1).setCellRenderer(new DefaultTableCellRenderer {
+        outer =>
+        private val wrap = new Label { override lazy val peer = outer }
+
+        override def setValue(value: Any): Unit = value match {
+          case view: ObjView[_] =>
+            wrap.text = if (view.name == "<unnamed>") "" else view.name
+            wrap.icon = view.icon
+          case _ =>
+        }
+
+        //        override def getTableCellRendererComponent(table: JTable, value: Any, isSelected: Boolean,
+        //                                                   hasFocus: Boolean, row: Int, column: Int): java.awt.Component = {
+        //          super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column)
+        //          value match {
+        //            case view: ObjView[_] =>
+        //              wrap.text = view.name
+        //              wrap.icon = view.icon
+        //            case _ =>
+        //          }
+        //          outer
+        //        }
+      })
+      tcm.getColumn(2).setCellRenderer(new DefaultTableCellRenderer {
+        outer =>
+        private val wrap = new Label { override lazy val peer = outer }
+        override def getTableCellRendererComponent(table: JTable, value: Any, isSelected: Boolean,
+                                                   hasFocus: Boolean, row: Int, column: Int): java.awt.Component = {
+          super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column)
+          value match {
+            case view: ObjView[_] => view.configureRenderer(wrap).peer
+            case _ => outer
+          }
+        }
+      })
+      val scroll    = new ScrollPane(tab)
+      scroll.border = null
+      component     = scroll
       tab.listenTo(tab.selection)
       tab.reactions += {
         case TableColumnsSelected(_, _, _) => // note: range is range of _changes_ rows, not current selection

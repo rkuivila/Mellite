@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{ProcGroupElem, Elem, FolderElem, AudioGraphemeElem, Obj, DoubleElem, IntElem, StringElem, Grapheme}
+import de.sciss.synth.proc.{BooleanElem, ProcGroupElem, Elem, FolderElem, AudioGraphemeElem, Obj, DoubleElem, IntElem, StringElem, Grapheme}
 import de.sciss.lucre.stm
 import java.io.File
 import javax.swing.Icon
@@ -32,7 +32,7 @@ object ObjView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
   import mellite.{Code => _Code, Recursion => _Recursion}
-  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, ProcGroup => _ProcGroup}
+  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, ProcGroup => _ProcGroup, FadeSpec => _FadeSpec}
 
   trait Factory {
     def prefix: _String
@@ -73,6 +73,12 @@ object ObjView {
     def obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]]
   }
 
+  val Boolean: Factory { type E[S <: evt.Sys[S]] = BooleanElem[S] } = Impl.Boolean
+  trait Boolean[S <: Sys[S]] extends ObjView[S] {
+    def obj: stm.Source[S#Tx, Obj.T[S, BooleanElem]]
+    def value: _Boolean
+  }
+
   val AudioGrapheme: Factory { type E[S <: evt.Sys[S]] = AudioGraphemeElem[S] /* ; type Init = File */ } =
     Impl.AudioGrapheme
 
@@ -107,8 +113,14 @@ object ObjView {
 
   val Code: Factory { type E[S <: evt.Sys[S]] = _Code.Elem[S] } = Impl.Code
   trait Code[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, mellite.Code.Elem]]
+    def obj: stm.Source[S#Tx, Obj.T[S, _Code.Elem]]
     def value: _Code
+  }
+
+  val FadeSpec: Factory { type E[S <: evt.Sys[S]] = _FadeSpec.Elem[S] } = Impl.FadeSpec
+  trait FadeSpec[S <: Sys[S]] extends ObjView[S] {
+    def obj: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]]
+    def value: _FadeSpec
   }
 }
 trait ObjView[S <: Sys[S]] {

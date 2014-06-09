@@ -1,13 +1,14 @@
 AttrMapView
 
-- FadeSpec -> 'missing view'
-- Value updates not reflected (e.g. gain change)
-- Drag-and-drop
-- Title
-- Icon/Type
-- custom ObjView renderers
-- editable
-- sortable columns
+[OK]    - FadeSpec -> missing view
+[OK]    - Boolean  -> missing view
+        - Value updates not reflected (e.g. gain change)
+        - Drag-and-drop
+        - Title
+[OK]    - Icon/Type
+[OK]    - custom ObjView renderers
+        - editable
+[OK]    - sortable columns
 
 ElementsView
 
@@ -21,3 +22,6 @@ TimelineView
 
 - rename not reflected
 
+General
+
+- use sample rate 14112000 throughout

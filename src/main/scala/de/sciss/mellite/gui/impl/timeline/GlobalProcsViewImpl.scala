@@ -18,13 +18,13 @@ package timeline
 
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.ProcGroup
-import scala.swing.{Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
+import scala.swing.{Action, Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import javax.swing.table.{TableColumnModel, AbstractTableModel}
 import scala.annotation.switch
 import Swing._
 import de.sciss.desktop.OptionPane
-import javax.swing.{JComponent, TransferHandler, DropMode}
+import javax.swing.{JTable, JComponent, TransferHandler, DropMode}
 import javax.swing.TransferHandler.TransferSupport
 import java.awt.datatransfer.Transferable
 import scala.swing.event.TableColumnsSelected
@@ -34,6 +34,7 @@ import de.sciss.lucre.expr.{Int => IntEx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing._
 import de.sciss.file.File
+import de.sciss.icons.raphael
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](document: File /* Document[S] */, group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
@@ -84,9 +85,9 @@ object GlobalProcsViewImpl {
       def getRowCount     = procSeq.size
       def getColumnCount  = 4
 
-      def getValueAt(row: Int, column: Int): AnyRef = {
+      def getValueAt(row: Int, col: Int): AnyRef = {
         val pv  = procSeq(row)
-        val res = (column: @switch) match {
+        val res = (col: @switch) match {
           case 0 => pv.name
           case 1 => pv.gain
           case 2 => pv.muted
@@ -95,11 +96,11 @@ object GlobalProcsViewImpl {
         res.asInstanceOf[AnyRef]
       }
 
-      override def isCellEditable(row: Int, column: Int): Boolean = true
+      override def isCellEditable(row: Int, col: Int): Boolean = true
 
-      override def setValueAt(value: Any, row: Int, column: Int): Unit = {
+      override def setValueAt(value: Any, row: Int, col: Int): Unit = {
         val pv = procSeq(row)
-        (column, value) match {
+        (col, value) match {
           case (0, name: String) =>
             atomic { implicit tx =>
               ProcActions.rename(pv.proc, if (name.isEmpty) None else Some(name))
@@ -127,12 +128,19 @@ object GlobalProcsViewImpl {
         }
       }
 
-      override def getColumnName(column: Int): String = (column: @switch) match {
+      override def getColumnName(col: Int): String = (col: @switch) match {
         case 0 => "Name"
         case 1 => "Gain"
         case 2 => "M" // short because column only uses checkbox
         case 3 => "Bus"
-        case other => super.getColumnName(column)
+        // case other => super.getColumnName(col)
+      }
+
+      override def getColumnClass(col: Int): Class[_] = (col: @switch) match {
+        case 0 => classOf[String]
+        case 1 => classOf[Double]
+        case 2 => classOf[Boolean]
+        case 3 => classOf[Int]
       }
     }
 
@@ -163,26 +171,30 @@ object GlobalProcsViewImpl {
 
     def guiInit(): Unit = {
       table             = new Table()
-      table.peer.putClientProperty("JComponent.sizeVariant", "small")
+      // XXX TODO: enable the following - but we're loosing default boolean rendering
+      //        // Table default has idiotic renderer/editor handling
+      //        override lazy val peer: JTable = new JTable /* with Table.JTableMixin */ with SuperMixin
+      //      }
       table.model       = tm
       // table.background  = Color.darkGray
       val jt            = table.peer
       jt.setAutoCreateRowSorter(true)
+      // jt.putClientProperty("JComponent.sizeVariant", "small")
+      // jt.getRowSorter.setSortKeys(...)
       //      val tcm = new DefaultTableColumnModel {
       //
       //      }
       val tcm = jt.getColumnModel
-      setColumnWidth(tcm, 0, 48)
-      setColumnWidth(tcm, 1, 32)
-      setColumnWidth(tcm, 2, 16)
-      setColumnWidth(tcm, 3, 24)
-      val tj = table.peer
-      tj.setPreferredScrollableViewportSize(124 -> 100)
+      setColumnWidth(tcm, 0, 55)
+      setColumnWidth(tcm, 1, 47)
+      setColumnWidth(tcm, 2, 29)
+      setColumnWidth(tcm, 3, 43)
+      jt.setPreferredScrollableViewportSize(177 -> 100)
 
       // ---- drag and drop ----
-      tj.setDropMode(DropMode.ON)
-      tj.setDragEnabled(true)
-      tj.setTransferHandler(new TransferHandler {
+      jt.setDropMode(DropMode.ON)
+      jt.setDragEnabled(true)
+      jt.setTransferHandler(new TransferHandler {
         override def getSourceActions(c: JComponent): Int = TransferHandler.LINK
 
         override def createTransferable(c: JComponent): Transferable = {
@@ -199,7 +211,7 @@ object GlobalProcsViewImpl {
 
         override def importData(support: TransferSupport): Boolean =
           support.isDataFlavorSupported(timeline.DnD.flavor) && {
-            Option(tj.getDropLocation).fold(false) { dl =>
+            Option(jt.getDropLocation).fold(false) { dl =>
               val pv    = procSeq(dl.getRow)
               val drag  = support.getTransferable.getTransferData(timeline.DnD.flavor).asInstanceOf[timeline.DnD.Drag[S]]
               drag match {
@@ -225,18 +237,20 @@ object GlobalProcsViewImpl {
       val scroll    = new ScrollPane(table)
       scroll.border = null
 
-      val ggAdd = Button("+")(addItemWithDialog())
-      ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
+      val actionAdd = Action(null)(addItemWithDialog())
+      val ggAdd: Button = GUI.toolButton(actionAdd, raphael.Shapes.Plus, "Add Global Process")
+      // ggAdd.peer.putClientProperty("JButton.buttonType", "roundRect")
 
-      val ggDelete: Button = Button("\u2212") {
+      val actionDelete = Action(null) {
         val pvs = table.selection.rows.map(procSeq)
         removeProcs(pvs)
       }
-      ggDelete.enabled = false
-      ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
+      val ggDelete: Button = GUI.toolButton(actionDelete, raphael.Shapes.Minus, "Delete Global Process")
+      actionDelete.enabled = false
+      // ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
       table.listenTo(table.selection)
       table.reactions += {
-        case TableColumnsSelected(_, range, _) => ggDelete.enabled = range.nonEmpty
+        case TableColumnsSelected(_, range, _) => actionDelete.enabled = range.nonEmpty
       }
 
       val butPanel  = new FlowPanel(ggAdd, ggDelete)
