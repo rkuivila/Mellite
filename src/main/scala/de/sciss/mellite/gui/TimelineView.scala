@@ -22,7 +22,7 @@ import de.sciss.audiowidgets.TimelineModel
 import de.sciss.lucre.synth.Sys
 
 object TimelineView {
-  def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](document: Workspace[S], group: Obj.T[S, ProcGroupElem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineView[S] =
     Impl[S](document, group)
 }

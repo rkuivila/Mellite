@@ -41,7 +41,7 @@ object RecursionFrameImpl {
     def sameFiles: Boolean = deployed != product
   }
 
-  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, Recursion.Elem])
+  def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, Recursion.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] = {
     new Impl[S] {
       val document  = doc

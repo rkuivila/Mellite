@@ -22,7 +22,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.View
 
 object InstantGroupPanel {
-  def apply[S <: Sys[S]](document: Document[S], transport: ProcTransport[S])
+  def apply[S <: Sys[S]](document: Workspace[S], transport: ProcTransport[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] =
     Impl(document, transport)
 }

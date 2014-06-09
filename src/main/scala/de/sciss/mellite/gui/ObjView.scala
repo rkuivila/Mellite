@@ -175,5 +175,5 @@ trait ObjView[S <: Sys[S]] {
     *
     * TODO: should have optional window argument
     */
-  def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]]
+  def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]]
 }

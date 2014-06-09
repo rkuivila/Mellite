@@ -21,13 +21,13 @@ import de.sciss.lucre.swing._
 
 object DocumentViewHandler {
   lazy val instance: DocumentViewHandler = new DocumentViewHandler {
-    private var map = Map.empty[Document[_], Vec[DocumentView[_]]] withDefaultValue Vec.empty
+    private var map = Map.empty[Workspace[_], Vec[DocumentView[_]]] withDefaultValue Vec.empty
 
     Desktop.addListener {
-      case Desktop.OpenFiles(_, files) => files.foreach(ActionOpenFile.perform)
+      case Desktop.OpenFiles(_, files) => files.foreach(ActionOpenWorkspace.perform)
     }
 
-    def apply[S <: Sys[S]](document: Document[S]): Iterator[DocumentView[S]] = {
+    def apply[S <: Sys[S]](document: Workspace[S]): Iterator[DocumentView[S]] = {
       requireEDT()
       map(document).iterator.asInstanceOf[Iterator[DocumentView[S]]]
     }
@@ -47,7 +47,7 @@ object DocumentViewHandler {
   }
 }
 trait DocumentViewHandler /* extends Model... */ {
-  def apply [S <: Sys[S]](document: Document[S]): Iterator[DocumentView[S]]
+  def apply [S <: Sys[S]](document: Workspace[S]): Iterator[DocumentView[S]]
   def add   [S <: Sys[S]](view: DocumentView[S]): Unit
   def remove[S <: Sys[S]](view: DocumentView[S]): Unit
 }

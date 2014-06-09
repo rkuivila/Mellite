@@ -29,6 +29,6 @@ object TransportView {
 }
 
 trait TransportView[S <: Sys[S]] extends View[S] {
-  def transport /* ( implicit tx: S#Tx ) */ : Document.Transport[S]
+  def transport /* ( implicit tx: S#Tx ) */ : Workspace.Transport[S]
   def timelineModel: TimelineModel
 }

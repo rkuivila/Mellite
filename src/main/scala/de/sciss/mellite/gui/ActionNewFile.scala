@@ -15,10 +15,10 @@ package de.sciss.mellite
 package gui
 
 import swing.{Dialog, Action}
-import java.io.File
 import de.sciss.desktop.{FileDialog, KeyStrokes}
 import util.control.NonFatal
 import scala.swing.event.Key
+import de.sciss.file._
 
 object ActionNewFile extends Action("Workspace...") {
   import KeyStrokes._
@@ -38,7 +38,7 @@ object ActionNewFile extends Action("Workspace...") {
   def apply(): Unit =
     FileDialog.save(title = "Location for New Document").show(None).foreach { folder0 =>
       val name    = folder0.getName
-      val folder  = if (name.endsWith(".mllt")) folder0 else new File(folder0.getParentFile, name + ".mllt")
+      val folder  = if (name.endsWith(s".${Workspace.ext}")) folder0 else folder0.parent / s"$name.${Workspace.ext}"
       if (folder.exists()) {
         if (Dialog.showConfirmation(
           message     = s"Document ${folder.getPath} already exists.\nAre you sure you want to overwrite it?",
@@ -58,9 +58,9 @@ object ActionNewFile extends Action("Workspace...") {
       }
 
       try {
-        val doc = Document.empty(folder)
+        val doc = Workspace.Confluent.empty(folder)
         // XXX TODO: SetFile -a E <folder>
-        ActionOpenFile.openGUI(doc)
+        ActionOpenWorkspace.openGUI(doc)
 
       } catch {
         case NonFatal(e) =>

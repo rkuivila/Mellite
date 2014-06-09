@@ -24,12 +24,12 @@ import de.sciss.desktop.Window
 import de.sciss.lucre.swing.View
 
 object CodeFrame {
-  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, Code.Elem])
+  def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, Code.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): CodeFrame[S] =
     Impl(doc, obj)
 }
 
 trait CodeFrame[S <: Sys[S]] extends View[S] {
   def window   : Window
-  def document : Document[S]
+  def document : Workspace[S]
 }

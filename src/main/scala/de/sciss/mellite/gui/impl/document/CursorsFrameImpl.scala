@@ -38,7 +38,7 @@ object CursorsFrameImpl {
   type S = proc.Confluent
   type D = S#D
 
-  def apply(document: ConfluentDocument)(implicit tx: D#Tx): DocumentCursorsFrame = {
+  def apply(document: Workspace.Confluent)(implicit tx: D#Tx): DocumentCursorsFrame = {
     val root      = document.cursors
     val rootView  = createView(document, parent = None, elem = root)
     val view      = new Impl(document, rootView)(tx.system)
@@ -58,7 +58,7 @@ object CursorsFrameImpl {
     view
   }
 
-  private def createView(document: ConfluentDocument, parent: Option[CursorView], elem: Cursors[S, D])
+  private def createView(document: Workspace.Confluent, parent: Option[CursorView], elem: Cursors[S, D])
                         (implicit tx: D#Tx): CursorView = {
     import document._
     val name    = elem.name.value
@@ -72,7 +72,7 @@ object CursorsFrameImpl {
                                  var children: Vec[CursorView], var name: String,
                                  val created: Long, var updated: Long)
 
-  private final class Impl(val document: ConfluentDocument, _root: CursorView)(implicit cursor: stm.Cursor[D])
+  private final class Impl(val document: Workspace.Confluent, _root: CursorView)(implicit cursor: stm.Cursor[D])
     extends DocumentCursorsFrame with ComponentHolder[desktop.Window] with DocumentCursorsView {
 
     type Node = CursorView

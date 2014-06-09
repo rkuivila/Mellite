@@ -41,7 +41,7 @@ import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.synth.proc
 
 object PanelImpl {
-  def apply[S <: Sys[S]](document: Document[S], transport: ProcTransport[S])
+  def apply[S <: Sys[S]](document: Workspace[S], transport: ProcTransport[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] = {
 
     //      require( EventQueue.isDispatchThread, "VisualInstantPresentation.apply must be called on EDT" )

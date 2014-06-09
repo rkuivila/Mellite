@@ -31,7 +31,7 @@ import proc.Implicits._
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 
 object FrameImpl {
-  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroupElem] /*, transport: Document.Transport[S] */)
+  def apply[S <: Sys[S]](document: Workspace[S], obj: Obj.T[S, ProcGroupElem] /*, transport: Document.Transport[S] */)
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupFrame[S] = {
     val sampleRate        = 44100.0   // XXX TODO
     val group             = obj.elem.peer
@@ -54,7 +54,7 @@ object FrameImpl {
   private final class Impl[S <: Sys[S]](val view      : InstantGroupPanel[S],
                                         transportPanel: TransportView[S],
                                         groupH        : Source[S#Tx, ProcGroup[S]], // Document.Group[S]],
-                                        val transport : Document.Transport[S],
+                                        val transport : Workspace.Transport[S],
                                         name          : String)
                                        (implicit protected val cursor: Cursor[S])
     extends InstantGroupFrame[S] with WindowHolder[desktop.Window] with CursorHolder[S] {

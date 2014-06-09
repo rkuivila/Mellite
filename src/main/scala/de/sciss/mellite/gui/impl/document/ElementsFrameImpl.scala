@@ -33,7 +33,7 @@ import proc.FolderElem
 import de.sciss.mellite.gui.impl.component.CollectionFrameImpl
 
 object ElementsFrameImpl {
-  def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Document[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
+  def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Workspace[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
                                         cursor: stm.Cursor[S], bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl {
       protected var dirty: Boolean = false
@@ -57,7 +57,7 @@ object ElementsFrameImpl {
     view
   }
 
-  private abstract class Impl[S <: Sys[S], S1 <: Sys[S1]](document: Document[S], val contents: FolderView[S])
+  private abstract class Impl[S <: Sys[S], S1 <: Sys[S1]](document: Workspace[S], val contents: FolderView[S])
                                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager,
                                         bridge: S#Tx => S1#Tx)
     extends CollectionFrameImpl[S, S1](document, file = Some(document.folder), frameY = 0f)

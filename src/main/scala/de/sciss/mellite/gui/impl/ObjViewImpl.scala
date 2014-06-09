@@ -403,7 +403,7 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
+      def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
         val frame = AudioFileFrame(document, obj())
         Some(frame)
       }
@@ -513,7 +513,7 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
+      def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
         val frame = RecursionFrame(document, obj())
         Some(frame)
       }
@@ -619,7 +619,7 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
+      def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
         val message = s"<html><b>Select View Type for $name:</b></html>"
         val entries = Seq("Timeline View", "Real-time View", "Cancel")
         val opt = OptionPane(message = message, optionType = OptionPane.Options.YesNoCancel,
@@ -703,7 +703,7 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
+      def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
         val frame = CodeFrame(document, obj())
         Some(frame)
       }
@@ -820,7 +820,7 @@ object ObjViewImpl {
   trait NonViewable[S <: Sys[S]] {
     def isViewable: Boolean = false
 
-    def openView(document: Document[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = None
+    def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = None
   }
 
   trait EmptyRenderer {

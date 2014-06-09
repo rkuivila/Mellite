@@ -24,7 +24,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.icons.raphael
 import de.sciss.lucre.swing.{View, deferTx, requireEDT}
 
-abstract class CollectionFrameImpl[S <: Sys[S], S1 <: Sys[S1]](val document: Document[S],
+abstract class CollectionFrameImpl[S <: Sys[S], S1 <: Sys[S1]](val document: Workspace[S],
                                                                file: Option[File] = None,
                                                                frameX: Float = 0.5f, frameY: Float = 0.5f)
                                                               (implicit val cursor: stm.Cursor[S],

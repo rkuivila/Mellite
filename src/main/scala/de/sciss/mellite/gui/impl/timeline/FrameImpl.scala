@@ -17,7 +17,7 @@ package impl
 package timeline
 
 import de.sciss.synth.proc.{ProcGroupElem, Obj, ProcGroup}
-import de.sciss.mellite.Document
+import de.sciss.mellite.Workspace
 import de.sciss.lucre.stm
 import de.sciss.desktop.{KeyStrokes, Menu, OptionPane, Window}
 import scala.swing.event.Key
@@ -29,7 +29,7 @@ import de.sciss.synth.proc
 import proc.Implicits._
 
 object FrameImpl {
-  def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](document: Workspace[S], group: Obj.T[S, ProcGroupElem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineFrame[S] = {
     val tlv     = TimelineView[S](document, group)
     val name    = group.attr.name
@@ -71,11 +71,11 @@ object FrameImpl {
         contents    = view.component
 
         bindMenus(
-          "file.bounce"           -> view.bounceAction,
-          "edit.delete"           -> view.deleteAction,
-          "actions.stopAllSound"  -> view.stopAllSoundAction,
+          "file.bounce"             -> view.bounceAction,
+          "edit.delete"             -> view.deleteAction,
+          "actions.stop-all-sound"  -> view.stopAllSoundAction,
           // "timeline.splitObjects" -> view.splitObjectsAction,
-          "actions.debugPrint"    -> Action(null) {
+          "actions.debug-print"     -> Action(null) {
             val it = view.procSelectionModel.iterator
             if (it.hasNext)
               it.foreach { pv =>
@@ -111,22 +111,22 @@ object FrameImpl {
         import KeyStrokes._
         private val mTimeline = Group("timeline", "Timeline")
           // .add(Item("trimToSelection",    proxy("Trim to Selection",        (menu1 + Key.F5))))
-          .add(Item("insertSpan",         proxy("Insert Span...",           menu1 + shift + Key.E)))
-          .add(Item("clearSpan",          proxy("Clear Selected Span",      menu1 + Key.BackSlash)))
-          .add(Item("removeSpan",         proxy("Remove Selected Span",     menu1 + shift + Key.BackSlash)))
-          .add(Item("dupSpanToPos",       "Duplicate Span to Cursor"))
+          .add(Item("insert-span",        proxy("Insert Span...",           menu1 + shift + Key.E)))
+          .add(Item("clear-span",         proxy("Clear Selected Span",      menu1 + Key.BackSlash)))
+          .add(Item("remove-span",        proxy("Remove Selected Span",     menu1 + shift + Key.BackSlash)))
+          .add(Item("dup-span-to-pos",    "Duplicate Span to Cursor"))
           .addLine()
-          .add(Item("nudgeAmount",        "Nudge Amount..."))
-          .add(Item("nudgeLeft",          proxy("Nudge Objects Backward",   plain + Key.Minus)))
-          .add(Item("nudgeRight",         proxy("Nudge Objects Forward",    plain + Key.Plus)))
+          .add(Item("nudge-amount",       "Nudge Amount..."))
+          .add(Item("nudge-left",         proxy("Nudge Objects Backward",   plain + Key.Minus)))
+          .add(Item("nudge-right",        proxy("Nudge Objects Forward",    plain + Key.Plus)))
           .addLine()
-          .add(Item("selectFollowing",    proxy("Select Following Objects", menu2 + Key.F)))
-          .add(Item("alignObjStartToPos", "Align Objects Start To Cursor"))
+          .add(Item("select-following",   proxy("Select Following Objects", menu2 + Key.F)))
+          .add(Item("align-obj-start-to-pos", "Align Objects Start To Cursor"))
           // .add(Item("splitObjects",       proxy("Split Selected Objects",   menu2 + Key.Y)))
-          .add(Item("splitObjects", view.splitObjectsAction))
+          .add(Item("split-objects", view.splitObjectsAction))
           .addLine()
-          .add(Item("selStopToStart",     "Flip Selection Backward"))
-          .add(Item("selStartToStop",     "Flip Selection Forward"))
+          .add(Item("sel-stop-to-start",     "Flip Selection Backward"))
+          .add(Item("sel-start-to-stop",     "Flip Selection Forward"))
 
         handler.menuFactory.add(Some(this), mTimeline)
 

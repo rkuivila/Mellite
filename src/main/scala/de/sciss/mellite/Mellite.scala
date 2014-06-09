@@ -26,7 +26,7 @@ import com.alee.laf.progressbar.WebProgressBarStyle
 import java.awt.Color
 
 object Mellite extends SwingApplicationImpl("Mellite") {
-  type Document = mellite.Document[_ <: Sys[_]]
+  type Document = mellite.Workspace[_ <: Sys[_]]
 
   // lucre.event    .showLog = true
   // lucre.confluent.showLog = true
@@ -57,7 +57,6 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     // ---- type extensions ----
 
     mellite.initTypes()
-    de.sciss.lucre.synth.expr.initTypes()
 
     // ---- look and feel
 

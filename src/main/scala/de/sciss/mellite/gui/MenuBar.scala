@@ -30,10 +30,10 @@ object MenuBar {
         .add(Item("new-doc", ActionNewFile))
         .add(Item("repl",    InterpreterFrame.Action))
       )
-      .add(Item("open", ActionOpenFile))
-      .add(ActionOpenFile.recentMenu)
+      .add(Item("open", ActionOpenWorkspace))
+      .add(ActionOpenWorkspace.recentMenu)
       .add(Item("close",              proxy("Close",                    menu1 + Key.W)))
-      .add(Item("closeAll",           "Close All"))
+      .add(Item("close-all",          "Close All"))
       .addLine()
       .add(Item("bounce",             proxy("Bounce...",                menu1 + Key.B)))
       // .add(Item("bounce-transform",   proxy("Bounce And Transform...",  (menu1 + shift + Key.B))))
@@ -50,14 +50,14 @@ object MenuBar {
       .add(Item("paste",              proxy("Paste",                    menu1 + Key.V)))
       .add(Item("delete",             proxy("Delete",                   plain + Key.BackSpace)))
       .addLine()
-      .add(Item("selectAll",          proxy("Select All",               menu1 + Key.A)))
+      .add(Item("select-all",         proxy("Select All",               menu1 + Key.A)))
 
     if (itPrefs.visible /* && Desktop.isLinux */) mEdit.addLine().add(itPrefs)
 
     val mActions = Group("actions", "Actions")
-      .add(Item("stopAllSound",       proxy("Stop All Sound",           menu1 + Key.Period)))
-      .add(Item("debugPrint",         proxy("Debug Print",              menu2 + Key.P)))
-      .add(Item("windowShot",         proxy("Export Window as PDF...")))
+      .add(Item("stop-all-sound",     proxy("Stop All Sound",           menu1 + Key.Period)))
+      .add(Item("debug-print",        proxy("Debug Print",              menu2 + Key.P)))
+      // .add(Item("window-shot",        proxy("Export Window as PDF...")))
 
     //    // --- timeline menu ---
     //    val mTimeline = Group("timeline", "Timeline")

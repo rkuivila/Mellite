@@ -21,12 +21,12 @@ import synth.proc
 object DocumentCursorsFrame {
   type S = proc.Confluent
   type D = S#D
-  def apply(document: ConfluentDocument)(implicit tx: D#Tx): DocumentCursorsFrame = Impl(document)
+  def apply(document: Workspace.Confluent)(implicit tx: D#Tx): DocumentCursorsFrame = Impl(document)
 }
 trait DocumentCursorsFrame /* [S <: Sys[S]] */ {
   def component: desktop.Window
   def view: DocumentCursorsView
-  def document : ConfluentDocument // Document[S]
+  def document : Workspace.Confluent // Document[S]
 }
 
 trait DocumentCursorsView extends DocumentView[DocumentCursorsFrame.S]

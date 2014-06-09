@@ -22,7 +22,7 @@ import de.sciss.desktop
 import de.sciss.lucre.synth.Sys
 
 object AttrMapFrame {
-  def apply[S <: Sys[S]](document: Document[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): AttrMapFrame[S] =
+  def apply[S <: Sys[S]](document: Workspace[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): AttrMapFrame[S] =
     Impl(document, obj)
 }
 trait AttrMapFrame[S <: Sys[S]] extends View[S] {

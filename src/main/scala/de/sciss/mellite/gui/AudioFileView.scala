@@ -23,7 +23,7 @@ import de.sciss.file.File
 import de.sciss.lucre.swing.View
 
 object AudioFileView {
-  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, AudioGraphemeElem])
+  def apply[S <: Sys[S]](document: Workspace[S], obj: Obj.T[S, AudioGraphemeElem])
                         (implicit tx: S#Tx, aural: AuralSystem): AudioFileView[S] =
     Impl(document, obj)
 }

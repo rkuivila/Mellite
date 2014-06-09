@@ -1,5 +1,5 @@
 /*
- *  Document.scala
+ *  Workspace.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
@@ -17,14 +17,18 @@ import java.io.File
 import de.sciss.lucre.{expr, event => evt, bitemp, stm}
 import bitemp.BiGroup
 import de.sciss.synth.proc
-import impl.{DocumentImpl => Impl}
-import de.sciss.synth.proc.{Obj, Elem, Folder, Proc}
+import impl.{WorkspaceImpl => Impl}
+import de.sciss.synth.proc.{Obj, Folder, Proc}
 import de.sciss.serial.Serializer
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.synth.{Sys => SSys}
+import de.sciss.lucre.stm.Disposable
 
-object Document {
+object Workspace {
+  /** File name extension (excluding leading period) */
+  final val ext = "mllt"
+
   type Group       [S <: Sys[S]] = BiGroup.Modifiable   [S, Proc[S], Proc.Update[S]]
   type GroupUpdate [S <: Sys[S]] = BiGroup.Update       [S, Proc[S], Proc.Update[S]]
 
@@ -34,8 +38,31 @@ object Document {
   type Transport   [S <: Sys[S]] = proc.ProcTransport[S]
   type Transports  [S <: Sys[S]] = expr.List.Modifiable[S, Transport[S], Unit] // Transport.Update[ S, Proc[ S ]]]
 
-  def read (dir: File): ConfluentDocument = Impl.read (dir)
-  def empty(dir: File): ConfluentDocument = Impl.empty(dir)
+  object Confluent {
+    def read (dir: File): Confluent = Impl.readConfluent (dir)
+    def empty(dir: File): Confluent = Impl.emptyConfluent(dir)
+  }
+  trait Confluent extends Workspace[proc.Confluent] {
+    type S = proc.Confluent
+
+    // have to restate this for some reason?
+    // cf. http://stackoverflow.com/questions/16495522/pattern-matching-refuses-to-recognize-member-type-value-x-is-not-a-member-of-2
+    // def system: S
+
+    def cursors: Cursors[S, S#D]
+  }
+  
+  object Ephemeral {
+    def read (dir: File): Ephemeral = Impl.readEphemeral (dir)
+    def empty(dir: File): Ephemeral = Impl.emptyEphemeral(dir)
+  }
+  trait Ephemeral extends Workspace[proc.Durable] {
+    type S = proc.Durable
+
+    // def system: S
+
+    def cursor: stm.Cursor[S] = system
+  }
 
   object Serializers {
     implicit def group[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Group[S]] with evt.Reader[S, Group[S]] = {
@@ -45,8 +72,8 @@ object Document {
   }
 }
 
-sealed trait Document[S <: Sys[S]] {
-  import Document.{Group => _}
+sealed trait Workspace[S <: Sys[S]] {
+  import Workspace.{Group => _}
 
   implicit def system: S
   // implicit def cursor: Cursor[S]
@@ -67,22 +94,11 @@ sealed trait Document[S <: Sys[S]] {
   def collectObjects[A](pf: PartialFunction[Obj[S], A])(implicit tx: S#Tx): Vec[A]
 
   implicit def systemType: reflect.runtime.universe.TypeTag[S]
-}
 
-trait ConfluentDocument extends Document[proc.Confluent] {
-  type S = proc.Confluent
-
-  // have to restate this for some reason?
-  // cf. http://stackoverflow.com/questions/16495522/pattern-matching-refuses-to-recognize-member-type-value-x-is-not-a-member-of-2
-  // def system: S
-
-  def cursors: Cursors[S, S#D]
-}
-
-trait EphemeralDocument extends Document[proc.Durable] {
-  type S = proc.Durable
-
-  // def system: S
-
-  def cursor: stm.Cursor[S] = system
+  /** Adds a dependent which is disposed just before the workspace is disposed.
+    *
+    * @param dep  the dependent. This must be an _ephemeral_ object.
+    */
+  def addDependent   (dep: Disposable[S#Tx])(implicit tx: S#Tx): Unit
+  def removeDependent(dep: Disposable[S#Tx])(implicit tx: S#Tx): Unit
 }

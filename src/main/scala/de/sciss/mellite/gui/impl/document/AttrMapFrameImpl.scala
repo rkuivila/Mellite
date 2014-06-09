@@ -19,7 +19,7 @@ import de.sciss.synth.proc.Obj
 import de.sciss.lucre.stm
 
 import scala.swing.Action
-import de.sciss.mellite.Document
+import de.sciss.mellite.Workspace
 import de.sciss.mellite.gui.impl.component.CollectionFrameImpl
 import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.swing.deferTx
@@ -29,7 +29,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.{CompoundEdit, EditAttrMap}
 
 object AttrMapFrameImpl {
-  def apply[S <: Sys[S]](document: Document[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): AttrMapFrame[S] = {
+  def apply[S <: Sys[S]](document: Workspace[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): AttrMapFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl {
       protected var dirty: Boolean = false
     }
@@ -42,7 +42,7 @@ object AttrMapFrameImpl {
     res
   }
 
-  private final class Impl[S <: Sys[S]](document: Document[S], objH: stm.Source[S#Tx, Obj[S]],
+  private final class Impl[S <: Sys[S]](document: Workspace[S], objH: stm.Source[S#Tx, Obj[S]],
                                         val contents: AttrMapView[S])
                                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager)
     extends CollectionFrameImpl[S, S](document)

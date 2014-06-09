@@ -31,7 +31,7 @@ import proc.Implicits._
 import de.sciss.synth.proc.Obj
 
 object CodeFrameImpl {
-  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, Code.Elem])
+  def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, Code.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): CodeFrame[S] = {
     val _name   = obj.attr.name
     val _codeEx = obj.elem.peer

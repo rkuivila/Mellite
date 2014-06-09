@@ -7,7 +7,7 @@ import de.sciss.lucre.event.Sys
 /** A proxy for a swing application. */
 object Application extends SwingApplication { me =>
 
-  type Document = mellite.Document[_ <: Sys[_]]
+  type Document = mellite.Workspace[_ <: Sys[_]]
 
   private[this] var peer: SwingApplication { type Document = Application.Document } = null
 

@@ -13,16 +13,12 @@
 
 package de.sciss
 
-import lucre.expr
-import de.sciss.synth.proc.{Elem, Confluent}
-import de.sciss.serial.{Serializer, DataInput}
-import scala.collection.immutable.{IndexedSeq => Vec}
+import de.sciss.synth.proc.Confluent
 import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
 import scala.annotation.elidable
 import scala.annotation.elidable.CONFIG
 import scala.concurrent.ExecutionContext
-import de.sciss.lucre.synth.{InMemory, Sys}
 import de.sciss.mellite.impl.CodeImpl.CodeElemImpl
 import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
 
@@ -42,6 +38,7 @@ package object mellite {
   implicit val executionContext: ExecutionContext = ExecutionContext.Implicits.global
 
   def initTypes(): Unit = {
+    de.sciss.lucre.synth.expr.initTypes()
     CodeElemImpl
     RecursionElemImpl
   }

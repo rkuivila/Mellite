@@ -90,7 +90,7 @@ object ActionBounceTimeline {
 
   type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Obj.T[S, Code.Elem]]
 
-  def findTransforms[S <: Sys[S]](document: Document[S])(implicit tx: S#Tx): Vec[Labeled[CodeSource[S]]] = {
+  def findTransforms[S <: Sys[S]](document: Workspace[S])(implicit tx: S#Tx): Vec[Labeled[CodeSource[S]]] = {
     type Res = Vec[Labeled[CodeSource[S]]]
     def loop(xs: List[Obj[S]], res: Res): Res =
       xs match {
@@ -110,7 +110,7 @@ object ActionBounceTimeline {
     loop(document.root().iterator.toList, Vector.empty)
   }
 
-  def query[S <: Sys[S]](init: QuerySettings[S], document: Document[S], timelineModel: TimelineModel,
+  def query[S <: Sys[S]](init: QuerySettings[S], document: Workspace[S], timelineModel: TimelineModel,
                          window: Option[Window])
                         (implicit cursor: stm.Cursor[S]) : (QuerySettings[S], Boolean) = {
 
@@ -331,7 +331,7 @@ object ActionBounceTimeline {
   //    importFile: Boolean = true, location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   //  )
 
-  def performGUI[S <: Sys[S]](document: Document[S],
+  def performGUI[S <: Sys[S]](document: Workspace[S],
                               settings: QuerySettings[S],
                               group: stm.Source[S#Tx, proc.ProcGroup[S]], file: File,
                               window: Option[Window] = None)
@@ -456,7 +456,7 @@ object ActionBounceTimeline {
     }
   }
 
-  def perform[S <: Sys[S]](document: Document[S], settings: PerformSettings[S])
+  def perform[S <: Sys[S]](document: Workspace[S], settings: PerformSettings[S])
                           (implicit cursor: stm.Cursor[S]): Processor[File, _] = {
     import document.inMemoryBridge
     val bounce  = Bounce[S, document.I]

@@ -22,7 +22,7 @@ import de.sciss.lucre.swing.View
 import de.sciss.synth.proc.{ProcGroupElem, Obj}
 
 object InstantGroupFrame {
-  def apply[S <: Sys[S]](document: Document[S], group: Obj.T[S, ProcGroupElem] /*, transport: Document.Transport[S] */)
+  def apply[S <: Sys[S]](document: Workspace[S], group: Obj.T[S, ProcGroupElem] /*, transport: Document.Transport[S] */)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): InstantGroupFrame[S] =
     Impl(document, group)
 }

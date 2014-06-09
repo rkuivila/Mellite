@@ -96,7 +96,7 @@ object TimelineViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  def apply[S <: Sys[S]](document: Document[S], obj: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](document: Workspace[S], obj: Obj.T[S, ProcGroupElem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
@@ -284,7 +284,7 @@ object TimelineViewImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]](val document      : Document[S],
+  private final class Impl[S <: Sys[S]](val document      : Workspace[S],
                                         groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
                                         groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
                                         transport         : Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],

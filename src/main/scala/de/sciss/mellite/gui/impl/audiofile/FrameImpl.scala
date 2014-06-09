@@ -28,7 +28,7 @@ import proc.Implicits._
 import scala.swing.Component
 
 object FrameImpl {
-  def apply[S <: Sys[S]](doc: Document[S], obj: Obj.T[S, AudioGraphemeElem])
+  def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, AudioGraphemeElem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): AudioFileFrame[S] = {
     implicit val aural = Mellite.auralSystem
     val afv       = AudioFileView(doc, obj)
@@ -41,7 +41,7 @@ object FrameImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]](val document: Document[S], afv: AudioFileView[S], name: String, _file: File)
+  private final class Impl[S <: Sys[S]](val document: Workspace[S], afv: AudioFileView[S], name: String, _file: File)
                                        (implicit cursor: stm.Cursor[S])
     extends AudioFileFrame[S] with WindowHolder[Window] {
 
