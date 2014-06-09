@@ -33,6 +33,8 @@ import de.sciss.model.impl.ModelImpl
 import Swing._
 import javax.swing.{AbstractCellEditor, JTable}
 import de.sciss.mellite.gui.edit.{CompoundEdit, EditAttrMap}
+import java.util.EventObject
+import java.awt.event.MouseEvent
 
 object AttrMapViewImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
@@ -272,6 +274,11 @@ object AttrMapViewImpl {
       colValue.setCellEditor(new AbstractCellEditor with TableCellEditor {
         // private var currentValue: Any = null
         private val editor = new TextField(10)
+
+        override def isCellEditable(e: EventObject): Boolean = e match {
+          case m: MouseEvent => m.getClickCount >= 2
+          case _ => true
+        }
 
         def getCellEditorValue: AnyRef = editor.text // currentValue.asInstanceOf[AnyRef]
 

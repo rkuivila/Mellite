@@ -22,6 +22,7 @@ TimelineView
 
 [OK]    - rename not reflected
         - use undo manager
+        - removal and adding of attributes
 
 General
 
@@ -29,4 +30,4 @@ General
 
 ObjView
 
-        - allow custom editors
+        - allow custom editors (+ click count)
