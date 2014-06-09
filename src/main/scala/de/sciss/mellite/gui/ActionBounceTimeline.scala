@@ -262,12 +262,12 @@ object ActionBounceTimeline {
     val pPath     = new FlowPanel(ggPathText, ggPathDialog)
     val pFormat   = new FlowPanel(ggFileType, ggSampleFormat, ggGainAmt, new Label("dB"), ggGainType)
     val pSpan     = new GridPanel(6, 2) {
-      contents ++= Seq(new Label("Channels:"                       , EmptyIcon, Trailing), ggChannels,
-                       new Label("Timeline Span:"                  , EmptyIcon, Trailing), ggSpanAll,
-                       HStrut(1),                                                          ggSpanUser,
-                       HStrut(1),                                                          VStrut(32),
-                       new Label("Import Output File Into Session:", EmptyIcon, Trailing), ggImport,
-                       new Label("Apply Transformation:"           , EmptyIcon, Trailing), pTransform)
+      contents ++= Seq(new Label("Channels:"                         , EmptyIcon, Trailing), ggChannels,
+                       new Label("Timeline Span:"                    , EmptyIcon, Trailing), ggSpanAll,
+                       HStrut(1),                                                            ggSpanUser,
+                       HStrut(1),                                                            VStrut(32),
+                       new Label("Import Output File Into Workspace:", EmptyIcon, Trailing), ggImport,
+                       new Label("Apply Transformation:"             , EmptyIcon, Trailing), pTransform)
     }
 
     val box       = new BoxPanel(Orientation.Vertical) {

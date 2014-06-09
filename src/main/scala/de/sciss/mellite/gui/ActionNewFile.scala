@@ -20,7 +20,7 @@ import de.sciss.desktop.{FileDialog, KeyStrokes}
 import util.control.NonFatal
 import scala.swing.event.Key
 
-object ActionNewFile extends Action("Session...") {
+object ActionNewFile extends Action("Workspace...") {
   import KeyStrokes._
   accelerator = Some(menu1 + Key.N)
 

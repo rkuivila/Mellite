@@ -31,12 +31,12 @@ import java.util.Locale
 import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.audiowidgets.TimelineModel
 import scala.swing.Swing._
-import de.sciss.desktop.Window
+import de.sciss.desktop.{KeyStrokes, Window}
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
-import scala.swing.event.ValueChanged
+import scala.swing.event.{Key, ValueChanged}
 import de.sciss.synth.proc.{Transport, ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
@@ -368,6 +368,9 @@ object TimelineViewImpl {
     }
 
     object splitObjectsAction extends Action("Split Selected Objects") {
+      import KeyStrokes.menu2
+      accelerator = Some(menu2 + Key.Y)
+
       def apply(): Unit = {
         val pos     = timelineModel.position
         val pos1    = pos - MinDur

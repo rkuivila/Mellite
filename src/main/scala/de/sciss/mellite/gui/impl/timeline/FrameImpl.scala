@@ -19,8 +19,8 @@ package timeline
 import de.sciss.synth.proc.{ProcGroupElem, Obj, ProcGroup}
 import de.sciss.mellite.Document
 import de.sciss.lucre.stm
-import de.sciss.desktop.{OptionPane, Window}
-import scala.swing.event.WindowClosing
+import de.sciss.desktop.{KeyStrokes, Menu, OptionPane, Window}
+import scala.swing.event.Key
 import scala.swing.{Component, Action}
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
@@ -74,7 +74,7 @@ object FrameImpl {
           "file.bounce"           -> view.bounceAction,
           "edit.delete"           -> view.deleteAction,
           "actions.stopAllSound"  -> view.stopAllSoundAction,
-          "timeline.splitObjects" -> view.splitObjectsAction,
+          // "timeline.splitObjects" -> view.splitObjectsAction,
           "actions.debugPrint"    -> Action(null) {
             val it = view.procSelectionModel.iterator
             if (it.hasNext)
@@ -105,6 +105,30 @@ object FrameImpl {
             }
           }
         )
+
+        // --- timeline menu ---
+        import Menu.{Group, Item, proxy}
+        import KeyStrokes._
+        private val mTimeline = Group("timeline", "Timeline")
+          // .add(Item("trimToSelection",    proxy("Trim to Selection",        (menu1 + Key.F5))))
+          .add(Item("insertSpan",         proxy("Insert Span...",           menu1 + shift + Key.E)))
+          .add(Item("clearSpan",          proxy("Clear Selected Span",      menu1 + Key.BackSlash)))
+          .add(Item("removeSpan",         proxy("Remove Selected Span",     menu1 + shift + Key.BackSlash)))
+          .add(Item("dupSpanToPos",       "Duplicate Span to Cursor"))
+          .addLine()
+          .add(Item("nudgeAmount",        "Nudge Amount..."))
+          .add(Item("nudgeLeft",          proxy("Nudge Objects Backward",   plain + Key.Minus)))
+          .add(Item("nudgeRight",         proxy("Nudge Objects Forward",    plain + Key.Plus)))
+          .addLine()
+          .add(Item("selectFollowing",    proxy("Select Following Objects", menu2 + Key.F)))
+          .add(Item("alignObjStartToPos", "Align Objects Start To Cursor"))
+          // .add(Item("splitObjects",       proxy("Split Selected Objects",   menu2 + Key.Y)))
+          .add(Item("splitObjects", view.splitObjectsAction))
+          .addLine()
+          .add(Item("selStopToStart",     "Flip Selection Backward"))
+          .add(Item("selStartToStop",     "Flip Selection Forward"))
+
+        handler.menuFactory.add(Some(this), mTimeline)
 
         reactions += {
           case Window.Closing(_) => frameClosing()
