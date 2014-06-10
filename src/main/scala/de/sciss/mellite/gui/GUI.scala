@@ -35,6 +35,13 @@ object GUI {
     timer.start()
   }
 
+  def fixSize(c: Component): Unit = {
+    val d = c.preferredSize
+    c.preferredSize = d
+    c.minimumSize   = d
+    c.maximumSize   = d
+  }
+
   def fixWidth(c: Component, width: Int = -1): Unit = {
     val w         = if (width < 0) c.preferredSize.width else width
     val min       = c.minimumSize

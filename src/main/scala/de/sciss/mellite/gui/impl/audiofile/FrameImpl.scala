@@ -43,8 +43,6 @@ object FrameImpl {
     extends WindowImpl[S](title0)
     with AudioFileFrame[S] {
 
-    windowFile = Some(_file)
-
     //    def component: Component = contents.component
     //
     //    def contents: AudioFileView[S] = afv
@@ -78,5 +76,7 @@ object FrameImpl {
     //        front()
     //      }
     //    }
+
+    override protected def initGUI(): Unit = windowFile = Some(_file)
   }
 }
