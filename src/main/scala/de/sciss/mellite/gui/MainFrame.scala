@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import desktop.Window
+import de.sciss.desktop.{WindowHandler, Window}
 import scala.swing.{CheckBox, Button, FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
 import de.sciss.synth.proc.{SensorSystem, AuralSystem}
 import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
@@ -34,8 +34,10 @@ import de.sciss.lucre.stm.TxnLike
 import scala.collection.immutable.{IndexedSeq => Vec}
 import de.sciss.audiowidgets.PeakMeter
 
-final class MainFrame extends WindowImpl { me =>
+final class MainFrame extends desktop.impl.WindowImpl { me =>
   import Mellite.{auralSystem, sensorSystem}
+
+  def handler: WindowHandler = Application.windowHandler
 
   private val lbSensors = new Label("Sensors:")
   private val lbAudio   = new Label("Audio:")

@@ -17,6 +17,7 @@ package gui
 
 import impl.document.{CursorsFrameImpl => Impl}
 import synth.proc
+import de.sciss.lucre.swing.View
 
 object DocumentCursorsFrame {
   type S = proc.Confluent
@@ -24,9 +25,10 @@ object DocumentCursorsFrame {
   def apply(document: Workspace.Confluent)(implicit tx: D#Tx): DocumentCursorsFrame = Impl(document)
 }
 trait DocumentCursorsFrame /* [S <: Sys[S]] */ {
-  def component: desktop.Window
+  def window: desktop.Window
   def view: DocumentCursorsView
-  def document : Workspace.Confluent // Document[S]
+  def workspace: Workspace.Confluent // Document[S]
 }
 
-trait DocumentCursorsView extends DocumentView[DocumentCursorsFrame.S]
+// XXX TODO: ViewHasWorkspace minus the cursor?
+trait DocumentCursorsView extends View[DocumentCursorsFrame.S] //  DocumentView[DocumentCursorsFrame.S]

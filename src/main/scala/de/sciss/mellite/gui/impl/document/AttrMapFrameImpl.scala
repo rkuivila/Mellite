@@ -35,18 +35,17 @@ object AttrMapFrameImpl {
     }
     val contents  = AttrMapView(obj)
     val res       = new Impl(document, tx.newHandle(obj), contents)
-    deferTx {
-      res.guiInit()
-      res.window.front()
-    }
+    res.init()
     res
   }
 
   private final class Impl[S <: Sys[S]](document: Workspace[S], objH: stm.Source[S#Tx, Obj[S]],
                                         val contents: AttrMapView[S])
                                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager)
-    extends CollectionFrameImpl[S, S](document)
+    extends CollectionFrameImpl[S](contents)
     with AttrMapFrame[S] {
+
+    def component = contents.component
 
     protected def nameObserver: Option[Disposable[S#Tx]] = None
 
@@ -71,11 +70,12 @@ object AttrMapFrameImpl {
       }
     }
 
-    protected def initGUI2(): Unit = {
-      contents.addListener {
-        case AttrMapView.SelectionChanged(_, sel) =>
-          selectionChanged(sel.map(_._2))
-      }
-    }
+    // MMM
+    //    protected def initGUI2(): Unit = {
+    //      contents.addListener {
+    //        case AttrMapView.SelectionChanged(_, sel) =>
+    //          selectionChanged(sel.map(_._2))
+    //      }
+    //    }
   }
 }

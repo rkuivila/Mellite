@@ -78,7 +78,9 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     WebProgressBarStyle.highlightDarkWhite  = new Color(255, 255, 255, 0)
 
     LogFrame           .instance    // init
+    DocumentHandler    .instance    // init
     DocumentViewHandler.instance    // init
+
     new MainFrame
   }
 }

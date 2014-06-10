@@ -27,7 +27,6 @@ object TimelineFrame {
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineFrame[S] =
     Impl(document, group)
 }
-trait TimelineFrame[S <: Sys[S]] extends View[S] {
-  def window  : Window
-  def contents: TimelineView[S]
+trait TimelineFrame[S <: Sys[S]] extends lucre.swing.Window[S] {
+  def view: TimelineView[S]
 }

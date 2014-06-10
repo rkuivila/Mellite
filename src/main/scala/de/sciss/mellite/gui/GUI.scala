@@ -18,10 +18,12 @@ package gui
 import scala.swing.Swing._
 import scala.swing.{Table, Action, Color, Button, AbstractButton, Swing, Dialog, Component, TextField, Label, Alignment}
 import java.awt.{Rectangle, GraphicsEnvironment}
-import javax.swing.{SortOrder, RowSorter, Icon, Timer}
+import javax.swing.{JComponent, SortOrder, RowSorter, Icon, Timer}
 import de.sciss.swingplus.GroupPanel
 import de.sciss.icons.raphael
 import java.awt.geom.Path2D
+import de.sciss.mellite.gui.impl.WindowImpl
+import scala.annotation.tailrec
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
@@ -46,8 +48,18 @@ object GUI {
   def round(b: AbstractButton*): Unit =
     b.foreach(_.peer.putClientProperty("JButton.buttonType", "roundRect"))
 
-  def findWindow(c: Component): Option[desktop.Window] =
-    None  // XXX TODO - we should place a client property in Desktop
+  def findWindow(c: Component): Option[desktop.Window] = {
+    @tailrec def loop(p: JComponent): Option[desktop.Window] =
+      p.getClientProperty(WindowImpl.WindowKey) match {
+        case f: desktop.Window => Some(f)
+        case _ => c.peer.getParent match {
+          case pp: JComponent => loop(pp)
+          case _ => None
+        }
+      }
+
+    loop(c.peer)
+  }
 
   def maximumWindowBounds: Rectangle = {
     val ge  = GraphicsEnvironment.getLocalGraphicsEnvironment

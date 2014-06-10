@@ -14,40 +14,60 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.event.Sys
+// import de.sciss.lucre.synth.Sys
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.desktop.Desktop
 import de.sciss.lucre.swing._
+import impl.document.{ViewHandlerImpl => Impl}
+import de.sciss.model.Model
+
+//object DocumentViewHandler {
+//  lazy val instance: DocumentViewHandler = new DocumentViewHandler {
+//    private var map = Map.empty[Workspace[_], Vec[DocumentView[_]]] withDefaultValue Vec.empty
+//
+//    Desktop.addListener {
+//      case Desktop.OpenFiles(_, files) => files.foreach(ActionOpenWorkspace.perform)
+//    }
+//
+//    def apply[S <: Sys[S]](document: Workspace[S]): Iterator[DocumentView[S]] = {
+//      requireEDT()
+//      map(document).iterator.asInstanceOf[Iterator[DocumentView[S]]]
+//    }
+//
+//    def add[S <: Sys[S]](view: DocumentView[S]): Unit = {
+//      requireEDT()
+//      map += view.document -> (map(view.document) :+ view)
+//    }
+//
+//    def remove[S <: Sys[S]](view: DocumentView[S]): Unit = {
+//      requireEDT()
+//      val vec = map(view.document)
+//      val idx = vec.indexOf(view)
+//      require(idx >= 0, s"View $view was not registered")
+//      map += view.document -> vec.patch(idx, Vec.empty, 1)
+//    }
+//  }
+//}
+//trait DocumentViewHandler /* extends Model... */ {
+//  def apply [S <: Sys[S]](document: Workspace[S]): Iterator[DocumentView[S]]
+//  def add   [S <: Sys[S]](view: DocumentView[S]): Unit
+//  def remove[S <: Sys[S]](view: DocumentView[S]): Unit
+//}
 
 object DocumentViewHandler {
-  lazy val instance: DocumentViewHandler = new DocumentViewHandler {
-    private var map = Map.empty[Workspace[_], Vec[DocumentView[_]]] withDefaultValue Vec.empty
+  type WorkspaceWindow[S <: Sys[S]] = Window[S] // MMM
 
-    Desktop.addListener {
-      case Desktop.OpenFiles(_, files) => files.foreach(ActionOpenWorkspace.perform)
-    }
+  type View[S <: Sys[S]] = WorkspaceWindow[S]
 
-    def apply[S <: Sys[S]](document: Workspace[S]): Iterator[DocumentView[S]] = {
-      requireEDT()
-      map(document).iterator.asInstanceOf[Iterator[DocumentView[S]]]
-    }
+  lazy val instance: DocumentViewHandler = Impl.instance
 
-    def add[S <: Sys[S]](view: DocumentView[S]): Unit = {
-      requireEDT()
-      map += view.document -> (map(view.document) :+ view)
-    }
-
-    def remove[S <: Sys[S]](view: DocumentView[S]): Unit = {
-      requireEDT()
-      val vec = map(view.document)
-      val idx = vec.indexOf(view)
-      require(idx >= 0, s"View $view was not registered")
-      map += view.document -> vec.patch(idx, Vec.empty, 1)
-    }
-  }
+  sealed trait Update
+  case class Activated[S <: Sys[S]](doc: Workspace[S]) extends Update
 }
-trait DocumentViewHandler /* extends Model... */ {
-  def apply [S <: Sys[S]](document: Workspace[S]): Iterator[DocumentView[S]]
-  def add   [S <: Sys[S]](view: DocumentView[S]): Unit
-  def remove[S <: Sys[S]](view: DocumentView[S]): Unit
+trait DocumentViewHandler extends Model[DocumentViewHandler.Update] {
+  def getWindow[S <: Sys[S]](doc: Workspace[S]): Option[DocumentViewHandler.View[_]]
+  // var activeDocument: Option[Document]
+  def activeDocument: Option[DocumentHandler.Document]
+  def activeDocument_=[S <: Sys[S]](doc: Option[Workspace[S]]): Unit
 }

@@ -405,7 +405,7 @@ object ObjViewImpl {
 
       def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
         val frame = AudioFileFrame(document, obj())
-        Some(frame)
+        Some(frame.view)
       }
 
       def configureRenderer(label: Label): Component = {
@@ -515,7 +515,7 @@ object ObjViewImpl {
 
       def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
         val frame = RecursionFrame(document, obj())
-        Some(frame)
+        Some(frame.view)
       }
 
       def configureRenderer(label: Label): Component = {
@@ -620,20 +620,20 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
-        val message = s"<html><b>Select View Type for $name:</b></html>"
-        val entries = Seq("Timeline View", "Real-time View", "Cancel")
-        val opt = OptionPane(message = message, optionType = OptionPane.Options.YesNoCancel,
-          messageType = OptionPane.Message.Question, entries = entries)
-        opt.title = s"View $name"
-        (opt.show(None).id: @switch) match {
-          case 0 =>
+//        val message = s"<html><b>Select View Type for $name:</b></html>"
+//        val entries = Seq("Timeline View", "Real-time View", "Cancel")
+//        val opt = OptionPane(message = message, optionType = OptionPane.Options.YesNoCancel,
+//          messageType = OptionPane.Message.Question, entries = entries)
+//        opt.title = s"View $name"
+//        (opt.show(None).id: @switch) match {
+//          case 0 =>
             val frame = TimelineFrame[S](document, obj())
-            Some(frame)
-          case 1 =>
-            val frame = InstantGroupFrame[S](document, obj())
-            Some(frame)
-          case _ => None
-        }
+            Some(frame.view)
+//          case 1 =>
+//            val frame = InstantGroupFrame[S](document, obj())
+//            Some(frame)
+//          case _ => None
+//        }
       }
     }
   }

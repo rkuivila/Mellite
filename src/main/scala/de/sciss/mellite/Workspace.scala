@@ -23,7 +23,7 @@ import de.sciss.serial.Serializer
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.synth.{Sys => SSys}
-import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.stm.{TxnLike, Disposable}
 
 object Workspace {
   /** File name extension (excluding leading period) */
@@ -75,7 +75,7 @@ object Workspace {
   }
 }
 
-sealed trait Workspace[S <: Sys[S]] {
+sealed trait Workspace[S <: Sys[S]] extends Disposable[S#Tx] {
   import Workspace.{Group => _}
 
   // type S1 = S
@@ -104,6 +104,9 @@ sealed trait Workspace[S <: Sys[S]] {
     *
     * @param dep  the dependent. This must be an _ephemeral_ object.
     */
-  def addDependent   (dep: Disposable[S#Tx])(implicit tx: S#Tx): Unit
-  def removeDependent(dep: Disposable[S#Tx])(implicit tx: S#Tx): Unit
+  def addDependent   (dep: Disposable[S#Tx])(implicit tx: TxnLike /* S#Tx */): Unit
+  def removeDependent(dep: Disposable[S#Tx])(implicit tx: TxnLike /* S#Tx */): Unit
+
+  /** Issues a transaction that closes and disposes the workspace. */
+  def close(): Unit
 }

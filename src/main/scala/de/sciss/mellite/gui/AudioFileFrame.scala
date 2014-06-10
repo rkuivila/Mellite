@@ -28,8 +28,7 @@ object AudioFileFrame {
     Impl(doc, obj)
 }
 
-trait AudioFileFrame[S <: Sys[S]] extends View[S] {
-  def window   : desktop.Window
-  def contents : AudioFileView[S]
-  def document : Workspace[S]
+trait AudioFileFrame[S <: Sys[S]] extends lucre.swing.Window[S] {
+  def view: AudioFileView[S]
+  // def document : Workspace[S]
 }

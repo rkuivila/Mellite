@@ -33,51 +33,56 @@ import de.sciss.lucre.stm.Disposable
 import de.sciss.file._
 import de.sciss.lucre.synth.{Server, Sys}
 import de.sciss.swingplus.GroupPanel
-import de.sciss.lucre.swing.{defer, deferTx}
+import de.sciss.lucre.swing.{View, defer, deferTx}
 import proc.Implicits._
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.model.impl.ModelImpl
 
 object RecursionFrameImpl {
-  private final case class View(name: String, deployed: File, product: File) {
+  private final case class ViewData(name: String, deployed: File, product: File) {
     def sameFiles: Boolean = deployed != product
   }
 
   def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, Recursion.Elem])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] = {
-    new Impl[S] {
-      val document  = doc
+    val view = new ViewImpl[S] {
+      val workspace = doc
       val recH      = tx.newHandle(obj)
       val _spec     = obj.elem.peer.productSpec
       val _cursor   = cursor
       val _aural    = Mellite.auralSystem
 
-      private def mkView()(implicit tx: S#Tx): View = {
+      private def mkView()(implicit tx: S#Tx): ViewData = {
         val name      = obj.attr.name
         val rec       = recH()
         val deployed  = rec.elem.peer.deployed.elem.peer.artifact.value
         val product   = rec.elem.peer.product.value
         val _depFile  = deployed
         val _prodFile = product
-        View(name, deployed = _depFile, product = _prodFile)
+        ViewData(name, deployed = _depFile, product = _prodFile)
       }
 
-      private var _view = mkView()
+      private var _viewData = mkView()
 
-      def view: View = _view
+      def viewData: ViewData = _viewData
 
       val observer  = obj.elem.changed.react { implicit tx => {
         case _ =>
           // println(s"Observed: $x")
           val v = mkView()
           deferTx {
-            _view = v
+            _viewData = v
             guiUpdate()
           }
       }}
-
       deferTx {
         guiInit()
       }
     }
+
+    val res = new FrameImpl(view)
+    res.init()
+    res
   }
 
   private final class FileComparison(a: File, b: File) extends ProcessorImpl[Boolean, FileComparison] {
@@ -121,21 +126,43 @@ object RecursionFrameImpl {
     }
   }
 
-  private abstract class Impl[S <: Sys[S]]
-    extends RecursionFrame[S] with WindowHolder[Frame[S]] {
+  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S])
+    extends WindowImpl[S] with RecursionFrame[S] {
+
+    // def document: Workspace[S] = ???
+
+    // def view: View[S] = ???
+
+    // def component: Component = contents.component
+
+    override protected def initGUI(): Unit =
+      view.addListener { case viewData =>
+        title = viewData.name
+        windowFile = Some(viewData.deployed)
+      }
+  }
+
+  private abstract class ViewImpl[S <: Sys[S]]
+    extends ViewHasWorkspace[S]
+    with ComponentHolder[Component]
+    with ModelImpl[ViewData] {
 
     protected def recH      : stm.Source[S#Tx, Obj.T[S, Recursion.Elem]]
-    protected def view      : View
+    protected def viewData  : ViewData
     protected def _spec     : AudioFileSpec
     protected implicit def _cursor   : stm.Cursor[S]
     protected implicit def _aural    : AuralSystem
     protected def observer  : Disposable[S#Tx]
 
-    def component: Component = window.c
+    def workspace: Workspace[S]
+
+    def cursor: stm.Cursor[S] = _cursor
+
+    // def component: Component = window.c
 
     final def dispose()(implicit tx: S#Tx): Unit = {
       disposeData()
-      deferTx(window.dispose())
+      // deferTx(window.dispose())
     }
 
     private def disposeData()(implicit tx: S#Tx): Unit =
@@ -152,13 +179,13 @@ object RecursionFrameImpl {
     private var currentProc = Option.empty[Processor[Any, _]]
 
     final protected def guiUpdate(): Unit = {
-      ggDeployed.text = view.deployed.name
-      ggProduct .text = view.product .name
-      // println(s"view.deployed = ${view.deployed}, product = ${view.product}")
-      window.setTitle(view.name)
-      window.file_=     (Some(view.deployed))
+      ggDeployed.text = viewData.deployed.name
+      ggProduct .text = viewData.product .name
+
       val enabled = currentProc.isEmpty
-      updateDeployed.enabled  = enabled && view.sameFiles
+      updateDeployed.enabled  = enabled && viewData.sameFiles
+
+      dispatch(viewData)
     }
 
     final protected def guiInit(): Unit = {
@@ -187,8 +214,8 @@ object RecursionFrameImpl {
       }
 
       def performProductUpdate(): Unit = {
-        val b         = view.product.parent
-        val (n0,ext)  = view.product.baseAndExt
+        val b         = viewData.product.parent
+        val (n0,ext)  = viewData.product.baseAndExt
         val i         = n0.lastIndexOf('_')
         val n         = if (i < 0) n0 else n0.substring(0, i)
 
@@ -216,7 +243,7 @@ object RecursionFrameImpl {
                 artM.child_=(newChild)
 
               case _ =>
-                println("Woop. Product artifact is not modifiable !?")
+                println("Warning: Product artifact is not modifiable !?")
             }
           }
         }
@@ -249,14 +276,14 @@ object RecursionFrameImpl {
         ActionBounceTimeline.specToServerConfig(file, audio.spec, server)
 
         val pSet    = ActionBounceTimeline.PerformSettings(groupH, server, gain, span, channels)
-        val pBounce = ActionBounceTimeline.perform(document, pSet)
+        val pBounce = ActionBounceTimeline.perform(workspace, pSet)
         monitor("Bounce", pBounce) { _ => success }
       }
 
       def performMatch(): Unit = {
         val file = File.createTempFile("bounce", "." + _spec.fileType.extension)
         performBounce(file) {
-          val pCompare = new FileComparison(view.deployed, file)
+          val pCompare = new FileComparison(viewData.deployed, file)
           pCompare.start()
           monitor("Compare", pCompare) { res =>
             processStopped()
@@ -269,7 +296,7 @@ object RecursionFrameImpl {
 
       def updateGadgets(enabled: Boolean): Unit = {
         matchDeployed .enabled  = enabled
-        updateDeployed.enabled  = enabled && view.sameFiles
+        updateDeployed.enabled  = enabled && viewData.sameFiles
         updateProduct .enabled  = enabled
         ggProgress    .visible  = !enabled
         ggStopProcess .visible  = !enabled
@@ -298,7 +325,7 @@ object RecursionFrameImpl {
           case Failure(e: Exception) => // XXX TODO: Desktop should allow Throwable for DialogSource.Exception
             defer {
               processStopped()
-              DialogSource.Exception(e -> title).show(Some(window))
+              DialogSource.Exception(e -> title).show(None) // XXX TODO: Some(window))
             }
           case Failure(e) =>
             defer(processStopped())
@@ -308,7 +335,7 @@ object RecursionFrameImpl {
 
       lazy val viewDeployed: Button = Button("View") {
         _cursor.step { implicit tx =>
-          AudioFileFrame(document, recH().elem.peer.deployed)
+          AudioFileFrame(workspace, recH().elem.peer.deployed)
         }
       }
       lazy val matchDeployed: Button = Button("Match") {
@@ -320,7 +347,7 @@ object RecursionFrameImpl {
         }
       }
       lazy val viewProduct: Button = Button("View") {
-        Desktop.revealFile(view.product)
+        Desktop.revealFile(viewData.product)
       }
       lazy val dummyProduct = new Label(null)
       lazy val updateProduct: Button = Button("Update \u2697") {
@@ -328,7 +355,7 @@ object RecursionFrameImpl {
       }
       GUI.round(viewDeployed, matchDeployed, updateDeployed, viewProduct, updateProduct)
 
-      updateDeployed.enabled = view.sameFiles
+      updateDeployed.enabled = viewData.sameFiles
 
       val box = new GroupPanel {
         horizontal = Seq(
@@ -350,24 +377,27 @@ object RecursionFrameImpl {
         add(box, BorderPanel.Position.Center)
         add(panelProgress, BorderPanel.Position.South)
       }
-      val frame = new Frame(this, panel)
+
+      // val frame = new Frame(this, panel)
       guiUpdate()
       processStopped()
-      GUI.centerOnScreen(frame)
-      frame.front()
-      window = frame
+      // GUI.centerOnScreen(frame)
+      // frame.front()
+      // window = frame
+
+      component = panel
     }
   }
 
-  private class Frame[S <: Sys[S]](impl: Impl[S], val c: Component) extends WindowImpl {
-    contents    = c
-    reactions += {
-      case Window.Closing(_) => impl.frameClosing()
-    }
-    resizable   = false
-    pack()
-
-    def setTitle(n: String): Unit = title_=(n)
-    // def setFile (f: File  ): Unit = file_=(Some(f))
-  }
+  //  private class Frame[S <: Sys[S]](impl: Impl[S], val c: Component) extends WindowImpl {
+  //    contents    = c
+  //    reactions += {
+  //      case Window.Closing(_) => impl.frameClosing()
+  //    }
+  //    resizable   = false
+  //    pack()
+  //
+  //    def setTitle(n: String): Unit = title_=(n)
+  //    // def setFile (f: File  ): Unit = file_=(Some(f))
+  //  }
 }

@@ -26,8 +26,7 @@ object TimelineView {
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineView[S] =
     Impl[S](document, group)
 }
-trait TimelineView[S <: Sys[S]] extends DocumentView[S] {
-  def component         : Component
+trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] {
   def timelineModel     : TimelineModel
   def procSelectionModel: ProcSelectionModel[S]
 

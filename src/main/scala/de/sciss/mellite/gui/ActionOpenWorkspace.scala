@@ -76,10 +76,11 @@ object ActionOpenWorkspace extends Action("Open...") {
     }
   }
 
-  private def openView[S <: Sys[S]](doc: Workspace[S]): Unit =
-    DocumentViewHandler.instance(doc).collectFirst {
-      case dcv: DocumentCursorsView => dcv.window
-    } .foreach(_.front())
+  private def openView[S <: Sys[S]](doc: Workspace[S]): Unit = ()
+// MMM
+//    DocumentViewHandler.instance(doc).collectFirst {
+//      case dcv: DocumentCursorsView => dcv.window
+//    } .foreach(_.front())
 
   def perform(folder: File): Unit =
     Application.documentHandler.documents.find(_.folder == folder).fold(doOpen(folder)) { doc =>

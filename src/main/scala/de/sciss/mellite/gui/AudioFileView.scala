@@ -21,14 +21,15 @@ import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.synth.Sys
 import de.sciss.file.File
 import de.sciss.lucre.swing.View
+import de.sciss.lucre.stm
 
 object AudioFileView {
   def apply[S <: Sys[S]](document: Workspace[S], obj: Obj.T[S, AudioGraphemeElem])
-                        (implicit tx: S#Tx, aural: AuralSystem): AudioFileView[S] =
+                        (implicit tx: S#Tx, aural: AuralSystem, cursor: stm.Cursor[S]): AudioFileView[S] =
     Impl(document, obj)
 }
-trait AudioFileView[S <: Sys[S]] extends View[S] /* Disposable[S#Tx] */ {
-  def document: File // Document[S]
-  def component: Component
+trait AudioFileView[S <: Sys[S]] extends ViewHasWorkspace[S] /* Disposable[S#Tx] */ {
+  // def document: File // Document[S]
+  // def component: Component
   def obj(implicit tx: S#Tx): Obj.T[S, AudioGraphemeElem]
 }

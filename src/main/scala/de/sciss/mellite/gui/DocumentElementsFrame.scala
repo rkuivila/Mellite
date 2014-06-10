@@ -27,8 +27,6 @@ object DocumentElementsFrame {
     Impl(doc, nameOpt = name)
 }
 
-trait DocumentElementsFrame[S <: Sys[S]] extends View[S] {
-  def window  : desktop.Window
-  def document: Workspace[S]
-  def contents: FolderView[S]
+trait DocumentElementsFrame[S <: Sys[S]] extends lucre.swing.Window[S] {
+  // def folder: FolderView[S]
 }

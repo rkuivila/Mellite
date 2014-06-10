@@ -23,8 +23,8 @@ import de.sciss.serial.{DataInput, Serializer, DataOutput}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.synth.{Sys => SSys}
-import de.sciss.lucre.stm.{DataStoreFactory, Disposable}
-import scala.concurrent.stm.Ref
+import de.sciss.lucre.stm.{TxnLike, DataStoreFactory, Disposable}
+import scala.concurrent.stm.{Txn, Ref}
 import java.util.Properties
 import scala.language.existentials
 
@@ -156,6 +156,8 @@ object WorkspaceImpl {
 
     protected def access: stm.Source[S#Tx, Data[S]]
 
+    protected def masterCursor: stm.Cursor[S]
+
     // ---- implemented ----
 
     override def toString = s"Workspace<${folder.name}>" // + hashCode().toHexString
@@ -164,10 +166,10 @@ object WorkspaceImpl {
 
     final val root: stm.Source[S#Tx, Folder[S]] = stm.Source.map(access)(_.root)
 
-    final def addDependent   (dep: Disposable[S#Tx])(implicit tx: S#Tx): Unit =
+    final def addDependent   (dep: Disposable[S#Tx])(implicit tx: TxnLike): Unit =
       dependents.transform(_ :+ dep)(tx.peer)
 
-    final def removeDependent(dep: Disposable[S#Tx])(implicit tx: S#Tx): Unit =
+    final def removeDependent(dep: Disposable[S#Tx])(implicit tx: TxnLike): Unit =
       dependents.transform { in =>
         val idx = in.indexOf(dep)
         require(idx >= 0, s"Dependent $dep was not registered")
@@ -190,6 +192,25 @@ object WorkspaceImpl {
       loop(root())
       b.result()
     }
+
+    final def close(): Unit = masterCursor.step { implicit tx =>
+      dispose()
+    }
+
+    final def dispose()(implicit tx: S#Tx): Unit = {
+      // logInfoTx(s"Dispose workspace $name")
+
+      // first dispose all dependents
+      val dep = dependents.get(tx.peer)
+      dep.foreach(_.dispose())
+      dependents.update(Vec.empty)(tx.peer)
+
+      // if the transaction is successful...
+      Txn.afterCommit { _ =>
+        // ...and close the database
+        system.close()
+      } (tx.peer)
+    }
   }
 
   private final class ConfluentImpl(val folder: File, val system: Cf, protected val access: stm.Source[Cf#Tx, Data[Cf]],
@@ -201,6 +222,8 @@ object WorkspaceImpl {
     type I = system.I
     val inMemoryBridge = (tx: S#Tx) => Confluent.inMemory(tx)
     def inMemoryCursor: stm.Cursor[I] = system.inMemory
+
+    protected def masterCursor = cursors.cursor
   }
 
   private final class EphemeralImpl(val folder: File, val system: Dur,
@@ -212,5 +235,7 @@ object WorkspaceImpl {
     type I = system.I
     val inMemoryBridge = (tx: S#Tx) => Dur.inMemory(tx)
     def inMemoryCursor: stm.Cursor[I] = system.inMemory
+
+    protected def masterCursor = cursor
   }
 }

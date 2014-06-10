@@ -28,7 +28,8 @@ object RecursionFrame {
     Impl(doc, obj)
 }
 
-trait RecursionFrame[S <: Sys[S]] extends View[S] {
+trait RecursionFrame[S <: Sys[S]] extends lucre.swing.Window[S] /* View[S] */ {
   def window   : desktop.Window
-  def document : Workspace[S]
+  // def document : Workspace[S]
+  def view : ViewHasWorkspace[S]
 }

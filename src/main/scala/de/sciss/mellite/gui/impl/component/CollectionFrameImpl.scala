@@ -23,19 +23,27 @@ import de.sciss.file._
 import de.sciss.lucre.synth.Sys
 import de.sciss.icons.raphael
 import de.sciss.lucre.swing.{View, deferTx, requireEDT}
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.model.impl.ModelImpl
 
-abstract class CollectionFrameImpl[S <: Sys[S], S1 <: Sys[S1]](val document: Workspace[S],
-                                                               file: Option[File] = None,
-                                                               frameX: Float = 0.5f, frameY: Float = 0.5f)
-                                                              (implicit val cursor: stm.Cursor[S],
-                                                               val undoManager: UndoManager,
-                                                               bridge: S#Tx => S1#Tx)
-  extends View[S] with WindowHolder[CollectionFrameImplPeer[S]] with CursorHolder[S] {
+object CollectionViewImpl {
+  sealed trait Update
+  final case class NamedChanged(name: String) extends Update
+
+  //  def apply[S <: Sys[S], S1 <: Sys[S1]](peer: View.Editable[S])(implicit tx: S#Tx): CollectionsViewImpl[S, S1] = {
+  //
+  //  }
+}
+trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
+  extends ViewHasWorkspace[S] with ComponentHolder[Component] with ModelImpl[CollectionViewImpl.Update] {
+
   impl =>
 
   // ---- abstract ----
 
-  def contents: View.Editable[S]
+  protected def peer: View.Editable[S]
+
+  protected def bridge: S#Tx => S1#Tx
 
   protected def nameObserver: Option[stm.Disposable[S1#Tx]]
   protected def mkTitle(sOpt: Option[String]): String
@@ -54,55 +62,43 @@ abstract class CollectionFrameImpl[S <: Sys[S], S1 <: Sys[S1]](val document: Wor
   lazy final protected val actionAttr: Action = Action(null) {
     val sel = selectedObjects
     if (sel.nonEmpty) cursor.step { implicit tx =>
-      sel.foreach(n => AttrMapFrame(document, n.obj()))
+      sel.foreach(n => AttrMapFrame(workspace, n.obj()))
     }
   }
 
   lazy final protected val actionView: Action = Action(null) {
     val sel = selectedObjects.filter(_.isViewable)
     if (sel.nonEmpty) cursor.step { implicit tx =>
-      sel.foreach(_.openView(document))
+      sel.foreach(_.openView(workspace))
     }
   }
 
-  final def component: Component = contents.component
-
-  final def dispose()(implicit tx: S#Tx): Unit = {
-    disposeData()
-    deferTx(window.dispose())
+  protected def selectionChanged(sel: List[ObjView[S]]): Unit = {
+    val nonEmpty  = sel.nonEmpty
+    actionAdd   .enabled  = sel.size < 2
+    actionDelete.enabled  = nonEmpty
+    actionView  .enabled  = nonEmpty && sel.exists(_.isViewable)
+    actionAttr  .enabled  = nonEmpty
   }
-
-  final protected def nameUpdate(name: Option[String]): Unit = {
-    requireEDT()
-    window.title = mkTitle(name)
-  }
-
-  private def disposeData()(implicit tx: S#Tx): Unit = {
-    contents  .dispose()
-    nameObserver.foreach(_.dispose()(bridge(tx)))
-  }
-
-  final def frameClosing(): Unit =
-    cursor.step { implicit tx =>
-      disposeData()
-    }
-
-  //  private final class AddAction(f: ObjView.Factory) extends Action(f.prefix) {
-  //    icon = f.icon
-  //
-  //    def apply(): Unit = {
-  //      implicit val folderSer = Folder.serializer[S]
-  //      val parentH = cursor.step { implicit tx => tx.newHandle(contents.insertionPoint._1) }
-  //      f.initDialog[S](parentH, Some(window)).foreach(undoManager.add)
-  //    }
-  //  }
 
   final protected var ggAdd   : Button = _
   final protected var ggDelete: Button = _
   final protected var ggView  : Button = _
   final protected var ggAttr  : Button = _
 
-  final def guiInit(): Unit = {
+  final def init()(implicit tx: S#Tx): Unit = deferTx(guiInit())
+
+  private var _title: String = ""
+
+  def title: String = _title
+
+  final def nameUpdate(sOpt: Option[String]): Unit = {
+    _title = mkTitle(sOpt)
+    dispatch(CollectionViewImpl.NamedChanged(_title))
+  }
+
+
+  private def guiInit(): Unit = {
     //    lazy val addPopup: PopupMenu = {
     //      import Menu._
     //      val pop = Popup()
@@ -148,61 +144,94 @@ abstract class CollectionFrameImpl[S <: Sys[S], S1 <: Sys[S1]](val document: Wor
     //      }
     //    }
 
-    ggAdd    = GUI.toolButton(actionAdd   , raphael.Shapes.Plus  , "Add Element"            )
-    ggDelete = GUI.toolButton(actionDelete, raphael.Shapes.Minus , "Remove Selected Element")
-    ggAttr   = GUI.toolButton(actionAttr  , raphael.Shapes.Wrench, "Attributes Editor"      )
-    ggView   = GUI.toolButton(actionView  , raphael.Shapes.View  , "View Selected Element"  )
+    ggAdd     = GUI.toolButton(actionAdd, raphael.Shapes.Plus, "Add Element")
+    ggDelete  = GUI.toolButton(actionDelete, raphael.Shapes.Minus, "Remove Selected Element")
+    ggAttr    = GUI.toolButton(actionAttr, raphael.Shapes.Wrench, "Attributes Editor")
+    ggView    = GUI.toolButton(actionView, raphael.Shapes.View, "View Selected Element")
 
-    lazy val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggAttr, ggView)
+    val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggAttr, ggView)
 
-    lazy val compoundPanel = new BorderPanel {
-      add(impl.contents.component, BorderPanel.Position.Center)
-      add(buttonPanel            , BorderPanel.Position.South )
+    component = new BorderPanel {
+      add(impl.peer.component, BorderPanel.Position.Center)
+      add(buttonPanel, BorderPanel.Position.South)
     }
-
-    window = new CollectionFrameImplPeer(this, compoundPanel, _fileOpt = file)
-
-    //    contents.addListener {
-    //      case FolderView.SelectionChanged(_, sel) =>
-    //        val nonEmpty = sel.nonEmpty
-    //        actionAdd   .enabled  = sel.size < 2
-    //        actionDelete.enabled  = nonEmpty
-    //        actionView  .enabled  = nonEmpty && sel.exists(_.renderData.isViewable)
-    //        actionAttr  .enabled  = nonEmpty
-    //    }
-
-    initGUI2()
-
-    selectionChanged(selectedObjects)
-    window.pack()
-    GUI.placeWindow(window, frameX, frameY, 24)
   }
 
-  protected def selectionChanged(sel: List[ObjView[S]]): Unit = {
-    val nonEmpty  = sel.nonEmpty
-    actionAdd   .enabled  = sel.size < 2
-    actionDelete.enabled  = nonEmpty
-    actionView  .enabled  = nonEmpty && sel.exists(_.isViewable)
-    actionAttr  .enabled  = nonEmpty
+  def dispose()(implicit tx: S#Tx): Unit = {
+    nameObserver.foreach(_.dispose()(bridge(tx)))
   }
 }
 
-final class CollectionFrameImplPeer[S <: Sys[S]](view: CollectionFrameImpl[S, _], _contents: Component,
-                                                 _fileOpt: Option[File])
-  extends WindowImpl {
+class CollectionFrameImpl[S <: Sys[S]](val view: View[S] /* CollectionViewImpl[S, _] */)
+  extends WindowImpl[S] /* with WindowHolder[CollectionFrameImplPeer[S]] with CursorHolder[S] */ {
+  impl =>
 
-  file            = _fileOpt
-  closeOperation  = Window.CloseDispose
-  reactions += {
-    case Window.Closing(_) => view.frameClosing()
-  }
+  //  final def component: Component = contents.component
+  //
+  //  final def dispose()(implicit tx: S#Tx): Unit = {
+  //    disposeData()
+  //    deferTx(window.dispose())
+  //  }
 
-  bindMenus(
-    "edit.undo" -> view.contents.undoManager.undoAction,
-    "edit.redo" -> view.contents.undoManager.redoAction
-  )
+  //  final protected def nameUpdate(name: Option[String]): Unit = {
+  //    requireEDT()
+  //    // window.title = mkTitle(name)
+  //    title = mkTitle(name)
+  //  }
 
-  contents = _contents
+  //  private def disposeData()(implicit tx: S#Tx): Unit = {
+  //    contents  .dispose()
+  //  }
+  //
+  //  final def frameClosing(): Unit =
+  //    cursor.step { implicit tx =>
+  //      disposeData()
+  //    }
 
-  def show[A](source: DialogSource[A]): A = showDialog(source)
+  //  private final class AddAction(f: ObjView.Factory) extends Action(f.prefix) {
+  //    icon = f.icon
+  //
+  //    def apply(): Unit = {
+  //      implicit val folderSer = Folder.serializer[S]
+  //      val parentH = cursor.step { implicit tx => tx.newHandle(contents.insertionPoint._1) }
+  //      f.initDialog[S](parentH, Some(window)).foreach(undoManager.add)
+  //    }
+  //  }
+
+  //    window = new CollectionFrameImplPeer(this, compoundPanel, _fileOpt = file)
+  //
+  //    //    contents.addListener {
+  //    //      case FolderView.SelectionChanged(_, sel) =>
+  //    //        val nonEmpty = sel.nonEmpty
+  //    //        actionAdd   .enabled  = sel.size < 2
+  //    //        actionDelete.enabled  = nonEmpty
+  //    //        actionView  .enabled  = nonEmpty && sel.exists(_.renderData.isViewable)
+  //    //        actionAttr  .enabled  = nonEmpty
+  //    //    }
+  //
+  //    initGUI2()
+  //
+  //    selectionChanged(selectedObjects)
+  //    window.pack()
+  //    GUI.placeWindow(window, frameX, frameY, 24)
 }
+
+//final class CollectionFrameImplPeer[S <: Sys[S]](view: CollectionFrameImpl[S, _], _contents: Component,
+//                                                 _fileOpt: Option[File])
+//  extends WindowImpl {
+//
+//  file            = _fileOpt
+//  closeOperation  = Window.CloseDispose
+//  reactions += {
+//    case Window.Closing(_) => view.frameClosing()
+//  }
+//
+//  bindMenus(
+//    "edit.undo" -> view.contents.undoManager.undoAction,
+//    "edit.redo" -> view.contents.undoManager.redoAction
+//  )
+//
+//  contents = _contents
+//
+//  def show[A](source: DialogSource[A]): A = showDialog(source)
+//}

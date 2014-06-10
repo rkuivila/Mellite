@@ -176,8 +176,10 @@ object CodeFrameImpl {
 
       codePaneC = Component.wrap(codePane.component)
 
-      window = new WindowImpl {
+      window = new de.sciss.desktop.impl.WindowImpl {
         frame =>
+
+        def handler = Application.windowHandler
 
         override def style = Window.Auxiliary
 

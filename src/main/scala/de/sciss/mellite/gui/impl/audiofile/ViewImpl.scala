@@ -31,11 +31,10 @@ import de.sciss.audiowidgets.TimelineModel
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.file.File
 
 object ViewImpl {
   def apply[S <: Sys[S]](doc: Workspace[S], obj0: Obj.T[S, AudioGraphemeElem])
-                        (implicit tx: S#Tx, aural: AuralSystem): AudioFileView[S] = {
+                        (implicit tx: S#Tx, aural: AuralSystem, _cursor: stm.Cursor[S]): AudioFileView[S] = {
     val f             = obj0.elem.peer.value // .artifact // store.resolve(element.entity.value.artifact)
     val sampleRate    = f.spec.sampleRate
     type I            = doc.I
@@ -62,7 +61,8 @@ object ViewImpl {
     import doc.inMemoryBridge
     val res: Impl[S, I] = new Impl[S, I] {
       val timelineModel = new TimelineModelImpl(fullSpan, sampleRate)
-      val document      = doc.folder
+      val workspace     = doc
+      val cursor        = _cursor
       val holder        = tx.newHandle(obj0)
       val transportView: TransportView[I] = TransportView[I](transport, timelineModel, hasMillis = true, hasLoop = true)
     }
@@ -77,7 +77,7 @@ object ViewImpl {
     extends AudioFileView[S] with ComponentHolder[Component] { impl =>
 
     protected def holder       : stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
-    val document               : File // Document[S]
+    // val document               : File // Document[S]
     protected def transportView: TransportView[I]
     protected def timelineModel: TimelineModel
 
@@ -101,7 +101,7 @@ object ViewImpl {
       //      }
       val sonoView  = new ViewJ(_sono, timelineModel)
 
-      val ggDragRegion = new DnD.Button(document, holder, snapshot, timelineModel)
+      val ggDragRegion = new DnD.Button(workspace.folder, holder, snapshot, timelineModel)
 
       val topPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
@@ -150,7 +150,7 @@ object ViewImpl {
       override def importData(support: TransferSupport): Boolean = {
         val t     = support.getTransferable
         val data  = t.getTransferData(FolderView.selectionFlavor).asInstanceOf[FolderView.SelectionDnDData[S]]
-        (data.document == view.document) && {
+        (data.document == view.workspace) && {
           data.selection.exists { nodeView =>
             nodeView.renderData match {
               case ev: ObjView.Int[S] =>

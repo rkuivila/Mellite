@@ -18,14 +18,10 @@ package audiofile
 
 import de.sciss.lucre.stm
 import de.sciss.synth.proc
-import proc.{AudioGraphemeElem, Obj, AuralSystem}
-import de.sciss.desktop.Window
+import proc.{AudioGraphemeElem, Obj}
 import de.sciss.file._
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.lucre.swing._
 import proc.Implicits._
-import scala.swing.Component
 
 object FrameImpl {
   def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, AudioGraphemeElem])
@@ -34,49 +30,53 @@ object FrameImpl {
     val afv       = AudioFileView(doc, obj)
     val name      = obj.attr.name
     val file      = obj.elem.peer.value.artifact
-    val view      = new Impl(doc, afv, name, file)
-    deferTx {
-      view.guiInit()
-    }
-    view
+    val fileName  = file.base
+    val title     = if (name == fileName) name else s"$name - $fileName"
+    val res       = new Impl(/* doc, */ view = afv, name = name, _file = file, title0 = title)
+    res.init()
+    res
   }
 
-  private final class Impl[S <: Sys[S]](val document: Workspace[S], afv: AudioFileView[S], name: String, _file: File)
+  private final class Impl[S <: Sys[S]](/* val document: Workspace[S], */ val view: AudioFileView[S], name: String,
+                                        _file: File, title0: String)
                                        (implicit cursor: stm.Cursor[S])
-    extends AudioFileFrame[S] with WindowHolder[Window] {
+    extends WindowImpl[S](title0)
+    with AudioFileFrame[S] {
 
-    def component: Component = contents.component
+    windowFile = Some(_file)
 
-    def contents: AudioFileView[S] = afv
+    //    def component: Component = contents.component
+    //
+    //    def contents: AudioFileView[S] = afv
 
-    def dispose()(implicit tx: S#Tx): Unit = {
-      disposeData()
-      deferTx(window.dispose())
-    }
+    //    def dispose()(implicit tx: S#Tx): Unit = {
+    //      disposeData()
+    //      deferTx(window.dispose())
+    //    }
+    //
+    //    private def disposeData()(implicit tx: S#Tx): Unit =
+    //      afv.dispose()
 
-    private def disposeData()(implicit tx: S#Tx): Unit =
-      afv.dispose()
+    //    private def frameClosing(): Unit =
+    //      cursor.step { implicit tx =>
+    //        disposeData()
+    //      }
 
-    private def frameClosing(): Unit =
-      cursor.step { implicit tx =>
-        disposeData()
-      }
-
-    def guiInit(): Unit = {
-      val fileName = _file.base
-      window = new WindowImpl {
-        component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
-        title       = if (name == fileName) name else s"$name - $fileName"
-        file        = Some(_file)
-        contents    = afv.component
-        reactions += {
-          case Window.Closing(_) => frameClosing()
-        }
-        pack()
-        // centerOnScreen()
-        GUI.placeWindow(this, 1f, 0.75f, 24)
-        front()
-      }
-    }
+    //    def guiInit(): Unit = {
+    //      val fileName = _file.base
+    //      window = new WindowImpl {
+    //        component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
+    //        title       = if (name == fileName) name else s"$name - $fileName"
+    //        file        = Some(_file)
+    //        contents    = afv.component
+    //        reactions += {
+    //          case Window.Closing(_) => frameClosing()
+    //        }
+    //        pack()
+    //        // centerOnScreen()
+    //        GUI.placeWindow(this, 1f, 0.75f, 24)
+    //        front()
+    //      }
+    //    }
   }
 }

@@ -52,8 +52,10 @@ private[gui] object InterpreterFrameImpl {
     val intp = InterpreterPane(interpreterConfig = intpCfg, codePaneConfig = codeCfg)
 
     new InterpreterFrame {
-      val component = new WindowImpl {
+      val component = new de.sciss.desktop.impl.WindowImpl {
         frame =>
+
+        def handler = Application.windowHandler
 
         override def style = Window.Auxiliary
 

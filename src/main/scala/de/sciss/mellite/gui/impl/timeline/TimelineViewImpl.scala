@@ -284,7 +284,7 @@ object TimelineViewImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]](val document      : Workspace[S],
+  private final class Impl[S <: Sys[S]](val workspace     : Workspace[S],
                                         groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
                                         groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
                                         transport         : Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],
@@ -295,7 +295,7 @@ object TimelineViewImpl {
                                         globalView        : GlobalProcsView[S],
                                         transportView     : TransportView[S],
                                         val procSelectionModel: ProcSelectionModel[S])
-                                       (implicit cursor: Cursor[S])
+                                       (implicit val cursor: Cursor[S])
     extends TimelineView[S] with ComponentHolder[Component] {
     impl =>
 
@@ -323,7 +323,7 @@ object TimelineViewImpl {
     def dispose()(implicit tx: S#Tx): Unit = {
       disposables.swap(Nil)(tx.peer).foreach(_.dispose())
       deferTx {
-        DocumentViewHandler.instance.remove(this)
+        // DocumentViewHandler.instance.remove(this)
         val pit     = procViews.iterator
         procViews   = RangedSeq.empty
         pit.foreach(_.disposeGUI())
@@ -348,11 +348,11 @@ object TimelineViewImpl {
         import ActionBounceTimeline._
         val window  = GUI.findWindow(component)
         val setUpd  = settings.copy(span = timelineModel.selection)
-        val (_settings, ok) = query(setUpd, document, timelineModel, window = window)
+        val (_settings, ok) = query(setUpd, workspace, timelineModel, window = window)
         settings = _settings
         _settings.file match {
           case Some(file) if ok =>
-            performGUI(document, _settings, groupH, file, window = window)
+            performGUI(workspace, _settings, groupH, file, window = window)
           case _ =>
         }
       }
@@ -464,7 +464,7 @@ object TimelineViewImpl {
       val actionAttr: Action = Action(null) {
         withSelection { implicit tx =>
           seq => seq.foreach { view =>
-            AttrMapFrame(document, view.proc)
+            AttrMapFrame(workspace, view.proc)
           }
         }
       }
@@ -501,7 +501,7 @@ object TimelineViewImpl {
       }
 
       component = pane
-      DocumentViewHandler.instance.add(this)
+      // DocumentViewHandler.instance.add(this)
     }
 
     private def repaintAll(): Unit = view.canvasComponent.repaint()
@@ -717,17 +717,17 @@ object TimelineViewImpl {
         case ed: DnD.ExtAudioRegionDrag[S] =>
           val file = ed.file
           val resOpt = step { implicit tx =>
-            ObjectActions.findAudioFile(document.root(), file).map { grapheme =>
+            ObjectActions.findAudioFile(workspace.root(), file).map { grapheme =>
               insertAudioRegion(drop, ed, grapheme.elem.peer)
             }
           }
 
           resOpt.getOrElse {
             Try(AudioFile.readSpec(file)).toOption.fold(false) { spec =>
-              ActionArtifactLocation.query[S](document.root, file).fold(false) { src =>
+              ActionArtifactLocation.query[S](workspace.root, file).fold(false) { src =>
                 step { implicit tx =>
                   src().elem.peer.modifiableOption.fold(false) { loc =>
-                    val elems = document.root()
+                    val elems = workspace.root()
                     // val obj   = ObjectActions.addAudioFile(elems, elems.size, loc, file, spec)
                     val obj   = ObjectActions.mkAudioFile(loc, file, spec)
                     elems.addLast(obj)
@@ -838,7 +838,7 @@ object TimelineViewImpl {
 
       object canvasComponent extends Component with DnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
-        protected def document      = impl.document.folder
+        protected def document      = impl.workspace.folder
 
         private var currentDrop = Option.empty[DnD.Drop[S]]
 

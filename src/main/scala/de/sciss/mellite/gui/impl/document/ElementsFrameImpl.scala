@@ -30,7 +30,7 @@ import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.mellite.gui.edit.EditRemoveObj
 import javax.swing.undo.{CompoundEdit, UndoableEdit}
 import proc.FolderElem
-import de.sciss.mellite.gui.impl.component.CollectionFrameImpl
+import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
 
 object ElementsFrameImpl {
   def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Workspace[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
@@ -40,41 +40,57 @@ object ElementsFrameImpl {
     }
     val folderView      = FolderView(doc.folder, doc.root())
     val name0           = nameOpt.map(_.value(bridge(tx)))
-    val view            = new Impl[S, S1](doc, folderView) {
+    val view            = new ViewImpl[S, S1](doc, folderView) {
       protected val nameObserver = nameOpt.map { name =>
         name.changed.react { implicit tx => upd =>
           deferTx(nameUpdate(Some(upd.now)))
         } (bridge(tx))
       }
 
-      deferTx {
-        guiInit()
-        nameUpdate(name0)
-        window.front()
-      }
+      //      deferTx {
+      //        guiInit()
+      //        nameUpdate(name0)
+      //      }
     }
+    view.init()
 
-    view
+    val res = new FrameImpl[S](view, name0 = name0)
+    res.init()
+    res
   }
 
-  private abstract class Impl[S <: Sys[S], S1 <: Sys[S1]](document: Workspace[S], val contents: FolderView[S])
-                                       (implicit cursor: stm.Cursor[S], undoManager: UndoManager,
-                                        bridge: S#Tx => S1#Tx)
-    extends CollectionFrameImpl[S, S1](document, file = Some(document.folder), frameY = 0f)
-    with DocumentElementsFrame[S] {
+  private final class FrameImpl[S <: Sys[S]](view: ViewImpl[S, _], name0: Option[String])
+    extends CollectionFrameImpl[S](view) with DocumentElementsFrame[S] {
+
+    override protected def initGUI(): Unit = {
+      view.addListener {
+        case CollectionViewImpl.NamedChanged(n) => title = n
+      }
+      view.nameUpdate(name0)
+    }
+  }
+
+  private abstract class ViewImpl[S <: Sys[S], S1 <: Sys[S1]](val workspace: Workspace[S],
+                                                              val peer: FolderView[S])
+                                       (implicit val cursor: stm.Cursor[S], undoManager: UndoManager,
+                                        protected val bridge: S#Tx => S1#Tx)
+    extends CollectionViewImpl[S, S1] // (document, file = Some(document.folder), frameY = 0f)
+    {
+
     impl =>
 
     protected def nameObserver: Option[stm.Disposable[S1#Tx]]
 
-    protected def mkTitle(sOpt: Option[String]) = s"${document.folder.base}${sOpt.fold("")(s => s"/$s")} : Elements"
+    protected def mkTitle(sOpt: Option[String]): String =
+      s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Elements"
 
     private final class AddAction(f: ObjView.Factory) extends Action(f.prefix) {
       icon = f.icon
 
       def apply(): Unit = {
         implicit val folderSer = Folder.serializer[S]
-        val parentH = cursor.step { implicit tx => tx.newHandle(contents.insertionPoint._1) }
-        f.initDialog[S](parentH, Some(window)).foreach(undoManager.add)
+        val parentH = cursor.step { implicit tx => tx.newHandle(impl.peer.insertionPoint._1) }
+        f.initDialog[S](parentH, None /* XXX TODO: Some(window) */).foreach(undoManager.add)
       }
     }
 
@@ -84,6 +100,8 @@ object ElementsFrameImpl {
       ObjView.factories.toList.sortBy(_.prefix).foreach { f =>
         pop.add(Item(f.prefix, new AddAction(f)))
       }
+
+      val window = GUI.findWindow(component).getOrElse(sys.error(s"No window for $impl"))
       val res = pop.create(window)
       res.peer.pack() // so we can read `size` correctly
       res
@@ -95,15 +113,15 @@ object ElementsFrameImpl {
     }
 
     final protected lazy val actionDelete: Action = Action(null) {
-      val sel = contents.selection
-      val edits: List[UndoableEdit] = atomic { implicit tx =>
+      val sel = peer.selection
+      val edits: List[UndoableEdit] = cursor.step { implicit tx =>
         sel.map { nodeView =>
           val parent = nodeView.parentOption.flatMap { pView =>
             pView.modelData() match {
               case FolderElem.Obj(objT) => Some(objT.elem.peer)
               case _ => None
             }
-          }.getOrElse(contents.root())
+          }.getOrElse(peer.root())
           val childH  = nodeView.modelData
           val child   = childH()
           val idx     = parent.indexOf(child)
@@ -124,12 +142,12 @@ object ElementsFrameImpl {
     }
 
     final protected def initGUI2(): Unit = {
-      contents.addListener {
+      peer.addListener {
         case FolderView.SelectionChanged(_, sel) =>
           selectionChanged(sel.map(_.renderData))
       }
     }
 
-    protected def selectedObjects: List[ObjView[S]] = contents.selection.map(_.renderData)
+    protected def selectedObjects: List[ObjView[S]] = peer.selection.map(_.renderData)
   }
 }
