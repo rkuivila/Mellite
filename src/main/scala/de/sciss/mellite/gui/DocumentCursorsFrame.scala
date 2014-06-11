@@ -24,11 +24,12 @@ object DocumentCursorsFrame {
   type D = S#D
   def apply(document: Workspace.Confluent)(implicit tx: D#Tx): DocumentCursorsFrame = Impl(document)
 }
-trait DocumentCursorsFrame /* [S <: Sys[S]] */ {
-  def window: desktop.Window
-  def view: DocumentCursorsView
-  def workspace: Workspace.Confluent // Document[S]
+trait DocumentCursorsFrame extends lucre.swing.Window[DocumentCursorsFrame.D] /* [S <: Sys[S]] */ {
+//  def window: desktop.Window
+//  def view: DocumentCursorsView
+//  def workspace: Workspace.Confluent // Document[S]
 }
 
-// XXX TODO: ViewHasWorkspace minus the cursor?
-trait DocumentCursorsView extends View[DocumentCursorsFrame.S] //  DocumentView[DocumentCursorsFrame.S]
+trait DocumentCursorsView extends View[DocumentCursorsFrame.D] {
+  def workspace: Workspace[DocumentCursorsFrame.S]
+}

@@ -208,6 +208,7 @@ object WorkspaceImpl {
       // if the transaction is successful...
       Txn.afterCommit { _ =>
         // ...and close the database
+        log(s"Closing system $system")
         system.close()
       } (tx.peer)
     }

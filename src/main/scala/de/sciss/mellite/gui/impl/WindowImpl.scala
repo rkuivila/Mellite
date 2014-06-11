@@ -66,6 +66,11 @@ object WindowImpl {
     pack()
   }
 }
+
+//abstract class WindowImpl0[S <: Sys[S], S1 <: Sys[S1]](title0: Optional[String] = None)
+//  extends Window[S] with WindowHolder[desktop.Window] {
+//}
+
 abstract class WindowImpl[S <: Sys[S]](title0: Optional[String] = None)
   extends Window[S] with WindowHolder[desktop.Window] {
 
@@ -134,14 +139,17 @@ abstract class WindowImpl[S <: Sys[S]](title0: Optional[String] = None)
   private var didClose = false
   private def disposeFromGUI(): Unit = if (!didClose) {
     requireEDT()
+    performClose()
+    didClose = true
+  }
+
+  protected def performClose(): Unit =
     view match {
       case cv: View.Cursor[S] => cv.cursor.step { implicit tx =>
         dispose()
       }
       case _ =>
     }
-    didClose = true
-  }
 
   final def handleClose(): Unit = {
     requireEDT()

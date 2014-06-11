@@ -18,7 +18,7 @@ package document
 
 import scala.swing._
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.{Escape, confluent, stm}
+import de.sciss.lucre.{confluent, stm}
 import java.util.{Locale, Date}
 import java.text.SimpleDateFormat
 import de.sciss.file._
@@ -33,30 +33,30 @@ import de.sciss.synth.proc.ExprImplicits
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.icons.raphael
+import de.sciss.lucre.stm.Disposable
 
 object CursorsFrameImpl {
   type S = proc.Confluent
   type D = S#D
 
-  def apply(document: Workspace.Confluent)(implicit tx: D#Tx): DocumentCursorsFrame = {
-    val root      = document.cursors
-    val rootView  = createView(document, parent = None, elem = root)
-    val view      = new Impl(document, rootView)(tx.system)
-
-    /* val obs = */ root.changed.react { implicit tx => upd =>
-      log(s"DocumentCursorsFrame update $upd")
-      view.elemUpdated(rootView, upd.changes)
+  def apply(workspace: Workspace.Confluent)(implicit tx: D#Tx): DocumentCursorsFrame = {
+    val root      = workspace.cursors
+    val rootView  = createView(workspace, parent = None, elem = root)
+    val view      = new ViewImpl(workspace, rootView)(tx.system) {
+      val observer = root.changed.react { implicit tx => upd =>
+        log(s"DocumentCursorsFrame update $upd")
+        view.elemUpdated(rootView, upd.changes)
+      }
     }
-    // XXX TODO: remember obs for disposal
-
-    deferTx {
-      view.guiInit()
-    }
-
+    view.init()
     view.addChildren(rootView, root)
     // document.addDependent(view)
 
-    view
+    val res = new FrameImpl(view)
+    // missing from WindowImpl because of system mismatch
+    workspace.addDependent(res.WorkspaceClosed)
+    res.init()
+    res
   }
 
   private def createView(document: Workspace.Confluent, parent: Option[CursorView], elem: Cursors[S, D])
@@ -73,18 +73,66 @@ object CursorsFrameImpl {
                                  var children: Vec[CursorView], var name: String,
                                  val created: Long, var updated: Long)
 
-  private final class Impl(val workspace: Workspace.Confluent, _root: CursorView)(implicit cursor: stm.Cursor[D])
-    extends DocumentCursorsFrame
-    with WindowHolder[desktop.Window]
-    with ComponentHolder[Component]
-    with DocumentCursorsView {
+  private final class FrameImpl(val view: DocumentCursorsView) // (implicit cursor: stm.Cursor[D])
+    extends WindowImpl[D](s"${view.workspace.folder.base} : Cursors")
+    with DocumentCursorsFrame {
+
+    impl =>
+
+    def workspace = view.workspace
+
+    object WorkspaceClosed extends Disposable[S#Tx] {
+      def dispose()(implicit tx: S#Tx): Unit = impl.dispose()(workspace.system.durableTx(tx))
+    }
+
+    override protected def initGUI(): Unit = {
+      windowFile = Some(workspace.folder)
+      // missing from WindowImpl because of system mismatch
+      window.reactions += {
+        case desktop.Window.Activated(_) =>
+          DocumentViewHandler.instance.activeDocument = Some(workspace)
+      }
+    }
+
+    override def dispose()(implicit tx: D#Tx): Unit = {
+      // missing from WindowImpl because of system mismatch
+      workspace.removeDependent(WorkspaceClosed)
+      super.dispose()
+    }
+
+    override protected def performClose(): Unit = {
+      log(s"Closing workspace ${workspace.folder}")
+      Application.documentHandler.removeDocument(workspace)
+      workspace.close()
+    }
+
+    override protected def placement = (1f, 0f, 24)
+  }
+
+  private abstract class ViewImpl(val workspace: Workspace.Confluent, _root: CursorView)
+                                 (implicit cursorD: stm.Cursor[D])
+    extends ComponentHolder[Component] with DocumentCursorsView {
 
     type Node = CursorView
 
+    protected def observer: Disposable[D#Tx]
+
     private var mapViews = Map.empty[Cursors[S, D], Node]
 
-    def view   = this
+    final def view   = this
     // def window = component
+
+    final def cursor: stm.Cursor[S] = workspace.cursors.cursor
+
+    def dispose()(implicit tx: D#Tx): Unit = {
+      // implicit val dtx = workspace.system.durableTx(tx)
+      observer.dispose()
+      //      // document.removeDependent(this)
+      //      deferTx {
+      //        window.dispose()
+      //        // DocumentViewHandler.instance.remove(this)
+      //      }
+    }
 
     private class ElementTreeModel extends AbstractTreeModel[Node] {
       lazy val root: Node = _root // ! must be lazy. suckers....
@@ -129,7 +177,7 @@ object CursorsFrameImpl {
       val ggValue = new FormattedTextField(format)
       ggValue.peer.setValue(new Date(parent.updated))
       val nameOpt = GUI.keyValueDialog(value = ggValue, title = nameAdd,
-        defaultName = "branch", window = Some(window))
+        defaultName = "branch", window = GUI.findWindow(component))
       (nameOpt, ggValue.peer.getValue) match {
         case (Some(name), seminalDate: Date) =>
           val parentElem = parent.elem
@@ -160,7 +208,7 @@ object CursorsFrameImpl {
         }
       }
 
-    def addChildren(parentView: Node, parent: Cursors[S, D])(implicit tx: D#Tx): Unit =
+    final def addChildren(parentView: Node, parent: Cursors[S, D])(implicit tx: D#Tx): Unit =
       parent.descendants.toList.zipWithIndex.foreach { case (c, ci) =>
         elemAdded(parent = parentView, idx = ci, child = c)
       }
@@ -179,7 +227,7 @@ object CursorsFrameImpl {
       addChildren(cv, child)
     }
 
-    def elemUpdated(v: Node, upd: Vec[Cursors.Change[S, D]])(implicit tx: D#Tx): Unit =
+    final def elemUpdated(v: Node, upd: Vec[Cursors.Change[S, D]])(implicit tx: D#Tx): Unit =
       upd.foreach {
         case Cursors.ChildAdded  (idx, child) => elemAdded  (v, idx, child)
         case Cursors.ChildRemoved(idx, child) => elemRemoved(v, idx, child)
@@ -193,7 +241,9 @@ object CursorsFrameImpl {
           }
       }
 
-    def guiInit(): Unit = {
+    final def init()(implicit tx: D#Tx): Unit = deferTx(guiInit())
+
+    private def guiInit(): Unit = {
       _model = new ElementTreeModel
 
       val colName = new TreeColumnModel.Column[Node, String]("Name") {
@@ -201,7 +251,7 @@ object CursorsFrameImpl {
 
         def update(node: Node, value: String): Unit =
           if (value != node.name) {
-            cursor.step { implicit tx =>
+            cursorD.step { implicit tx =>
               val expr = ExprImplicits[D]
               import expr._
               node.elem.name_=(value)
@@ -269,7 +319,7 @@ object CursorsFrameImpl {
           val elem = path.last.elem
           implicit val cursor = elem.cursor
           cursor.step { implicit tx =>
-            implicit val dtx = Escape.durableTx(workspace.system)
+            implicit val dtx = workspace.system.durableTx(tx)
             DocumentElementsFrame(workspace, name = Some(elem.name))
           }
         }
@@ -297,34 +347,6 @@ object CursorsFrameImpl {
       }
 
       component = panel
-
-      window = new de.sciss.desktop.impl.WindowImpl {
-        def handler = Application.windowHandler
-
-        title           = s"${workspace.folder.base} : Cursors"
-        file            = Some(workspace.folder)
-        closeOperation  = desktop.Window.CloseIgnore
-        contents        = panel
-        reactions += {
-          case desktop.Window.Closing(_) => workspace.close()
-        }
-
-        pack()
-        // centerOnScreen()
-        GUI.placeWindow(this, 1f, 0f, 24)
-        front()
-        // add(folderPanel, BorderPanel.Position.Center)
-      }
-
-      // DocumentViewHandler.instance.add(this)
-    }
-
-    def dispose()(implicit tx: S#Tx): Unit = {
-      // document.removeDependent(this)
-      deferTx {
-        window.dispose()
-        // DocumentViewHandler.instance.remove(this)
-      }
     }
   }
 }
