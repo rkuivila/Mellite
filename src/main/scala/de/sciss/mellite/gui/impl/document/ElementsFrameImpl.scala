@@ -27,13 +27,14 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.swing._
 import de.sciss.synth.proc
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.mellite.gui.edit.EditRemoveObj
-import javax.swing.undo.{CompoundEdit, UndoableEdit}
+import de.sciss.mellite.gui.edit.{CompoundEdit, EditRemoveObj}
+import javax.swing.undo.UndoableEdit
 import proc.FolderElem
 import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
 
 object ElementsFrameImpl {
-  def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Workspace[S], nameOpt: Option[Expr[S1, String]])(implicit tx: S#Tx,
+  def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Workspace[S], nameOpt: Option[Expr[S1, String]],
+                                        isWorkspaceRoot: Boolean)(implicit tx: S#Tx,
                                         cursor: stm.Cursor[S], bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl {
       protected var dirty: Boolean = false
@@ -54,19 +55,31 @@ object ElementsFrameImpl {
     }
     view.init()
 
-    val res = new FrameImpl[S](view, name0 = name0)
+    val res = new FrameImpl[S](view, name0 = name0, isWorkspaceRoot = isWorkspaceRoot)
     res.init()
     res
   }
 
-  private final class FrameImpl[S <: Sys[S]](view: ViewImpl[S, _], name0: Option[String])
+  private final class FrameImpl[S <: Sys[S]](view: ViewImpl[S, _], name0: Option[String], isWorkspaceRoot: Boolean)
     extends CollectionFrameImpl[S](view) with DocumentElementsFrame[S] {
+
+    def workspace = view.workspace
 
     override protected def initGUI(): Unit = {
       view.addListener {
         case CollectionViewImpl.NamedChanged(n) => title = n
       }
       view.nameUpdate(name0)
+    }
+
+    override protected def placement: (Float, Float, Int) = (0.5f, 0.0f, 20)
+
+    override protected def performClose(): Unit = if (isWorkspaceRoot) {
+      log(s"Closing workspace ${workspace.folder}")
+      Application.documentHandler.removeDocument(workspace)
+      workspace.close()
+    } else {
+      super.performClose()
     }
   }
 
@@ -130,15 +143,8 @@ object ElementsFrameImpl {
           EditRemoveObj[S](nodeView.renderData.prefix, parentH, idx, childH)
         }
       }
-      edits match {
-        case single :: Nil => undoManager.add(single)
-        case Nil =>
-        case several =>
-          val ce = new CompoundEdit
-          several.foreach(ce.addEdit)
-          ce.end()
-          undoManager.add(ce)
-      }
+      val ceOpt = CompoundEdit(edits, "Delete Elements")
+      ceOpt.foreach(undoManager.add)
     }
 
     final protected def initGUI2(): Unit = {

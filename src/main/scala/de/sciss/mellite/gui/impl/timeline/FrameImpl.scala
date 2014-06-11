@@ -36,9 +36,7 @@ object FrameImpl {
     import ProcGroup.serializer
     val groupH  = tx.newHandle(group.elem.peer)
     val res     = new Impl(tlv, name, groupH)
-    deferTx {
-      res.init()
-    }
+    res.init()
     res
   }
 

@@ -11,7 +11,8 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite.gui
+package de.sciss.mellite
+package gui
 
 import de.sciss.lucre.swing.View
 import de.sciss.synth.proc.Obj
@@ -22,9 +23,9 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.model.Model
 
 object AttrMapView {
-  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
-                                      undoManager: UndoManager): AttrMapView[S] =
-    Impl(obj)
+  def apply[S <: Sys[S]](workspace: Workspace[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
+                         undoManager: UndoManager): AttrMapView[S] =
+    Impl(workspace, obj)
 
   type Selection[S <: Sys[S]] = List[(String, ObjView[S])]
 
@@ -32,6 +33,6 @@ object AttrMapView {
   final case class SelectionChanged[S <: Sys[S]](view: AttrMapView[S], selection: Selection[S])
     extends Update[S]
 }
-trait AttrMapView[S <: Sys[S]] extends View.Editable[S] with Model[AttrMapView.Update[S]] {
+trait AttrMapView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] with Model[AttrMapView.Update[S]] {
   def selection: AttrMapView.Selection[S]
 }

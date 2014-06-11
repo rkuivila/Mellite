@@ -16,7 +16,6 @@ package gui
 package impl
 package document
 
-import scala.swing._
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.{confluent, stm}
 import java.util.{Locale, Date}
@@ -24,8 +23,6 @@ import java.text.SimpleDateFormat
 import de.sciss.file._
 import de.sciss.treetable.{TreeTableCellRenderer, TreeColumnModel, TreeTable, AbstractTreeModel}
 import de.sciss.synth.proc
-import de.sciss.mellite._
-import de.sciss.mellite.gui._
 import de.sciss.desktop
 import de.sciss.treetable.TreeTableSelectionChanged
 import de.sciss.model.Change
@@ -34,6 +31,8 @@ import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm.Disposable
+
+import scala.swing.{FormattedTextField, BorderPanel, ScrollPane, FlowPanel, Button, Action, Component}
 
 object CursorsFrameImpl {
   type S = proc.Confluent
@@ -320,7 +319,7 @@ object CursorsFrameImpl {
           implicit val cursor = elem.cursor
           cursor.step { implicit tx =>
             implicit val dtx = workspace.system.durableTx(tx)
-            DocumentElementsFrame(workspace, name = Some(elem.name))
+            DocumentElementsFrame(workspace, name = Some(elem.name), isWorkspaceRoot = false)
           }
         }
       }

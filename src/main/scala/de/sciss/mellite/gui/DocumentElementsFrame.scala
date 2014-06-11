@@ -22,9 +22,17 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.swing.View
 
 object DocumentElementsFrame {
-  def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Workspace[S], name: Option[Expr[S1, String]])
+  /** Creates a new frame for document elements.
+    *
+    * @param workspace        the workspace whose root to display
+    * @param name             optional window name
+    * @param isWorkspaceRoot  if `true`, closes the workspace when the window closes; if `false` does nothing
+    *                         upon closing the window
+    */
+  def apply[S <: Sys[S], S1 <: Sys[S1]](workspace: Workspace[S], name: Option[Expr[S1, String]],
+                                        isWorkspaceRoot: Boolean)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S], bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] =
-    Impl(doc, nameOpt = name)
+    Impl(workspace, nameOpt = name, isWorkspaceRoot = isWorkspaceRoot)
 }
 
 trait DocumentElementsFrame[S <: Sys[S]] extends lucre.swing.Window[S] {

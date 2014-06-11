@@ -97,7 +97,6 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
     dispatch(CollectionViewImpl.NamedChanged(_title))
   }
 
-
   private def guiInit(): Unit = {
     //    lazy val addPopup: PopupMenu = {
     //      import Menu._
@@ -155,6 +154,9 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
       add(impl.peer.component, BorderPanel.Position.Center)
       add(buttonPanel, BorderPanel.Position.South)
     }
+
+    initGUI2()
+    selectionChanged(selectedObjects)
   }
 
   def dispose()(implicit tx: S#Tx): Unit = {

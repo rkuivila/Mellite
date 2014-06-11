@@ -46,7 +46,7 @@ object ActionOpenWorkspace extends Action("Open...") {
       case eph: Workspace.Ephemeral =>
         implicit val csr = eph.cursor
         csr.step { implicit tx =>
-          DocumentElementsFrame[proc.Durable, proc.Durable](eph, None)
+          DocumentElementsFrame[proc.Durable, proc.Durable](eph, name = None, isWorkspaceRoot = true)
         }
     }
   }

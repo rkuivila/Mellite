@@ -17,6 +17,7 @@ package impl
 package interpreter
 
 import de.sciss.desktop.{OptionPane, Window}
+import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.scalainterpreter.CodePane
 import scala.swing.{FlowPanel, BorderPanel, Swing, Label, Button, Component}
 import de.sciss.lucre.stm
@@ -25,23 +26,23 @@ import scala.concurrent.Future
 import Swing._
 import scala.util.{Failure, Success}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing.{deferTx, defer, requireEDT}
+import de.sciss.lucre.swing.{deferTx, defer}
 import de.sciss.synth.proc
 import proc.Implicits._
 import de.sciss.synth.proc.Obj
 
 object CodeFrameImpl {
   def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, Code.Elem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): CodeFrame[S] = {
+                        (implicit tx: S#Tx, _cursor: stm.Cursor[S]): CodeFrame[S] = {
     val _name   = obj.attr.name
     val _codeEx = obj.elem.peer
     val _code   = _codeEx.value
 
-    new Impl[S] {
-      val document = doc
+    val view = new ViewImpl[S] {
+      val workspace = doc
       protected val name      = _name
       protected val contextName = _code.contextName
-      protected val _cursor   = cursor
+      val cursor   = _cursor
       protected val codeH     = tx.newHandle(_codeEx)(Codes.serializer[S])
       protected val codeID    = _code.id
 
@@ -62,82 +63,35 @@ object CodeFrameImpl {
       //        b.build
       //      }
 
-      deferTx(guiInit())
     }
+    view.init()
+    val res = new FrameImpl(view, title0 = s"${_name} : ${_code.contextName} Code")
+    res.init()
+    res
   }
 
-  private abstract class Impl[S <: Sys[S]] extends CodeFrame[S] with WindowHolder[Window] {
-    // protected def intpCfg: Interpreter.Config
+  private abstract class ViewImpl[S <: Sys[S]]
+    extends ViewHasWorkspace[S] with ComponentHolder[Component] {
+
     protected def codeCfg: CodePane.Config
     protected def name: String
     protected def contextName: String
-    protected def _cursor: stm.Cursor[S]
+    // protected def _cursor: stm.Cursor[S]
     protected def codeH: stm.Source[S#Tx, Expr[S, Code]]
     protected def codeID: Int
 
     private var codePane: CodePane        = _
     private var codePaneC: Component = _
-    // private var intp    : Interpreter     = _
-    // private var intpPane: InterpreterPane = _
     private var futCompile = Option.empty[Future[Unit]]
     private var ggStatus: Label = _
 
     private def currentText: String = codePane.editor.getText
 
-    def component: Component = {
-      requireEDT()
-      if (codePaneC == null) throw new IllegalStateException("Component not yet initialized")
-      codePaneC
-    }
+    def init()(implicit tx: S#Tx): Unit = deferTx(guiInit())
 
-    private def checkClose(): Unit = {
-      if (futCompile.isDefined) {
-        ggStatus.text = "busy!"
-        return
-      }
+    def dispose()(implicit tx: S#Tx): Unit = ()
 
-      val newText = currentText
-      if (newText != codeCfg.text && newText.stripMargin != "") {
-        val message = "The code has been edited.\nDo you want to save the changes?"
-        val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
-          messageType = OptionPane.Message.Warning)
-        opt.title = s"Close Code Editor - $name"
-        opt.show(Some(window)) match {
-          case OptionPane.Result.No =>
-          case OptionPane.Result.Yes =>
-            _cursor.step { implicit tx =>
-              codeH() match {
-                case Expr.Var(vr) => vr() = Codes.newConst[S](Code(codeID, newText))
-              }
-            }
-
-          case OptionPane.Result.Cancel | OptionPane.Result.Closed =>
-            return
-        }
-      }
-      disposeFromGUI()
-    }
-
-    private def disposeFromGUI(): Unit = {
-      _cursor.step { implicit tx =>
-        disposeData()
-      }
-      window.dispose()
-    }
-
-    final def dispose()(implicit tx: S#Tx): Unit = {
-      disposeData()
-      deferTx {
-        window.dispose()
-        // intp.dispose()
-      }
-    }
-
-    private def disposeData()(implicit tx: S#Tx): Unit = {
-      // observer.dispose()
-    }
-
-    def guiInit(): Unit = {
+    private def guiInit(): Unit = {
       codePane  = CodePane(codeCfg)
       // intp      = Interpreter(intpCfg)
       // intpPane  = InterpreterPane.wrap(intp, codePane)
@@ -176,29 +130,46 @@ object CodeFrameImpl {
 
       codePaneC = Component.wrap(codePane.component)
 
-      window = new de.sciss.desktop.impl.WindowImpl {
-        frame =>
-
-        def handler = Application.windowHandler
-
-        override def style = Window.Auxiliary
-
-        title           = s"$name : $contextName Code"
-        contents        = new BorderPanel {
-          add(codePaneC, BorderPanel.Position.Center)
-          add(panelBottom, BorderPanel.Position.South)
-        }
-        closeOperation  = Window.CloseIgnore
-
-        reactions += {
-          case Window.Closing(_) =>
-            checkClose()
-        }
-
-        pack()
-        GUI.centerOnScreen(this)
-        front()
+      component = new BorderPanel {
+        add(codePaneC, BorderPanel.Position.Center)
+        add(panelBottom, BorderPanel.Position.South)
       }
     }
+
+    def checkClose(): Boolean = {
+      if (futCompile.isDefined) {
+        ggStatus.text = "busy!"
+        false
+      }
+
+      val newText = currentText
+      (newText == codeCfg.text || newText.stripMargin.isEmpty) || {
+        val message = "The code has been edited.\nDo you want to save the changes?"
+        val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
+          messageType = OptionPane.Message.Warning)
+        opt.title = s"Close Code Editor - $name"
+        opt.show(GUI.findWindow(component)) match {
+          case OptionPane.Result.No => true
+          case OptionPane.Result.Yes =>
+            cursor.step { implicit tx =>
+              codeH() match {
+                case Expr.Var(vr) => vr() = Codes.newConst[S](Code(codeID, newText))
+              }
+            }
+            true
+
+          case OptionPane.Result.Cancel | OptionPane.Result.Closed =>
+            false
+        }
+      }
+    }
+  }
+
+  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], title0: String)
+    extends WindowImpl[S](title0) with CodeFrame[S] {
+
+    override protected def checkClose(): Boolean = view.checkClose()
+
+    override def style = Window.Auxiliary
   }
 }

@@ -705,7 +705,7 @@ object ObjViewImpl {
 
       def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
         val frame = CodeFrame(document, obj())
-        Some(frame)
+        Some(frame.view)
       }
 
       def configureRenderer(label: Label): Component = {

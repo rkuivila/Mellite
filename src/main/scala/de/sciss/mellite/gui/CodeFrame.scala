@@ -16,12 +16,9 @@ package mellite
 package gui
 
 import lucre.stm
-import stm.Disposable
 import impl.interpreter.{CodeFrameImpl => Impl}
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc.Obj
-import de.sciss.desktop.Window
-import de.sciss.lucre.swing.View
 
 object CodeFrame {
   def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, Code.Elem])
@@ -29,7 +26,7 @@ object CodeFrame {
     Impl(doc, obj)
 }
 
-trait CodeFrame[S <: Sys[S]] extends View[S] {
-  def window   : Window
-  def document : Workspace[S]
+trait CodeFrame[S <: Sys[S]] extends lucre.swing.Window[S] {
+//  def window   : Window
+//  def document : Workspace[S]
 }
