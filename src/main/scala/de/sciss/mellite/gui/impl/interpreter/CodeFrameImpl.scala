@@ -22,7 +22,7 @@ import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{UndoManager, OptionPane, Window}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.event.Sys
 import de.sciss.synth.{SynthGraph, proc}
 import proc.Implicits._
 import de.sciss.synth.proc.{ProcKeys, SynthGraphs, Proc, Obj}

@@ -17,7 +17,7 @@ package gui
 
 import lucre.stm
 import impl.interpreter.{CodeFrameImpl => Impl}
-import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.event.Sys
 import de.sciss.synth.proc.{Proc, Obj}
 
 object CodeFrame {
