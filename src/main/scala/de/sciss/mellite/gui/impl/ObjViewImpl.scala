@@ -635,20 +635,7 @@ object ObjViewImpl {
       // currently this just opens a code editor. in the future we should
       // add a scans map editor, and a convenience button for the attributes
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        val attr    = obj().attr
-        // if there is no source code attached,
-        // create a new code object and add it to the attribute map.
-        // let's just do that without undo manager
-        val codeObj = attr.get(ProcKeys.attrGraphSource) match {
-          case Some(_Code.Elem.Obj(c)) => c
-          case _ =>
-            val source  = "// graph function source code\n\n"
-            val code    = _Code.SynthGraph(source)
-            val c       = Obj(_Code.Elem(_Code.Expr.newVar(_Code.Expr.newConst[S](code))))
-            attr.put(ProcKeys.attrGraphSource, c)
-            c
-        }
-        val frame = CodeFrame(codeObj, title = Some(attr.name))
+        val frame = CodeFrame.proc(obj())
         Some(frame)
       }
     }
