@@ -41,7 +41,7 @@ object CursorsFrameImpl {
   def apply(workspace: Workspace.Confluent)(implicit tx: D#Tx): DocumentCursorsFrame = {
     val root      = workspace.cursors
     val rootView  = createView(workspace, parent = None, elem = root)
-    val view      = new ViewImpl(workspace, rootView)(tx.system) {
+    val view      = new ViewImpl(rootView)(workspace, tx.system) {
       val observer = root.changed.react { implicit tx => upd =>
         log(s"DocumentCursorsFrame update $upd")
         view.elemUpdated(rootView, upd.changes)
@@ -108,8 +108,8 @@ object CursorsFrameImpl {
     override protected def placement = (1f, 0f, 24)
   }
 
-  private abstract class ViewImpl(val workspace: Workspace.Confluent, _root: CursorView)
-                                 (implicit cursorD: stm.Cursor[D])
+  private abstract class ViewImpl(val _root: CursorView)
+                                 (implicit val workspace: Workspace.Confluent, cursorD: stm.Cursor[D])
     extends ComponentHolder[Component] with DocumentCursorsView {
 
     type Node = CursorView
@@ -319,7 +319,7 @@ object CursorsFrameImpl {
           implicit val cursor = elem.cursor
           cursor.step { implicit tx =>
             implicit val dtx = workspace.system.durableTx(tx)
-            DocumentElementsFrame(workspace, name = Some(elem.name), isWorkspaceRoot = false)
+            DocumentElementsFrame(name = Some(elem.name), isWorkspaceRoot = false)
           }
         }
       }

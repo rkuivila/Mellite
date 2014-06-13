@@ -24,15 +24,24 @@ import de.sciss.lucre.synth.Sys
 import javax.swing.undo.UndoableEdit
 import impl.{ObjViewImpl => Impl}
 import scala.language.higherKinds
-import de.sciss.lucre.swing.{Window, View}
+import de.sciss.lucre.swing.Window
 import de.sciss.lucre.{event => evt}
 import scala.swing.{Component, Label}
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.collection.breakOut
 
 object ObjView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
   import mellite.{Code => _Code, Recursion => _Recursion}
   import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, Proc => _Proc, ProcGroup => _ProcGroup, FadeSpec => _FadeSpec}
+
+  final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
+    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
+  }
+
+  // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
+  val SelectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]
 
   trait Factory {
     def prefix: _String
@@ -126,6 +135,8 @@ object ObjView {
   }
 }
 trait ObjView[S <: Sys[S]] {
+  def typeID: Int
+
   /** The contents of the `"name"` attribute of the object. This is directly
     * set by the table tree view. The object view itself must only make sure that
     * an initial value is provided.

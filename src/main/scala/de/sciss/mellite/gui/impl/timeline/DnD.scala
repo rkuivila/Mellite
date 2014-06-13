@@ -28,38 +28,44 @@ import java.awt.datatransfer.{DataFlavor, Transferable}
 import de.sciss.file._
 import scala.util.Try
 import de.sciss.lucre.event.Sys
+import de.sciss.lucre.synth.{Sys => SSys}
 
 object DnD {
   sealed trait Drag[S <: Sys[S]] {
-    def document: File // Document[S]
+    def workspace: Workspace[S]
     // def source: stm.Source[S#Tx, Element[S]]
   }
   sealed trait AudioDragLike[S <: Sys[S]] extends Drag[S] {
     def selection: Span
   }
-  final case class AudioDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
+  final case class AudioDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                           /* grapheme: Grapheme.Value.Audio, */ selection: Span,
                                           bus: Option[stm.Source[S#Tx, Obj.T[S, IntElem]]])
     extends AudioDragLike[S]
 
-  final case class IntDrag [S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]
-  final case class CodeDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Code.Elem]]) extends Drag[S]
-  final case class ProcDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Proc.Elem]]) extends Drag[S]
+  //  final case class IntDrag [S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]
+  //  final case class CodeDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Code.Elem]]) extends Drag[S]
+  //  final case class ProcDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Proc.Elem]]) extends Drag[S]
+
+  final case class GlobalProcDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Obj.T[S, Proc.Elem]])
+    extends Drag[S]
+
+  final case class ObjectDrag[S <: SSys[S]](workspace: Workspace[S], view: ObjView[S]) extends Drag[S]
 
   /** Drag and Drop from Eisenkraut */
-  final case class ExtAudioRegionDrag[S <: Sys[S]](document: File, file: File, selection: Span)
+  final case class ExtAudioRegionDrag[S <: Sys[S]](workspace: Workspace[S], file: File, selection: Span)
     extends AudioDragLike[S]
 
   final case class Drop[S <: Sys[S]](frame: Long, y: Int, drag: Drag[S])
 
   final val flavor = DragAndDrop.internalFlavor[Drag[_]]
 }
-trait DnD[S <: Sys[S]] {
+trait DnD[S <: SSys[S]] {
   _: Component =>
 
   import DnD._
 
-  protected def document: File // Document[S]
+  protected def workspace: Workspace[S]
   protected def timelineModel: TimelineModel
 
   protected def updateDnD(drop: Option[Drop[S]]): Unit
@@ -86,7 +92,7 @@ trait DnD[S <: Sys[S]] {
     private def mkExtStringDrag(t: Transferable, isDragging: Boolean): Option[DnD.ExtAudioRegionDrag[S]] = {
       // stupid OS X doesn't give out the string data before drop actually happens
       if (isDragging) {
-        return Some(ExtAudioRegionDrag(document, file(""), Span(0, 0)))
+        return Some(ExtAudioRegionDrag(workspace, file(""), Span(0, 0)))
       }
 
       val data  = t.getTransferData(DataFlavor.stringFlavor)
@@ -96,7 +102,7 @@ trait DnD[S <: Sys[S]] {
         Try {
           val path = file(arr(0))
           val span = Span(arr(1).toLong, arr(2).toLong)
-          ExtAudioRegionDrag[S](document, path, span)
+          ExtAudioRegionDrag[S](workspace, path, span)
         } .toOption
       } else None
     }
@@ -110,12 +116,19 @@ trait DnD[S <: Sys[S]] {
 
     private def isSupported(t: Transferable): Boolean =
       t.isDataFlavorSupported(DnD.flavor) ||
+      t.isDataFlavorSupported(ObjView.SelectionFlavor) ||
       t.isDataFlavorSupported(DataFlavor.stringFlavor)
 
     private def mkDrag(t: Transferable, isDragging: Boolean): Option[Drag[S]] =
       if (t.isDataFlavorSupported(DnD.flavor)) {
         t.getTransferData(DnD.flavor) match {
-          case d: DnD.Drag[_] if d.document == document => Some(d.asInstanceOf[DnD.Drag[S]])
+          case d: DnD.Drag[_] if d.workspace == workspace => Some(d.asInstanceOf[DnD.Drag[S]])
+          case _ => None
+        }
+      } else if (t.isDataFlavorSupported(ObjView.SelectionFlavor)) {
+        t.getTransferData(ObjView.SelectionFlavor) match {
+          case d: ObjView.SelectionDnDData[_] if d.selection.size == 1 && d.workspace == workspace =>
+            d.asInstanceOf[ObjView.SelectionDnDData[S]].selection.headOption.map(DnD.ObjectDrag(workspace, _))
           case _ => None
         }
 

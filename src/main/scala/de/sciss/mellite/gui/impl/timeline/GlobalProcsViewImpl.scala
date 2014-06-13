@@ -17,14 +17,14 @@ package impl
 package timeline
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.ProcGroup
+import de.sciss.synth.proc.{IntElem, ProcGroup}
 import scala.swing.{Action, Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import javax.swing.table.{TableColumnModel, AbstractTableModel}
 import scala.annotation.switch
 import Swing._
 import de.sciss.desktop.OptionPane
-import javax.swing.{JTable, JComponent, TransferHandler, DropMode}
+import javax.swing.{JComponent, TransferHandler, DropMode}
 import javax.swing.TransferHandler.TransferSupport
 import java.awt.datatransfer.Transferable
 import scala.swing.event.TableColumnsSelected
@@ -33,24 +33,22 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{Int => IntEx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing._
-import de.sciss.file.File
 import de.sciss.icons.raphael
 
 object GlobalProcsViewImpl {
-  def apply[S <: Sys[S]](document: File /* Document[S] */, group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): GlobalProcsView[S] = {
+  def apply[S <: Sys[S]](group: ProcGroup[S], selectionModel: ProcSelectionModel[S])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): GlobalProcsView[S] = {
 
     import ProcGroup.Modifiable.serializer
     val groupHOpt = group.modifiableOption.map(tx.newHandle(_))
-    val view      = new Impl[S](document, groupHOpt, selectionModel)
+    val view      = new Impl[S](groupHOpt, selectionModel)
     deferTx(view.guiInit())
     view
   }
 
-  private final class Impl[S <: Sys[S]](document: File /* Document[S] */,
-                                        groupHOpt: Option[stm.Source[S#Tx, ProcGroup.Modifiable[S]]],
+  private final class Impl[S <: Sys[S]](groupHOpt: Option[stm.Source[S#Tx, ProcGroup.Modifiable[S]]],
                                         selectionModel: ProcSelectionModel[S])
-                                       (implicit cursor: stm.Cursor[S])
+                                       (implicit workspace: Workspace[S], cursor: stm.Cursor[S])
     extends GlobalProcsView[S] with ComponentHolder[Component] {
 
     private var procSeq = Vec.empty[ProcView[S]]
@@ -73,8 +71,8 @@ object GlobalProcsViewImpl {
 
         val indices   = items.map(procSeq.indexOf(_))
         val rows      = table.selection.rows
-        val toAdd     = indices.filterNot(rows.contains)
-        val toRemove  = rows.filterNot(indices.contains)
+        val toAdd     = indices.filterNot(rows   .contains)
+        val toRemove  = rows   .filterNot(indices.contains)
 
         if (toRemove.nonEmpty) rows --= toRemove
         if (toAdd   .nonEmpty) rows ++= toAdd
@@ -198,37 +196,54 @@ object GlobalProcsViewImpl {
         override def getSourceActions(c: JComponent): Int = TransferHandler.LINK
 
         override def createTransferable(c: JComponent): Transferable = {
-          val sel = table.selection.rows
-          sel.headOption.map { row =>
+          val selRows         = table.selection.rows
+          //          if (selRows.isEmpty) null else {
+          //            val sel   = selRows.map(procSeq.apply)
+          //            val types = Set(Proc.typeID)
+          //            val tSel  = DragAndDrop.Transferable(FolderView.selectionFlavor) {
+          //              new FolderView.SelectionDnDData(document, sel, types)
+          //            }
+          //            tSel
+
+          selRows.headOption.map { row =>
             val pv = procSeq(row)
-            DragAndDrop.Transferable(timeline.DnD.flavor)(timeline.DnD.ProcDrag(document, pv.procSource))
+            DragAndDrop.Transferable(timeline.DnD.flavor)(timeline.DnD.GlobalProcDrag(workspace, pv.procSource))
           } .orNull
         }
 
         // ---- import ----
         override def canImport(support: TransferSupport): Boolean =
-          support.isDataFlavorSupported(timeline.DnD.flavor)
+          support.isDataFlavorSupported(ObjView.SelectionFlavor)
 
         override def importData(support: TransferSupport): Boolean =
-          support.isDataFlavorSupported(timeline.DnD.flavor) && {
+          support.isDataFlavorSupported(ObjView.SelectionFlavor) && {
             Option(jt.getDropLocation).fold(false) { dl =>
               val pv    = procSeq(dl.getRow)
-              val drag  = support.getTransferable.getTransferData(timeline.DnD.flavor).asInstanceOf[timeline.DnD.Drag[S]]
-              drag match {
-                case timeline.DnD.IntDrag (`document`, source) =>
+              val drag  = support.getTransferable.getTransferData(ObjView.SelectionFlavor)
+                .asInstanceOf[ObjView.SelectionDnDData[S]]
+              val sel   = drag.selection
+              sel.size == 1 && drag.workspace == workspace && {
+                if (drag.types(ObjView.Int.typeID)) {
                   atomic { implicit tx =>
-                    val intExpr = source().elem.peer
-                    ProcActions.setBus(pv.proc :: Nil, intExpr)
+                    sel.headOption.map(_.obj()) match {
+                      case Some(IntElem.Obj(objT)) =>
+                        val intExpr = objT.elem.peer
+                        ProcActions.setBus(pv.proc :: Nil, intExpr)
+                        true
+                      case _ => false
+                    }
                   }
-                  true
 
-                case timeline.DnD.CodeDrag(`document`, source) =>
+                } else if (drag.types(ObjView.Code.typeID)) {
                   atomic { implicit tx =>
-                    val codeElem = source()
-                    ProcActions.setSynthGraph(pv.proc :: Nil, codeElem)
+                    sel.headOption.map(_.obj()) match {
+                      case Some(Code.Elem.Obj(objT)) =>
+                        ProcActions.setSynthGraph(pv.proc :: Nil, objT)
+                        true
+                      case _ => false
+                    }
                   }
-
-                case _ => false
+                } else false
               }
             }
           }

@@ -29,10 +29,10 @@ object DocumentElementsFrame {
     * @param isWorkspaceRoot  if `true`, closes the workspace when the window closes; if `false` does nothing
     *                         upon closing the window
     */
-  def apply[S <: Sys[S], S1 <: Sys[S1]](workspace: Workspace[S], name: Option[Expr[S1, String]],
-                                        isWorkspaceRoot: Boolean)
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] =
-    Impl(workspace, nameOpt = name, isWorkspaceRoot = isWorkspaceRoot)
+  def apply[S <: Sys[S], S1 <: Sys[S1]](name: Option[Expr[S1, String]], isWorkspaceRoot: Boolean)
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                         bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] =
+    Impl(nameOpt = name, isWorkspaceRoot = isWorkspaceRoot)
 }
 
 trait DocumentElementsFrame[S <: Sys[S]] extends lucre.swing.Window[S] {

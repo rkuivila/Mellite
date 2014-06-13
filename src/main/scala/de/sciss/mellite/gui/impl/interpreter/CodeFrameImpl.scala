@@ -25,12 +25,12 @@ import proc.Implicits._
 import de.sciss.synth.proc.Obj
 
 object CodeFrameImpl {
-  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem])
+  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], title: Option[String])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
     implicit val undoMgr: UndoManager = new UndoManagerImpl {
       protected var dirty: Boolean = false
     }
-    val _name   = obj.attr.name
+    val _name   = title getOrElse obj.attr.name
     val _codeEx = obj.elem.peer
     val _code   = _codeEx.value
     val view    = CodeView(obj, _code)(None)

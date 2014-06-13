@@ -51,15 +51,13 @@ object FolderViewImpl {
 
   // TreeTableViewImpl.DEBUG = true
 
-  def apply[S <: Sys[S]](document: File, root0: Folder[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], undoManager: UndoManager): FolderView[S] = {
-    val _doc    = document
-
+  def apply[S <: Sys[S]](root0: Folder[S])
+                        (implicit tx: S#Tx, workspace: Workspace[S],
+                         cursor: stm.Cursor[S], undoManager: UndoManager): FolderView[S] = {
     implicit val folderSer = Folder.serializer[S]
 
     new Impl[S] {
       val mapViews  = tx.newInMemoryIDMap[ObjView[S]]  // folder IDs to renderers
-      val document  = _doc
       val treeView  = TreeTableView[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]](root0, TTHandler)
 
       deferTx {
@@ -68,14 +66,13 @@ object FolderViewImpl {
     }
   }
 
-  private abstract class Impl[S <: Sys[S]](implicit val undoManager: UndoManager, val cursor: stm.Cursor[S])
+  private abstract class Impl[S <: Sys[S]](implicit val undoManager: UndoManager, val workspace: Workspace[S],
+                                           val cursor: stm.Cursor[S])
     extends ComponentHolder[Component] with FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
     private type Data     = ObjView[S]
     private type NodeView = TreeTableView.NodeView[S, Obj[S], Data]
-
-    protected def document: File // Document[S]
 
     protected object TTHandler
       extends TreeTableView.Handler[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]] {
@@ -244,31 +241,35 @@ object FolderViewImpl {
           TransferHandler.COPY | TransferHandler.MOVE // dragging only works when MOVE is included. Why?
 
         override def createTransferable(c: JComponent): Transferable = {
-          val sel   = selection
-          val tSel  = DragAndDrop.Transferable(FolderView.selectionFlavor) {
-            new FolderView.SelectionDnDData(document, selection)
+          val sel             = selection
+          val tSel            = DragAndDrop.Transferable(FolderView.SelectionFlavor) {
+            new FolderView.SelectionDnDData(workspace, sel)
           }
-          // except for the general selection flavour, see if there is more specific types
-          // (current Int and Code are supported)
-          cursor.step { implicit tx =>
-            sel.headOption.fold(tSel) { nodeView =>
-              nodeView.modelData() match {
-                case IntElem.Obj(objT) =>
-                  val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
-                    timeline.DnD.IntDrag[S](document, tx.newHandle(objT))
-                  }
-                  DragAndDrop.Transferable.seq(tSel, tElem)
-
-                case Code.Elem.Obj(objT) /* if elemView.value.id == Code.SynthGraph.id */ =>
-                  val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
-                    timeline.DnD.CodeDrag[S](document, tx.newHandle(objT))
-                  }
-                  DragAndDrop.Transferable.seq(tSel, tElem)
-
-                case _ => tSel
-              }
-            }
+          val lSel            = DragAndDrop.Transferable(ObjView.SelectionFlavor) {
+            new ObjView.SelectionDnDData(workspace, sel.map(_.renderData)(breakOut))
           }
+          DragAndDrop.Transferable.seq(tSel, lSel)
+          //          // except for the general selection flavour, see if there is more specific types
+          //          // (current Int and Code are supported)
+          //          cursor.step { implicit tx =>
+          //            sel.headOption.fold(tSel) { nodeView =>
+          //              nodeView.modelData() match {
+          //                case IntElem.Obj(objT) =>
+          //                  val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
+          //                    timeline.DnD.IntDrag[S](document, tx.newHandle(objT))
+          //                  }
+          //                  DragAndDrop.Transferable.seq(tSel, tElem)
+          //
+          //                case Code.Elem.Obj(objT) /* if elemView.value.id == Code.SynthGraph.id */ =>
+          //                  val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
+          //                    timeline.DnD.CodeDrag[S](document, tx.newHandle(objT))
+          //                  }
+          //                  DragAndDrop.Transferable.seq(tSel, tElem)
+          //
+          //                case _ => tSel
+          //              }
+          //            }
+          //          }
         }
 
         // ---- import ----
@@ -286,7 +287,7 @@ object FolderViewImpl {
                 // println(s"Action = ${support.getUserDropAction}")
 
                 support   .isDataFlavorSupported(DataFlavor.javaFileListFlavor) ||
-                  (support.isDataFlavorSupported(FolderView.selectionFlavor   ) &&
+                  (support.isDataFlavorSupported(FolderView.SelectionFlavor   ) &&
                    support.getUserDropAction == TransferHandler.MOVE)
 
               } else {
@@ -353,9 +354,9 @@ object FolderViewImpl {
 
         private def importSelection(support: TransferSupport, parent: Folder[S], index: Int)
                                    (implicit tx: S#Tx): Option[UndoableEdit] = {
-          val data = support.getTransferable.getTransferData(FolderView.selectionFlavor)
+          val data = support.getTransferable.getTransferData(FolderView.SelectionFlavor)
             .asInstanceOf[FolderView.SelectionDnDData[S]]
-          if (data.document == document) {
+          if (data.workspace == workspace) {
             val sel     = data.selection
             insertData(sel, parent, index)
           } else {
@@ -400,7 +401,7 @@ object FolderViewImpl {
               }
               parentOpt.flatMap { parent =>
                 val idx = tdl.index
-                if (support.isDataFlavorSupported(FolderView.selectionFlavor))
+                if (support.isDataFlavorSupported(FolderView.SelectionFlavor))
                   importSelection(support, parent, idx)
                 else if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
                   importFiles(support, parent, idx)

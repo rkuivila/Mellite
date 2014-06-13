@@ -14,8 +14,8 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.{ProcGroupElem, ProcGroup, Obj}
-import scala.swing.{Action, Component}
+import de.sciss.synth.proc.{ProcGroupElem, Obj}
+import scala.swing.Action
 import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm
 import de.sciss.audiowidgets.TimelineModel

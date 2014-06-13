@@ -78,7 +78,6 @@ object ViewImpl {
     extends AudioFileView[S] with ComponentHolder[Component] { impl =>
 
     protected def holder       : stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
-    // val document               : File // Document[S]
     protected def transportView: TransportView[I]
     protected def timelineModel: TimelineModel
 
@@ -102,7 +101,7 @@ object ViewImpl {
       //      }
       val sonoView  = new ViewJ(_sono, timelineModel)
 
-      val ggDragRegion = new DnD.Button(workspace.folder, holder, snapshot, timelineModel)
+      val ggDragRegion = new DnD.Button(holder, snapshot, timelineModel)
 
       val topPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
@@ -142,7 +141,7 @@ object ViewImpl {
     private val trns = new TransferHandler {
       // how to enforce a drop action: https://weblogs.java.net/blog/shan_man/archive/2006/02/choosing_the_dr.html
       override def canImport(support: TransferSupport): Boolean =
-        if (support.isDataFlavorSupported(FolderView.selectionFlavor) &&
+        if (support.isDataFlavorSupported(FolderView.SelectionFlavor) &&
            ((support.getSourceDropActions & TransferHandler.COPY) != 0)) {
           support.setDropAction(TransferHandler.COPY)
           true
@@ -150,8 +149,8 @@ object ViewImpl {
 
       override def importData(support: TransferSupport): Boolean = {
         val t     = support.getTransferable
-        val data  = t.getTransferData(FolderView.selectionFlavor).asInstanceOf[FolderView.SelectionDnDData[S]]
-        (data.document == view.workspace) && {
+        val data  = t.getTransferData(FolderView.SelectionFlavor).asInstanceOf[FolderView.SelectionDnDData[S]]
+        (data.workspace == view.workspace) && {
           data.selection.exists { nodeView =>
             nodeView.renderData match {
               case ev: ObjView.Int[S] =>

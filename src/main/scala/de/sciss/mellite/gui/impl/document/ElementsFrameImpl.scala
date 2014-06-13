@@ -33,15 +33,16 @@ import proc.FolderElem
 import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
 
 object ElementsFrameImpl {
-  def apply[S <: Sys[S], S1 <: Sys[S1]](doc: Workspace[S], nameOpt: Option[Expr[S1, String]],
+  def apply[S <: Sys[S], S1 <: Sys[S1]](nameOpt: Option[Expr[S1, String]],
                                         isWorkspaceRoot: Boolean)(implicit tx: S#Tx,
-                                        cursor: stm.Cursor[S], bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] = {
+                                        workspace: Workspace[S], cursor: stm.Cursor[S],
+                                        bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl {
       protected var dirty: Boolean = false
     }
-    val folderView      = FolderView(doc.folder, doc.root())
+    val folderView      = FolderView(workspace.root())
     val name0           = nameOpt.map(_.value(bridge(tx)))
-    val view            = new ViewImpl[S, S1](doc, folderView) {
+    val view            = new ViewImpl[S, S1](folderView) {
       protected val nameObserver = nameOpt.map { name =>
         name.changed.react { implicit tx => upd =>
           deferTx(nameUpdate(Some(upd.now)))
@@ -83,9 +84,9 @@ object ElementsFrameImpl {
     }
   }
 
-  private abstract class ViewImpl[S <: Sys[S], S1 <: Sys[S1]](val workspace: Workspace[S],
-                                                              val peer: FolderView[S])
-                                       (implicit val cursor: stm.Cursor[S], val undoManager: UndoManager,
+  private abstract class ViewImpl[S <: Sys[S], S1 <: Sys[S1]](val peer: FolderView[S])
+                                       (implicit val workspace: Workspace[S],
+                                        val cursor: stm.Cursor[S], val undoManager: UndoManager,
                                         protected val bridge: S#Tx => S1#Tx)
     extends CollectionViewImpl[S, S1]
     {

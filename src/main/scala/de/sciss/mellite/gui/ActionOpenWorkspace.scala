@@ -40,13 +40,15 @@ object ActionOpenWorkspace extends Action("Open...") {
     Application.documentHandler.addDocument(doc)
     doc match {
       case cf: Workspace.Confluent =>
+        implicit val workspace = cf
         (cf: Workspace.Confluent).system.durable.step { implicit tx =>
           DocumentCursorsFrame(cf)
         }
       case eph: Workspace.Ephemeral =>
-        implicit val csr = eph.cursor
+        implicit val csr        = eph.cursor
+        implicit val workspace  = eph
         csr.step { implicit tx =>
-          DocumentElementsFrame[proc.Durable, proc.Durable](eph, name = None, isWorkspaceRoot = true)
+          DocumentElementsFrame[proc.Durable, proc.Durable](name = None, isWorkspaceRoot = true)
         }
     }
   }

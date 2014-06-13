@@ -49,9 +49,9 @@ object DnD {
 
   // final val flavor = DragAndDrop.internalFlavor[Drag[_]]
 
-  final class Button[S <: Sys[S]](document: File, val source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
+  final class Button[S <: Sys[S]](val source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                   snapshot0: Grapheme.Value.Audio,
-                                  timelineModel: TimelineModel)
+                                  timelineModel: TimelineModel)(implicit workspace: Workspace[S])
     extends swing.Button("Region") {
 
     var snapshot  = snapshot0
@@ -65,7 +65,7 @@ object DnD {
         DragAndDrop.Transferable(flavor) {
           timelineModel.selection match {
             case sp @ Span(_, _) if sp.nonEmpty =>
-              Drag(document, source, /* grapheme = snapshot, */ selection = sp, bus = bus)
+              Drag(workspace, source, /* grapheme = snapshot, */ selection = sp, bus = bus)
             case _ => null
           }
       }

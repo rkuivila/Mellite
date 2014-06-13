@@ -15,7 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{BooleanElem, ProcGroupElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
+import de.sciss.synth.proc.{ProcKeys, BooleanElem, ProcGroupElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -95,6 +95,7 @@ object ObjViewImpl {
       extends ObjView[S] with NonEditable[S] with NonViewable[S] {
 
       def prefix: String = "Generic"
+      def typeID: Int = 0
 
       def value: Any = ()
 
@@ -148,6 +149,7 @@ object ObjViewImpl {
 
       def prefix  = String.prefix
       def icon    = String.icon
+      def typeID  = String.typeID
 
       def exprType = lucre.expr.String
 
@@ -203,8 +205,9 @@ object ObjViewImpl {
       with StringRenderer
       with NonViewable[S] {
 
-      def prefix = Int.prefix
-      def icon   = Int.icon
+      def prefix  = Int.prefix
+      def icon    = Int.icon
+      def typeID  = Int.typeID
 
       def exprType = lucre.expr.Int
 
@@ -265,6 +268,7 @@ object ObjViewImpl {
 
       def prefix  = Double.prefix
       def icon    = Double.icon
+      def typeID  = Double.typeID
 
       def exprType = lucre.expr.Double
 
@@ -324,8 +328,9 @@ object ObjViewImpl {
       // with StringRenderer
       with NonViewable[S] {
 
-      def prefix = Boolean.prefix
-      def icon   = Boolean.icon
+      def prefix  = Boolean.prefix
+      def icon    = Boolean.icon
+      def typeID  = Boolean.typeID
 
       def exprType = lucre.expr.Boolean
 
@@ -394,6 +399,7 @@ object ObjViewImpl {
 
       def prefix  = AudioGrapheme.prefix
       def icon    = AudioGrapheme.icon
+      def typeID  = AudioGrapheme.typeID
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
         case Change(_, now: Grapheme.Value.Audio) =>
@@ -473,6 +479,8 @@ object ObjViewImpl {
 
         def icon    = ArtifactLocation.icon
         def prefix  = ArtifactLocation.prefix
+        def typeID  = ArtifactLocation.typeID
+
         def value   = directory
 
         def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
@@ -508,6 +516,8 @@ object ObjViewImpl {
 
       def icon    = Recursion.icon
       def prefix  = Recursion.prefix
+      def typeID  = Recursion.typeID
+
       def value   = deployed
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false  // XXX TODO
@@ -570,6 +580,7 @@ object ObjViewImpl {
 
       def prefix  = Folder.prefix
       def icon    = Folder.icon
+      def typeID  = Folder.typeID
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false  // element addition and removal is handled by folder view
     }
@@ -615,15 +626,30 @@ object ObjViewImpl {
       def value   = ()
       def icon    = Proc.icon
       def prefix  = Proc.prefix
+      def typeID  = Proc.typeID
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
 
-      def isViewable = false // true
+      def isViewable = true
 
+      // currently this just opens a code editor. in the future we should
+      // add a scans map editor, and a convenience button for the attributes
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        // val frame = TimelineFrame[S](document, obj())
-        // Some(frame.view)
-        ???
+        val attr    = obj().attr
+        // if there is no source code attached,
+        // create a new code object and add it to the attribute map.
+        // let's just do that without undo manager
+        val codeObj = attr.get(ProcKeys.attrGraphSource) match {
+          case Some(_Code.Elem.Obj(c)) => c
+          case _ =>
+            val source  = "// graph function source code\n\n"
+            val code    = _Code.SynthGraph(source)
+            val c       = Obj(_Code.Elem(_Code.Expr.newVar(_Code.Expr.newConst[S](code))))
+            attr.put(ProcKeys.attrGraphSource, c)
+            c
+        }
+        val frame = CodeFrame(codeObj, title = Some(attr.name))
+        Some(frame)
       }
     }
   }
@@ -668,6 +694,7 @@ object ObjViewImpl {
       def value   = ()
       def icon    = ProcGroup.icon
       def prefix  = ProcGroup.prefix
+      def typeID  = ProcGroup.typeID
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
 
@@ -752,6 +779,7 @@ object ObjViewImpl {
 
       def icon    = Code.icon
       def prefix  = Code.prefix
+      def typeID  = Code.typeID
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
 
@@ -809,6 +837,7 @@ object ObjViewImpl {
 
       def icon    = FadeSpec.icon
       def prefix  = FadeSpec.prefix
+      def typeID  = FadeSpec.typeID
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
         case Change(_, valueNew: _FadeSpec) =>

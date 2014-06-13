@@ -126,7 +126,7 @@ object TimelineViewImpl {
     disposables ::= auralView
 
     val procSelectionModel = ProcSelectionModel[S]
-    val global  = GlobalProcsView(workspace.folder, group, procSelectionModel)
+    val global  = GlobalProcsView(group, procSelectionModel)
     disposables ::= global
 
     val transportView = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
@@ -738,18 +738,18 @@ object TimelineViewImpl {
             }
           }
 
-        case id: DnD.IntDrag[S] => withRegions { implicit tx => regions =>
-          val intExpr = id.source().elem.peer
+        case DnD.ObjectDrag(_, view: ObjView.Int[S]) => withRegions { implicit tx => regions =>
+          val intExpr = view.obj().elem.peer
           ProcActions.setBus[S](regions.map(_.proc), intExpr)
           true
         }
 
-        case cd: DnD.CodeDrag[S] => withRegions { implicit tx => regions =>
-          val codeElem  = cd.source()
+        case DnD.ObjectDrag(_, view: ObjView.Code[S]) => withRegions { implicit tx => regions =>
+          val codeElem = view.obj()
           ProcActions.setSynthGraph[S](regions.map(_.proc), codeElem)
         }
 
-        case pd: DnD.ProcDrag[S] => withRegions { implicit tx => regions =>
+        case pd: DnD.GlobalProcDrag[S] => withRegions { implicit tx => regions =>
           val in = pd.source()
           regions.map { pv =>
             val out = pv.proc
@@ -838,7 +838,7 @@ object TimelineViewImpl {
 
       object canvasComponent extends Component with DnD[S] with sonogram.PaintController {
         protected def timelineModel = impl.timelineModel
-        protected def document      = impl.workspace.folder
+        protected def workspace     = impl.workspace
 
         private var currentDrop = Option.empty[DnD.Drop[S]]
 

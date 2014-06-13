@@ -17,14 +17,12 @@ package impl
 package timeline
 
 import de.sciss.synth.proc.{ProcGroupElem, Obj, ProcGroup}
-import de.sciss.mellite.Workspace
 import de.sciss.lucre.stm
-import de.sciss.desktop.{KeyStrokes, Menu, OptionPane, Window}
+import de.sciss.desktop.{KeyStrokes, Menu, OptionPane}
 import scala.swing.event.Key
-import scala.swing.{Component, Action}
+import scala.swing.Action
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing.deferTx
 import de.sciss.synth.proc
 import proc.Implicits._
 

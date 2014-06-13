@@ -23,11 +23,12 @@ import de.sciss.synth.proc.{ArtifactLocation, Folder, Obj}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.{View, TreeTableView}
 import de.sciss.desktop.UndoManager
+import scala.collection.breakOut
 
 object FolderView {
-  def apply[S <: Sys[S]](document: File, root: Folder[S])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S], undoManager: UndoManager): FolderView[S] =
-    Impl(document, root)
+  def apply[S <: Sys[S]](root: Folder[S])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                         undoManager: UndoManager): FolderView[S] = Impl(root)
 
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
@@ -36,10 +37,12 @@ object FolderView {
   type Selection[S <: Sys[S]] = List[TreeTableView.NodeView[S, Obj[S], ObjView[S]]]
   // type Selection[S <: Sys[S]] = Vec[stm.Source[S#Tx, Obj[S]]]
 
-  final case class SelectionDnDData[S <: Sys[S]](document: File, selection: Selection[S])
+  final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], selection: Selection[S]) {
+    lazy val types: Set[Int] = selection.map(_.renderData.typeID)(breakOut)
+  }
 
   // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
-  val selectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]
+  val SelectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]
 
   sealed trait Update[S <: Sys[S]] { def view: FolderView[S] }
   final case class SelectionChanged[S <: Sys[S]](view: FolderView[S], selection: Selection[S])

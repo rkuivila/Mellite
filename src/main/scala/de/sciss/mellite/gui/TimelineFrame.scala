@@ -15,12 +15,10 @@ package de.sciss
 package mellite
 package gui
 
-import desktop.Window
 import de.sciss.synth.proc.{ProcGroupElem, Obj}
 import impl.timeline.{FrameImpl => Impl}
 import lucre.stm
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing.View
 
 object TimelineFrame {
   def apply[S <: Sys[S]](group: Obj.T[S, ProcGroupElem])
