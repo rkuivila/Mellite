@@ -45,7 +45,8 @@ object ObjView {
 
     // type Init
 
-    def initDialog[S <: Sys[S]](parentH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], parentH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit]
 
     // def newInstance[S <: Sys[S]](init: Init)(implicit tx: S#Tx): Obj.T[S, E]

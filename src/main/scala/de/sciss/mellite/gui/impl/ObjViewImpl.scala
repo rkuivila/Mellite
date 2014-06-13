@@ -16,7 +16,7 @@ package gui
 package impl
 
 import de.sciss.synth.proc.{BooleanElem, ProcGroupElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
-import javax.swing.{Icon, SpinnerNumberModel}
+import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{Expr, ExprType}
@@ -125,7 +125,8 @@ object ObjViewImpl {
       new String.Impl(tx.newHandle(obj), name, value, isEditable = isEditable)
     }
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       val expr      = ExprImplicits[S]
       import expr._
@@ -181,7 +182,8 @@ object ObjViewImpl {
       new Int.Impl(tx.newHandle(obj), name, value, isEditable = isEditable)
     }
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       val expr      = ExprImplicits[S]
       import expr._
@@ -241,7 +243,8 @@ object ObjViewImpl {
       new Double.Impl(tx.newHandle(obj), name, value, isEditable = isEditable)
     }
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       val expr      = ExprImplicits[S]
       import expr._
@@ -301,7 +304,8 @@ object ObjViewImpl {
       new Boolean.Impl(tx.newHandle(obj), name, value, isEditable = isEditable)
     }
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       val expr      = ExprImplicits[S]
       import expr._
@@ -364,7 +368,8 @@ object ObjViewImpl {
     }
 
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       // val locViews  = folderView.locations
       val dlg       = FileDialog.open(init = None /* locViews.headOption.map(_.directory) */, title = "Add Audio File")
@@ -447,7 +452,8 @@ object ObjViewImpl {
         new ArtifactLocation.Impl(tx.newHandle(obj), name, value)
       }
 
-      def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+      def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                  window: Option[desktop.Window])
                                  (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
         val query = ActionArtifactLocation.queryNew(window = window)
         query.map { case (directory, _name) =>
@@ -498,7 +504,8 @@ object ObjViewImpl {
       new Recursion.Impl(tx.newHandle(obj), name, value)
     }
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = None
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Recursion.Elem]],
@@ -529,7 +536,7 @@ object ObjViewImpl {
 
   object Folder extends Factory {
     type E[S <: evt.Sys[S]] = FolderElem[S]
-    val icon    = Swing.EmptyIcon
+    val icon    = UIManager.getIcon("Tree.openIcon")  // Swing.EmptyIcon
     val prefix  = "Folder"
     def typeID  = FolderElemImpl.typeID
     type Init   = _String
@@ -539,7 +546,8 @@ object ObjViewImpl {
       new Folder.Impl(tx.newHandle(obj), name)
     }
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       val opt = OptionPane.textInput(message = "Enter initial folder name:",
         messageType = OptionPane.Message.Question, initial = "Folder")
@@ -588,7 +596,8 @@ object ObjViewImpl {
       new ProcGroup.Impl(tx.newHandle(obj), name)
     }
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       val opt = OptionPane.textInput(message = "Enter initial group name:",
         messageType = OptionPane.Message.Question, initial = "Timeline")
@@ -653,7 +662,8 @@ object ObjViewImpl {
       new Code.Impl(tx.newHandle(obj), name, value)
     }
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       val ggValue = new ComboBox(Seq(_Code.FileTransform.name, _Code.SynthGraph.name))
       actionAddPrimitive(folderH, window, tpe = prefix, ggValue = ggValue, prepare = ggValue.selection.index match {
@@ -730,7 +740,8 @@ object ObjViewImpl {
       new FadeSpec.Impl(tx.newHandle(obj), name, value)
     }
 
-    def initDialog[S <: Sys[S]](folderH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window])
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       None
 //      val ggShape = new ComboBox()

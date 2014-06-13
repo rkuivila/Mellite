@@ -103,7 +103,7 @@ object ElementsFrameImpl {
       def apply(): Unit = {
         implicit val folderSer = Folder.serializer[S]
         val parentH = cursor.step { implicit tx => tx.newHandle(impl.peer.insertionPoint._1) }
-        f.initDialog[S](parentH, None /* XXX TODO: Some(window) */).foreach(undoManager.add)
+        f.initDialog[S](workspace, parentH, None /* XXX TODO: Some(window) */).foreach(undoManager.add)
       }
     }
 

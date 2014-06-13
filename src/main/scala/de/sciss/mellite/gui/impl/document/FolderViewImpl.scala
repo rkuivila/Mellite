@@ -106,7 +106,7 @@ object FolderViewImpl {
                 val objView = nv.renderData
                 objView.isUpdateVisible(u1)
               }
-            case Obj.AttrAdded  (ProcKeys.attrName, e: StringElem[S]) => updateObjectName(obj, e.peer.value)
+            case Obj.AttrAdded  (ProcKeys.attrName, StringElem.Obj(e)) => updateObjectName(obj, e.elem.peer.value)
             case Obj.AttrRemoved(ProcKeys.attrName, _) => updateObjectName(obj, "<unnamed>")
             case Obj.AttrChange (ProcKeys.attrName, _, changes) =>
               (false /: changes) {
