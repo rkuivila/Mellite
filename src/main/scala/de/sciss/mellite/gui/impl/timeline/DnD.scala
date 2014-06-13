@@ -116,7 +116,7 @@ trait DnD[S <: SSys[S]] {
 
     private def isSupported(t: Transferable): Boolean =
       t.isDataFlavorSupported(DnD.flavor) ||
-      t.isDataFlavorSupported(ObjView.SelectionFlavor) ||
+      t.isDataFlavorSupported(ObjView.Flavor) ||
       t.isDataFlavorSupported(DataFlavor.stringFlavor)
 
     private def mkDrag(t: Transferable, isDragging: Boolean): Option[Drag[S]] =
@@ -125,10 +125,10 @@ trait DnD[S <: SSys[S]] {
           case d: DnD.Drag[_] if d.workspace == workspace => Some(d.asInstanceOf[DnD.Drag[S]])
           case _ => None
         }
-      } else if (t.isDataFlavorSupported(ObjView.SelectionFlavor)) {
-        t.getTransferData(ObjView.SelectionFlavor) match {
-          case d: ObjView.SelectionDnDData[_] if d.selection.size == 1 && d.workspace == workspace =>
-            d.asInstanceOf[ObjView.SelectionDnDData[S]].selection.headOption.map(DnD.ObjectDrag(workspace, _))
+      } else if (t.isDataFlavorSupported(ObjView.Flavor)) {
+        t.getTransferData(ObjView.Flavor) match {
+          case ObjView.Drag(ws, view) if ws == workspace =>
+            Some(DnD.ObjectDrag(workspace, view.asInstanceOf[ObjView[S]]))
           case _ => None
         }
 

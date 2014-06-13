@@ -17,7 +17,7 @@ package impl
 package timeline
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{IntElem, ProcGroup}
+import de.sciss.synth.proc.ProcGroup
 import scala.swing.{Action, Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import javax.swing.table.{TableColumnModel, AbstractTableModel}
@@ -213,37 +213,33 @@ object GlobalProcsViewImpl {
 
         // ---- import ----
         override def canImport(support: TransferSupport): Boolean =
-          support.isDataFlavorSupported(ObjView.SelectionFlavor)
+          support.isDataFlavorSupported(ObjView.Flavor)
 
         override def importData(support: TransferSupport): Boolean =
-          support.isDataFlavorSupported(ObjView.SelectionFlavor) && {
+          support.isDataFlavorSupported(ObjView.Flavor) && {
             Option(jt.getDropLocation).fold(false) { dl =>
               val pv    = procSeq(dl.getRow)
-              val drag  = support.getTransferable.getTransferData(ObjView.SelectionFlavor)
-                .asInstanceOf[ObjView.SelectionDnDData[S]]
-              val sel   = drag.selection
-              sel.size == 1 && drag.workspace == workspace && {
-                if (drag.types(ObjView.Int.typeID)) {
-                  atomic { implicit tx =>
-                    sel.headOption.map(_.obj()) match {
-                      case Some(IntElem.Obj(objT)) =>
-                        val intExpr = objT.elem.peer
-                        ProcActions.setBus(pv.proc :: Nil, intExpr)
-                        true
-                      case _ => false
+              val drag  = support.getTransferable.getTransferData(ObjView.Flavor)
+                .asInstanceOf[ObjView.Drag[S]]
+              drag.workspace == workspace && {
+                drag.view match {
+                  case iv: ObjView.Int[S] =>
+                    atomic { implicit tx =>
+                      val objT = iv.obj()
+                      val intExpr = objT.elem.peer
+                      ProcActions.setBus(pv.proc :: Nil, intExpr)
+                      true
                     }
-                  }
 
-                } else if (drag.types(ObjView.Code.typeID)) {
-                  atomic { implicit tx =>
-                    sel.headOption.map(_.obj()) match {
-                      case Some(Code.Elem.Obj(objT)) =>
-                        ProcActions.setSynthGraph(pv.proc :: Nil, objT)
-                        true
-                      case _ => false
+                  case iv: ObjView.Code[S] =>
+                    atomic { implicit tx =>
+                      val objT = iv.obj()
+                      ProcActions.setSynthGraph(pv.proc :: Nil, objT)
+                      true
                     }
-                  }
-                } else false
+
+                  case _ => false
+                }
               }
             }
           }

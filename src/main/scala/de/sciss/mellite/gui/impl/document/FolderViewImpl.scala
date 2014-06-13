@@ -241,14 +241,22 @@ object FolderViewImpl {
           TransferHandler.COPY | TransferHandler.MOVE // dragging only works when MOVE is included. Why?
 
         override def createTransferable(c: JComponent): Transferable = {
-          val sel             = selection
-          val tSel            = DragAndDrop.Transferable(FolderView.SelectionFlavor) {
+          val sel     = selection
+          val trans0  = DragAndDrop.Transferable(FolderView.SelectionFlavor) {
             new FolderView.SelectionDnDData(workspace, sel)
           }
-          val lSel            = DragAndDrop.Transferable(ObjView.SelectionFlavor) {
-            new ObjView.SelectionDnDData(workspace, sel.map(_.renderData)(breakOut))
-          }
-          DragAndDrop.Transferable.seq(tSel, lSel)
+          // val lSel            = DragAndDrop.Transferable(ObjView.SelectionFlavor) {
+          //   new ObjView.SelectionDnDData(workspace, sel.map(_.renderData)(breakOut))
+          // }
+          val trans1 = if (sel.size == 1) {
+            val _res = DragAndDrop.Transferable(ObjView.Flavor) {
+              new ObjView.Drag(workspace, sel.head.renderData)
+            }
+            DragAndDrop.Transferable.seq(trans0, _res)
+          } else trans0
+
+          trans1
+
           //          // except for the general selection flavour, see if there is more specific types
           //          // (current Int and Code are supported)
           //          cursor.step { implicit tx =>

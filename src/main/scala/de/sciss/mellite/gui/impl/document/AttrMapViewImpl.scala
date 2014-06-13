@@ -16,12 +16,15 @@ package gui
 package impl
 package document
 
+import javax.swing.TransferHandler.TransferSupport
+
+import de.sciss.swingplus.DropMode
 import de.sciss.synth.proc.{StringElem, ProcKeys, Obj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.impl.ComponentHolder
 import scala.swing.{TextField, Label, Swing, ScrollPane, Table}
 import de.sciss.lucre.swing.deferTx
-import de.sciss.desktop.UndoManager
+import de.sciss.desktop.{OptionPane, UndoManager}
 import de.sciss.lucre.synth.Sys
 import javax.swing.table.{TableCellEditor, DefaultTableCellRenderer, AbstractTableModel}
 import scala.collection.immutable.{IndexedSeq => Vec}
@@ -32,7 +35,7 @@ import de.sciss.model.Change
 import scala.swing.event.TableColumnsSelected
 import de.sciss.model.impl.ModelImpl
 import Swing._
-import javax.swing.{AbstractCellEditor, JTable}
+import javax.swing.{TransferHandler, AbstractCellEditor, JTable}
 import de.sciss.mellite.gui.edit.{CompoundEdit, EditAttrMap}
 import java.util.EventObject
 import java.awt.event.MouseEvent
@@ -229,10 +232,10 @@ object AttrMapViewImpl {
       val colName   = tcm.getColumn(0)
       val colTpe    = tcm.getColumn(1)
       val colValue  = tcm.getColumn(2)
-      colName .setPreferredWidth( 72)
-      colTpe  .setPreferredWidth( 64)
+      colName .setPreferredWidth( 96)
+      colTpe  .setPreferredWidth( 96)
       colValue.setPreferredWidth(176)
-      jt.setPreferredScrollableViewportSize(312 -> 160)
+      jt.setPreferredScrollableViewportSize(358 -> 160)
       // val colName = tcm.getColumn(0)
       //      colName.setCellEditor(new DefaultTreeTableCellEditor() {
       //        override def stopCellEditing(): Boolean = super.stopCellEditing()
@@ -293,6 +296,54 @@ object AttrMapViewImpl {
         }
       })
       GUI.sortTable(tab, 0)
+
+      jt.setDragEnabled(true)
+      jt.setDropMode(DropMode.OnOrInsertRows)
+      jt.setTransferHandler(new TransferHandler {
+        override def canImport(support: TransferSupport): Boolean = {
+          val res = support.isDrop && {
+            val dl = support.getDropLocation.asInstanceOf[JTable.DropLocation]
+            val locOk = dl.isInsertRow || {
+              val viewCol   = dl.getColumn
+              val modelCol  = jt.convertColumnIndexToModel(viewCol)
+              modelCol >= 1   // should drop on the 'type' or 'value' column
+            }
+            // println(s"locOk? $locOk")
+            locOk && support.isDataFlavorSupported(ObjView.Flavor)
+          }
+          res
+        }
+
+        override def importData(support: TransferSupport): Boolean = {
+          val res = support.isDrop && {
+            val dl        = support.getDropLocation.asInstanceOf[JTable.DropLocation]
+            val isInsert  = dl.isInsertRow
+            val view      = support.getTransferable.getTransferData(ObjView.Flavor).asInstanceOf[ObjView.Drag[S]].view
+            val keyOpt = if (isInsert) {   // ---- create new entry with key via dialog ----
+              // XXX TODO: initial key could use sensible default depending on value type
+              val opt   = OptionPane.textInput(message = "Key Name", initial = "key")
+              opt.title = "Create Attribute"
+              opt.show(GUI.findWindow(component))
+
+            } else {          // ---- update value of existing entrywith key via dialog ----
+              val rowV  = dl.getRow
+              val row   = jt.convertRowIndexToModel(rowV)
+              Some(model(row)._1)
+            }
+            // println(s"TODO: ${if (isInsert) "insert" else "replace"} $view")
+
+            keyOpt.exists { key =>
+              val edit = cursor.step { implicit tx =>
+                val editName = if (isInsert) s"Create Attribute '$key'" else s"Change Attribute '$key'"
+                EditAttrMap(name = editName, obj = mapH(), key = key, value = Some(view.obj()))
+              }
+              undoManager.add(edit)
+              true
+            }
+          }
+          res
+        }
+      })
 
       val scroll    = new ScrollPane(tab)
       scroll.border = null

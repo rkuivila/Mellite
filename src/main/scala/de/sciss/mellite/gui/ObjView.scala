@@ -36,12 +36,15 @@ object ObjView {
   import mellite.{Code => _Code, Recursion => _Recursion}
   import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, Proc => _Proc, ProcGroup => _ProcGroup, FadeSpec => _FadeSpec}
 
-  final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
-    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
-  }
+  //  final case class SelectionDrag[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
+  //    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
+  //  }
+
+  final case class Drag[S <: Sys[S]](workspace: Workspace[S], view: ObjView[S])
 
   // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
-  val SelectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]
+  // val SelectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]
+  val Flavor = DragAndDrop.internalFlavor[Drag[_]]
 
   trait Factory {
     def prefix: _String
