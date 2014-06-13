@@ -49,7 +49,7 @@ object AttrMapFrameImpl {
   }
 
   private abstract class ViewImpl[S <: Sys[S]](val peer: AttrMapView[S])
-                                              (implicit val cursor: stm.Cursor[S], undoManager: UndoManager)
+                                              (implicit val cursor: stm.Cursor[S], val undoManager: UndoManager)
     extends CollectionViewImpl[S, S] {
 
     impl =>

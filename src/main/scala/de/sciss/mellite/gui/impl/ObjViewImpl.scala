@@ -27,7 +27,7 @@ import de.sciss.icons.raphael
 import de.sciss.synth.{Curve, proc}
 import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.swing.{deferTx, View}
+import de.sciss.lucre.swing.{Window, deferTx, View}
 import de.sciss.file._
 import scala.swing.{CheckBox, Label, ComboBox, TextField, Component, Swing}
 import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
@@ -48,7 +48,7 @@ object ObjViewImpl {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
   import mellite.{Recursion => _Recursion, Code => _Code}
-  import proc.{Folder => _Folder, ProcGroup => _ProcGroup, ArtifactLocation => _ArtifactLocation, FadeSpec => _FadeSpec}
+  import proc.{Folder => _Folder, Proc => _Proc, ProcGroup => _ProcGroup, ArtifactLocation => _ArtifactLocation, FadeSpec => _FadeSpec}
 
   private val sync = new AnyRef
 
@@ -75,6 +75,7 @@ object ObjViewImpl {
     ArtifactLocation.typeID -> ArtifactLocation,
     Recursion       .typeID -> Recursion,
     Folder          .typeID -> Folder,
+    Proc            .typeID -> Proc,
     ProcGroup       .typeID -> ProcGroup,
     Code            .typeID -> Code,
     FadeSpec        .typeID -> FadeSpec
@@ -112,7 +113,6 @@ object ObjViewImpl {
     val icon    = raphaelIcon(raphael.Shapes.Font)
     val prefix  = "String"
     def typeID  = ElemImpl.String.typeID
-    type Init   = (_String, _String)
 
     def apply[S <: Sys[S]](obj: Obj.T[S, StringElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.attr.name
@@ -169,7 +169,6 @@ object ObjViewImpl {
     val icon    = raphaelIcon(Shapes.IntegerNumbers)
     val prefix  = "Int"
     def typeID  = ElemImpl.Int.typeID
-    type Init   = (_String, _Int)
 
     def apply[S <: Sys[S]](obj: Obj.T[S, IntElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.attr.name
@@ -230,7 +229,6 @@ object ObjViewImpl {
     val icon    = raphaelIcon(Shapes.RealNumbers)
     val prefix  = "Double"
     def typeID  = ElemImpl.Double.typeID
-    type Init   = (_String, _Double)
 
     def apply[S <: Sys[S]](obj: Obj.T[S, DoubleElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.attr.name
@@ -291,7 +289,6 @@ object ObjViewImpl {
     val icon    = raphaelIcon(Shapes.BooleanNumbers)
     val prefix  = "Boolean"
     def typeID  = ElemImpl.Boolean.typeID
-    type Init   = (_String, _Boolean)
 
     def apply[S <: Sys[S]](obj: Obj.T[S, BooleanElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.attr.name
@@ -359,7 +356,6 @@ object ObjViewImpl {
     val icon    = raphaelIcon(raphael.Shapes.Music)
     val prefix  = "AudioGrapheme"
     def typeID  = ElemImpl.AudioGrapheme.typeID
-    type Init   = File
 
     def apply[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
@@ -408,9 +404,9 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
-        val frame = AudioFileFrame(document, obj())
-        Some(frame.view)
+      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        val frame = AudioFileFrame(obj())
+        Some(frame)
       }
 
       def configureRenderer(label: Label): Component = {
@@ -444,7 +440,6 @@ object ObjViewImpl {
       val icon    = raphaelIcon(raphael.Shapes.Location)
       val prefix  = "ArtifactStore"
       def typeID  = ElemImpl.ArtifactLocation.typeID
-      type Init   = File
 
       def apply[S <: Sys[S]](obj: Obj.T[S, _ArtifactLocation.Elem])(implicit tx: S#Tx): ObjView[S] = {
         val name  = obj.attr.name
@@ -496,7 +491,6 @@ object ObjViewImpl {
     val icon    = raphaelIcon(raphael.Shapes.Quote)
     val prefix  = "Recursion"
     def typeID  = RecursionElemImpl.typeID
-    type Init   = Unit
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Recursion.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name      = obj.attr.name
@@ -520,9 +514,9 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
-        val frame = RecursionFrame(document, obj())
-        Some(frame.view)
+      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        val frame = RecursionFrame(obj())
+        Some(frame)
       }
 
       def configureRenderer(label: Label): Component = {
@@ -536,10 +530,9 @@ object ObjViewImpl {
 
   object Folder extends Factory {
     type E[S <: evt.Sys[S]] = FolderElem[S]
-    val icon    = UIManager.getIcon("Tree.openIcon")  // Swing.EmptyIcon
+    def icon    = UIManager.getIcon("Tree.openIcon")  // Swing.EmptyIcon
     val prefix  = "Folder"
     def typeID  = FolderElemImpl.typeID
-    type Init   = _String
 
     def apply[S <: Sys[S]](obj: Obj.T[S, FolderElem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
@@ -582,6 +575,59 @@ object ObjViewImpl {
     }
   }
 
+  // -------- Proc --------
+
+  object Proc extends Factory {
+    type E[S <: evt.Sys[S]] = _Proc.Elem[S]
+    val icon    = raphaelIcon(raphael.Shapes.Cogs)
+    val prefix  = "Proc"
+    def typeID  = ElemImpl.Proc.typeID
+
+    def apply[S <: Sys[S]](obj: Obj.T[S, _Proc.Elem])(implicit tx: S#Tx): ObjView[S] = {
+      val name  = obj.attr.name
+      new Proc.Impl(tx.newHandle(obj), name)
+    }
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+      val opt = OptionPane.textInput(message = "Enter initial proc name:",
+        messageType = OptionPane.Message.Question, initial = "Proc")
+      opt.title = s"New $prefix"
+      val res = opt.show(window)
+      res.map { name =>
+        cursor.step { implicit tx =>
+          val peer  = _Proc[S]
+          val elem  = _Proc.Elem(peer)
+          val obj   = Obj(elem)
+          obj.attr.name = name
+          addObject(prefix, folderH(), obj)
+        }
+      }
+    }
+
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Proc.Elem]], var name: _String)
+      extends ObjView.Proc[S]
+      with ObjViewImpl.Impl[S]
+      with EmptyRenderer
+      with NonEditable[S] {
+
+      def value   = ()
+      def icon    = Proc.icon
+      def prefix  = Proc.prefix
+
+      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
+
+      def isViewable = false // true
+
+      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        // val frame = TimelineFrame[S](document, obj())
+        // Some(frame.view)
+        ???
+      }
+    }
+  }
+
   // -------- ProcGroup --------
 
   object ProcGroup extends Factory {
@@ -589,7 +635,6 @@ object ObjViewImpl {
     val icon    = raphaelIcon(raphael.Shapes.Ruler)
     val prefix  = "ProcGroup"
     def typeID  = ElemImpl.ProcGroup.typeID
-    type Init   = _String
 
     def apply[S <: Sys[S]](obj: Obj.T[S, ProcGroupElem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
@@ -628,7 +673,7 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
+      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
 //        val message = s"<html><b>Select View Type for $name:</b></html>"
 //        val entries = Seq("Timeline View", "Real-time View", "Cancel")
 //        val opt = OptionPane(message = message, optionType = OptionPane.Options.YesNoCancel,
@@ -636,8 +681,8 @@ object ObjViewImpl {
 //        opt.title = s"View $name"
 //        (opt.show(None).id: @switch) match {
 //          case 0 =>
-            val frame = TimelineFrame[S](document, obj())
-            Some(frame.view)
+            val frame = TimelineFrame[S](obj())
+            Some(frame)
 //          case 1 =>
 //            val frame = InstantGroupFrame[S](document, obj())
 //            Some(frame)
@@ -654,7 +699,6 @@ object ObjViewImpl {
     val icon            = raphaelIcon(raphael.Shapes.Code)
     val prefix          = "Code"
     def typeID          = CodeElemImpl.typeID
-    type Init           = Unit
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Code.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name    = obj.attr.name
@@ -695,7 +739,7 @@ object ObjViewImpl {
         case _  => None
       }) { implicit tx =>
         value =>
-          val peer  = Codes.newVar[S](Codes.newConst(value))
+          val peer  = _Code.Expr.newVar[S](_Code.Expr.newConst(value))
           _Code.Elem(peer)
       }
     }
@@ -713,9 +757,9 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = {
-        val frame = CodeFrame(document, obj())
-        Some(frame.view)
+      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        val frame = CodeFrame(obj())
+        Some(frame)
       }
 
       def configureRenderer(label: Label): Component = {
@@ -732,7 +776,6 @@ object ObjViewImpl {
     val icon            = raphaelIcon(raphael.Shapes.Up)
     val prefix          = "FadeSpec"
     def typeID          = ElemImpl.FadeSpec.typeID
-    type Init           = Unit
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _FadeSpec.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name    = obj.attr.name
@@ -831,7 +874,7 @@ object ObjViewImpl {
   trait NonViewable[S <: Sys[S]] {
     def isViewable: Boolean = false
 
-    def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]] = None
+    def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = None
   }
 
   trait EmptyRenderer {

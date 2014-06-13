@@ -19,7 +19,7 @@ package impl
 import de.sciss.synth.proc.{Obj, AuralSystem, Artifact}
 import lucre.stm
 import java.io.File
-import de.sciss.desktop.{Desktop, DialogSource, Window}
+import de.sciss.desktop.{Desktop, DialogSource}
 import scala.swing.{Component, BorderPanel, FlowPanel, ProgressBar, Button, Alignment, Label}
 import de.sciss.synth.proc
 import de.sciss.processor.Processor
@@ -33,7 +33,7 @@ import de.sciss.lucre.stm.Disposable
 import de.sciss.file._
 import de.sciss.lucre.synth.{Server, Sys}
 import de.sciss.swingplus.GroupPanel
-import de.sciss.lucre.swing.{View, defer, deferTx}
+import de.sciss.lucre.swing.{defer, deferTx}
 import proc.Implicits._
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.model.impl.ModelImpl
@@ -43,13 +43,11 @@ object RecursionFrameImpl {
     def sameFiles: Boolean = deployed != product
   }
 
-  def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, Recursion.Elem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] = {
+  def apply[S <: Sys[S]](obj: Obj.T[S, Recursion.Elem])
+                        (implicit tx: S#Tx, _workspace: Workspace[S], cursor: stm.Cursor[S]): RecursionFrame[S] = {
     val view = new ViewImpl[S] {
-      val workspace = doc
       val recH      = tx.newHandle(obj)
       val _spec     = obj.elem.peer.productSpec
-      val _cursor   = cursor
       val _aural    = Mellite.auralSystem
 
       private def mkView()(implicit tx: S#Tx): ViewData = {
@@ -129,12 +127,6 @@ object RecursionFrameImpl {
   private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S])
     extends WindowImpl[S] with RecursionFrame[S] {
 
-    // def document: Workspace[S] = ???
-
-    // def view: View[S] = ???
-
-    // def component: Component = contents.component
-
     override protected def initGUI(): Unit =
       view.addListener { case viewData =>
         title = viewData.name
@@ -142,7 +134,7 @@ object RecursionFrameImpl {
       }
   }
 
-  private abstract class ViewImpl[S <: Sys[S]]
+  private abstract class ViewImpl[S <: Sys[S]](implicit val workspace: Workspace[S], val cursor: stm.Cursor[S])
     extends ViewHasWorkspace[S]
     with ComponentHolder[Component]
     with ModelImpl[ViewData] {
@@ -150,13 +142,8 @@ object RecursionFrameImpl {
     protected def recH      : stm.Source[S#Tx, Obj.T[S, Recursion.Elem]]
     protected def viewData  : ViewData
     protected def _spec     : AudioFileSpec
-    protected implicit def _cursor   : stm.Cursor[S]
     protected implicit def _aural    : AuralSystem
     protected def observer  : Disposable[S#Tx]
-
-    def workspace: Workspace[S]
-
-    def cursor: stm.Cursor[S] = _cursor
 
     // def component: Component = window.c
 
@@ -169,7 +156,7 @@ object RecursionFrameImpl {
       observer.dispose()
 
     def frameClosing(): Unit =
-      _cursor.step { implicit tx =>
+      cursor.step { implicit tx =>
         disposeData()
       }
 
@@ -224,7 +211,7 @@ object RecursionFrameImpl {
           if (!f.exists()) f else loopFile(i + 1)
         }
 
-        val ftOpt = _cursor.step { implicit tx =>
+        val ftOpt = cursor.step { implicit tx =>
           recH().elem.peer.transform.map(_.elem.peer.value) match {
             case Some(ft: Code.FileTransform) => Some(ft)
             case _ => None
@@ -235,7 +222,7 @@ object RecursionFrameImpl {
 
         def embed(): Unit = {
           processStopped()
-          _cursor.step { implicit tx =>
+          cursor.step { implicit tx =>
             val product = recH().elem.peer.product
             product.modifiableOption match {
               case (/* Some(locM), */ Some(artM)) =>
@@ -262,7 +249,7 @@ object RecursionFrameImpl {
       }
 
       def performBounce(file: File)(success: => Unit): Unit = {
-        val (groupH, gain, span, channels, audio) = _cursor.step { implicit tx =>
+        val (groupH, gain, span, channels, audio) = cursor.step { implicit tx =>
           import proc.ProcGroup.serializer
           val e         = recH().elem.peer
           val _groupH   = tx.newHandle(e.group)
@@ -334,15 +321,15 @@ object RecursionFrameImpl {
       }
 
       lazy val viewDeployed: Button = Button("View") {
-        _cursor.step { implicit tx =>
-          AudioFileFrame(workspace, recH().elem.peer.deployed)
+        cursor.step { implicit tx =>
+          AudioFileFrame(recH().elem.peer.deployed)
         }
       }
       lazy val matchDeployed: Button = Button("Match") {
         performMatch()
       }
       updateDeployed = Button("Update \u2713") {
-        _cursor.step { implicit tx =>
+        cursor.step { implicit tx =>
           recH().elem.peer.iterate()
         }
       }

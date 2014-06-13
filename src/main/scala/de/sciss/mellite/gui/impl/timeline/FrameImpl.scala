@@ -29,9 +29,9 @@ import de.sciss.synth.proc
 import proc.Implicits._
 
 object FrameImpl {
-  def apply[S <: Sys[S]](document: Workspace[S], group: Obj.T[S, ProcGroupElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineFrame[S] = {
-    val tlv     = TimelineView[S](document, group)
+  def apply[S <: Sys[S]](group: Obj.T[S, ProcGroupElem])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineFrame[S] = {
+    val tlv     = TimelineView[S](group)
     val name    = group.attr.name
     import ProcGroup.serializer
     val groupH  = tx.newHandle(group.elem.peer)

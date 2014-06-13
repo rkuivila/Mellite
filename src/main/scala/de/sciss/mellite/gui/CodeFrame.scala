@@ -21,12 +21,10 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc.Obj
 
 object CodeFrame {
-  def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, Code.Elem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): CodeFrame[S] =
-    Impl(doc, obj)
+  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = Impl(obj)
 }
 
 trait CodeFrame[S <: Sys[S]] extends lucre.swing.Window[S] {
-//  def window   : Window
-//  def document : Workspace[S]
+  def view: CodeView[S]
 }

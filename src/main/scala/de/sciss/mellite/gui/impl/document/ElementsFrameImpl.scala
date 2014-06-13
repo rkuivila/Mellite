@@ -85,9 +85,9 @@ object ElementsFrameImpl {
 
   private abstract class ViewImpl[S <: Sys[S], S1 <: Sys[S1]](val workspace: Workspace[S],
                                                               val peer: FolderView[S])
-                                       (implicit val cursor: stm.Cursor[S], undoManager: UndoManager,
+                                       (implicit val cursor: stm.Cursor[S], val undoManager: UndoManager,
                                         protected val bridge: S#Tx => S1#Tx)
-    extends CollectionViewImpl[S, S1] // (document, file = Some(document.folder), frameY = 0f)
+    extends CollectionViewImpl[S, S1]
     {
 
     impl =>

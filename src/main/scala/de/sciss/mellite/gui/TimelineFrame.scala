@@ -23,9 +23,9 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.View
 
 object TimelineFrame {
-  def apply[S <: Sys[S]](document: Workspace[S], group: Obj.T[S, ProcGroupElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineFrame[S] =
-    Impl(document, group)
+  def apply[S <: Sys[S]](group: Obj.T[S, ProcGroupElem])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineFrame[S] =
+    Impl(group)
 }
 trait TimelineFrame[S <: Sys[S]] extends lucre.swing.Window[S] {
   def view: TimelineView[S]

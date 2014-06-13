@@ -96,8 +96,8 @@ object TimelineViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  def apply[S <: Sys[S]](document: Workspace[S], obj: Obj.T[S, ProcGroupElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): TimelineView[S] = {
+  def apply[S <: Sys[S]](obj: Obj.T[S, ProcGroupElem])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineView[S] = {
     val sampleRate  = 44100.0 // XXX TODO
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
@@ -110,7 +110,7 @@ object TimelineViewImpl {
 
     // XXX TODO --- should use TransportView now!
 
-    import document.inMemoryBridge // {cursor, inMemory}
+    import workspace.inMemoryBridge // {cursor, inMemory}
     val procMap   = tx.newInMemoryIDMap[ProcView[S]]
     val scanMap   = tx.newInMemoryIDMap[(String, stm.Source[S#Tx, S#ID])]
 
@@ -120,18 +120,18 @@ object TimelineViewImpl {
     // freed directly...
     disposables ::= procMap
     disposables ::= scanMap
-    val transport = proc.Transport[S, document.I](group, sampleRate = sampleRate)
+    val transport = proc.Transport[S, workspace.I](group, sampleRate = sampleRate)
     disposables ::= transport
     val auralView = proc.AuralPresentation.run[S](transport, Mellite.auralSystem, Some(Mellite.sensorSystem))
     disposables ::= auralView
 
     val procSelectionModel = ProcSelectionModel[S]
-    val global  = GlobalProcsView(document.folder, group, procSelectionModel)
+    val global  = GlobalProcsView(workspace.folder, group, procSelectionModel)
     disposables ::= global
 
     val transportView = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
 
-    val view    = new Impl(document, groupH, groupEH, transport, procMap, scanMap, tlm, auralView, global,
+    val view    = new Impl(workspace, groupH, groupEH, transport, procMap, scanMap, tlm, auralView, global,
       transportView, procSelectionModel)
 
     group.iterator.foreach { case (span, seq) =>

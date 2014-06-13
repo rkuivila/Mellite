@@ -35,7 +35,10 @@ object CollectionViewImpl {
   //  }
 }
 trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
-  extends ViewHasWorkspace[S] with ComponentHolder[Component] with ModelImpl[CollectionViewImpl.Update] {
+  extends ViewHasWorkspace[S]
+  with View.Editable[S]
+  with ComponentHolder[Component]
+  with ModelImpl[CollectionViewImpl.Update] {
 
   impl =>
 
@@ -69,7 +72,7 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
   lazy final protected val actionView: Action = Action(null) {
     val sel = selectedObjects.filter(_.isViewable)
     if (sel.nonEmpty) cursor.step { implicit tx =>
-      sel.foreach(_.openView(workspace))
+      sel.foreach(_.openView())
     }
   }
 

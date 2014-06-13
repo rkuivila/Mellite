@@ -15,9 +15,10 @@ package de.sciss
 package mellite
 package impl
 
-import scala.concurrent._
 import java.io.File
+import java.util.concurrent.Executors
 import de.sciss.processor.Processor
+import scala.concurrent.{ExecutionContextExecutor, ExecutionContext, Await, Promise, Future, blocking}
 import scala.tools.nsc
 import scala.tools.nsc.interpreter.{Results, IMain}
 import scala.tools.nsc.{ConsoleWriter, NewLinePrintWriter}
@@ -32,9 +33,11 @@ import evt.Sys
 import de.sciss.synth.proc.impl.ElemImpl
 import de.sciss.lucre.expr.Expr
 import de.sciss.synth.proc.Elem
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 object CodeImpl {
   private final val COOKIE  = 0x436F6465  // "Code"
+
   implicit object serializer extends ImmutableSerializer[Code] {
     def write(v: Code, out: DataOutput): Unit = {
       out.writeInt(COOKIE)
@@ -51,10 +54,16 @@ object CodeImpl {
     }
   }
 
+  // note: the Scala compiler is _not_ reentrant!!
+  private implicit val executionContext: ExecutionContextExecutor =
+    ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
+
+  def future[A](fun: => A): Future[A] = concurrent.Future(fun)(executionContext)
+
   // ---- elem ----
 
   object CodeElemImpl extends ElemImpl.Companion[Code.Elem] {
-    final val typeID = Codes.typeID // 0x20001
+    final val typeID = Code.Expr.typeID // 0x20001
 
     Elem.registerExtension(this)
 
@@ -71,7 +80,7 @@ object CodeImpl {
     /** Read identified active element */
     def readIdentified[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S])
                                    (implicit tx: S#Tx): Code.Elem[S] with evt.Node[S] = {
-      val peer = Codes.read(in, access)
+      val peer = Code.Expr.read(in, access)
       new Impl[S](targets, peer)
     }
 
@@ -95,19 +104,36 @@ object CodeImpl {
     }
   }
 
+  private val sync = new AnyRef
+
+  private var importsMap = Map[Int, Vec[String]](
+    Code.FileTransform.id -> Vec(
+      "de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat, Frames}",
+      "de.sciss.synth._",
+      "de.sciss.file._",
+      "de.sciss.fscape.{FScapeJobs => fscape}",
+      "de.sciss.mellite.TransformUtil._"
+    ),
+    Code.SynthGraph.id -> Vec(
+      "de.sciss.synth._",
+      "de.sciss.synth.ugen._",
+      "de.sciss.synth.proc.graph._"
+    )
+  )
+
+  def registerImports(id: Int, imports: Seq[String]): Unit = sync.synchronized {
+    importsMap += id -> (importsMap(id) ++ imports)
+  }
+
+  def getImports(id: Int): Vec[String] = importsMap(id)
+
   // ---- internals ----
 
   object Wrapper {
     implicit object FileTransform
       extends Wrapper[(File, File, Processor[Any, _] => Unit), Future[Unit], Code.FileTransform] {
 
-      def imports: ISeq[String] = ISeq(
-        "de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat, Frames}",
-        "de.sciss.synth._",
-        "de.sciss.file._",
-        "de.sciss.fscape.{FScapeJobs => fscape}",
-        "de.sciss.mellite.TransformUtil._"
-      )
+      def id = Code.FileTransform.id
 
       def binding: Option[String] = Some("FileTransformContext")
 
@@ -125,11 +151,7 @@ object CodeImpl {
     implicit object SynthGraph
       extends Wrapper[Unit, synth.SynthGraph, Code.SynthGraph] {
 
-      def imports: ISeq[String] = ISeq(
-        "de.sciss.synth._",
-        "de.sciss.synth.ugen._",
-        "de.sciss.synth.proc.graph._"
-      )
+      def id = Code.SynthGraph.id
 
       def binding = None
 
@@ -139,7 +161,9 @@ object CodeImpl {
     }
   }
   trait Wrapper[In, Out, Repr] {
-    def imports: ISeq[String]
+    protected def id: Int
+
+    final def imports: ISeq[String] = importsMap(id)
     def binding: Option[String]
 
     /** When `execute` is called, the result of executing the compiled code
@@ -155,7 +179,7 @@ object CodeImpl {
     def blockTag: TypeTag[_]
   }
 
-  def execute[I, O, Repr <: Code { type In = I; type Out = O }](code: Repr, in: I)
+  final def execute[I, O, Repr <: Code { type In = I; type Out = O }](code: Repr, in: I)
                       (implicit w: Wrapper[I, O, Repr]): O = {
     w.wrap(in) {
       compileThunk(code.source, w, execute = true)
@@ -164,7 +188,7 @@ object CodeImpl {
 
   def compileBody[I, O, Repr <: Code { type In = I; type Out = O }](code: Repr)
                       (implicit w: Wrapper[I, O, Repr]): Future[Unit] =
-    Future {
+    future {
       blocking {
         compileThunk(code.source, w, execute = false)
       }

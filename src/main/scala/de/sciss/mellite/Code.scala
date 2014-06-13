@@ -13,6 +13,7 @@
 
 package de.sciss.mellite
 
+import de.sciss.lucre.expr.impl.ExprTypeImplA
 import de.sciss.serial.{Serializer, Writable, DataInput, DataOutput, ImmutableSerializer}
 import impl.{CodeImpl => Impl}
 import java.io.File
@@ -21,10 +22,12 @@ import de.sciss.processor.Processor
 import de.sciss.synth
 import scala.annotation.switch
 import de.sciss.synth.proc
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.{event => evt}
+import evt.Sys
+import de.sciss.lucre.expr.{Expr => _Expr}
 import de.sciss.synth.proc.Obj
 import de.sciss.model
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 object Code {
   final case class CompilationFailed() extends Exception
@@ -38,6 +41,12 @@ object Code {
     case FileTransform.id => FileTransform(source)
     case SynthGraph   .id => SynthGraph   (source)
   }
+
+  def future[A](fun: => A): Future[A] = Impl.future(fun)
+
+  def registerImports(id: Int, imports: Seq[String]): Unit = Impl.registerImports(id, imports)
+
+  def getImports(id: Int): Vec[String] = Impl.getImports(id)
 
   object FileTransform {
     final val id    = 0
@@ -53,6 +62,8 @@ object Code {
     def execute(in: In): Out = Impl.execute[In, Out, FileTransform](this, in)
 
     def contextName = FileTransform.name
+
+    def updateSource(newText: String) = copy(source = newText)
   }
 
   object SynthGraph {
@@ -69,11 +80,26 @@ object Code {
     def execute(in: In): Out = Impl.execute[In, Out, SynthGraph](this, in)
 
     def contextName = SynthGraph.name
+
+    def updateSource(newText: String) = copy(source = newText)
   }
 
+  // ---- expr ----
+
+  object Expr extends ExprTypeImplA[Code] {
+    final val typeID = 0x20001
+
+    def readValue(in: DataInput): Code = Code.read(in)
+    def writeValue(value: Code, out: DataOutput): Unit = value.write(out)
+
+    protected def readTuple[S <: Sys[S]](cookie: Int, in: DataInput, access: S#Acc, targets: evt.Targets[S])
+                                        (implicit tx: S#Tx): Code.Expr.ExN[S] = {
+      sys.error(s"No tuple operations defined for Code ($cookie)")
+    }
+  }
   // ---- element ----
   object Elem {
-    def apply[S <: Sys[S]](peer: Expr[S, Code])(implicit tx: S#Tx): Code.Elem[S] = Impl.CodeElemImpl(peer)
+    def apply[S <: Sys[S]](peer: _Expr[S, Code])(implicit tx: S#Tx): Code.Elem[S] = Impl.CodeElemImpl(peer)
 
     implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Code.Elem[S]] = Impl.CodeElemImpl.serializer
 
@@ -85,13 +111,13 @@ object Code {
   }
 
   trait Elem[S <: Sys[S]] extends proc.Elem[S] {
-    type Peer         = Expr[S, Code]
+    type Peer         = _Expr[S, Code]
     type PeerUpdate   = model.Change[Code]
 
     def mkCopy()(implicit tx: S#Tx): Elem[S]
   }
 }
-sealed trait Code extends Writable {
+sealed trait Code extends Writable { me =>
   /** The interfacing input type */
   type In
   /** The interfacing output type */
@@ -102,6 +128,8 @@ sealed trait Code extends Writable {
 
   /** Source code. */
   def source: String
+
+  def updateSource(newText: String): Code { type In = me.In; type Out = me.Out }
 
   /** Human readable name. */
   def contextName: String

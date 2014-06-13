@@ -24,7 +24,7 @@ import de.sciss.lucre.synth.Sys
 import javax.swing.undo.UndoableEdit
 import impl.{ObjViewImpl => Impl}
 import scala.language.higherKinds
-import de.sciss.lucre.swing.View
+import de.sciss.lucre.swing.{Window, View}
 import de.sciss.lucre.{event => evt}
 import scala.swing.{Component, Label}
 
@@ -32,7 +32,7 @@ object ObjView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
   import mellite.{Code => _Code, Recursion => _Recursion}
-  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, ProcGroup => _ProcGroup, FadeSpec => _FadeSpec}
+  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, Proc => _Proc, ProcGroup => _ProcGroup, FadeSpec => _FadeSpec}
 
   trait Factory {
     def prefix: _String
@@ -43,13 +43,9 @@ object ObjView {
 
     def apply[S <: Sys[S]](obj: Obj.T[S, E])(implicit tx: S#Tx): ObjView[S]
 
-    // type Init
-
     def initDialog[S <: Sys[S]](workspace: Workspace[S], parentH: stm.Source[S#Tx, _Folder[S]],
                                 window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit]
-
-    // def newInstance[S <: Sys[S]](init: Init)(implicit tx: S#Tx): Obj.T[S, E]
   }
 
   def addFactory(f: Factory): Unit = Impl.addFactory(f)
@@ -58,18 +54,18 @@ object ObjView {
 
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ObjView[S] = Impl(obj)
 
-  val String: Factory { type E[S <: evt.Sys[S]] = StringElem[S] /* ; type Init = (_String, _String) */ } = Impl.String
+  val String: Factory { type E[S <: evt.Sys[S]] = StringElem[S] } = Impl.String
   trait String[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, Obj.T[S, StringElem]]
   }
 
-  val Int: Factory { type E[S <: evt.Sys[S]] = IntElem[S] /* ; type Init = (_String, _Int) */ } = Impl.Int
+  val Int: Factory { type E[S <: evt.Sys[S]] = IntElem[S] } = Impl.Int
   trait Int[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, Obj.T[S, IntElem]]
     def value: _Int
   }
 
-  val Double: Factory { type E[S <: evt.Sys[S]] = DoubleElem[S] /* ; type Init = (_String, _Double) */ } = Impl.Double
+  val Double: Factory { type E[S <: evt.Sys[S]] = DoubleElem[S] } = Impl.Double
   trait Double[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]]
   }
@@ -80,7 +76,7 @@ object ObjView {
     def value: _Boolean
   }
 
-  val AudioGrapheme: Factory { type E[S <: evt.Sys[S]] = AudioGraphemeElem[S] /* ; type Init = File */ } =
+  val AudioGrapheme: Factory { type E[S <: evt.Sys[S]] = AudioGraphemeElem[S] } =
     Impl.AudioGrapheme
 
   trait AudioGrapheme[S <: Sys[S]] extends ObjView[S] {
@@ -88,7 +84,7 @@ object ObjView {
     def value: Grapheme.Value.Audio
   }
 
-  val ArtifactLocation: Factory { type E[S <: evt.Sys[S]] = _ArtifactLocation.Elem[S] /* ; type Init = File */ } =
+  val ArtifactLocation: Factory { type E[S <: evt.Sys[S]] = _ArtifactLocation.Elem[S] } =
     Impl.ArtifactLocation
 
   trait ArtifactLocation[S <: Sys[S]] extends ObjView[S] {
@@ -96,18 +92,23 @@ object ObjView {
     def directory: File
   }
 
-  val Recursion: Factory { type E[S <: evt.Sys[S]] = mellite.Recursion.Elem[S] /* ; type Init = Unit */ } = Impl.Recursion
+  val Recursion: Factory { type E[S <: evt.Sys[S]] = mellite.Recursion.Elem[S] } = Impl.Recursion
   trait Recursion[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, Obj.T[S, mellite.Recursion.Elem]]
     def deployed: File
   }
 
-  val Folder: Factory { type E[S <: evt.Sys[S]] = FolderElem[S] /* ; type Init = _String */ } = Impl.Folder
+  val Folder: Factory { type E[S <: evt.Sys[S]] = FolderElem[S] } = Impl.Folder
   trait Folder[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, Obj.T[S, FolderElem]]
   }
 
-  val ProcGroup: Factory { type E[S <: evt.Sys[S]] = ProcGroupElem[S] /* ; type Init = _String */ } = Impl.ProcGroup
+  val Proc: Factory { type E[S <: evt.Sys[S]] = _Proc.Elem[S] } = Impl.Proc
+  trait Proc[S <: Sys[S]] extends ObjView[S] {
+    def obj: stm.Source[S#Tx, Obj.T[S, _Proc.Elem]]
+  }
+
+  val ProcGroup: Factory { type E[S <: evt.Sys[S]] = ProcGroupElem[S] } = Impl.ProcGroup
   trait ProcGroup[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]]
   }
@@ -176,5 +177,5 @@ trait ObjView[S <: Sys[S]] {
     *
     * TODO: should have optional window argument
     */
-  def openView(document: Workspace[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[View[S]]
+  def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]]
 }

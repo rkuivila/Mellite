@@ -23,9 +23,9 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.View
 
 object AudioFileFrame {
-  def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, AudioGraphemeElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): AudioFileFrame[S] =
-    Impl(doc, obj)
+  def apply[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): AudioFileFrame[S] =
+    Impl(obj)
 }
 
 trait AudioFileFrame[S <: Sys[S]] extends lucre.swing.Window[S] {

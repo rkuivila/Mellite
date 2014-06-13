@@ -33,12 +33,13 @@ import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
 
 object ViewImpl {
-  def apply[S <: Sys[S]](doc: Workspace[S], obj0: Obj.T[S, AudioGraphemeElem])
-                        (implicit tx: S#Tx, aural: AuralSystem, _cursor: stm.Cursor[S]): AudioFileView[S] = {
+  def apply[S <: Sys[S]](obj0: Obj.T[S, AudioGraphemeElem])
+                        (implicit tx: S#Tx, _workspace: Workspace[S], _cursor: stm.Cursor[S],
+                         aural: AuralSystem): AudioFileView[S] = {
     val f             = obj0.elem.peer.value // .artifact // store.resolve(element.entity.value.artifact)
     val sampleRate    = f.spec.sampleRate
-    type I            = doc.I
-    implicit val itx  = doc.inMemoryBridge(tx)
+    type I            = _workspace.I
+    implicit val itx  = _workspace.inMemoryBridge(tx)
     val group         = proc.ProcGroup.Modifiable[I]
     // val groupObj      = Obj(ProcGroupElem(group))
     val fullSpan      = Span(0L, f.spec.numFrames)
@@ -55,13 +56,13 @@ object ViewImpl {
     ProcActions.insertAudioRegion[I](group, time = 0L, track = 0, grapheme = iGrapheme, selection = fullSpan,
       bus = None)
 
-    import doc.inMemoryCursor
+    import _workspace.inMemoryCursor
     val transport     = Transport[I, I](group, sampleRate = sampleRate)
 
-    import doc.inMemoryBridge
+    import _workspace.inMemoryBridge
     val res: Impl[S, I] = new Impl[S, I] {
       val timelineModel = new TimelineModelImpl(fullSpan, sampleRate)
-      val workspace     = doc
+      val workspace     = _workspace
       val cursor        = _cursor
       val holder        = tx.newHandle(obj0)
       val transportView: TransportView[I] = TransportView[I](transport, timelineModel, hasMillis = true, hasLoop = true)

@@ -24,10 +24,10 @@ import de.sciss.lucre.synth.Sys
 import proc.Implicits._
 
 object FrameImpl {
-  def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, AudioGraphemeElem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): AudioFileFrame[S] = {
+  def apply[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): AudioFileFrame[S] = {
     implicit val aural = Mellite.auralSystem
-    val afv       = AudioFileView(doc, obj)
+    val afv       = AudioFileView(obj)
     val name      = obj.attr.name
     val file      = obj.elem.peer.value.artifact
     val fileName  = file.base

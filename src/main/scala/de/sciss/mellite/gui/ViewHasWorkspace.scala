@@ -18,5 +18,5 @@ import de.sciss.lucre.swing.{View => SView}
 import de.sciss.mellite.Workspace
 
 trait ViewHasWorkspace[S <: Sys[S]] extends SView.Cursor[S] {
-  def workspace: Workspace[S]
+  implicit def workspace: Workspace[S]
 }

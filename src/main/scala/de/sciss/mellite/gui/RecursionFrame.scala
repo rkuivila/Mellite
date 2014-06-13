@@ -23,9 +23,9 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.View
 
 object RecursionFrame {
-  def apply[S <: Sys[S]](doc: Workspace[S], obj: Obj.T[S, Recursion.Elem])
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): RecursionFrame[S] =
-    Impl(doc, obj)
+  def apply[S <: Sys[S]](obj: Obj.T[S, Recursion.Elem])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): RecursionFrame[S] =
+    Impl(obj)
 }
 
 trait RecursionFrame[S <: Sys[S]] extends lucre.swing.Window[S] /* View[S] */ {
