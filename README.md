@@ -6,6 +6,14 @@
 
 Mellite is a computer music application, implemented as a graphical front end for [SoundProcesses](http://github.com/Sciss/SoundProcesses). It is (C)opyright 2012&ndash;2014 by Hanns Holger Rutz. All rights reserved. Mellite is released under the [GNU General Public License](http://github.com/Sciss/Mellite/blob/master/licenses/Mellite-License.txt) v3+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
 
+## linking
+
+The following artifact is available from Maven Central:
+
+    "de.sciss" %% "mellite" % v
+
+The current version `v` is `"0.8.0"`.
+
 ## building
 
 Mellite builds with sbt 0.13 and Scala 2.11, 2.10. The dependencies should be downloaded automatically from maven central repository, except for snapshots during development.

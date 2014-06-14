@@ -24,7 +24,7 @@ import de.sciss.file._
 import de.sciss.swingplus.PopupMenu
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.deferTx
 import de.sciss.synth.proc
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.mellite.gui.edit.{CompoundEdit, EditRemoveObj}

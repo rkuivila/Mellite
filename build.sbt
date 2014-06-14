@@ -2,7 +2,7 @@ import AssemblyKeys._
 
 name               := "Mellite"
 
-version            := "0.8.0-SNAPSHOT"
+version            := "0.8.0"
 
 organization       := "de.sciss"
 
@@ -17,7 +17,7 @@ scalaVersion       := "2.11.1"
 crossScalaVersions := Seq("2.11.1", "2.10.4")
 
 libraryDependencies ++= Seq(
-  "de.sciss" %% "soundprocesses"                  % "2.4.0-SNAPSHOT",  // computer-music framework
+  "de.sciss" %% "soundprocesses"                  % "2.4.0",  // computer-music framework
   "de.sciss" %% "scalacolliderswing-interpreter"  % "1.16.0", // REPL
   "de.sciss" %% "lucreswing"                      % "0.3.0",  // reactive Swing components
   "de.sciss" %% "lucrestm-bdb"                    % "2.0.4",  // database backend
@@ -34,9 +34,10 @@ libraryDependencies ++= Seq(
 
 // retrieveManaged := true
 
-scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xfuture")
-
-// scalacOptions ++= Seq("-Xelide-below", "INFO")
+scalacOptions ++= {
+  val xs = Seq("-deprecation", "-unchecked", "-feature", "-Xfuture")
+  if (version.value endsWith "-SNAPSHOT") xs else xs ++ Seq("-Xelide-below", "INFO")
+}
 
 javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
 
