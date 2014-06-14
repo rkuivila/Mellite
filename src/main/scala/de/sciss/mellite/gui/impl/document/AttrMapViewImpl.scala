@@ -41,8 +41,8 @@ import java.util.EventObject
 import java.awt.event.MouseEvent
 
 object AttrMapViewImpl {
-  def apply[S <: Sys[S]](workspace: Workspace[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
-                                      undoManager: UndoManager): AttrMapView[S] = {
+  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
+                                      workspace: Workspace[S], undoManager: UndoManager): AttrMapView[S] = {
     val map   = obj.attr
     val objH  = tx.newHandle(obj)
 
@@ -52,7 +52,7 @@ object AttrMapViewImpl {
         (key, view)
     } .toIndexedSeq
 
-    val res = new Impl(workspace, objH, list0) {
+    val res = new Impl(objH, list0) {
       val observer = obj.changed.react { implicit tx => upd =>
         upd.changes.foreach {
           case Obj.AttrAdded  (key, value) =>
@@ -76,9 +76,9 @@ object AttrMapViewImpl {
 
   // private final class EntryView[S <: Sys[S]](var name: String, val obj: ObjView[S])
 
-  private abstract class Impl[S <: Sys[S]](val workspace: Workspace[S], mapH: stm.Source[S#Tx, Obj[S]],
+  private abstract class Impl[S <: Sys[S]](mapH: stm.Source[S#Tx, Obj[S]],
                                            list0: Vec[(String, ObjView[S])])(implicit val cursor: stm.Cursor[S],
-                                           val undoManager: UndoManager)
+                                           val workspace: Workspace[S], val undoManager: UndoManager)
     extends AttrMapView[S] with ComponentHolder[ScrollPane] with ModelImpl[AttrMapView.Update[S]] {
     impl =>
 

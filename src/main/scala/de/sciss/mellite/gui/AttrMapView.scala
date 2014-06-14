@@ -23,9 +23,9 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.model.Model
 
 object AttrMapView {
-  def apply[S <: Sys[S]](workspace: Workspace[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
+  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undoManager: UndoManager): AttrMapView[S] =
-    Impl(workspace, obj)
+    Impl(obj)
 
   type Selection[S <: Sys[S]] = List[(String, ObjView[S])]
 

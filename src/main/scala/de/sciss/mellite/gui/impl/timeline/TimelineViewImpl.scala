@@ -131,7 +131,7 @@ object TimelineViewImpl {
 
     val transportView = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
 
-    val view    = new Impl(workspace, groupH, groupEH, transport, procMap, scanMap, tlm, auralView, global,
+    val view    = new Impl(groupH, groupEH, transport, procMap, scanMap, tlm, auralView, global,
       transportView, procSelectionModel)
 
     group.iterator.foreach { case (span, seq) =>
@@ -284,8 +284,7 @@ object TimelineViewImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]](val workspace     : Workspace[S],
-                                        groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
+  private final class Impl[S <: Sys[S]](groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
                                         groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
                                         transport         : Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],
                                         procMap           : ProcView.ProcMap[S],
@@ -295,7 +294,7 @@ object TimelineViewImpl {
                                         globalView        : GlobalProcsView[S],
                                         transportView     : TransportView[S],
                                         val procSelectionModel: ProcSelectionModel[S])
-                                       (implicit val cursor: Cursor[S])
+                                       (implicit val workspace: Workspace[S], val cursor: Cursor[S])
     extends TimelineView[S] with ComponentHolder[Component] {
     impl =>
 
@@ -464,7 +463,7 @@ object TimelineViewImpl {
       val actionAttr: Action = Action(null) {
         withSelection { implicit tx =>
           seq => seq.foreach { view =>
-            AttrMapFrame(workspace, view.proc)
+            AttrMapFrame(view.proc)
           }
         }
       }

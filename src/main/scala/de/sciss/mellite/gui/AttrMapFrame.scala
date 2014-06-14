@@ -17,15 +17,14 @@ package gui
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.Obj
 import impl.document.{AttrMapFrameImpl => Impl}
-import de.sciss.lucre.swing.View
-import de.sciss.desktop
+import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
 
 object AttrMapFrame {
-  def apply[S <: Sys[S]](document: Workspace[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): AttrMapFrame[S] =
-    Impl(document, obj)
+  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
+                                      cursor: stm.Cursor[S]): AttrMapFrame[S] =
+    Impl(obj)
 }
-trait AttrMapFrame[S <: Sys[S]] extends View[S] {
-  def window  : desktop.Window
-  def contents: AttrMapView[S]
+trait AttrMapFrame[S <: Sys[S]] extends Window[S] {
+  def contents: AttrMapView[S]  // XXX TODO - should really be `view`
 }

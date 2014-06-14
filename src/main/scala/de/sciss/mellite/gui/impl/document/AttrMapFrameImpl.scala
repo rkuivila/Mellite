@@ -33,11 +33,12 @@ import de.sciss.file._
 import proc.Implicits._
 
 object AttrMapFrameImpl {
-  def apply[S <: Sys[S]](workspace: Workspace[S], obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): AttrMapFrame[S] = {
+  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
+                                      cursor: stm.Cursor[S]): AttrMapFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl {
       protected var dirty: Boolean = false
     }
-    val contents  = AttrMapView[S](workspace, obj)
+    val contents  = AttrMapView[S](obj)
     val view      = new ViewImpl[S](contents) {
       protected def nameObserver: Option[Disposable[S#Tx]] = None
     }
@@ -114,7 +115,8 @@ object AttrMapFrameImpl {
     protected def selectedObjects: List[ObjView[S]] = peer.selection.map(_._2)
   }
 
-  private final class FrameImpl[S <: Sys[S]](objH: stm.Source[S#Tx, Obj[S]], view: ViewImpl[S], title0: String)
+  private final class FrameImpl[S <: Sys[S]](objH: stm.Source[S#Tx, Obj[S]], view: ViewImpl[S],
+                                             title0: String)
                                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager)
     extends CollectionFrameImpl[S](view)
     with AttrMapFrame[S] {

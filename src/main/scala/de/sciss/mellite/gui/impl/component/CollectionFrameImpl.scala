@@ -18,11 +18,9 @@ package component
 
 import scala.swing.{Component, FlowPanel, Action, Button, BorderPanel}
 import de.sciss.lucre.stm
-import de.sciss.desktop.{UndoManager, DialogSource, Window}
-import de.sciss.file._
 import de.sciss.lucre.synth.Sys
 import de.sciss.icons.raphael
-import de.sciss.lucre.swing.{View, deferTx, requireEDT}
+import de.sciss.lucre.swing.{View, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.model.impl.ModelImpl
 
@@ -65,7 +63,7 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
   lazy final protected val actionAttr: Action = Action(null) {
     val sel = selectedObjects
     if (sel.nonEmpty) cursor.step { implicit tx =>
-      sel.foreach(n => AttrMapFrame(workspace, n.obj()))
+      sel.foreach(n => AttrMapFrame(n.obj()))
     }
   }
 
