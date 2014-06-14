@@ -93,11 +93,14 @@ object AttrMapFrameImpl {
     }
 
     final protected lazy val actionDelete: Action = Action(null) {
-      // val sel = peer.selection
+      val sel = peer.selection
       val edits: List[UndoableEdit] = cursor.step { implicit tx =>
-        Nil
+        val obj0 = peer.obj
+        sel.map { case (key, _) =>
+          EditAttrMap(name = s"Delete Attribute '$key'", obj = obj0, key = key, value = None)
+        }
       }
-      val ceOpt = CompoundEdit(edits, "Delete Elements")
+      val ceOpt = CompoundEdit(edits, "Delete Attributes")
       ceOpt.foreach(undoManager.add)
     }
 

@@ -95,6 +95,8 @@ object AttrMapViewImpl {
 
     private val viewMap = TMap(list0: _*)
 
+    final def obj(implicit tx: S#Tx): Obj[S] = mapH()
+
     final protected def attrAdded(key: String, view: ObjView[S])(implicit tx: S#Tx): Unit = {
       viewMap.+=(key -> view)(tx.peer)
       deferTx {
@@ -122,7 +124,7 @@ object AttrMapViewImpl {
     private def updateObjectName(objView: ObjView[S], name: String)(implicit tx: S#Tx): Unit =
       deferTx { objView.name = name }
 
-    private def updateObject(obj: Obj[S], objView: ObjView[S], changes: Vec[Obj.Change[S, Any]])
+    private def updateObject(objView: ObjView[S], changes: Vec[Obj.Change[S, Any]])
                             (implicit tx: S#Tx): Boolean =
       (false /: changes) { (p, ch) =>
         val p1 = ch match {
@@ -152,7 +154,7 @@ object AttrMapViewImpl {
       viewOpt.fold {
         warnNoView(key)
       } { view =>
-        val isDirty = updateObject(value, view, changes)
+        val isDirty = updateObject(view, changes)
         if (isDirty) deferTx {
           val row = model.indexWhere(_._1 == key)
           if (row < 0) {
@@ -203,9 +205,9 @@ object AttrMapViewImpl {
           if (oldKey != newKey) {
             val editOpt = cursor.step { implicit tx =>
               val value = view.obj()
-              val obj   = mapH()
-              val ed1   = EditAttrMap(name = "Remove", obj, key = oldKey, value = None)
-              val ed2   = EditAttrMap(name = "Insert", obj, key = newKey, value = Some(value))
+              val obj0  = obj
+              val ed1   = EditAttrMap(name = "Remove", obj0, key = oldKey, value = None)
+              val ed2   = EditAttrMap(name = "Insert", obj0, key = newKey, value = Some(value))
               CompoundEdit(ed1 :: ed2 :: Nil, s"Rename Attribute Key")
             }
             editOpt.foreach(undoManager.add)
@@ -234,8 +236,8 @@ object AttrMapViewImpl {
       val colValue  = tcm.getColumn(2)
       colName .setPreferredWidth( 96)
       colTpe  .setPreferredWidth( 96)
-      colValue.setPreferredWidth(176)
-      jt.setPreferredScrollableViewportSize(358 -> 160)
+      colValue.setPreferredWidth(208)
+      jt.setPreferredScrollableViewportSize(390 -> 160)
       // val colName = tcm.getColumn(0)
       //      colName.setCellEditor(new DefaultTreeTableCellEditor() {
       //        override def stopCellEditing(): Boolean = super.stopCellEditing()
@@ -335,7 +337,7 @@ object AttrMapViewImpl {
             keyOpt.exists { key =>
               val edit = cursor.step { implicit tx =>
                 val editName = if (isInsert) s"Create Attribute '$key'" else s"Change Attribute '$key'"
-                EditAttrMap(name = editName, obj = mapH(), key = key, value = Some(view.obj()))
+                EditAttrMap(name = editName, obj = obj, key = key, value = Some(view.obj()))
               }
               undoManager.add(edit)
               true

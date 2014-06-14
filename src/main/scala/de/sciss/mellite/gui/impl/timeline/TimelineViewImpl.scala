@@ -749,6 +749,16 @@ object TimelineViewImpl {
           ProcActions.setSynthGraph[S](regions.map(_.proc), codeElem)
         }
 
+        case DnD.ObjectDrag(_, view: ObjView.Proc[S]) => step { implicit tx =>
+          plainGroup.modifiableOption.exists { group =>
+            val length  = (timelineModel.sampleRate * 2).toLong // note: always match with DnD visual cue
+            val span    = Span(drop.frame, drop.frame + length)
+            val spanEx  = SpanLikeEx.newVar[S](SpanLikeEx.newConst(span))
+            group.add(spanEx, view.obj())
+            true
+          }
+        }
+
         case pd: DnD.GlobalProcDrag[S] => withRegions { implicit tx => regions =>
           val in = pd.source()
           regions.map { pv =>
@@ -1114,6 +1124,12 @@ object TimelineViewImpl {
               case ad: DnD.AudioDragLike[S] =>
                 val track = screenToTrack(drop.y)
                 val span  = Span(drop.frame, drop.frame + ad.selection.length)
+                drawDropFrame(g, track, span)
+
+              case DnD.ObjectDrag(_, _: ObjView.Proc[S]) =>
+                val track   = screenToTrack(drop.y)
+                val length  = (timelineModel.sampleRate * 2).toLong  // XXX TODO - make it view resolution dependent?
+                val span    = Span(drop.frame, drop.frame + length)
                 drawDropFrame(g, track, span)
 
               case _ =>
