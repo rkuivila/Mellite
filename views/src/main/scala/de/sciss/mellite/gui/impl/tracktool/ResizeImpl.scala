@@ -52,6 +52,9 @@ final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Resize(dStart, dStop)
   }
 
-  protected def commitProc(drag: Resize)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit =
-    ProcActions.resize(span, proc, drag, canvas.timelineModel)
+  protected def commitProc(drag: Resize)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])
+                          (implicit tx: S#Tx): Unit = {
+    val minStart = canvas.timelineModel.bounds.start
+    ProcActions.resize(span, proc, drag, minStart = minStart)
+  }
 }

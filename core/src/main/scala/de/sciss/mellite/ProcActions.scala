@@ -18,7 +18,7 @@ import lucre.expr.Expr
 import span.{Span, SpanLike}
 import de.sciss.synth.proc.{Obj, SynthGraphs, ExprImplicits, ProcKeys, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
-import de.sciss.audiowidgets.TimelineModel
+// import de.sciss.audiowidgets.TimelineModel
 import de.sciss.synth.proc
 import scala.util.control.NonFatal
 import collection.breakOut
@@ -53,12 +53,12 @@ object ProcActions {
   }
 
   def resize[S <: Sys[S]](span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem],
-                          amount: Resize, timelineModel: TimelineModel)
+                          amount: Resize, minStart: Long /* timelineModel: TimelineModel */)
                          (implicit tx: S#Tx): Unit = {
     import amount._
 
     val oldSpan   = span.value
-    val minStart  = timelineModel.bounds.start
+    // val minStart  = timelineModel.bounds.start
     val dStartC   = if (deltaStart >= 0) deltaStart else oldSpan match {
       case Span.HasStart(oldStart)  => math.max(-(oldStart - minStart)         , deltaStart)
       case _ => 0L

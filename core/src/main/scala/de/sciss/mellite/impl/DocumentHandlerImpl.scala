@@ -16,11 +16,9 @@ package impl
 
 import de.sciss.model.impl.ModelImpl
 import de.sciss.lucre.event.Sys
-import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.stm.{TxnLike, Disposable}
 import scala.concurrent.stm.{Ref => STMRef, TMap}
 import de.sciss.file._
-import de.sciss.lucre.swing._
-import de.sciss.mellite.Workspace
 import scala.collection.immutable.{IndexedSeq => Vec}
 
 object DocumentHandlerImpl {
@@ -47,8 +45,12 @@ object DocumentHandlerImpl {
         def dispose()(implicit tx: S#Tx): Unit = removeDoc(doc)
       })
 
-      deferTx(dispatch(DocumentHandler.Opened(doc)))
+      deferTx {
+        dispatch(DocumentHandler.Opened(doc))
+      }
     }
+
+    private def deferTx(code: => Unit)(implicit tx: TxnLike): Unit = tx.afterCommit(code)
 
     private def removeDoc[S <: Sys[S]](doc: Workspace[S])(implicit tx: S#Tx): Unit = {
       all.transform { in =>
@@ -58,7 +60,9 @@ object DocumentHandlerImpl {
       } (tx.peer)
       map.-=(doc.folder)(tx.peer)
 
-      deferTx(dispatch(DocumentHandler.Closed(doc)))
+      deferTx {
+        dispatch(DocumentHandler.Closed(doc))
+      }
     }
 
     def allDocuments: Iterator[Document] = all.single().iterator

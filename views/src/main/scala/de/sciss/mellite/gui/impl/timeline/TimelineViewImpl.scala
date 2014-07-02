@@ -417,7 +417,8 @@ object TimelineViewImpl {
               case Span.HasStart(leftStart) =>
                 val _rightSpan  = SpanLikeEx.newVar(oldSpan())
                 val resize      = ProcActions.Resize(time - leftStart, 0L)
-                ProcActions.resize(_rightSpan, rightProc, resize, timelineModel)
+                val minStart    = timelineModel.bounds.start
+                ProcActions.resize(_rightSpan, rightProc, resize, minStart = minStart)
                 _rightSpan
 
               case Span.HasStop(rightStop) =>
@@ -426,8 +427,9 @@ object TimelineViewImpl {
 
             oldVal match {
               case Span.HasStop(rightStop) =>
-                val resize = ProcActions.Resize(0L, time - rightStop)
-                ProcActions.resize(oldSpan, leftProc, resize, timelineModel)
+                val minStart  = timelineModel.bounds.start
+                val resize    = ProcActions.Resize(0L, time - rightStop)
+                ProcActions.resize(oldSpan, leftProc, resize, minStart = minStart)
 
               case Span.HasStart(leftStart) =>
                 val leftSpan = Span(leftStart, time)

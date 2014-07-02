@@ -29,6 +29,11 @@ object DocumentHandler {
   final case class Opened[S <: Sys[S]](doc: Workspace[S]) extends Update
   final case class Closed[S <: Sys[S]](doc: Workspace[S]) extends Update
 }
+
+/** Note: the model dispatches not on the EDT. Listeners
+  * requiring to execute code on the EDT should use a
+  * wrapper like `defer` (LucreSwing).
+  */
 trait DocumentHandler extends Model[DocumentHandler.Update] {
   import DocumentHandler.Document
 
