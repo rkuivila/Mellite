@@ -37,7 +37,7 @@ import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{Transport, ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, TimedProc}
+import de.sciss.synth.proc.{TransportOLD => Transport, ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -120,7 +120,7 @@ object TimelineViewImpl {
     // freed directly...
     disposables ::= procMap
     disposables ::= scanMap
-    val transport = proc.Transport[S, workspace.I](group, sampleRate = sampleRate)
+    val transport = proc.TransportOLD[S, workspace.I](group, sampleRate = sampleRate)
     disposables ::= transport
     val auralView = proc.AuralPresentation.run[S](transport, Mellite.auralSystem, Some(Mellite.sensorSystem))
     disposables ::= auralView

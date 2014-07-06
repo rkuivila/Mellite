@@ -68,7 +68,7 @@ lazy val core: Project = Project(
     description := "Core layer for Mellite",
     libraryDependencies ++= Seq(
       "de.sciss" %% "scalainterpreterpane"            % "1.6.2",  // REPL
-      "de.sciss" %% "soundprocesses"                  % "2.4.0",  // computer-music framework
+      "de.sciss" %% "soundprocesses"                  % "2.5.0-SNAPSHOT",  // computer-music framework
       "de.sciss" %% "lucrestm-bdb"                    % "2.0.4",  // database backend
       "de.sciss" %% "fscapejobs"                      % "1.4.1",  // remote FScape invocation
       "de.sciss" %% "strugatzki"                      % "2.4.1"   // feature extraction
@@ -87,7 +87,7 @@ lazy val views = Project(
       "de.sciss" %% "scalacolliderswing-interpreter"  % "1.16.0", // REPL
       "de.sciss" %% "lucreswing"                      % "0.3.0",  // reactive Swing components
       "de.sciss" %% "audiowidgets-app"                % "1.6.2",  // audio application widgets
-      "de.sciss" %% "desktop-mac"                     % "0.5.3",  // desktop framework; TODO: should be only added on OS X platforms
+      "de.sciss" %% "desktop-mac"                     % "0.5.4",  // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss" %% "sonogramoverview"                % "1.7.1",  // sonogram component
       "de.sciss" %% "treetable-scala"                 % "1.3.6",  // tree-table component
       "de.sciss" %% "raphael-icons"                   % "1.0.2",  // icon set

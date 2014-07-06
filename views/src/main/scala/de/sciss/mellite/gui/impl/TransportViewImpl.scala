@@ -26,7 +26,7 @@ import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.desktop.{KeyStrokes, FocusType}
 import scala.swing.event.Key
 import de.sciss.span.Span
-import de.sciss.synth.proc.{Obj, Proc, Transport}
+import de.sciss.synth.proc.{Obj, Proc, TransportOLD => Transport}
 import de.sciss.desktop.Implicits._
 
 object TransportViewImpl {

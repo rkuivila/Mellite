@@ -18,7 +18,6 @@ import lucre.expr.Expr
 import span.{Span, SpanLike}
 import de.sciss.synth.proc.{Obj, SynthGraphs, ExprImplicits, ProcKeys, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
 import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
-// import de.sciss.audiowidgets.TimelineModel
 import de.sciss.synth.proc
 import scala.util.control.NonFatal
 import collection.breakOut
@@ -140,7 +139,7 @@ object ProcActions {
         val imp = ExprImplicits[S]
         import imp._
         val scanw       = pNew.scans.add(ProcKeys.graphAudio)
-        val grw         = Grapheme.Modifiable[S]
+        val grw         = Grapheme.Modifiable[S](audio.spec.numChannels)
         val gStart      = LongEx  .newVar(time        .value)
         val audioOffset = LongEx  .newVar(audio.offset.value)  // XXX TODO
         val audioGain   = DoubleEx.newVar(audio.gain  .value)
@@ -293,9 +292,9 @@ object ProcActions {
       attr.put(ProcKeys.attrBus, Obj(bus))
     }
 
-    val scanIn  = proc.scans.add(ProcKeys.graphAudio)
-    /* val scanOut = */ proc.scans.add(ProcKeys.scanMainOut)
-    val grIn    = Grapheme.Modifiable[S]
+    val scanIn  = proc.scans.add(ProcKeys.graphAudio )
+    /*val sOut=*/ proc.scans.add(ProcKeys.scanMainOut)
+    val grIn    = Grapheme.Modifiable[S](grapheme.spec.numChannels)
 
     // we preserve data.source(), i.e. the original audio file offset
     // ; therefore the grapheme element must start `selection.start` frames

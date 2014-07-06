@@ -19,7 +19,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.View
 import de.sciss.lucre.stm
 import de.sciss.audiowidgets.TimelineModel
-import de.sciss.synth.proc.{Transport, Obj, Proc}
+import de.sciss.synth.proc.{TransportOLD => Transport, Obj, Proc}
 
 object TransportView {
   def apply[S <: Sys[S]](transport: Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],
