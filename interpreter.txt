@@ -1,18 +1,18 @@
 type S = proc.Confluent
-val d = document.asInstanceOf[ConfluentDocument]
+val d = document.asInstanceOf[Workspace.Confluent]
 val c = d.cursors.cursor
 
 c.step { implicit tx =>
-  val tl = d.collectElements {
-    case etl: Element.ProcGroup[S] => etl.entity
+  val tl = d.collectObjects {
+    case proc.Timeline.Obj(tl) => tl.elem.peer
   } .head
 
   tl.nearestEventAfter(0L)
 }
 
 c.step { implicit tx =>
-  val tl = d.collectElements {
-    case etl: Element.ProcGroup[S] => etl.entity
+  val tl = d.collectObjects {
+    case proc.Timeline.Obj(tl) => tl.elem.peer
   } .head
 
   tl.iterator.foreach { case (span, xs) =>

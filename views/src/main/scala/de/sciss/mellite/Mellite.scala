@@ -34,6 +34,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   // synth.proc.showLog          = true
   // synth.proc.showTransportLog = true
   // showLog                     = true
+  showTimelineLog = true
 
   override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
     override lazy val usesInternalFrames = {

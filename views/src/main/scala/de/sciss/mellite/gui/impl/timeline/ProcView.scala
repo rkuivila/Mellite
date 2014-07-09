@@ -310,7 +310,7 @@ sealed trait ProcView[S <: Sys[S]] {
     */
   def releaseSonogram(): Unit
 
-  /** Attemps to acquire a sonogram view. Updates the `sono` variable if successful. */
+  /** Attempts to acquire a sonogram view. Updates the `sono` variable if successful. */
   def acquireSonogram(): Option[SonoOverview]
 
   def disposeTx(timed: TimedProc[S],

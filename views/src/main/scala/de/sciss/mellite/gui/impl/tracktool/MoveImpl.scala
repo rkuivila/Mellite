@@ -88,21 +88,21 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       val imp = ExprImplicits[S]
       import imp._
 
-      ProcActions.getAudioRegion(span, proc) match {
-        case Some((gtime, audio)) => // audio region
-          (span, gtime) match {
-            case (Expr.Var(t1), Expr.Var(t2)) =>
-              t1.transform(_ shift deltaC)
-              t2.transform(_ + deltaC) // XXX TODO: actually should shift the segment as well, i.e. the ceil time?
-
-            case _ =>
-          }
-        case _ => // other proc
+      //      ProcActions.getAudioRegion(span, proc) match {
+      //        case Some((gtime, audio)) => // audio region
+      //          (span, gtime) match {
+      //            case (Expr.Var(t1), Expr.Var(t2)) =>
+      //              t1.transform(_ shift deltaC)
+      //              t2.transform(_ + deltaC) // XXX TODO: actually should shift the segment as well, i.e. the ceil time?
+      //
+      //            case _ =>
+      //          }
+      //        case _ => // other proc
           span match {
             case Expr.Var(s) => s.transform(_ shift deltaC)
             case _ =>
           }
-      }
+      //      }
     }
   }
 

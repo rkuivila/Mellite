@@ -174,7 +174,7 @@ object TimelineViewImpl {
 
     def attrChanged(timed: BiGroup.TimedElem[S, Obj[S]], name: String)(implicit tx: S#Tx): Unit = {
       timed.value match {
-        case Timeline.Obj(tl) =>
+        case Proc.Obj(tl) =>
           val timed1 = timed.asInstanceOf[TimedProc[S]]
           attrChanged1(timed1, name)
       }
@@ -244,28 +244,24 @@ object TimelineViewImpl {
                 val timed = timed0.asInstanceOf[TimedProc  [S]]
                 val updP  = updP1 .asInstanceOf[Proc.Update[S]]
                 updP.changes.foreach {
-                  case Proc.ScanAdded  (key, _) => scanAdded(timed, key)
+                  case Proc.ScanAdded  (key, _) => scanAdded  (timed, key)
                   case Proc.ScanRemoved(key, _) => scanRemoved(timed, key)
                   case Proc.ScanChange (name, scan, scanUpdates) =>
                     scanUpdates.foreach {
                       case Scan.GraphemeChange(grapheme, segments) =>
                         if (name == ProcKeys.graphAudio) {
-                          timed.span.value match {
-                            case Span.HasStart(startFrame) =>
-                              val segmOpt = segments.find(_.span.contains(startFrame)) match {
-                                case Some(segm: Grapheme.Segment.Audio) => Some(segm)
-                                case _ => None
-                              }
-                              view.procAudioChanged(timed, segmOpt)
-                            case _ =>
+                          val segmOpt = segments.find(_.span.contains(0L)) match {
+                            case Some(segm: Grapheme.Segment.Audio) => Some(segm)
+                            case _ => None
                           }
+                          view.procAudioChanged(timed, segmOpt)
                         }
 
                       case Scan.SinkAdded(Scan.Link.Scan(peer)) =>
                         val test: Scan[S] = scan
                         view.scanSinkAdded(timed, name, test, peer)
-                      case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => view.scanSinkRemoved(timed, name, scan, peer)
-                      case Scan.SourceAdded  (Scan.Link.Scan(peer)) => view.scanSourceAdded(timed, name, scan, peer)
+                      case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => view.scanSinkRemoved  (timed, name, scan, peer)
+                      case Scan.SourceAdded  (Scan.Link.Scan(peer)) => view.scanSourceAdded  (timed, name, scan, peer)
                       case Scan.SourceRemoved(Scan.Link.Scan(peer)) => view.scanSourceRemoved(timed, name, scan, peer)
 
                       case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
@@ -429,7 +425,7 @@ object TimelineViewImpl {
             val imp = ExprImplicits[S]
             import imp._
             val leftProc  = pv.proc
-            val rightProc = ProcActions.copy[S](leftProc, Some(oldSpan))
+            val rightProc = ProcActions.copy[S](leftProc /*, Some(oldSpan) */)
             val oldVal    = oldSpan.value
             val rightSpan = oldVal match {
               case Span.HasStart(leftStart) =>
@@ -527,7 +523,7 @@ object TimelineViewImpl {
 
     def addProc(span: SpanLike, timed: BiGroup.TimedElem[S, Obj[S]], repaint: Boolean)(implicit tx: S#Tx): Unit = {
       timed.value match {
-        case Timeline.Obj(tl) =>
+        case Proc.Obj(tl) =>
           val timed1 = timed.asInstanceOf[TimedProc[S]] // XXX TODO -- dirty
           addProc1(span, timed1, repaint = repaint)
         case _ =>
@@ -556,7 +552,7 @@ object TimelineViewImpl {
 
     def removeProc(span: SpanLike, timed: BiGroup.TimedElem[S, Obj[S]])(implicit tx: S#Tx): Unit = {
       timed.value match {
-        case Timeline.Obj(tl) =>
+        case Proc.Obj(tl) =>
           val timed1 = timed.asInstanceOf[TimedProc[S]] // XXX TODO
           removeProc1(span, timed1)
         case _ =>
@@ -582,7 +578,7 @@ object TimelineViewImpl {
 
     def procMoved(timed: BiGroup.TimedElem[S, Obj[S]], spanCh: Change[SpanLike], trackCh: Change[Int])(implicit tx: S#Tx): Unit = {
       timed.value match {
-        case Timeline.Obj(tl) =>
+        case Proc.Obj(tl) =>
           val timed1 = timed.asInstanceOf[TimedProc[S]] // XXX TODO
           procMoved1(timed1, spanCh, trackCh)
       }
@@ -736,8 +732,10 @@ object TimelineViewImpl {
                                   grapheme: Grapheme.Expr.Audio[S])(implicit tx: S#Tx): Boolean =
       plainGroup.modifiableOption match {
         case Some(groupM) =>
-          ProcActions.insertAudioRegion(groupM, time = drop.frame, track = view.screenToTrack(drop.y),
-            grapheme = grapheme, selection = drag.selection, bus = None) // , bus = ad.bus.map(_.apply().entity))
+          logT(s"insertAudioRegion($drop, ${drag.selection}, $grapheme)")
+          val tlSpan = Span(drop.frame, drop.frame + drag.selection.length)
+          ProcActions.insertAudioRegion(groupM, time = tlSpan, track = view.screenToTrack(drop.y),
+            grapheme = grapheme, gOffset = drag.selection.start, bus = None) // , bus = ad.bus.map(_.apply().entity))
           true
         case _ => false
       }
@@ -997,14 +995,16 @@ object TimelineViewImpl {
 
                   sonogramOpt.foreach { sonogram =>
                     val audio   = segm.value
-                    val dStart  = audio.offset /* - start */ + (/* start */ - segm.span.start) - move
+                    val srRatio = sonogram.inputSpec.sampleRate / Timeline.SampleRate
+                    val dStart  = audio.offset - (segm.span.start /* + move */) * srRatio
                     val startC  = screenToFrame(px1C) // math.max(0.0, screenToFrame(px1C))
                     val stopC   = screenToFrame(px2C)
                     val boost   = if (selected) visualBoost * gainState.factor else visualBoost
                     // println(s"audio.gain = ${audio.gain.toFloat}")
                     sonogramBoost   = (audio.gain + pv.gain).toFloat * boost
-                    val startP  = math.max(0L, startC + dStart)
-                    val stopP   = startP + (stopC - startC)
+                    val startP  = math.max(0.0, /* startC + */ dStart)
+                    // val stopP   = startP + (stopC - startC)
+                    val stopP   = startP + (stopC - startC) * srRatio
                     sonogram.paint(startP, stopP, g, px1C, innerY, px2C - px1C, innerH, this)
                   }
                 }

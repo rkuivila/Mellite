@@ -1,0 +1,10 @@
+val in   = scan.In("in")
+val bus  = attribute("bus" ).kr(0)
+val gain = attribute("gain").kr(1)
+val mute = attribute("mute").kr(0)
+
+val amp   = gain * (1 - mute)
+val sig  = in * amp
+
+Out.ar(bus, sig)
+

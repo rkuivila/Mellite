@@ -43,7 +43,9 @@ object ViewImpl {
     val group         = Timeline[I] // proc.ProcGroup.Modifiable[I]
     // val groupObj      = Obj(ProcGroupElem(group))
     val srRatio       = f.spec.sampleRate / Timeline.SampleRate
-    val fullSpan      = Span(0L, (f.spec.numFrames / srRatio).toLong)
+    // val fullSpanFile  = Span(0L, f.spec.numFrames)
+    val numFramesTL   = (f.spec.numFrames / srRatio).toLong
+    val fullSpanTL    = Span(0L, numFramesTL)
 
     // ---- we go through a bit of a mess here to convert S -> I ----
     val graphemeV     = f // elem.entity.value
@@ -54,8 +56,8 @@ object ViewImpl {
     val iLoc          = ArtifactLocation.Modifiable[I](artifDir)
     val iArtifact     = iLoc.add(artifact.value)
     val iGrapheme     = Grapheme.Expr.Audio[I](iArtifact, graphemeV.spec, graphemeV.offset, graphemeV.gain)
-    ProcActions.insertAudioRegion[I](group, time = 0L, track = 0, grapheme = iGrapheme, selection = fullSpan,
-      bus = None)
+    ProcActions.insertAudioRegion[I](group, time = Span(0L, numFramesTL),
+      track = 0, grapheme = iGrapheme, gOffset = 0L, bus = None)
 
     import _workspace.inMemoryCursor
     // val transport     = Transport[I, I](group, sampleRate = sampleRate)
@@ -63,7 +65,7 @@ object ViewImpl {
 
     import _workspace.inMemoryBridge
     val res: Impl[S, I] = new Impl[S, I] {
-      val timelineModel = new TimelineModelImpl(fullSpan, Timeline.SampleRate)
+      val timelineModel = new TimelineModelImpl(fullSpanTL, Timeline.SampleRate)
       val workspace     = _workspace
       val cursor        = _cursor
       val holder        = tx.newHandle(obj0)
@@ -83,25 +85,25 @@ object ViewImpl {
     protected def transportView: TransportView[I]
     protected def timelineModel: TimelineModel
 
-    private var _sono: sonogram.Overview = _
+    private var _sonogram: sonogram.Overview = _
 
     def dispose()(implicit tx: S#Tx): Unit = {
       val itx: I#Tx = tx
       transportView.transport.dispose()(itx)
       transportView.dispose()(itx)
       deferTx {
-        SonogramManager.release(_sono)
+        SonogramManager.release(_sonogram)
       }
     }
 
     def guiInit(snapshot: Grapheme.Value.Audio): Unit = {
       // println("AudioFileView guiInit")
-      _sono = SonogramManager.acquire(snapshot.artifact)
+      _sonogram = SonogramManager.acquire(snapshot.artifact)
       // import SonogramManager.executionContext
       //      sono.onComplete {
       //        case x => println(s"<view> $x")
       //      }
-      val sonoView  = new ViewJ(_sono, timelineModel)
+      val sonogramView = new ViewJ(_sonogram, timelineModel)
 
       val ggDragRegion = new DnD.Button(holder, snapshot, timelineModel)
 
@@ -119,8 +121,8 @@ object ViewImpl {
 
       val pane = new BorderPanel {
         layoutManager.setVgap(2)
-        add(topPane,            BorderPanel.Position.North )
-        add(sonoView.component, BorderPanel.Position.Center)
+        add(topPane,                BorderPanel.Position.North )
+        add(sonogramView.component, BorderPanel.Position.Center)
       }
 
       component = pane

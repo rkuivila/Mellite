@@ -37,18 +37,13 @@ object ProcActions {
   final case class Resize(deltaStart: Long, deltaStop: Long)
 
   /** Queries the audio region's grapheme segment start and audio element. */
-  def getAudioRegion[S <: Sys[S]](span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])
+  def getAudioRegion[S <: Sys[S]](/* span: Expr[S, SpanLike], */ proc: Obj.T[S, Proc.Elem])
                                  (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme.Expr.Audio[S])] = {
-    span.value match {
-      case Span.HasStart(frame) =>
-        for {
-          scan <- proc.elem.peer.scans.get(ProcKeys.graphAudio)
-          Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
-          BiExpr(time, audio: Grapheme.Expr.Audio[S]) <- g.at(frame)
-        } yield (time, audio)
-
-      case _ => None
-    }
+    for {
+      scan <- proc.elem.peer.scans.get(ProcKeys.graphAudio)
+      Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
+      BiExpr(time, audio: Grapheme.Expr.Audio[S]) <- g.at(0L)
+    } yield (time, audio)
   }
 
   def resize[S <: Sys[S]](span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem],
@@ -71,15 +66,17 @@ object ProcActions {
       val imp = ExprImplicits[S]
       import imp._
 
-      val (dStartCC, dStopCC) = getAudioRegion(span, proc) match {
-        //        case Some((gtime, audio)) => // audio region
-        //          val gtimeV  = gtime.value
-        //          val audioV  = audio.value
-        //          dStartC
+      //      val (dStartCC, dStopCC) = getAudioRegion(span, proc) match {
+      //        //        case Some((gtime, audio)) => // audio region
+      //        //          val gtimeV  = gtime.value
+      //        //          val audioV  = audio.value
+      //        //          dStartC
+      //
+      //        case _ => // other proc
+      //          (dStartC, dStopC)
+      //      }
 
-        case _ => // other proc
-          (dStartC, dStopC)
-      }
+      val (dStartCC, dStopCC) = (dStartC, dStopC)
 
       span match {
         case Expr.Var(s) =>
@@ -117,14 +114,14 @@ object ProcActions {
     }
   }
 
+  // @param span the process span. if given, tries to copy the audio grapheme as well.
   /** Makes a copy of a proc. Copies the graph and all attributes, creates scans with the same keys
     * and connects _outgoing_ scans.
     *
     * @param proc the process to copy
-    * @param span the process span. if given, tries to copy the audio grapheme as well.
     * @return
     */
-  def copy[S <: Sys[S]](proc: Obj.T[S, Proc.Elem], span: Option[Expr[S, SpanLike]])
+  def copy[S <: Sys[S]](proc: Obj.T[S, Proc.Elem] /*, span: Option[Expr[S, SpanLike]] */)
                        (implicit tx: S#Tx): Obj.T[S, Proc.Elem] = {
     val pNew    = Proc[S]
     val res     = Obj(Proc.Elem(pNew))
@@ -134,11 +131,12 @@ object ProcActions {
       res.attr.put(key, attrOut)
     }
     proc.elem.peer.scans.keys.foreach(pNew.scans.add)
-    span.foreach { sp =>
-      ProcActions.getAudioRegion(sp, proc).foreach { case (time, audio) =>
+
+    // span.foreach { sp =>
+      ProcActions.getAudioRegion(/* sp, */ proc).foreach { case (time, audio) =>
         val imp = ExprImplicits[S]
         import imp._
-        val scanw       = pNew.scans.add(ProcKeys.graphAudio)
+        val scanW       = pNew.scans.add(ProcKeys.graphAudio)
         val grw         = Grapheme.Modifiable[S](audio.spec.numChannels)
         val gStart      = LongEx  .newVar(time        .value)
         val audioOffset = LongEx  .newVar(audio.offset.value)  // XXX TODO
@@ -146,9 +144,9 @@ object ProcActions {
         val gElem       = Grapheme.Expr.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
         val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
         grw.add(bi)
-        scanw addSource grw
+        scanW addSource grw
       }
-    }
+    // }
 
     // connect outgoing scans
     proc.elem.peer.scans.iterator.foreach {
@@ -261,27 +259,29 @@ object ProcActions {
   /** Inserts a new audio region proc into a given group.
     *
     * @param group      the group to insert the proc into
-    * @param time       the time offset in the group
+    * @param time       the time span on the outer timeline
     * @param track      the track to associate with the proc, or `-1` to have the track undefined
     * @param grapheme   the grapheme carrying the underlying audio file
-    * @param selection  the selection with respect to the grapheme. This is the span inside the underlying audio file,
+    * @param gOffset    the selection start with respect to the grapheme.
+    *                   This is inside the underlying audio file (but using timeline sample-rate),
     *                   whereas the proc will be placed in the group aligned with `time`.
     * @param bus        an optional bus to assign
     * @return           a tuple consisting of the span expression and the newly created proc.
     */
   def insertAudioRegion[S <: Sys[S]](
       group     : TimelineMod[S],
-      time      : Long,
+      time      : Span,
       track     : Int,
       grapheme  : Grapheme.Expr.Audio[S],
-      selection : Span,
+      gOffset   : Long,
       bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
      (implicit tx: S#Tx): (Expr[S, Span], Obj.T[S, Proc.Elem]) = {
 
     val imp = ExprImplicits[S]
     import imp._
 
-    val spanV   = Span(time, time + selection.length)
+    // val srRatio = grapheme.spec.sampleRate / Timeline.SampleRate
+    val spanV   = time // Span(time, time + (selection.length / srRatio).toLong)
     val span    = SpanEx.newVar[S](spanV)
     val proc    = Proc[S]
     val obj     = Obj(Proc.Elem(proc))
@@ -299,7 +299,9 @@ object ProcActions {
     // we preserve data.source(), i.e. the original audio file offset
     // ; therefore the grapheme element must start `selection.start` frames
     // before the insertion position `drop.frame`
-    val gStart  = LongEx.newVar(time - selection.start)  // wooopa, could even be a bin op at some point
+
+    // val gStart  = LongEx.newVar(time - selection.start)
+    val gStart = LongEx.newVar(-gOffset)
     val bi: Grapheme.TimedElem[S] = BiExpr(gStart, grapheme)
     grIn.add(bi)
     scanIn addSource grIn

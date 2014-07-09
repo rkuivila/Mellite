@@ -24,7 +24,7 @@ import de.sciss.strugatzki.{FeatureCorrelation, FeatureExtraction}
 import de.sciss.processor.Processor
 import de.sciss.synth.proc
 import de.sciss.mellite._
-import de.sciss.synth.proc.{Obj, ExprImplicits, FadeSpec, ProcKeys, ArtifactLocation, Grapheme}
+import de.sciss.synth.proc.{Timeline, Obj, ExprImplicits, FadeSpec, ProcKeys, ArtifactLocation, Grapheme}
 import de.sciss.file._
 import de.sciss.lucre.synth.InMemory
 
@@ -86,10 +86,14 @@ object MetaNull {
         import imp._
         val grapheme  = Grapheme.Expr.Audio(artifact, spec, offset, gain)
         val span      = m.punch
-        val (_, proc) = ProcActions.insertAudioRegion(group = group, time = time, track = 0, grapheme = grapheme,
-                                                      selection = span, bus = None)
-        val fdIn      = FadeSpec.Expr.newConst[I](FadeSpec(882))
-        val fdOut     = FadeSpec.Expr.newConst[I](FadeSpec(math.min(span.length - 882, 22050)))
+        val srRatio   = spec.sampleRate / Timeline.SampleRate
+        val gOffset   = (span.start / srRatio).toLong
+        val tlSpan    = Span(time, time + (span.length / srRatio).toLong)
+        val (_, proc) = ProcActions.insertAudioRegion(group = group, time = tlSpan, track = 0, grapheme = grapheme,
+                                                      gOffset = gOffset, bus = None)
+        val fdInLen   = (0.02 * Timeline.SampleRate).toLong
+        val fdIn      = FadeSpec.Expr.newConst[I](FadeSpec(fdInLen))
+        val fdOut     = FadeSpec.Expr.newConst[I](FadeSpec(math.min(tlSpan.length - fdInLen, (0.5 * Timeline.SampleRate).toLong)))
         proc.attr.put(ProcKeys.attrFadeIn , Obj(FadeSpec.Elem(fdIn )))
         proc.attr.put(ProcKeys.attrFadeOut, Obj(FadeSpec.Elem(fdOut)))
       }
