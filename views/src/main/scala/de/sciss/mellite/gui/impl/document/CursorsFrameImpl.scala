@@ -181,7 +181,7 @@ object CursorsFrameImpl {
         case (Some(name), seminalDate: Date) =>
           val parentElem = parent.elem
           parentElem.cursor.step { implicit tx =>
-            implicit val dtx = proc.Confluent.durable(tx)
+            implicit val dtx = tx.durable: D#Tx // proc.Confluent.durable(tx)
             val seminal = tx.inputAccess.takeUntil(seminalDate.getTime)
             // lucre.event.showLog = true
             parentElem.addChild(seminal)
@@ -318,7 +318,8 @@ object CursorsFrameImpl {
           val elem = path.last.elem
           implicit val cursor = elem.cursor
           cursor.step { implicit tx =>
-            implicit val dtx = workspace.system.durableTx(tx)
+            implicit val dtxView  = workspace.system.durableTx _ // (tx)
+            implicit val dtx      = dtxView(tx)
             DocumentElementsFrame(name = Some(elem.name), isWorkspaceRoot = false)
           }
         }

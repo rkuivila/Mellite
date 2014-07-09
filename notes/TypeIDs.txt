@@ -32,6 +32,8 @@
 0x10004     expr.List
 0x10005     Proc
 
+0x10006     Timeline
+
 :: indeterminus ::
 
 0x20000     Recursion

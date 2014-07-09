@@ -221,7 +221,7 @@ object WorkspaceImpl {
     val systemType = implicitly[reflect.runtime.universe.TypeTag[Cf]]
 
     type I = system.I
-    val inMemoryBridge = (tx: S#Tx) => Confluent.inMemory(tx)
+    val inMemoryBridge = (tx: S#Tx) => tx.inMemory  // Confluent.inMemory(tx)
     def inMemoryCursor: stm.Cursor[I] = system.inMemory
 
     protected def masterCursor = cursors.cursor
