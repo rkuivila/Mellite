@@ -15,7 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{ProcKeys, BooleanElem, ProcGroupElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
+import de.sciss.synth.proc.{Timeline, ProcKeys, BooleanElem, ProcGroupElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -837,7 +837,7 @@ object ObjViewImpl {
 
 
       def configureRenderer(label: Label): Component = {
-        val sr = 44100.0 // XXX TODO - damn, how to determine this?
+        val sr = Timeline.SampleRate // 44100.0
         val dur = timeFmt.format(value.numFrames.toDouble / sr)
         label.text = s"$dur, ${value.curve}"
         label

@@ -37,7 +37,7 @@ import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{TransportOLD => Transport, ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, TimedProc}
+import de.sciss.synth.proc.{Timeline, Transport, ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -98,7 +98,7 @@ object TimelineViewImpl {
 
   def apply[S <: Sys[S]](obj: Obj.T[S, ProcGroupElem])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineView[S] = {
-    val sampleRate  = 44100.0 // XXX TODO
+    val sampleRate  = Timeline.SampleRate
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
     val group       = obj.elem.peer
@@ -120,10 +120,11 @@ object TimelineViewImpl {
     // freed directly...
     disposables ::= procMap
     disposables ::= scanMap
-    val transport = proc.TransportOLD[S, workspace.I](group, sampleRate = sampleRate)
+    val transport = Transport[S](Mellite.auralSystem) // = proc.Transport [S, workspace.I](group, sampleRate = sampleRate)
     disposables ::= transport
-    val auralView = proc.AuralPresentation.run[S](transport, Mellite.auralSystem, Some(Mellite.sensorSystem))
-    disposables ::= auralView
+    // val auralView = proc.AuralPresentation.run[S](transport, Mellite.auralSystem, Some(Mellite.sensorSystem))
+    // disposables ::= auralView
+    transport.addObject(obj)
 
     val procSelectionModel = ProcSelectionModel[S]
     val global  = GlobalProcsView(group, procSelectionModel)
@@ -131,7 +132,7 @@ object TimelineViewImpl {
 
     val transportView = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
 
-    val view    = new Impl(groupH, groupEH, transport, procMap, scanMap, tlm, auralView, global,
+    val view    = new Impl(groupH, groupEH, /* transport, */ procMap, scanMap, tlm, /* auralView, */ global,
       transportView, procSelectionModel)
 
     group.iterator.foreach { case (span, seq) =>
@@ -286,11 +287,11 @@ object TimelineViewImpl {
 
   private final class Impl[S <: Sys[S]](groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
                                         groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
-                                        transport         : Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],
+                                        // transport         : Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],
                                         procMap           : ProcView.ProcMap[S],
                                         scanMap           : ProcView.ScanMap[S],
                                         val timelineModel : TimelineModel,
-                                        auralView         : AuralPresentation[S],
+                                        // auralView         : AuralPresentation[S],
                                         globalView        : GlobalProcsView[S],
                                         transportView     : TransportView[S],
                                         val procSelectionModel: ProcSelectionModel[S])
@@ -336,7 +337,8 @@ object TimelineViewImpl {
     object stopAllSoundAction extends Action("StopAllSound") {
       def apply(): Unit =
         cursor.step { implicit tx =>
-          auralView.stopAll
+          transportView.transport.stop()  // XXX TODO - what else could we do?
+          // auralView.stopAll
         }
     }
 

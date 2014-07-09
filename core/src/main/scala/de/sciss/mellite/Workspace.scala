@@ -18,7 +18,7 @@ import de.sciss.lucre.{expr, event => evt, bitemp, stm}
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{WorkspaceImpl => Impl}
-import de.sciss.synth.proc.{Obj, Folder, Proc}
+import de.sciss.synth.proc.{Transport, Obj, Folder, Proc}
 import de.sciss.serial.Serializer
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.Sys
@@ -35,8 +35,8 @@ object Workspace {
   type Groups      [S <: Sys[S]] = expr.List.Modifiable[S, Group[S], GroupUpdate[S]]
   type GroupsUpdate[S <: Sys[S]] = expr.List.Update    [S, Group[S], GroupUpdate[S]]
 
-  type Transport   [S <: Sys[S]] = proc.ProcTransport[S]
-  type Transports  [S <: Sys[S]] = expr.List.Modifiable[S, Transport[S], Unit] // Transport.Update[ S, Proc[ S ]]]
+  // type Transport   [S <: Sys[S]] = proc.ProcTransport[S]
+  type Transports  [S <: SSys[S]] = expr.List.Modifiable[S, Transport[S], Unit] // Transport.Update[ S, Proc[ S ]]]
 
   def read (dir: File): Workspace[_] /* [~ forSome { type ~ <: SSys[~] }] */ = Impl.read(dir)
 

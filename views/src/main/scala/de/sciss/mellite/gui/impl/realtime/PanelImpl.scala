@@ -17,7 +17,7 @@ package impl
 package realtime
 
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{DoubleElem, TransportOLD => Transport, ProcGroupElem, ProcGroup, Obj, ProcKeys, Elem, Proc, Param, ProcTransport}
+import de.sciss.synth.proc.{DoubleElem, Transport, ProcGroupElem, ProcGroup, Obj, ProcKeys, Elem, Proc, Param, ProcTransport}
 import de.sciss.lucre.bitemp.BiGroup
 import java.awt.{RenderingHints, Graphics2D, Color}
 import collection.immutable.{IndexedSeq => Vec}
@@ -38,97 +38,97 @@ import de.sciss.span.SpanLike
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.synth.proc
 
 object PanelImpl {
-  def apply[S <: Sys[S]](document: Workspace[S], transport: ProcTransport[S])
+  def apply[S <: Sys[S]](document: Workspace[S], transport: Transport[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] = {
 
     //      require( EventQueue.isDispatchThread, "VisualInstantPresentation.apply must be called on EDT" )
     //      require( Txn.findCurrent.isEmpty, "VisualInstantPresentation.apply must be called outside transaction" )
 
-    //    val sampleRate        = 44100.0   // XXX TODO
+    //    val sampleRate        = ...
     //    val group             = obj.elem.peer
     //    import document.inMemoryBridge
     //    val transport         = proc.Transport[S, document.I](group, sampleRate = sampleRate)
-    val vis = new Impl(transport, cursor)
-    val map = tx.newInMemoryIDMap[Map[SpanLike, List[VisualProc[S]]]]
-    val all = transport.iterator.map(_._2).toIndexedSeq
-
-    //    def playStop(b: Boolean)(implicit tx: S#Tx): Unit =
-    //      deferTx(vis.playing = b)
-
-    def advance(time: Long,
-                added  : Vec[ BiGroup.TimedElem[S, Obj.T[S, Proc.Elem]]],
-                removed: Vec[ BiGroup.TimedElem[S, Obj.T[S, Proc.Elem]]],
-                changes: Vec[(BiGroup.TimedElem[S, Obj.T[S, Proc.Elem]], Transport.Proc.Update[S])])  // Map[String, Param]
-               (implicit tx: S#Tx): Unit = {
-      val vpRem = removed.flatMap { timed =>
-        map.get(timed.id).flatMap { vpm =>
-          map.remove(timed.id)
-          val span = timed.span.value
-          vpm.get(span).flatMap {
-            case vp :: tail =>
-              if (tail.nonEmpty) {
-                map.put(timed.id, vpm + (span -> tail))
-              }
-              Some(vp)
-            case _ =>
-              None
-          }
-        }
-      }
-      val hasRem  = vpRem.nonEmpty
-      val vpAdd   = added.map { timed =>
-        val id    = timed.id
-        val proc  = timed.value
-        val n     = proc.attr.expr[String](ProcKeys.attrName).fold("<unnamed>")(_.value)
-        // val n = proc.name.value
-        //            val par  = proc.par.entriesAt( time )
-        val par   = Map.empty[String, Double]
-        val vp    = new VisualProc[S](n, par, cursor.position, tx.newHandle(proc))
-        val span  = timed.span.value
-        map.get(id) match {
-          case Some(vpm) =>
-            map.remove(id)
-            map.put(id, vpm + (span -> (vp :: vpm.getOrElse(span, Nil))))
-          case _ =>
-            map.put(id, Map(span -> (vp :: Nil)))
-        }
-        vp
-      }
-      val hasAdd = vpAdd.nonEmpty
-
-      val vpMod = changes.flatMap {
-        case (timed, Transport.Proc.AttrChanged(upd)) =>
-          val key = upd.key
-          upd.elem match {
-            case DoubleElem.Obj(objT) =>
-              val param = objT.elem.peer.value
-              map.get(timed.id).flatMap(_.getOrElse(timed.span.value, Nil).headOption).map(vis => (vis, key, param))
-            // vp.par += upd.key -> objT.elem.peer.value
-            case _ => None
-          }
-        case _ => None
-      }
-      val hasMod = vpMod.nonEmpty
-
-      if (hasAdd || hasRem || hasMod) deferTx {
-        if (hasAdd) vis.add    (vpAdd: _*)
-        if (hasRem) vis.remove (vpRem: _*)
-        if (hasMod) vis.updated(vpMod: _*)
-      }
-    }
-
-    val obsTrans = transport.react { implicit tx: S#Tx => {
-      case Transport.Advance(t, time, isSeek, isPlaying, added, removed, changes) =>
-        advance(time = time, added = added, removed = removed, changes = changes)
-      case _ =>
-    }}
-
-    deferTx(vis.guiInit())
-    advance(transport.time, all, Vec.empty, Vec.empty) // after init!
-    vis
+???
+//    val vis = new Impl(transport, cursor)
+//    val map = tx.newInMemoryIDMap[Map[SpanLike, List[VisualProc[S]]]]
+//    val all = transport.iterator.map(_._2).toIndexedSeq
+//
+//    //    def playStop(b: Boolean)(implicit tx: S#Tx): Unit =
+//    //      deferTx(vis.playing = b)
+//
+//    def advance(time: Long,
+//                added  : Vec[ BiGroup.TimedElem[S, Obj.T[S, Proc.Elem]]],
+//                removed: Vec[ BiGroup.TimedElem[S, Obj.T[S, Proc.Elem]]],
+//                changes: Vec[(BiGroup.TimedElem[S, Obj.T[S, Proc.Elem]], Transport.Proc.Update[S])])  // Map[String, Param]
+//               (implicit tx: S#Tx): Unit = {
+//      val vpRem = removed.flatMap { timed =>
+//        map.get(timed.id).flatMap { vpm =>
+//          map.remove(timed.id)
+//          val span = timed.span.value
+//          vpm.get(span).flatMap {
+//            case vp :: tail =>
+//              if (tail.nonEmpty) {
+//                map.put(timed.id, vpm + (span -> tail))
+//              }
+//              Some(vp)
+//            case _ =>
+//              None
+//          }
+//        }
+//      }
+//      val hasRem  = vpRem.nonEmpty
+//      val vpAdd   = added.map { timed =>
+//        val id    = timed.id
+//        val proc  = timed.value
+//        val n     = proc.attr.expr[String](ProcKeys.attrName).fold("<unnamed>")(_.value)
+//        // val n = proc.name.value
+//        //            val par  = proc.par.entriesAt( time )
+//        val par   = Map.empty[String, Double]
+//        val vp    = new VisualProc[S](n, par, cursor.position, tx.newHandle(proc))
+//        val span  = timed.span.value
+//        map.get(id) match {
+//          case Some(vpm) =>
+//            map.remove(id)
+//            map.put(id, vpm + (span -> (vp :: vpm.getOrElse(span, Nil))))
+//          case _ =>
+//            map.put(id, Map(span -> (vp :: Nil)))
+//        }
+//        vp
+//      }
+//      val hasAdd = vpAdd.nonEmpty
+//
+//      val vpMod = changes.flatMap {
+//        case (timed, Transport.Proc.AttrChanged(upd)) =>
+//          val key = upd.key
+//          upd.elem match {
+//            case DoubleElem.Obj(objT) =>
+//              val param = objT.elem.peer.value
+//              map.get(timed.id).flatMap(_.getOrElse(timed.span.value, Nil).headOption).map(vis => (vis, key, param))
+//            // vp.par += upd.key -> objT.elem.peer.value
+//            case _ => None
+//          }
+//        case _ => None
+//      }
+//      val hasMod = vpMod.nonEmpty
+//
+//      if (hasAdd || hasRem || hasMod) deferTx {
+//        if (hasAdd) vis.add    (vpAdd: _*)
+//        if (hasRem) vis.remove (vpRem: _*)
+//        if (hasMod) vis.updated(vpMod: _*)
+//      }
+//    }
+//
+//    val obsTrans = transport.react { implicit tx: S#Tx => {
+//      case Transport.Advance(t, time, isSeek, isPlaying, added, removed, changes) =>
+//        advance(time = time, added = added, removed = removed, changes = changes)
+//      case _ =>
+//    }}
+//
+//    deferTx(vis.guiInit())
+//    advance(transport.time, all, Vec.empty, Vec.empty) // after init!
+//    vis
   }
 
   //   private final class VisualProc( val name: String )
@@ -143,7 +143,7 @@ object PanelImpl {
   //   private val colrPlay       = new Color( 0, 0x80, 0 )
   //   private val colrStop       = Color.black
 
-  private final class Impl[S <: Sys[S]](transport: ProcTransport[S], cursor: Cursor[S])
+  private final class Impl[S <: Sys[S]](transport: Transport[S], cursor: Cursor[S])
     extends InstantGroupPanel[S] with ComponentHolder[Component] {
 
     private var playingVar = false

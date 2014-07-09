@@ -18,7 +18,7 @@ package realtime
 
 import de.sciss.lucre.stm.{Source, Cursor}
 import scala.swing.{Component, Dialog, Action, Button, FlowPanel, BorderPanel}
-import de.sciss.synth.proc.{ProcGroupElem, Obj, ProcGroup, ExprImplicits, Proc}
+import de.sciss.synth.proc.{Timeline, Transport, ProcGroupElem, Obj, ProcGroup, ExprImplicits, Proc}
 import de.sciss.span.Span
 import de.sciss.desktop
 import de.sciss.desktop.{FocusType, KeyStrokes}
@@ -33,10 +33,10 @@ import de.sciss.audiowidgets.impl.TimelineModelImpl
 object FrameImpl {
   def apply[S <: Sys[S]](document: Workspace[S], obj: Obj.T[S, ProcGroupElem] /*, transport: Document.Transport[S] */)
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupFrame[S] = {
-    val sampleRate        = 44100.0   // XXX TODO
+    val sampleRate        = Timeline.SampleRate
     val group             = obj.elem.peer
     import document.inMemoryBridge
-    val transport         = proc.TransportOLD[S, document.I](group, sampleRate = sampleRate)
+    val transport: Transport[S] = ??? // = proc.Transpor [S, document.I](group, sampleRate = sampleRate)
     val prefusePanel      = InstantGroupPanel(document, transport)
     // note: the transport only reads and updates the position, as well as reading span start for return-to-zero
     val tlm               = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
@@ -54,7 +54,7 @@ object FrameImpl {
   private final class Impl[S <: Sys[S]](val view      : InstantGroupPanel[S],
                                         transportPanel: TransportView[S],
                                         groupH        : Source[S#Tx, ProcGroup[S]], // Document.Group[S]],
-                                        val transport : Workspace.Transport[S],
+                                        val transport : Transport[S],
                                         name          : String)
                                        (implicit protected val cursor: Cursor[S])
     extends InstantGroupFrame[S] with WindowHolder[desktop.Window] with CursorHolder[S] {
@@ -77,8 +77,8 @@ object FrameImpl {
         import imp._
         group.modifiableOption.foreach { g =>
           val t = transport
-          val pos = t.time
-          val span = Span(pos, pos + 44100)
+          val pos = t.position
+          val span = Span(pos, pos + Timeline.SampleRate.toLong)
           val proc = Proc[S]
           ??? // g.add(span, proc)
         }

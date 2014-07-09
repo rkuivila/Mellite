@@ -16,13 +16,13 @@ package gui
 
 import de.sciss.lucre.stm.Cursor
 import de.sciss.synth.proc
-import proc.ProcTransport
+import de.sciss.synth.proc.{Transport, ProcTransport}
 import impl.realtime.{PanelImpl => Impl}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.View
 
 object InstantGroupPanel {
-  def apply[S <: Sys[S]](document: Workspace[S], transport: ProcTransport[S])
+  def apply[S <: Sys[S]](document: Workspace[S], transport: Transport[S])
                         (implicit tx: S#Tx, cursor: Cursor[S]): InstantGroupPanel[S] =
     Impl(document, transport)
 }

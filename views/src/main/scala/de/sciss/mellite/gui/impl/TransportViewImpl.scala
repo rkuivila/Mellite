@@ -26,31 +26,32 @@ import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.desktop.{KeyStrokes, FocusType}
 import scala.swing.event.Key
 import de.sciss.span.Span
-import de.sciss.synth.proc.{Obj, Proc, TransportOLD => Transport}
+import de.sciss.synth.proc.{Timeline, Obj, Proc, Transport}
 import de.sciss.desktop.Implicits._
 
 object TransportViewImpl {
-  def apply[S <: Sys[S]](transport: Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]], 
+  def apply[S <: Sys[S]](transport: Transport[S] /* .Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]] */,
                          model: TimelineModel, hasMillis: Boolean, hasLoop: Boolean)
                         (implicit tx: S#Tx, cursor: Cursor[S]): TransportView[S] = {
     val view    = new Impl(transport, model)
-    val srk     = 1000 / transport.sampleRate
+    val srk     = 1000 / Timeline.SampleRate // transport.sampleRate
 
     view.observer = transport.react { implicit tx => {
       case Transport.Play(_, time) => view.startedPlaying(time)
       case Transport.Stop(_, time) => view.stoppedPlaying(time)
-      case _ =>
+      case Transport.Seek(_, time, p) =>
+        if (p) view.startedPlaying(time) else view.stoppedPlaying(time)
     }}
 
     val initPlaying = transport.isPlaying // .playing.value
-    val initMillis = (transport.time * srk).toLong
+    val initMillis = (transport.position * srk).toLong
     deferTx {
       view.guiInit(initPlaying, initMillis, hasMillis = hasMillis, hasLoop = hasLoop)
     }
     view
   }
 
-  private final class Impl[S <: Sys[S]](val transport: Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]], 
+  private final class Impl[S <: Sys[S]](val transport: Transport[S] /* .Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]] */,
                                         val timelineModel: TimelineModel)
                                        (implicit protected val cursor: Cursor[S])
     extends TransportView[S] with ComponentHolder[Component] with CursorHolder[S] {
@@ -69,7 +70,7 @@ object TransportViewImpl {
 
     private var timerFrame  = 0L
     private var timerSys    = 0L
-    private val srm         = 0.001 * transport.sampleRate
+    private val srm         = 0.001 * Timeline.SampleRate // transport.sampleRate
 
     private var transportStrip: Component with GUITransport.ButtonStrip = _
 
@@ -135,13 +136,14 @@ object TransportViewImpl {
     private def fastForward() = ()
 
     private def toggleLoop(): Unit = {
-      val sel       = timelineModel.selection
-      val isLooping = atomic { implicit tx =>
-        val loopSpan = if (transport.loop == Span.Void) sel else Span.Void
-        transport.loop  = loopSpan
-        !loopSpan.isEmpty
-      }
-      transportStrip.button(GUITransport.Loop).foreach(_.selected = isLooping)
+      println("--todo : toggleLoop--")
+//      val sel       = timelineModel.selection
+//      val isLooping = atomic { implicit tx =>
+//        val loopSpan = if (transport.loop == Span.Void) sel else Span.Void
+//        transport.loop  = loopSpan
+//        !loopSpan.isEmpty
+//      }
+//      transportStrip.button(GUITransport.Loop).foreach(_.selected = isLooping)
     }
 
     //    private def playing: Boolean = playingVar
