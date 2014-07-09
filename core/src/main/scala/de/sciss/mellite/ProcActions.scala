@@ -16,8 +16,8 @@ package mellite
 
 import lucre.expr.Expr
 import span.{Span, SpanLike}
-import de.sciss.synth.proc.{Obj, SynthGraphs, ExprImplicits, ProcKeys, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
-import de.sciss.lucre.bitemp.{BiGroup, BiExpr}
+import de.sciss.synth.proc.{Timeline, Obj, SynthGraphs, ExprImplicits, ProcKeys, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
+import de.sciss.lucre.bitemp.BiExpr
 import de.sciss.synth.proc
 import scala.util.control.NonFatal
 import collection.breakOut
@@ -30,9 +30,9 @@ import scala.language.existentials
 object ProcActions {
   private val MinDur    = 32
 
-  // scalac still has bug finding ProcGroup.Modifiable
-  // private type ProcGroupMod[S <: Sys[S]] = ProcGroup.Modifiable[S] // BiGroup.Modifiable[S, Proc[S], Proc.Update[S]]
-  private type ProcGroupMod[S <: Sys[S]] = BiGroup.Modifiable[S, Obj.T[S, Proc.Elem], Obj.UpdateT[S, Proc.Elem[S]]]
+  // scalac still has bug finding Timeline.Modifiable
+  // private type TimelineMod[S <: Sys[S]] = Timeline.Modifiable[S] // BiGroup.Modifiable[S, Proc[S], Proc.Update[S]]
+  private type TimelineMod[S <: Sys[S]] = Timeline.Modifiable[S]
 
   final case class Resize(deltaStart: Long, deltaStop: Long)
 
@@ -270,7 +270,7 @@ object ProcActions {
     * @return           a tuple consisting of the span expression and the newly created proc.
     */
   def insertAudioRegion[S <: Sys[S]](
-      group     : ProcGroupMod[S],
+      group     : TimelineMod[S],
       time      : Long,
       track     : Int,
       grapheme  : Grapheme.Expr.Audio[S],
@@ -310,7 +310,7 @@ object ProcActions {
   }
 
   def insertGlobalRegion[S <: Sys[S]](
-      group     : ProcGroupMod[S],
+      group     : TimelineMod[S],
       name      : String,
       bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
      (implicit tx: S#Tx): Obj.T[S, Proc.Elem] = {

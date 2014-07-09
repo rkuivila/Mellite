@@ -54,7 +54,7 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
   }
 
   def commit(drag: Function)(implicit tx: S#Tx): Unit =
-    canvas.group.modifiableOption.foreach { g =>
+    canvas.timeline.modifiableOption.foreach { g =>
       val span  = SpanEx.newVar[S](SpanEx.newConst(drag.span))
       val p     = Proc[S]
       val obj   = Obj(Proc.Elem(p))

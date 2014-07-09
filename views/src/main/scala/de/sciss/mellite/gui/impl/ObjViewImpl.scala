@@ -15,7 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Timeline, ProcKeys, BooleanElem, ProcGroupElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
+import de.sciss.synth.proc.{BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -24,12 +24,12 @@ import de.sciss.lucre.stm
 import de.sciss.{desktop, mellite, lucre}
 import scala.util.Try
 import de.sciss.icons.raphael
-import de.sciss.synth.{Curve, proc}
+import de.sciss.synth.proc
 import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.swing.{Window, deferTx, View}
+import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.file._
-import scala.swing.{CheckBox, Label, ComboBox, TextField, Component, Swing}
+import scala.swing.{CheckBox, Label, ComboBox, TextField, Component}
 import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
 import de.sciss.mellite.impl.CodeImpl.CodeElemImpl
 import de.sciss.swingplus.Spinner
@@ -41,14 +41,13 @@ import de.sciss.lucre.{event => evt}
 import proc.Implicits._
 import de.sciss.audiowidgets.AxisFormat
 import de.sciss.model.Change
-import scala.annotation.switch
 
 object ObjViewImpl {
   import ObjView.Factory
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
   import mellite.{Recursion => _Recursion, Code => _Code}
-  import proc.{Folder => _Folder, Proc => _Proc, ProcGroup => _ProcGroup, ArtifactLocation => _ArtifactLocation, FadeSpec => _FadeSpec}
+  import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline, ArtifactLocation => _ArtifactLocation, FadeSpec => _FadeSpec}
 
   private val sync = new AnyRef
 
@@ -76,7 +75,7 @@ object ObjViewImpl {
     Recursion       .typeID -> Recursion,
     Folder          .typeID -> Folder,
     Proc            .typeID -> Proc,
-    ProcGroup       .typeID -> ProcGroup,
+    Timeline       .typeID -> Timeline,
     Code            .typeID -> Code,
     FadeSpec        .typeID -> FadeSpec
   )
@@ -641,17 +640,17 @@ object ObjViewImpl {
     }
   }
 
-  // -------- ProcGroup --------
+  // -------- Timeline --------
 
-  object ProcGroup extends Factory {
-    type E[S <: evt.Sys[S]] = ProcGroupElem[S]
+  object Timeline extends Factory {
+    type E[S <: evt.Sys[S]] = _Timeline.Elem[S]
     val icon    = raphaelIcon(raphael.Shapes.Ruler)
-    val prefix  = "ProcGroup"
-    def typeID  = ElemImpl.ProcGroup.typeID
+    val prefix  = "Timeline"
+    def typeID  = ElemImpl.Timeline.typeID
 
-    def apply[S <: Sys[S]](obj: Obj.T[S, ProcGroupElem])(implicit tx: S#Tx): ObjView[S] = {
+    def apply[S <: Sys[S]](obj: Obj.T[S, _Timeline.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
-      new ProcGroup.Impl(tx.newHandle(obj), name)
+      new Timeline.Impl(tx.newHandle(obj), name)
     }
 
     def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
@@ -663,8 +662,8 @@ object ObjViewImpl {
       val res = opt.show(window)
       res.map { name =>
         cursor.step { implicit tx =>
-          val peer  = _ProcGroup.Modifiable[S]
-          val elem  = ProcGroupElem(peer)
+          val peer  = _Timeline[S] // .Modifiable[S]
+          val elem  = _Timeline.Elem(peer)
           val obj   = Obj(elem)
           obj.attr.name = name
           addObject(prefix, folderH(), obj)
@@ -672,16 +671,16 @@ object ObjViewImpl {
       }
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]], var name: _String)
-      extends ObjView.ProcGroup[S]
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]], var name: _String)
+      extends ObjView.Timeline[S]
       with ObjViewImpl.Impl[S]
       with EmptyRenderer
       with NonEditable[S] {
 
       def value   = ()
-      def icon    = ProcGroup.icon
-      def prefix  = ProcGroup.prefix
-      def typeID  = ProcGroup.typeID
+      def icon    = Timeline.icon
+      def prefix  = Timeline.prefix
+      def typeID  = Timeline.typeID
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
 
@@ -837,7 +836,7 @@ object ObjViewImpl {
 
 
       def configureRenderer(label: Label): Component = {
-        val sr = Timeline.SampleRate // 44100.0
+        val sr = _Timeline.SampleRate // 44100.0
         val dur = timeFmt.format(value.numFrames.toDouble / sr)
         label.text = s"$dur, ${value.curve}"
         label

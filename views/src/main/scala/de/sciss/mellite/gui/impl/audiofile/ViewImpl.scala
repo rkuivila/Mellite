@@ -16,7 +16,7 @@ package gui
 package impl
 package audiofile
 
-import de.sciss.synth.proc.{Transport, ArtifactLocation, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
+import de.sciss.synth.proc.{Timeline, Transport, ArtifactLocation, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
 import de.sciss.lucre.stm
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
 import java.awt.Color
@@ -37,12 +37,13 @@ object ViewImpl {
                         (implicit tx: S#Tx, _workspace: Workspace[S], _cursor: stm.Cursor[S],
                          aural: AuralSystem): AudioFileView[S] = {
     val f             = obj0.elem.peer.value // .artifact // store.resolve(element.entity.value.artifact)
-    val sampleRate    = f.spec.sampleRate
+    // val sampleRate    = f.spec.sampleRate
     type I            = _workspace.I
     implicit val itx  = _workspace.inMemoryBridge(tx)
-    val group         = proc.ProcGroup.Modifiable[I]
+    val group         = Timeline[I] // proc.ProcGroup.Modifiable[I]
     // val groupObj      = Obj(ProcGroupElem(group))
-    val fullSpan      = Span(0L, f.spec.numFrames)
+    val srRatio       = f.spec.sampleRate / Timeline.SampleRate
+    val fullSpan      = Span(0L, (f.spec.numFrames / srRatio).toLong)
 
     // ---- we go through a bit of a mess here to convert S -> I ----
     val graphemeV     = f // elem.entity.value
@@ -62,7 +63,7 @@ object ViewImpl {
 
     import _workspace.inMemoryBridge
     val res: Impl[S, I] = new Impl[S, I] {
-      val timelineModel = new TimelineModelImpl(fullSpan, sampleRate)
+      val timelineModel = new TimelineModelImpl(fullSpan, Timeline.SampleRate)
       val workspace     = _workspace
       val cursor        = _cursor
       val holder        = tx.newHandle(obj0)

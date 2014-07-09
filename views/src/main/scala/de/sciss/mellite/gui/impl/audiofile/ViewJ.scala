@@ -18,6 +18,8 @@ package audiofile
 
 import de.sciss.sonogram
 import java.awt.{Color, Graphics2D}
+import de.sciss.synth.proc.Timeline
+
 import scala.util.Failure
 import scala.util.Success
 import scala.swing.{Swing, Component}
@@ -43,6 +45,7 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
 
   object canvasComponent extends Component with sonogram.PaintController {
     private var paintFun: Graphics2D => Unit = paintChecker("Calculating...")
+    private val srRatio = sono.inputSpec.sampleRate / Timeline.SampleRate
 
     override def paintComponent(g: Graphics2D): Unit = {
       paintFun(g)
@@ -66,8 +69,10 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
     }
 
     private def paintReady(g: Graphics2D): Unit = {
-      val visi = timelineModel.visible
-      sono.paint(spanStart = visi.start, spanStop = visi.stop, g, 0, 0, width, height, this)
+      val visSpan   = timelineModel.visible
+      val fileStart = visSpan.start * srRatio
+      val fileStop  = visSpan.stop  * srRatio
+      sono.paint(spanStart = fileStart, spanStop = fileStop, g, 0, 0, width, height, this)
     }
 
     def adjustGain(amp: Float, pos: Double) = amp

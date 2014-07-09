@@ -48,15 +48,14 @@ object EditAttrMap {
       cursor.step { implicit tx => perform() }
     }
 
-    private def perform(valueH: stm.Source[S#Tx, Option[Obj[S]]])(implicit tx: S#Tx): Unit =
-      cursor.step { implicit tx =>
-        val map = objH().attr
-        valueH().fold[Unit] {
-          map.remove(key)
-        } { obj =>
-          map.put(key, obj)
-        }
+    private def perform(valueH: stm.Source[S#Tx, Option[Obj[S]]])(implicit tx: S#Tx): Unit = {
+      val map = objH().attr
+      valueH().fold[Unit] {
+        map.remove(key)
+      } { obj =>
+        map.put(key, obj)
       }
+    }
 
     def perform()(implicit tx: S#Tx): Unit = perform(nowH)
 

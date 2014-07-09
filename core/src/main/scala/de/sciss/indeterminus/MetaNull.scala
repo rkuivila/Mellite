@@ -75,7 +75,7 @@ object MetaNull {
     type I            = InMemory
     implicit val sys  = InMemory()
     val p = sys.step { implicit tx =>
-      val group = proc.ProcGroup.Modifiable[I]
+      val group = proc.Timeline[I] // ProcGroup.Modifiable[I]
       matches.foreach { case (time, m) +: _ =>    // just mono right now
         val loc       = ArtifactLocation.Modifiable[I](m.file.parent.parent) // XXX TODO: bug in ArtifactLocation -- needs one sub-level at least
         val artifact  = loc.add(m.file)
@@ -96,8 +96,8 @@ object MetaNull {
 
       val bnc   = proc.Bounce[I, I]
       val bc    = bnc.Config()
-      implicit val ser = proc.ProcGroup.Modifiable.serializer[I]
-      bc.group  = tx.newHandle(group)
+      // implicit val ser = proc.ProcGroup.Modifiable.serializer[I]
+      bc.group  = ??? // tx.newHandle(group)
       // bc.init   = ...
       val sc                = bc.server
       sc.outputBusChannels  = 1

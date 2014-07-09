@@ -14,7 +14,7 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.synth.proc.{ProcGroupElem, Obj}
+import de.sciss.synth.proc.{Timeline, Obj}
 import scala.swing.Action
 import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm
@@ -22,7 +22,7 @@ import de.sciss.audiowidgets.TimelineModel
 import de.sciss.lucre.synth.Sys
 
 object TimelineView {
-  def apply[S <: Sys[S]](group: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](group: Timeline.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineView[S] =
     Impl[S](group)
 }
@@ -30,7 +30,7 @@ trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] {
   def timelineModel     : TimelineModel
   def procSelectionModel: ProcSelectionModel[S]
 
-  def group(implicit tx: S#Tx): Obj.T[S, ProcGroupElem]
+  def group(implicit tx: S#Tx): Timeline.Obj[S]
 
   // ---- GUI actions ----
   def bounceAction      : Action

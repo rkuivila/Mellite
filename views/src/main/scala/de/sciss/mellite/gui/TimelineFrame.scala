@@ -15,13 +15,13 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{ProcGroupElem, Obj}
+import de.sciss.synth.proc.{Timeline, Obj}
 import impl.timeline.{FrameImpl => Impl}
 import lucre.stm
 import de.sciss.lucre.synth.Sys
 
 object TimelineFrame {
-  def apply[S <: Sys[S]](group: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](group: Timeline.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineFrame[S] =
     Impl(group)
 }

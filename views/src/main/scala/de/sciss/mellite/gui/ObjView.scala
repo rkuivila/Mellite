@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{BooleanElem, ProcGroupElem, Elem, FolderElem, AudioGraphemeElem, Obj, DoubleElem, IntElem, StringElem, Grapheme}
+import de.sciss.synth.proc.{BooleanElem, Elem, FolderElem, AudioGraphemeElem, Obj, DoubleElem, IntElem, StringElem, Grapheme}
 import de.sciss.lucre.stm
 import java.io.File
 import javax.swing.Icon
@@ -34,7 +34,7 @@ object ObjView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
   import mellite.{Code => _Code, Recursion => _Recursion}
-  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, Proc => _Proc, ProcGroup => _ProcGroup, FadeSpec => _FadeSpec}
+  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, Proc => _Proc, Timeline => _Timeline, FadeSpec => _FadeSpec}
 
   //  final case class SelectionDrag[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
   //    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
@@ -120,9 +120,9 @@ object ObjView {
     def obj: stm.Source[S#Tx, Obj.T[S, _Proc.Elem]]
   }
 
-  val ProcGroup: Factory { type E[S <: evt.Sys[S]] = ProcGroupElem[S] } = Impl.ProcGroup
-  trait ProcGroup[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, ProcGroupElem]]
+  val Timeline: Factory { type E[S <: evt.Sys[S]] = _Timeline.Elem[S] } = Impl.Timeline
+  trait Timeline[S <: Sys[S]] extends ObjView[S] {
+    def obj: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]]
   }
 
   val Code: Factory { type E[S <: evt.Sys[S]] = _Code.Elem[S] } = Impl.Code

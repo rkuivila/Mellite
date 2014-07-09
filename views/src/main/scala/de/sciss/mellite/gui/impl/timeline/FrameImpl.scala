@@ -16,7 +16,7 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{ProcGroupElem, Obj, ProcGroup}
+import de.sciss.synth.proc.Timeline
 import de.sciss.lucre.stm
 import de.sciss.desktop.{KeyStrokes, Menu, OptionPane}
 import scala.swing.event.Key
@@ -27,11 +27,11 @@ import de.sciss.synth.proc
 import proc.Implicits._
 
 object FrameImpl {
-  def apply[S <: Sys[S]](group: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](group: Timeline.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineFrame[S] = {
     val tlv     = TimelineView[S](group)
     val name    = group.attr.name
-    import ProcGroup.serializer
+    import Timeline.serializer
     val groupH  = tx.newHandle(group.elem.peer)
     val res     = new Impl(tlv, name, groupH)
     res.init()
@@ -39,7 +39,7 @@ object FrameImpl {
   }
 
   private final class Impl[S <: Sys[S]](val view: TimelineView[S], name: String,
-                                        groupH: stm.Source[S#Tx, ProcGroup[S]])
+                                        groupH: stm.Source[S#Tx, Timeline[S]])
                                        (implicit _cursor: stm.Cursor[S])
     extends WindowImpl[S](s"$name : Timeline")
     with TimelineFrame[S] {

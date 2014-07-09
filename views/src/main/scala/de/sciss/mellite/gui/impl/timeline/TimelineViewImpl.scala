@@ -37,7 +37,7 @@ import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{Timeline, Transport, ProcGroupElem, Obj, ExprImplicits, FadeSpec, AuralPresentation, Grapheme, ProcKeys, Proc, Scan, ProcGroup, TimedProc}
+import de.sciss.synth.proc.{Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, ProcKeys, Proc, Scan, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -96,13 +96,13 @@ object TimelineViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  def apply[S <: Sys[S]](obj: Obj.T[S, ProcGroupElem])
+  def apply[S <: Sys[S]](obj: Timeline.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineView[S] = {
     val sampleRate  = Timeline.SampleRate
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
     val group       = obj.elem.peer
-    import ProcGroup.serializer
+    import Timeline.serializer
     val groupH      = tx.newHandle(group)
     val groupEH     = tx.newHandle(obj  )
 
@@ -172,7 +172,15 @@ object TimelineViewImpl {
       view.procFadeChanged(timed, fadeIn, fadeOut)
     }
 
-    def attrChanged(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit =
+    def attrChanged(timed: BiGroup.TimedElem[S, Obj[S]], name: String)(implicit tx: S#Tx): Unit = {
+      timed.value match {
+        case Timeline.Obj(tl) =>
+          val timed1 = timed.asInstanceOf[TimedProc[S]]
+          attrChanged1(timed1, name)
+      }
+    }
+
+    def attrChanged1(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit =
       name match {
         case ProcKeys.attrMute  => muteChanged(timed)
         case ProcKeys.attrFadeIn | ProcKeys.attrFadeOut => fadeChanged(timed)
@@ -227,53 +235,60 @@ object TimelineViewImpl {
         // println(s"Moved   $timed, $spanCh")
         view.procMoved(timed, spanCh = spanChange, trackCh = Change(0, 0))
 
-      case BiGroup.ElementMutated(timed, procUpd) =>
-        if (DEBUG) println(s"Mutated $timed, $procUpd")
+      case BiGroup.ElementMutated(timed0, procUpd) =>
+        if (DEBUG) println(s"Mutated $timed0, $procUpd")
         procUpd.changes.foreach {
-          case Obj.ElemChange(updP) =>
-            updP.changes.foreach {
-              case Proc.ScanAdded  (key, _) => scanAdded  (timed, key)
-              case Proc.ScanRemoved(key, _) => scanRemoved(timed, key)
-              case Proc.ScanChange(name, scan, scanUpdates) =>
-                scanUpdates.foreach {
-                  case Scan.GraphemeChange(grapheme, segments) =>
-                    if (name == ProcKeys.graphAudio) {
-                      timed.span.value match {
-                        case Span.HasStart(startFrame) =>
-                          val segmOpt = segments.find(_.span.contains(startFrame)) match {
-                            case Some(segm: Grapheme.Segment.Audio) => Some(segm)
-                            case _ => None
+          case Obj.ElemChange(updP0) =>
+            (timed0.value, updP0) match {
+              case (Timeline.Obj(tl), updP1: Proc.Update[_]) =>
+                val timed = timed0.asInstanceOf[TimedProc  [S]]
+                val updP  = updP1 .asInstanceOf[Proc.Update[S]]
+                updP.changes.foreach {
+                  case Proc.ScanAdded  (key, _) => scanAdded(timed, key)
+                  case Proc.ScanRemoved(key, _) => scanRemoved(timed, key)
+                  case Proc.ScanChange (name, scan, scanUpdates) =>
+                    scanUpdates.foreach {
+                      case Scan.GraphemeChange(grapheme, segments) =>
+                        if (name == ProcKeys.graphAudio) {
+                          timed.span.value match {
+                            case Span.HasStart(startFrame) =>
+                              val segmOpt = segments.find(_.span.contains(startFrame)) match {
+                                case Some(segm: Grapheme.Segment.Audio) => Some(segm)
+                                case _ => None
+                              }
+                              view.procAudioChanged(timed, segmOpt)
+                            case _ =>
                           }
-                          view.procAudioChanged(timed, segmOpt)
-                        case _ =>
-                      }
+                        }
+
+                      case Scan.SinkAdded(Scan.Link.Scan(peer)) =>
+                        val test: Scan[S] = scan
+                        view.scanSinkAdded(timed, name, test, peer)
+                      case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => view.scanSinkRemoved(timed, name, scan, peer)
+                      case Scan.SourceAdded  (Scan.Link.Scan(peer)) => view.scanSourceAdded(timed, name, scan, peer)
+                      case Scan.SourceRemoved(Scan.Link.Scan(peer)) => view.scanSourceRemoved(timed, name, scan, peer)
+
+                      case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
                     }
-
-                  case Scan.SinkAdded    (Scan.Link.Scan(peer)) =>
-                    val test: Scan[S] = scan
-                    view.scanSinkAdded    (timed, name, test, peer)
-                  case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => view.scanSinkRemoved  (timed, name, scan, peer)
-                  case Scan.SourceAdded  (Scan.Link.Scan(peer)) => view.scanSourceAdded  (timed, name, scan, peer)
-                  case Scan.SourceRemoved(Scan.Link.Scan(peer)) => view.scanSourceRemoved(timed, name, scan, peer)
-
-                  case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
+                  case Proc.GraphChange(_) =>
                 }
-              case Proc.GraphChange(_)      =>
+
+              case _ =>
             }
 
-          case Obj.AttrAdded  (key, _) => attrChanged(timed, key)
-          case Obj.AttrRemoved(key, _) => attrChanged(timed, key)
+          case Obj.AttrAdded  (key, _) => attrChanged(timed0, key)
+          case Obj.AttrRemoved(key, _) => attrChanged(timed0, key)
 
           case Obj.AttrChange(name, attr, ach) =>
             (name, ach) match {
               case (ProcKeys.attrTrack, changes) =>
                 changes.foreach {
                   case Obj.ElemChange(Change(before: Int, now: Int)) =>
-                    view.procMoved(timed, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
+                    view.procMoved(timed0, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
                   case _ =>
                 }
 
-              case _ => attrChanged(timed, name)
+              case _ => attrChanged(timed0, name)
             }
         }
     }}
@@ -285,8 +300,8 @@ object TimelineViewImpl {
     view
   }
 
-  private final class Impl[S <: Sys[S]](groupH            : stm.Source[S#Tx, proc.ProcGroup[S]],
-                                        groupEH           : stm.Source[S#Tx, Obj.T[S, ProcGroupElem]],
+  private final class Impl[S <: Sys[S]](groupH            : stm.Source[S#Tx, proc.Timeline[S]],
+                                        groupEH           : stm.Source[S#Tx, Timeline.Obj[S]],
                                         // transport         : Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],
                                         procMap           : ProcView.ProcMap[S],
                                         scanMap           : ProcView.ScanMap[S],
@@ -353,7 +368,8 @@ object TimelineViewImpl {
         settings = _settings
         _settings.file match {
           case Some(file) if ok =>
-            performGUI(workspace, _settings, groupH, file, window = window)
+            println("--TODO : Bounce --")
+            // performGUI(workspace, _settings, groupH, file, window = window)
           case _ =>
         }
       }
@@ -509,7 +525,16 @@ object TimelineViewImpl {
 
     private def repaintAll(): Unit = view.canvasComponent.repaint()
 
-    def addProc(span: SpanLike, timed: TimedProc[S], repaint: Boolean)(implicit tx: S#Tx): Unit = {
+    def addProc(span: SpanLike, timed: BiGroup.TimedElem[S, Obj[S]], repaint: Boolean)(implicit tx: S#Tx): Unit = {
+      timed.value match {
+        case Timeline.Obj(tl) =>
+          val timed1 = timed.asInstanceOf[TimedProc[S]] // XXX TODO -- dirty
+          addProc1(span, timed1, repaint = repaint)
+        case _ =>
+      }
+    }
+
+    private def addProc1(span: SpanLike, timed: TimedProc[S], repaint: Boolean)(implicit tx: S#Tx): Unit = {
       logT(s"addProc($span, $timed)")
       // timed.span
       // val proc = timed.value
@@ -529,7 +554,16 @@ object TimelineViewImpl {
         doAdd()
     }
 
-    def removeProc(span: SpanLike, timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
+    def removeProc(span: SpanLike, timed: BiGroup.TimedElem[S, Obj[S]])(implicit tx: S#Tx): Unit = {
+      timed.value match {
+        case Timeline.Obj(tl) =>
+          val timed1 = timed.asInstanceOf[TimedProc[S]] // XXX TODO
+          removeProc1(span, timed1)
+        case _ =>
+      }
+    }
+
+    private def removeProc1(span: SpanLike, timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       logT(s"removeProcProc($span, $timed)")
       procMap.get(timed.id).foreach { pv =>
         pv.disposeTx(timed, procMap, scanMap)
@@ -546,9 +580,17 @@ object TimelineViewImpl {
       }
     }
 
+    def procMoved(timed: BiGroup.TimedElem[S, Obj[S]], spanCh: Change[SpanLike], trackCh: Change[Int])(implicit tx: S#Tx): Unit = {
+      timed.value match {
+        case Timeline.Obj(tl) =>
+          val timed1 = timed.asInstanceOf[TimedProc[S]] // XXX TODO
+          procMoved1(timed1, spanCh, trackCh)
+      }
+    }
+
     // insignificant changes are ignored, therefore one can just move the span without the track
     // by using trackCh = Change(0,0), and vice versa
-    def procMoved(timed: TimedProc[S], spanCh: Change[SpanLike], trackCh: Change[Int])(implicit tx: S#Tx): Unit =
+    private def procMoved1(timed: TimedProc[S], spanCh: Change[SpanLike], trackCh: Change[Int])(implicit tx: S#Tx): Unit =
       procMap.get(timed.id).foreach { pv =>
         deferTx {
           if (pv.isGlobal)
@@ -779,7 +821,7 @@ object TimelineViewImpl {
       // import AbstractTimelineView._
       def timelineModel             = impl.timelineModel
       def selectionModel            = impl.procSelectionModel
-      def group(implicit tx: S#Tx)  = impl.plainGroup
+      def timeline(implicit tx: S#Tx)  = impl.plainGroup
 
       def intersect(span: Span): Iterator[ProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
 
