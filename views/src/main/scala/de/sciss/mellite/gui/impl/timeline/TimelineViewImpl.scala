@@ -970,6 +970,7 @@ object TimelineViewImpl {
               val pw    = x2 - x1
               val ph    = 64
 
+              // clipped coordinates
               val px1C    = math.max(px + 1, cr.x - 2)
               val px2C    = math.min(px + pw, cr.x + cr.width + 3)
               if (px1C < px2C) {  // skip this if we are not overlapping with clip
@@ -996,13 +997,13 @@ object TimelineViewImpl {
                   sonogramOpt.foreach { sonogram =>
                     val audio   = segm.value
                     val srRatio = sonogram.inputSpec.sampleRate / Timeline.SampleRate
-                    val dStart  = audio.offset - (segm.span.start /* + move */) * srRatio
+                    val dStart  = audio.offset - segm.span.start * srRatio
                     val startC  = screenToFrame(px1C) // math.max(0.0, screenToFrame(px1C))
                     val stopC   = screenToFrame(px2C)
                     val boost   = if (selected) visualBoost * gainState.factor else visualBoost
                     // println(s"audio.gain = ${audio.gain.toFloat}")
                     sonogramBoost   = (audio.gain + pv.gain).toFloat * boost
-                    val startP  = math.max(0.0, /* startC + */ dStart)
+                    val startP  = math.max(0.0, screenToFrame(px1C - px) * srRatio + dStart)
                     // val stopP   = startP + (stopC - startC)
                     val stopP   = startP + (stopC - startC) * srRatio
                     sonogram.paint(startP, stopP, g, px1C, innerY, px2C - px1C, innerH, this)
