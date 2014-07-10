@@ -17,6 +17,7 @@ package mellite
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.WindowHandler
+import de.sciss.synth.proc
 import de.sciss.synth.proc.{SensorSystem, AuralSystem}
 import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
@@ -30,11 +31,11 @@ object Mellite extends SwingApplicationImpl("Mellite") {
 
   // lucre.event    .showLog = true
   // lucre.confluent.showLog = true
-  // synth.proc.showAuralLog     = true
   // synth.proc.showLog          = true
-  // synth.proc.showTransportLog = true
   // showLog                     = true
-  showTimelineLog = true
+  showTimelineLog       = true
+  proc.showAuralLog     = true
+  proc.showTransportLog = true
 
   override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
     override lazy val usesInternalFrames = {

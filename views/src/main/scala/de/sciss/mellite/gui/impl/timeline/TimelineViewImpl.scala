@@ -37,7 +37,7 @@ import de.sciss.lucre.expr.Expr
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, ProcKeys, Proc, Scan, TimedProc}
+import de.sciss.synth.proc.{TimeRef, Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, ProcKeys, Proc, Scan, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -531,7 +531,7 @@ object TimelineViewImpl {
     }
 
     private def addProc1(span: SpanLike, timed: TimedProc[S], repaint: Boolean)(implicit tx: S#Tx): Unit = {
-      logT(s"addProc($span, $timed)")
+      logT(s"addProc($span / ${TimeRef.spanToSecs(span)}, $timed)")
       // timed.span
       // val proc = timed.value
       val pv = ProcView(timed, procMap, scanMap)
@@ -1002,7 +1002,7 @@ object TimelineViewImpl {
                     val stopC   = screenToFrame(px2C)
                     val boost   = if (selected) visualBoost * gainState.factor else visualBoost
                     // println(s"audio.gain = ${audio.gain.toFloat}")
-                    sonogramBoost   = (audio.gain + pv.gain).toFloat * boost
+                    sonogramBoost   = (audio.gain * pv.gain).toFloat * boost
                     val startP  = math.max(0.0, screenToFrame(px1C - px) * srRatio + dStart)
                     // val stopP   = startP + (stopC - startC)
                     val stopP   = startP + (stopC - startC) * srRatio
