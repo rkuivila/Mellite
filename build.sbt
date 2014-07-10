@@ -70,7 +70,7 @@ lazy val core: Project = Project(
     libraryDependencies ++= Seq(
       "de.sciss" %% "scalainterpreterpane"            % "1.6.2",  // REPL
       "de.sciss" %% "soundprocesses"                  % "2.5.0-SNAPSHOT",  // computer-music framework
-      "de.sciss" %% "lucrestm-bdb"                    % "2.1.0-SNAPSHOT",  // database backend
+      "de.sciss" %% "lucrestm-bdb"                    % "2.1.0",  // database backend
       "de.sciss" %% "fscapejobs"                      % "1.4.1",  // remote FScape invocation
       "de.sciss" %% "strugatzki"                      % "2.4.1"   // feature extraction
     )
@@ -86,7 +86,7 @@ lazy val views = Project(
     description := fullDescr,
     libraryDependencies ++= Seq(
       "de.sciss" %% "scalacolliderswing-interpreter"  % "1.16.0", // REPL
-      "de.sciss" %% "lucreswing"                      % "0.4.0-SNAPSHOT",  // reactive Swing components
+      "de.sciss" %% "lucreswing"                      % "0.4.0",  // reactive Swing components
       "de.sciss" %% "audiowidgets-app"                % "1.6.2",  // audio application widgets
       "de.sciss" %% "desktop-mac"                     % "0.5.4",  // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss" %% "sonogramoverview"                % "1.7.1",  // sonogram component

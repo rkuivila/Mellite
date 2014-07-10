@@ -31,11 +31,11 @@ object Mellite extends SwingApplicationImpl("Mellite") {
 
   // lucre.event    .showLog = true
   // lucre.confluent.showLog = true
-  // synth.proc.showLog          = true
-  // showLog                     = true
-  showTimelineLog       = true
-  proc.showAuralLog     = true
-  proc.showTransportLog = true
+  // proc.showLog            = true
+  // showLog                 = true
+  // showTimelineLog         = true
+  // proc.showAuralLog       = true
+  // proc.showTransportLog   = true
 
   override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
     override lazy val usesInternalFrames = {
