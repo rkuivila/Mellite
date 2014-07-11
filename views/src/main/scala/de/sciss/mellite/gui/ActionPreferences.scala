@@ -50,6 +50,8 @@ object ActionPreferences extends Action("Preferences...") {
     val ggAudioDevice   = textField(Prefs.audioDevice   , Prefs.defaultAudioDevice    )
     val lbNumOutputs    = label("Output Channels")
     val ggNumOutputs    = intField(Prefs.audioNumOutputs, Prefs.defaultAudioNumOutputs)
+    val lbNumPrivate    = label("Private Channels")
+    val ggNumPrivate    = intField(Prefs.audioNumPrivate, Prefs.defaultAudioNumPrivate)
 
     val lbHeadphones    = label("Headphones Bus")
     val ggHeadphones    = intField(Prefs.headphonesBus  , Prefs.defaultHeadphonesBus  )
@@ -68,8 +70,8 @@ object ActionPreferences extends Action("Preferences...") {
     val box = new GroupPanel {
       // val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
       horizontal = Par(sepAudio, sepSensor, Seq(
-        Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAudioDevice, lbNumOutputs, lbHeadphones, lbSensorProtocol, lbSensorPort),
-        Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAudioDevice, ggNumOutputs, ggHeadphones, ggSensorProtocol, ggSensorPort)
+        Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAudioDevice, lbNumOutputs, lbNumPrivate, lbHeadphones, lbSensorProtocol, lbSensorPort),
+        Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAudioDevice, ggNumOutputs, ggNumPrivate, ggHeadphones, ggSensorProtocol, ggSensorPort)
       ))
       vertical = Seq(
         Par(Baseline)(lbLookAndFeel     , ggLookAndFeel     ),
@@ -78,6 +80,7 @@ object ActionPreferences extends Action("Preferences...") {
         Par(Baseline)(lbSuperCollider   , ggSuperCollider   ),
         Par(Baseline)(lbAudioDevice     , ggAudioDevice     ),
         Par(Baseline)(lbNumOutputs      , ggNumOutputs      ),
+        Par(Baseline)(lbNumPrivate      , ggNumPrivate      ),
         Par(Baseline)(lbHeadphones      , ggHeadphones      ),
         sepSensor,
         Par(Baseline)(lbSensorProtocol  , ggSensorProtocol  ),

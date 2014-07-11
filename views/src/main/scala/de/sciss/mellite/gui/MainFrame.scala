@@ -15,11 +15,11 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.desktop.{WindowHandler, Window}
+import de.sciss.desktop.{Menu, WindowHandler, Window}
 import scala.swing.{CheckBox, Button, FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
 import de.sciss.synth.proc.{SensorSystem, AuralSystem}
 import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
-import de.sciss.synth.{addToTail, SynthDef, addToHead, AudioBus}
+import de.sciss.synth.{proc, addToTail, SynthDef, addToHead, AudioBus}
 import Swing._
 import java.awt.{Color, Font}
 import scala.swing.event.{ButtonClicked, ValueChanged}
@@ -108,12 +108,44 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     contents += HStrut(4)
     contents += lbAudio
     contents += audioServerPane
+    contents += HGlue
   }
 
   // component.peer.getRootPane.putClientProperty("Window.style", "small")
   component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
   resizable = false
   contents  = boxPane
+  handler.menuFactory.get("actions").foreach {
+    case g: Menu.Group =>
+      g.add(Some(this), Menu.Item("server-tree", ActionShowTree))
+      g.add(Some(this), Menu.Item("toggle-debug-log")("Toggle Debug Log")(toggleDebugLog()))
+    case _ =>
+  }
+
+  private def toggleDebugLog(): Unit = {
+    val state = !showTimelineLog
+    showTimelineLog         = state
+    proc.showAuralLog       = state
+    proc.showTransportLog   = state
+  }
+
+  private object ActionShowTree extends Action("Show Server Node Tree") {
+    enabled = false
+
+    private var sOpt = Option.empty[Server]
+
+    def server: Option[Server] = sOpt
+    def server_=(value: Option[Server]): Unit = {
+      sOpt    = value
+      enabled = sOpt.isDefined
+    }
+
+    def apply(): Unit =
+      sOpt.foreach { server =>
+        import de.sciss.synth.swing.Implicits._
+        server.peer.gui.tree()
+      }
+  }
 
   def startAuralSystem(): Unit = {
     val config        = Server.Config()
@@ -121,7 +153,11 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     if (programPath != Prefs.defaultSuperCollider) config.program = programPath.path
     val audioDevice   = Prefs.audioDevice.getOrElse(Prefs.defaultAudioDevice)
     if (audioDevice != Prefs.defaultAudioDevice) config.deviceName = Some(audioDevice)
-    config.outputBusChannels = Prefs.audioNumOutputs.getOrElse(Prefs.defaultAudioNumOutputs)
+    val numOutputs    = Prefs.audioNumOutputs.getOrElse(Prefs.defaultAudioNumOutputs)
+    config.outputBusChannels = numOutputs
+    val numPrivate    = Prefs.audioNumPrivate.getOrElse(Prefs.defaultAudioNumPrivate)
+    config.audioBusChannels = numOutputs + numPrivate
+    config.wireBuffers = math.max(256, numOutputs * 4)  // XXX TODO - sensible?
     config.transport  = osc.TCP
     config.pickPort()
 
@@ -149,6 +185,8 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
     deferTx {
       import synth.Ops._
+
+      ActionShowTree.server = Some(s)
 
       audioServerPane.server = Some(s.peer)
       val numOuts = s.peer.config.outputBusChannels

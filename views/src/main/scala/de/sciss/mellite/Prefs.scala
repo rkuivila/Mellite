@@ -41,10 +41,11 @@ object Prefs {
 
   // ---- gui ----
 
-  def defaultLookAndFeel: LookAndFeelInfo = {
-    val clazzName = UIManager.getSystemLookAndFeelClassName
-    LookAndFeelType.valueOf(clazzName).getOrElse(new LookAndFeelInfo("<system>", clazzName))
-  }
+  def defaultLookAndFeel: LookAndFeelInfo =
+    UIManager.getInstalledLookAndFeels.find(_.getName == "Web Look And Feel").getOrElse {
+      val clazzName = UIManager.getSystemLookAndFeelClassName
+      LookAndFeelType.valueOf(clazzName).getOrElse(new LookAndFeelInfo("<system>", clazzName))
+    }
 
   def lookAndFeel: Entry[LookAndFeelInfo] = userPrefs("look-and-feel")
 
@@ -55,11 +56,13 @@ object Prefs {
   final val defaultSuperCollider    = file("<SC_HOME>")
   final val defaultAudioDevice      = "<default>"
   final val defaultAudioNumOutputs  = 8
+  final val defaultAudioNumPrivate  = 512
   final val defaultHeadphonesBus    = 0
 
   def superCollider  : Entry[File  ] = userPrefs("supercollider"    )
   def audioDevice    : Entry[String] = userPrefs("audio-device"     )
   def audioNumOutputs: Entry[Int   ] = userPrefs("audio-num-outputs")
+  def audioNumPrivate: Entry[Int   ] = userPrefs("audio-num-private")
   def headphonesBus  : Entry[Int   ] = userPrefs("headphones-bus"   )
 
   // ---- sensor ----
