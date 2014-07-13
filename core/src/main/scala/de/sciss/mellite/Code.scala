@@ -41,6 +41,7 @@ object Code {
   def apply(id: Int, source: String): Code = (id: @switch) match {
     case FileTransform.id => FileTransform(source)
     case SynthGraph   .id => SynthGraph   (source)
+    case Action       .id => Action       (source)
   }
 
   def future[A](fun: => A): Future[A] = Impl.future(fun)

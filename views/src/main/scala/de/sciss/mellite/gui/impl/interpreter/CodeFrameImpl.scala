@@ -21,8 +21,10 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{UndoManager, OptionPane, Window}
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.IDPeek
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.event.Sys
+import de.sciss.mellite.impl.ActionImpl
 import de.sciss.synth.{SynthGraph, proc}
 import proc.Implicits._
 import de.sciss.synth.proc.{ProcKeys, SynthGraphs, Proc, Obj}
@@ -43,9 +45,9 @@ object CodeFrameImpl {
     }
 
     val handler = new CodeView.Handler[S, Unit, SynthGraph] {
-      def in = ()
+      def in() = ()
 
-      def save(out: SynthGraph)(implicit tx: S#Tx): UndoableEdit = {
+      def save(in: Unit, out: SynthGraph)(implicit tx: S#Tx): UndoableEdit = {
         val obj = objH()
         import SynthGraphs.{serializer, varSerializer}
         EditVar.Expr[S, SynthGraph]("Change SynthGraph", obj.graph, SynthGraphs.newConst[S](out))
@@ -65,26 +67,38 @@ object CodeFrameImpl {
       init = "// action source code\n\n")
 
     val codeEx0 = codeObj.elem.peer
-    val objH    = tx.newHandle(obj.elem.peer)
     val code0   = codeEx0.value match {
       case cs: Code.Action => cs
       case other => sys.error(s"Action source code does not produce plain function: ${other.contextName}")
     }
 
-    val handler = new CodeView.Handler[S, String, Array[Byte]] {
-      def in: String = ???
 
-      def save(out: Array[Byte])(implicit tx: S#Tx): UndoableEdit = {
-        val obj = objH()
-        //        import SynthGraphs.{serializer, varSerializer}
-        //        EditVar.Expr[S, SynthGraph]("Change Action Body", obj.graph, SynthGraphs.newConst[S](out))
-        ???
-      }
 
-      def dispose()(implicit tx: S#Tx) = ()
+
+    val handlerOpt = obj.elem.peer match {
+      case Action.Var(vr) =>
+        val objH = tx.newHandle(vr)
+        val handler = new CodeView.Handler[S, String, Array[Byte]] {
+          def in(): String = cursor.step { implicit tx =>
+            val id = tx.newID()
+            val cnt = IDPeek(id)
+            s"Action$cnt"
+          }
+
+          def save(in: String, out: Array[Byte])(implicit tx: S#Tx): UndoableEdit = {
+            val obj = objH()
+            val value = ActionImpl.newConst[S](name = in, jar = out)
+            EditVar[S, Action[S], Action.Var[S]](name = "Change Action Body", expr = obj, value = value)
+          }
+
+          def dispose()(implicit tx: S#Tx) = ()
+        }
+        Some(handler)
+
+      case _ => None
     }
 
-    make(codeObj, code0, obj.attr.name, Some(handler))
+    make(codeObj, code0, obj.attr.name, handlerOpt)
   }
 
   // ---- general constructor ----

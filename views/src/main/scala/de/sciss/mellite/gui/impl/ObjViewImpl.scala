@@ -15,6 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
+import de.sciss.lucre.stm.Cursor
 import de.sciss.synth.proc.{BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
@@ -870,12 +871,18 @@ object ObjViewImpl {
       extends ObjView.Action[S]
       with ObjViewImpl.Impl[S]
       with NonEditable[S]
-      with NonViewable[S]
       with EmptyRenderer[S] {
 
       def icon    = Action.icon
       def prefix  = Action.prefix
       def typeID  = Action.typeID
+
+      def isViewable = true
+
+      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        val frame = CodeFrame.action(obj())
+        Some(frame)
+      }
     }
   }
 

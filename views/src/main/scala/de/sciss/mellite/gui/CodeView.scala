@@ -27,9 +27,9 @@ import scala.swing.Action
 import scala.concurrent.Future
 
 object CodeView {
-  trait Handler[S <: Sys[S], +In, -Out] extends Disposable[S#Tx] {
-    def in: In
-    def save(out: Out)(implicit tx: S#Tx): UndoableEdit
+  trait Handler[S <: Sys[S], In, -Out] extends Disposable[S#Tx] {
+    def in(): In
+    def save(in: In, out: Out)(implicit tx: S#Tx): UndoableEdit
   }
 
   /** If `graph` is given, the `apply` action is tied to updating the graph variable. */

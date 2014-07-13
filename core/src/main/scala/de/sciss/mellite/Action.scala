@@ -41,11 +41,10 @@ object Action {
         case x: Var[S] => Some(x)
         case _ => None
       }
+
+    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Var[S]] = Impl.varSerializer[S]
   }
-  trait Var[S <: Sys[S]] extends Action[S] {
-    def apply()(implicit tx: S#Tx): Action[S]
-    def update(value: Action[S])(implicit tx: S#Tx): Unit
-  }
+  trait Var[S <: Sys[S]] extends Action[S] with stm.Var[S#Tx, Action[S]]
 
   implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Action[S]] = Impl.serializer[S]
 

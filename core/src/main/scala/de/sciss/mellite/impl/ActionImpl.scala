@@ -17,18 +17,18 @@ package impl
 import de.sciss.lucre.{event => evt}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Elem
-import de.sciss.lucre.event.{Reader, InMemory, Node, Targets, EventLike, Sys}
+import de.sciss.lucre.event.{Reader, InMemory, EventLike, Sys}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IDPeek
-import de.sciss.serial.{DataInput, DataOutput}
+import de.sciss.serial.{Serializer, DataInput, DataOutput}
 
 import scala.annotation.switch
 import scala.collection.mutable
 import scala.concurrent.{Promise, Future, blocking}
-import scala.concurrent.stm.{InTxn, TMap, TSet, TxnLocal}
+import scala.concurrent.stm.{InTxn, TMap, TSet}
 
 object ActionImpl {
-  private val count = TxnLocal(0) // to distinguish different action class-names within the same transaction
+  // private val count = TxnLocal(0) // to distinguish different action class-names within the same transaction
 
   private final val COOKIE        = 0x61637400   // "act\0"
   private final val CONST_EMPTY   = 0
@@ -42,8 +42,8 @@ object ActionImpl {
   def compile[S <: Sys[S]](source: Code.Action)
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Future[stm.Source[S#Tx, Action[S]]] = {
     val id      = tx.newID()
-    val cnt     = count.getAndTransform(_ + 1)(tx.peer)
-    val name    = s"Action${IDPeek(id)}_$cnt"
+    // val cnt     = count.getAndTransform(_ + 1)(tx.peer)
+    val name    = s"Action${IDPeek(id)}"  // _$cnt
     val p       = Promise[stm.Source[S#Tx, Action[S]]]()
     val system  = tx.system
     tx.afterCommit(performCompile(p, name, source, system))
@@ -58,6 +58,18 @@ object ActionImpl {
     new VarImpl[S](targets, peer)
   }
 
+  def newConst[S <: Sys[S]](name: String, jar: Array[Byte])(implicit tx: S#Tx): Action[S] = {
+    val system = tx.system
+    val res: Action[S] = sync.synchronized {
+      val cl = clMap.getOrElseUpdate(system, {
+        if (DEBUG) println("ActionImpl: Create new class loader")
+        new MemoryClassLoader
+      })
+      new ConstFunImpl(name, jar, system, cl)
+    }
+    res
+  }
+
   // ----
 
   private def performCompile[S <: Sys[S]](p: Promise[stm.Source[S#Tx, Action[S]]], name: String,
@@ -65,15 +77,9 @@ object ActionImpl {
     // val jarFut = source.compileToFunction(name)
     val jarFut = Code.future(blocking(source.execute(name)))
     val actFut = jarFut.map { jar =>
-      if (DEBUG) println(s"compileToFunction completed. jar-size = ${jar.length}")
+      if (DEBUG) println(s"ActionImpl: compileToFunction completed. jar-size = ${jar.length}")
       cursor.step { implicit tx =>
-        val a: Action[S] = sync.synchronized {
-          val cl = clMap.getOrElseUpdate(system, {
-            if (DEBUG) println("Create new class loader")
-            new MemoryClassLoader
-          })
-          new ConstFunImpl(name, jar, system, cl)
-        }
+        val a = newConst(name, jar)
         tx.newHandle(a)
       }
     }
@@ -84,16 +90,12 @@ object ActionImpl {
 
   def serializer[S <: Sys[S]]: evt.EventLikeSerializer[S, Action[S]] = anySer.asInstanceOf[Ser[S]]
 
-  private val anySer = new Ser[InMemory]
+  def varSerializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Action.Var[S]] = anyVarSer.asInstanceOf[VarSer[S]]
+
+  private val anySer    = new Ser   [InMemory]
+  private val anyVarSer = new VarSer[InMemory]
 
   private final class Ser[S <: Sys[S]] extends evt.EventLikeSerializer[S, Action[S]] {
-    private def readCookieAndTpe(in: DataInput): Byte = {
-      val cookie = in.readInt()
-      if (cookie != COOKIE)
-        sys.error(s"Unexpected cookie (found ${cookie.toHexString}, expected ${COOKIE.toHexString})")
-      in.readByte()
-    }
-
     def readConstant(in: DataInput)(implicit tx: S#Tx): Action[S] =
       (readCookieAndTpe(in): @switch) match {
         case CONST_FUN    =>
@@ -104,7 +106,7 @@ object ActionImpl {
           val system  = tx.system
           sync.synchronized {
             val cl = clMap.getOrElseUpdate(system, {
-              if (DEBUG) println("Create new class loader")
+              if (DEBUG) println("ActionImpl: Create new class loader")
               new MemoryClassLoader
             })
             new ConstFunImpl[S](name, jar, system, cl)
@@ -115,15 +117,32 @@ object ActionImpl {
         case other => sys.error(s"Unexpected action cookie $other")
       }
 
-    def read(in: DataInput, access: S#Acc, targets: Targets[S])(implicit tx: S#Tx): Action[S] with Node[S] =
-      (readCookieAndTpe(in): @switch) match {
-        case CONST_VAR =>
-          val peer = tx.readVar[Action[S]](targets.id, in)
-          new VarImpl[S](targets, peer)
-
-        case other => sys.error(s"Unexpected action cookie $other")
-      }
+    def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Action[S] with evt.Node[S] =
+      ActionImpl.readVar(in, access, targets)
   }
+
+  private final class VarSer[S <: Sys[S]] extends evt.NodeSerializer[S, Action.Var[S]] {
+    def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])
+            (implicit tx: S#Tx): Action.Var[S] with evt.Node[S] =
+      ActionImpl.readVar(in, access, targets)
+  }
+
+  private def readCookieAndTpe(in: DataInput): Byte = {
+    val cookie = in.readInt()
+    if (cookie != COOKIE)
+      sys.error(s"Unexpected cookie (found ${cookie.toHexString}, expected ${COOKIE.toHexString})")
+    in.readByte()
+  }
+
+  private def readVar[S <: Sys[S]](in: DataInput, access: S#Acc, targets: evt.Targets[S])
+                                  (implicit tx: S#Tx): Action.Var[S] with evt.Node[S] =
+    (readCookieAndTpe(in): @switch) match {
+      case CONST_VAR =>
+        val peer = tx.readVar[Action[S]](targets.id, in)
+        new VarImpl[S](targets, peer)
+
+      case other => sys.error(s"Unexpected action cookie $other")
+    }
 
   // ---- constant implementation ----
 
@@ -197,6 +216,9 @@ object ActionImpl {
       if (old != value) fire(())
     }
 
+    // stupidly defined on stm.Var
+    def transform(fun: Action[S] => Action[S])(implicit tx: S#Tx): Unit = update(fun(apply()))
+
     def execute()(implicit tx: S#Tx): Unit = peer().execute()
 
     protected def disposeData()(implicit tx: S#Tx): Unit = peer.dispose()
@@ -219,7 +241,7 @@ object ActionImpl {
 
     def add(name: String, jar: Array[Byte])(implicit tx: InTxn): Unit = {
       val isNew = setAdded.add(name)
-      if (DEBUG) println(s"Class loader add '$name' - isNew? $isNew")
+      if (DEBUG) println(s"ActionImpl: Class loader add '$name' - isNew? $isNew")
       if (isNew) {
         val entries = JarUtil.unpack(jar)
         if (DEBUG) {
@@ -233,11 +255,11 @@ object ActionImpl {
 
     override protected def findClass(name: String): Class[_] =
       mapClasses.single.get(name).map { bytes =>
-        if (DEBUG) println(s"Class loader: defineClass '$name'")
+        if (DEBUG) println(s"ActionImpl: Class loader: defineClass '$name'")
         defineClass(name, bytes, 0, bytes.length)
 
       } .getOrElse {
-        if (DEBUG) println(s"Class loader: not found '$name' - calling super")
+        if (DEBUG) println(s"ActionImpl: Class loader: not found '$name' - calling super")
         super.findClass(name) // throws exception
       }
   }

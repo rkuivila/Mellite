@@ -160,10 +160,10 @@ object CodeViewImpl {
       }
     }
 
-    private def saveSourceAndObject(newCode: String, obj: Out0)(implicit tx: S#Tx): Option[UndoableEdit] = {
+    private def saveSourceAndObject(newCode: String, in: In0, out: Out0)(implicit tx: S#Tx): Option[UndoableEdit] = {
       val edit1 = saveSource(newCode)
       val edit2 = handlerOpt.map { handler =>
-        handler.save(obj)
+        handler.save(in, out)
       }
       val edits0  = edit2.toList
       val edits   = edit1.fold(edits0)(_ :: edits0)
@@ -185,11 +185,15 @@ object CodeViewImpl {
       val fut = handlerOpt match {
         case Some(handler) if save =>
           // val _fut = Library.compile(newCode)
-          val _fut = Code.future(code.execute(handler.in))
-          _fut.onSuccess { case graph =>
+          val _fut = Code.future {
+            val in  = handler.in()
+            val out = code.execute(in)
+            (in, out)
+          }
+          _fut.onSuccess { case (in, out) =>
             defer {
               val editOpt = cursor.step { implicit tx =>
-                saveSourceAndObject(newCode, graph)
+                saveSourceAndObject(newCode, in, out)
               }
               editOpt.foreach(addEditAndClear)
             }

@@ -226,6 +226,7 @@ object CodeImpl {
       val compiler        = intp.global  // we re-use the intp compiler -- no problem, right?
       // println("---2")
       intp.reset()
+      compiler.reporter.reset()
       // println("---3")
       val f               = File.createTempFile("temp", ".scala")
       val out             = new BufferedOutputStream(new FileOutputStream(f))
@@ -252,9 +253,11 @@ object CodeImpl {
 
       out.write(synth.getBytes("UTF-8"))
       out.flush(); out.close()
-      val run             = new compiler.Run()
+      val run = new compiler.Run()
       run.compile(List(f.getPath))
       f.delete()
+
+      if (compiler.reporter.hasErrors) throw new Code.CompilationFailed()
 
       val d0    = intp.replOutput.dir
       //        println(s"isClassContainer? ${d0.isClassContainer}")
