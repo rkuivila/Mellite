@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package impl
 
-import java.io.File
+import java.io.{BufferedOutputStream, FileOutputStream, File}
 import java.util.concurrent.Executors
 import de.sciss.processor.Processor
 import scala.concurrent.{ExecutionContextExecutor, ExecutionContext, Await, Promise, Future, blocking}
@@ -118,7 +118,8 @@ object CodeImpl {
       "de.sciss.synth._",
       "de.sciss.synth.ugen.{DiskIn => _, VDiskIn => _, BufChannels => _, BufRateScale => _, BufSampleRate => _, _}",
       "de.sciss.synth.proc.graph._"
-    )
+    ),
+    Code.Action.id -> Vec() // what should go inside?
   )
 
   def registerImports(id: Int, imports: Seq[String]): Unit = sync.synchronized {
@@ -145,7 +146,9 @@ object CodeImpl {
         proc
       }
 
-      def blockTag = typeTag[Unit]
+      def blockTag  = typeTag[Unit]
+//      def inTag     = typeTag[File]
+//      def outTag    = typeTag[File]
     }
 
     implicit object SynthGraph
@@ -157,7 +160,23 @@ object CodeImpl {
 
       def wrap(in: Unit)(fun: => Any): synth.SynthGraph = synth.SynthGraph(fun)
 
-      def blockTag = typeTag[Unit]
+      def blockTag  = typeTag[Unit]
+//      def inTag     = typeTag[Unit]
+//      def outTag    = typeTag[synth.SynthGraph]
+    }
+
+    implicit object Action
+      extends Wrapper[Unit, Unit, Code.Action] {
+
+      def id = Code.Action.id
+
+      def binding = None
+
+      def wrap(in: Unit)(fun: => Any): Unit = fun
+
+      def blockTag  = typeTag[Unit]
+//      def inTag     = typeTag[Unit]
+//      def outTag    = typeTag[Unit]
     }
   }
   trait Wrapper[In, Out, Repr] {
@@ -170,13 +189,15 @@ object CodeImpl {
       * is passed into this function.
       *
       * @param in   the code type's input
-      * @param fun  the thunk that executes the coe
+      * @param fun  the thunk that executes the code
       * @return     the result of `fun` wrapped into type `Out`
       */
     def wrap(in: In)(fun: => Any): Out
 
     /** TypeTag of */
     def blockTag: TypeTag[_]
+//    def inTag   : TypeTag[In]
+//    def outTag  : TypeTag[Out]
   }
 
   final def execute[I, O, Repr <: Code { type In = I; type Out = O }](code: Repr, in: I)
@@ -193,6 +214,70 @@ object CodeImpl {
         compileThunk(code.source, w, execute = false)
       }
     }
+
+  /** Compiles a source code consisting of a body which is wrapped in a `Function0` apply method,
+    * and returns the function's class name (without package) and the raw jar file produced in the compilation.
+    */
+  def compileToFunction[Repr <: Code { type In = Unit; type Out = Unit }](name: String, code: Repr)
+                        (implicit w: Wrapper[Unit, Unit, Repr]): Future[Array[Byte]] =
+    future {
+      blocking {
+        // println("---1")
+        val compiler        = intp.global  // we re-use the intp compiler -- no problem, right?
+        // println("---2")
+        intp.reset()
+        // println("---3")
+        val f               = File.createTempFile("temp", ".scala")
+        val out             = new BufferedOutputStream(new FileOutputStream(f))
+
+        val impS  = w.imports.map(i => s"  import $i\n").mkString
+        //        val bindS = w.binding.fold("")(i =>
+        //          s"""  val __context__ = $pkg.$i.__context__
+        //             |  import __context__._
+        //             |""".stripMargin)
+        // val aTpe  = w.blockTag.tpe.toString
+        val synth =
+          s"""package $UserPackage
+             |
+             |class $name extends Function0[Unit] {
+             |  def apply(): Unit = {
+             |$impS
+             |${code.source}
+             |  }
+             |}
+             |""".stripMargin
+
+        // println(synth)
+
+        // val code : String   = ??? // wrapSource(source)
+        out.write(synth.getBytes("UTF-8"))
+        out.flush(); out.close()
+        val run             = new compiler.Run()
+        run.compile(List(f.getPath))
+        f.delete()
+
+        val d0    = intp.replOutput.dir
+        //        println(s"isClassContainer? ${d0.isClassContainer}")
+        //        println(s"isDirectory? ${d0.isDirectory}")
+        //        println(s"isVirtual? ${d0.isVirtual}")
+        //        println(s"toList: ${d0.toList}")
+
+        // val d = d0.file
+        // require(d != null, "Compiler used a virtual directory")
+        val bytes = JarUtil.pack(d0)
+        // deleteDir(d)
+
+        bytes
+      }
+    }
+
+  //  def deleteDir(base: File): Unit = {
+  //    base.listFiles().foreach { f =>
+  //      if (f.isFile) f.delete()
+  //      else deleteDir(f)
+  //    }
+  //    base.delete()
+  //  }
 
   private final class Intp(cSet: nsc.Settings)
     extends IMain(cSet, new NewLinePrintWriter(new ConsoleWriter, autoFlush = true)) {
@@ -260,6 +345,8 @@ object CodeImpl {
 
   private val pkg = "de.sciss.mellite.impl.CodeImpl"
 
+  val UserPackage = "de.sciss.mellite.user"
+
   // note: synchronous
   private def compileThunk(code: String, w: Wrapper[_, _, _], execute: Boolean): Any = {
     val i = intp
@@ -289,6 +376,7 @@ object CodeImpl {
     }
 
     // val res = i.interpret(synth)
+    i.reset()
     val res = interpret(synth)
 
     // commented out to chase ClassNotFoundException

@@ -94,7 +94,7 @@ object ActionBounceTimeline {
     type Res = Vec[Labeled[CodeSource[S]]]
     def loop(xs: List[Obj[S]], res: Res): Res =
       xs match {
-        case Code.Elem.Obj(objT) :: tail =>
+        case Code.Obj(objT) :: tail =>
           val res1 = objT.elem.peer.value match {
             case ft: Code.FileTransform => res :+ Labeled(tx.newHandle(objT))(objT.attr.name)
             case _ => res

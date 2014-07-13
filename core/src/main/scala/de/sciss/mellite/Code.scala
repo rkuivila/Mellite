@@ -25,7 +25,6 @@ import de.sciss.synth.proc
 import de.sciss.lucre.{event => evt}
 import evt.Sys
 import de.sciss.lucre.expr.{Expr => _Expr}
-import de.sciss.synth.proc.Obj
 import de.sciss.model
 import scala.collection.immutable.{IndexedSeq => Vec}
 
@@ -48,6 +47,8 @@ object Code {
 
   def getImports(id: Int): Vec[String] = Impl.getImports(id)
 
+  // ---- type: FileTransform ----
+
   object FileTransform {
     final val id    = 0
     final val name  = "File Transform"
@@ -66,6 +67,8 @@ object Code {
     def updateSource(newText: String) = copy(source = newText)
   }
 
+  // ---- type: SynthGraph ----
+
   object SynthGraph {
     final val id    = 1
     final val name  = "Synth Graph"
@@ -82,6 +85,28 @@ object Code {
     def contextName = SynthGraph.name
 
     def updateSource(newText: String) = copy(source = newText)
+  }
+
+  // ---- type: Action ----
+
+  object Action {
+    final val id    = 2
+    final val name  = "Action"
+  }
+  final case class Action(source: String) extends Code {
+    type In     = Unit
+    type Out    = Unit
+    def id      = Action.id
+
+    def compileBody(): Future[Unit] = Impl.compileBody[In, Out, Action](this)
+
+    def execute(in: In): Out = Impl.execute[In, Out, Action](this, in)
+
+    def contextName = SynthGraph.name
+
+    def updateSource(newText: String) = copy(source = newText)
+
+    def compileToFunction(name: String): Future[Array[Byte]] = Impl.compileToFunction(name, this)
   }
 
   // ---- expr ----
@@ -102,12 +127,6 @@ object Code {
     def apply[S <: Sys[S]](peer: _Expr[S, Code])(implicit tx: S#Tx): Code.Elem[S] = Impl.CodeElemImpl(peer)
 
     implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Code.Elem[S]] = Impl.CodeElemImpl.serializer
-
-    object Obj {
-      def unapply[S <: Sys[S]](obj: Obj[S]): Option[proc.Obj.T[S, Code.Elem]] =
-        if (obj.elem.isInstanceOf[Code.Elem[S]]) Some(obj.asInstanceOf[proc.Obj.T[S, Code.Elem]])
-        else None
-    }
   }
 
   trait Elem[S <: Sys[S]] extends proc.Elem[S] {
@@ -116,6 +135,14 @@ object Code {
 
     def mkCopy()(implicit tx: S#Tx): Elem[S]
   }
+
+  object Obj {
+    def unapply[S <: Sys[S]](obj: proc.Obj[S]): Option[Code.Obj[S]] =
+      if (obj.elem.isInstanceOf[Code.Elem[S]]) Some(obj.asInstanceOf[Code.Obj[S]])
+      else None
+  }
+
+  type Obj[S <: Sys[S]] = proc.Obj.T[S, Code.Elem]
 }
 sealed trait Code extends Writable { me =>
   /** The interfacing input type */

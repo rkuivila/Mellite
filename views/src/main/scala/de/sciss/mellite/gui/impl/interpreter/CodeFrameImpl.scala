@@ -34,7 +34,7 @@ object CodeFrameImpl {
     // create a new code object and add it to the attribute map.
     // let's just do that without undo manager
     val codeObj = proc.attr.get(ProcKeys.attrGraphSource) match {
-      case Some(Code.Elem.Obj(c)) => c
+      case Some(Code.Obj(c)) => c
       case _ =>
         val source  = "// graph function source code\n\n"
         val code    = Code.SynthGraph(source)

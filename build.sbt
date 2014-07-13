@@ -73,7 +73,8 @@ lazy val core: Project = Project(
       "de.sciss" %% "lucrestm-bdb"                    % "2.1.0",  // database backend
       "de.sciss" %% "fscapejobs"                      % "1.4.1",  // remote FScape invocation
       "de.sciss" %% "strugatzki"                      % "2.4.1"   // feature extraction
-    )
+    ),
+    initialCommands in console := "import de.sciss.mellite._"
   )
 )
 

@@ -21,6 +21,7 @@
 16  SynthGraph
 17  IncompleteProduct (SoundDesigner)
 18  UGenSource (SoundDesigner)
+19  Action (Function0[Unit])
 
 :: non-expr elements (mutables) ::
 
