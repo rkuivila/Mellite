@@ -44,7 +44,7 @@ object ObjViewImpl {
   import ObjView.Factory
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
-  import mellite.{Recursion => _Recursion, Code => _Code}
+  import mellite.{Recursion => _Recursion, Code => _Code, Action => _Action}
   import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline, ArtifactLocation => _ArtifactLocation, FadeSpec => _FadeSpec}
 
   private val sync = new AnyRef
@@ -73,9 +73,10 @@ object ObjViewImpl {
     Recursion       .typeID -> Recursion,
     Folder          .typeID -> Folder,
     Proc            .typeID -> Proc,
-    Timeline       .typeID -> Timeline,
+    Timeline        .typeID -> Timeline,
     Code            .typeID -> Code,
-    FadeSpec        .typeID -> FadeSpec
+    FadeSpec        .typeID -> FadeSpec,
+    Action          .typeID -> Action
   )
 
   // -------- Generic --------
@@ -549,8 +550,8 @@ object ObjViewImpl {
     def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
                                 window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-      val opt = OptionPane.textInput(message = "Enter initial folder name:",
-        messageType = OptionPane.Message.Question, initial = "Folder")
+      val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
+        messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = "New Folder"
       val res = opt.show(window)
       res.map { name =>
@@ -569,17 +570,13 @@ object ObjViewImpl {
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, FolderElem]], var name: _String)
       extends ObjView.Folder[S]
       with ObjViewImpl.Impl[S]
-      with EmptyRenderer
+      with EmptyRenderer[S]
       with NonEditable[S]
       with NonViewable[S] {
-
-      def value = ()
 
       def prefix  = Folder.prefix
       def icon    = Folder.icon
       def typeID  = Folder.typeID
-
-      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false  // element addition and removal is handled by folder view
     }
   }
 
@@ -599,8 +596,8 @@ object ObjViewImpl {
     def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
                                 window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-      val opt = OptionPane.textInput(message = "Enter initial proc name:",
-        messageType = OptionPane.Message.Question, initial = "Proc")
+      val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
+        messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = s"New $prefix"
       val res = opt.show(window)
       res.map { name =>
@@ -617,15 +614,12 @@ object ObjViewImpl {
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Proc.Elem]], var name: _String)
       extends ObjView.Proc[S]
       with ObjViewImpl.Impl[S]
-      with EmptyRenderer
+      with EmptyRenderer[S]
       with NonEditable[S] {
 
-      def value   = ()
       def icon    = Proc.icon
       def prefix  = Proc.prefix
       def typeID  = Proc.typeID
-
-      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
 
       def isViewable = true
 
@@ -654,8 +648,8 @@ object ObjViewImpl {
     def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
                                 window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-      val opt = OptionPane.textInput(message = "Enter initial group name:",
-        messageType = OptionPane.Message.Question, initial = "Timeline")
+      val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
+        messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = s"New $prefix"
       val res = opt.show(window)
       res.map { name =>
@@ -672,15 +666,12 @@ object ObjViewImpl {
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]], var name: _String)
       extends ObjView.Timeline[S]
       with ObjViewImpl.Impl[S]
-      with EmptyRenderer
+      with EmptyRenderer[S]
       with NonEditable[S] {
 
-      def value   = ()
       def icon    = Timeline.icon
       def prefix  = Timeline.prefix
       def typeID  = Timeline.typeID
-
-      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
 
       def isViewable = true
 
@@ -802,7 +793,7 @@ object ObjViewImpl {
 //      val ggShape = new ComboBox()
 //      Curve.cubed
 //      val ggValue = new ComboBox(Seq(_Code.FileTransform.name, _Code.SynthGraph.name))
-//      actionAddPrimitive(folderH, window, tpe = prefix, ggValue = ggValue, prepare = ???
+//      actionAddPrimitive(folderH, window, tpe = prefix, ggValue = ggValue, prepare = ...
 //      ) { implicit tx =>
 //        value =>
 //          val peer = _FadeSpec.Expr(numFrames, shape, floor)
@@ -839,6 +830,52 @@ object ObjViewImpl {
         label.text = s"$dur, ${value.curve}"
         label
       }
+    }
+  }
+
+  // -------- Action --------
+
+  object Action extends Factory {
+    type E[S <: evt.Sys[S]] = _Action.Elem[S]
+    val icon            = raphaelIcon(raphael.Shapes.Up)
+    val prefix          = "Action"
+    def typeID          = _Action.typeID
+
+    def apply[S <: Sys[S]](obj: _Action.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
+      val name    = obj.attr.name
+      // val value   = obj.elem.peer.value
+      new Action.Impl(tx.newHandle(obj), name)
+    }
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+      val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
+        messageType = OptionPane.Message.Question, initial = prefix)
+      opt.title = s"New $prefix"
+      val res = opt.show(window)
+      res.map { name =>
+        cursor.step { implicit tx =>
+          val peer  = _Action.Var(_Action.empty[S])
+          val elem  = _Action.Elem(peer)
+          val obj   = Obj(elem)
+          obj.attr.name = name
+          addObject(prefix, folderH(), obj)
+        }
+      }
+    }
+
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Action.Obj[S]],
+                                  var name: _String)
+      extends ObjView.Action[S]
+      with ObjViewImpl.Impl[S]
+      with NonEditable[S]
+      with NonViewable[S]
+      with EmptyRenderer[S] {
+
+      def icon    = Action.icon
+      def prefix  = Action.prefix
+      def typeID  = Action.typeID
     }
   }
 
@@ -890,8 +927,10 @@ object ObjViewImpl {
     def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = None
   }
 
-  trait EmptyRenderer {
+  trait EmptyRenderer[S <: Sys[S]] {
     def configureRenderer(label: Label): Component = label
+    def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
+    def value: Any = ()
   }
 
   trait StringRenderer {

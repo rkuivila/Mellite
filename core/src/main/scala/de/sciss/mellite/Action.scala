@@ -29,6 +29,8 @@ object Action {
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Future[stm.Source[S#Tx, Action[S]]] =
     Impl.compile(source)
 
+  def empty[S <: Sys[S]](implicit tx: S#Tx): Action[S] = Impl.empty[S]
+
   object Var {
     def apply[S <: Sys[S]](init: Action[S])(implicit tx: S#Tx): Var[S] = ???
 

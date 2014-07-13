@@ -33,7 +33,7 @@ import scala.collection.breakOut
 object ObjView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
-  import mellite.{Code => _Code, Recursion => _Recursion}
+  import mellite.{Code => _Code, Recursion => _Recursion, Action => _Action}
   import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, Proc => _Proc, Timeline => _Timeline, FadeSpec => _FadeSpec}
 
   //  final case class SelectionDrag[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
@@ -117,17 +117,17 @@ object ObjView {
 
   val Proc: Factory { type E[S <: evt.Sys[S]] = _Proc.Elem[S] } = Impl.Proc
   trait Proc[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, _Proc.Elem]]
+    def obj: stm.Source[S#Tx, _Proc.Obj[S]]
   }
 
   val Timeline: Factory { type E[S <: evt.Sys[S]] = _Timeline.Elem[S] } = Impl.Timeline
   trait Timeline[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]]
+    def obj: stm.Source[S#Tx, _Timeline.Obj[S]]
   }
 
   val Code: Factory { type E[S <: evt.Sys[S]] = _Code.Elem[S] } = Impl.Code
   trait Code[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, _Code.Elem]]
+    def obj: stm.Source[S#Tx, _Code.Obj[S]]
     def value: _Code
   }
 
@@ -135,6 +135,12 @@ object ObjView {
   trait FadeSpec[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]]
     def value: _FadeSpec
+  }
+
+  val Action: Factory { type E[S <: evt.Sys[S]] = _Action.Elem[S] } = Impl.Action
+  trait Action[S <: Sys[S]] extends ObjView[S] {
+    def obj: stm.Source[S#Tx, _Action.Obj[S]]
+    // def value: _Action
   }
 }
 trait ObjView[S <: Sys[S]] {

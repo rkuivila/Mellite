@@ -22,6 +22,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IDPeek
 import de.sciss.serial.{DataInput, DataOutput}
 
+import scala.annotation.switch
 import scala.collection.mutable
 import scala.concurrent.{Promise, Future}
 import scala.concurrent.stm.{InTxn, TMap, TSet, TxnLocal}
@@ -29,7 +30,9 @@ import scala.concurrent.stm.{InTxn, TMap, TSet, TxnLocal}
 object ActionImpl {
   private val count = TxnLocal(0) // to distinguish different action class-names within the same transaction
 
-  private val COOKIE  = 0x61637400   // "act\0"
+  private final val COOKIE        = 0x61637400   // "act\0"
+  private final val CONST_EMPTY   = 0
+  private final val CONST_FUN     = 1
 
   private val DEBUG = true
 
@@ -46,6 +49,8 @@ object ActionImpl {
     p.future
   }
 
+  def empty[S <: Sys[S]](implicit tx: S#Tx): Action[S] = new ConstEmptyImpl[S]
+
   private def performCompile[S <: Sys[S]](p: Promise[stm.Source[S#Tx, Action[S]]], name: String,
                                           source: Code.Action, system: S)(implicit cursor: stm.Cursor[S]): Unit = {
     val jarFut = source.compileToFunction(name)
@@ -57,7 +62,7 @@ object ActionImpl {
             if (DEBUG) println("Create new class loader")
             new MemoryClassLoader
           })
-          new ConstImpl(name, jar, system, cl)
+          new ConstFunImpl(name, jar, system, cl)
         }
         tx.newHandle(a)
       }
@@ -74,18 +79,27 @@ object ActionImpl {
   private final class Ser[S <: Sys[S]] extends evt.EventLikeSerializer[S, Action[S]] {
     def readConstant(in: DataInput)(implicit tx: S#Tx): Action[S] = {
       val cookie = in.readInt()
-      if (cookie != COOKIE) sys.error(s"Unexpected cookie (found ${cookie.toHexString}, expected ${COOKIE.toHexString})")
-      val name    = in.readUTF()
-      val jarSize = in.readInt()
-      val jar     = new Array[Byte](jarSize)
-      in.readFully(jar)
-      val system  = tx.system
-      sync.synchronized {
-        val cl = clMap.getOrElseUpdate(system, {
-          if (DEBUG) println("Create new class loader")
-          new MemoryClassLoader
-        })
-        new ConstImpl[S](name, jar, system, cl)
+      if (cookie != COOKIE)
+        sys.error(s"Unexpected cookie (found ${cookie.toHexString}, expected ${COOKIE.toHexString})")
+      val tpe = in.readByte()
+      (tpe: @switch) match {
+        case CONST_FUN    =>
+          val name    = in.readUTF()
+          val jarSize = in.readInt()
+          val jar     = new Array[Byte](jarSize)
+          in.readFully(jar)
+          val system  = tx.system
+          sync.synchronized {
+            val cl = clMap.getOrElseUpdate(system, {
+              if (DEBUG) println("Create new class loader")
+              new MemoryClassLoader
+            })
+            new ConstFunImpl[S](name, jar, system, cl)
+          }
+
+        case CONST_EMPTY  => new ConstEmptyImpl[S]
+
+        case other => sys.error(s"Unexpected constant action cookie $other")
       }
     }
 
@@ -101,10 +115,16 @@ object ActionImpl {
   // this is why workspace should have a general caching system
   private val clMap = new mutable.WeakHashMap[Sys[_], MemoryClassLoader]
 
+  private sealed trait ConstImpl[S <: Sys[S]] extends Action[S] with evt.impl.Constant {
+    def dispose()(implicit tx: S#Tx): Unit = ()
+
+    def changed: EventLike[S, Unit] = evt.Dummy[S, Unit]
+  }
+
   // is this assumption correct: since we hold both a `system` and `cl` instance, `cl` will
   // remain valid until the `ConstImpl` itself is GC'ed?
-  private final class ConstImpl[S <: Sys[S]](name: String, jar: Array[Byte], val system: S, cl: MemoryClassLoader)
-    extends Action[S] with evt.impl.Constant {
+  private final class ConstFunImpl[S <: Sys[S]](name: String, jar: Array[Byte], val system: S, cl: MemoryClassLoader)
+    extends ConstImpl[S] {
 
     def execute()(implicit tx: S#Tx): Unit = {
       implicit val itx = tx.peer
@@ -118,14 +138,20 @@ object ActionImpl {
 
     protected def writeData(out: DataOutput): Unit = {
       out.writeInt(COOKIE)
+      out.writeByte(CONST_FUN)
       out.writeUTF(name)
       out.writeInt(jar.length)
       out.write(jar)
     }
+  }
 
-    def dispose()(implicit tx: S#Tx): Unit = ()
+  private final class ConstEmptyImpl[S <: Sys[S]] extends ConstImpl[S] {
+    def execute()(implicit tx: S#Tx): Unit = ()
 
-    def changed: EventLike[S, Unit] = evt.Dummy[S, Unit]
+    protected def writeData(out: DataOutput): Unit = {
+      out.writeInt(COOKIE)
+      out.writeByte(CONST_EMPTY)
+    }
   }
 
   // ---- class loader ----
