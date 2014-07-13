@@ -21,9 +21,9 @@ import de.sciss.lucre.event.Sys
 import de.sciss.synth.proc.{Proc, Obj}
 
 object CodeFrame {
-  def apply[S <: Sys[S]](obj: Code.Obj[S])
+  def apply[S <: Sys[S]](obj: Code.Obj[S], hasExecute: Boolean)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] =
-    Impl(obj)
+    Impl(obj, hasExecute = hasExecute)
 
   def proc[S <: Sys[S]](proc: Proc.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] =

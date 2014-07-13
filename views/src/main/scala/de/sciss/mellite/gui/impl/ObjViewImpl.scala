@@ -762,7 +762,7 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        val frame = CodeFrame(obj())
+        val frame = CodeFrame(obj(), hasExecute = false)
         Some(frame)
       }
 

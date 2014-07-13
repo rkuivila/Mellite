@@ -59,7 +59,7 @@ object CodeViewImpl {
     })
   }
 
-  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], code0: Code)
+  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], code0: Code, hasExecute: Boolean)
                         (handlerOpt: Option[CodeView.Handler[S, code0.In, code0.Out]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undoManager: UndoManager): CodeView[S] = {
@@ -75,14 +75,15 @@ object CodeViewImpl {
     // val code0   = codeEx.value
     // val source0 = code0.source
     // val sourceH = tx.newHandle(sourceCode)(StringEx.varSerializer[S])
-    val res     = new Impl[S, code0.In, code0.Out](codeVarHOpt, code0)(handlerOpt)
+    val res     = new Impl[S, code0.In, code0.Out](codeVarHOpt, code0, handlerOpt, hasExecute = hasExecute)
     res.init()
     res
   }
 
   private final class Impl[S <: Sys[S], In0, Out0](codeVarHOpt: Option[stm.Source[S#Tx, Expr.Var[S, Code]]],
-                                        private var code: Code { type In = In0; type Out = Out0 })(
-                                        handlerOpt: Option[CodeView.Handler[S, In0, Out0]])
+                                        private var code: Code { type In = In0; type Out = Out0 },
+                                        handlerOpt: Option[CodeView.Handler[S, In0, Out0]],
+                                        hasExecute: Boolean)
                                        (implicit undoManager: UndoManager, val workspace: Workspace[S],
                                         val cursor: stm.Cursor[S])
     extends ComponentHolder[Component] with CodeView[S] with ModelImpl[CodeView.Update] {
@@ -266,8 +267,21 @@ object CodeViewImpl {
 
       lazy val ggApply: Button = GUI.toolButton(actionApply, raphael.Shapes.Check , tooltip = "Save text changes")
 
-      val panelBottom = new FlowPanel(FlowPanel.Alignment.Trailing)(
-        HGlue, ggApply, ggCompile, ggProgress) // HStrut(16))
+      val bot0: List[Component] = ggProgress :: Nil
+      val bot1 = handlerOpt.fold(bot0) { handler =>
+        if (!hasExecute) bot0
+        else {
+          val actionExecute = Action(null) {
+            cursor.step { implicit tx =>
+              handler.execute()
+            }
+          }
+          val ggExecute = GUI.toolButton(actionExecute, raphael.Shapes.Bolt, tooltip = "Run body")
+          ggExecute :: bot0
+        }
+      }
+      val bot2 = HGlue :: ggApply :: ggCompile :: bot1
+      val panelBottom = new FlowPanel(FlowPanel.Alignment.Trailing)(bot2: _*)
 
       val iPaneC  = iPane.component
       val iPaneCW = Component.wrap(iPaneC)

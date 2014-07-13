@@ -30,14 +30,15 @@ object CodeView {
   trait Handler[S <: Sys[S], In, -Out] extends Disposable[S#Tx] {
     def in(): In
     def save(in: In, out: Out)(implicit tx: S#Tx): UndoableEdit
+    def execute()(implicit tx: S#Tx): Unit // (in: In, out: Out)(implicit tx: S#Tx): Unit
   }
 
   /** If `graph` is given, the `apply` action is tied to updating the graph variable. */
-  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], code0: Code)
+  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], code0: Code, hasExecute: Boolean)
                         (handler: Option[Handler[S, code0.In, code0.Out]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undoManager: UndoManager): CodeView[S] =
-    Impl(obj, code0)(handler)
+    Impl(obj, code0, hasExecute = hasExecute)(handler)
 
   sealed trait Update
   case class DirtyChange(value: Boolean) extends Update

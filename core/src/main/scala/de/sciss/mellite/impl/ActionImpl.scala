@@ -35,7 +35,7 @@ object ActionImpl {
   private final val CONST_FUN     = 1
   private final val CONST_VAR     = 2
 
-  private val DEBUG = true
+  private final val DEBUG = false
 
   // ---- creation ----
 
@@ -58,16 +58,25 @@ object ActionImpl {
     new VarImpl[S](targets, peer)
   }
 
-  def newConst[S <: Sys[S]](name: String, jar: Array[Byte])(implicit tx: S#Tx): Action[S] = {
-    val system = tx.system
-    val res: Action[S] = sync.synchronized {
-      val cl = clMap.getOrElseUpdate(system, {
-        if (DEBUG) println("ActionImpl: Create new class loader")
-        new MemoryClassLoader
-      })
-      new ConstFunImpl(name, jar, system, cl)
-    }
-    res
+  def newConst[S <: Sys[S]](name: String, jar: Array[Byte])(implicit tx: S#Tx): Action[S] =
+    new ConstFunImpl(name, jar)
+
+  private def classLoader[S <: Sys[S]](implicit tx: S#Tx): MemoryClassLoader = sync.synchronized {
+    clMap.getOrElseUpdate(tx.system, {
+      if (DEBUG) println("ActionImpl: Create new class loader")
+      new MemoryClassLoader
+    })
+  }
+
+  def execute[S <: Sys[S]](name: String, jar: Array[Byte])(implicit tx: S#Tx): Unit = {
+    implicit val itx = tx.peer
+    val cl = classLoader[S]
+    cl.add(name, jar)
+    val fullName  = s"${CodeImpl.UserPackage}.$name"
+    val clazz     = Class.forName(fullName, true, cl)
+    //  println("Instantiating...")
+    val fun = clazz.newInstance().asInstanceOf[() => Unit]
+    fun()
   }
 
   // ----
@@ -104,13 +113,7 @@ object ActionImpl {
           val jar     = new Array[Byte](jarSize)
           in.readFully(jar)
           val system  = tx.system
-          sync.synchronized {
-            val cl = clMap.getOrElseUpdate(system, {
-              if (DEBUG) println("ActionImpl: Create new class loader")
-              new MemoryClassLoader
-            })
-            new ConstFunImpl[S](name, jar, system, cl)
-          }
+          new ConstFunImpl[S](name, jar)
 
         case CONST_EMPTY  => new ConstEmptyImpl[S]
 
@@ -157,21 +160,10 @@ object ActionImpl {
     def changed: EventLike[S, Unit] = evt.Dummy[S, Unit]
   }
 
-  // is this assumption correct: since we hold both a `system` and `cl` instance, `cl` will
-  // remain valid until the `ConstImpl` itself is GC'ed?
-  private final class ConstFunImpl[S <: Sys[S]](val name: String, jar: Array[Byte],
-                                                val system: S, cl: MemoryClassLoader)
+  private final class ConstFunImpl[S <: Sys[S]](val name: String, jar: Array[Byte])
     extends ConstImpl[S] {
 
-    def execute()(implicit tx: S#Tx): Unit = {
-      implicit val itx = tx.peer
-      cl.add(name, jar)
-      val fullName  = s"${CodeImpl.UserPackage}.$name"
-      val clazz     = Class.forName(fullName, true, cl)
-      //  println("Instantiating...")
-      val fun = clazz.newInstance().asInstanceOf[() => Unit]
-      fun()
-    }
+    def execute()(implicit tx: S#Tx): Unit = ActionImpl.execute[S](name, jar)
 
     protected def writeData(out: DataOutput): Unit = {
       out.writeInt(COOKIE)

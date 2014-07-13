@@ -54,9 +54,10 @@ object CodeFrameImpl {
       }
 
       def dispose()(implicit tx: S#Tx) = ()
+      def execute()(implicit tx: S#Tx) = ()
     }
 
-    make(codeObj, code0, obj.attr.name, Some(handler))
+    make(codeObj, code0, obj.attr.name, Some(handler), hasExecute = false)
   }
 
   // ---- adapter for editing a Action's source ----
@@ -71,9 +72,6 @@ object CodeFrameImpl {
       case cs: Code.Action => cs
       case other => sys.error(s"Action source code does not produce plain function: ${other.contextName}")
     }
-
-
-
 
     val handlerOpt = obj.elem.peer match {
       case Action.Var(vr) =>
@@ -91,6 +89,12 @@ object CodeFrameImpl {
             EditVar[S, Action[S], Action.Var[S]](name = "Change Action Body", expr = obj, value = value)
           }
 
+          def execute()(implicit tx: S#Tx): Unit = {
+            val obj = objH()
+            obj.execute()
+            // ActionImpl.execute[S](name = in, jar = out)
+          }
+
           def dispose()(implicit tx: S#Tx) = ()
         }
         Some(handler)
@@ -98,26 +102,26 @@ object CodeFrameImpl {
       case _ => None
     }
 
-    make(codeObj, code0, obj.attr.name, handlerOpt)
+    make(codeObj, code0, obj.attr.name, handlerOpt, hasExecute = true)
   }
 
   // ---- general constructor ----
 
-  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem])
+  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], hasExecute: Boolean)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
     val _codeEx = obj.elem.peer
     val _code   = _codeEx.value
-    make[S, _code.In, _code.Out](obj, _code, obj.attr.name, None)
+    make[S, _code.In, _code.Out](obj, _code, obj.attr.name, None, hasExecute = hasExecute)
   }
   
   private def make[S <: Sys[S], In0, Out0](obj: Code.Obj[S], code0: Code { type In = In0; type Out = Out0 },
-                                _name: String, handler: Option[CodeView.Handler[S, In0, Out0]])
+                                _name: String, handler: Option[CodeView.Handler[S, In0, Out0]], hasExecute: Boolean)
                                (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
     implicit val undoMgr: UndoManager = new UndoManagerImpl {
       protected var dirty: Boolean = false
     }
     // val _name   = /* title getOrElse */ obj.attr.name
-    val view    = CodeView(obj, code0)(handler)
+    val view    = CodeView(obj, code0, hasExecute = hasExecute)(handler)
     val res     = new FrameImpl(view, name0 = _name, contextName = code0.contextName)
     res.init()
     res
