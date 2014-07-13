@@ -27,11 +27,6 @@ import scala.swing.Action
 import scala.concurrent.Future
 
 object CodeView {
-  //  def apply[S <: Sys[S]](entry: Library.Leaf[S])
-  //                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
-  //                         undoManager: UndoManager): CodeView[S] =
-  //    Impl(entry.source, graph = None)
-
   trait Handler[S <: Sys[S], +In, -Out] extends Disposable[S#Tx] {
     def in: In
     def save(out: Out)(implicit tx: S#Tx): UndoableEdit
