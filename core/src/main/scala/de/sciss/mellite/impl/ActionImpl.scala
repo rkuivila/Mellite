@@ -24,7 +24,7 @@ import de.sciss.serial.{DataInput, DataOutput}
 
 import scala.annotation.switch
 import scala.collection.mutable
-import scala.concurrent.{Promise, Future}
+import scala.concurrent.{Promise, Future, blocking}
 import scala.concurrent.stm.{InTxn, TMap, TSet, TxnLocal}
 
 object ActionImpl {
@@ -62,7 +62,8 @@ object ActionImpl {
 
   private def performCompile[S <: Sys[S]](p: Promise[stm.Source[S#Tx, Action[S]]], name: String,
                                           source: Code.Action, system: S)(implicit cursor: stm.Cursor[S]): Unit = {
-    val jarFut = source.compileToFunction(name)
+    // val jarFut = source.compileToFunction(name)
+    val jarFut = Code.future(blocking(source.execute(name)))
     val actFut = jarFut.map { jar =>
       if (DEBUG) println(s"compileToFunction completed. jar-size = ${jar.length}")
       cursor.step { implicit tx =>

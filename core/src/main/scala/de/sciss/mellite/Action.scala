@@ -25,6 +25,8 @@ import scala.concurrent.Future
 object Action {
   final val typeID = 19
 
+  final val attrSource = "action-source"
+
   def compile[S <: Sys[S]](source: Code.Action)
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Future[stm.Source[S#Tx, Action[S]]] =
     Impl.compile(source)

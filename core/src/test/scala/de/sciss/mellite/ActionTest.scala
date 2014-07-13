@@ -2,7 +2,7 @@ package de.sciss.mellite
 
 import de.sciss.mellite.impl.{JarUtil, CodeImpl}
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, blocking}
 import scala.util.Success
 
 object ActionTest extends App {
@@ -43,12 +43,13 @@ object ActionTest extends App {
         val x     = clazz.newInstance().asInstanceOf[() => Unit]
         println("Invoking 'apply':")
         x()
+        sys.exit()
     }
   }
 
   def iter(name: String): Future[Array[Byte]] = {
-    val code = Code.Action(exampleSource)
-    val fut = CodeImpl.compileToFunction[Code.Action](name, code)
+    val code  = Code.Action(exampleSource)
+    val fut   = Code.future(blocking(CodeImpl.compileToFunction(name, code)))
 
     fut.onComplete { res =>
       println("Result:")

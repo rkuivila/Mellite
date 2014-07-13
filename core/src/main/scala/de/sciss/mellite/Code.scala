@@ -17,7 +17,7 @@ import de.sciss.lucre.expr.impl.ExprTypeImplA
 import de.sciss.serial.{Serializer, Writable, DataInput, DataOutput, ImmutableSerializer}
 import impl.{CodeImpl => Impl}
 import java.io.File
-import scala.concurrent.Future
+import scala.concurrent.{Future, blocking}
 import de.sciss.processor.Processor
 import de.sciss.synth
 import scala.annotation.switch
@@ -96,19 +96,22 @@ object Code {
     final val name  = "Action"
   }
   final case class Action(source: String) extends Code {
-    type In     = Unit
-    type Out    = Unit
+    type In     = String
+    type Out    = Array[Byte]
     def id      = Action.id
 
-    def compileBody(): Future[Unit] = Impl.compileBody[In, Out, Action](this)
+    def compileBody(): Future[Unit] = future(blocking { execute("Unnamed"); () })
 
-    def execute(in: In): Out = Impl.execute[In, Out, Action](this, in)
+    def execute(in: In): Out = {
+      // Impl.execute[In, Out, Action](this, in)
+      Impl.compileToFunction(in, this)
+    }
 
-    def contextName = SynthGraph.name
+    def contextName = Action.name
 
     def updateSource(newText: String) = copy(source = newText)
 
-    def compileToFunction(name: String): Future[Array[Byte]] = Impl.compileToFunction(name, this)
+    // def compileToFunction(name: String): Future[Array[Byte]] = Impl.compileToFunction(name, this)
   }
 
   // ---- expr ----

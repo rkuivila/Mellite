@@ -168,19 +168,19 @@ object CodeImpl {
 //      def outTag    = typeTag[synth.SynthGraph]
     }
 
-    implicit object Action
-      extends Wrapper[Unit, Unit, Code.Action] {
-
-      def id = Code.Action.id
-
-      def binding = None
-
-      def wrap(in: Unit)(fun: => Any): Unit = fun
-
-      def blockTag  = typeTag[Unit]
-//      def inTag     = typeTag[Unit]
-//      def outTag    = typeTag[Unit]
-    }
+    //    implicit object Action
+    //      extends Wrapper[Unit, Unit, Code.Action] {
+    //
+    //      def id = Code.Action.id
+    //
+    //      def binding = None
+    //
+    //      def wrap(in: Unit)(fun: => Any): Unit = fun
+    //
+    //      def blockTag  = typeTag[Unit]
+    ////      def inTag     = typeTag[Unit]
+    ////      def outTag    = typeTag[Unit]
+    //    }
   }
   trait Wrapper[In, Out, Repr] {
     protected def id: Int
@@ -221,57 +221,53 @@ object CodeImpl {
   /** Compiles a source code consisting of a body which is wrapped in a `Function0` apply method,
     * and returns the function's class name (without package) and the raw jar file produced in the compilation.
     */
-  def compileToFunction[Repr <: Code { type In = Unit; type Out = Unit }](name: String, code: Repr)
-                        (implicit w: Wrapper[Unit, Unit, Repr]): Future[Array[Byte]] =
-    future {
-      blocking {
-        // println("---1")
-        val compiler        = intp.global  // we re-use the intp compiler -- no problem, right?
-        // println("---2")
-        intp.reset()
-        // println("---3")
-        val f               = File.createTempFile("temp", ".scala")
-        val out             = new BufferedOutputStream(new FileOutputStream(f))
+  def compileToFunction(name: String, code: Code.Action): Array[Byte] = {
+      // println("---1")
+      val compiler        = intp.global  // we re-use the intp compiler -- no problem, right?
+      // println("---2")
+      intp.reset()
+      // println("---3")
+      val f               = File.createTempFile("temp", ".scala")
+      val out             = new BufferedOutputStream(new FileOutputStream(f))
 
-        val impS  = w.imports.map(i => s"  import $i\n").mkString
-        //        val bindS = w.binding.fold("")(i =>
-        //          s"""  val __context__ = $pkg.$i.__context__
-        //             |  import __context__._
-        //             |""".stripMargin)
-        // val aTpe  = w.blockTag.tpe.toString
-        val synth =
-          s"""package $UserPackage
-             |
-             |class $name extends Function0[Unit] {
-             |  def apply(): Unit = {
-             |$impS
-             |${code.source}
-             |  }
-             |}
-             |""".stripMargin
+      val imports = getImports(Code.Action.id)
+      val impS  = /* w. */imports.map(i => s"  import $i\n").mkString
+      //        val bindS = w.binding.fold("")(i =>
+      //          s"""  val __context__ = $pkg.$i.__context__
+      //             |  import __context__._
+      //             |""".stripMargin)
+      // val aTpe  = w.blockTag.tpe.toString
+      val synth =
+        s"""package $UserPackage
+           |
+           |class $name extends Function0[Unit] {
+           |  def apply(): Unit = {
+           |$impS
+           |${code.source}
+           |  }
+           |}
+           |""".stripMargin
 
-        // println(synth)
+      // println(synth)
 
-        // val code : String   = ??? // wrapSource(source)
-        out.write(synth.getBytes("UTF-8"))
-        out.flush(); out.close()
-        val run             = new compiler.Run()
-        run.compile(List(f.getPath))
-        f.delete()
+      out.write(synth.getBytes("UTF-8"))
+      out.flush(); out.close()
+      val run             = new compiler.Run()
+      run.compile(List(f.getPath))
+      f.delete()
 
-        val d0    = intp.replOutput.dir
-        //        println(s"isClassContainer? ${d0.isClassContainer}")
-        //        println(s"isDirectory? ${d0.isDirectory}")
-        //        println(s"isVirtual? ${d0.isVirtual}")
-        //        println(s"toList: ${d0.toList}")
+      val d0    = intp.replOutput.dir
+      //        println(s"isClassContainer? ${d0.isClassContainer}")
+      //        println(s"isDirectory? ${d0.isDirectory}")
+      //        println(s"isVirtual? ${d0.isVirtual}")
+      //        println(s"toList: ${d0.toList}")
 
-        // val d = d0.file
-        // require(d != null, "Compiler used a virtual directory")
-        val bytes = JarUtil.pack(d0)
-        // deleteDir(d)
+      // val d = d0.file
+      // require(d != null, "Compiler used a virtual directory")
+      val bytes = JarUtil.pack(d0)
+      // deleteDir(d)
 
-        bytes
-      }
+      bytes
     }
 
   //  def deleteDir(base: File): Unit = {
