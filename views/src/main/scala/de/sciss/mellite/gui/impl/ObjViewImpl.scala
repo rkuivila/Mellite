@@ -30,8 +30,6 @@ import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.file._
 import scala.swing.{CheckBox, Label, ComboBox, TextField, Component}
-import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
-import de.sciss.mellite.impl.CodeImpl.CodeElemImpl
 import de.sciss.swingplus.Spinner
 import java.awt.geom.Path2D
 import de.sciss.desktop.{OptionPane, FileDialog}
@@ -497,7 +495,7 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Recursion.Elem[S]
     val icon    = raphaelIcon(raphael.Shapes.Quote)
     val prefix  = "Recursion"
-    def typeID  = RecursionElemImpl.typeID
+    def typeID  = Recursion.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Recursion.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name      = obj.attr.name
@@ -711,7 +709,7 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Code.Elem[S]
     val icon            = raphaelIcon(raphael.Shapes.Code)
     val prefix          = "Code"
-    def typeID          = CodeElemImpl.typeID
+    def typeID          = Code.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Code.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name    = obj.attr.name

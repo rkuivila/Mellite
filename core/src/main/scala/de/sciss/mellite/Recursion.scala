@@ -30,6 +30,8 @@ object Recursion {
   type Channels = Vec[Range.Inclusive]
   type Update[S <: Sys[S]] = Unit
 
+  final val typeID = 0x20000
+
   def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanOrVoid, deployed: Obj.T[S, AudioGraphemeElem],
                          gain: Gain, channels: Channels, transform: Option[Obj.T[S, Code.Elem]])
                         (implicit tx: S#Tx): Recursion[S] =
@@ -42,10 +44,10 @@ object Recursion {
 
   // ---- element ----
   object Elem {
-    def apply[S <: Sys[S]](peer: Recursion[S])(implicit tx: S#Tx): Recursion.Elem[S] = Impl.RecursionElemImpl(peer)
+    def apply[S <: Sys[S]](peer: Recursion[S])(implicit tx: S#Tx): Recursion.Elem[S] = Impl.ElemImpl(peer)
 
     implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Recursion.Elem[S]] =
-      Impl.RecursionElemImpl.serializer
+      Impl.ElemImpl.serializer
 
     object Obj {
       def unapply[S <: Sys[S]](obj: Obj[S]): Option[proc.Obj.T[S, Recursion.Elem]] =

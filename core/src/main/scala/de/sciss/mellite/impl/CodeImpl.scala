@@ -18,6 +18,7 @@ package impl
 import java.io.{BufferedOutputStream, FileOutputStream, File}
 import java.util.concurrent.Executors
 import de.sciss.processor.Processor
+import de.sciss.synth.proc
 import scala.concurrent.{ExecutionContextExecutor, ExecutionContext, Await, Promise, Future, blocking}
 import scala.tools.nsc
 import scala.tools.nsc.interpreter.{Results, IMain}
@@ -62,8 +63,8 @@ object CodeImpl {
 
   // ---- elem ----
 
-  object CodeElemImpl extends ElemImpl.Companion[Code.Elem] {
-    final val typeID = Code.Expr.typeID // 0x20001
+  object ElemImpl extends proc.impl.ElemImpl.Companion[Code.Elem] {
+    def typeID = Code.typeID // 0x20001
 
     Elem.registerExtension(this)
 
@@ -93,9 +94,9 @@ object CodeImpl {
     private final class Impl[S <: Sys[S]](protected val targets: evt.Targets[S],
                                           val peer: Expr[S, Code])
       extends Code.Elem[S]
-      with ElemImpl.Active[S] {
+      with proc.impl.ElemImpl.Active[S] {
 
-      def typeID = CodeElemImpl.typeID
+      def typeID = ElemImpl.typeID
       def prefix = "Code"
 
       override def toString() = s"$prefix$id"
@@ -103,6 +104,8 @@ object CodeImpl {
       def mkCopy()(implicit tx: S#Tx): Code.Elem[S] = Code.Elem(peer)
     }
   }
+
+  // ---- imports ----
 
   private val sync = new AnyRef
 

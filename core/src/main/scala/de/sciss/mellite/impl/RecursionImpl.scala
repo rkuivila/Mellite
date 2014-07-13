@@ -16,6 +16,7 @@ package mellite
 package impl
 
 import de.sciss.synth.io.AudioFileSpec
+import de.sciss.synth.proc
 import de.sciss.synth.proc.{Elem, Obj, AudioGraphemeElem, ExprImplicits, ProcGroup, Artifact}
 import de.sciss.lucre.{expr, event => evt}
 import expr.Expr
@@ -25,7 +26,6 @@ import scala.annotation.switch
 import de.sciss.lucre.synth.InMemory
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.event.Sys
-import de.sciss.synth.proc.impl.ElemImpl
 
 object RecursionImpl {
   import Recursion.Channels
@@ -37,8 +37,8 @@ object RecursionImpl {
 
   // ---- elem ----
 
-  object RecursionElemImpl extends ElemImpl.Companion[Recursion.Elem] {
-    final val typeID = 0x20000
+  object ElemImpl extends proc.impl.ElemImpl.Companion[Recursion.Elem] {
+    def typeID = Recursion.typeID
 
     Elem.registerExtension(this)
 
@@ -68,9 +68,9 @@ object RecursionImpl {
     private final class Impl[S <: Sys[S]](protected val targets: evt.Targets[S],
                                           val peer: Recursion[S])
       extends Recursion.Elem[S]
-      with ElemImpl.Active[S] {
+      with proc.impl.ElemImpl.Active[S] {
 
-      def typeID = RecursionElemImpl.typeID
+      def typeID = ElemImpl.typeID
       def prefix = "Recursion"
 
       override def toString() = s"$prefix$id"

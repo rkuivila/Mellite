@@ -13,14 +13,13 @@
 
 package de.sciss
 
+import de.sciss.mellite.impl.{ActionImpl, RecursionImpl, CodeImpl}
 import de.sciss.synth.proc.Confluent
 import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
 import scala.annotation.elidable
 import scala.annotation.elidable.CONFIG
 import scala.concurrent.ExecutionContext
-import de.sciss.mellite.impl.CodeImpl.CodeElemImpl
-import de.sciss.mellite.impl.RecursionImpl.RecursionElemImpl
 
 package object mellite {
   type Cf = Confluent
@@ -39,8 +38,9 @@ package object mellite {
 
   def initTypes(): Unit = {
     de.sciss.lucre.synth.expr.initTypes()
-    CodeElemImpl
-    RecursionElemImpl
+    CodeImpl.ElemImpl
+    RecursionImpl.ElemImpl
+    ActionImpl.ElemImpl
   }
 
   //  object Folder {

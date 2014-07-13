@@ -29,6 +29,8 @@ import de.sciss.model
 import scala.collection.immutable.{IndexedSeq => Vec}
 
 object Code {
+  final val typeID = 0x20001
+
   final case class CompilationFailed() extends Exception
   final case class CodeIncomplete   () extends Exception
 
@@ -112,7 +114,7 @@ object Code {
   // ---- expr ----
 
   object Expr extends ExprTypeImplA[Code] {
-    final val typeID = 0x20001
+    def typeID = Code.typeID
 
     def readValue(in: DataInput): Code = Code.read(in)
     def writeValue(value: Code, out: DataOutput): Unit = value.write(out)
@@ -124,9 +126,9 @@ object Code {
   }
   // ---- element ----
   object Elem {
-    def apply[S <: Sys[S]](peer: _Expr[S, Code])(implicit tx: S#Tx): Code.Elem[S] = Impl.CodeElemImpl(peer)
+    def apply[S <: Sys[S]](peer: _Expr[S, Code])(implicit tx: S#Tx): Code.Elem[S] = Impl.ElemImpl(peer)
 
-    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Code.Elem[S]] = Impl.CodeElemImpl.serializer
+    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Code.Elem[S]] = Impl.ElemImpl.serializer
   }
 
   trait Elem[S <: Sys[S]] extends proc.Elem[S] {
