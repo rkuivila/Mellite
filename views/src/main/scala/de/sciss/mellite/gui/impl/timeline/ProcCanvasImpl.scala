@@ -70,8 +70,8 @@ trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCa
   }
   trackTools.currentTool.addListener(toolListener)
 
-  private val selectionListener: ProcSelectionModel.Listener[S] = {
-    case ProcSelectionModel.Update(added, removed) =>
+  private val selectionListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
+    case SelectionModel.Update(added, removed) =>
       canvasComponent.repaint() // XXX TODO: dirty rectangle optimization
   }
 

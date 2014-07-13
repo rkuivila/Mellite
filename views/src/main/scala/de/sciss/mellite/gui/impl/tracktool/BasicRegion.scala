@@ -25,9 +25,9 @@ object BasicRegion {
 trait BasicRegion[S <: Sys[S], A] extends RegionImpl[S, A] with Dragging[S, A] {
   import TrackTool._
 
-  protected type Initial = timeline.ProcView[S]
+  protected type Initial = TimelineObjView[S]
 
-  final protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: timeline.ProcView[S]): Unit =
+  final protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit =
     if (e.getClickCount == 2) {
       handleDoubleClick()
     } else {

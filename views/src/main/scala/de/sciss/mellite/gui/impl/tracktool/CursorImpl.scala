@@ -32,7 +32,7 @@ final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends R
   val name          = "Cursor"
   val icon          = ToolsImpl.getIcon("text")
 
-  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: ProcView[S]): Unit =
+  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit =
     if (e.getClickCount == 2) {
       val ggText  = new TextField(region.name, 24)
       val panel   = new FlowPanel(new Label("Name:"), ggText)
@@ -42,7 +42,7 @@ final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends R
       val res     = pane.show(None) // XXX TODO: search for window source
       if (res == OptionPane.Result.Ok && ggText.text != region.name) {
         val text    = ggText.text
-        val nameOpt = if (text == "" || text == ProcView.Unnamed) None else Some(text)
+        val nameOpt = if (text == "" || text == TimelineObjView.Unnamed) None else Some(text)
         dispatch(TrackTool.Adjust(TrackTool.Cursor(nameOpt)))
       }
 
@@ -59,7 +59,7 @@ final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends R
       }
     }
 
-  protected def commitProc(drag: TrackTool.Cursor)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])
+  protected def commitObj(drag: TrackTool.Cursor)(span: Expr[S, SpanLike], obj: Obj[S])
                           (implicit tx: S#Tx): Unit =
-    ProcActions.rename(proc, drag.name)
+    ProcActions.rename(obj, drag.name)
 }

@@ -30,7 +30,7 @@ import de.sciss.treetable.TreeTableCellRenderer
 import java.io.File
 import de.sciss.lucre.stm
 import de.sciss.model.Change
-import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.{TreeTableView, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.synth.proc
 import proc.Implicits._

@@ -36,7 +36,7 @@ import de.sciss.lucre.swing._
 import de.sciss.icons.raphael
 
 object GlobalProcsViewImpl {
-  def apply[S <: Sys[S]](group: Timeline[S], selectionModel: ProcSelectionModel[S])
+  def apply[S <: Sys[S]](group: Timeline[S], selectionModel: ProcView.SelectionModel[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): GlobalProcsView[S] = {
 
     import ProcGroup.Modifiable.serializer
@@ -47,7 +47,7 @@ object GlobalProcsViewImpl {
   }
 
   private final class Impl[S <: Sys[S]](groupHOpt: Option[stm.Source[S#Tx, Timeline.Modifiable[S]]],
-                                        selectionModel: ProcSelectionModel[S])
+                                        selectionModel: ProcView.SelectionModel[S])
                                        (implicit workspace: Workspace[S], cursor: stm.Cursor[S])
     extends GlobalProcsView[S] with ComponentHolder[Component] {
 
@@ -57,8 +57,8 @@ object GlobalProcsViewImpl {
 
     private var table: Table = _
 
-    private val selectionListener: ProcSelectionModel.Listener[S] = {
-      case ProcSelectionModel.Update(_, _) =>
+    private val selectionListener: SelectionModel.Listener[S, ProcView[S]] = {
+      case SelectionModel.Update(_, _) =>
         val items = selectionModel.iterator.flatMap { pv =>
           pv.outputs.flatMap {
             case (_, links) =>

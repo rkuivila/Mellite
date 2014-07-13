@@ -17,7 +17,7 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{Obj, Proc}
+import de.sciss.synth.proc.Obj
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.synth.Sys
@@ -52,9 +52,9 @@ final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Resize(dStart, dStop)
   }
 
-  protected def commitProc(drag: Resize)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])
+  protected def commitObj(drag: Resize)(span: Expr[S, SpanLike], obj: Obj[S])
                           (implicit tx: S#Tx): Unit = {
     val minStart = canvas.timelineModel.bounds.start
-    ProcActions.resize(span, proc, drag, minStart = minStart)
+    ProcActions.resize(span, obj, drag, minStart = minStart)
   }
 }

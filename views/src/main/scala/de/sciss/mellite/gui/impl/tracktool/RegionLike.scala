@@ -28,7 +28,7 @@ trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackToo
   protected def canvas: TimelineProcCanvas[S]
 
   /** Applies standard mouse selection techniques regarding regions. */
-  protected final def handleMouseSelection(e: MouseEvent, regionOpt: Option[timeline.ProcView[S]]): Unit = {
+  protected final def handleMouseSelection(e: MouseEvent, regionOpt: Option[TimelineObjView[S]]): Unit = {
     val selm = canvas.selectionModel
     if (e.isShiftDown) {
       regionOpt.foreach { region =>
@@ -71,5 +71,5 @@ trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackToo
   }
 
   protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long,
-                            regionOpt: Option[timeline.ProcView[S]]): Unit
+                            regionOpt: Option[TimelineObjView[S]]): Unit
 }

@@ -16,7 +16,7 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Obj, ExprImplicits, Proc}
+import de.sciss.synth.proc.{Obj, ExprImplicits}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
@@ -34,31 +34,31 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   protected def dragToParam(d: Drag): Move = {
     val eNow  = d.currentEvent
-    val dtim0 = d.currentPos - d.firstPos
-    val dtrk0 = d.currentTrack - d.firstTrack
-    val (dtim, dtrk) = if (eNow.isShiftDown) { // constrain movement to either horizontal or vertical
+    val dTim0 = d.currentPos - d.firstPos
+    val dTrk0 = d.currentTrack - d.firstTrack
+    val (dTim, dTrk) = if (eNow.isShiftDown) { // constrain movement to either horizontal or vertical
       val eBefore = d.firstEvent
       if (math.abs(eNow.getX - eBefore.getX) > math.abs(eNow.getY - eBefore.getY)) {  // horizontal
-        (dtim0, 0)
+        (dTim0, 0)
       } else {  // vertical
-        (0L, dtrk0)
+        (0L, dTrk0)
       }
     } else {  // unconstrained
-      (dtim0, dtrk0)
+      (dTim0, dTrk0)
     }
 
-    Move(deltaTime = dtim, deltaTrack = dtrk, copy = d.currentEvent.isAltDown)
+    Move(deltaTime = dTim, deltaTrack = dTrk, copy = d.currentEvent.isAltDown)
   }
 
-  protected def commitProc(drag: Move)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit = {
+  protected def commitObj(drag: Move)(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): Unit = {
     import drag._
     if (deltaTrack != 0) {
       // XXX TODO: could check for Expr.Const here and Expr.Var.
       // in the case of const, just overwrite, in the case of
       // var, check the value stored in the var, and update the var
-      // instead (recursion). otherwise, it will be some combinatory
+      // instead (recursion). otherwise, it will be some combinatorial
       // expression, and we could decide to construct a binary op instead!
-      val attr = proc.attr
+      val attr = obj.attr
       val expr = ExprImplicits[S]
       import expr._
       // attr[Attribute.Int[S]](ProcKeys.track).foreach {

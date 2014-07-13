@@ -40,7 +40,7 @@ trait Dragging[S <: Sys[S], A] {
     }
 
   protected class Drag(val firstEvent: MouseEvent, val firstTrack: Int,
-                       val firstPos: Long, val initial: Initial /* , val firstRegion: timeline.ProcView[S] */)
+                       val firstPos: Long, val initial: Initial)
     extends MouseInputAdapter with KeyListener {
 
     private var started         = false

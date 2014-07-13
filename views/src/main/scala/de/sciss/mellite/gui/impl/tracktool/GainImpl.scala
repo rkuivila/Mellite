@@ -45,24 +45,6 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Gain(factor)
   }
 
-  protected def commitProc(drag: Gain)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit =
-    ProcActions.adjustGain(proc, drag.factor)
-
-  //  private def commitOld(drag: Gain)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit = {
-  //    import drag._
-  //    val imp = ExprImplicits[S]
-  //    import imp._
-  //    ProcActions.getAudioRegion(span, proc) match {
-  //      case Some((gtime, audio)) => // audio region
-  //        // println(s"audio.gain = ${audio.gain}")
-  //        audio.gain match {
-  //          case Expr.Var(vr) =>
-  //            // println(s"old value ${vr.value}")
-  //            vr.transform(_ * factor)
-  //            // println(s"new value ${vr.value}")
-  //          case _ =>
-  //        }
-  //      case _ =>
-  //    }
-  //  }
+  protected def commitObj(drag: Gain)(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): Unit =
+    ProcActions.adjustGain(obj, drag.factor)
 }

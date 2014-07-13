@@ -61,10 +61,10 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     result
   }
 
-  protected def commitProc(drag: Fade)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit = {
+  protected def commitObj(drag: Fade)(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): Unit = {
     import drag._
 
-    val attr    = proc.attr
+    val attr    = obj.attr
     val exprIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn )
     val exprOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut)
     val valIn   = exprIn .fold(EmptyFade)(_.value)

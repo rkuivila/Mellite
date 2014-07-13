@@ -4,12 +4,30 @@ package gui
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
-import de.sciss.span.SpanLike
-import de.sciss.synth.proc.{FadeSpec, Obj, Elem}
+import de.sciss.lucre.stm.IdentifierMap
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.synth.proc.{Timeline, FadeSpec, Obj, Elem}
 
 import scala.language.higherKinds
+import scala.language.implicitConversions
 
 object TimelineObjView {
+  type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, TimelineObjView[S]]
+
+  final val Unnamed = "<unnamed>"
+
+  implicit def span[S <: Sys[S]](view: TimelineObjView[S]): (Long, Long) = {
+    view.spanValue match {
+      case Span(start, stop)  => (start, stop)
+      case Span.From(start)   => (start, Long.MaxValue)
+      case Span.Until(stop)   => (Long.MinValue, stop)
+      case Span.All           => (Long.MinValue, Long.MaxValue)
+      case Span.Void          => (Long.MinValue, Long.MinValue)
+    }
+  }
+
+  type Map[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, TimelineObjView[S]]
+
   trait Factory {
     //    def prefix: String
     //    def icon  : Icon
@@ -24,7 +42,7 @@ object TimelineObjView {
 
   def factories: Iterable[Factory] = ??? // Impl.factories
 
-  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): TimelineObjView[S] = ??? // Impl(obj)
+  def apply[S <: Sys[S]](timed: Timeline.Timed[S])(implicit tx: S#Tx): TimelineObjView[S] = ??? // Impl(obj)
 
   // ---- specialization ----
 
@@ -49,6 +67,9 @@ trait TimelineObjView[S <: Sys[S]] {
   //def name: String
 
   var nameOption: Option[String]
+
+  /** Convenience method that returns an "unnamed" string if no name is set. */
+  def name: String = nameOption.getOrElse(TimelineObjView.Unnamed)
 
   def span: stm.Source[S#Tx, Expr[S, SpanLike]]
   def obj : stm.Source[S#Tx, Obj [S]]

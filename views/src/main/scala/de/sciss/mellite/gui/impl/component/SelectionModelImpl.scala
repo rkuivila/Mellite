@@ -1,5 +1,5 @@
 /*
- *  ProcSelectionModelImpl.scala
+ *  SelectionModelImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
@@ -11,33 +11,31 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
-package gui
-package impl
-package timeline
+package de.sciss.mellite.gui.impl.component
 
+import de.sciss.lucre.event.Sys
+import de.sciss.mellite.gui.SelectionModel
 import de.sciss.model.impl.ModelImpl
-import de.sciss.lucre.synth.Sys
 
-final class ProcSelectionModelImpl[S <: Sys[S]]
-  extends ProcSelectionModel[S] with ModelImpl[ProcSelectionModel.Update[S]] {
+final class SelectionModelImpl[S <: Sys[S], Repr]
+  extends SelectionModel[S, Repr] with ModelImpl[SelectionModel.Update[S, Repr]] {
 
-  import ProcSelectionModel.Update
+  import de.sciss.mellite.gui.SelectionModel.Update
 
   // no sync because we assume the model is only used on the event thread
-  private var set = Set.empty[ProcView[S]]
+  private var set = Set.empty[Repr]
 
-  def contains(view: ProcView[S]): Boolean = set.contains(view)
+  def contains(view: Repr): Boolean = set.contains(view)
 
-  def iterator: Iterator[ProcView[S]] = set.iterator
+  def iterator: Iterator[Repr] = set.iterator
 
-  def +=(view: ProcView[S]): Unit =
+  def +=(view: Repr): Unit =
     if (!set.contains(view)) {
       set += view
       dispatch(Update(added = Set(view), removed = Set.empty))
     }
 
-  def -=(view: ProcView[S]): Unit =
+  def -=(view: Repr): Unit =
     if (set.contains(view)) {
       set -= view
       dispatch(Update(added = Set.empty, removed = Set(view)))

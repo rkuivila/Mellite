@@ -46,7 +46,7 @@ object ProcActions {
     } yield (time, audio)
   }
 
-  def resize[S <: Sys[S]](span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem],
+  def resize[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S],
                           amount: Resize, minStart: Long /* timelineModel: TimelineModel */)
                          (implicit tx: S#Tx): Unit = {
     import amount._
@@ -65,16 +65,6 @@ object ProcActions {
     if (dStartC != 0L || dStopC != 0L) {
       val imp = ExprImplicits[S]
       import imp._
-
-      //      val (dStartCC, dStopCC) = getAudioRegion(span, proc) match {
-      //        //        case Some((gtime, audio)) => // audio region
-      //        //          val gtimeV  = gtime.value
-      //        //          val audioV  = audio.value
-      //        //          dStartC
-      //
-      //        case _ => // other proc
-      //          (dStartC, dStopC)
-      //      }
 
       val (dStartCC, dStopCC) = (dStartC, dStopC)
 
@@ -96,11 +86,11 @@ object ProcActions {
 
   /** Changes or removes the name of a process.
     *
-    * @param proc the proc to rename
+    * @param obj the proc to rename
     * @param name the new name or `None` to remove the name attribute
     */
-  def rename[S <: Sys[S]](proc: Obj.T[S, Proc.Elem], name: Option[String])(implicit tx: S#Tx): Unit = {
-    val attr  = proc.attr
+  def rename[S <: Sys[S]](obj: Obj[S], name: Option[String])(implicit tx: S#Tx): Unit = {
+    val attr  = obj.attr
     val imp   = ExprImplicits[S]
     import imp._
     name match {
@@ -118,48 +108,46 @@ object ProcActions {
   /** Makes a copy of a proc. Copies the graph and all attributes, creates scans with the same keys
     * and connects _outgoing_ scans.
     *
-    * @param proc the process to copy
+    * @param obj the process to copy
     * @return
     */
-  def copy[S <: Sys[S]](proc: Obj.T[S, Proc.Elem] /*, span: Option[Expr[S, SpanLike]] */)
-                       (implicit tx: S#Tx): Obj.T[S, Proc.Elem] = {
-    val pNew    = Proc[S]
-    val res     = Obj(Proc.Elem(pNew))
-    pNew.graph() = proc.elem.peer.graph()
-    proc.attr.iterator.foreach { case (key, attr) =>
-      val attrOut = Obj.copy(attr)
-      res.attr.put(key, attrOut)
-    }
-    proc.elem.peer.scans.keys.foreach(pNew.scans.add)
+  def copy[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Obj[S] = {
+    val elemNew = obj.elem.mkCopy()
+    val res     = Obj(elemNew)
 
-    // span.foreach { sp =>
-      ProcActions.getAudioRegion(/* sp, */ proc).foreach { case (time, audio) =>
-        val imp = ExprImplicits[S]
-        import imp._
-        val scanW       = pNew.scans.add(Proc.Obj.graphAudio)
-        val grw         = Grapheme.Modifiable[S](audio.spec.numChannels)
-        val gStart      = LongEx  .newVar(time        .value)
-        val audioOffset = LongEx  .newVar(audio.offset.value)  // XXX TODO
-        val audioGain   = DoubleEx.newVar(audio.gain  .value)
-        val gElem       = Grapheme.Expr.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
-        val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
-        grw.add(bi)
-        scanW addSource grw
-      }
-    // }
-
-    // connect outgoing scans
-    proc.elem.peer.scans.iterator.foreach {
-      case (key, scan) =>
-        val sinks = scan.sinks
-        if (sinks.nonEmpty) {
-          pNew.scans.get(key).foreach { scan2 =>
-            scan.sinks.foreach { link =>
-              scan2.addSink(link)
-            }
-          }
+    res match {
+      case Proc.Obj(procObj) =>
+        ProcActions.getAudioRegion(procObj).foreach { case (time, audio) =>
+          val imp = ExprImplicits[S]
+          import imp._
+          val pNew        = procObj.elem.peer
+          val scanW       = pNew.scans.add(Proc.Obj.graphAudio)
+          scanW.sources.toList.foreach(scanW.removeSource)
+          val grw         = Grapheme.Modifiable[S](audio.spec.numChannels)
+          val gStart      = LongEx.newVar(time.value)
+          val audioOffset = LongEx.newVar(audio.offset.value) // XXX TODO
+          val audioGain   = DoubleEx.newVar(audio.gain.value)
+          val gElem       = Grapheme.Expr.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
+          val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
+          grw.add(bi)
+          scanW addSource grw
         }
+
+      case _ =>
     }
+
+    //    // connect outgoing scans
+    //    obj.elem.peer.scans.iterator.foreach {
+    //      case (key, scan) =>
+    //        val sinks = scan.sinks
+    //        if (sinks.nonEmpty) {
+    //          pNew.scans.get(key).foreach { scan2 =>
+    //            scan.sinks.foreach { link =>
+    //              scan2.addSink(link)
+    //            }
+    //          }
+    //        }
+    //    }
 
     res
   }
@@ -179,10 +167,10 @@ object ProcActions {
     }
   }
 
-  def adjustGain[S <: Sys[S]](proc: Obj.T[S, Proc.Elem], factor: Double)(implicit tx: S#Tx): Unit = {
+  def adjustGain[S <: Sys[S]](obj: Obj[S], factor: Double)(implicit tx: S#Tx): Unit = {
     if (factor == 1.0) return
 
-    val attr  = proc.attr
+    val attr  = obj.attr
     val imp   = ExprImplicits[S]
     import imp._
 
@@ -194,18 +182,18 @@ object ProcActions {
     }
   }
 
-  def setBus[S <: Sys[S]](procs: Iterable[Obj.T[S, Proc.Elem]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
+  def setBus[S <: Sys[S]](objects: Iterable[Obj[S]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
     val attr    = IntElem(intExpr)
-    procs.foreach { proc =>
+    objects.foreach { proc =>
       proc.attr.put(ObjKeys.attrBus, Obj(attr))
     }
   }
 
-  def toggleMute[S <: Sys[S]](proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit = {
+  def toggleMute[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Unit = {
     val imp   = ExprImplicits[S]
     import imp._
 
-    val attr = proc.attr
+    val attr = obj.attr
     attr.expr[Boolean](ObjKeys.attrMute) match {
       // XXX TODO: BooleanEx should have `not` operator
       case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld }

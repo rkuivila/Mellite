@@ -38,9 +38,13 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   val name          = "Mute"
   val icon          = ToolsImpl.getIcon("mute")
 
-  protected def commitProc(mute: Mute)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit =
-    ProcActions.toggleMute(proc)
+  protected def commitObj(mute: Mute)(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): Unit =
+    ProcActions.toggleMute(obj)
 
-  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: timeline.ProcView[S]): Unit =
-    dispatch(TrackTool.Adjust(Mute(!region.muted)))
+  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit = region match {
+    case hm: TimelineObjView.HasMute => dispatch(TrackTool.Adjust(Mute(!hm.muted)))
+    case _ =>
+  }
+
+  //  dispatch(TrackTool.Adjust(Mute(!region.muted)))
 }

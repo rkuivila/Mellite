@@ -34,9 +34,9 @@ object ProcView {
   type ProcMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcView[S]]
   type ScanMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
 
-  private final val DEBUG = false
+  type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, ProcView[S]]
 
-  final val Unnamed = "<unnamed>"
+  private final val DEBUG = false
 
   private def addLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
     map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
@@ -50,11 +50,11 @@ object ProcView {
     * This will automatically add the new view to the map!
     *
     * @param timed    the proc to create the view for
-    * @param procMap  a map from `TimedProc` ids to their views. This is used to establish scan links.
+    * @param viewMap  a map from `TimedProc` ids to their views. This is used to establish scan links.
     * @param scanMap  a map from `Scan` ids to their keys and a handle on the timed-proc's id.
     */
-  def apply[S <: Sys[S]](timed  : TimedProc[S],
-                         procMap: ProcMap  [S],
+  def apply[S <: Sys[S]](x: Int, timed  : TimedProc[S],
+                         viewMap: TimelineObjView.Map[S],
                          scanMap: ScanMap  [S])
                         (implicit tx: S#Tx): ProcView[S] = {
     val span  = timed.span
@@ -113,15 +113,18 @@ object ProcView {
           case Scan.Link.Scan(peer) if scanMap.contains(peer.id) =>
             val Some((thatKey, thatIdH)) = scanMap.get(peer.id)
             val thatID = thatIdH()
-            procMap.get(thatID).foreach { thatView =>
-              if (DEBUG) println(s"PV ${timed.id} add link from $key to $thatID, $thatKey")
-              if (inp) {
-                res     .addInput (key    , thatView, thatKey)
-                thatView.addOutput(thatKey, res     , key    )
-              } else {
-                res     .addOutput(key    , thatView, thatKey)
-                thatView.addInput (thatKey, res     , key    )
-              }
+            viewMap.get(thatID).foreach {
+              case thatView: ProcView[S] =>
+                if (DEBUG) println(s"PV ${timed.id} add link from $key to $thatID, $thatKey")
+                if (inp) {
+                  res     .addInput (key    , thatView, thatKey)
+                  thatView.addOutput(thatKey, res     , key    )
+                } else {
+                  res     .addOutput(key    , thatView, thatKey)
+                  thatView.addInput (thatKey, res     , key    )
+                }
+
+              case _ =>
             }
 
           case other =>
@@ -138,7 +141,7 @@ object ProcView {
       findLinks(inp = false)
     }
 
-    procMap.put(timed.id, res)
+    // procMap.put(timed.id, res)
     res
   }
 
@@ -176,8 +179,8 @@ object ProcView {
         SonogramManager.release(ovr)
       }
 
-    def name = nameOption.getOrElse {
-      audio.fold(Unnamed)(_.value.artifact.base)
+    override def name = nameOption.getOrElse {
+      audio.fold(TimelineObjView.Unnamed)(_.value.artifact.base)
     }
 
     def acquireSonogram(): Option[SonoOverview] = {
@@ -246,16 +249,6 @@ object ProcView {
     def proc(implicit tx: S#Tx): Obj.T[S, Proc.Elem] = obj()
   }
 
-  implicit def span[S <: Sys[S]](view: ProcView[S]): (Long, Long) = {
-    view.spanValue match {
-      case Span(start, stop)  => (start, stop)
-      case Span.From(start)   => (start, Long.MaxValue)
-      case Span.Until(stop)   => (Long.MinValue, stop)
-      case Span.All           => (Long.MinValue, Long.MaxValue)
-      case Span.Void          => (Long.MinValue, Long.MinValue)
-    }
-  }
-
   case class Link[S <: Sys[S]](target: ProcView[S], targetKey: String)
 }
 
@@ -275,8 +268,8 @@ trait ProcView[S <: Sys[S]]
   
   override def obj: stm.Source[S#Tx, Proc.Obj[S]]
 
-  /** Convenience for `procSource()` */
-  def proc(implicit tx: S#Tx): Obj.T[S, Proc.Elem]
+  /** Convenience for `obj()` */
+  def proc(implicit tx: S#Tx): Proc.Obj[S]
 
   // var track: Int
 
@@ -284,9 +277,6 @@ trait ProcView[S <: Sys[S]]
 
   /** Convenience check for `span == Span.All` */
   def isGlobal: Boolean
-
-  /** The proc's name or a place holder name if no name is set. */
-  def name: String
 
   var inputs : LinkMap[S]
   var outputs: LinkMap[S]

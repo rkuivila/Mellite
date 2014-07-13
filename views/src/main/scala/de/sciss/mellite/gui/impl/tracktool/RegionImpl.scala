@@ -25,7 +25,7 @@ import de.sciss.lucre.synth.Sys
 trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
   tool =>
 
-  protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[timeline.ProcView[S]]): Unit = {
+  protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineObjView[S]]): Unit = {
     handleMouseSelection(e, regionOpt)
     // now go on if region is selected
     regionOpt.foreach { region =>
@@ -37,10 +37,10 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
     canvas.selectionModel.iterator.foreach { pv =>
       val span  = pv.span()
       val proc  = pv.obj()
-      commitProc(drag)(span, proc)
+      commitObj(drag)(span, proc)
     }
 
-  protected def commitProc(drag: A)(span: Expr[S, SpanLike], proc: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit
+  protected def commitObj(drag: A)(span: Expr[S, SpanLike], proc: Obj[S])(implicit tx: S#Tx): Unit
 
-  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: timeline.ProcView[S]): Unit
+  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit
 }

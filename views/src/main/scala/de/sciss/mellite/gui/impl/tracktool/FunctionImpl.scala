@@ -35,7 +35,7 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
 
   protected type Initial = Unit
 
-  protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[timeline.ProcView[S]]): Unit = {
+  protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineObjView[S]]): Unit = {
     handleMouseSelection(e, regionOpt)
     regionOpt match {
       case Some(region) =>

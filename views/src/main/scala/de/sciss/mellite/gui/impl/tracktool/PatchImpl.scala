@@ -60,27 +60,27 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   val name          = "Patch"
   val icon          = new PaddedIcon(new ImageIcon(PatchImpl.image), new Insets(1, 1, 2, 2)) // make it 20x20
 
-  protected type Initial = ProcView[S]
+  protected type Initial = TimelineObjView[S]
 
   protected def dragToParam(d: Drag): Patch[S] = {
     val pos   = d.currentPos
     val sink  = canvas.findRegion(frame = pos, hitTrack = d.currentTrack) match {
-      case Some(r) if r != d.initial /* && r.inputs.nonEmpty */ =>  // region.inpus only carries linked ones!
+      case Some(r: ProcView[S]) if r != d.initial /* && r.inputs.nonEmpty */ =>  // region.inpus only carries linked ones!
         Patch.Linked(r)
       case _ =>
         Patch.Unlinked(frame = pos, y = d.currentEvent.getY)
     }
-    Patch(d.initial, sink)
+    ??? // Patch(d.initial, sink)
   }
 
-  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: ProcView[S]): Unit =
+  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit =
     /* if (region.outputs.nonEmpty) */ new Drag(e, hitTrack, pos, region)  // region.outputs only carries linked ones!
 
-  protected def commitProc(drag: Patch[S])(span: Expr[S, SpanLike], out: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit =
-    drag.sink match {
-      case Patch.Linked(view) =>
+  protected def commitObj(drag: Patch[S])(span: Expr[S, SpanLike], out: Obj[S])(implicit tx: S#Tx): Unit =
+    (drag.sink, out) match {
+      case (Patch.Linked(view), Proc.Obj(procObj)) =>
         val in = view.obj()
-        ProcActions.linkOrUnlink(out, in)
+        ProcActions.linkOrUnlink(procObj, in)
 
       case _ =>
     }

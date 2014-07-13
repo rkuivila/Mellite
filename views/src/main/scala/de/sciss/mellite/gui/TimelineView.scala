@@ -29,8 +29,8 @@ object TimelineView {
   final val TrackScale = 16
 }
 trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] {
-  def timelineModel     : TimelineModel
-  def procSelectionModel: ProcSelectionModel[S]
+  def timelineModel   : TimelineModel
+  def selectionModel  : TimelineObjView.SelectionModel[S]
 
   def group(implicit tx: S#Tx): Timeline.Obj[S]
 
