@@ -27,14 +27,14 @@ import de.sciss.lucre.event.Sys
 import de.sciss.mellite.impl.ActionImpl
 import de.sciss.synth.{SynthGraph, proc}
 import proc.Implicits._
-import de.sciss.synth.proc.{ProcKeys, SynthGraphs, Proc, Obj}
+import de.sciss.synth.proc.{SynthGraphs, Proc, Obj}
 
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
 
   def proc[S <: Sys[S]](obj: Obj.T[S, Proc.Elem])
                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
-    val codeObj = mkSource(obj = obj, codeID = Code.SynthGraph.id, key = ProcKeys.attrGraphSource,
+    val codeObj = mkSource(obj = obj, codeID = Code.SynthGraph.id, key = Proc.Obj.attrSource,
       init = "// graph function source code\n\n")
     
     val codeEx0 = codeObj.elem.peer

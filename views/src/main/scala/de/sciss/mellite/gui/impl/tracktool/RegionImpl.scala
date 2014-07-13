@@ -35,8 +35,8 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
 
   def commit(drag: A)(implicit tx: S#Tx): Unit =
     canvas.selectionModel.iterator.foreach { pv =>
-      val span  = pv.spanSource()
-      val proc  = pv.procSource()
+      val span  = pv.span()
+      val proc  = pv.obj()
       commitProc(drag)(span, proc)
     }
 

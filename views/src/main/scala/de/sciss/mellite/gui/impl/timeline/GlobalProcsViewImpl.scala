@@ -207,7 +207,7 @@ object GlobalProcsViewImpl {
 
           selRows.headOption.map { row =>
             val pv = procSeq(row)
-            DragAndDrop.Transferable(timeline.DnD.flavor)(timeline.DnD.GlobalProcDrag(workspace, pv.procSource))
+            DragAndDrop.Transferable(timeline.DnD.flavor)(timeline.DnD.GlobalProcDrag(workspace, pv.obj))
           } .orNull
         }
 

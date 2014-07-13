@@ -25,7 +25,6 @@ import de.sciss.span.Span
 import de.sciss.sonogram
 import javax.swing.{TransferHandler, ImageIcon}
 import javax.swing.TransferHandler.TransferSupport
-import de.sciss.synth.proc
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.lucre.synth.Sys
@@ -57,7 +56,7 @@ object ViewImpl {
     val iArtifact     = iLoc.add(artifact.value)
     val iGrapheme     = Grapheme.Expr.Audio[I](iArtifact, graphemeV.spec, graphemeV.offset, graphemeV.gain)
     ProcActions.insertAudioRegion[I](group, time = Span(0L, numFramesTL),
-      track = 0, grapheme = iGrapheme, gOffset = 0L, bus = None)
+      /* track = 0, */ grapheme = iGrapheme, gOffset = 0L, bus = None)
 
     import _workspace.inMemoryCursor
     // val transport     = Transport[I, I](group, sampleRate = sampleRate)

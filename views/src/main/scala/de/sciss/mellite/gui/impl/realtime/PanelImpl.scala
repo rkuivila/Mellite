@@ -17,7 +17,7 @@ package impl
 package realtime
 
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{DoubleElem, Transport, ProcGroupElem, ProcGroup, Obj, ProcKeys, Elem, Proc, Param, ProcTransport}
+import de.sciss.synth.proc.{DoubleElem, Transport, ProcGroupElem, ProcGroup, Obj, Elem, Proc, Param, ProcTransport}
 import de.sciss.lucre.bitemp.BiGroup
 import java.awt.{RenderingHints, Graphics2D, Color}
 import collection.immutable.{IndexedSeq => Vec}

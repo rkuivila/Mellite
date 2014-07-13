@@ -16,7 +16,7 @@ package mellite
 
 import lucre.expr.Expr
 import span.{Span, SpanLike}
-import de.sciss.synth.proc.{Timeline, Obj, SynthGraphs, ExprImplicits, ProcKeys, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
+import de.sciss.synth.proc.{ObjKeys, Timeline, Obj, SynthGraphs, ExprImplicits, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
 import de.sciss.lucre.bitemp.BiExpr
 import de.sciss.synth.proc
 import scala.util.control.NonFatal
@@ -40,7 +40,7 @@ object ProcActions {
   def getAudioRegion[S <: Sys[S]](/* span: Expr[S, SpanLike], */ proc: Obj.T[S, Proc.Elem])
                                  (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme.Expr.Audio[S])] = {
     for {
-      scan <- proc.elem.peer.scans.get(ProcKeys.graphAudio)
+      scan <- proc.elem.peer.scans.get(Proc.Obj.graphAudio)
       Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
       BiExpr(time, audio: Grapheme.Expr.Audio[S]) <- g.at(0L)
     } yield (time, audio)
@@ -105,12 +105,12 @@ object ProcActions {
     import imp._
     name match {
       case Some(n) =>
-        attr.expr[String](ProcKeys.attrName) match {
+        attr.expr[String](ObjKeys.attrName) match {
           case Some(Expr.Var(vr)) => vr() = n
-          case _                  => attr.put(ProcKeys.attrName, Obj(StringElem(StringEx.newVar(n))))
+          case _                  => attr.put(ObjKeys.attrName, Obj(StringElem(StringEx.newVar(n))))
         }
 
-      case _ => attr.remove(ProcKeys.attrName)
+      case _ => attr.remove(ObjKeys.attrName)
     }
   }
 
@@ -136,7 +136,7 @@ object ProcActions {
       ProcActions.getAudioRegion(/* sp, */ proc).foreach { case (time, audio) =>
         val imp = ExprImplicits[S]
         import imp._
-        val scanW       = pNew.scans.add(ProcKeys.graphAudio)
+        val scanW       = pNew.scans.add(Proc.Obj.graphAudio)
         val grw         = Grapheme.Modifiable[S](audio.spec.numChannels)
         val gStart      = LongEx  .newVar(time        .value)
         val audioOffset = LongEx  .newVar(audio.offset.value)  // XXX TODO
@@ -170,11 +170,11 @@ object ProcActions {
     import imp._
 
     if (gain == 1.0) {
-      attr.remove(ProcKeys.attrGain)
+      attr.remove(ObjKeys.attrGain)
     } else {
-      attr.expr[Double](ProcKeys.attrGain) match {
+      attr.expr[Double](ObjKeys.attrGain) match {
         case Some(Expr.Var(vr)) => vr() = gain
-        case _                  => attr.put(ProcKeys.attrGain, Obj(DoubleElem(DoubleEx.newVar(gain))))
+        case _                  => attr.put(ObjKeys.attrGain, Obj(DoubleElem(DoubleEx.newVar(gain))))
       }
     }
   }
@@ -186,18 +186,18 @@ object ProcActions {
     val imp   = ExprImplicits[S]
     import imp._
 
-    attr.expr[Double](ProcKeys.attrGain) match {
+    attr.expr[Double](ObjKeys.attrGain) match {
       case Some(Expr.Var(vr)) => vr.transform(_ * factor)
       case other =>
         val newGain = other.fold(1.0)(_.value) * factor
-        attr.put(ProcKeys.attrGain, Obj(DoubleElem(DoubleEx.newVar(newGain))))
+        attr.put(ObjKeys.attrGain, Obj(DoubleElem(DoubleEx.newVar(newGain))))
     }
   }
 
   def setBus[S <: Sys[S]](procs: Iterable[Obj.T[S, Proc.Elem]], intExpr: Expr[S, Int])(implicit tx: S#Tx): Unit = {
     val attr    = IntElem(intExpr)
     procs.foreach { proc =>
-      proc.attr.put(ProcKeys.attrBus, Obj(attr))
+      proc.attr.put(ObjKeys.attrBus, Obj(attr))
     }
   }
 
@@ -206,10 +206,10 @@ object ProcActions {
     import imp._
 
     val attr = proc.attr
-    attr.expr[Boolean](ProcKeys.attrMute) match {
+    attr.expr[Boolean](ObjKeys.attrMute) match {
       // XXX TODO: BooleanEx should have `not` operator
       case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld }
-      case _                  => attr.put(ProcKeys.attrMute, Obj(BooleanElem(BooleanEx.newVar(true))))
+      case _                  => attr.put(ObjKeys.attrMute, Obj(BooleanElem(BooleanEx.newVar(true))))
     }
   }
 
@@ -229,10 +229,10 @@ object ProcActions {
           // sg.sources.foreach(println)
           if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
 
-          val attrNameOpt = codeElem.attr.get(ProcKeys.attrName)
+          val attrNameOpt = codeElem.attr.get(ObjKeys.attrName)
           procs.foreach { p =>
             p.elem.peer.graph() = SynthGraphs.newConst[S](sg)  // XXX TODO: ideally would link to code updates
-            attrNameOpt.foreach(attrName => p.attr.put(ProcKeys.attrName, attrName))
+            attrNameOpt.foreach(attrName => p.attr.put(ObjKeys.attrName, attrName))
             val scans = p.elem.peer.scans
             val toRemove = scans.iterator.collect {
               case (key, scan) if !scanKeys.contains(key) && scan.sinks.isEmpty && scan.sources.isEmpty => key
@@ -260,7 +260,6 @@ object ProcActions {
     *
     * @param group      the group to insert the proc into
     * @param time       the time span on the outer timeline
-    * @param track      the track to associate with the proc, or `-1` to have the track undefined
     * @param grapheme   the grapheme carrying the underlying audio file
     * @param gOffset    the selection start with respect to the grapheme.
     *                   This is inside the underlying audio file (but using timeline sample-rate),
@@ -271,7 +270,7 @@ object ProcActions {
   def insertAudioRegion[S <: Sys[S]](
       group     : TimelineMod[S],
       time      : Span,
-      track     : Int,
+//      track     : Int,
       grapheme  : Grapheme.Expr.Audio[S],
       gOffset   : Long,
       bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
@@ -286,14 +285,14 @@ object ProcActions {
     val proc    = Proc[S]
     val obj     = Obj(Proc.Elem(proc))
     val attr    = obj.attr
-    if (track >= 0) attr.put(ProcKeys.attrTrack, Obj(IntElem(IntEx.newVar(track))))
+//    if (track >= 0) attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(track))))
     bus.foreach { busEx =>
       val bus = IntElem(busEx)
-      attr.put(ProcKeys.attrBus, Obj(bus))
+      attr.put(ObjKeys.attrBus, Obj(bus))
     }
 
-    val scanIn  = proc.scans.add(ProcKeys.graphAudio )
-    /*val sOut=*/ proc.scans.add(ProcKeys.scanMainOut)
+    val scanIn  = proc.scans.add(Proc.Obj.graphAudio )
+    /*val sOut=*/ proc.scans.add(Proc.Obj.scanMainOut)
     val grIn    = Grapheme.Modifiable[S](grapheme.spec.numChannels)
 
     // we preserve data.source(), i.e. the original audio file offset
@@ -324,7 +323,7 @@ object ProcActions {
     val obj     = Obj(Proc.Elem(proc))
     val attr    = obj.attr
     val nameEx  = StringEx.newVar[S](StringEx.newConst(name))
-    attr.put(ProcKeys.attrName, Obj(StringElem(nameEx)))
+    attr.put(ObjKeys.attrName, Obj(StringElem(nameEx)))
 
     group.add(Span.All, obj) // constant span expression
     obj

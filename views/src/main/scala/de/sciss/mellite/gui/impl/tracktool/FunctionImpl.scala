@@ -17,7 +17,7 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{Obj, ProcKeys, Proc, IntElem}
+import de.sciss.synth.proc.{Obj, Proc, IntElem}
 import de.sciss.span.Span
 import java.awt.event.MouseEvent
 import de.sciss.lucre.synth.Sys
@@ -58,7 +58,7 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
       val span  = SpanEx.newVar[S](SpanEx.newConst(drag.span))
       val p     = Proc[S]
       val obj   = Obj(Proc.Elem(p))
-      obj.attr.put(ProcKeys.attrTrack, Obj(IntElem(IntEx.newVar(IntEx.newConst(drag.track)))))
+      obj.attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(IntEx.newConst(drag.track)))))
       g.add(span, obj)
       log(s"Added function region $p, span = ${drag.span}, track = ${drag.track}")
 

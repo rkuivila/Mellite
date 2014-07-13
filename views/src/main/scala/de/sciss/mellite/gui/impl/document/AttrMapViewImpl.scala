@@ -19,7 +19,7 @@ package document
 import javax.swing.TransferHandler.TransferSupport
 
 import de.sciss.swingplus.DropMode
-import de.sciss.synth.proc.{StringElem, ProcKeys, Obj}
+import de.sciss.synth.proc.{ObjKeys, StringElem, Obj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.impl.ComponentHolder
 import scala.swing.{TextField, Label, Swing, ScrollPane, Table}
@@ -130,13 +130,13 @@ object AttrMapViewImpl {
         val p1 = ch match {
           case Obj.ElemChange(u1) =>
             objView.isUpdateVisible(u1)
-          case Obj.AttrAdded  (ProcKeys.attrName, e: StringElem[S]) =>
+          case Obj.AttrAdded  (ObjKeys.attrName, e: StringElem[S]) =>
             updateObjectName(objView, e.peer.value)
             true
-          case Obj.AttrRemoved(ProcKeys.attrName, _) =>
+          case Obj.AttrRemoved(ObjKeys.attrName, _) =>
             updateObjectName(objView, "<unnamed>")
             true
-          case Obj.AttrChange (ProcKeys.attrName, _, nameChanges) =>
+          case Obj.AttrChange (ObjKeys.attrName, _, nameChanges) =>
             (false /: nameChanges) {
               case (_, Obj.ElemChange(Change(_, name: String))) =>
                 updateObjectName(objView, name)

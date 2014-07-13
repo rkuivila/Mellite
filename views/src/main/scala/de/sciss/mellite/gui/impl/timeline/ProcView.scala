@@ -16,7 +16,7 @@ package gui
 package impl
 package timeline
 
-import de.sciss.synth.proc.{Obj, FadeSpec, ProcKeys, Grapheme, Scan, Proc, TimedProc}
+import de.sciss.synth.proc.{ObjKeys, Obj, FadeSpec, Grapheme, Scan, Proc, TimedProc}
 import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.sonogram.{Overview => SonoOverview}
@@ -66,7 +66,7 @@ object ProcView {
 
     // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
     val scans = proc.elem.peer.scans
-    val audio = scans.get(ProcKeys.graphAudio).flatMap { scanw =>
+    val audio = scans.get(Proc.Obj.graphAudio).flatMap { scanw =>
       // println("--- has scan")
       scanw.sources.flatMap {
         case Scan.Link.Grapheme(g) =>
@@ -90,16 +90,17 @@ object ProcView {
 
     val attr    = proc.attr
 
-    val track   = attr.expr[Int     ](ProcKeys.attrTrack  ).fold(0)(_.value)
-    val name    = attr.expr[String  ](ProcKeys.attrName   ).map(_.value)
-    val mute    = attr.expr[Boolean ](ProcKeys.attrMute).exists(_.value)
-    val fadeIn  = attr.expr[FadeSpec](ProcKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-    val fadeOut = attr.expr[FadeSpec](ProcKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
-    val gain    = attr.expr[Double  ](ProcKeys.attrGain   ).fold(1.0)(_.value)
-    val bus     = attr.expr[Int     ](ProcKeys.attrBus    ).map(_.value)
+    val trackY  = attr.expr[Int     ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
+    val trackH  = attr.expr[Int     ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
+    val name    = attr.expr[String  ](ObjKeys.attrName   ).map(_.value)
+    val mute    = attr.expr[Boolean ](ObjKeys.attrMute).exists(_.value)
+    val fadeIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
+    val fadeOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
+    val gain    = attr.expr[Double  ](ObjKeys.attrGain   ).fold(1.0)(_.value)
+    val bus     = attr.expr[Int     ](ObjKeys.attrBus    ).map(_.value)
 
-    val res = new Impl(spanSource = tx.newHandle(span), procSource = tx.newHandle(proc),
-      span = spanV, track = track, nameOption = name, muted = mute, audio = audio,
+    val res = new Impl(span = tx.newHandle(span), obj = tx.newHandle(proc),
+      spanValue = spanV, trackIndex = trackY , trackHeight = trackH, nameOption = name, muted = mute, audio = audio,
       fadeIn = fadeIn, fadeOut = fadeOut, gain = gain, busOption = bus)
 
     import de.sciss.lucre.synth.expr.IdentifierSerializer
@@ -141,10 +142,11 @@ object ProcView {
     res
   }
 
-  private final class Impl[S <: Sys[S]](val spanSource: stm.Source[S#Tx, Expr[S, SpanLike]],
-                                        val procSource: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
-                                        var span      : SpanLike,
-                                        var track     : Int,
+  private final class Impl[S <: Sys[S]](val span: stm.Source[S#Tx, Expr[S, SpanLike]],
+                                        val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
+                                        var spanValue      : SpanLike,
+                                        var trackIndex : Int,
+                                        var trackHeight: Int,
                                         var nameOption: Option[String],
                                         var muted     : Boolean,
                                         var audio     : Option[Grapheme.Segment.Audio],
@@ -154,10 +156,10 @@ object ProcView {
                                         var busOption : Option[Int])
     extends ProcView[S] { self =>
 
-    override def toString = s"ProcView($name, $span, $audio)"
+    override def toString = s"ProcView($name, $spanValue, $audio)"
 
     def debugString =
-      s"ProcView(span = $span, track = $track, nameOption = $nameOption, muted = $muted, audio = $audio, " +
+      s"ProcView(span = $spanValue, trackIndex = $trackIndex, nameOption = $nameOption, muted = $muted, audio = $audio, " +
       s"fadeIn = $fadeIn, fadeOut = $fadeOut, gain = $gain, busOption = $busOption)\n" +
       inputs .mkString("  inputs  = [", ", ", "]\n") +
       outputs.mkString("  outputs = [", ", ", "]\n")
@@ -239,13 +241,13 @@ object ProcView {
     def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
       outputs = removeLink(outputs, thisKey, Link(thatView, thatKey))
 
-    def isGlobal = span == Span.All
+    def isGlobal = spanValue == Span.All
 
-    def proc(implicit tx: S#Tx): Obj.T[S, Proc.Elem] = procSource()
+    def proc(implicit tx: S#Tx): Obj.T[S, Proc.Elem] = obj()
   }
 
   implicit def span[S <: Sys[S]](view: ProcView[S]): (Long, Long) = {
-    view.span match {
+    view.spanValue match {
       case Span(start, stop)  => (start, stop)
       case Span.From(start)   => (start, Long.MaxValue)
       case Span.Until(stop)   => (Long.MinValue, stop)
@@ -262,18 +264,23 @@ object ProcView {
   * and do not affect the underlying model. They should typically only be called
   * in response to observing a change in the model.
   */
-sealed trait ProcView[S <: Sys[S]] {
+trait ProcView[S <: Sys[S]]
+  extends TimelineObjView[S]
+  with TimelineObjView.HasMute
+  with TimelineObjView.HasGain
+  with TimelineObjView.HasFade
+  {
+
   import ProcView.{LinkMap, ProcMap, ScanMap}
   
-  def spanSource: stm.Source[S#Tx, Expr[S, SpanLike]]
-  def procSource: stm.Source[S#Tx, Obj.T[S, Proc.Elem]]
+  override def obj: stm.Source[S#Tx, Proc.Obj[S]]
 
   /** Convenience for `procSource()` */
   def proc(implicit tx: S#Tx): Obj.T[S, Proc.Elem]
 
-  var span: SpanLike
-  var track: Int
-  var nameOption: Option[String]
+  // var track: Int
+
+  // var nameOption: Option[String]
 
   /** Convenience check for `span == Span.All` */
   def isGlobal: Boolean
@@ -290,8 +297,6 @@ sealed trait ProcView[S <: Sys[S]] {
   def removeInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit
   def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit
 
-  var muted: Boolean
-
   var busOption: Option[Int]
 
   /** If this proc is bound to an audio grapheme for the default scan key, returns
@@ -299,11 +304,6 @@ sealed trait ProcView[S <: Sys[S]] {
   var audio: Option[Grapheme.Segment.Audio]
 
   var sonogram: Option[SonoOverview]
-
-  var fadeIn : FadeSpec
-  var fadeOut: FadeSpec
-
-  var gain: Double
 
   /** Releases a sonogram view. If none had been acquired, this is a safe no-op.
     * Updates the `sono` variable.

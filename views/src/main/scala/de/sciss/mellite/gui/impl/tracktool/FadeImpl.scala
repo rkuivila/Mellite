@@ -16,7 +16,7 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Obj, FadeSpec, ProcKeys, Proc}
+import de.sciss.synth.proc.{ObjKeys, Obj, FadeSpec, Proc}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
@@ -35,7 +35,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   private var dragCurve = false
 
   protected def dragToParam(d: Drag): Fade = {
-    val firstSpan = d.initial.span
+    val firstSpan = d.initial.spanValue
     val leftHand = firstSpan match {
       case Span(start, stop)  => math.abs(d.firstPos - start) < math.abs(d.firstPos - stop)
       case Span.From(start)   => true
@@ -65,8 +65,8 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     import drag._
 
     val attr    = proc.attr
-    val exprIn  = attr.expr[FadeSpec](ProcKeys.attrFadeIn )
-    val exprOut = attr.expr[FadeSpec](ProcKeys.attrFadeOut)
+    val exprIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn )
+    val exprOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut)
     val valIn   = exprIn .fold(EmptyFade)(_.value)
     val valOut  = exprOut.fold(EmptyFade)(_.value)
     val total   = span.value match {
@@ -95,7 +95,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
         case None =>
           val vr = FadeSpec.Expr.newVar(elem)
-          attr.put(ProcKeys.attrFadeIn, Obj(FadeSpec.Elem(vr)))
+          attr.put(ObjKeys.attrFadeIn, Obj(FadeSpec.Elem(vr)))
           res
 
         case _ =>
@@ -124,7 +124,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
         case None =>
           val vr  = FadeSpec.Expr.newVar(elem)
-          attr.put(ProcKeys.attrFadeOut, Obj(FadeSpec.Elem(vr)))
+          attr.put(ObjKeys.attrFadeOut, Obj(FadeSpec.Elem(vr)))
 
         case _ =>
       }

@@ -25,6 +25,8 @@ object TimelineView {
   def apply[S <: Sys[S]](group: Timeline.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineView[S] =
     Impl[S](group)
+
+  final val TrackScale = 16
 }
 trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] {
   def timelineModel     : TimelineModel

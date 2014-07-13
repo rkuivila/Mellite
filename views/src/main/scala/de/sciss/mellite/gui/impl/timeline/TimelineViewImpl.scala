@@ -34,10 +34,11 @@ import scala.swing.Swing._
 import de.sciss.desktop.{KeyStrokes, Window}
 import scala.concurrent.stm.Ref
 import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.{Int => IntEx}
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{TimeRef, Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, ProcKeys, Proc, Scan, TimedProc}
+import de.sciss.synth.proc.{ObjKeys, IntElem, TimeRef, Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, Proc, Scan, TimedProc}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -49,6 +50,7 @@ import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.icons.raphael
+import TimelineView.TrackScale
 
 object TimelineViewImpl {
   private val colrBg              = Color.darkGray
@@ -143,32 +145,32 @@ object TimelineViewImpl {
 
     def muteChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val muted   = attr.expr[Boolean](ProcKeys.attrMute).exists(_.value)
+      val muted   = attr.expr[Boolean](ObjKeys.attrMute).exists(_.value)
       view.procMuteChanged(timed, muted)
     }
 
     def nameChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val nameOpt = attr.expr[String](ProcKeys.attrName).map(_.value)
+      val nameOpt = attr.expr[String](ObjKeys.attrName).map(_.value)
       view.procNameChanged(timed, nameOpt)
     }
 
     def gainChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr  = timed.value.attr
-      val gain  = attr.expr[Double](ProcKeys.attrGain).fold(1.0)(_.value)
+      val gain  = attr.expr[Double](ObjKeys.attrGain).fold(1.0)(_.value)
       view.procGainChanged(timed, gain)
     }
 
     def busChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val busOpt  = attr.expr[Int](ProcKeys.attrBus).map(_.value)
+      val busOpt  = attr.expr[Int](ObjKeys.attrBus).map(_.value)
       view.procBusChanged(timed, busOpt)
     }
 
     def fadeChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val fadeIn  = attr.expr[FadeSpec](ProcKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-      val fadeOut = attr.expr[FadeSpec](ProcKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
+      val fadeIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
+      val fadeOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
       view.procFadeChanged(timed, fadeIn, fadeOut)
     }
 
@@ -182,11 +184,11 @@ object TimelineViewImpl {
 
     def attrChanged1(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit =
       name match {
-        case ProcKeys.attrMute  => muteChanged(timed)
-        case ProcKeys.attrFadeIn | ProcKeys.attrFadeOut => fadeChanged(timed)
-        case ProcKeys.attrName  => nameChanged(timed)
-        case ProcKeys.attrGain  => gainChanged(timed)
-        case ProcKeys.attrBus   => busChanged (timed)
+        case ObjKeys.attrMute  => muteChanged(timed)
+        case ObjKeys.attrFadeIn | ObjKeys.attrFadeOut => fadeChanged(timed)
+        case ObjKeys.attrName  => nameChanged(timed)
+        case ObjKeys.attrGain  => gainChanged(timed)
+        case ObjKeys.attrBus   => busChanged (timed)
         case _ =>
       }
 
@@ -249,7 +251,7 @@ object TimelineViewImpl {
                   case Proc.ScanChange (name, scan, scanUpdates) =>
                     scanUpdates.foreach {
                       case Scan.GraphemeChange(grapheme, segments) =>
-                        if (name == ProcKeys.graphAudio) {
+                        if (name == Proc.Obj.graphAudio) {
                           val segmOpt = segments.find(_.span.contains(0L)) match {
                             case Some(segm: Grapheme.Segment.Audio) => Some(segm)
                             case _ => None
@@ -277,7 +279,7 @@ object TimelineViewImpl {
 
           case Obj.AttrChange(name, attr, ach) =>
             (name, ach) match {
-              case (ProcKeys.attrTrack, changes) =>
+              case (TimelineObjView.attrTrackIndex, changes) =>
                 changes.foreach {
                   case Obj.ElemChange(Change(before: Int, now: Int)) =>
                     view.procMoved(timed0, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
@@ -388,7 +390,7 @@ object TimelineViewImpl {
         val pos     = timelineModel.position
         val pos1    = pos - MinDur
         val pos2    = pos + MinDur
-        withFilteredSelection(pv => pv.span.contains(pos1) && pv.span.contains(pos2)) { implicit tx =>
+        withFilteredSelection(pv => pv.spanValue.contains(pos1) && pv.spanValue.contains(pos2)) { implicit tx =>
           splitObjects(pos)
         }
       }
@@ -420,7 +422,7 @@ object TimelineViewImpl {
         group             <- plainGroup.modifiableOption
         pv                <- views
       } {
-        pv.spanSource() match {
+        pv.span() match {
           case Expr.Var(oldSpan) =>
             val imp = ExprImplicits[S]
             import imp._
@@ -594,8 +596,8 @@ object TimelineViewImpl {
           else
             procViews -= pv
 
-          if (spanCh .isSignificant) pv.span  = spanCh .now
-          if (trackCh.isSignificant) pv.track = trackCh.now
+          if (spanCh .isSignificant) pv.spanValue   = spanCh .now
+          if (trackCh.isSignificant) pv.trackIndex  = trackCh.now
 
           if (pv.isGlobal) {
             globalView.add(pv)
@@ -734,8 +736,10 @@ object TimelineViewImpl {
         case Some(groupM) =>
           logT(s"insertAudioRegion($drop, ${drag.selection}, $grapheme)")
           val tlSpan = Span(drop.frame, drop.frame + drag.selection.length)
-          ProcActions.insertAudioRegion(groupM, time = tlSpan, track = view.screenToTrack(drop.y),
+          val (_, obj) = ProcActions.insertAudioRegion(groupM, time = tlSpan,
             grapheme = grapheme, gOffset = drag.selection.start, bus = None) // , bus = ad.bus.map(_.apply().entity))
+          val track = view.screenToTrack(drop.y)
+          obj.attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(IntEx.newConst(track)))))
           true
         case _ => false
       }
@@ -823,13 +827,13 @@ object TimelineViewImpl {
 
       def intersect(span: Span): Iterator[ProcView[S]] = procViews.filterOverlaps((span.start, span.stop))
 
-      def screenToTrack(y    : Int): Int = y     / 32
-      def trackToScreen(track: Int): Int = track * 32
+      def screenToTrack(y    : Int): Int = y     / TrackScale
+      def trackToScreen(track: Int): Int = track * TrackScale
 
       def findRegion(pos: Long, hitTrack: Int): Option[ProcView[S]] = {
         val span      = Span(pos, pos + 1)
         val regions   = intersect(span)
-        regions.find(pv => pv.track == hitTrack || (pv.track + 1) == hitTrack)
+        regions.find(pv => pv.trackIndex <= hitTrack && (pv.trackIndex + pv.trackHeight) > hitTrack)
       }
 
       protected def commitToolChanges(value: Any): Unit = {
@@ -965,10 +969,10 @@ object TimelineViewImpl {
             val selected  = sel.contains(pv)
 
             def drawProc(start: Long, x1: Int, x2: Int, move: Long): Unit = {
-              val py    = (if (selected) math.max(0, pv.track + moveState.deltaTrack) else pv.track) * 32
+              val py    = (if (selected) math.max(0, pv.trackIndex + moveState.deltaTrack) else pv.trackIndex) * TrackScale
               val px    = x1
               val pw    = x2 - x1
-              val ph    = 64
+              val ph    = pv.trackHeight * TrackScale
 
               // clipped coordinates
               val px1C    = math.max(px + 1, cr.x - 2)
@@ -1111,7 +1115,7 @@ object TimelineViewImpl {
                 }
               } else 0L
 
-            pv.span match {
+            pv.spanValue match {
               case Span(start, stop) =>
                 val dStart    = adjustStart(start)
                 val dStop     = adjustStop (stop )
@@ -1170,20 +1174,20 @@ object TimelineViewImpl {
               case ad: DnD.AudioDragLike[S] =>
                 val track = screenToTrack(drop.y)
                 val span  = Span(drop.frame, drop.frame + ad.selection.length)
-                drawDropFrame(g, track, span)
+                drawDropFrame(g, track, 4, span)
 
               case DnD.ObjectDrag(_, _: ObjView.Proc[S]) =>
                 val track   = screenToTrack(drop.y)
                 val length  = (timelineModel.sampleRate * 2).toLong  // XXX TODO - make it view resolution dependent?
                 val span    = Span(drop.frame, drop.frame + length)
-                drawDropFrame(g, track, span)
+                drawDropFrame(g, track, 4, span)
 
               case _ =>
             }
           }
 
           if (functionState.track >= 0) {
-            drawDropFrame(g, functionState.track, functionState.span)
+            drawDropFrame(g, functionState.track, 4, functionState.span)
           }
 
           if (patchState.source != null) {
@@ -1191,7 +1195,7 @@ object TimelineViewImpl {
           }
         }
 
-        private def linkFrame(pv: ProcView[S]): Long = pv.span match {
+        private def linkFrame(pv: ProcView[S]): Long = pv.spanValue match {
           case Span(start, stop)  => (start + stop)/2
           case hs: Span.HasStart  => hs.start + (timelineModel.sampleRate * 0.1).toLong
           case _ => 0L
@@ -1199,9 +1203,9 @@ object TimelineViewImpl {
 
         private def linkY(view: ProcView[S], input: Boolean): Int =
           if (input)
-            trackToScreen(view.track) + 4
+            trackToScreen(view.trackIndex) + 4
           else
-            trackToScreen(view.track + 2) - 5
+            trackToScreen(view.trackIndex + view.trackHeight) - 5
 
         private def drawLink(g: Graphics2D, source: ProcView[S], sink: ProcView[S]): Unit = {
           val srcFrameC   = linkFrame(source)
@@ -1244,16 +1248,16 @@ object TimelineViewImpl {
           g.setStroke(strkOrig)
         }
 
-        private def drawDropFrame(g: Graphics2D, track: Int, span: Span): Unit = {
+        private def drawDropFrame(g: Graphics2D, trackIndex: Int, trackHeight: Int, span: Span): Unit = {
           val x1 = frameToScreen(span.start).toInt
           val x2 = frameToScreen(span.stop ).toInt
           g.setColor(colrDropRegionBg)
           val strkOrig = g.getStroke
           g.setStroke(strkDropRegion)
-          val y   = trackToScreen(track)
+          val y   = trackToScreen(trackIndex)
           val x1b = math.min(x1 + 1, x2)
           val x2b = math.max(x1b, x2 - 1)
-          g.drawRect(x1b, y + 1, x2b - x1b, 64)
+          g.drawRect(x1b, y + 1, x2b - x1b, trackToScreen(trackIndex + trackHeight) - y)
           g.setStroke(strkOrig)
         }
       }

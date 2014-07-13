@@ -34,7 +34,7 @@ final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   protected def dialog(): Option[Resize] = None // not yet supported
 
   protected def dragToParam(d: Drag): Resize = {
-    val (usesStart, usesStop) = d.initial.span match {
+    val (usesStart, usesStop) = d.initial.spanValue match {
       case Span.From (_)      => (true, false)
       case Span.Until(_)      => (false, true)
       case Span(start, stop)  =>

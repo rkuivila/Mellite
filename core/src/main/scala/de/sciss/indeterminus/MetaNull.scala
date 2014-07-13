@@ -24,7 +24,7 @@ import de.sciss.strugatzki.{FeatureCorrelation, FeatureExtraction}
 import de.sciss.processor.Processor
 import de.sciss.synth.proc
 import de.sciss.mellite._
-import de.sciss.synth.proc.{Timeline, Obj, ExprImplicits, FadeSpec, ProcKeys, ArtifactLocation, Grapheme}
+import de.sciss.synth.proc.{ObjKeys, Timeline, Obj, ExprImplicits, FadeSpec, ArtifactLocation, Grapheme}
 import de.sciss.file._
 import de.sciss.lucre.synth.InMemory
 
@@ -89,13 +89,13 @@ object MetaNull {
         val srRatio   = spec.sampleRate / Timeline.SampleRate
         val gOffset   = (span.start / srRatio).toLong
         val tlSpan    = Span(time, time + (span.length / srRatio).toLong)
-        val (_, proc) = ProcActions.insertAudioRegion(group = group, time = tlSpan, track = 0, grapheme = grapheme,
+        val (_, proc) = ProcActions.insertAudioRegion(group = group, time = tlSpan, grapheme = grapheme,
                                                       gOffset = gOffset, bus = None)
         val fdInLen   = (0.02 * Timeline.SampleRate).toLong
         val fdIn      = FadeSpec.Expr.newConst[I](FadeSpec(fdInLen))
         val fdOut     = FadeSpec.Expr.newConst[I](FadeSpec(math.min(tlSpan.length - fdInLen, (0.5 * Timeline.SampleRate).toLong)))
-        proc.attr.put(ProcKeys.attrFadeIn , Obj(FadeSpec.Elem(fdIn )))
-        proc.attr.put(ProcKeys.attrFadeOut, Obj(FadeSpec.Elem(fdOut)))
+        proc.attr.put(ObjKeys.attrFadeIn , Obj(FadeSpec.Elem(fdIn )))
+        proc.attr.put(ObjKeys.attrFadeOut, Obj(FadeSpec.Elem(fdOut)))
       }
 
       val bnc   = proc.Bounce[I, I]

@@ -16,7 +16,7 @@ object ProcGUIActions {
   def removeProcs[S <: Sys[S]](group: TimelineMod[S], views: TraversableOnce[ProcView[S]])(implicit tx: S#Tx): Unit = {
     requireEDT()
     views.foreach { pv =>
-      val span  = pv.spanSource()
+      val span  = pv.span()
       val proc  = pv.proc
 
       def deleteLinks(map: ProcView.LinkMap[S])(fun: (String, Scan[S], String, Scan[S]) => Unit): Unit =

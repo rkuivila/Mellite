@@ -79,7 +79,7 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   protected def commitProc(drag: Patch[S])(span: Expr[S, SpanLike], out: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Unit =
     drag.sink match {
       case Patch.Linked(view) =>
-        val in = view.procSource()
+        val in = view.obj()
         ProcActions.linkOrUnlink(out, in)
 
       case _ =>

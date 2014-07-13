@@ -51,7 +51,7 @@ final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends R
         val it    = canvas.selectionModel.iterator
         val empty = Span.Void: Span.SpanOrVoid
         val all   = (empty /: it) { (res, pv) =>
-          pv.span match {
+          pv.spanValue match {
             case sp @ Span(_, _) => res.nonEmptyOption.fold(sp)(_ union sp)
           }
         }

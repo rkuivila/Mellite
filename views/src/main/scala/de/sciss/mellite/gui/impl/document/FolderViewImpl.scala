@@ -16,7 +16,7 @@ package gui
 package impl
 package document
 
-import de.sciss.synth.proc.{ArtifactLocation, IntElem, FolderElem, ProcKeys, Folder, Artifact, Obj, StringElem}
+import de.sciss.synth.proc.{ObjKeys, ArtifactLocation, FolderElem, Folder, Artifact, Obj, StringElem}
 import swing.Component
 import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
@@ -103,9 +103,9 @@ object FolderViewImpl {
                 val objView = nv.renderData
                 objView.isUpdateVisible(u1)
               }
-            case Obj.AttrAdded  (ProcKeys.attrName, StringElem.Obj(e)) => updateObjectName(obj, e.elem.peer.value)
-            case Obj.AttrRemoved(ProcKeys.attrName, _) => updateObjectName(obj, "<unnamed>")
-            case Obj.AttrChange (ProcKeys.attrName, _, changes) =>
+            case Obj.AttrAdded  (ObjKeys.attrName, StringElem.Obj(e)) => updateObjectName(obj, e.elem.peer.value)
+            case Obj.AttrRemoved(ObjKeys.attrName, _) => updateObjectName(obj, "<unnamed>")
+            case Obj.AttrChange (ObjKeys.attrName, _, changes) =>
               (false /: changes) {
                 case (res, Obj.ElemChange(Change(_, name: String))) =>
                   res | updateObjectName(obj, name)
@@ -177,7 +177,7 @@ object FolderViewImpl {
                 val valueOpt: Option[Obj[S]] = if (text.isEmpty || text.toLowerCase == "<unnamed>") None else {
                   Some(Obj(StringElem(lucre.expr.String.newConst[S](text))))
                 }
-                val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ProcKeys.attrName, valueOpt)
+                val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName, valueOpt)
                 Some(ed)
               } else {
                 objView.tryEdit(text)
