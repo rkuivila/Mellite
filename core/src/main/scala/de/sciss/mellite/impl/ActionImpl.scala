@@ -17,7 +17,7 @@ package impl
 import de.sciss.lucre.{event => evt}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Elem
-import de.sciss.lucre.event.{InMemory, Node, Targets, EventLike, Sys}
+import de.sciss.lucre.event.{Reader, InMemory, Node, Targets, EventLike, Sys}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IDPeek
 import de.sciss.serial.{DataInput, DataOutput}
@@ -33,6 +33,7 @@ object ActionImpl {
   private final val COOKIE        = 0x61637400   // "act\0"
   private final val CONST_EMPTY   = 0
   private final val CONST_FUN     = 1
+  private final val CONST_VAR     = 2
 
   private val DEBUG = true
 
@@ -50,6 +51,14 @@ object ActionImpl {
   }
 
   def empty[S <: Sys[S]](implicit tx: S#Tx): Action[S] = new ConstEmptyImpl[S]
+
+  def newVar[S <: Sys[S]](init: Action[S])(implicit tx: S#Tx): Action.Var[S] = {
+    val targets = evt.Targets[S]
+    val peer    = tx.newVar(targets.id, init)
+    new VarImpl[S](targets, peer)
+  }
+
+  // ----
 
   private def performCompile[S <: Sys[S]](p: Promise[stm.Source[S#Tx, Action[S]]], name: String,
                                           source: Code.Action, system: S)(implicit cursor: stm.Cursor[S]): Unit = {
@@ -77,12 +86,15 @@ object ActionImpl {
   private val anySer = new Ser[InMemory]
 
   private final class Ser[S <: Sys[S]] extends evt.EventLikeSerializer[S, Action[S]] {
-    def readConstant(in: DataInput)(implicit tx: S#Tx): Action[S] = {
+    private def readCookieAndTpe(in: DataInput): Byte = {
       val cookie = in.readInt()
       if (cookie != COOKIE)
         sys.error(s"Unexpected cookie (found ${cookie.toHexString}, expected ${COOKIE.toHexString})")
-      val tpe = in.readByte()
-      (tpe: @switch) match {
+      in.readByte()
+    }
+
+    def readConstant(in: DataInput)(implicit tx: S#Tx): Action[S] =
+      (readCookieAndTpe(in): @switch) match {
         case CONST_FUN    =>
           val name    = in.readUTF()
           val jarSize = in.readInt()
@@ -99,13 +111,17 @@ object ActionImpl {
 
         case CONST_EMPTY  => new ConstEmptyImpl[S]
 
-        case other => sys.error(s"Unexpected constant action cookie $other")
+        case other => sys.error(s"Unexpected action cookie $other")
       }
-    }
 
-    def read(in: DataInput, access: S#Acc, targets: Targets[S])(implicit tx: S#Tx): Action[S] with Node[S] = {
-      ???
-    }
+    def read(in: DataInput, access: S#Acc, targets: Targets[S])(implicit tx: S#Tx): Action[S] with Node[S] =
+      (readCookieAndTpe(in): @switch) match {
+        case CONST_VAR =>
+          val peer = tx.readVar[Action[S]](targets.id, in)
+          new VarImpl[S](targets, peer)
+
+        case other => sys.error(s"Unexpected action cookie $other")
+      }
   }
 
   // ---- constant implementation ----
@@ -123,7 +139,8 @@ object ActionImpl {
 
   // is this assumption correct: since we hold both a `system` and `cl` instance, `cl` will
   // remain valid until the `ConstImpl` itself is GC'ed?
-  private final class ConstFunImpl[S <: Sys[S]](name: String, jar: Array[Byte], val system: S, cl: MemoryClassLoader)
+  private final class ConstFunImpl[S <: Sys[S]](val name: String, jar: Array[Byte],
+                                                val system: S, cl: MemoryClassLoader)
     extends ConstImpl[S] {
 
     def execute()(implicit tx: S#Tx): Unit = {
@@ -143,15 +160,53 @@ object ActionImpl {
       out.writeInt(jar.length)
       out.write(jar)
     }
+
+    override def hashCode(): Int = name.hashCode
+
+    override def equals(that: Any): Boolean = that match {
+      case cf: ConstFunImpl[_] => cf.name == name
+      case _ => super.equals(that)
+    }
   }
 
   private final class ConstEmptyImpl[S <: Sys[S]] extends ConstImpl[S] {
     def execute()(implicit tx: S#Tx): Unit = ()
 
+    override def equals(that: Any): Boolean = that match {
+      case e: ConstEmptyImpl[_] => true
+      case _ => super.equals(that)
+    }
+
+    override def hashCode(): Int = 0
+
     protected def writeData(out: DataOutput): Unit = {
       out.writeInt(COOKIE)
       out.writeByte(CONST_EMPTY)
     }
+  }
+
+  private final class VarImpl[S <: Sys[S]](protected val targets: evt.Targets[S], peer: S#Var[Action[S]])
+    extends Action.Var[S] with evt.impl.SingleGenerator[S, Unit, Action[S]] {
+
+    def apply()(implicit tx: S#Tx): Action[S] = peer()
+
+    def update(value: Action[S])(implicit tx: S#Tx): Unit = {
+      val old = peer()
+      peer()  = value
+      if (old != value) fire(())
+    }
+
+    def execute()(implicit tx: S#Tx): Unit = peer().execute()
+
+    protected def disposeData()(implicit tx: S#Tx): Unit = peer.dispose()
+
+    protected def writeData(out: DataOutput): Unit = {
+      out.writeInt(COOKIE)
+      out.writeByte(CONST_VAR)
+      peer.write(out)
+    }
+
+    protected def reader: Reader[S, Action[S]] = ActionImpl.serializer
   }
 
   // ---- class loader ----

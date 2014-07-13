@@ -32,7 +32,7 @@ object Action {
   def empty[S <: Sys[S]](implicit tx: S#Tx): Action[S] = Impl.empty[S]
 
   object Var {
-    def apply[S <: Sys[S]](init: Action[S])(implicit tx: S#Tx): Var[S] = ???
+    def apply[S <: Sys[S]](init: Action[S])(implicit tx: S#Tx): Var[S] = Impl.newVar(init)
 
     def unapply[S <: Sys[S]](a: Action[S]): Option[Var[S]] =
       a match {

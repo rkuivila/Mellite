@@ -496,7 +496,7 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Recursion.Elem[S]
     val icon    = raphaelIcon(raphael.Shapes.Quote)
     val prefix  = "Recursion"
-    def typeID  = Recursion.typeID
+    def typeID  = _Recursion.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Recursion.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name      = obj.attr.name
@@ -638,7 +638,7 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Timeline.Elem[S]
     val icon    = raphaelIcon(raphael.Shapes.Ruler)
     val prefix  = "Timeline"
-    def typeID  = ElemImpl.Timeline.typeID
+    def typeID  = _Timeline.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Timeline.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.attr.name
@@ -700,7 +700,7 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Code.Elem[S]
     val icon            = raphaelIcon(raphael.Shapes.Code)
     val prefix          = "Code"
-    def typeID          = Code.typeID
+    def typeID          = _Code.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Code.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name    = obj.attr.name
@@ -747,7 +747,7 @@ object ObjViewImpl {
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Code.Elem]],
-                                                   var name: _String, var value: _Code)
+                                  var name: _String, var value: _Code)
       extends ObjView.Code[S]
       with ObjViewImpl.Impl[S]
       with NonEditable[S] {
@@ -837,7 +837,7 @@ object ObjViewImpl {
 
   object Action extends Factory {
     type E[S <: evt.Sys[S]] = _Action.Elem[S]
-    val icon            = raphaelIcon(raphael.Shapes.Up)
+    val icon            = raphaelIcon(raphael.Shapes.Bolt)
     val prefix          = "Action"
     def typeID          = _Action.typeID
 

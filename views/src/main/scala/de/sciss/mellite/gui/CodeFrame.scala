@@ -21,13 +21,17 @@ import de.sciss.lucre.event.Sys
 import de.sciss.synth.proc.{Proc, Obj}
 
 object CodeFrame {
-  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem])
+  def apply[S <: Sys[S]](obj: Code.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] =
     Impl(obj)
 
-  def proc[S <: Sys[S]](proc: Obj.T[S, Proc.Elem])
+  def proc[S <: Sys[S]](proc: Proc.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] =
     Impl.proc(proc)
+
+  def action[S <: Sys[S]](action: Action.Obj[S])
+                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] =
+    Impl.action(action)
 }
 
 trait CodeFrame[S <: Sys[S]] extends lucre.swing.Window[S] {

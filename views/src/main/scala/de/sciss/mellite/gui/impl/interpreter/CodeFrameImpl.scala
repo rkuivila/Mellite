@@ -65,6 +65,12 @@ object CodeFrameImpl {
     make(codeObj, code0, proc.attr.name, Some(handler))
   }
 
+  def action[S <: Sys[S]](action: Action.Obj[S])
+                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
+
+    ???
+  }
+
   def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
     val _codeEx = obj.elem.peer
