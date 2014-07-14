@@ -339,7 +339,7 @@ object TimelineViewImpl {
         // DocumentViewHandler.instance.remove(this)
         val pit     = viewRange.iterator
         viewRange   = RangedSeq.empty
-        ??? // pit.foreach(_.disposeGUI())
+        ??? // pit.foreach(_.dispose())
         viewMap.dispose()
         scanMap.dispose()
       }
@@ -581,24 +581,23 @@ object TimelineViewImpl {
     // insignificant changes are ignored, therefore one can just move the span without the track
     // by using trackCh = Change(0,0), and vice versa
     private def objMoved1(timed: TimedProc[S], spanCh: Change[SpanLike], trackCh: Change[Int])(implicit tx: S#Tx): Unit =
-      viewMap.get(timed.id).foreach { pv =>
-        ???
-//        deferTx {
-//          if (pv.isGlobal)
-//            globalView.remove(pv)
-//          else
-//            viewRange -= pv
-//
-//          if (spanCh .isSignificant) pv.spanValue   = spanCh .now
-//          if (trackCh.isSignificant) pv.trackIndex  = trackCh.now
-//
-//          if (pv.isGlobal) {
-//            globalView.add(pv)
-//          } else {
-//            viewRange += pv
-//            repaintAll()  // XXX TODO: optimize dirty rectangle
-//          }
-//        }
+      viewMap.get(timed.id).foreach { view =>
+        deferTx {
+          view match {
+            case pv: ProcView[S] if pv.isGlobal => globalView.remove(pv)
+            case _                              => viewRange -= view
+          }
+
+          if (spanCh .isSignificant) view.spanValue   = spanCh .now
+          if (trackCh.isSignificant) view.trackIndex  = trackCh.now
+
+          view match {
+            case pv: ProcView[S] if pv.isGlobal => globalView.add(pv)
+            case _ =>
+              viewRange += view
+              repaintAll()  // XXX TODO: optimize dirty rectangle
+          }
+        }
       }
 
     private def objUpdated(view: TimelineObjView[S]): Unit = {
@@ -1021,25 +1020,28 @@ object TimelineViewImpl {
                 g.clipRect(px + 1, innerY, pw - 2, innerH)
 
                 // --- sonogram ---
-                ???
-//                pv.audio.foreach { segm =>
-//                  val sonogramOpt = pv.sonogram.orElse(pv.acquireSonogram())
-//
-//                  sonogramOpt.foreach { sonogram =>
-//                    val audio   = segm.value
-//                    val srRatio = sonogram.inputSpec.sampleRate / Timeline.SampleRate
-//                    val dStart  = audio.offset - segm.span.start * srRatio
-//                    val startC  = screenToFrame(px1C) // math.max(0.0, screenToFrame(px1C))
-//                    val stopC   = screenToFrame(px2C)
-//                    val boost   = if (selected) visualBoost * gainState.factor else visualBoost
-//                    // println(s"audio.gain = ${audio.gain.toFloat}")
-//                    sonogramBoost   = (audio.gain * pv.gain).toFloat * boost
-//                    val startP  = math.max(0.0, screenToFrame(px1C - px) * srRatio + dStart)
-//                    // val stopP   = startP + (stopC - startC)
-//                    val stopP   = startP + (stopC - startC) * srRatio
-//                    sonogram.paint(startP, stopP, g, px1C, innerY, px2C - px1C, innerH, this)
-//                  }
-//                }
+                view match {
+                  case pv: ProcView[S] if pv.audio.isDefined =>
+                    val segm        = pv.audio.get
+                    val sonogramOpt = pv.sonogram.orElse(pv.acquireSonogram())
+
+                    sonogramOpt.foreach { sonogram =>
+                      val audio   = segm.value
+                      val srRatio = sonogram.inputSpec.sampleRate / Timeline.SampleRate
+                      val dStart  = audio.offset - segm.span.start * srRatio
+                      val startC  = screenToFrame(px1C) // math.max(0.0, screenToFrame(px1C))
+                      val stopC   = screenToFrame(px2C)
+                      val boost   = if (selected) visualBoost * gainState.factor else visualBoost
+                      // println(s"audio.gain = ${audio.gain.toFloat}")
+                      sonogramBoost   = (audio.gain * pv.gain).toFloat * boost
+                      val startP  = math.max(0.0, screenToFrame(px1C - px) * srRatio + dStart)
+                      // val stopP   = startP + (stopC - startC)
+                      val stopP   = startP + (stopC - startC) * srRatio
+                      sonogram.paint(startP, stopP, g, px1C, innerY, px2C - px1C, innerH, this)
+                    }
+
+                  case _ =>
+                }
 
                 // --- fades ---
                 def paintFade(curve: Curve, fw: Float, y1: Float, y2: Float, x: Float, x0: Float): Unit = {
@@ -1067,29 +1069,31 @@ object TimelineViewImpl {
                   g.draw    (shpDraw)
                 }
 
-                ???
-//                if (fadeViewMode == FadeViewMode.Curve) {
-//                  val st      = if (selected) fadeState else NoFade
-//                  val fdIn    = pv.fadeIn  // XXX TODO: continue here. add delta
-//                  val fdInFr  = fdIn.numFrames + st.deltaFadeIn
-//                  if (fdInFr > 0) {
-//                    val fw    = framesToScreen(fdInFr).toFloat
-//                    val fdC   = st.deltaFadeInCurve
-//                    val shape = if (fdC != 0f) adjustFade(fdIn.curve, fdC) else fdIn.curve
-//                    // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = $px")
-//                    paintFade(shape, fw = fw, y1 = fdIn.floor, y2 = 1f, x = px, x0 = px)
-//                  }
-//                  val fdOut   = pv.fadeOut
-//                  val fdOutFr = fdOut.numFrames + st.deltaFadeOut
-//                  if (fdOutFr > 0) {
-//                    val fw    = framesToScreen(fdOutFr).toFloat
-//                    val fdC   = st.deltaFadeOutCurve
-//                    val shape = if (fdC != 0f) adjustFade(fdOut.curve, fdC) else fdOut.curve
-//                    // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = ${px + pw - 1 - fw}")
-//                    val x0    = px + pw - 1
-//                    paintFade(shape, fw = fw, y1 = 1f, y2 = fdOut.floor, x = x0 - fw, x0 = x0)
-//                  }
-//                }
+                view match {
+                  case fv: TimelineObjView.HasFade if fadeViewMode == FadeViewMode.Curve =>
+                    val st      = if (selected) fadeState else NoFade
+                    val fdIn    = fv.fadeIn  // XXX TODO: continue here. add delta
+                    val fdInFr  = fdIn.numFrames + st.deltaFadeIn
+                    if (fdInFr > 0) {
+                      val fw    = framesToScreen(fdInFr).toFloat
+                      val fdC   = st.deltaFadeInCurve
+                      val shape = if (fdC != 0f) adjustFade(fdIn.curve, fdC) else fdIn.curve
+                      // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = $px")
+                      paintFade(shape, fw = fw, y1 = fdIn.floor, y2 = 1f, x = px, x0 = px)
+                    }
+                    val fdOut   = fv.fadeOut
+                    val fdOutFr = fdOut.numFrames + st.deltaFadeOut
+                    if (fdOutFr > 0) {
+                      val fw    = framesToScreen(fdOutFr).toFloat
+                      val fdC   = st.deltaFadeOutCurve
+                      val shape = if (fdC != 0f) adjustFade(fdOut.curve, fdC) else fdOut.curve
+                      // if (DEBUG) println(s"fadeIn. fw = $fw, shape = $shape, x = ${px + pw - 1 - fw}")
+                      val x0    = px + pw - 1
+                      paintFade(shape, fw = fw, y1 = 1f, y2 = fdOut.floor, x = x0 - fw, x0 = x0)
+                    }
+
+                  case _ =>
+                }
                 
                 g.setClip(clipOrig)
     
@@ -1100,7 +1104,10 @@ object TimelineViewImpl {
                   g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
                   // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
                   // val text  = if (view.muted) "\u23DB " + name else name
-                  val text: String = ???
+                  val text: String = view match {
+                    case mv: TimelineObjView.HasMute if mv.muted => "\u23DB " + name
+                    case _ => name
+                  }
                   val tx    = px + 4
                   val ty    = py + hndlBaseline
                   g.setColor(colrNameShadow)
@@ -1114,11 +1121,12 @@ object TimelineViewImpl {
                   g.setClip(clipOrig)
                 }
 
-                ???
-//                if (pv.muted) {
-//                  g.setColor(colrRegionBgMuted)
-//                  g.fillRoundRect(px, py, pw, ph, 5, 5)
-//                }
+                view match {
+                  case mv: TimelineObjView.HasMute if mv.muted =>
+                    g.setColor(colrRegionBgMuted)
+                    g.fillRoundRect(px, py, pw, ph, 5, 5)
+                  case _ =>
+                }
               }
             }
 
