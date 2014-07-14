@@ -54,7 +54,7 @@ object ProcView extends TimelineObjView.Factory {
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
     */
-  def apply[S <: Sys[S]](span: Expr[S, SpanLike], obj: Proc.Obj[S], context: TimelineObjView.Context[S])
+  def apply[S <: Sys[S]](timedID: S#ID, span: Expr[S, SpanLike], obj: Proc.Obj[S], context: TimelineObjView.Context[S])
                         (implicit tx: S#Tx): ProcView[S] = {
     val spanV = span.value
     import SpanLikeEx._
@@ -63,16 +63,16 @@ object ProcView extends TimelineObjView.Factory {
 
     // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
     val scans = obj.elem.peer.scans
-    val audio = scans.get(Proc.Obj.graphAudio).flatMap { scanw =>
+    val audio = scans.get(Proc.Obj.graphAudio).flatMap { scanW =>
       // println("--- has scan")
-      scanw.sources.flatMap {
+      scanW.sources.flatMap {
         case Scan.Link.Grapheme(g) =>
           // println("--- scan is linked")
           spanV match {
             case Span.HasStart(frame) =>
               // println("--- has start")
               g.segment(frame) match {
-                case Some(segm @ Grapheme.Segment.Audio(gspan, _)) /* if (gspan.start == frame) */ => Some(segm)
+                case Some(segm @ Grapheme.Segment.Audio(gSpan, _)) /* if (gspan.start == frame) */ => Some(segm)
                 // case Some(Grapheme.Segment.Audio(gspan, _audio)) =>
                 //   // println(s"--- has audio segment $gspan offset ${_audio.offset}}; proc $spanV")
                 //   // if (gspan == spanV) ... -> no, because segment will give as a Span.From(_) !
@@ -94,8 +94,6 @@ object ProcView extends TimelineObjView.Factory {
     TimelineObjViewImpl.initGainAttrs(span, obj, res)
     TimelineObjViewImpl.initMuteAttrs(span, obj, res)
     TimelineObjViewImpl.initFadeAttrs(span, obj, res)
-
-    val timedID: S#ID = ???
 
     import de.sciss.lucre.synth.expr.IdentifierSerializer
     lazy val idH = tx.newHandle(timedID)

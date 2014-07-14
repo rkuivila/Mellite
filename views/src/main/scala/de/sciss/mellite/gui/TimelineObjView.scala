@@ -44,7 +44,7 @@ object TimelineObjView {
 
     type E[~ <: Sys[~]] <: Elem[~]
 
-    def apply[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj.T[S, E], context: TimelineObjView.Context[S])
+    def apply[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Obj.T[S, E], context: TimelineObjView.Context[S])
                           (implicit tx: S#Tx): TimelineObjView[S]
   }
 

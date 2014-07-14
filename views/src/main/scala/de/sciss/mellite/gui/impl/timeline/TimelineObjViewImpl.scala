@@ -28,7 +28,7 @@ object TimelineObjViewImpl {
     val obj   = timed.value
     val tid   = obj.elem.typeID
     // getOrElse(sys.error(s"No view for type $tid"))
-    map.get(tid).fold(Generic(span, obj))(f => f(span, obj.asInstanceOf[Obj.T[S, f.E]], context))
+    map.get(tid).fold(Generic(span, obj))(f => f(timed.id, span, obj.asInstanceOf[Obj.T[S, f.E]], context))
   }
 
   private var map = Map[Int, Factory](

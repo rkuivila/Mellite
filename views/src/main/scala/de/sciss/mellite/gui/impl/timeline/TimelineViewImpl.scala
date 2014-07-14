@@ -32,7 +32,7 @@ import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.audiowidgets.TimelineModel
 import scala.swing.Swing._
 import de.sciss.desktop.{KeyStrokes, Window}
-import scala.concurrent.stm.Ref
+import scala.concurrent.stm.{TSet, Ref}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.expr.{Int => IntEx}
 import java.awt.geom.Path2D
@@ -315,6 +315,7 @@ object TimelineViewImpl {
     val selectionModel = SelectionModel[S, TimelineObjView[S]]
 
     private var viewRange = RangedSeq.empty[TimelineObjView[S], Long]
+    private val viewSet   = TSet.empty[TimelineObjView[S]]
 
     private var view: View    = _
     val disposables           = Ref(List.empty[Disposable[S#Tx]])
@@ -334,16 +335,19 @@ object TimelineViewImpl {
     def window: Window = component.peer.getClientProperty("de.sciss.mellite.Window").asInstanceOf[Window]
 
     def dispose()(implicit tx: S#Tx): Unit = {
-      disposables.swap(Nil)(tx.peer).foreach(_.dispose())
       deferTx {
-        // DocumentViewHandler.instance.remove(this)
-        val pit     = viewRange.iterator
-        viewRange   = RangedSeq.empty
-        ??? // pit.foreach(_.dispose())
-        viewMap.dispose()
-        scanMap.dispose()
+        viewRange = RangedSeq.empty
       }
+      disposables.swap(Nil)(tx.peer).foreach(_.dispose())
+      viewSet.foreach(_.dispose())(tx.peer)
+      clearSet(viewSet)
+      // these two are already included in `disposables`:
+      // viewMap.dispose()
+      // scanMap.dispose()
     }
+
+    private def clearSet[A](s: TSet[A])(implicit tx: S#Tx): Unit =
+      s.retain(_ => false)(tx.peer) // no `clear` method
 
     // ---- actions ----
 
@@ -530,6 +534,8 @@ object TimelineViewImpl {
 
       // val pv = ProcView(timed, viewMap, scanMap)
       val view = TimelineObjView(timed, this)
+      viewMap.put(timed.id, view)
+      viewSet.add(view)(tx.peer)
 
       def doAdd(): Unit = view match {
         case pv: ProcView[S] if pv.isGlobal =>
@@ -559,6 +565,7 @@ object TimelineViewImpl {
       val id = timed.id
       viewMap.get(id).foreach { view =>
         viewMap.remove(id)
+        viewSet.remove(view)(tx.peer)
         deferTx {
           view match {
             case pv: ProcView[S] if pv.isGlobal => globalView.remove(pv)
