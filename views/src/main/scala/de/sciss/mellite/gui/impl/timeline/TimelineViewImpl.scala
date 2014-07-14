@@ -300,14 +300,14 @@ object TimelineViewImpl {
   private final class Impl[S <: Sys[S]](groupH            : stm.Source[S#Tx, proc.Timeline[S]],
                                         groupEH           : stm.Source[S#Tx, Timeline.Obj[S]],
                                         // transport         : Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],
-                                        viewMap           : TimelineObjView.Map[S],
-                                        scanMap           : ProcView.ScanMap[S],
+                                        val viewMap       : TimelineObjView.Map[S],
+                                        val scanMap       : ProcView.ScanMap[S],
                                         val timelineModel : TimelineModel,
                                         // auralView         : AuralPresentation[S],
                                         globalView        : GlobalProcsView[S],
                                         transportView     : TransportView[S])
                                        (implicit val workspace: Workspace[S], val cursor: Cursor[S])
-    extends TimelineView[S] with ComponentHolder[Component] {
+    extends TimelineView[S] with ComponentHolder[Component] with TimelineObjView.Context[S] {
     impl =>
 
     import cursor.step
@@ -529,7 +529,7 @@ object TimelineViewImpl {
       // val proc = timed.value
 
       // val pv = ProcView(timed, viewMap, scanMap)
-      val view = TimelineObjView(timed)
+      val view = TimelineObjView(timed, this)
 
       def doAdd(): Unit = view match {
         case pv: ProcView[S] if pv.isGlobal =>

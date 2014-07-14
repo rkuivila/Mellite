@@ -5,8 +5,10 @@ import de.sciss.lucre.event.Sys
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IdentifierMap
+import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc.{Timeline, FadeSpec, Obj, Elem}
+import impl.timeline.{TimelineObjViewImpl => Impl}
 
 import scala.language.higherKinds
 import scala.language.implicitConversions
@@ -28,6 +30,13 @@ object TimelineObjView {
 
   type Map[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, TimelineObjView[S]]
 
+  trait Context[S <: Sys[S]] {
+    /** A map from `TimedProc` ids to their views. This is used to establish scan links. */
+    def viewMap: Map[S]
+    /** A map from `Scan` ids to their keys and a handle on the timed-proc's id. */
+    def scanMap: ProcView.ScanMap[S]
+  }
+
   trait Factory {
     //    def prefix: String
     //    def icon  : Icon
@@ -35,14 +44,16 @@ object TimelineObjView {
 
     type E[~ <: Sys[~]] <: Elem[~]
 
-    def apply[S <: Sys[S]](obj: Obj.T[S, E])(implicit tx: S#Tx): TimelineObjView[S]
+    def apply[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj.T[S, E], context: TimelineObjView.Context[S])
+                          (implicit tx: S#Tx): TimelineObjView[S]
   }
 
-  def addFactory(f: Factory): Unit = ??? // Impl.addFactory(f)
+  def addFactory(f: Factory): Unit = Impl.addFactory(f)
 
-  def factories: Iterable[Factory] = ??? // Impl.factories
+  def factories: Iterable[Factory] = Impl.factories
 
-  def apply[S <: Sys[S]](timed: Timeline.Timed[S])(implicit tx: S#Tx): TimelineObjView[S] = ??? // Impl(obj)
+  def apply[S <: Sys[S]](timed: Timeline.Timed[S], context: Context[S])(implicit tx: S#Tx): TimelineObjView[S] =
+    Impl(timed, context)
 
   // ---- specialization ----
 

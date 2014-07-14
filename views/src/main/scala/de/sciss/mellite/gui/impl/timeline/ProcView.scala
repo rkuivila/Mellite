@@ -34,8 +34,6 @@ object ProcView extends TimelineObjView.Factory {
 
   type E[S <: Sys[S]] = Proc.Elem[S]
 
-  def apply[S <: Sys[S]](obj: Obj.T[S, E])(implicit tx: S#Tx): TimelineObjView[S] = ???
-
   type LinkMap[S <: Sys[S]] = Map[String, Vec[ProcView.Link[S]]]
   type ProcMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcView[S]]
   type ScanMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
@@ -54,24 +52,16 @@ object ProcView extends TimelineObjView.Factory {
 
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
-    *
-    * @param timed    the proc to create the view for
-    * @param viewMap  a map from `TimedProc` ids to their views. This is used to establish scan links.
-    * @param scanMap  a map from `Scan` ids to their keys and a handle on the timed-proc's id.
     */
-  def apply[S <: Sys[S]](x: Int, timed  : TimedProc[S],
-                         viewMap: TimelineObjView.Map[S],
-                         scanMap: ScanMap  [S])
+  def apply[S <: Sys[S]](span: Expr[S, SpanLike], obj: Proc.Obj[S], context: TimelineObjView.Context[S])
                         (implicit tx: S#Tx): ProcView[S] = {
-    val span  = timed.span
-    val proc  = timed.value
     val spanV = span.value
     import SpanLikeEx._
     // println("--- scan keys:")
     // proc.scans.keys.foreach(println)
 
     // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
-    val scans = proc.elem.peer.scans
+    val scans = obj.elem.peer.scans
     val audio = scans.get(Proc.Obj.graphAudio).flatMap { scanw =>
       // println("--- has scan")
       scanw.sources.flatMap {
@@ -94,23 +84,21 @@ object ProcView extends TimelineObjView.Factory {
       } .toList.headOption
     }
 
-    val attr    = proc.attr
-
-    val trackY  = attr.expr[Int     ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
-    val trackH  = attr.expr[Int     ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
-    val name    = attr.expr[String  ](ObjKeys.attrName   ).map(_.value)
-    val mute    = attr.expr[Boolean ](ObjKeys.attrMute).exists(_.value)
-    val fadeIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-    val fadeOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
-    val gain    = attr.expr[Double  ](ObjKeys.attrGain   ).fold(1.0)(_.value)
+    val attr    = obj.attr
     val bus     = attr.expr[Int     ](ObjKeys.attrBus    ).map(_.value)
+    val res = new Impl(span = tx.newHandle(span), obj = tx.newHandle(obj), audio = audio, busOption = bus)
 
-    val res = new Impl(span = tx.newHandle(span), obj = tx.newHandle(proc),
-      spanValue = spanV, trackIndex = trackY , trackHeight = trackH, nameOption = name, muted = mute, audio = audio,
-      fadeIn = fadeIn, fadeOut = fadeOut, gain = gain, busOption = bus)
+    TimelineObjViewImpl.initAttrs    (span, obj, res)
+    TimelineObjViewImpl.initGainAttrs(span, obj, res)
+    TimelineObjViewImpl.initMuteAttrs(span, obj, res)
+    TimelineObjViewImpl.initFadeAttrs(span, obj, res)
+
+    val timedID: S#ID = ???
 
     import de.sciss.lucre.synth.expr.IdentifierSerializer
-    lazy val idH = tx.newHandle(timed.id)
+    lazy val idH = tx.newHandle(timedID)
+
+    import context.{scanMap, viewMap}
 
     scans.iterator.foreach { case (key, scan) =>
       def findLinks(inp: Boolean): Unit = {
@@ -121,7 +109,7 @@ object ProcView extends TimelineObjView.Factory {
             val thatID = thatIdH()
             viewMap.get(thatID).foreach {
               case thatView: ProcView[S] =>
-                if (DEBUG) println(s"PV ${timed.id} add link from $key to $thatID, $thatKey")
+                if (DEBUG) println(s"PV $timedID add link from $key to $thatID, $thatKey")
                 if (inp) {
                   res     .addInput (key    , thatView, thatKey)
                   thatView.addOutput(thatKey, res     , key    )
@@ -136,12 +124,12 @@ object ProcView extends TimelineObjView.Factory {
           case other =>
             if (DEBUG) other match {
               case Scan.Link.Scan(peer) =>
-                println(s"PV ${timed.id} missing link from $key to scan $peer")
+                println(s"PV $timedID missing link from $key to scan $peer")
               case _ =>
             }
         }
       }
-      if (DEBUG) println(s"PV ${timed.id} add scan ${scan.id}, $key")
+      if (DEBUG) println(s"PV $timedID add scan ${scan.id}, $key")
       scanMap.put(scan.id, key -> idH)
       findLinks(inp = true )
       findLinks(inp = false)
@@ -153,19 +141,20 @@ object ProcView extends TimelineObjView.Factory {
 
   private final class Impl[S <: Sys[S]](val span: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
-                                        var spanValue      : SpanLike,
-                                        var trackIndex : Int,
-                                        var trackHeight: Int,
-                                        var nameOption: Option[String],
-                                        var muted     : Boolean,
                                         var audio     : Option[Grapheme.Segment.Audio],
-                                        var fadeIn    : FadeSpec,
-                                        var fadeOut   : FadeSpec,
-                                        var gain      : Double,
                                         var busOption : Option[Int])
     extends ProcView[S] { self =>
 
     override def toString = s"ProcView($name, $spanValue, $audio)"
+
+    var trackIndex  : Int             = _
+    var trackHeight : Int             = _
+    var nameOption  : Option[String]  = _
+    var spanValue   : SpanLike        = _
+    var gain        : Double          = _
+    var muted       : Boolean         = _
+    var fadeIn      : FadeSpec        = _
+    var fadeOut     : FadeSpec        = _
 
     def debugString =
       s"ProcView(span = $spanValue, trackIndex = $trackIndex, nameOption = $nameOption, muted = $muted, audio = $audio, " +
