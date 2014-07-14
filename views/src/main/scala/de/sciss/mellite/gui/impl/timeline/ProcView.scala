@@ -16,6 +16,7 @@ package gui
 package impl
 package timeline
 
+import de.sciss.lucre.event.Sys
 import de.sciss.synth.proc.{ObjKeys, Obj, FadeSpec, Grapheme, Scan, Proc, TimedProc}
 import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
@@ -26,10 +27,15 @@ import scala.util.control.NonFatal
 import de.sciss.file._
 import de.sciss.lucre.stm.IdentifierMap
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 
-object ProcView {
+object ProcView extends TimelineObjView.Factory {
+  def typeID: Int = Proc.typeID
+
+  type E[S <: Sys[S]] = Proc.Elem[S]
+
+  def apply[S <: Sys[S]](obj: Obj.T[S, E])(implicit tx: S#Tx): TimelineObjView[S] = ???
+
   type LinkMap[S <: Sys[S]] = Map[String, Vec[ProcView.Link[S]]]
   type ProcMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcView[S]]
   type ScanMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
