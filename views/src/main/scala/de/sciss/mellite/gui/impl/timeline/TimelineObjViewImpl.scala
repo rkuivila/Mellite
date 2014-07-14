@@ -81,6 +81,8 @@ object TimelineObjViewImpl {
       var trackHeight : Int = _
       var nameOption  : Option[String] = _
       var spanValue   : SpanLike = _
+
+      def dispose()(implicit tx: S#Tx) = ()
     }
   }
 }

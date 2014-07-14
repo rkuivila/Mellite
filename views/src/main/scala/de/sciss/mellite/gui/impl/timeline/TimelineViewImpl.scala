@@ -556,19 +556,16 @@ object TimelineViewImpl {
 
     private def removeObj1(span: SpanLike, timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       logT(s"removeProcProc($span, $timed)")
-      viewMap.get(timed.id).foreach { pv =>
-        ???
-//        pv.disposeTx(timed, viewMap, scanMap)
-//        deferTx {
-//          if (pv.isGlobal)
-//            globalView.remove(pv)
-//          else
-//            procViews -= pv
-//
-//          pv.disposeGUI()
-//
-//          if (!pv.isGlobal) repaintAll() // XXX TODO: optimize dirty rectangle
-//        }
+      val id = timed.id
+      viewMap.get(id).foreach { view =>
+        viewMap.remove(id)
+        deferTx {
+          view match {
+            case pv: ProcView[S] if pv.isGlobal => globalView.remove(pv)
+            case _ => repaintAll() // XXX TODO: optimize dirty rectangle
+          }
+        }
+        view.dispose()
       }
     }
 

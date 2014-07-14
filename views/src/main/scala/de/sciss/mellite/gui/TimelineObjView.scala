@@ -4,7 +4,7 @@ package gui
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.IdentifierMap
+import de.sciss.lucre.stm.{Disposable, IdentifierMap}
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc.{Timeline, FadeSpec, Obj, Elem}
@@ -73,7 +73,7 @@ object TimelineObjView {
     var fadeOut: FadeSpec
   }
 }
-trait TimelineObjView[S <: Sys[S]] {
+trait TimelineObjView[S <: Sys[S]] extends Disposable[S#Tx] {
   /** The proc's name or a place holder name if no name is set. */
   //def name: String
 

@@ -28,6 +28,7 @@ import de.sciss.file._
 import de.sciss.lucre.stm.IdentifierMap
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.lucre.swing.deferTx
 
 object ProcView extends TimelineObjView.Factory {
   def typeID: Int = Proc.typeID
@@ -86,7 +87,8 @@ object ProcView extends TimelineObjView.Factory {
 
     val attr    = obj.attr
     val bus     = attr.expr[Int     ](ObjKeys.attrBus    ).map(_.value)
-    val res = new Impl(span = tx.newHandle(span), obj = tx.newHandle(obj), audio = audio, busOption = bus)
+    val res = new Impl(span = tx.newHandle(span), obj = tx.newHandle(obj), audio = audio, busOption = bus,
+      context = context)
 
     TimelineObjViewImpl.initAttrs    (span, obj, res)
     TimelineObjViewImpl.initGainAttrs(span, obj, res)
@@ -142,7 +144,7 @@ object ProcView extends TimelineObjView.Factory {
   private final class Impl[S <: Sys[S]](val span: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
                                         var audio     : Option[Grapheme.Segment.Audio],
-                                        var busOption : Option[Int])
+                                        var busOption : Option[Int], context: TimelineObjView.Context[S])
     extends ProcView[S] { self =>
 
     override def toString = s"ProcView($name, $spanValue, $audio)"
@@ -195,17 +197,17 @@ object ProcView extends TimelineObjView.Factory {
       sonogram
     }
 
-    def disposeTx(timed: TimedProc[S],
-                  procMap: ProcMap[S],
-                  scanMap: ScanMap[S])(implicit tx: S#Tx): Unit = {
-      procMap.remove(timed.id)
-      val proc = timed.value.elem.peer
+    def dispose()(implicit tx: S#Tx): Unit = {
+      // procMap.remove(timed.id)
+      val proc  = obj().elem.peer
+      // val proc = timed.value.elem.peer
       proc.scans.iterator.foreach { case (_, scan) =>
-        scanMap.remove(scan.id)
+        context.scanMap.remove(scan.id)
       }
+      deferTx(disposeGUI())
     }
 
-    def disposeGUI(): Unit = {
+    private def disposeGUI(): Unit = {
       releaseSonogram()
 
       def removeLinks(inp: Boolean): Unit = {
@@ -297,12 +299,6 @@ trait ProcView[S <: Sys[S]]
 
   /** Attempts to acquire a sonogram view. Updates the `sono` variable if successful. */
   def acquireSonogram(): Option[SonoOverview]
-
-  def disposeTx(timed: TimedProc[S],
-                procMap: ProcMap[S],
-                scanMap: ScanMap[S])(implicit tx: S#Tx): Unit
-
-  def disposeGUI(): Unit
 
   def debugString: String
 }
