@@ -142,46 +142,38 @@ object TimelineViewImpl {
       }
     }
 
-    def muteChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
+    def muteChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
       val muted   = attr.expr[Boolean](ObjKeys.attrMute).exists(_.value)
       view.objMuteChanged(timed, muted)
     }
 
-    def nameChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
+    def nameChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
       val nameOpt = attr.expr[String](ObjKeys.attrName).map(_.value)
       view.objNameChanged(timed, nameOpt)
     }
 
-    def gainChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
+    def gainChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr  = timed.value.attr
       val gain  = attr.expr[Double](ObjKeys.attrGain).fold(1.0)(_.value)
       view.objGainChanged(timed, gain)
     }
 
-    def busChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
+    def busChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
       val busOpt  = attr.expr[Int](ObjKeys.attrBus).map(_.value)
       view.procBusChanged(timed, busOpt)
     }
 
-    def fadeChanged(timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
+    def fadeChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
       val fadeIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
       val fadeOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
       view.objFadeChanged(timed, fadeIn, fadeOut)
     }
 
-    def attrChanged(timed: BiGroup.TimedElem[S, Obj[S]], name: String)(implicit tx: S#Tx): Unit = {
-      timed.value match {
-        case Proc.Obj(tl) =>
-          val timed1 = timed.asInstanceOf[TimedProc[S]]
-          attrChanged1(timed1, name)
-      }
-    }
-
-    def attrChanged1(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit =
+    def attrChanged(timed: Timeline.Timed[S], name: String)(implicit tx: S#Tx): Unit =
       name match {
         case ObjKeys.attrMute  => muteChanged(timed)
         case ObjKeys.attrFadeIn | ObjKeys.attrFadeOut => fadeChanged(timed)
@@ -552,15 +544,6 @@ object TimelineViewImpl {
     }
 
     def removeObj(span: SpanLike, timed: BiGroup.TimedElem[S, Obj[S]])(implicit tx: S#Tx): Unit = {
-      timed.value match {
-        case Proc.Obj(tl) =>
-          val timed1 = timed.asInstanceOf[TimedProc[S]] // XXX TODO
-          removeObj1(span, timed1)
-        case _ =>
-      }
-    }
-
-    private def removeObj1(span: SpanLike, timed: TimedProc[S])(implicit tx: S#Tx): Unit = {
       logT(s"removeProcProc($span, $timed)")
       val id = timed.id
       viewMap.get(id).foreach { view =>
@@ -576,18 +559,10 @@ object TimelineViewImpl {
       }
     }
 
-    def objMoved(timed: BiGroup.TimedElem[S, Obj[S]], spanCh: Change[SpanLike], trackCh: Change[Int])
-                 (implicit tx: S#Tx): Unit = {
-      timed.value match {
-        case Proc.Obj(tl) =>
-          val timed1 = timed.asInstanceOf[TimedProc[S]] // XXX TODO
-          objMoved1(timed1, spanCh, trackCh)
-      }
-    }
-
     // insignificant changes are ignored, therefore one can just move the span without the track
     // by using trackCh = Change(0,0), and vice versa
-    private def objMoved1(timed: TimedProc[S], spanCh: Change[SpanLike], trackCh: Change[Int])(implicit tx: S#Tx): Unit =
+    def objMoved(timed: BiGroup.TimedElem[S, Obj[S]], spanCh: Change[SpanLike], trackCh: Change[Int])
+                 (implicit tx: S#Tx): Unit =
       viewMap.get(timed.id).foreach { view =>
         deferTx {
           view match {
@@ -614,7 +589,7 @@ object TimelineViewImpl {
       repaintAll() // XXX TODO: optimize dirty rectangle
     }
 
-    def objMuteChanged(timed: TimedProc[S], newMute: Boolean)(implicit tx: S#Tx): Unit = {
+    def objMuteChanged(timed: Timeline.Timed[S], newMute: Boolean)(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"procMuteChanged(newMute = $newMute, view = $pvo")
       pvo.foreach {
@@ -628,7 +603,7 @@ object TimelineViewImpl {
       }
     }
 
-    def objNameChanged(timed: TimedProc[S], newName: Option[String])(implicit tx: S#Tx): Unit = {
+    def objNameChanged(timed: Timeline.Timed[S], newName: Option[String])(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"procNameChanged(newName = $newName, view = $pvo")
       pvo.foreach { pv =>
@@ -639,7 +614,7 @@ object TimelineViewImpl {
       }
     }
 
-    def procBusChanged(timed: TimedProc[S], newBus: Option[Int])(implicit tx: S#Tx): Unit = {
+    def procBusChanged(timed: Timeline.Timed[S], newBus: Option[Int])(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"procBusChanged(newBus = $newBus, view = $pvo")
       pvo.foreach {
@@ -653,7 +628,7 @@ object TimelineViewImpl {
       }
     }
 
-    def objGainChanged(timed: TimedProc[S], newGain: Double)(implicit tx: S#Tx): Unit = {
+    def objGainChanged(timed: Timeline.Timed[S], newGain: Double)(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"procGainChanged(newGain = $newGain, view = $pvo")
       pvo.foreach {
@@ -667,7 +642,7 @@ object TimelineViewImpl {
       }
     }
 
-    def objFadeChanged(timed: TimedProc[S], newFadeIn: FadeSpec, newFadeOut: FadeSpec)(implicit tx: S#Tx): Unit = {
+    def objFadeChanged(timed: Timeline.Timed[S], newFadeIn: FadeSpec, newFadeOut: FadeSpec)(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"procFadeChanged(newFadeIn = $newFadeIn, newFadeOut = $newFadeOut, view = $pvo")
       pvo.foreach {
