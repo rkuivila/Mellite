@@ -16,10 +16,10 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Obj, ExprImplicits}
+import de.sciss.synth.proc.{IntElem, Obj, ExprImplicits}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.{Expr, Int => IntEx}
 import de.sciss.lucre.synth.Sys
 
 final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
@@ -66,13 +66,11 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       //   case _ =>
       // }
 
-      // lucre.event.showLog = true
-      // lucre.bitemp.impl.BiGroupImpl.showLog = true
-
-      for (Expr.Var(t) <- attr.expr[Int](TimelineObjView.attrTrackIndex)) t.transform(_ + deltaTrack)
-
-      // lucre.event.showLog = false
-      // lucre.bitemp.impl.BiGroupImpl.showLog = false
+      attr.expr[Int](TimelineObjView.attrTrackIndex) match {
+        case Some(Expr.Var(t))  => t.transform(_ + deltaTrack)
+        case _ =>
+          attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(IntEx.newConst(deltaTrack)))))
+      }
 
       // val trackNew  = math.max(0, trackOld + deltaTrack)
       // attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(trackNew)))
