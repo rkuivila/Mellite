@@ -27,7 +27,8 @@ object PrefsGUI {
     gg
   }
 
-  def pathField(prefs: Preferences.Entry[File], default: => File, title: String): Component = {
+  def pathField(prefs: Preferences.Entry[File], default: => File, title: String,
+                accept: File => Option[File] = Some(_)): Component = {
     def fixDefault: File = default  // XXX TODO: Scalac bug?
     val tx = new TextField(prefs.getOrElse(default).path, 16)
     tx.listenTo(tx)
@@ -38,7 +39,7 @@ object PrefsGUI {
     }
     val bt = Button("…") {
       val dlg = FileDialog.open(init = prefs.get, title = title)
-      dlg.show(None).foreach { f =>
+      dlg.show(None).flatMap(accept).foreach { f =>
         tx.text = f.path
         prefs.put(f)
       }

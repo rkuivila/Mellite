@@ -16,7 +16,7 @@ package mellite
 package gui
 
 import de.sciss.desktop.{Menu, WindowHandler, Window}
-import scala.swing.{CheckBox, Button, FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
+import scala.swing.{Alignment, CheckBox, Button, FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
 import de.sciss.synth.proc.{SensorSystem, AuralSystem}
 import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
 import de.sciss.synth.{proc, addToTail, SynthDef, addToHead, AudioBus}
@@ -27,7 +27,6 @@ import collection.breakOut
 import javax.swing.border.Border
 import de.sciss.lucre.synth.{Txn, Server}
 import de.sciss.file._
-import de.sciss.mellite.gui.impl.WindowImpl
 import scala.concurrent.stm.atomic
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.stm.TxnLike
@@ -53,6 +52,12 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   }
 
   locally {
+    lbSensors.horizontalAlignment = Alignment.Trailing
+    lbAudio  .horizontalAlignment = Alignment.Trailing
+    ggSensors.focusable = false
+    // this is so it looks the same as the audio-boot button on OS X
+    ggSensors.peer.putClientProperty("JButton.buttonType", "bevel")
+    ggSensors.peer.putClientProperty("JComponent.sizeVariant", "small")
     val p1    = lbSensors.preferredSize
     val p2    = lbAudio  .preferredSize
     p1.width  = math.max(p1.width, p2.width)
@@ -107,6 +112,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   boxPane.contents += new BoxPanel(Orientation.Horizontal) {
     contents += HStrut(4)
     contents += lbAudio
+    contents += HStrut(2)
     contents += audioServerPane
     contents += HGlue
   }
@@ -440,4 +446,6 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
   pack()
   front()
+
+  if (Prefs.autoBoot.getOrElse(false)) startAuralSystem()
 }

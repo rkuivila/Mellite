@@ -14,13 +14,14 @@
 package de.sciss
 package mellite.gui
 
-import de.sciss.desktop.{OptionPane, KeyStrokes}
+import de.sciss.desktop.{Desktop, OptionPane, KeyStrokes}
 import de.sciss.swingplus.{GroupPanel, Separator}
 import javax.swing.UIManager
 import scala.swing.Action
 import scala.swing.event.Key
 import de.sciss.mellite.Prefs
 import de.sciss.mellite.gui.impl.PrefsGUI
+import de.sciss.file._
 
 object ActionPreferences extends Action("Preferences...") {
   import KeyStrokes._
@@ -44,7 +45,16 @@ object ActionPreferences extends Action("Preferences...") {
 
     val lbSuperCollider = label("SuperCollider (scsynth)")
     val ggSuperCollider = pathField(Prefs.superCollider, Prefs.defaultSuperCollider,
-      title = "SuperCollider Server Location (scsynth)")
+      title = "SuperCollider Server Location (scsynth)", accept = { f =>
+        val f2 = if (Desktop.isMac && f.ext == "app") {
+          val f1 = f / "Contents" / "Resources" / "scsynth"
+          if (f1.exists) f1 else f
+        } else f
+        Some(f2)
+      })
+
+    val lbAutoBoot      = label("Automatic Boot")
+    val ggAutoBoot      = checkBox(Prefs.autoBoot, default = false)
 
     val lbAudioDevice   = label("Audio Device")
     val ggAudioDevice   = textField(Prefs.audioDevice   , Prefs.defaultAudioDevice    )
@@ -70,14 +80,15 @@ object ActionPreferences extends Action("Preferences...") {
     val box = new GroupPanel {
       // val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
       horizontal = Par(sepAudio, sepSensor, Seq(
-        Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAudioDevice, lbNumOutputs, lbNumPrivate, lbHeadphones, lbSensorProtocol, lbSensorPort),
-        Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAudioDevice, ggNumOutputs, ggNumPrivate, ggHeadphones, ggSensorProtocol, ggSensorPort)
+        Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAutoBoot, lbAudioDevice, lbNumOutputs, lbNumPrivate, lbHeadphones, lbSensorProtocol, lbSensorPort),
+        Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAutoBoot, ggAudioDevice, ggNumOutputs, ggNumPrivate, ggHeadphones, ggSensorProtocol, ggSensorPort)
       ))
       vertical = Seq(
         Par(Baseline)(lbLookAndFeel     , ggLookAndFeel     ),
         Par(Baseline)(lbNativeDecoration, ggNativeDecoration),
         sepAudio,
         Par(Baseline)(lbSuperCollider   , ggSuperCollider   ),
+        Par(Baseline)(lbAutoBoot        , ggAutoBoot        ),
         Par(Baseline)(lbAudioDevice     , ggAudioDevice     ),
         Par(Baseline)(lbNumOutputs      , ggNumOutputs      ),
         Par(Baseline)(lbNumPrivate      , ggNumPrivate      ),

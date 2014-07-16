@@ -59,11 +59,12 @@ object Prefs {
   final val defaultAudioNumPrivate  = 512
   final val defaultHeadphonesBus    = 0
 
-  def superCollider  : Entry[File  ] = userPrefs("supercollider"    )
-  def audioDevice    : Entry[String] = userPrefs("audio-device"     )
-  def audioNumOutputs: Entry[Int   ] = userPrefs("audio-num-outputs")
-  def audioNumPrivate: Entry[Int   ] = userPrefs("audio-num-private")
-  def headphonesBus  : Entry[Int   ] = userPrefs("headphones-bus"   )
+  def superCollider  : Entry[File   ] = userPrefs("supercollider"    )
+  def audioDevice    : Entry[String ] = userPrefs("audio-device"     )
+  def audioNumOutputs: Entry[Int    ] = userPrefs("audio-num-outputs")
+  def audioNumPrivate: Entry[Int    ] = userPrefs("audio-num-private")
+  def headphonesBus  : Entry[Int    ] = userPrefs("headphones-bus"   )
+  def autoBoot       : Entry[Boolean] = userPrefs("auto-boot"        )
 
   // ---- sensor ----
 
