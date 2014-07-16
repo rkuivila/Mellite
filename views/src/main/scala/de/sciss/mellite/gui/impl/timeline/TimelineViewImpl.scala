@@ -1116,7 +1116,7 @@ object TimelineViewImpl {
                   // possible unicodes: 2327 23DB 24DC 25C7 2715 29BB
                   // val text  = if (view.muted) "\u23DB " + name else name
                   val text: String = view match {
-                    case mv: TimelineObjView.HasMute if mv.muted => "\u23DB " + name
+                    case mv: TimelineObjView.HasMute if mv.muted => "\u25C7 " + name
                     case _ => name
                   }
                   val tx    = px + 4

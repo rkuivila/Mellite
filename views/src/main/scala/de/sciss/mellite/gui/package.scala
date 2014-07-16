@@ -13,6 +13,8 @@
 
 package de.sciss.mellite
 
+import de.sciss.mellite
+
 package object gui {
   private def wordWrap(s: String, margin: Int = 80): String = {
     if (s == null) return "" // fuck java
@@ -35,4 +37,8 @@ package object gui {
     e.getClass.toString + " :\n" + wordWrap(e.getMessage) + "\n" +
       e.getStackTrace.take(10).map("   at " + _).mkString("\n")
   }
+
+  //  def initTypes(): Unit = {
+  //    mellite.initTypes()
+  //  }
 }

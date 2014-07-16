@@ -33,7 +33,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   // lucre.confluent.showLog = true
   // proc.showLog            = true
   // showLog                 = true
-  showTimelineLog         = true
+  // showTimelineLog         = true
   // proc.showAuralLog       = true
   // proc.showTransportLog   = true
 

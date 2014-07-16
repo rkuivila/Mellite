@@ -5,11 +5,12 @@ package impl.timeline
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Source
-import de.sciss.mellite.gui.TimelineObjView.Factory
+import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
 import de.sciss.span.SpanLike
-import de.sciss.synth.proc.{FadeSpec, Timeline, StringElem, ObjKeys, Proc, Obj}
+import de.sciss.synth.proc.{FadeSpec, Timeline, ObjKeys, Proc, Obj}
 import de.sciss.lucre.expr.{String => StringEx, Expr}
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.mellite.{Action => _Action}
 
 object TimelineObjViewImpl {
   private val sync = new AnyRef
@@ -22,7 +23,7 @@ object TimelineObjViewImpl {
 
   def factories: Iterable[Factory] = map.values
 
-  def apply[S <: Sys[S]](timed: Timeline.Timed[S], context: TimelineObjView.Context[S])
+  def apply[S <: Sys[S]](timed: Timeline.Timed[S], context: Context[S])
                         (implicit tx: S#Tx): TimelineObjView[S] = {
     val span  = timed.span
     val obj   = timed.value
@@ -32,7 +33,8 @@ object TimelineObjViewImpl {
   }
 
   private var map = Map[Int, Factory](
-    Proc.typeID -> ProcView
+    Proc  .typeID -> ProcView,
+    Action.typeID -> Action
   )
 
   // -------- Generic --------
@@ -65,22 +67,48 @@ object TimelineObjViewImpl {
     view.fadeOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
   }
 
+  trait BasicImpl[S <: Sys[S]] extends TimelineObjView[S] {
+    var trackIndex  : Int = _
+    var trackHeight : Int = _
+    var nameOption  : Option[String] = _
+    var spanValue   : SpanLike = _
+  }
+
+  import SpanLikeEx.serializer
 
   object Generic {
     def apply[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): TimelineObjView[S] = {
-      import SpanLikeEx.serializer
       val res = new Generic.Impl(tx.newHandle(span), tx.newHandle(obj))
       initAttrs(span, obj, res)
       res
     }
+    
+    private final class Impl[S <: Sys[S]](val span: Source[S#Tx, Expr[S, SpanLike]], val obj: stm.Source[S#Tx, Obj[S]])
+      extends BasicImpl[S] {
+
+      def dispose()(implicit tx: S#Tx) = ()
+    }
+  }
+
+  // ---- Action ----
+
+  object Action extends TimelineObjView.Factory {
+    def typeID: Int = _Action.typeID
+
+    type E[S <: Sys[S]] = _Action.Elem[S]
+
+    def apply[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: _Action.Obj[S], context: Context[S])
+                          (implicit tx: S#Tx): TimelineObjView[S] = {
+      val res = new Action.Impl(tx.newHandle(span), tx.newHandle(obj))
+      initAttrs    (span, obj, res)
+      initMuteAttrs(span, obj, res)
+      res
+    }
 
     private final class Impl[S <: Sys[S]](val span: Source[S#Tx, Expr[S, SpanLike]], val obj: stm.Source[S#Tx, Obj[S]])
-      extends TimelineObjView[S] {
+      extends BasicImpl[S] with TimelineObjView.HasMute {
 
-      var trackIndex  : Int = _
-      var trackHeight : Int = _
-      var nameOption  : Option[String] = _
-      var spanValue   : SpanLike = _
+      var muted: Boolean = _
 
       def dispose()(implicit tx: S#Tx) = ()
     }
