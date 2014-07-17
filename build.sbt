@@ -87,7 +87,7 @@ lazy val views = Project(
     description := fullDescr,
     libraryDependencies ++= Seq(
       "de.sciss" %% "scalacolliderswing-interpreter"  % "1.16.0", // REPL
-      "de.sciss" %% "lucreswing"                      % "0.4.0",  // reactive Swing components
+      "de.sciss" %% "lucreswing"                      % "0.4.1",  // reactive Swing components
       "de.sciss" %% "audiowidgets-app"                % "1.6.2",  // audio application widgets
       "de.sciss" %% "desktop-mac"                     % "0.5.4",  // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss" %% "sonogramoverview"                % "1.7.1",  // sonogram component
