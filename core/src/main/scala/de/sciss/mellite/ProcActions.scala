@@ -37,7 +37,7 @@ object ProcActions {
   final case class Resize(deltaStart: Long, deltaStop: Long)
 
   /** Queries the audio region's grapheme segment start and audio element. */
-  def getAudioRegion[S <: Sys[S]](/* span: Expr[S, SpanLike], */ proc: Obj.T[S, Proc.Elem])
+  def getAudioRegion[S <: Sys[S]](/* span: Expr[S, SpanLike], */ proc: Proc.Obj[S])
                                  (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme.Expr.Audio[S])] = {
     for {
       scan <- proc.elem.peer.scans.get(Proc.Obj.graphAudio)
@@ -124,9 +124,9 @@ object ProcActions {
           val scanW       = pNew.scans.add(Proc.Obj.graphAudio)
           scanW.sources.toList.foreach(scanW.removeSource)
           val grw         = Grapheme.Modifiable[S](audio.spec.numChannels)
-          val gStart      = LongEx.newVar(time.value)
-          val audioOffset = LongEx.newVar(audio.offset.value) // XXX TODO
-          val audioGain   = DoubleEx.newVar(audio.gain.value)
+          val gStart      = LongEx  .newVar(time        .value)
+          val audioOffset = LongEx  .newVar(audio.offset.value) // XXX TODO
+          val audioGain   = DoubleEx.newVar(audio.gain  .value)
           val gElem       = Grapheme.Expr.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
           val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
           grw.add(bi)
@@ -152,7 +152,7 @@ object ProcActions {
     res
   }
 
-  def setGain[S <: Sys[S]](proc: Obj.T[S, Proc.Elem], gain: Double)(implicit tx: S#Tx): Unit = {
+  def setGain[S <: Sys[S]](proc: Proc.Obj[S], gain: Double)(implicit tx: S#Tx): Unit = {
     val attr  = proc.attr
     val imp   = ExprImplicits[S]
     import imp._
@@ -201,7 +201,7 @@ object ProcActions {
     }
   }
 
-  def setSynthGraph[S <: Sys[S]](procs: Iterable[Obj.T[S, Proc.Elem]], codeElem: Obj.T[S, Code.Elem])
+  def setSynthGraph[S <: Sys[S]](procs: Iterable[Proc.Obj[S]], codeElem: Code.Obj[S])
                                 (implicit tx: S#Tx): Boolean = {
     val code = codeElem.elem.peer.value
     code match {
@@ -212,7 +212,7 @@ object ProcActions {
           val scanKeys: Set[String] = sg.sources.collect {
             case proc.graph.scan.In   (key)    => key
             case proc.graph.scan.Out  (key, _) => key
-            case proc.graph.scan.InFix(key, _) => key
+            // case proc.graph.scan.InFix(key, _) => key
           } (breakOut)
           // sg.sources.foreach(println)
           if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
@@ -262,7 +262,7 @@ object ProcActions {
       grapheme  : Grapheme.Expr.Audio[S],
       gOffset   : Long,
       bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
-     (implicit tx: S#Tx): (Expr[S, Span], Obj.T[S, Proc.Elem]) = {
+     (implicit tx: S#Tx): (Expr[S, Span], Proc.Obj[S]) = {
 
     val imp = ExprImplicits[S]
     import imp._
@@ -302,7 +302,7 @@ object ProcActions {
       group     : TimelineMod[S],
       name      : String,
       bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
-     (implicit tx: S#Tx): Obj.T[S, Proc.Elem] = {
+     (implicit tx: S#Tx): Proc.Obj[S] = {
 
     val imp = ExprImplicits[S]
     import imp._
@@ -330,7 +330,7 @@ object ProcActions {
     source.removeSink(Scan.Link.Scan(sink))
   }
 
-  def linkOrUnlink[S <: Sys[S]](out: Obj.T[S, Proc.Elem], in: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): Boolean = {
+  def linkOrUnlink[S <: Sys[S]](out: Proc.Obj[S], in: Proc.Obj[S])(implicit tx: S#Tx): Boolean = {
     val outsIt  = out.elem.peer.scans.iterator // .toList
     val insSeq0 = in .elem.peer.scans.iterator.toIndexedSeq
 
