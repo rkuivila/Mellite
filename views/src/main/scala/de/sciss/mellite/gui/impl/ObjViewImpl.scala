@@ -459,7 +459,7 @@ object ObjViewImpl {
         query.map { case (directory, _name) =>
           cursor.step { implicit tx =>
             // ActionArtifactLocation.create(directory, _name, targetFolder)
-            val peer  = _ArtifactLocation.Modifiable[S](directory)
+            val peer  = _ArtifactLocation[S](directory)
             val elem  = _ArtifactLocation.Elem(peer)
             val obj   = Obj(elem)
             obj.attr.name = _name

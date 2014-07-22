@@ -115,7 +115,7 @@ object ActionArtifactLocation {
 
   def create[S <: Sys[S]](directory: File, name: String, parent: Folder[S])
                          (implicit tx: S#Tx): Obj.T[S, ArtifactLocation.Elem] = {
-    val peer  = ArtifactLocation.Modifiable[S](directory)
+    val peer  = ArtifactLocation[S](directory)
     val elem  = ArtifactLocation.Elem(peer)
     val obj   = Obj(elem)
     obj.attr.name = name

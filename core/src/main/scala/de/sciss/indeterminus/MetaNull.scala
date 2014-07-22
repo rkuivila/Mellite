@@ -77,7 +77,7 @@ object MetaNull {
     val p = sys.step { implicit tx =>
       val group = proc.Timeline[I] // ProcGroup.Modifiable[I]
       matches.foreach { case (time, m) +: _ =>    // just mono right now
-        val loc       = ArtifactLocation.Modifiable[I](m.file.parent.parent) // XXX TODO: bug in ArtifactLocation -- needs one sub-level at least
+        val loc       = ArtifactLocation[I](m.file.parent.parent) // XXX TODO: bug in ArtifactLocation -- needs one sub-level at least
         val artifact  = loc.add(m.file)
         val spec      = AudioFile.readSpec(m.file)
         val offset    = 0L
@@ -99,7 +99,7 @@ object MetaNull {
       }
 
       val bnc   = proc.Bounce[I, I]
-      val bc    = bnc.Config()
+      val bc    = proc.Bounce.Config[I]
       // implicit val ser = proc.ProcGroup.Modifiable.serializer[I]
       bc.group  = ??? // tx.newHandle(group)
       // bc.init   = ...

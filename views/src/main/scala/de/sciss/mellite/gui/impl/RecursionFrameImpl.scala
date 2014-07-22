@@ -139,7 +139,7 @@ object RecursionFrameImpl {
     with ComponentHolder[Component]
     with ModelImpl[ViewData] {
 
-    protected def recH      : stm.Source[S#Tx, Obj.T[S, Recursion.Elem]]
+    protected def recH      : stm.Source[S#Tx, Recursion.Obj[S]]
     protected def viewData  : ViewData
     protected def _spec     : AudioFileSpec
     protected implicit def _aural    : AuralSystem
@@ -250,7 +250,7 @@ object RecursionFrameImpl {
 
       def performBounce(file: File)(success: => Unit): Unit = {
         val (groupH, gain, span, channels, audio) = cursor.step { implicit tx =>
-          import proc.ProcGroup.serializer
+          // import proc.ProcGroup.serializer
           val e         = recH().elem.peer
           val _groupH   = tx.newHandle(e.group)
           val _gain     = e.gain

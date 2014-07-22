@@ -40,7 +40,7 @@ import de.sciss.lucre.expr.{Int => IntEx}
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
 import scala.swing.event.{Key, ValueChanged}
-import de.sciss.synth.proc.{ObjKeys, IntElem, TimeRef, Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, Proc, Scan, TimedProc}
+import de.sciss.synth.proc.{ObjKeys, IntElem, TimeRef, Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, Proc, Scan}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
 import de.sciss.synth.io.AudioFile
@@ -99,6 +99,8 @@ object TimelineViewImpl {
   private val DEBUG       = false
 
   import de.sciss.mellite.{logTimeline => logT}
+
+  private type TimedProc[S <: Sys[S]] = BiGroup.TimedElem[S, Proc.Obj[S]]
 
   def apply[S <: Sys[S]](obj: Timeline.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineView[S] = {

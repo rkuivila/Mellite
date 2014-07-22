@@ -52,7 +52,7 @@ object ViewImpl {
     import imp._
     val artifact      = obj0.elem.peer.artifact
     val artifDir      = artifact.location.directory
-    val iLoc          = ArtifactLocation.Modifiable[I](artifDir)
+    val iLoc          = ArtifactLocation[I](artifDir)
     val iArtifact     = iLoc.add(artifact.value)
     val iGrapheme     = Grapheme.Expr.Audio[I](iArtifact, graphemeV.spec, graphemeV.offset, graphemeV.gain)
     ProcActions.insertAudioRegion[I](group, time = Span(0L, numFramesTL),

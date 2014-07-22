@@ -15,13 +15,13 @@ package de.sciss
 package mellite
 
 import de.sciss.synth.io.AudioFileSpec
-import de.sciss.synth.proc.{Obj, AudioGraphemeElem, Artifact, ProcGroup}
+import de.sciss.synth.proc.{Timeline, Obj, AudioGraphemeElem, Artifact}
 import de.sciss.span.Span.SpanOrVoid
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.{event => evt}
 import evt.Sys
 import impl.{RecursionImpl => Impl}
-import de.sciss.span.SpanLike
+import de.sciss.span.{Span, SpanLike}
 import de.sciss.lucre.stm.Disposable
 import de.sciss.serial.{Serializer, DataInput, Writable}
 import de.sciss.synth.proc
@@ -32,8 +32,8 @@ object Recursion {
 
   final val typeID = 0x20000
 
-  def apply[S <: Sys[S]](group: ProcGroup[S], span: SpanOrVoid, deployed: Obj.T[S, AudioGraphemeElem],
-                         gain: Gain, channels: Channels, transform: Option[Obj.T[S, Code.Elem]])
+  def apply[S <: Sys[S]](group: Timeline[S], span: Span, deployed: proc.Obj.T[S, AudioGraphemeElem],
+                         gain: Gain, channels: Channels, transform: Option[Code.Obj[S]])
                         (implicit tx: S#Tx): Recursion[S] =
     Impl(group, span, deployed, gain, channels, transform)
 
@@ -43,19 +43,12 @@ object Recursion {
   implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Recursion[S]] = Impl.serializer
 
   // ---- element ----
+
   object Elem {
     def apply[S <: Sys[S]](peer: Recursion[S])(implicit tx: S#Tx): Recursion.Elem[S] = Impl.ElemImpl(peer)
 
     implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Recursion.Elem[S]] =
       Impl.ElemImpl.serializer
-
-    object Obj {
-      def unapply[S <: Sys[S]](obj: Obj[S]): Option[proc.Obj.T[S, Recursion.Elem]] =
-        if (obj.elem.isInstanceOf[Recursion.Elem[S]]) Some(obj.asInstanceOf[proc.Obj.T[S, Recursion.Elem]])
-        else None
-    }
-
-    // implicit def serializer[S <: Sys[S]]: serial.Serializer[S#Tx, S#Acc, Folder[S]] = ...
   }
   trait Elem[S <: Sys[S]] extends proc.Elem[S] {
     type Peer       = Recursion[S]
@@ -63,13 +56,20 @@ object Recursion {
 
     def mkCopy()(implicit tx: S#Tx): Elem[S]
   }
+
+  object Obj {
+    def unapply[S <: Sys[S]](obj: Obj[S]): Option[Recursion.Obj[S]] =
+      if (obj.elem.isInstanceOf[Recursion.Elem[S]]) Some(obj.asInstanceOf[Recursion.Obj[S]])
+      else None
+  }
+  type Obj[S <: Sys[S]] = proc.Obj.T[S, Recursion.Elem]
 }
 trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] with evt.Publisher[S, Recursion.Update[S]] {
   import Recursion.Channels
 
-  def group: ProcGroup[S]
-  def span(implicit tx: S#Tx): SpanLike
-  def span_=(value: SpanLike)(implicit tx: S#Tx): Unit
+  def group: Timeline[S]
+  def span(implicit tx: S#Tx): Span
+  def span_=(value: Span)(implicit tx: S#Tx): Unit
   def deployed: Obj.T[S, AudioGraphemeElem] //  Grapheme.Elem.Audio[S]
   def product: Artifact[S]
   def productSpec: AudioFileSpec

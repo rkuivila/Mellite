@@ -17,7 +17,7 @@ package impl
 package timeline
 
 import de.sciss.lucre.event.Sys
-import de.sciss.synth.proc.{ObjKeys, Obj, FadeSpec, Grapheme, Scan, Proc, TimedProc}
+import de.sciss.synth.proc.{ObjKeys, Obj, FadeSpec, Grapheme, Scan, Proc}
 import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.sonogram.{Overview => SonoOverview}

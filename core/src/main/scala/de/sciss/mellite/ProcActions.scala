@@ -123,7 +123,7 @@ object ProcActions {
           val pNew        = procObj.elem.peer
           val scanW       = pNew.scans.add(Proc.Obj.graphAudio)
           scanW.sources.toList.foreach(scanW.removeSource)
-          val grw         = Grapheme.Modifiable[S](audio.spec.numChannels)
+          val grw         = Grapheme[S](audio.spec.numChannels)
           val gStart      = LongEx  .newVar(time        .value)
           val audioOffset = LongEx  .newVar(audio.offset.value) // XXX TODO
           val audioGain   = DoubleEx.newVar(audio.gain  .value)
@@ -281,7 +281,7 @@ object ProcActions {
 
     val scanIn  = proc.scans.add(Proc.Obj.graphAudio )
     /*val sOut=*/ proc.scans.add(Proc.Obj.scanMainOut)
-    val grIn    = Grapheme.Modifiable[S](grapheme.spec.numChannels)
+    val grIn    = Grapheme[S](grapheme.spec.numChannels)
 
     // we preserve data.source(), i.e. the original audio file offset
     // ; therefore the grapheme element must start `selection.start` frames

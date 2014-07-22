@@ -17,7 +17,7 @@ package impl
 package timeline
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.{Timeline, ProcGroup}
+import de.sciss.synth.proc.Timeline
 import scala.swing.{Action, Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import javax.swing.table.{TableColumnModel, AbstractTableModel}
@@ -39,7 +39,7 @@ object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](group: Timeline[S], selectionModel: ProcView.SelectionModel[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): GlobalProcsView[S] = {
 
-    import ProcGroup.Modifiable.serializer
+    // import ProcGroup.Modifiable.serializer
     val groupHOpt = group.modifiableOption.map(tx.newHandle(_))
     val view      = new Impl[S](groupHOpt, selectionModel)
     deferTx(view.guiInit())

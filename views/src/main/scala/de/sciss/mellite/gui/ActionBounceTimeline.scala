@@ -17,7 +17,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Artifact, Bounce}
+import de.sciss.synth.proc.{Timeline, ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Artifact, Bounce}
 import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -64,7 +64,7 @@ object ActionBounceTimeline {
     location:  Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]] = None,
     transform: Option[stm.Source[S#Tx, Obj.T[S, Code.Elem            ]]] = None
   ) {
-    def prepare(group: stm.Source[S#Tx, proc.ProcGroup[S]], f: File): PerformSettings[S] = {
+    def prepare(group: stm.Source[S#Tx, Timeline[S]], f: File): PerformSettings[S] = {
       val server                = Server.Config()
       specToServerConfig(f, spec, server)
       PerformSettings(
@@ -74,10 +74,10 @@ object ActionBounceTimeline {
   }
 
   final case class PerformSettings[S <: Sys[S]](
-    group: stm.Source[S#Tx, proc.ProcGroup[S]],
+    group: stm.Source[S#Tx, Timeline[S]],
     server: Server.Config,
     gain: Gain = Gain.normalized(-0.2f),
-    span: SpanLike, channels: Vec[Range.Inclusive]
+    span: Span.SpanOrVoid, channels: Vec[Range.Inclusive]
   )
 
   def specToServerConfig(file: File, spec: AudioFileSpec, config: Server.ConfigBuilder): Unit = {
@@ -335,7 +335,7 @@ object ActionBounceTimeline {
 
   def performGUI[S <: Sys[S]](document: Workspace[S],
                               settings: QuerySettings[S],
-                              group: stm.Source[S#Tx, proc.ProcGroup[S]], file: File,
+                              group: stm.Source[S#Tx, Timeline[S]], file: File,
                               window: Option[Window] = None)
                              (implicit cursor: stm.Cursor[S]): Unit = {
 
@@ -436,7 +436,7 @@ object ActionBounceTimeline {
               val depObj    = Obj(depElem)
               depObj.attr.name = file.base
               val transfOpt = settings.transform.map(_.apply())
-              val recursion = Recursion(group(), settings.span, depObj, settings.gain, settings.channels, transfOpt)
+              val recursion = Recursion(group(), ??? /* settings.span */, depObj, settings.gain, settings.channels, transfOpt)
               val recElem   = Recursion.Elem(recursion)
               val recObj    = Obj(recElem)
               recObj.attr.name = elemName
@@ -462,10 +462,10 @@ object ActionBounceTimeline {
                           (implicit cursor: stm.Cursor[S]): Processor[File, _] = {
     import document.inMemoryBridge
     val bounce  = Bounce[S, document.I]
-    val bnc     = bounce.Config()
-    bnc.group   = settings.group
+    val bnc     = Bounce.Config[S]
+    bnc.group   = ??? // settings.group :: Nil
     bnc.server.read(settings.server)
-    bnc.span    = settings.span
+    bnc.span    = ??? // settings.span
     bnc.init    = { (_tx, s) =>
       implicit val tx = _tx
       val graph = SynthGraph {
