@@ -92,7 +92,7 @@ object TimelineViewImpl {
   private val NoResize    = TrackTool.Resize(deltaStart = 0L, deltaStop = 0L)
   private val NoGain      = TrackTool.Gain(1f)
   private val NoFade      = TrackTool.Fade(0L, 0L, 0f, 0f)
-  private val NoFunction  = TrackTool.Function(-1, Span(0L, 0L))
+  private val NoFunction  = TrackTool.Function(-1, -1, Span(0L, 0L))
 
   private val MinDur      = 32
 
@@ -473,6 +473,7 @@ object TimelineViewImpl {
         max       = 64
         value     = 0
         focusable = false
+        tooltip   = "Sonogram Brightness"
         peer.putClientProperty("JComponent.sizeVariant", "small")
         listenTo(this)
         reactions += {
@@ -1264,13 +1265,11 @@ object TimelineViewImpl {
             }
           }
 
-          if (functionState.track >= 0) {
-            drawDropFrame(g, functionState.track, 4, functionState.span)
-          }
+          if (functionState.isValid)
+            drawDropFrame(g, functionState.trackIndex, functionState.trackHeight, functionState.span)
 
-          if (patchState.source != null) {
+          if (patchState.source != null)
             drawPatch(g, patchState)
-          }
         }
 
         private def linkFrame(pv: ProcView[S]): Long = pv.spanValue match {

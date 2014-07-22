@@ -17,7 +17,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Artifact, Bounce, Folder}
+import de.sciss.synth.proc.{ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Artifact, Bounce}
 import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -121,7 +121,7 @@ object ActionBounceTimeline {
     // ggSampleFormat.items = fuck you scala no method here
     ggSampleFormat.selection.item = init.spec.sampleFormat
 
-    val ggPathText      = new TextField(32)
+    val ggPathText = new TextField(32)
 
     def setPathText(file: File): Unit =
       ggPathText.text = file.replaceExt(ggFileType.selection.item.extension).path
@@ -130,12 +130,14 @@ object ActionBounceTimeline {
     ggFileType.reactions += {
       case SelectionChanged(_) =>
         val s = ggPathText.text
-        if (s != "") setPathText(new File(s))
+        if (!s.isEmpty) setPathText(new File(s))
     }
 
     init.file.foreach(f => ggPathText.text = f.path)
     val ggPathDialog    = Button("...") {
-      val dlg = FileDialog.save(init = Some(new File(ggPathText.text)), title = "Bounce Audio Output File")
+      val initT = ggPathText.text
+      val init  = if (initT.isEmpty) None else Some(new File(initT))
+      val dlg   = FileDialog.save(init = init, title = "Bounce Audio Output File")
       dlg.show(window).foreach(setPathText)
     }
     ggPathDialog.peer.putClientProperty("JButton.buttonType", "gradient")

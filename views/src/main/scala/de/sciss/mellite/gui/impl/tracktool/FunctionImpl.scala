@@ -50,7 +50,10 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
   protected def dragToParam(d: Drag): Function = {
     val dStart  = math.min(d.firstPos, d.currentPos)
     val dStop   = math.max(dStart + BasicRegion.MinDur, math.max(d.firstPos, d.currentPos))
-    Function(d.firstTrack, Span(dStart, dStop))
+    val dTrkIdx = math.min(d.firstTrack, d.currentTrack)
+    val dTrkH   = math.max(d.firstTrack, d.currentTrack) - dTrkIdx + 1
+
+    Function(trackIndex = dTrkIdx, trackHeight = dTrkH, span = Span(dStart, dStop))
   }
 
   def commit(drag: Function)(implicit tx: S#Tx): Unit =
@@ -58,9 +61,10 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
       val span  = SpanEx.newVar[S](SpanEx.newConst(drag.span))
       val p     = Proc[S]
       val obj   = Obj(Proc.Elem(p))
-      obj.attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(IntEx.newConst(drag.track)))))
+      obj.attr.put(TimelineObjView.attrTrackIndex , Obj(IntElem(IntEx.newVar(IntEx.newConst(drag.trackIndex )))))
+      obj.attr.put(TimelineObjView.attrTrackHeight, Obj(IntElem(IntEx.newVar(IntEx.newConst(drag.trackHeight)))))
       g.add(span, obj)
-      log(s"Added function region $p, span = ${drag.span}, track = ${drag.track}")
+      log(s"Added function region $p, span = ${drag.span}, trackIndex = ${drag.trackIndex}")
 
       // canvas.selectionModel.clear()
       // canvas.selectionModel += ?

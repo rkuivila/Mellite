@@ -95,7 +95,9 @@ object TrackTool {
   final case class Gain    (factor: Float)
   final case class Mute    (engaged: Boolean)
   final case class Fade    (deltaFadeIn: Long, deltaFadeOut: Long, deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
-  final case class Function(track: Int, span: Span)
+  final case class Function(trackIndex: Int, trackHeight: Int, span: Span) {
+    def isValid: Boolean = trackIndex >= 0
+  }
   final case class Cursor  (name: Option[String])
 
   object Patch {
