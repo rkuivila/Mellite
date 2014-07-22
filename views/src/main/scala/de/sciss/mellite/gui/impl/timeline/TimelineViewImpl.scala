@@ -16,6 +16,8 @@ package gui
 package impl
 package timeline
 
+import de.sciss.swingplus.ScrollBar
+
 import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
 import de.sciss.span.{Span, SpanLike}
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, LinearGradientPaint}
@@ -422,8 +424,8 @@ object TimelineViewImpl {
 
     def splitObjects(time: Long)(views: TraversableOnce[TimelineObjView[S]])(implicit tx: S#Tx): Unit =
       for {
-        group             <- plainGroup.modifiableOption
-        pv                <- views
+        group <- plainGroup.modifiableOption
+        pv    <- views
       } {
         pv.span() match {
           case Expr.Var(oldSpan) =>
@@ -508,6 +510,13 @@ object TimelineViewImpl {
         )
       }
 
+      val ggTrackPos = new ScrollBar
+      ggTrackPos.maximum = 512 // 128 tracks at default "full-size" (4)
+      ggTrackPos.listenTo(ggTrackPos)
+      ggTrackPos.reactions += {
+        case ValueChanged(_) => canvasView.trackIndexOffset = ggTrackPos.value
+      }
+
       val pane2 = new SplitPane(Orientation.Vertical, globalView.component, canvasView.component)
       pane2.dividerSize = 4
       pane2.border      = null
@@ -517,6 +526,7 @@ object TimelineViewImpl {
         layoutManager.setVgap(2)
         add(transportPane, North )
         add(pane2        , Center)
+        add(ggTrackPos   , East  )
         // add(globalView.component, West  )
       }
 
@@ -856,6 +866,14 @@ object TimelineViewImpl {
     private final class View extends ProcCanvasImpl[S] {
       canvasImpl =>
 
+      private var trkIdxOff = 0
+
+      def trackIndexOffset: Int = trkIdxOff
+      def trackIndexOffset_=(value: Int): Unit = {
+        trkIdxOff = value
+        canvasImpl.repaint()
+      }
+
       // import AbstractTimelineView._
       def timelineModel             = impl.timelineModel
       def selectionModel            = impl.selectionModel
@@ -863,8 +881,8 @@ object TimelineViewImpl {
 
       def intersect(span: Span): Iterator[TimelineObjView[S]] = viewRange.filterOverlaps((span.start, span.stop))
 
-      def screenToTrack(y    : Int): Int = y     / TrackScale
-      def trackToScreen(track: Int): Int = track * TrackScale
+      def screenToTrack(y    : Int): Int = y / TrackScale + trkIdxOff
+      def trackToScreen(track: Int): Int = (track - trkIdxOff) * TrackScale
 
       def findRegion(pos: Long, hitTrack: Int): Option[TimelineObjView[S]] = {
         val span      = Span(pos, pos + 1)
@@ -1005,10 +1023,11 @@ object TimelineViewImpl {
             val selected  = sel.contains(view)
 
             def drawProc(start: Long, x1: Int, x2: Int, move: Long): Unit = {
-              val py    = (if (selected) math.max(0, view.trackIndex + moveState.deltaTrack) else view.trackIndex) * TrackScale
+              val pTrk  = if (selected) math.max(0, view.trackIndex + moveState.deltaTrack) else view.trackIndex
+              val py    = trackToScreen(pTrk)
               val px    = x1
               val pw    = x2 - x1
-              val ph    = view.trackHeight * TrackScale
+              val ph    = trackToScreen(pTrk + view.trackHeight) - py
 
               // clipped coordinates
               val px1C    = math.max(px + 1, cr.x - 2)
