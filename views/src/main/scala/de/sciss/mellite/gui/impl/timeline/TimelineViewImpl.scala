@@ -1039,16 +1039,22 @@ object TimelineViewImpl {
                     sonogramOpt.foreach { sonogram =>
                       val audio   = segm.value
                       val srRatio = sonogram.inputSpec.sampleRate / Timeline.SampleRate
+                      // dStart is the frame inside the audio-file corresponding
+                      // to the region's left margin. That is, if the grapheme segment
+                      // starts early than the region (its start is less than zero),
+                      // the frame accordingly increases.
                       val dStart  = audio.offset - segm.span.start * srRatio
-                      val startC  = screenToFrame(px1C) // math.max(0.0, screenToFrame(px1C))
-                      val stopC   = screenToFrame(px2C)
+                      // a factor to convert from pixel space to audio-file frames
+                      val s2f     = timelineModel.visible.length.toDouble / canvasComponent.peer.getWidth * srRatio
+                      val lenC    = (px2C - px1C) * s2f
                       val boost   = if (selected) visualBoost * gainState.factor else visualBoost
-                      // println(s"audio.gain = ${audio.gain.toFloat}")
-                      sonogramBoost   = (audio.gain * pv.gain).toFloat * boost
-                      val startP  = math.max(0.0, screenToFrame(px1C - px) * srRatio + dStart)
-                      // val stopP   = startP + (stopC - startC)
-                      val stopP   = startP + (stopC - startC) * srRatio
-                      sonogram.paint(startP, stopP, g, px1C, innerY, px2C - px1C, innerH, this)
+                      sonogramBoost = (audio.gain * pv.gain).toFloat * boost
+                      val startP  = (px1C - px) * s2f + dStart
+                      val stopP   = startP + lenC
+                      // println(s"${pv.name}; audio.offset = ${audio.offset}, segm.span.start = ${segm.span.start}, dStart = $dStart, px1C = $px1C, startC = $startC, startP = $startP")
+                      // println(s"dStart = $dStart, px = $px, px1C = $px1C, startC = $startC, startP = $startP")
+                      sonogram.paint(spanStart = startP, spanStop = stopP, g2 = g,
+                        tx = px1C, ty = innerY, width = px2C - px1C, height = innerH, ctrl = this)
                     }
 
                   case _ =>
