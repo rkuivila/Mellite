@@ -120,6 +120,8 @@ object ActionBounceTimeline {
     GUI.fixWidth(ggSampleFormat)
     // ggSampleFormat.items = fuck you scala no method here
     ggSampleFormat.selection.item = init.spec.sampleFormat
+    val ggSampleRate    = new SpinnerComboBox(value0 = 44100.0, minimum = 1.0, maximum = Timeline.SampleRate,
+      step = 100.0, items = Seq(44100.0, 48000.0, 88200.0, 96000.0))
 
     val ggPathText = new TextField(32)
 
@@ -262,7 +264,7 @@ object ActionBounceTimeline {
     import Swing.EmptyIcon
     import Alignment.Trailing
     val pPath     = new FlowPanel(ggPathText, ggPathDialog)
-    val pFormat   = new FlowPanel(ggFileType, ggSampleFormat, ggGainAmt, new Label("dB"), ggGainType)
+    val pFormat   = new FlowPanel(ggFileType, ggSampleFormat, ggSampleRate, ggGainAmt, new Label("dB"), ggGainType)
     val pSpan     = new GridPanel(6, 2) {
       contents ++= Seq(new Label("Channels:"                         , EmptyIcon, Trailing), ggChannels,
                        new Label("Timeline Span:"                    , EmptyIcon, Trailing), ggSpanAll,
@@ -294,7 +296,7 @@ object ActionBounceTimeline {
     var settings = QuerySettings(
       file        = file,
       spec        = AudioFileSpec(ggFileType.selection.item, ggSampleFormat.selection.item,
-        numChannels = numChannels, sampleRate = timelineModel.sampleRate),
+        numChannels = numChannels, sampleRate = ggSampleRate.value),
       gain        = Gain(gainModel.getNumber.floatValue(), if (ggGainType.selection.index == 0) true else false),
       span        = if (ggSpanUser.selected) tlSel else Span.Void,
       channels    = channels,
