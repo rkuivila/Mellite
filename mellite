@@ -1,2 +1,2 @@
 #!/bin/sh
-java -jar Mellite.jar "$@"
+java -Xms2048m -Xmx2048m -XX:PermSize=256m -XX:MaxPermSize=512m -server -jar Mellite.jar "$@"
