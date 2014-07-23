@@ -11,8 +11,8 @@ lazy val commonSettings = Project.defaultSettings ++ Seq(
   organization       := "de.sciss",
   homepage           := Some(url("https://github.com/Sciss/" + name.value)),
   licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
-  scalaVersion       := "2.11.1",
-  crossScalaVersions := Seq("2.11.1", "2.10.4"),
+  scalaVersion       := "2.11.2",
+  crossScalaVersions := Seq("2.11.2", "2.10.4"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-Xfuture")
     if (version.value endsWith "-SNAPSHOT") xs else xs ++ Seq("-Xelide-below", "INFO")
