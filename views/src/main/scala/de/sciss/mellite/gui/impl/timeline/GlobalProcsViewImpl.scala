@@ -36,7 +36,7 @@ import de.sciss.lucre.swing._
 import de.sciss.icons.raphael
 
 object GlobalProcsViewImpl {
-  def apply[S <: Sys[S]](group: Timeline[S], selectionModel: ProcView.SelectionModel[S])
+  def apply[S <: Sys[S]](group: Timeline[S], selectionModel: SelectionModel[S, TimelineObjView[S]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): GlobalProcsView[S] = {
 
     // import ProcGroup.Modifiable.serializer
@@ -47,7 +47,7 @@ object GlobalProcsViewImpl {
   }
 
   private final class Impl[S <: Sys[S]](groupHOpt: Option[stm.Source[S#Tx, Timeline.Modifiable[S]]],
-                                        selectionModel: ProcView.SelectionModel[S])
+                                        selectionModel: SelectionModel[S, TimelineObjView[S]])
                                        (implicit workspace: Workspace[S], cursor: stm.Cursor[S])
     extends GlobalProcsView[S] with ComponentHolder[Component] {
 
@@ -57,16 +57,19 @@ object GlobalProcsViewImpl {
 
     private var table: Table = _
 
-    private val selectionListener: SelectionModel.Listener[S, ProcView[S]] = {
+    private val selectionListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
       case SelectionModel.Update(_, _) =>
-        val items = selectionModel.iterator.flatMap { pv =>
-          pv.outputs.flatMap {
-            case (_, links) =>
-              links.flatMap { link =>
-                val tgt = link.target
-                if (tgt.isGlobal) Some(tgt) else None
-              }
-          }
+        val items = selectionModel.iterator.flatMap {
+          case pv: ProcView[S] =>
+            pv.outputs.flatMap {
+              case (_, links) =>
+                links.flatMap { link =>
+                  val tgt = link.target
+                  if (tgt.isGlobal) Some(tgt) else None
+                }
+            }
+          case _ => Nil
+
         } .toSet
 
         val indices   = items.map(procSeq.indexOf(_))

@@ -132,13 +132,13 @@ object TimelineViewImpl {
     // disposables ::= auralView
     transport.addObject(obj)
 
-    val globalSelectionModel = SelectionModel[S, ProcView[S]]
-    val global  = GlobalProcsView(group, globalSelectionModel)
-    disposables ::= global
+    // val globalSelectionModel = SelectionModel[S, ProcView[S]]
+    val selectionModel  = SelectionModel[S, TimelineObjView[S]]
+    val global          = GlobalProcsView(group, selectionModel)
+    disposables       ::= global
 
-    val transportView = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
-
-    val tlView = new Impl[S](groupH, groupEH, viewMap, scanMap, tlm, global, transportView)
+    val transportView   = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
+    val tlView          = new Impl[S](groupH, groupEH, viewMap, scanMap, tlm, selectionModel, global, transportView)
 
     group.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>
@@ -302,11 +302,10 @@ object TimelineViewImpl {
 
   private final class Impl[S <: Sys[S]](groupH            : stm.Source[S#Tx, proc.Timeline[S]],
                                         groupEH           : stm.Source[S#Tx, Timeline.Obj[S]],
-                                        // transport         : Transport.Realtime[S, Obj.T[S, Proc.Elem], Transport.Proc.Update[S]],
                                         val viewMap       : TimelineObjView.Map[S],
                                         val scanMap       : ProcView.ScanMap[S],
                                         val timelineModel : TimelineModel,
-                                        // auralView         : AuralPresentation[S],
+                                        val selectionModel: SelectionModel[S, TimelineObjView[S]],
                                         globalView        : GlobalProcsView[S],
                                         transportView     : TransportView[S])
                                        (implicit val workspace: Workspace[S], val cursor: Cursor[S])
@@ -314,8 +313,6 @@ object TimelineViewImpl {
     impl =>
 
     import cursor.step
-
-    val selectionModel = SelectionModel[S, TimelineObjView[S]]
 
     private var viewRange = RangedSeq.empty[TimelineObjView[S], Long]
     private val viewSet   = TSet.empty[TimelineObjView[S]]
@@ -1016,7 +1013,7 @@ object TimelineViewImpl {
              case RegionViewMode.TitledBox  => hndlExtent
           }
 
-          val sel         = selectionModel
+          val sel = selectionModel
 
           g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 

@@ -22,7 +22,7 @@ import de.sciss.mellite.gui.impl.timeline.{GlobalProcsViewImpl => Impl, ProcView
 import de.sciss.lucre.synth.Sys
 
 object GlobalProcsView {
-  def apply[S <: Sys[S]](group: Timeline[S], selectionModel: ProcView.SelectionModel[S])
+  def apply[S <: Sys[S]](group: Timeline[S], selectionModel: SelectionModel[S, TimelineObjView[S]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): GlobalProcsView[S] =
       Impl(group, selectionModel)
 }

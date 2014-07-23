@@ -48,38 +48,39 @@ object FrameImpl {
       bindMenus(
         "file.bounce"             -> view.bounceAction,
         "edit.delete"             -> view.deleteAction,
-        "actions.stop-all-sound"  -> view.stopAllSoundAction
+        "actions.stop-all-sound"  -> view.stopAllSoundAction,
         // "timeline.splitObjects" -> view.splitObjectsAction,
 
-//        "actions.debug-print"     -> Action(null) {
-//          val it = view.procSelectionModel.iterator
-//          if (it.hasNext)
-//            it.foreach { pv =>
-//              println(pv.debugString)
-//            }
-//          else {
-//            val (treeS, opt) = _cursor.step { implicit tx =>
-//              val s1 = groupH().debugPrint
-//              val s2 = BiGroupImpl.verifyConsistency(groupH(), reportOnly = true)
-//              (s1, s2)
-//            }
-//            if (opt.isEmpty) {
-//              println("No problems found!")
-//            } else {
-//              println(treeS)
-//              println()
-//              opt.foreach(println)
-//
-//              val pane = OptionPane.confirmation(message = "Correct the data structure?",
-//                optionType = OptionPane.Options.YesNo, messageType = OptionPane.Message.Warning)
-//              pane.title = "Sanitize Timeline"
-//              val sel = pane.show(Some(window))
-//              if (sel == OptionPane.Result.Yes) _cursor.step { implicit tx =>
-//                BiGroupImpl.verifyConsistency(groupH(), reportOnly = false)
-//              }
-//            }
-//          }
-//        }
+        "actions.debug-print"     -> Action(null) {
+          val it = view.selectionModel.iterator
+          if (it.hasNext)
+            it.foreach {
+              case pv: ProcView[S] => println(pv.debugString)
+              case _ =>
+            }
+          else {
+            val (treeS, opt) = _cursor.step { implicit tx =>
+              val s1 = groupH().debugPrint
+              val s2 = BiGroupImpl.verifyConsistency(groupH(), reportOnly = true)
+              (s1, s2)
+            }
+            if (opt.isEmpty) {
+              println("No problems found!")
+            } else {
+              println(treeS)
+              println()
+              opt.foreach(println)
+
+              val pane = OptionPane.confirmation(message = "Correct the data structure?",
+                optionType = OptionPane.Options.YesNo, messageType = OptionPane.Message.Warning)
+              pane.title = "Sanitize Timeline"
+              val sel = pane.show(Some(window))
+              if (sel == OptionPane.Result.Yes) _cursor.step { implicit tx =>
+                BiGroupImpl.verifyConsistency(groupH(), reportOnly = false)
+              }
+            }
+          }
+        }
       )
 
       // --- timeline menu ---
