@@ -32,7 +32,7 @@ object Recursion {
 
   final val typeID = 0x20000
 
-  def apply[S <: Sys[S]](group: Timeline[S], span: Span, deployed: proc.Obj.T[S, AudioGraphemeElem],
+  def apply[S <: Sys[S]](group: Timeline.Obj[S], span: SpanLike, deployed: proc.Obj.T[S, AudioGraphemeElem],
                          gain: Gain, channels: Channels, transform: Option[Code.Obj[S]])
                         (implicit tx: S#Tx): Recursion[S] =
     Impl(group, span, deployed, gain, channels, transform)
@@ -67,9 +67,9 @@ object Recursion {
 trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] with evt.Publisher[S, Recursion.Update[S]] {
   import Recursion.Channels
 
-  def group: Timeline[S]
-  def span(implicit tx: S#Tx): Span
-  def span_=(value: Span)(implicit tx: S#Tx): Unit
+  def group: Timeline.Obj[S]
+  def span(implicit tx: S#Tx): SpanLike
+  def span_=(value: SpanLike)(implicit tx: S#Tx): Unit
   def deployed: Obj.T[S, AudioGraphemeElem] //  Grapheme.Elem.Audio[S]
   def product: Artifact[S]
   def productSpec: AudioFileSpec
@@ -78,7 +78,7 @@ trait Recursion[S <: Sys[S]] extends Writable with Disposable[S#Tx] with evt.Pub
   def channels(implicit tx: S#Tx): Channels
   def channels_=(value: Vec[Range.Inclusive])(implicit tx: S#Tx): Unit
 
-  def transform: Option[Obj.T[S, Code.Elem]]
+  def transform: Option[Code.Obj[S]]
   // def transform_=(value: Option[Element.Code[S]])(implicit tx: S#Tx): Unit
 
   /** Moves the product to deployed position. */

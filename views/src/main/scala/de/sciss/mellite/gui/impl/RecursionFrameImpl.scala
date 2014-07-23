@@ -309,14 +309,11 @@ object RecursionFrameImpl {
           case Success(value) => defer(onSuccess(value))
           case Failure(Processor.Aborted()) =>
             defer(processStopped())
-          case Failure(e: Exception) => // XXX TODO: Desktop should allow Throwable for DialogSource.Exception
+          case Failure(e) =>
             defer {
               processStopped()
               DialogSource.Exception(e -> title).show(None) // XXX TODO: Some(window))
             }
-          case Failure(e) =>
-            defer(processStopped())
-            e.printStackTrace()
         }
       }
 

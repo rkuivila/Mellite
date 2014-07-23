@@ -45,7 +45,7 @@ object ActionArtifactLocation {
         xs match {
           case head :: tail =>
             val res1 = head match {
-              case ArtifactLocation.Elem.Obj(objT) =>
+              case ArtifactLocation.Obj(objT) =>
                 val parent = objT.elem.peer.directory
                 if (Try(Artifact.relativize(parent, file)).isSuccess) {
                   res :+ Labeled(tx.newHandle(objT))(objT.attr.name)

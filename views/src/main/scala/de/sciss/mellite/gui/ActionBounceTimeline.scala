@@ -57,14 +57,14 @@ object ActionBounceTimeline {
   final case class QuerySettings[S <: Sys[S]](
     file: Option[File]  = None,
     spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
-    gain: Gain = Gain.normalized(-0.2f),
+    gain: Gain          = Gain.normalized(-0.2f),
     span: SpanOrVoid    = Span.Void,
     channels: Vec[Range.Inclusive] = Vector(0 to 0 /* 1 */),
     importFile: Boolean = false,
-    location:  Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]] = None,
-    transform: Option[stm.Source[S#Tx, Obj.T[S, Code.Elem            ]]] = None
+    location:  Option[stm.Source[S#Tx, ArtifactLocation.Obj[S]]] = None,
+    transform: Option[stm.Source[S#Tx, Code.Obj[S]]] = None
   ) {
-    def prepare(group: stm.Source[S#Tx, Timeline[S]], f: File): PerformSettings[S] = {
+    def prepare(group: stm.Source[S#Tx, Timeline.Obj[S]], f: File): PerformSettings[S] = {
       val server                = Server.Config()
       specToServerConfig(f, spec, server)
       PerformSettings(
@@ -74,10 +74,10 @@ object ActionBounceTimeline {
   }
 
   final case class PerformSettings[S <: Sys[S]](
-    group: stm.Source[S#Tx, Timeline[S]],
+    group: stm.Source[S#Tx, Timeline.Obj[S]],
     server: Server.Config,
     gain: Gain = Gain.normalized(-0.2f),
-    span: Span.SpanOrVoid, channels: Vec[Range.Inclusive]
+    span: SpanLike, channels: Vec[Range.Inclusive]
   )
 
   def specToServerConfig(file: File, spec: AudioFileSpec, config: Server.ConfigBuilder): Unit = {
@@ -183,12 +183,12 @@ object ActionBounceTimeline {
       checkTransform.enabled = enabled
       ggTransform   .enabled = enabled && checkTransform.selected
       if (ggTransform.enabled && !transformItemsCollected) {
-        val trns = cursor.step { implicit tx =>
+        val transform = cursor.step { implicit tx =>
           findTransforms(document)
         }
         transformItemsCollected =  true
-        ggTransform.peer.setModel(ComboBox.newConstantModel(trns))
-        for (t <- init.transform; lb <- trns.find(_.value == t)) {
+        ggTransform.peer.setModel(ComboBox.newConstantModel(transform))
+        for (t <- init.transform; lb <- transform.find(_.value == t)) {
           ggTransform.selection.item = lb
         }
       }
@@ -335,7 +335,7 @@ object ActionBounceTimeline {
 
   def performGUI[S <: Sys[S]](document: Workspace[S],
                               settings: QuerySettings[S],
-                              group: stm.Source[S#Tx, Timeline[S]], file: File,
+                              group: stm.Source[S#Tx, Timeline.Obj[S]], file: File,
                               window: Option[Window] = None)
                              (implicit cursor: stm.Cursor[S]): Unit = {
 
@@ -371,14 +371,11 @@ object ActionBounceTimeline {
     val onFailure: PartialFunction[Any, Unit] = {
       case Failure(Processor.Aborted()) =>
         defer(fDispose())
-      case Failure(e: Exception) => // XXX TODO: Desktop should allow Throwable for DialogSource.Exception
+      case Failure(e) =>
         defer {
           fDispose()
           DialogSource.Exception(e -> title).show(window)
         }
-      case Failure(e) =>
-        defer(fDispose())
-        e.printStackTrace()
     }
 
     def bounceDone(): Unit = {
@@ -435,8 +432,8 @@ object ActionBounceTimeline {
               val depElem   = AudioGraphemeElem(deployed)
               val depObj    = Obj(depElem)
               depObj.attr.name = file.base
-              val transfOpt = settings.transform.map(_.apply())
-              val recursion = Recursion(group(), ??? /* settings.span */, depObj, settings.gain, settings.channels, transfOpt)
+              val transformOpt = settings.transform.map(_.apply())
+              val recursion = Recursion(group(), settings.span, depObj, settings.gain, settings.channels, transformOpt)
               val recElem   = Recursion.Elem(recursion)
               val recObj    = Obj(recElem)
               recObj.attr.name = elemName
@@ -463,9 +460,26 @@ object ActionBounceTimeline {
     import document.inMemoryBridge
     val bounce  = Bounce[S, document.I]
     val bnc     = Bounce.Config[S]
-    bnc.group   = ??? // settings.group :: Nil
+    bnc.group   = settings.group :: Nil
     bnc.server.read(settings.server)
-    bnc.span    = ??? // settings.span
+    val spanL   = settings.span
+    val span    = spanL match {
+      case sp: Span => sp
+      case _ =>
+        cursor.step { implicit tx =>
+          val tl = settings.group().elem.peer
+          val start = spanL match {
+            case hs: Span.HasStart => hs.start
+            case _ => tl.nearestEventAfter(Long.MinValue + 1).getOrElse(0L)
+          }
+          val stop = spanL match {
+            case hs: Span.HasStop => hs.stop
+            case _ => tl.nearestEventBefore(Long.MaxValue - 1).getOrElse(start)
+          }
+          Span(start, stop)
+        }
+    }
+    bnc.span    = span
     bnc.init    = { (_tx, s) =>
       implicit val tx = _tx
       val graph = SynthGraph {

@@ -373,8 +373,7 @@ object TimelineViewImpl {
         settings = _settings
         _settings.file match {
           case Some(file) if ok =>
-            println("--TODO : Bounce --")
-            // performGUI(workspace, _settings, groupH, file, window = window)
+            performGUI(workspace, _settings, groupEH, file, window = window)
           case _ =>
         }
       }

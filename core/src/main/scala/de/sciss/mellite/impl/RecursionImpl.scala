@@ -113,8 +113,8 @@ object RecursionImpl {
     def read(in: DataInput, access: S#Acc, targets: evt.Targets[S])(implicit tx: S#Tx): Recursion[S] with evt.Node[S] = {
       val cookie  = in.readShort()
       require(cookie == COOKIE, s"Unexpected cookie $cookie (requires $COOKIE)")
-      val group       = Timeline.read(in, access)
-      val span        = SpanEx.readVar(in, access)
+      val group       = Obj.readT[S, Timeline.Elem](in, access)
+      val span        = SpanLikeEx.readVar(in, access)
       val id          = targets.id
       val gain        = tx.readVar[Gain    ](id, in)
       val channels    = tx.readVar[Channels](id, in)(ImmutableSerializer.indexedSeq[Range.Inclusive])
@@ -129,7 +129,7 @@ object RecursionImpl {
     }
   }
 
-  def apply[S <: Sys[S]](group: Timeline[S], span: Span, deployed: Obj.T[S, AudioGraphemeElem],
+  def apply[S <: Sys[S]](group: Timeline.Obj[S], span: SpanLike, deployed: Obj.T[S, AudioGraphemeElem],
                          gain: Gain, channels: Channels, transform: Option[Obj.T[S, Code.Elem]])
                         (implicit tx: S#Tx): Recursion[S] = {
     val imp = ExprImplicits[S]
@@ -137,7 +137,7 @@ object RecursionImpl {
 
     val targets   = evt.Targets[S]
     val id        = targets.id
-    val _span     = SpanEx.newVar(span)
+    val _span     = SpanLikeEx.newVar(span)
     val _gain     = tx.newVar(id, gain)
     val _channels = tx.newVar(id, channels)(ImmutableSerializer.indexedSeq[Range.Inclusive])
 
@@ -153,11 +153,11 @@ object RecursionImpl {
     new Impl[S](targets, group, _span, _gain, _channels, transform, deployed, product = product, productSpec = spec)
   }
 
-  private final class Impl[S <: Sys[S]](protected val targets: evt.Targets[S], val group: Timeline[S],
-      _span          : Expr.Var[S, Span],
+  private final class Impl[S <: Sys[S]](protected val targets: evt.Targets[S], val group: Timeline.Obj[S],
+      _span          : Expr.Var[S, SpanLike],
       _gain          : S#Var[Gain],
       _channels      : S#Var[Channels],
-      val transform  : /* S#Var[ */ Option[Obj.T[S, Code.Elem]],
+      val transform  : /* S#Var[ */ Option[Code.Obj[S]],
       val deployed   : Obj.T[S, AudioGraphemeElem],
       val product    : Artifact[S],
       val productSpec: AudioFileSpec)
@@ -165,8 +165,8 @@ object RecursionImpl {
     with evt.impl.Generator     [S, Recursion.Update[S], Recursion[S]]
     with evt.impl.StandaloneLike[S, Recursion.Update[S], Recursion[S]] {
 
-    def span(implicit tx: S#Tx): Span = _span.value
-    def span_=(value: Span)(implicit tx: S#Tx): Unit = {
+    def span(implicit tx: S#Tx): SpanLike = _span.value
+    def span_=(value: SpanLike)(implicit tx: S#Tx): Unit = {
       val imp = ExprImplicits[S]
       import imp._
       _span() = value
