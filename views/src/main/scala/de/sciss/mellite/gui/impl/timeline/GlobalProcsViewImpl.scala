@@ -47,7 +47,7 @@ object GlobalProcsViewImpl {
   }
 
   private final class Impl[S <: Sys[S]](groupHOpt: Option[stm.Source[S#Tx, Timeline.Modifiable[S]]],
-                                        selectionModel: SelectionModel[S, TimelineObjView[S]])
+                                        tlSelModel: SelectionModel[S, TimelineObjView[S]])
                                        (implicit workspace: Workspace[S], cursor: stm.Cursor[S])
     extends GlobalProcsView[S] with ComponentHolder[Component] {
 
@@ -57,9 +57,13 @@ object GlobalProcsViewImpl {
 
     private var table: Table = _
 
-    private val selectionListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
+    def tableComponent = table
+
+    val selectionModel = SelectionModel[S, ProcView[S]]
+
+    private val tlSelListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
       case SelectionModel.Update(_, _) =>
-        val items = selectionModel.iterator.flatMap {
+        val items = tlSelModel.iterator.flatMap {
           case pv: ProcView[S] =>
             pv.outputs.flatMap {
               case (_, links) =>
@@ -172,6 +176,7 @@ object GlobalProcsViewImpl {
 
     def guiInit(): Unit = {
       table             = new Table()
+
       // XXX TODO: enable the following - but we're loosing default boolean rendering
       //        // Table default has idiotic renderer/editor handling
       //        override lazy val peer: JTable = new JTable /* with Table.JTableMixin */ with SuperMixin
@@ -264,12 +269,20 @@ object GlobalProcsViewImpl {
       // ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
       table.listenTo(table.selection)
       table.reactions += {
-        case TableColumnsSelected(_, range, _) => actionDelete.enabled = range.nonEmpty
+        case TableColumnsSelected(_, range, _) =>
+          actionDelete.enabled = range.nonEmpty
+          val newSel = range.map(procSeq(_))
+          selectionModel.iterator.foreach { v =>
+            if (!newSel.contains(v)) selectionModel -= v
+          }
+          newSel.foreach { v =>
+            if (!selectionModel.contains(v)) selectionModel += v
+          }
       }
 
       val butPanel  = new FlowPanel(ggAdd, ggDelete)
 
-      selectionModel addListener selectionListener
+      tlSelModel addListener tlSelListener
 
       component = new BorderPanel {
         add(scroll, BorderPanel.Position.Center)
@@ -278,7 +291,7 @@ object GlobalProcsViewImpl {
     }
 
     def dispose()(implicit tx: S#Tx): Unit = deferTx {
-      selectionModel removeListener  selectionListener
+      tlSelModel removeListener  tlSelListener
     }
 
     def add(proc: ProcView[S]): Unit = {

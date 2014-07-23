@@ -18,7 +18,7 @@ package timeline
 
 import de.sciss.synth.proc.Timeline
 import de.sciss.lucre.stm
-import de.sciss.desktop.{KeyStrokes, Menu, OptionPane}
+import de.sciss.desktop.{Window, KeyStrokes, Menu, OptionPane}
 import scala.swing.event.Key
 import scala.swing.Action
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
@@ -104,6 +104,10 @@ object FrameImpl {
         .addLine()
         .add(Item("sel-stop-to-start",     "Flip Selection Backward"))
         .add(Item("sel-start-to-stop",     "Flip Selection Forward"))
+
+      window.reactions += {
+        case Window.Activated(_) => view.canvasComponent.requestFocusInWindow()
+      }
 
       Application.windowHandler.menuFactory.add(Some(window), mTimeline)
     }

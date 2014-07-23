@@ -15,7 +15,7 @@ package de.sciss.mellite
 package gui
 
 import de.sciss.synth.proc.{Timeline, Obj}
-import scala.swing.Action
+import scala.swing.{Component, Action}
 import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl}
 import de.sciss.lucre.stm
 import de.sciss.audiowidgets.TimelineModel
@@ -33,6 +33,8 @@ trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] {
   def selectionModel  : TimelineObjView.SelectionModel[S]
 
   def group(implicit tx: S#Tx): Timeline.Obj[S]
+
+  def canvasComponent: Component
 
   // ---- GUI actions ----
   def bounceAction      : Action

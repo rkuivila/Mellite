@@ -16,7 +16,7 @@ package gui
 
 import de.sciss.synth.proc.Timeline
 import de.sciss.lucre.stm.Disposable
-import scala.swing.Component
+import scala.swing.{Table, Component}
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui.impl.timeline.{GlobalProcsViewImpl => Impl, ProcView}
 import de.sciss.lucre.synth.Sys
@@ -28,6 +28,9 @@ object GlobalProcsView {
 }
 trait GlobalProcsView[S <: Sys[S]] extends Disposable[S#Tx] {
   def component: Component
+  def tableComponent: Table
+
+  def selectionModel: SelectionModel[S, ProcView[S]]
 
   def add    (proc: ProcView[S]): Unit
   def remove (proc: ProcView[S]): Unit

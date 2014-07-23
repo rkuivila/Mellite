@@ -18,7 +18,7 @@ package timeline
 
 import de.sciss.swingplus.ScrollBar
 
-import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
+import scala.swing.{Reactor, Reactions, Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
 import de.sciss.span.{Span, SpanLike}
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, LinearGradientPaint}
 import de.sciss.synth
@@ -39,7 +39,7 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.expr.{Int => IntEx}
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
-import scala.swing.event.{Key, ValueChanged}
+import scala.swing.event.{FocusGained, Key, ValueChanged}
 import de.sciss.synth.proc.{ObjKeys, IntElem, TimeRef, Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, Proc, Scan}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import java.awt.geom.GeneralPath
@@ -334,6 +334,8 @@ object TimelineViewImpl {
 
     def window: Window = component.peer.getClientProperty("de.sciss.mellite.Window").asInstanceOf[Window]
 
+    def canvasComponent: Component = canvasView.canvasComponent
+
     def dispose()(implicit tx: S#Tx): Unit = {
       deferTx {
         viewRange = RangedSeq.empty
@@ -399,10 +401,11 @@ object TimelineViewImpl {
       }
     }
 
-    private def withSelection(fun: S#Tx => TraversableOnce[TimelineObjView[S]] => Unit): Unit = {
-      val sel = selectionModel.iterator
-      if (sel.hasNext) step { implicit tx => fun(tx)(sel) }
-    }
+    private def withSelection(fun: S#Tx => TraversableOnce[TimelineObjView[S]] => Unit): Unit =
+      if (selectionModel.nonEmpty) {
+       val sel = selectionModel.iterator
+        step { implicit tx => fun(tx)(sel) }
+      }
 
     private def withFilteredSelection(p: TimelineObjView[S] => Boolean)
                                      (fun: S#Tx => TraversableOnce[TimelineObjView[S]] => Unit): Unit = {
@@ -482,13 +485,25 @@ object TimelineViewImpl {
       }
       GUI.fixWidth(ggVisualBoost)
 
+      var tlHasFocus = true // XXX TODO yes this is ugly
+
       val actionAttr: Action = Action(null) {
-        withSelection { implicit tx =>
-          seq => seq.foreach { view =>
-            AttrMapFrame(view.obj())
+        if (tlHasFocus) {
+          withSelection { implicit tx =>
+            seq => seq.foreach { view =>
+              AttrMapFrame(view.obj())
+            }
+          }
+        } else {
+          val sel = globalView.selectionModel
+          if (sel.nonEmpty) step { implicit tx =>
+            sel.iterator.foreach { view =>
+              AttrMapFrame(view.obj())
+            }
           }
         }
       }
+      actionAttr.enabled = false
       val ggAttr = GUI.toolButton(actionAttr, raphael.Shapes.Wrench, "Attributes Editor")
       ggAttr.focusable = false
 
@@ -514,6 +529,31 @@ object TimelineViewImpl {
       ggTrackPos.listenTo(ggTrackPos)
       ggTrackPos.reactions += {
         case ValueChanged(_) => canvasView.trackIndexOffset = ggTrackPos.value
+      }
+
+      selectionModel.addListener {
+        case _ if tlHasFocus => actionAttr.enabled = selectionModel.nonEmpty
+      }
+
+      globalView.selectionModel.addListener {
+        case _ if !tlHasFocus => actionAttr.enabled = globalView.selectionModel.nonEmpty
+      }
+
+      val r = new Reactor {}
+      val globalViewTable = globalView.tableComponent
+      val canvasViewC     = canvasView.canvasComponent
+      r.listenTo(globalViewTable)
+      r.listenTo(canvasViewC    )
+      r.reactions += {
+        case FocusGained(`globalViewTable`, _, _) =>
+          // println("FocusGained: globalViewTable")
+          tlHasFocus          = false
+          actionAttr.enabled  = globalView.selectionModel.nonEmpty
+
+        case FocusGained(`canvasViewC`    , _, _) =>
+          // println("FocusGained: canvasViewC")
+          tlHasFocus          = true
+          actionAttr.enabled  = selectionModel.nonEmpty
       }
 
       val pane2 = new SplitPane(Orientation.Vertical, globalView.component, canvasView.component)
