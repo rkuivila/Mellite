@@ -35,7 +35,7 @@ import de.sciss.swingplus.Spinner
 import java.awt.geom.Path2D
 import de.sciss.desktop.{OptionPane, FileDialog}
 import de.sciss.synth.io.{SampleFormat, AudioFile}
-import de.sciss.mellite.gui.edit.EditInsertObj
+import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditInsertObj}
 import de.sciss.lucre.{event => evt}
 import proc.Implicits._
 import de.sciss.audiowidgets.AxisFormat
@@ -447,9 +447,11 @@ object ObjViewImpl {
       def typeID  = ElemImpl.ArtifactLocation.typeID
 
       def apply[S <: Sys[S]](obj: Obj.T[S, _ArtifactLocation.Elem])(implicit tx: S#Tx): ObjView[S] = {
-        val name  = obj.attr.name
-        val value = obj.elem.peer.directory
-        new ArtifactLocation.Impl(tx.newHandle(obj), name, value)
+        val name      = obj.attr.name
+        val peer      = obj.elem.peer
+        val value     = peer.directory
+        val editable  = peer.modifiableOption.isDefined
+        new ArtifactLocation.Impl(tx.newHandle(obj), name, value, isEditable = editable)
       }
 
       def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
@@ -469,11 +471,10 @@ object ObjViewImpl {
       }
 
       final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _ArtifactLocation.Elem]],
-                                                     var name: _String, var directory: File)
+                                    var name: _String, var directory: File, val isEditable: _Boolean)
         extends ObjView.ArtifactLocation[S]
         with ObjViewImpl.Impl[S]
         with StringRenderer
-        with NonEditable[S]
         with NonViewable[S] {
 
         def icon    = ArtifactLocation.icon
@@ -487,6 +488,24 @@ object ObjViewImpl {
             deferTx { directory = now }
             true
           case _ => false
+        }
+
+        /** Given that the view is editable, this method is called when the editor gave notification about
+          * the editing being done. It is then the duty of the view to issue a corresponding transactional
+          * mutation, returned in an undoable edit. Views that do not support editing should just return `None`.
+          */
+        def tryEdit(value: Any)(implicit tx: S#Tx, cursor: Cursor[S]): Option[UndoableEdit] = {
+          val dirOpt = value match {
+            case s: String  => Some(file(s))
+            case f: File    => Some(f)
+            case _          => None
+          }
+          dirOpt.flatMap { newDir =>
+            val loc = obj().elem.peer
+            if (loc.directory == newDir) None else loc.modifiableOption.map { mod =>
+              EditArtifactLocation(mod, newDir)
+            }
+          }
         }
       }
     }
