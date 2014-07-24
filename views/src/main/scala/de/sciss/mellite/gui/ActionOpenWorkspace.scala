@@ -15,7 +15,7 @@ package de.sciss.mellite
 package gui
 
 import swing.{Dialog, Action}
-import de.sciss.desktop.{Desktop, Menu, RecentFiles, FileDialog, KeyStrokes}
+import de.sciss.desktop.{Menu, RecentFiles, FileDialog, KeyStrokes}
 import util.control.NonFatal
 import de.sciss.file._
 import de.sciss.lucre.synth.Sys
@@ -56,26 +56,15 @@ object ActionOpenWorkspace extends Action("Open...") {
   def recentFiles: RecentFiles  = _recent
   def recentMenu : Menu.Group   = _recent.menu
 
+  // private def isWebLaF = javax.swing.UIManager.getLookAndFeel.getName == "WebLookAndFeel"
+
   def apply(): Unit = {
-    val dlg = if (Desktop.isMac) {
-      val res = FileDialog.open(title = fullTitle)
-      res.setFilter { f => f.isDirectory && f.ext.toLowerCase == Workspace.ext }
-      res
-    } else {
-      val res = FileDialog.open(title = fullTitle)
-      // "Filename filters do not function in Sun's reference implementation for Microsoft Windows"
-      // ... and Linux neither. Suckers.
-      //      res.setFilter { f =>
-      //        val res = f.name.toLowerCase == "open" && f.parentOption.exists(_.ext.toLowerCase == Workspace.ext)
-      //        println(s"TEST '${f.path}' = $res")
-      //        res
-      //      }
-      res
-    }
-    dlg.show(None).foreach { f =>
-      val f1 = if (Desktop.isMac) f else f.parent
-      perform(f1)
-    }
+    val dlg = FileDialog.open(title = fullTitle)
+    // if (!isWebLaF) {
+      // filter currently doesn't work with WebLaF
+      dlg.setFilter { f => f.isDirectory && f.ext.toLowerCase == Workspace.ext}
+    // }
+    dlg.show(None).foreach(perform)
   }
 
   private def openView[S <: Sys[S]](doc: Workspace[S]): Unit = ()

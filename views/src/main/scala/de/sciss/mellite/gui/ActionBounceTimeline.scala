@@ -65,7 +65,7 @@ object ActionBounceTimeline {
     transform: Option[stm.Source[S#Tx, Code.Obj[S]]] = None
   ) {
     def prepare(group: stm.Source[S#Tx, Timeline.Obj[S]], f: File): PerformSettings[S] = {
-      val server                = Server.Config()
+      val server = Server.Config()
       specToServerConfig(f, spec, server)
       PerformSettings(
         group = group, server = server, gain = gain, span = span, channels = channels
@@ -86,6 +86,8 @@ object ActionBounceTimeline {
     config.nrtSampleFormat    = spec.sampleFormat
     config.sampleRate         = spec.sampleRate.toInt
     config.outputBusChannels  = spec.numChannels
+    val numPrivate = Prefs.audioNumPrivate.getOrElse(Prefs.defaultAudioNumPrivate)
+    config.audioBusChannels   = config.outputBusChannels + numPrivate
   }
 
   type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Obj.T[S, Code.Elem]]
@@ -350,16 +352,20 @@ object ActionBounceTimeline {
     val pSet        = settings.prepare(group, bounceFile)
     var process: Processor[Any, _] = perform(document, pSet)
 
+    var processCompleted = false
+
     val ggProgress  = new ProgressBar()
-    val ggCancel    = Button("Abort") {
+    lazy val ggCancel = Button("Abort") {
       process.abort()
+      // currently process doesn't seem to abort under certain errors
+      // (e.g. buffer allocator exhausted). XXX TODO
+      val run = new Runnable { def run() = { Thread.sleep(1000); defer(fDispose()) }}
+      new Thread(run).start()
     }
     ggCancel.focusable = false
-    val op    = OptionPane(message = ggProgress, messageType = OptionPane.Message.Plain, entries = Seq(ggCancel))
-    val title = s"Bouncing to ${file.name} ..."
+    lazy val op     = OptionPane(message = ggProgress, messageType = OptionPane.Message.Plain, entries = Seq(ggCancel))
+    lazy val title  = s"Bouncing to ${file.name} ..."
     op.title  = title
-
-    var processCompleted = false
 
     def fDispose(): Unit = {
       val w = SwingUtilities.getWindowAncestor(op.peer); if (w != null) w.dispose()

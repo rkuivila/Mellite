@@ -27,7 +27,7 @@ import de.sciss.desktop.OptionPane
 import javax.swing.{JComponent, TransferHandler, DropMode}
 import javax.swing.TransferHandler.TransferSupport
 import java.awt.datatransfer.Transferable
-import scala.swing.event.TableColumnsSelected
+import scala.swing.event.TableRowsSelected
 import scala.util.Try
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{Int => IntEx}
@@ -267,20 +267,42 @@ object GlobalProcsViewImpl {
       val ggDelete: Button = GUI.toolButton(actionDelete, raphael.Shapes.Minus, "Delete Global Process")
       actionDelete.enabled = false
       // ggDelete.peer.putClientProperty("JButton.buttonType", "roundRect")
+
+      val actionAttr: Action = Action(null) {
+        if (selectionModel.nonEmpty) cursor.step { implicit tx =>
+          selectionModel.iterator.foreach { view =>
+            AttrMapFrame(view.obj())
+          }
+        }
+      }
+
+      val ggAttr = GUI.toolButton(actionAttr, raphael.Shapes.Wrench, "Attributes Editor")
+      actionAttr.enabled = false
+
       table.listenTo(table.selection)
       table.reactions += {
-        case TableColumnsSelected(_, range, _) =>
-          actionDelete.enabled = range.nonEmpty
+        case TableRowsSelected(_, _, _) =>
+          val range   = table.selection.rows
+          val hasSel  = range.nonEmpty
+          actionDelete.enabled = hasSel
+          actionAttr  .enabled = hasSel
+          // println(s"Table range = $range")
           val newSel = range.map(procSeq(_))
           selectionModel.iterator.foreach { v =>
-            if (!newSel.contains(v)) selectionModel -= v
+            if (!newSel.contains(v)) {
+              // println(s"selectionModel -= $v")
+              selectionModel -= v
+            }
           }
           newSel.foreach { v =>
-            if (!selectionModel.contains(v)) selectionModel += v
+            if (!selectionModel.contains(v)) {
+              // println(s"selectionModel += $v")
+              selectionModel += v
+            }
           }
       }
 
-      val butPanel  = new FlowPanel(ggAdd, ggDelete)
+      val butPanel  = new FlowPanel(ggAdd, ggDelete, ggAttr)
 
       tlSelModel addListener tlSelListener
 

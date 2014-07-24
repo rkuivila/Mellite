@@ -485,24 +485,14 @@ object TimelineViewImpl {
       }
       GUI.fixWidth(ggVisualBoost)
 
-      var tlHasFocus = true // XXX TODO yes this is ugly
-
       val actionAttr: Action = Action(null) {
-        if (tlHasFocus) {
-          withSelection { implicit tx =>
-            seq => seq.foreach { view =>
-              AttrMapFrame(view.obj())
-            }
-          }
-        } else {
-          val sel = globalView.selectionModel
-          if (sel.nonEmpty) step { implicit tx =>
-            sel.iterator.foreach { view =>
-              AttrMapFrame(view.obj())
-            }
+        withSelection { implicit tx =>
+          seq => seq.foreach { view =>
+            AttrMapFrame(view.obj())
           }
         }
       }
+
       actionAttr.enabled = false
       val ggAttr = GUI.toolButton(actionAttr, raphael.Shapes.Wrench, "Attributes Editor")
       ggAttr.focusable = false
@@ -532,28 +522,7 @@ object TimelineViewImpl {
       }
 
       selectionModel.addListener {
-        case _ if tlHasFocus => actionAttr.enabled = selectionModel.nonEmpty
-      }
-
-      globalView.selectionModel.addListener {
-        case _ if !tlHasFocus => actionAttr.enabled = globalView.selectionModel.nonEmpty
-      }
-
-      val r = new Reactor {}
-      val globalViewTable = globalView.tableComponent
-      val canvasViewC     = canvasView.canvasComponent
-      r.listenTo(globalViewTable)
-      r.listenTo(canvasViewC    )
-      r.reactions += {
-        case FocusGained(`globalViewTable`, _, _) =>
-          // println("FocusGained: globalViewTable")
-          tlHasFocus          = false
-          actionAttr.enabled  = globalView.selectionModel.nonEmpty
-
-        case FocusGained(`canvasViewC`    , _, _) =>
-          // println("FocusGained: canvasViewC")
-          tlHasFocus          = true
-          actionAttr.enabled  = selectionModel.nonEmpty
+        case _ => actionAttr.enabled = selectionModel.nonEmpty
       }
 
       val pane2 = new SplitPane(Orientation.Vertical, globalView.component, canvasView.component)
