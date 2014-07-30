@@ -12,7 +12,7 @@ The following artifact is available from Maven Central:
 
     "de.sciss" %% "mellite" % v
 
-The current stable version `v` is `"0.8.0"`.
+The current version `v` is `"0.9.0"`.
 
 ## building
 
@@ -21,6 +21,8 @@ Mellite builds with sbt 0.13 and Scala 2.11, 2.10. The dependencies should be do
 Dependencies not found are all available from their respective [GitHub repositories](https://github.com/Sciss?tab=repositories), so in case you want to build a snapshot version, you may need to check out these projects and publish them yourself using `sbt publish-local`.
 
 To build an OS X standalone application, run `sbt appbundle`, for all other platforms `sbt assembly` will create a fat `.jar` file in the root directory that can be executed via double-click. There is also a tiny shell script `./mellite` that will launch this jar file.
+
+__Note__: The `appbundle` is currently broken for v0.9.0 due to the sub-project refactoring. On OS X, you will also have to use the fat `.jar` via `sbt assembly`!
 
 On Linux, you can copy `Mellite.desktop` into `~/.local/share/applications` and edit this file to use the correct installation paths. You can then add Mellite to your desktop manager (GNOME, KDE, etc.)
 

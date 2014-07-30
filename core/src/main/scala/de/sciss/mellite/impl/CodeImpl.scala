@@ -259,7 +259,10 @@ object CodeImpl {
 
       if (compiler.reporter.hasErrors) throw new Code.CompilationFailed()
 
-      val d0    = intp.replOutput.dir
+      // this method is deprecated in Scala 2.11, but necessary to compile for Scala 2.10
+      val d0    = intp.virtualDirectory
+      // intp.replOutput.dir
+
       //        println(s"isClassContainer? ${d0.isClassContainer}")
       //        println(s"isDirectory? ${d0.isDirectory}")
       //        println(s"isVirtual? ${d0.isVirtual}")
