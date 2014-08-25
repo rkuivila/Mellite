@@ -752,9 +752,9 @@ object ObjViewImpl {
             |""".stripMargin))
 
         case 1 => Some(_Code.SynthGraph(
-          """|val in   = scan.In("in")
+          """|val in   = ScanIn("in")
             |val sig  = in
-            |scan.Out("out", sig)
+            |ScanOut("out", sig)
             |""".stripMargin
         ))
 

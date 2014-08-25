@@ -7,7 +7,7 @@ lazy val baseNameL  = baseName.toLowerCase
 lazy val fullDescr  = "A computer music application based on SoundProcesses"
 
 lazy val commonSettings = Project.defaultSettings ++ Seq(
-  version            := "0.9.0",
+  version            := "0.10.0-SNAPSHOT",
   organization       := "de.sciss",
   homepage           := Some(url("https://github.com/Sciss/" + name.value)),
   licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
@@ -21,7 +21,7 @@ lazy val commonSettings = Project.defaultSettings ++ Seq(
   // ---- publishing ----
   publishMavenStyle := true,
   publishTo := {
-    Some(if (version.value endsWith "-SNAPSHOT")
+    Some(if (isSnapshot.value)
       "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
     else
       "Sonatype Releases"  at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
@@ -69,7 +69,7 @@ lazy val core: Project = Project(
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
     libraryDependencies ++= Seq(
       "de.sciss" %% "scalainterpreterpane"            % "1.6.2",  // REPL
-      "de.sciss" %% "soundprocesses"                  % "2.5.0",  // computer-music framework
+      "de.sciss" %% "soundprocesses"                  % "2.6.0-SNAPSHOT",  // computer-music framework
       "de.sciss" %% "lucrestm-bdb"                    % "2.1.0",  // database backend
       "de.sciss" %% "fscapejobs"                      % "1.4.1",  // remote FScape invocation
       "de.sciss" %% "strugatzki"                      % "2.4.1"   // feature extraction

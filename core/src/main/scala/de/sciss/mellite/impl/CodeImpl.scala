@@ -222,59 +222,58 @@ object CodeImpl {
     * and returns the function's class name (without package) and the raw jar file produced in the compilation.
     */
   def compileToFunction(name: String, code: Code.Action): Array[Byte] = {
-      // println("---1")
-      val compiler        = intp.global  // we re-use the intp compiler -- no problem, right?
-      // println("---2")
-      intp.reset()
-      compiler.reporter.reset()
-      // println("---3")
-      val f               = File.createTempFile("temp", ".scala")
-      val out             = new BufferedOutputStream(new FileOutputStream(f))
+    // println("---1")
+    val compiler        = intp.global  // we re-use the intp compiler -- no problem, right?
+    // println("---2")
+    intp.reset()
+    compiler.reporter.reset()
+    // println("---3")
+    val f               = File.createTempFile("temp", ".scala")
+    val out             = new BufferedOutputStream(new FileOutputStream(f))
 
-      val imports = getImports(Code.Action.id)
-      val impS  = /* w. */imports.map(i => s"  import $i\n").mkString
-      //        val bindS = w.binding.fold("")(i =>
-      //          s"""  val __context__ = $pkg.$i.__context__
-      //             |  import __context__._
-      //             |""".stripMargin)
-      // val aTpe  = w.blockTag.tpe.toString
-      val synth =
-        s"""package $UserPackage
-           |
-           |class $name extends Function0[Unit] {
-           |  def apply(): Unit = {
-           |$impS
-           |${code.source}
-           |  }
-           |}
-           |""".stripMargin
+    val imports = getImports(Code.Action.id)
+    val impS  = /* w. */imports.map(i => s"  import $i\n").mkString
+    //        val bindS = w.binding.fold("")(i =>
+    //          s"""  val __context__ = $pkg.$i.__context__
+    //             |  import __context__._
+    //             |""".stripMargin)
+    // val aTpe  = w.blockTag.tpe.toString
+    val synth =
+      s"""package $UserPackage
+         |
+         |class $name extends Function0[Unit] {
+         |  def apply(): Unit = {
+         |$impS
+         |${code.source}
+         |  }
+         |}
+         |""".stripMargin
 
-      // println(synth)
+    // println(synth)
 
-      out.write(synth.getBytes("UTF-8"))
-      out.flush(); out.close()
-      val run = new compiler.Run()
-      run.compile(List(f.getPath))
-      f.delete()
+    out.write(synth.getBytes("UTF-8"))
+    out.flush(); out.close()
+    val run = new compiler.Run()
+    run.compile(List(f.getPath))
+    f.delete()
 
-      if (compiler.reporter.hasErrors) throw new Code.CompilationFailed()
+    if (compiler.reporter.hasErrors) throw new Code.CompilationFailed()
 
-      // this method is deprecated in Scala 2.11, but necessary to compile for Scala 2.10
-      val d0    = intp.virtualDirectory
-      // intp.replOutput.dir
+    val d0    = intp.virtualDirectory // method deprecated in Scala 2.11, but necessary for Scala 2.10
+    // intp.replOutput.dir
 
-      //        println(s"isClassContainer? ${d0.isClassContainer}")
-      //        println(s"isDirectory? ${d0.isDirectory}")
-      //        println(s"isVirtual? ${d0.isVirtual}")
-      //        println(s"toList: ${d0.toList}")
+    //        println(s"isClassContainer? ${d0.isClassContainer}")
+    //        println(s"isDirectory? ${d0.isDirectory}")
+    //        println(s"isVirtual? ${d0.isVirtual}")
+    //        println(s"toList: ${d0.toList}")
 
-      // val d = d0.file
-      // require(d != null, "Compiler used a virtual directory")
-      val bytes = JarUtil.pack(d0)
-      // deleteDir(d)
+    // val d = d0.file
+    // require(d != null, "Compiler used a virtual directory")
+    val bytes = JarUtil.pack(d0)
+    // deleteDir(d)
 
-      bytes
-    }
+    bytes
+  }
 
   //  def deleteDir(base: File): Unit = {
   //    base.listFiles().foreach { f =>
