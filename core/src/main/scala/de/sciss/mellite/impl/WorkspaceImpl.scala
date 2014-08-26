@@ -35,7 +35,10 @@ object WorkspaceImpl {
 
     def read(in: DataInput, access: S#Acc)(implicit tx: S#Tx): Data[S] = {
       val cookie = in.readLong()
-      require(cookie == COOKIE, s"Unexpected cookie $cookie (should be $COOKIE)")
+      if ((cookie & 0xFFFFFFFFFFFFFF00L) != COOKIE) sys.error(s"Unexpected cookie $cookie (should be $COOKIE)")
+      val version = cookie.toInt & 0xFF
+      if (version != VERSION) sys.error(s"Incompatible file version (found $version, but need $VERSION)")
+
       new Data[S] {
         val root = Folder.read[S](in, access)
       }
@@ -133,13 +136,14 @@ object WorkspaceImpl {
     new EphemeralImpl(dir, system, access)
   }
 
-  private final val COOKIE = 0x4D656C6C69746500L  // "Mellite\0"
+  private final val COOKIE  = 0x4D656C6C69746500L  // "Mellite\0"
+  private final val VERSION = 1
 
   private abstract class Data[S <: Sys[S]] {
     def root: Folder[S]
 
     final def write(out: DataOutput): Unit = {
-      out.writeLong(COOKIE)
+      out.writeLong(COOKIE | VERSION)
       root.write(out)
     }
 
