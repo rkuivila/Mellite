@@ -14,8 +14,8 @@ lazy val commonSettings = Project.defaultSettings ++ Seq(
   scalaVersion       := "2.11.2",
   crossScalaVersions := Seq("2.11.2", "2.10.4"),
   scalacOptions ++= {
-    val xs = Seq("-deprecation", "-unchecked", "-feature", "-Xfuture")
-    if (version.value endsWith "-SNAPSHOT") xs else xs ++ Seq("-Xelide-below", "INFO")
+    val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
+    if (isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
   },
   javacOptions ++= Seq("-source", "1.6", "-target", "1.6"),
   // ---- publishing ----
@@ -72,7 +72,7 @@ lazy val core: Project = Project(
       "de.sciss" %% "soundprocesses"                  % "2.6.0-SNAPSHOT",  // computer-music framework
       "de.sciss" %% "lucrestm-bdb"                    % "2.1.0",  // database backend
       "de.sciss" %% "fscapejobs"                      % "1.4.1",  // remote FScape invocation
-      "de.sciss" %% "strugatzki"                      % "2.4.1"   // feature extraction
+      "de.sciss" %% "strugatzki"                      % "2.5.0-SNAPSHOT"   // feature extraction
     ),
     initialCommands in console := "import de.sciss.mellite._"
   )
@@ -86,7 +86,7 @@ lazy val views = Project(
     name        := s"$baseName-views",
     description := fullDescr,
     libraryDependencies ++= Seq(
-      "de.sciss" %% "scalacolliderswing-interpreter"  % "1.16.0", // REPL
+      "de.sciss" %% "scalacolliderswing-interpreter"  % "1.18.0-SNAPSHOT", // REPL
       "de.sciss" %% "lucreswing"                      % "0.4.1",  // reactive Swing components
       "de.sciss" %% "audiowidgets-app"                % "1.6.2",  // audio application widgets
       "de.sciss" %% "desktop-mac"                     % "0.5.4",  // desktop framework; TODO: should be only added on OS X platforms

@@ -118,7 +118,7 @@ object CodeImpl {
       "de.sciss.mellite.TransformUtil._"
     ),
     Code.SynthGraph.id -> Vec(
-      "de.sciss.synth._",
+      "de.sciss.synth.{Buffer => _, _}",
       "de.sciss.synth.ugen.{DiskIn => _, VDiskIn => _, BufChannels => _, BufRateScale => _, BufSampleRate => _, _}",
       "de.sciss.synth.proc.graph._"
     ),
