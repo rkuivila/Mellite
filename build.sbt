@@ -6,6 +6,8 @@ lazy val baseNameL  = baseName.toLowerCase
 
 lazy val fullDescr  = "A computer music application based on SoundProcesses"
 
+lazy val loggingEnabled = true
+
 lazy val commonSettings = Project.defaultSettings ++ Seq(
   version            := "0.10.0-SNAPSHOT",
   organization       := "de.sciss",
@@ -15,7 +17,7 @@ lazy val commonSettings = Project.defaultSettings ++ Seq(
   crossScalaVersions := Seq("2.11.2", "2.10.4"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
-    if (isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
+    if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
   },
   javacOptions ++= Seq("-source", "1.6", "-target", "1.6"),
   // ---- publishing ----

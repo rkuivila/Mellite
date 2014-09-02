@@ -26,7 +26,6 @@ import scala.swing.event.{ButtonClicked, ValueChanged}
 import collection.breakOut
 import javax.swing.border.Border
 import de.sciss.lucre.synth.{Txn, Server}
-import de.sciss.file._
 import scala.concurrent.stm.atomic
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.stm.TxnLike
@@ -105,7 +104,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   }
 
   private val audioServerPane = new ServerStatusPanel()
-  audioServerPane.bootAction = Some(startAuralSystem _)
+  audioServerPane.bootAction = Some(() => { Mellite.startAuralSystem(); () })
 
   private val boxPane = new BoxPanel(Orientation.Vertical)
   boxPane.contents += sensorServerPane
@@ -153,26 +152,6 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
       }
   }
 
-  def startAuralSystem(): Unit = {
-    val config        = Server.Config()
-    val programPath   = Prefs.superCollider.getOrElse(Prefs.defaultSuperCollider)
-    if (programPath != Prefs.defaultSuperCollider) config.program = programPath.path
-    val audioDevice   = Prefs.audioDevice.getOrElse(Prefs.defaultAudioDevice)
-    if (audioDevice != Prefs.defaultAudioDevice) config.deviceName = Some(audioDevice)
-    val numOutputs    = Prefs.audioNumOutputs.getOrElse(Prefs.defaultAudioNumOutputs)
-    config.outputBusChannels = numOutputs
-    val numPrivate    = Prefs.audioNumPrivate.getOrElse(Prefs.defaultAudioNumPrivate)
-    config.audioBusChannels = numOutputs + numPrivate
-    config.wireBuffers = math.max(256, numOutputs * 4)  // XXX TODO - sensible?
-    config.transport  = osc.TCP
-    config.pickPort()
-
-    atomic { implicit itx =>
-      implicit val tx = Txn.wrap(itx)
-      auralSystem.start(config)
-    }
-  }
-
   private var meter       = Option.empty[AudioBusMeter]
   private var onlinePane  = Option.empty[Component]
 
@@ -204,21 +183,21 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
         import synth._
         import ugen._
         val in        = In.ar(0, numOuts)
-        val mainAmp   = Lag.ar(K2A.ar("amp".kr(1)))
+        val mainAmp   = Lag.ar(K2A.ar("amp".kr(1f)))
         val mainIn    = in * mainAmp
         val ceil      = -0.2.dbamp
         val mainLim   = Limiter.ar(mainIn, level = ceil)
-        val lim       = Lag.ar(K2A.ar("limiter".kr(1) * 2 - 1))
+        val lim       = Lag.ar(K2A.ar("limiter".kr(1f) * 2 - 1))
         val mainOut   = LinXFade2.ar(mainIn, mainLim, pan = lim)
-        val hpBusL    = "hp-bus".kr(0)
+        val hpBusL    = "hp-bus".kr(0f)
         val hpBusR    = hpBusL + 1
-        val hpAmp     = Lag.ar(K2A.ar("hp-amp".kr(1)))
+        val hpAmp     = Lag.ar(K2A.ar("hp-amp".kr(1f)))
         val hpInL     = Mix.tabulate((numOuts + 1) / 2)(i => in \ (i * 2))
         val hpInR     = Mix.tabulate( numOuts      / 2)(i => in \ (i * 2 + 1))
         val hpLimL    = Limiter.ar(hpInL * hpAmp, level = ceil)
         val hpLimR    = Limiter.ar(hpInR * hpAmp, level = ceil)
 
-        val hpActive  = Lag.ar(K2A.ar("hp".kr(0)))
+        val hpActive  = Lag.ar(K2A.ar("hp".kr(0f)))
         val out       = (0 until numOuts).map { i =>
           val isL   = hpActive & (hpBusL sig_== i)
           val isR   = hpActive & (hpBusR sig_== i)
@@ -447,5 +426,5 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   pack()
   front()
 
-  if (Prefs.autoBoot.getOrElse(false)) startAuralSystem()
+  if (Prefs.autoBoot.getOrElse(false)) Mellite.startAuralSystem()
 }

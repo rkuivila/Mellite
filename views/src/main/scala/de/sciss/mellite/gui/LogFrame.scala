@@ -29,7 +29,7 @@ object LogFrame {
 
     log.background  = Style.BlueForest.background
     log.foreground  = Style.BlueForest.foreground
-    log.font        = new Font(Font.MONOSPACED, Font.PLAIN, 10)
+    log.font        = new Font(Font.MONOSPACED, Font.PLAIN, 12)
 
     pack()  // after changing font!
     GUI.placeWindow(frame, horizontal = horizontalPlacement, vertical = verticalPlacement, padding = placementPadding)
