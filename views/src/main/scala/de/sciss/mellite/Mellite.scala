@@ -18,6 +18,7 @@ import de.sciss.lucre.synth.{Txn, Server}
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
+import de.sciss.synth.proc
 import de.sciss.synth.proc.{SensorSystem, AuralSystem}
 import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
@@ -31,13 +32,13 @@ import java.awt.Color
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = mellite.Workspace[_ <: Sys[_]]
 
-  // lucre.event    .showLog = true
-  // lucre.confluent.showLog = true
-  // proc.showLog            = true
-  // showLog                 = true
-  // showTimelineLog         = true
-  // proc.showAuralLog       = true
-  // proc.showTransportLog   = true
+  //  //  lucre.event    .showLog = true
+  //  //  lucre.confluent.showLog = true
+  //  proc.showLog            = true
+  //  proc.showAuralLog       = true
+  //  proc.showTransportLog   = true
+  //  showLog                 = true
+  //  showTimelineLog         = true
 
   override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
     override lazy val usesInternalFrames = {

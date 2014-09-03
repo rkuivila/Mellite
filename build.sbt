@@ -1,15 +1,51 @@
 import AssemblyKeys._
 
-lazy val baseName   = "Mellite"
+lazy val baseName                   = "Mellite"
 
-lazy val baseNameL  = baseName.toLowerCase
+lazy val baseNameL                  = baseName.toLowerCase
 
-lazy val fullDescr  = "A computer music application based on SoundProcesses"
+lazy val fullDescr                  = "A computer music application based on SoundProcesses"
 
-lazy val loggingEnabled = true
+lazy val loggingEnabled             = true
+
+lazy val projectVersion             = "0.10.0"
+
+// ---- core dependencies ----
+
+lazy val soundProcessesVersion      = "2.6.0"
+
+lazy val interpreterPaneVersion     = "1.6.2"
+
+lazy val lucreSTMVersion            = "2.1.0"
+
+lazy val fscapeJobsVersion          = "1.4.1"
+
+lazy val strugatzkiVersion          = "2.5.0"
+
+// ---- views dependencies ----
+
+lazy val scalaColliderSwingVersion  = "1.18.0"
+
+lazy val lucreSwingVersion          = "0.4.1"
+
+lazy val audioWidgetsVersion        = "1.6.2"
+
+lazy val desktopVersion             = "0.5.4"
+
+lazy val sonogramVersion            = "1.7.1"
+
+lazy val treetableVersion           = "1.3.6"
+
+lazy val raphaelIconsVersion        = "1.0.2"
+
+lazy val pdflitzVersion             = "1.1.0"
+
+lazy val webLaFVersion              = "1.28"
+
+// ----
 
 lazy val commonSettings = Project.defaultSettings ++ Seq(
-  version            := "0.10.0-SNAPSHOT",
+  version            := projectVersion,
   organization       := "de.sciss",
   homepage           := Some(url("https://github.com/Sciss/" + name.value)),
   licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
@@ -70,11 +106,11 @@ lazy val core: Project = Project(
     description := "Core layer for Mellite",
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
     libraryDependencies ++= Seq(
-      "de.sciss" %% "scalainterpreterpane"            % "1.6.2",  // REPL
-      "de.sciss" %% "soundprocesses"                  % "2.6.0-SNAPSHOT",  // computer-music framework
-      "de.sciss" %% "lucrestm-bdb"                    % "2.1.0",  // database backend
-      "de.sciss" %% "fscapejobs"                      % "1.4.1",  // remote FScape invocation
-      "de.sciss" %% "strugatzki"                      % "2.5.0-SNAPSHOT"   // feature extraction
+      "de.sciss" %% "soundprocesses"        % soundProcessesVersion,  // computer-music framework
+      "de.sciss" %% "scalainterpreterpane"  % interpreterPaneVersion, // REPL
+      "de.sciss" %% "lucrestm-bdb"          % lucreSTMVersion,        // database backend
+      "de.sciss" %% "fscapejobs"            % fscapeJobsVersion,      // remote FScape invocation
+      "de.sciss" %% "strugatzki"            % strugatzkiVersion       // feature extraction
     ),
     initialCommands in console := "import de.sciss.mellite._"
   )
@@ -88,15 +124,15 @@ lazy val views = Project(
     name        := s"$baseName-views",
     description := fullDescr,
     libraryDependencies ++= Seq(
-      "de.sciss" %% "scalacolliderswing-interpreter"  % "1.18.0-SNAPSHOT", // REPL
-      "de.sciss" %% "lucreswing"                      % "0.4.1",  // reactive Swing components
-      "de.sciss" %% "audiowidgets-app"                % "1.6.2",  // audio application widgets
-      "de.sciss" %% "desktop-mac"                     % "0.5.4",  // desktop framework; TODO: should be only added on OS X platforms
-      "de.sciss" %% "sonogramoverview"                % "1.7.1",  // sonogram component
-      "de.sciss" %% "treetable-scala"                 % "1.3.6",  // tree-table component
-      "de.sciss" %% "raphael-icons"                   % "1.0.2",  // icon set
-      "de.sciss" %% "pdflitz"                         % "1.1.0",  // PDF export
-      "de.sciss" %  "weblaf"                          % "1.28"    // Swing look-and-feel
+      "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL
+      "de.sciss" %% "lucreswing"                      % lucreSwingVersion,          // reactive Swing components
+      "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets
+      "de.sciss" %% "desktop-mac"                     % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
+      "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component
+      "de.sciss" %% "treetable-scala"                 % treetableVersion,           // tree-table component
+      "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
+      "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
+      "de.sciss" %  "weblaf"                          % webLaFVersion               // Swing look-and-feel
     ),
     mainClass in (Compile,run) := Some("de.sciss.mellite.Mellite"),
     initialCommands in console :=
