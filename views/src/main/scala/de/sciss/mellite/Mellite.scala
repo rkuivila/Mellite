@@ -18,7 +18,6 @@ import de.sciss.lucre.synth.{Txn, Server}
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
-import de.sciss.synth.proc
 import de.sciss.synth.proc.{SensorSystem, AuralSystem}
 import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
@@ -32,6 +31,7 @@ import java.awt.Color
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = mellite.Workspace[_ <: Sys[_]]
 
+  // import de.sciss.synth.proc
   //  //  lucre.event    .showLog = true
   //  //  lucre.confluent.showLog = true
   //  proc.showLog            = true
@@ -90,14 +90,16 @@ object Mellite extends SwingApplicationImpl("Mellite") {
       return false
     }
 
-    val audioDevice   = Prefs.audioDevice.getOrElse(Prefs.defaultAudioDevice)
+    val audioDevice     = Prefs.audioDevice     .getOrElse(Prefs.defaultAudioDevice)
     if (audioDevice != Prefs.defaultAudioDevice) config.deviceName = Some(audioDevice)
-    val numOutputs    = Prefs.audioNumOutputs.getOrElse(Prefs.defaultAudioNumOutputs)
+    val numOutputs      = Prefs.audioNumOutputs .getOrElse(Prefs.defaultAudioNumOutputs)
     config.outputBusChannels = numOutputs
-    val numPrivate    = Prefs.audioNumPrivate.getOrElse(Prefs.defaultAudioNumPrivate)
+    val numPrivate      = Prefs.audioNumPrivate .getOrElse(Prefs.defaultAudioNumPrivate)
     config.audioBusChannels = numOutputs + numPrivate
-    config.wireBuffers = math.max(256, numOutputs * 4)  // XXX TODO - sensible?
-    config.transport  = osc.TCP
+    config.wireBuffers  = Prefs.audioNumWireBufs.getOrElse(Prefs.defaultAudioNumWireBufs)
+    config.sampleRate   = Prefs.audioSampleRate .getOrElse(Prefs.defaultAudioSampleRate)
+    config.blockSize    = Prefs.audioBlockSize  .getOrElse(Prefs.defaultAudioBlockSize)
+    config.transport    = osc.TCP
     config.pickPort()
 
     TxnExecutor.defaultAtomic { implicit itx =>

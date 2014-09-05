@@ -55,16 +55,24 @@ object Prefs {
 
   final val defaultSuperCollider    = file("<SC_HOME>")
   final val defaultAudioDevice      = "<default>"
+  final val defaultAudioSampleRate  = 0
+
+  final val defaultAudioBlockSize   = 64
   final val defaultAudioNumOutputs  = 8
   final val defaultAudioNumPrivate  = 512
+  final val defaultAudioNumWireBufs = 256
   final val defaultHeadphonesBus    = 0
 
-  def superCollider  : Entry[File   ] = userPrefs("supercollider"    )
-  def audioDevice    : Entry[String ] = userPrefs("audio-device"     )
-  def audioNumOutputs: Entry[Int    ] = userPrefs("audio-num-outputs")
-  def audioNumPrivate: Entry[Int    ] = userPrefs("audio-num-private")
-  def headphonesBus  : Entry[Int    ] = userPrefs("headphones-bus"   )
-  def autoBoot       : Entry[Boolean] = userPrefs("auto-boot"        )
+  def superCollider   : Entry[File   ] = userPrefs("supercollider"      )
+  def audioDevice     : Entry[String ] = userPrefs("audio-device"       )
+  def audioNumOutputs : Entry[Int    ] = userPrefs("audio-num-outputs"  )
+  def audioSampleRate : Entry[Int    ] = userPrefs("audio-sample-rate"  )
+
+  def audioBlockSize  : Entry[Int    ] = userPrefs("audio-block-size"   )
+  def audioNumPrivate : Entry[Int    ] = userPrefs("audio-num-private"  )
+  def audioNumWireBufs: Entry[Int    ] = userPrefs("audio-num-wire-bufs")
+  def headphonesBus   : Entry[Int    ] = userPrefs("headphones-bus"     )
+  def autoBoot        : Entry[Boolean] = userPrefs("auto-boot"          )
 
   // ---- sensor ----
 

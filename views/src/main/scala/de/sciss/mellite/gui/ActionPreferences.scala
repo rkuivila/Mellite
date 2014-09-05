@@ -57,14 +57,25 @@ object ActionPreferences extends Action("Preferences...") {
     val ggAutoBoot      = checkBox(Prefs.autoBoot, default = false)
 
     val lbAudioDevice   = label("Audio Device")
-    val ggAudioDevice   = textField(Prefs.audioDevice   , Prefs.defaultAudioDevice    )
+    val ggAudioDevice   = textField(Prefs.audioDevice    , Prefs.defaultAudioDevice     )
     val lbNumOutputs    = label("Output Channels")
-    val ggNumOutputs    = intField(Prefs.audioNumOutputs, Prefs.defaultAudioNumOutputs)
+    val ggNumOutputs    = intField(Prefs.audioNumOutputs , Prefs.defaultAudioNumOutputs )
+    val lbSampleRate    = label("Sample Rate")
+    val ggSampleRate    = intField(Prefs.audioSampleRate , Prefs.defaultAudioSampleRate, max = 384000)
+
+    val sepAudioAdvanced = Separator()
+
+    val lbBlockSize     = label("Block Size")
+    val ggBlockSize     = intField(Prefs.audioBlockSize  , Prefs.defaultAudioBlockSize, min = 1)
     val lbNumPrivate    = label("Private Channels")
-    val ggNumPrivate    = intField(Prefs.audioNumPrivate, Prefs.defaultAudioNumPrivate)
+    val ggNumPrivate    = intField(Prefs.audioNumPrivate , Prefs.defaultAudioNumPrivate, min = 4)
+    val lbNumWireBufs   = label("Wire Buffers")
+    val ggNumWireBufs   = intField(Prefs.audioNumWireBufs, Prefs.defaultAudioNumWireBufs, min = 4, max = 262144)
+
+    val sepAudioHeadphones = Separator()
 
     val lbHeadphones    = label("Headphones Bus")
-    val ggHeadphones    = intField(Prefs.headphonesBus  , Prefs.defaultHeadphonesBus  )
+    val ggHeadphones    = intField(Prefs.headphonesBus   , Prefs.defaultHeadphonesBus   )
 
     // ---- sensor ----
     val sepSensor = Separator()
@@ -79,9 +90,9 @@ object ActionPreferences extends Action("Preferences...") {
 
     val box = new GroupPanel {
       // val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
-      horizontal = Par(sepAudio, sepSensor, Seq(
-        Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAutoBoot, lbAudioDevice, lbNumOutputs, lbNumPrivate, lbHeadphones, lbSensorProtocol, lbSensorPort),
-        Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAutoBoot, ggAudioDevice, ggNumOutputs, ggNumPrivate, ggHeadphones, ggSensorProtocol, ggSensorPort)
+      horizontal = Par(sepAudio, sepSensor, sepAudioAdvanced, sepAudioHeadphones, Seq(
+        Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAutoBoot, lbAudioDevice, lbNumOutputs, lbSampleRate, lbBlockSize, lbNumPrivate, lbNumWireBufs, lbHeadphones, lbSensorProtocol, lbSensorPort),
+        Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAutoBoot, ggAudioDevice, ggNumOutputs, ggSampleRate, ggNumPrivate, ggBlockSize, ggNumWireBufs, ggHeadphones, ggSensorProtocol, ggSensorPort)
       ))
       vertical = Seq(
         Par(Baseline)(lbLookAndFeel     , ggLookAndFeel     ),
@@ -91,7 +102,12 @@ object ActionPreferences extends Action("Preferences...") {
         Par(Baseline)(lbAutoBoot        , ggAutoBoot        ),
         Par(Baseline)(lbAudioDevice     , ggAudioDevice     ),
         Par(Baseline)(lbNumOutputs      , ggNumOutputs      ),
+        Par(Baseline)(lbSampleRate      , ggSampleRate      ),
+        sepAudioAdvanced,
+        Par(Baseline)(lbBlockSize       , ggBlockSize       ),
         Par(Baseline)(lbNumPrivate      , ggNumPrivate      ),
+        Par(Baseline)(lbNumWireBufs     , ggNumWireBufs     ),
+        sepAudioHeadphones,
         Par(Baseline)(lbHeadphones      , ggHeadphones      ),
         sepSensor,
         Par(Baseline)(lbSensorProtocol  , ggSensorProtocol  ),

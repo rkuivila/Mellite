@@ -24,6 +24,7 @@ object PrefsGUI {
         case _ => println(s"Unexpected value ${gg.value}")
       }
     }
+    gg.tooltip = s"Default: $default"
     gg
   }
 
@@ -66,6 +67,7 @@ object PrefsGUI {
         if (gg.text.isEmpty) gg.text = fixDefault
         prefs.put(gg.text)
     }
+    // gg.tooltip = s"Default: $default"
     gg
   }
 
