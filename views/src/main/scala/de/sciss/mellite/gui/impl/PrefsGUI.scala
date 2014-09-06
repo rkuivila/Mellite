@@ -2,13 +2,14 @@ package de.sciss.mellite
 package gui
 package impl
 
-import scala.swing.{CheckBox, ComboBox, FlowPanel, Button, TextField, Component, Alignment, Label}
+import scala.swing.{CheckBox, FlowPanel, Button, TextField, Component, Alignment, Label}
 import scala.swing.Swing.EmptyIcon
 import de.sciss.desktop.{FileDialog, Preferences}
 import javax.swing.{JPanel, SpinnerNumberModel}
-import de.sciss.swingplus.Spinner
+import de.sciss.swingplus.{ComboBox, Spinner}
 import scala.swing.event.{ButtonClicked, SelectionChanged, EditDone, ValueChanged}
 import de.sciss.file._
+import de.sciss.swingplus
 
 object PrefsGUI {
   def label(text: String) = new Label(text + ":", EmptyIcon, Alignment.Right)
@@ -73,7 +74,7 @@ object PrefsGUI {
 
   def combo[A](prefs: Preferences.Entry[A], default: => A, values: Seq[A])(implicit view: A => String): Component = {
     val gg = new ComboBox[A](values)
-    gg.renderer = scala.swing.ListView.Renderer(view)
+    gg.renderer = swingplus.ListView.Renderer(view)
     gg.peer.putClientProperty("JComboBox.isSquare", true)
     val idx0 = values.indexOf(prefs.getOrElse(default))
     if (idx0 >= 0) gg.selection.index = idx0

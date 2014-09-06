@@ -79,8 +79,8 @@ object ActionArtifactLocation {
       case Vec(Labeled(source)) => Some(source)
 
       case _ =>
-        val ggList = new swing.ListView(options)
-        ggList.selection.intervalMode = swing.ListView.IntervalMode.Single
+        val ggList = new swingplus.ListView(options)
+        ggList.selection.intervalMode = swingplus.ListView.IntervalMode.Single
         ggList.selection.indices += 0
         val opt = OptionPane.apply(message = ggList, messageType = OptionPane.Message.Question,
           optionType = OptionPane.Options.OkCancel, entries = Seq("Ok", "New Location", "Cancel"))

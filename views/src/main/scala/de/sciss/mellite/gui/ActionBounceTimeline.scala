@@ -19,7 +19,7 @@ import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
 import de.sciss.synth.proc.{Timeline, ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Artifact, Bounce}
 import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
-import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, ComboBox, Button, TextField}
+import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
 import java.io.File
 import javax.swing.{SwingUtilities, JFormattedTextField, SpinnerNumberModel}
@@ -35,7 +35,7 @@ import scala.util.{Failure, Try}
 import de.sciss.processor.Processor
 import de.sciss.file._
 import de.sciss.lucre.swing._
-import de.sciss.swingplus.{Spinner, Labeled}
+import de.sciss.swingplus.{ComboBox, Spinner, Labeled}
 import de.sciss.lucre.synth.{Server, Synth, Sys}
 import de.sciss.lucre.expr.{Long => LongEx, Double => DoubleEx}
 import proc.Implicits._
@@ -191,7 +191,7 @@ object ActionBounceTimeline {
           findTransforms(document)
         }
         transformItemsCollected =  true
-        ggTransform.peer.setModel(ComboBox.newConstantModel(transform))
+        ggTransform.items = transform
         for (t <- init.transform; lb <- transform.find(_.value == t)) {
           ggTransform.selection.item = lb
         }

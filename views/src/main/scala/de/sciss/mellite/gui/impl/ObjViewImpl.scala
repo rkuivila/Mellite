@@ -30,8 +30,8 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.file._
-import scala.swing.{CheckBox, Label, ComboBox, TextField, Component}
-import de.sciss.swingplus.Spinner
+import scala.swing.{CheckBox, Label, TextField, Component}
+import de.sciss.swingplus.{ComboBox, Spinner}
 import java.awt.geom.Path2D
 import de.sciss.desktop.{OptionPane, FileDialog}
 import de.sciss.synth.io.{SampleFormat, AudioFile}

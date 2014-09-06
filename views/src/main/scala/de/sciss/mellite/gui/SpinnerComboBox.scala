@@ -1,10 +1,10 @@
 package de.sciss.mellite.gui
 
-import java.awt.Component
-import java.awt.event.ActionListener
-import javax.swing.{SpinnerNumberModel, ComboBoxEditor, JSpinner, AbstractSpinnerModel}
+import javax.swing.{SpinnerNumberModel, AbstractSpinnerModel}
 
-import scala.swing.{Swing, ComboBox}
+import de.sciss.swingplus.{Spinner, ComboBox}
+
+import scala.swing.Swing
 
 class SpinnerComboBox[A](value0: A, minimum: A, maximum: A, step: A, items: Seq[A])(implicit num: Numeric[A])
   extends ComboBox[A](items) {
@@ -27,35 +27,43 @@ class SpinnerComboBox[A](value0: A, minimum: A, maximum: A, step: A, items: Seq[
 
   private def clip(in: A): A = num.max(minimum, num.min(maximum, in))
 
-  private val sp = new JSpinner(sm)
+  private val sp = new Spinner(sm)
   // sp.setBorder(null)
 
-  private object editor extends ComboBoxEditor {
-    def getEditorComponent: Component = sp
+  private object editor extends ComboBox.Editor[A] {
 
-    def getItem: AnyRef = sp.getValue
-    def setItem(value: Any): Unit = sp.setValue(value)
+//    def getEditorComponent: Component = sp
+//
+//    def getItem: AnyRef = sp.getValue
+//    def setItem(value: Any): Unit = sp.setValue(value)
+//
+//    def selectAll(): Unit = sp.getEditor match {
+//      case ed: JSpinner.DefaultEditor => ed.getTextField.selectAll()
+//      case _ =>
+//    }
+//
+//    def addActionListener(l: ActionListener): Unit = sp.getEditor match {
+//      case ed: JSpinner.DefaultEditor => ed.getTextField.addActionListener(l)
+//      case _ =>
+//    }
+//
+//    def removeActionListener(l: ActionListener): Unit = sp.getEditor match {
+//      case ed: JSpinner.DefaultEditor => ed.getTextField.removeActionListener(l)
+//      case _ =>
+//    }
 
-    def selectAll(): Unit = sp.getEditor match {
-      case ed: JSpinner.DefaultEditor => ed.getTextField.selectAll()
-      case _ =>
-    }
+    def component: swing.Component = sp
 
-    def addActionListener(l: ActionListener): Unit = sp.getEditor match {
-      case ed: JSpinner.DefaultEditor => ed.getTextField.addActionListener(l)
-      case _ =>
-    }
+    def item: A = sp.value.asInstanceOf[A]
+    def item_=(a: A): Unit = if (a != null) sp.value = a  // CCC
 
-    def removeActionListener(l: ActionListener): Unit = sp.getEditor match {
-      case ed: JSpinner.DefaultEditor => ed.getTextField.removeActionListener(l)
-      case _ =>
-    }
+    def startEditing(): Unit = comboBoxPeer.selectAll()
   }
 
-  peer.setEditor(editor)
-  peer.setEditable(true)
+  makeEditable()(_ => editor)
+
   border = Swing.EmptyBorder(0, 0, 0, 4)
 
-  def value: A          = sp.getValue.asInstanceOf[A]
-  def value_=(value: A) = sp.setValue(clip(value))
+  def value: A          = sp.value.asInstanceOf[A]
+  def value_=(value: A) = sp.value = clip(value)
 }
