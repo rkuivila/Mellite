@@ -483,7 +483,7 @@ object TimelineViewImpl {
             canvasView.trackTools.visualBoost = value.linexp(0, 64, 1, 512) // .toFloat
         }
       }
-      GUI.fixWidth(ggVisualBoost)
+      desktop.Util.fixWidth(ggVisualBoost)
 
       val actionAttr: Action = Action(null) {
         withSelection { implicit tx =>
@@ -972,7 +972,7 @@ object TimelineViewImpl {
         // setOpaque(true)
 
         preferredSize = {
-          val b = GUI.maximumWindowBounds
+          val b = desktop.Util.maximumWindowBounds
           (b.width >> 1, b.height >> 1)
         }
 

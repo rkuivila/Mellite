@@ -16,9 +16,8 @@ package mellite
 package gui
 
 import scala.swing.Swing._
-import scala.swing.{Table, Action, Color, Button, AbstractButton, Swing, Dialog, Component, TextField, Label, Alignment}
-import java.awt.{Rectangle, GraphicsEnvironment}
-import javax.swing.{JComponent, SortOrder, RowSorter, Icon, Timer}
+import scala.swing.{Action, Color, Button, AbstractButton, Dialog, Component, TextField, Label, Alignment}
+import javax.swing.{JComponent, Icon}
 import de.sciss.swingplus.GroupPanel
 import de.sciss.icons.raphael
 import java.awt.geom.Path2D
@@ -27,29 +26,26 @@ import scala.annotation.tailrec
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
-  def centerOnScreen(w: desktop.Window): Unit = placeWindow(w, 0.5f, 0.5f, 0)
-
-  def delay(millis: Int)(block: => Unit): Unit = {
-    val timer = new Timer(millis, Swing.ActionListener(_ => block))
-    timer.setRepeats(false)
-    timer.start()
+  private def wordWrap(s: String, margin: Int = 80): String = {
+    if (s == null) return "" // fuck java
+    val sz = s.length
+    if (sz <= margin) return s
+    var i = 0
+    val sb = new StringBuilder
+    while (i < sz) {
+      val j = s.lastIndexOf(" ", i + margin)
+      val found = j > i
+      val k = if (found) j else i + margin
+      sb.append(s.substring(i, math.min(sz, k)))
+      i = if (found) k + 1 else k
+      if (i < sz) sb.append('\n')
+    }
+    sb.toString()
   }
 
-  def fixSize(c: Component): Unit = {
-    val d = c.preferredSize
-    c.preferredSize = d
-    c.minimumSize   = d
-    c.maximumSize   = d
-  }
-
-  def fixWidth(c: Component, width: Int = -1): Unit = {
-    val w         = if (width < 0) c.preferredSize.width else width
-    val min       = c.minimumSize
-    val max       = c.maximumSize
-    min.width     = w
-    max.width     = w
-    c.minimumSize = min
-    c.maximumSize = max
+  def formatException(e: Throwable): String = {
+    e.getClass.toString + " :\n" + wordWrap(e.getMessage) + "\n" +
+      e.getStackTrace.take(10).map("   at " + _).mkString("\n")
   }
 
   def round(b: AbstractButton*): Unit =
@@ -66,19 +62,6 @@ object GUI {
       }
 
     loop(c.peer)
-  }
-
-  def maximumWindowBounds: Rectangle = {
-    val ge  = GraphicsEnvironment.getLocalGraphicsEnvironment
-    ge.getMaximumWindowBounds
-  }
-
-  def placeWindow(w: desktop.Window, horizontal: Float, vertical: Float, padding: Int): Unit = {
-    val bs  = maximumWindowBounds
-    val b   = w.size
-    val x   = (horizontal * (bs.width  - padding * 2 - b.width )).toInt + bs.x + padding
-    val y   = (vertical   * (bs.height - padding * 2 - b.height)).toInt + bs.y + padding
-    w.location = (x, y)
   }
 
   def keyValueDialog(value: Component, title: String = "New Entry", defaultName: String = "Name",
@@ -119,16 +102,5 @@ object GUI {
     res.peer.putClientProperty("JButton.buttonType", "textured")
     if (!tooltip.isEmpty) res.tooltip = tooltip
     res
-  }
-
-  /** Programmatically sets the sorted column of a table view. */
-  def sortTable(tab: Table, column: Int, ascending: Boolean = true): Unit = {
-    val sorter = tab.peer.getRowSorter
-    if (sorter != null) {
-      val list = new java.util.ArrayList[RowSorter.SortKey](1)
-      list.add(new RowSorter.SortKey(column, if (ascending) SortOrder.ASCENDING else SortOrder.DESCENDING))
-      sorter.setSortKeys(list)
-      // sorter.asInstanceOf[DefaultRowSorter].sort()
-    }
   }
 }

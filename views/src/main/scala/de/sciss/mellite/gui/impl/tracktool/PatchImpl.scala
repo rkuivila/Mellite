@@ -18,6 +18,7 @@ package tracktool
 
 import java.awt.{Color, RenderingHints, Point, Toolkit}
 import de.sciss.desktop.Desktop
+import de.sciss.swingplus.PaddedIcon
 import de.sciss.synth.proc.{Obj, Proc}
 import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
@@ -27,7 +28,6 @@ import javax.swing.ImageIcon
 import java.awt.event.MouseEvent
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.impl.component.PaddedIcon
 import scala.swing.Insets
 
 object PatchImpl {

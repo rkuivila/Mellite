@@ -3,6 +3,7 @@ package gui
 package impl
 package interpreter
 
+import de.sciss.desktop
 import de.sciss.scalainterpreter.{InterpreterPane, Interpreter, CodePane}
 import java.io.{IOException, FileInputStream, File}
 import swing.Component
@@ -63,7 +64,7 @@ private[gui] object InterpreterFrameImpl {
         contents        = Component.wrap(intp.component)
         closeOperation  = Window.CloseDispose
         pack()
-        GUI.centerOnScreen(this)
+        desktop.Util.centerOnScreen(this)
         front()
       }
     }

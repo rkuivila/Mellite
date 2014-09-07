@@ -17,6 +17,7 @@ package impl
 package component
 
 import de.sciss.audiowidgets.{TimelineModel, LCDPanel, LCDColors, LCDFont, AxisFormat}
+import de.sciss.desktop.impl.DynamicComponentImpl
 import scala.swing.{Swing, Orientation, BoxPanel, Component, Label}
 import Swing._
 import de.sciss.model.Change
@@ -24,7 +25,7 @@ import de.sciss.model.Change
 final class TimeDisplayImpl(model: TimelineModel, hasMillis: Boolean) extends TimeDisplay {
   private val lcdFormat = AxisFormat.Time(hours = true, millis = hasMillis)
   private val lcd: Label = new Label with DynamicComponentImpl {
-    protected def component: Component = this
+    // protected def component: Component = this
 
     private val decimals  = if (hasMillis)  3 else 0
     private val pad       = if (hasMillis) 12 else 8

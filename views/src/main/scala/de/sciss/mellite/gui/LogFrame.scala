@@ -14,6 +14,7 @@
 package de.sciss.mellite
 package gui
 
+import de.sciss.desktop
 import de.sciss.scalainterpreter.Style
 import de.sciss.desktop.{LogPane, WindowHandler, Window}
 import de.sciss.desktop.impl.LogWindowImpl
@@ -32,7 +33,7 @@ object LogFrame {
     log.font        = new Font(Font.MONOSPACED, Font.PLAIN, 12)
 
     pack()  // after changing font!
-    GUI.placeWindow(frame, horizontal = horizontalPlacement, vertical = verticalPlacement, padding = placementPadding)
+    desktop.Util.placeWindow(frame, horizontal = horizontalPlacement, vertical = verticalPlacement, padding = placementPadding)
   }
 }
 trait LogFrame extends Window {

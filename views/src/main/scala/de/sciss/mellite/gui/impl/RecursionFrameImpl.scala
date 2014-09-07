@@ -182,17 +182,17 @@ object RecursionFrameImpl {
       val ggStopProcess = Button("Abort") {
         currentProc.foreach(_.abort())
       }
-      GUI.fixWidth(ggProgress, 480)
+      desktop.Util.fixWidth(ggProgress, 480)
       GUI.round   (ggStopProcess)
 
       val lbDeployed    = new Label("Deployed Artifact:"   , ObjView.AudioGrapheme.icon, Alignment.Right)
       lbDeployed.peer.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT)
       ggDeployed        = new Label("---") // don't use `null`, it will stick to a width of zero
-      GUI.fixWidth(ggDeployed, 128)
+      desktop.Util.fixWidth(ggDeployed, 128)
       val lbProduct     = new Label("Most Recent Artifact:", ObjView.AudioGrapheme.icon, Alignment.Right)
       lbProduct.peer.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT)
       ggProduct         = new Label("---")
-      GUI.fixWidth(ggProduct, 128)
+      desktop.Util.fixWidth(ggProduct, 128)
 
       val panelProgress = new FlowPanel(ggProgress, ggStopProcess) {
         preferredSize = preferredSize

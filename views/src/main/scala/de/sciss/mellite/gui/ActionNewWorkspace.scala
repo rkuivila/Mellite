@@ -87,7 +87,7 @@ object ActionNewWorkspace extends Action("Workspace...") {
       } catch {
         case NonFatal(e) =>
           Dialog.showMessage(
-            message     = s"Unable to create new document ${folder.getPath} \n\n${formatException(e)}",
+            message     = s"Unable to create new document ${folder.getPath} \n\n${GUI.formatException(e)}",
             title       = fullTitle,
             messageType = Dialog.Message.Error
           )

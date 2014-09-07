@@ -17,10 +17,10 @@ package impl
 package interpreter
 
 import de.sciss.desktop.UndoManager
+import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.mellite.gui.edit.CompoundEdit
-import de.sciss.mellite.gui.impl.component.SpinningProgressBar
 import de.sciss.scalainterpreter.{InterpreterPane, Interpreter, CodePane}
+import de.sciss.swingplus.SpinningProgressBar
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.swing.{FlowPanel, Component, Action, BorderPanel, Button, Swing}

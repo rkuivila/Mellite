@@ -106,7 +106,7 @@ abstract class WindowImpl[S <: Sys[S]](title0: Optional[String] = None)
     window      = f
     windowImpl  = f
     val (ph, pv, pp) = placement
-    GUI.placeWindow(f, ph, pv, pp)
+    desktop.Util.placeWindow(f, ph, pv, pp)
     f.front()
 
     // so that the component may find a "window ancestor"

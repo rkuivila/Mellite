@@ -17,6 +17,7 @@ package document
 
 import javax.swing.undo.UndoableEdit
 
+import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Obj
 import de.sciss.lucre.stm
@@ -28,16 +29,14 @@ import de.sciss.lucre.stm.Disposable
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.edit.{CompoundEdit, EditAttrMap}
+import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.file._
 import proc.Implicits._
 
 object AttrMapFrameImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
                                       cursor: stm.Cursor[S]): AttrMapFrame[S] = {
-    implicit val undoMgr  = new UndoManagerImpl {
-      protected var dirty: Boolean = false
-    }
+    implicit val undoMgr  = new UndoManagerImpl
     val contents  = AttrMapView[S](obj)
     val view      = new ViewImpl[S](contents) {
       protected def nameObserver: Option[Disposable[S#Tx]] = None

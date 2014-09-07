@@ -14,13 +14,12 @@
 package de.sciss
 package mellite.gui
 
-import de.sciss.desktop.{Desktop, OptionPane, KeyStrokes}
+import de.sciss.desktop.{PrefsGUI, Desktop, OptionPane, KeyStrokes}
 import de.sciss.swingplus.{GroupPanel, Separator}
 import javax.swing.UIManager
 import scala.swing.Action
 import scala.swing.event.Key
 import de.sciss.mellite.Prefs
-import de.sciss.mellite.gui.impl.PrefsGUI
 import de.sciss.file._
 
 object ActionPreferences extends Action("Preferences...") {

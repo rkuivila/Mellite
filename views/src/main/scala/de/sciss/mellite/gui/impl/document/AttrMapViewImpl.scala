@@ -18,6 +18,7 @@ package document
 
 import javax.swing.TransferHandler.TransferSupport
 
+import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.swingplus.DropMode
 import de.sciss.synth.proc.{ObjKeys, StringElem, Obj}
 import de.sciss.lucre.stm
@@ -36,9 +37,10 @@ import scala.swing.event.TableColumnsSelected
 import de.sciss.model.impl.ModelImpl
 import Swing._
 import javax.swing.{TransferHandler, AbstractCellEditor, JTable}
-import de.sciss.mellite.gui.edit.{CompoundEdit, EditAttrMap}
+import de.sciss.mellite.gui.edit.EditAttrMap
 import java.util.EventObject
 import java.awt.event.MouseEvent
+import de.sciss.swingplus
 
 object AttrMapViewImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
@@ -297,7 +299,8 @@ object AttrMapViewImpl {
           editor.peer
         }
       })
-      GUI.sortTable(tab, 0)
+      import swingplus.Implicits._
+      tab.sort(0)
 
       jt.setDragEnabled(true)
       jt.setDropMode(DropMode.OnOrInsertRows)

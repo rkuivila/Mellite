@@ -35,7 +35,7 @@ import scala.util.{Failure, Try}
 import de.sciss.processor.Processor
 import de.sciss.file._
 import de.sciss.lucre.swing._
-import de.sciss.swingplus.{ComboBox, Spinner, Labeled}
+import de.sciss.swingplus.{SpinnerComboBox, ComboBox, Spinner, Labeled}
 import de.sciss.lucre.synth.{Server, Synth, Sys}
 import de.sciss.lucre.expr.{Long => LongEx, Double => DoubleEx}
 import proc.Implicits._
@@ -119,7 +119,7 @@ object ActionBounceTimeline {
     val ggFileType      = new ComboBox[AudioFileType](AudioFileType.writable)
     ggFileType.selection.item = init.spec.fileType // AudioFileType.AIFF
     val ggSampleFormat  = new ComboBox[SampleFormat](SampleFormat.fromInt16)
-    GUI.fixWidth(ggSampleFormat)
+    desktop.Util.fixWidth(ggSampleFormat)
     // ggSampleFormat.items = fuck you scala no method here
     ggSampleFormat.selection.item = init.spec.sampleFormat
     val ggSampleRate    = new SpinnerComboBox(value0 = 44100.0, minimum = 1.0, maximum = Timeline.SampleRate,
@@ -458,7 +458,7 @@ object ActionBounceTimeline {
     process.onSuccess { case _ => bounceDone() }
     process.onFailure(onFailure)
 
-    GUI.delay(500) {
+    desktop.Util.delay(500) {
       if (!processCompleted) op.show(window)
     }
   }

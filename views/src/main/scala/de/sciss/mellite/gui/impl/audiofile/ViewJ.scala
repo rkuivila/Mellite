@@ -16,7 +16,7 @@ package gui
 package impl
 package audiofile
 
-import de.sciss.sonogram
+import de.sciss.{desktop, sonogram}
 import java.awt.{Color, Graphics2D}
 import de.sciss.synth.proc.Timeline
 
@@ -56,7 +56,7 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
     @inline def height  = peer.getHeight
 
     preferredSize = {
-      val b = GUI.maximumWindowBounds
+      val b = desktop.Util.maximumWindowBounds
       (b.width >> 1, b.height >> 1)
     }
 

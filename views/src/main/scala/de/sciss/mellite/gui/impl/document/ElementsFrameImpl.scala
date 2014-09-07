@@ -16,6 +16,8 @@ package gui
 package impl
 package document
 
+import de.sciss.desktop.edit.CompoundEdit
+
 import scala.swing.Action
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.Folder
@@ -27,7 +29,7 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.swing.deferTx
 import de.sciss.synth.proc
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.mellite.gui.edit.{CompoundEdit, EditRemoveObj}
+import de.sciss.mellite.gui.edit.EditRemoveObj
 import javax.swing.undo.UndoableEdit
 import proc.FolderElem
 import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
@@ -37,9 +39,7 @@ object ElementsFrameImpl {
                                         isWorkspaceRoot: Boolean)(implicit tx: S#Tx,
                                         workspace: Workspace[S], cursor: stm.Cursor[S],
                                         bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] = {
-    implicit val undoMgr  = new UndoManagerImpl {
-      protected var dirty: Boolean = false
-    }
+    implicit val undoMgr  = new UndoManagerImpl
     val folderView      = FolderView(workspace.root())
     val name0           = nameOpt.map(_.value(bridge(tx)))
     val view            = new ViewImpl[S, S1](folderView) {

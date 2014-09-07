@@ -117,9 +117,7 @@ object CodeFrameImpl {
   private def make[S <: Sys[S], In0, Out0](obj: Code.Obj[S], code0: Code { type In = In0; type Out = Out0 },
                                 _name: String, handler: Option[CodeView.Handler[S, In0, Out0]], hasExecute: Boolean)
                                (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
-    implicit val undoMgr: UndoManager = new UndoManagerImpl {
-      protected var dirty: Boolean = false
-    }
+    implicit val undoMgr = new UndoManagerImpl
     // val _name   = /* title getOrElse */ obj.attr.name
     val view    = CodeView(obj, code0, hasExecute = hasExecute)(handler)
     val res     = new FrameImpl(view, name0 = _name, contextName = code0.contextName)

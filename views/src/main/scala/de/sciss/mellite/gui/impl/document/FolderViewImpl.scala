@@ -16,6 +16,7 @@ package gui
 package impl
 package document
 
+import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.synth.proc.{ObjKeys, ArtifactLocation, FolderElem, Folder, Artifact, Obj, StringElem}
 import swing.Component
 import scala.collection.{JavaConversions, breakOut}
@@ -40,7 +41,7 @@ import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.treetable.j.{TreeTableCellEditor, DefaultTreeTableCellEditor}
 import javax.swing.event.{ChangeEvent, CellEditorListener}
 import de.sciss.desktop.UndoManager
-import de.sciss.mellite.gui.edit.{CompoundEdit, EditInsertObj, EditRemoveObj, EditAttrMap}
+import de.sciss.mellite.gui.edit.{EditInsertObj, EditRemoveObj, EditAttrMap}
 import de.sciss.lucre
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
