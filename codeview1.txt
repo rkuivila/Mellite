@@ -1,0 +1,11 @@
+// graph function source code
+
+val freq = Attribute.kr("freq", 441)
+val z    = WhiteNoise.ar
+val sig  = MoogFF.ar(z, freq)
+
+val amp = FadeInOut.ar *
+          Attribute.kr("gain", 1) *
+          (1 - Attribute.kr("mute", 0))
+
+Out.ar(0, sig * amp)

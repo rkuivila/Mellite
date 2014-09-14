@@ -1,0 +1,18 @@
+val p = 15   // number of partials per channel per 'cymbal'.
+val f1 = Rand(500, 2500)
+val f2 = Rand(0, 8000)
+val sig: GE = for (i <- 1 to 2) yield {
+  val z = KlangSpec.fill(p) {
+    // sine oscillator bank specification :
+    (f1 + Rand(0, f2),  // frequencies
+     1,                 // amplitudes
+     Rand(1, 5))        // ring times
+  }
+  Klank.ar(z, Decay.ar(Impulse.ar(Rand(0.5, 3.5)), 0.004) * WhiteNoise.ar(0.03))
+}
+
+val amp = FadeInOut.ar *
+          Attribute.kr("gain", 1) *
+          (1 - Attribute.kr("mute", 0))
+
+Out.ar(0, sig * amp)

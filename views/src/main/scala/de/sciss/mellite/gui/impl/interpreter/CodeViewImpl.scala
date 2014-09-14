@@ -16,13 +16,14 @@ package gui
 package impl
 package interpreter
 
-import de.sciss.desktop.UndoManager
+import de.sciss.desktop.{KeyStrokes, UndoManager}
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.scalainterpreter.{InterpreterPane, Interpreter, CodePane}
 import de.sciss.swingplus.SpinningProgressBar
 import scala.collection.mutable
 import scala.concurrent.Future
+import scala.swing.event.Key
 import scala.swing.{FlowPanel, Component, Action, BorderPanel, Button, Swing}
 import Swing._
 import de.sciss.lucre.stm
@@ -43,6 +44,8 @@ import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{defer, deferTx, requireEDT}
 import javax.swing.undo.UndoableEdit
 import de.sciss.synth.proc.Obj
+
+import scala.util.control.NonFatal
 
 object CodeViewImpl {
   private val intpMap = mutable.WeakHashMap.empty[Int, Future[Interpreter]]
@@ -100,9 +103,23 @@ object CodeViewImpl {
 
     private type CodeT = Code { type In = In0; type Out = Out0 }
 
+    private def loadText(idx: Int): Unit = {
+      try {
+        val inp  = io.Source.fromFile(s"codeview$idx.txt", "UTF-8")
+        val text = inp.getLines().mkString("\n")
+        inp.close()
+        codePane.editor.setText(text)
+      } catch {
+        case NonFatal(e) => e.printStackTrace()
+      }
+    }
+
     private val codeCfg = {
       val b = CodePane.Config()
       b.text = code.source
+      // XXX TODO - cheesy hack
+      b.keyMap += (KeyStrokes.menu1 + Key.Key1 -> (() => loadText(1)))
+      b.keyMap += (KeyStrokes.menu1 + Key.Key2 -> (() => loadText(2)))
       b.build
     }
 
