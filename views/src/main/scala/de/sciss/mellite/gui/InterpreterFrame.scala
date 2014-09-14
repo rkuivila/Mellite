@@ -33,6 +33,11 @@ object InterpreterFrame {
   object Bindings {
     def document =
       Application.documentHandler.activeDocument.getOrElse(sys.error("No document open"))
+
+    def confluentDocument: Workspace.Confluent = document match {
+      case cd: Workspace.Confluent => cd
+      case other => sys.error("Not a confluent document")
+    }
   }
 }
 trait InterpreterFrame {

@@ -56,6 +56,9 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   implicit def auralSystem : AuralSystem  = _aural
   implicit def sensorSystem: SensorSystem = _sensor
 
+  def clearLog  (): Unit = LogFrame.instance.log.clear()
+  def logToFront(): Unit = LogFrame.instance.front()  // XXX TODO - should avoid focus transfer
+
   /** Tries to start the aural system by booting SuperCollider.
     * This reads the relevant preferences entries such as
     * path, audio device, number of output channels, etc.

@@ -6,8 +6,9 @@ package interpreter
 import de.sciss.desktop
 import de.sciss.scalainterpreter.{InterpreterPane, Interpreter, CodePane}
 import java.io.{IOException, FileInputStream, File}
+import scala.swing.event.Key
 import swing.Component
-import de.sciss.desktop.Window
+import de.sciss.desktop.{KeyStrokes, Window}
 
 // careful... tripping over SI-3809 "illegal cyclic reference involving class Array"...
 // actually SI-7481
@@ -35,12 +36,46 @@ private[gui] object InterpreterFrameImpl {
       case e: IOException => e.printStackTrace()
     }
 
-    val intpCfg = Interpreter.Config()
+    val txnKeyStroke  = KeyStrokes.shift + KeyStrokes.alt + Key.Enter
+    // var txnCount      = 0
+
+    def txnExecute(): Unit = {
+      intp.codePane.getSelectedTextOrCurrentLine.foreach { txt =>
+        // val txnId = txnCount
+        // txnCount += 1
+        Application.documentHandler.activeDocument.foreach {
+          case cd: Workspace.Confluent =>
+                        //            val txnTxt =
+            //              s"""class _txnBody$txnId(implicit t: scala.concurrent.stm.InTxn) {
+            //             |import MelliteDSL._
+            //             |$txt
+            //             |}
+            //             |val _txnRes$txnId = doc.cursor.atomic(implicit t => new _txnBody$txnId)
+            //             |import _txnRes$txnId._""".stripMargin
+            val txnTxt =
+              s"""confluentDocument.cursors.cursor.step { implicit tx =>
+             |import de.sciss.mellite.gui.InterpreterFrame.Bindings.{confluentDocument => doc}
+             |val _imp = proc.ExprImplicits[proc.Confluent]
+             |import _imp._
+             |$txt
+             |}""".stripMargin
+            intp.interpret(txnTxt)
+          case _ =>
+        }
+      }
+    }
+
+    codeCfg.keyMap += txnKeyStroke -> (() => txnExecute())
+
+    lazy val intpCfg = Interpreter.Config()
     intpCfg.imports = List(
       "de.sciss.mellite._",
       "de.sciss.synth._",
       "Ops._",
-      "concurrent.duration._",
+      // "concurrent.duration._",
+      "proc.Implicits._",
+      "de.sciss.span.Span",
+      "MelliteDSL._",
       "gui.InterpreterFrame.Bindings._"
     )
 
@@ -50,7 +85,7 @@ private[gui] object InterpreterFrameImpl {
 
     //      intpCfg.out = Some( LogWindow.instance.log.writer )
 
-    val intp = InterpreterPane(interpreterConfig = intpCfg, codePaneConfig = codeCfg)
+    lazy val intp = InterpreterPane(interpreterConfig = intpCfg, codePaneConfig = codeCfg)
 
     new InterpreterFrame {
       val component = new de.sciss.desktop.impl.WindowImpl {

@@ -18,7 +18,7 @@ import de.sciss.lucre.{expr, event => evt, bitemp, stm}
 import bitemp.BiGroup
 import de.sciss.synth.proc
 import impl.{WorkspaceImpl => Impl}
-import de.sciss.synth.proc.{WorkspaceHandle, Transport, Obj, Folder, Proc}
+import de.sciss.synth.proc.{Timeline, WorkspaceHandle, Transport, Obj, Folder, Proc}
 import de.sciss.serial.Serializer
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.Sys
@@ -84,6 +84,10 @@ sealed trait Workspace[S <: Sys[S]] extends WorkspaceHandle[S] with Disposable[S
   def root: stm.Source[S#Tx, Folder[S]]
 
   def collectObjects[A](pf: PartialFunction[Obj[S], A])(implicit tx: S#Tx): Vec[A]
+
+  //  def timelines(implicit tx: S#Tx): Vec[Timeline[S]] = collectObjects {
+  //    case Timeline.Obj(tl) => tl.elem.peer
+  //  }
 
   implicit def systemType: reflect.runtime.universe.TypeTag[S]
 

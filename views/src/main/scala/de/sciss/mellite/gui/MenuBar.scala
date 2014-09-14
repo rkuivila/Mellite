@@ -59,6 +59,10 @@ object MenuBar {
       .add(Item("debug-print",        proxy("Debug Print",              menu2 + Key.P)))
       // .add(Item("window-shot",        proxy("Export Window as PDF...")))
 
+    val mView = Group("view", "View")
+      .add(Item("show-log" )("Show Log Window"  -> (menu1         + Key.P))(Mellite.logToFront()))
+      .add(Item("clear-log")("Clear Log Window" -> (menu1 + shift + Key.P))(Mellite.clearLog  ()))
+
     //    // --- timeline menu ---
     //    val mTimeline = Group("timeline", "Timeline")
     //      // .add(Item("trimToSelection",    proxy("Trim to Selection",        (menu1 + Key.F5))))
@@ -87,6 +91,7 @@ object MenuBar {
       .add(mFile)
       .add(mEdit)
       .add(mActions)
+      .add(mView)
       // .add(mTimeline)
       // .add(mOperation)
   }

@@ -1,0 +1,24 @@
+type S = proc.Confluent
+val d = document.asInstanceOf[Workspace.Confluent]
+val c = d.cursors.cursor
+
+c.step { implicit tx =>
+  val tl = d.collectObjects {
+    case proc.Timeline.Obj(tl) => tl.elem.peer
+  } .head
+
+  tl.nearestEventAfter(0L)
+}
+
+c.step { implicit tx =>
+  val tl = d.collectObjects {
+    case proc.Timeline.Obj(tl) => tl.elem.peer
+  } .head
+
+  tl.iterator.foreach { case (span, xs) =>
+    xs.foreach { x =>
+      val sv = x.span.value
+      if (sv != span) println(s"Discrepancy: $span - $sv - $x")
+    }
+  }
+}

@@ -1,24 +1,12 @@
-type S = proc.Confluent
-val d = document.asInstanceOf[Workspace.Confluent]
-val c = d.cursors.cursor
+val tl = doc.collectObjects {
+  case proc.Timeline.Obj(tl) => tl.elem.peer
+} .head
 
-c.step { implicit tx =>
-  val tl = d.collectObjects {
-    case proc.Timeline.Obj(tl) => tl.elem.peer
-  } .head
-
-  tl.nearestEventAfter(0L)
+val Seq(a, b) = Seq("A", "B").map { n => 
+  tl.iterator.flatMap(_._2).toList.find(_.value.attr.name == n).get
 }
 
-c.step { implicit tx =>
-  val tl = d.collectObjects {
-    case proc.Timeline.Obj(tl) => tl.elem.peer
-  } .head
+val as = a.span
+val bs = b.span.asVar
 
-  tl.iterator.foreach { case (span, xs) =>
-    xs.foreach { x =>
-      val sv = x.span.value
-      if (sv != span) println(s"Discrepancy: $span - $sv - $x")
-    }
-  }
-}
+bs() = as shift 4.secframes
