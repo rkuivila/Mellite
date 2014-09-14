@@ -17,6 +17,9 @@ package impl
 package tracktool
 
 import java.awt.Cursor
+import javax.swing.undo.UndoableEdit
+import de.sciss.lucre.stm
+import de.sciss.mellite.gui.edit.Edits
 import de.sciss.synth.proc.Obj
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
@@ -52,9 +55,9 @@ final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Resize(dStart, dStop)
   }
 
+  // ProcActions.resize(span, obj, drag, minStart = minStart)
+
   protected def commitObj(drag: Resize)(span: Expr[S, SpanLike], obj: Obj[S])
-                          (implicit tx: S#Tx): Unit = {
-    val minStart = canvas.timelineModel.bounds.start
-    ProcActions.resize(span, obj, drag, minStart = minStart)
-  }
+                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
+    Edits.resize(span, drag, minStart = canvas.timelineModel.bounds.start)
 }

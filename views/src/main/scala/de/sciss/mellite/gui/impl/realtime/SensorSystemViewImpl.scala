@@ -7,10 +7,10 @@
 //
 //object SensorSystemViewImpl {
 //  def apply(): SensorSystemView = {
-//    ???
+//    ...
 //  }
 //
 //  private final class Impl extends SensorSystemView {
-//    def component: Component = ???
+//    def component: Component = ...
 //  }
 //}

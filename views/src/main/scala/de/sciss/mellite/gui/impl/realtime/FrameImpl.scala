@@ -36,7 +36,7 @@
 //    val sampleRate        = Timeline.SampleRate
 //    val group             = obj.elem.peer
 //    import document.inMemoryBridge
-//    val transport: Transport[S] = ??? // = proc.Transpor [S, document.I](group, sampleRate = sampleRate)
+//    val transport: Transport[S] = ... // = proc.Transpor [S, document.I](group, sampleRate = sampleRate)
 //    val prefusePanel      = InstantGroupPanel(document, transport)
 //    // note: the transport only reads and updates the position, as well as reading span start for return-to-zero
 //    val tlm               = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
@@ -80,7 +80,7 @@
 //          val pos = t.position
 //          val span = Span(pos, pos + Timeline.SampleRate.toLong)
 //          val proc = Proc[S]
-//          ??? // g.add(span, proc)
+//          ... // g.add(span, proc)
 //        }
 //      }
 //
@@ -137,7 +137,7 @@
 ////        front()
 ////      }
 //
-//      window = ??? // f
+//      window = ... // f
 //    }
 //  }
 //}

@@ -17,8 +17,12 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import de.sciss.synth.proc.{Obj, ExprImplicits, Proc}
+import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.stm
+import de.sciss.mellite.gui.edit.EditAttrMap
+import de.sciss.synth.proc.{DoubleElem, ObjKeys, Obj, ExprImplicits}
+import de.sciss.lucre.expr.{Double => DoubleEx}
 import de.sciss.span.SpanLike
 import de.sciss.synth
 import de.sciss.lucre.synth.Sys
@@ -45,6 +49,24 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Gain(factor)
   }
 
-  protected def commitObj(drag: Gain)(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): Unit =
-    ProcActions.adjustGain(obj, drag.factor)
+  protected def commitObj(drag: Gain)(span: Expr[S, SpanLike], obj: Obj[S])
+                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    import drag.factor
+    // ProcActions.adjustGain(obj, drag.factor)
+    val imp = ExprImplicits[S]
+    import imp._
+    if (factor == 1f) None else {
+      val newGain: Expr[S, Double] = obj.attr.expr[Double](ObjKeys.attrGain) match {
+        case Some(Expr.Var(vr)) => vr() * factor.toDouble
+        case other =>
+          other.fold(1.0)(_.value) * factor
+      }
+      val newGainOpt = if (newGain == DoubleEx.newConst[S](1.0)) None else Some(newGain)
+      import DoubleEx.serializer
+      val edit = EditAttrMap.expr(s"Adjust $name", obj, ObjKeys.attrGain, newGainOpt) { ex =>
+        DoubleElem(DoubleEx.newVar(ex))
+      }
+      Some(edit)
+    }
+  }
 }

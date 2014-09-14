@@ -35,7 +35,7 @@ import de.sciss.swingplus.{ComboBox, Spinner}
 import java.awt.geom.Path2D
 import de.sciss.desktop.{OptionPane, FileDialog}
 import de.sciss.synth.io.{SampleFormat, AudioFile}
-import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditInsertObj}
+import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditFolderInsertObj}
 import de.sciss.lucre.{event => evt}
 import proc.Implicits._
 import de.sciss.audiowidgets.AxisFormat
@@ -913,7 +913,7 @@ object ObjViewImpl {
     // parent.addLast(obj)
     val idx = parent.size
     implicit val folderSer = _Folder.serializer[S]
-    EditInsertObj[S](name, tx.newHandle(parent), idx, tx.newHandle(obj))
+    EditFolderInsertObj[S](name, parent, idx, obj)
   }
 
   def actionAddPrimitive[S <: Sys[S], A](parentH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window],

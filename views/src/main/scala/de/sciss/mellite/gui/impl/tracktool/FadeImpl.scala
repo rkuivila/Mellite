@@ -16,7 +16,12 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{ObjKeys, Obj, FadeSpec, Proc}
+import javax.swing.undo.UndoableEdit
+
+import de.sciss.desktop.edit.CompoundEdit
+import de.sciss.lucre.stm
+import de.sciss.mellite.gui.edit.EditAttrMap
+import de.sciss.synth.proc.{ObjKeys, Obj, FadeSpec}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
 import de.sciss.lucre.expr.Expr
@@ -61,8 +66,11 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     result
   }
 
-  protected def commitObj(drag: Fade)(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): Unit = {
+  protected def commitObj(drag: Fade)(span: Expr[S, SpanLike], obj: Obj[S])
+                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     import drag._
+
+    import FadeSpec.Expr.serializer
 
     val attr    = obj.attr
     val exprIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn )
@@ -82,25 +90,37 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     }
     val dInC    = if (valInC.isNaN) 0f else math.max(-20, math.min(20, deltaFadeInCurve + valInC)) - valInC
 
+    var edits = List.empty[UndoableEdit]
+
     val newValIn = if (dIn != 0L || dInC != 0f) {
       val newInC  = valInC + dInC
       val curve   = if (newInC == 0f) Curve.linear else Curve.parametric(newInC)
       val fr      = valIn.numFrames + dIn
       val res     = FadeSpec(fr, curve, valIn.floor)
       val elem    = FadeSpec.Expr.newConst[S](res)
-      exprIn match {
-        case Some(Expr.Var(vr)) =>
-          vr() = elem
-          res
 
-        case None =>
-          val vr = FadeSpec.Expr.newVar(elem)
-          attr.put(ObjKeys.attrFadeIn, Obj(FadeSpec.Elem(vr)))
-          res
-
-        case _ =>
-          valIn
+      val edit    = EditAttrMap.expr("Adjust Fade-In", obj, ObjKeys.attrFadeIn, Some(elem)) { ex =>
+        val vr = FadeSpec.Expr.newVar(ex)
+        FadeSpec.Elem(vr)
       }
+
+      edits ::= edit
+
+      //      exprIn match {
+      //        case Some(Expr.Var(vr)) =>
+      //          vr() = elem
+      //          res
+      //
+      //        case None =>
+      //          val vr = FadeSpec.Expr.newVar(elem)
+      //          attr.put(ObjKeys.attrFadeIn, Obj(FadeSpec.Elem(vr)))
+      //          res
+      //
+      //        case _ =>
+      //          valIn
+      //      }
+      res
+
     } else valIn
 
     // XXX TODO: DRY
@@ -118,17 +138,26 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       val fr      = valOut.numFrames + dOut
       val res     = FadeSpec(fr, curve, valOut.floor)
       val elem    = FadeSpec.Expr.newConst[S](res)
-      exprOut match {
-        case Some(Expr.Var(vr)) =>
-          vr() = elem
-
-        case None =>
-          val vr  = FadeSpec.Expr.newVar(elem)
-          attr.put(ObjKeys.attrFadeOut, Obj(FadeSpec.Elem(vr)))
-
-        case _ =>
+      val edit    = EditAttrMap.expr("Adjust Fade-Out", obj, ObjKeys.attrFadeOut, Some(elem)) { ex =>
+        val vr = FadeSpec.Expr.newVar(ex)
+        FadeSpec.Elem(vr)
       }
+
+      edits ::= edit
+
+      //      exprOut match {
+      //        case Some(Expr.Var(vr)) =>
+      //          vr() = elem
+      //
+      //        case None =>
+      //          val vr  = FadeSpec.Expr.newVar(elem)
+      //          attr.put(ObjKeys.attrFadeOut, Obj(FadeSpec.Elem(vr)))
+      //
+      //        case _ =>
+      //      }
     }
+
+    CompoundEdit(edits,s"Adjust $name")
   }
 
   protected def dialog() = None // XXX TODO

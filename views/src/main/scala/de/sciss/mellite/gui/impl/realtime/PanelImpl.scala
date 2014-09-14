@@ -50,7 +50,7 @@
 //    //    val group             = obj.elem.peer
 //    //    import document.inMemoryBridge
 //    //    val transport         = proc.Transport[S, document.I](group, sampleRate = sampleRate)
-//???
+//...
 ////    val vis = new Impl(transport, cursor)
 ////    val map = tx.newInMemoryIDMap[Map[SpanLike, List[VisualProc[S]]]]
 ////    val all = transport.iterator.map(_._2).toIndexedSeq

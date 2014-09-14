@@ -16,6 +16,13 @@ package gui
 package impl
 package tracktool
 
+import javax.swing.undo.UndoableEdit
+
+import de.sciss.desktop.edit.CompoundEdit
+import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.lucre.stm
+import de.sciss.lucre.swing.edit.EditVar
+import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.synth.proc.{IntElem, Obj, ExprImplicits}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
@@ -50,30 +57,30 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Move(deltaTime = dTim, deltaTrack = dTrk, copy = d.currentEvent.isAltDown)
   }
 
-  protected def commitObj(drag: Move)(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): Unit = {
+  protected def commitObj(drag: Move)(span: Expr[S, SpanLike], obj: Obj[S])
+                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    var edits = List.empty[UndoableEdit]
+
     import drag._
     if (deltaTrack != 0) {
-      // XXX TODO: could check for Expr.Const here and Expr.Var.
       // in the case of const, just overwrite, in the case of
       // var, check the value stored in the var, and update the var
       // instead (recursion). otherwise, it will be some combinatorial
       // expression, and we could decide to construct a binary op instead!
-      val attr = obj.attr
       val expr = ExprImplicits[S]
       import expr._
-      // attr[Attribute.Int[S]](ProcKeys.track).foreach {
-      //   case Expr.Var(vr) => vr.transform(_ + deltaTrack)
-      //   case _ =>
-      // }
 
-      attr.expr[Int](TimelineObjView.attrTrackIndex) match {
-        case Some(Expr.Var(t))  => t.transform(_ + deltaTrack)
-        case _ =>
-          attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(IntEx.newConst(deltaTrack)))))
+      val newTrack: Expr[S, Int] = obj.attr.expr[Int](TimelineObjView.attrTrackIndex) match {
+        case Some(Expr.Var(vr)) => vr() + deltaTrack
+        case other => other.fold(0)(_.value) + deltaTrack
       }
+      val newTrackOpt = if (newTrack == IntEx.newConst[S](0)) None else Some(newTrack)
 
-      // val trackNew  = math.max(0, trackOld + deltaTrack)
-      // attr.put(ProcKeys.track, Attribute.Int(Ints.newConst(trackNew)))
+      import IntEx.serializer
+      val edit = EditAttrMap.expr("Adjust Track Placement", obj, TimelineObjView.attrTrackIndex, newTrackOpt) { ex =>
+        IntElem(IntEx.newVar(ex))
+      }
+      edits ::= edit
     }
 
     val oldSpan   = span.value
@@ -85,23 +92,18 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     if (deltaC != 0L) {
       val imp = ExprImplicits[S]
       import imp._
-
-      //      ProcActions.getAudioRegion(span, proc) match {
-      //        case Some((gtime, audio)) => // audio region
-      //          (span, gtime) match {
-      //            case (Expr.Var(t1), Expr.Var(t2)) =>
-      //              t1.transform(_ shift deltaC)
-      //              t2.transform(_ + deltaC) // XXX TODO: actually should shift the segment as well, i.e. the ceil time?
-      //
-      //            case _ =>
-      //          }
-      //        case _ => // other proc
-          span match {
-            case Expr.Var(s) => s.transform(_ shift deltaC)
-            case _ =>
-          }
-      //      }
+      span match {
+        case Expr.Var(vr) =>
+          // s.transform(_ shift deltaC)
+          val newSpan = vr() shift deltaC
+          import SpanLikeEx.{serializer, varSerializer}
+          val edit    = EditVar.Expr(name, vr, newSpan)
+          edits ::= edit
+        case _ =>
+      }
     }
+
+    CompoundEdit(edits, name)
   }
 
   protected def dialog(): Option[Move] = {

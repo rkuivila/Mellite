@@ -17,7 +17,10 @@ package impl
 package tracktool
 
 import java.awt.{Color, RenderingHints, Point, Toolkit}
+import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.Desktop
+import de.sciss.lucre.stm
+import de.sciss.mellite.gui.edit.Edits
 import de.sciss.swingplus.PaddedIcon
 import de.sciss.synth.proc.{Obj, Proc}
 import de.sciss.lucre.expr.Expr
@@ -81,12 +84,13 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       case _ =>
     }
 
-  protected def commitObj(drag: Patch[S])(span: Expr[S, SpanLike], out: Obj[S])(implicit tx: S#Tx): Unit =
-    (drag.sink, out) match {
-      case (Patch.Linked(view), Proc.Obj(procObj)) =>
+  protected def commitObj(drag: Patch[S])(span: Expr[S, SpanLike], outObj: Obj[S])
+                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
+    (drag.sink, outObj) match {
+      case (Patch.Linked(view), Proc.Obj(out)) =>
         val in = view.obj()
-        ProcActions.linkOrUnlink(procObj, in)
+        Edits.linkOrUnlink(out, in)
 
-      case _ =>
+      case _ => None
     }
 }

@@ -29,7 +29,7 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.swing.deferTx
 import de.sciss.synth.proc
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.mellite.gui.edit.EditRemoveObj
+import de.sciss.mellite.gui.edit.EditFolderRemoveObj
 import javax.swing.undo.UndoableEdit
 import proc.FolderElem
 import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
@@ -140,8 +140,7 @@ object ElementsFrameImpl {
           val child   = childH()
           val idx     = parent.indexOf(child)
           implicit val folderSer = Folder.serializer[S]
-          val parentH = tx.newHandle(parent)
-          EditRemoveObj[S](nodeView.renderData.prefix, parentH, idx, childH)
+          EditFolderRemoveObj[S](nodeView.renderData.prefix, parent, idx, child)
         }
       }
       val ceOpt = CompoundEdit(edits, "Delete Elements")

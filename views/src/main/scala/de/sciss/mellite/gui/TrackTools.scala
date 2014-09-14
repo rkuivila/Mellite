@@ -16,6 +16,9 @@ package mellite
 package gui
 
 import java.awt.Cursor
+import javax.swing.undo.UndoableEdit
+import de.sciss.lucre.stm
+
 import annotation.switch
 import de.sciss.model.{Change, Model}
 import de.sciss.synth.proc.FadeSpec
@@ -130,7 +133,7 @@ trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
   def uninstall(component: Component): Unit
   // def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineProcView[S]]): Unit
 
-  def commit(drag: A)(implicit tx: S#Tx): Unit
+  def commit(drag: A)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit]
 }
 
 //object TrackSlideTool {

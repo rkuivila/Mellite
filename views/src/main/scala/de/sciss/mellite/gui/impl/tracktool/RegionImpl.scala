@@ -16,7 +16,11 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Obj, Proc}
+import javax.swing.undo.UndoableEdit
+
+import de.sciss.desktop.edit.CompoundEdit
+import de.sciss.lucre.stm
+import de.sciss.synth.proc.Obj
 import java.awt.event.MouseEvent
 import de.sciss.span.SpanLike
 import de.sciss.lucre.expr.Expr
@@ -33,14 +37,22 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
     }
   }
 
-  def commit(drag: A)(implicit tx: S#Tx): Unit =
-    canvas.selectionModel.iterator.foreach { pv =>
-      val span  = pv.span()
-      val proc  = pv.obj()
+  def commit(drag: A)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    val edits = canvas.selectionModel.iterator.flatMap { pv =>
+      val span = pv.span()
+      val proc = pv.obj()
       commitObj(drag)(span, proc)
+    } .toList
+    val name = edits.headOption.fold("Edit") { ed =>
+      val n = ed.getPresentationName
+      val i = n.indexOf(' ')
+      if (i < 0) n else n.substring(0, i)
     }
+    CompoundEdit(edits, name)
+  }
 
-  protected def commitObj(drag: A)(span: Expr[S, SpanLike], proc: Obj[S])(implicit tx: S#Tx): Unit
+  protected def commitObj(drag: A)(span: Expr[S, SpanLike], proc: Obj[S])
+                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit]
 
   protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit
 }

@@ -80,6 +80,8 @@ object ProcActions {
               case other => other
             }
           }
+
+        case _ =>
       }
     }
   }
@@ -114,6 +116,11 @@ object ProcActions {
   def copy[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Obj[S] = {
     val elemNew = obj.elem.mkCopy()
     val res     = Obj(elemNew)
+    val resAttr = res.attr
+    obj.attr.iterator.foreach { case (key, value) =>
+      val valueCopy = copy(value)
+      resAttr.put(key, valueCopy)
+    }
 
     res match {
       case Proc.Obj(procObj) =>
@@ -196,7 +203,7 @@ object ProcActions {
     val attr = obj.attr
     attr.expr[Boolean](ObjKeys.attrMute) match {
       // XXX TODO: BooleanEx should have `not` operator
-      case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld }
+      case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld: Expr[S, Boolean] }
       case _                  => attr.put(ObjKeys.attrMute, Obj(BooleanElem(BooleanEx.newVar(true))))
     }
   }
@@ -244,21 +251,8 @@ object ProcActions {
     }
   }
 
-  /** Inserts a new audio region proc into a given group.
-    *
-    * @param group      the group to insert the proc into
-    * @param time       the time span on the outer timeline
-    * @param grapheme   the grapheme carrying the underlying audio file
-    * @param gOffset    the selection start with respect to the grapheme.
-    *                   This is inside the underlying audio file (but using timeline sample-rate),
-    *                   whereas the proc will be placed in the group aligned with `time`.
-    * @param bus        an optional bus to assign
-    * @return           a tuple consisting of the span expression and the newly created proc.
-    */
-  def insertAudioRegion[S <: Sys[S]](
-      group     : TimelineMod[S],
+  def mkAudioRegion[S <: Sys[S]](
       time      : Span,
-//      track     : Int,
       grapheme  : Grapheme.Expr.Audio[S],
       gOffset   : Long,
       bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
@@ -293,9 +287,29 @@ object ProcActions {
     grIn.add(bi)
     scanIn addSource grIn
     proc.graph() = SynthGraphs.tape
-    group.add(span, obj)
-
     (span, obj)
+  }
+
+  /** Inserts a new audio region proc into a given group.
+    *
+    * @param group      the group to insert the proc into
+    * @param time       the time span on the outer timeline
+    * @param grapheme   the grapheme carrying the underlying audio file
+    * @param gOffset    the selection start with respect to the grapheme.
+    *                   This is inside the underlying audio file (but using timeline sample-rate),
+    *                   whereas the proc will be placed in the group aligned with `time`.
+    * @param bus        an optional bus to assign
+    * @return           a tuple consisting of the span expression and the newly created proc.
+    */
+  def insertAudioRegion[S <: Sys[S]](group     : TimelineMod[S],
+                                     time      : Span,
+                                     grapheme  : Grapheme.Expr.Audio[S],
+                                     gOffset   : Long,
+                                     bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
+                                    (implicit tx: S#Tx): (Expr[S, Span], Proc.Obj[S]) = {
+    val res @ (span, obj) = mkAudioRegion(time, grapheme, gOffset, bus)
+    group.add(span, obj)
+    res
   }
 
   def insertGlobalRegion[S <: Sys[S]](
@@ -316,7 +330,6 @@ object ProcActions {
     group.add(Span.All, obj) // constant span expression
     obj
   }
-
 
   private def addLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
                                   (implicit tx: S#Tx): Unit = {

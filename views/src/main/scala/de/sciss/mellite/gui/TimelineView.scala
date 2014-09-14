@@ -14,6 +14,8 @@
 package de.sciss.mellite
 package gui
 
+import de.sciss.desktop.UndoManager
+import de.sciss.lucre.swing.View
 import de.sciss.synth.proc.{Timeline, Obj}
 import scala.swing.{Component, Action}
 import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl}
@@ -23,12 +25,13 @@ import de.sciss.lucre.synth.Sys
 
 object TimelineView {
   def apply[S <: Sys[S]](group: Timeline.Obj[S])
-                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineView[S] =
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                         undoManager: UndoManager): TimelineView[S] =
     Impl[S](group)
 
   final val TrackScale = 16
 }
-trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] {
+trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] {
   def timelineModel   : TimelineModel
   def selectionModel  : TimelineObjView.SelectionModel[S]
 

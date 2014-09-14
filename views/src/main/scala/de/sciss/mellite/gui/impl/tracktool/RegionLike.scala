@@ -29,21 +29,21 @@ trait RegionLike[S <: Sys[S], A] extends TrackTool[S, A] with ModelImpl[TrackToo
 
   /** Applies standard mouse selection techniques regarding regions. */
   protected final def handleMouseSelection(e: MouseEvent, regionOpt: Option[TimelineObjView[S]]): Unit = {
-    val selm = canvas.selectionModel
+    val selMod = canvas.selectionModel
     if (e.isShiftDown) {
       regionOpt.foreach { region =>
-        if (selm.contains(region)) {
-          selm -= region
+        if (selMod.contains(region)) {
+          selMod -= region
         } else {
-          selm += region
+          selMod += region
         }
       }
     } else {
-      if (!regionOpt.exists(region => selm.contains(region))) {
+      if (!regionOpt.exists(region => selMod.contains(region))) {
         // either hitting a region which wasn't selected, or hitting an empty area
         // --> deselect all
-        selm.clear()
-        regionOpt.foreach(selm += _)
+        selMod.clear()
+        regionOpt.foreach(selMod += _)
       }
     }
   }

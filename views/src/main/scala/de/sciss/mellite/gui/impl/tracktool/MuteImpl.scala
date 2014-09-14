@@ -16,10 +16,15 @@ package gui
 package impl
 package tracktool
 
-import de.sciss.synth.proc.{Obj, Proc}
+import javax.swing.undo.UndoableEdit
+
+import de.sciss.lucre.expr.{Expr, Boolean => BooleanEx}
+import de.sciss.lucre.stm
+import de.sciss.lucre.synth.expr.ExprImplicits
+import de.sciss.mellite.gui.edit.EditAttrMap
+import de.sciss.synth.proc.{BooleanElem, ObjKeys, Obj}
 import java.awt.{Point, Toolkit}
 import java.awt.event.MouseEvent
-import de.sciss.lucre.expr.Expr
 import de.sciss.span.SpanLike
 import de.sciss.mellite.gui.TrackTool.Mute
 import de.sciss.lucre.synth.Sys
@@ -38,8 +43,24 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   val name          = "Mute"
   val icon          = ToolsImpl.getIcon("mute")
 
-  protected def commitObj(mute: Mute)(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): Unit =
-    ProcActions.toggleMute(obj)
+  // ProcActions.toggleMute(obj)
+
+  protected def commitObj(mute: Mute)(span: Expr[S, SpanLike], obj: Obj[S])
+                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    val imp = ExprImplicits[S]
+    import imp._
+    val newMute: Expr[S, Boolean] = obj.attr.expr[Boolean](ObjKeys.attrMute) match {
+      // XXX TODO: BooleanEx should have `not` operator
+      case Some(Expr.Var(vr)) => val vOld = vr().value; !vOld
+      case other => !other.exists(_.value)
+    }
+    val newMuteOpt = if (newMute == BooleanEx.newConst[S](false)) None else Some(newMute)
+    import BooleanEx.serializer
+    val edit = EditAttrMap.expr(s"Adjust $name", obj, ObjKeys.attrMute, newMuteOpt) { ex =>
+      BooleanElem(BooleanEx.newVar(ex))
+    }
+    Some(edit)
+  }
 
   protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit = region match {
     case hm: TimelineObjView.HasMute => dispatch(TrackTool.Adjust(Mute(!hm.muted)))

@@ -16,9 +16,10 @@ package gui
 package impl
 package timeline
 
+import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.synth.proc.Timeline
 import de.sciss.lucre.stm
-import de.sciss.desktop.{Window, KeyStrokes, Menu, OptionPane}
+import de.sciss.desktop.{UndoManager, Window, KeyStrokes, Menu, OptionPane}
 import scala.swing.event.Key
 import scala.swing.Action
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
@@ -29,6 +30,7 @@ import proc.Implicits._
 object FrameImpl {
   def apply[S <: Sys[S]](group: Timeline.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineFrame[S] = {
+    implicit val undoMgr  = new UndoManagerImpl
     val tlv     = TimelineView[S](group)
     val name    = group.attr.name
     import Timeline.serializer

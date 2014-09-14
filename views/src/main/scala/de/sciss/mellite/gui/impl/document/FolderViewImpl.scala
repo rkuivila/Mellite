@@ -41,7 +41,7 @@ import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.treetable.j.{TreeTableCellEditor, DefaultTreeTableCellEditor}
 import javax.swing.event.{ChangeEvent, CellEditorListener}
 import de.sciss.desktop.UndoManager
-import de.sciss.mellite.gui.edit.{EditInsertObj, EditRemoveObj, EditAttrMap}
+import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj, EditAttrMap}
 import de.sciss.lucre
 import de.sciss.synth.io.AudioFile
 import scala.util.Try
@@ -343,15 +343,12 @@ object FolderViewImpl {
 
             val childH  = nv.modelData
             val idx     = parent.indexOf(childH())
-            val parentH = tx.newHandle(parent)
-            EditRemoveObj[S](nv.renderData.prefix, parentH, idx, childH)
+            EditFolderRemoveObj[S](nv.renderData.prefix, parent, idx, childH())
           }
-
-          val newParentH = tx.newHandle(newParent)
 
           val editInsert = sel1.zipWithIndex.map { case (nv, off) =>
             val childH = nv.modelData
-            EditInsertObj[S](nv.renderData.prefix, newParentH, idx1 + off, childH)
+            EditFolderInsertObj[S](nv.renderData.prefix, newParent, idx1 + off, childH())
           }
           val edits: List[UndoableEdit] = editRemove ++ editInsert
           val name = sel1 match {
@@ -386,14 +383,12 @@ object FolderViewImpl {
           }
 
           implicit val folderSer = Folder.serializer[S]
-          val parentH = tx.newHandle(parent)
           val edits: List[UndoableEdit] = trip.flatMap {
             case (f, spec, locS) =>
               val loc = locS()
               loc.elem.peer.modifiableOption.map { locM =>
                 val obj     = ObjectActions.mkAudioFile(locM, f, spec)
-                val childH  = tx.newHandle(obj)
-                EditInsertObj[S]("Audio File", parentH, index, childH)
+                EditFolderInsertObj[S]("Audio File", parent, index, obj)
               }
           }
           CompoundEdit(edits, "Insert Audio Files")
