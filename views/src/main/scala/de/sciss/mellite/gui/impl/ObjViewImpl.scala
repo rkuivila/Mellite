@@ -15,20 +15,19 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
+import de.sciss.synth.proc.{Confluent, BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.{Expr, ExprType}
-import de.sciss.lucre.stm
+import de.sciss.lucre.expr.{Expr, ExprType, Int => IntEx}
+import de.sciss.lucre.{event => evt, confluent, stm}
 import de.sciss.{desktop, mellite, lucre}
 import scala.util.Try
 import de.sciss.icons.raphael
 import de.sciss.synth.proc
 import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.swing.{Window, deferTx}
+import de.sciss.lucre.swing.{View, Window, deferTx}
 import de.sciss.file._
 import scala.swing.{CheckBox, Label, TextField, Component}
 import de.sciss.swingplus.{ComboBox, Spinner}
@@ -36,7 +35,6 @@ import java.awt.geom.Path2D
 import de.sciss.desktop.{OptionPane, FileDialog}
 import de.sciss.synth.io.{SampleFormat, AudioFile}
 import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditFolderInsertObj}
-import de.sciss.lucre.{event => evt}
 import proc.Implicits._
 import de.sciss.audiowidgets.AxisFormat
 import de.sciss.model.Change
@@ -122,7 +120,8 @@ object ObjViewImpl {
         case Expr.Var(_)  => true
         case _            => false
       }
-      new String.Impl(tx.newHandle(obj), name, value, isEditable = isEditable)
+      val isViewable  = tx.isInstanceOf[Confluent.Txn]
+      new String.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
     }
 
     def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
@@ -138,13 +137,12 @@ object ObjViewImpl {
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, StringElem]],
-                                                   var name: _String, var value: _String,
-                                                   override val isEditable: _Boolean)
+                                 var name: _String, var value: _String,
+                                 override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ObjView.String[S]
       with ObjViewImpl.Impl[S]
       with ExprLike[S, _String]
-      with StringRenderer
-      with NonViewable[S] {
+      with StringRenderer {
 
       def prefix  = String.prefix
       def icon    = String.icon
@@ -179,7 +177,8 @@ object ObjViewImpl {
         case Expr.Var(_)  => true
         case _            => false
       }
-      new Int.Impl(tx.newHandle(obj), name, value, isEditable = isEditable)
+      val isViewable  = tx.isInstanceOf[Confluent.Txn]
+      new Int.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
     }
 
     def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
@@ -196,13 +195,13 @@ object ObjViewImpl {
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, IntElem]],
-                                                   var name: _String, var value: _Int,
-                                                   override val isEditable: _Boolean)
+                                  var name: _String, var value: _Int,
+                                  override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ObjView.Int[S]
       with ObjViewImpl.Impl[S]
       with ExprLike[S, _Int]
       with StringRenderer
-      with NonViewable[S] {
+      /* with NonViewable[S] */ {
 
       def prefix  = Int.prefix
       def icon    = Int.icon
@@ -240,7 +239,8 @@ object ObjViewImpl {
         case Expr.Var(_)  => true
         case _            => false
       }
-      new Double.Impl(tx.newHandle(obj), name, value, isEditable = isEditable)
+      val isViewable  = tx.isInstanceOf[Confluent.Txn]
+      new Double.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
     }
 
     def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
@@ -258,12 +258,11 @@ object ObjViewImpl {
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]],
                                                    var name: _String, var value: _Double,
-                                                   override val isEditable: _Boolean)
+                                                   override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ObjView.Double[S]
       with ObjViewImpl.Impl[S]
       with ExprLike[S, _Double]
-      with StringRenderer
-      with NonViewable[S] {
+      with StringRenderer {
 
       def prefix  = Double.prefix
       def icon    = Double.icon
@@ -301,7 +300,8 @@ object ObjViewImpl {
         case Expr.Var(_)  => true
         case _            => false
       }
-      new Boolean.Impl(tx.newHandle(obj), name, value, isEditable = isEditable)
+      val isViewable  = tx.isInstanceOf[Confluent.Txn]
+      new Boolean.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
     }
 
     def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
@@ -320,12 +320,10 @@ object ObjViewImpl {
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, BooleanElem]],
                                   var name: _String, var value: _Boolean,
-                                  override val isEditable: _Boolean)
+                                  override val isEditable: _Boolean, val isViewable: Boolean)
       extends ObjView.Boolean[S]
       with ObjViewImpl.Impl[S]
-      with ExprLike[S, _Boolean]
-      // with StringRenderer
-      with NonViewable[S] {
+      with ExprLike[S, _Boolean] {
 
       def prefix  = Boolean.prefix
       def icon    = Boolean.icon
@@ -490,11 +488,7 @@ object ObjViewImpl {
           case _ => false
         }
 
-        /** Given that the view is editable, this method is called when the editor gave notification about
-          * the editing being done. It is then the duty of the view to issue a corresponding transactional
-          * mutation, returned in an undoable edit. Views that do not support editing should just return `None`.
-          */
-        def tryEdit(value: Any)(implicit tx: S#Tx, cursor: Cursor[S]): Option[UndoableEdit] = {
+        def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
           val dirOpt = value match {
             case s: String  => Some(file(s))
             case f: File    => Some(f)
@@ -1010,6 +1004,22 @@ object ObjViewImpl {
           true
         }
       case _ => false
+    }
+
+    // XXX TODO - this is a quick hack for demo
+    def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+      workspace match {
+        case cf: Workspace.Confluent =>
+          // XXX TODO - all this casting is horrible
+          implicit val ctx = tx.asInstanceOf[Confluent#Tx]
+          implicit val ser = exprType.serializer[Confluent]
+          val w = new WindowImpl[Confluent](s"History for '$name'") {
+            val view = ExprHistoryView(cf, expr.asInstanceOf[Expr[Confluent, A]])
+            init()
+          }
+          Some(w.asInstanceOf[Window[S]])
+        case _ => None
+      }
     }
   }
 }
