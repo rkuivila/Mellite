@@ -1,12 +1,25 @@
+// find the first timeline object
+// and get a modifiable handle on it
 val tl = doc.collectObjects {
   case proc.Timeline.Obj(tl) => tl.elem.peer
-} .head
+} .head.modifiableOption.get
 
+// find objects named A and B on that timeline
 val Seq(a, b) = Seq("A", "B").map { n => 
   tl.iterator.flatMap(_._2).toList.find(_.value.attr.name == n).get
 }
 
-val as = a.span
-val bs = b.span.asVar
+val as      = a.span
+val bs      = b.span.asVar
+// create a new span that is
+// a shifted version of A's span
+val shifted = as shift 4.secframes
 
-bs() = as shift 4.secframes
+// (work-around: temporarily remove the objects)
+tl.remove(bs, b.value)
+tl.remove(as, a.value)
+// update B's span to the shifted expression
+bs() = shifted
+// (work-around: re-add the objects)
+tl.add(bs, b.value)
+tl.add(as, a.value)

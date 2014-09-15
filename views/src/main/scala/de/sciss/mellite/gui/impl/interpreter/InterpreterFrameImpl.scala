@@ -93,7 +93,7 @@ private[gui] object InterpreterFrameImpl {
 
         def handler = Application.windowHandler
 
-        override def style = Window.Auxiliary
+        // override def style = Window.Auxiliary
 
         title           = "Interpreter"
         contents        = Component.wrap(intp.component)
