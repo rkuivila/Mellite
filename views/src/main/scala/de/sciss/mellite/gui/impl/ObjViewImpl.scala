@@ -15,7 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Confluent, BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem}
+import de.sciss.synth.proc.{Confluent, BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem, LongElem}
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -42,7 +42,7 @@ import de.sciss.model.Change
 object ObjViewImpl {
   import ObjView.Factory
   import java.lang.{String => _String}
-  import scala.{Int => _Int, Double => _Double, Boolean => _Boolean}
+  import scala.{Int => _Int, Double => _Double, Boolean => _Boolean, Long => _Long}
   import mellite.{Recursion => _Recursion, Code => _Code, Action => _Action}
   import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline, ArtifactLocation => _ArtifactLocation, FadeSpec => _FadeSpec}
 
@@ -65,6 +65,7 @@ object ObjViewImpl {
   private var map = scala.Predef.Map[_Int, Factory](
     String          .typeID -> String,
     Int             .typeID -> Int,
+    Long            .typeID -> Long,
     Double          .typeID -> Double,
     Boolean         .typeID -> Boolean,
     AudioGrapheme   .typeID -> AudioGrapheme,
@@ -218,6 +219,67 @@ object ObjViewImpl {
 
       def testValue(v: Any): Option[_Int] = v match {
         case i: _Int  => Some(i)
+        case _        => None
+      }
+    }
+  }
+
+  // -------- Long --------
+
+  object Long extends Factory {
+    type E[S <: evt.Sys[S]] = LongElem[S]
+    val icon    = raphaelIcon(Shapes.IntegerNumbers)  // XXX TODO
+    val prefix  = "Long"
+    def typeID  = ElemImpl.Long.typeID
+
+    def apply[S <: Sys[S]](obj: Obj.T[S, LongElem])(implicit tx: S#Tx): ObjView[S] = {
+      val name        = obj.attr.name
+      val ex          = obj.elem.peer
+      val value       = ex.value
+      val isEditable  = ex match {
+        case Expr.Var(_)  => true
+        case _            => false
+      }
+      val isViewable  = tx.isInstanceOf[Confluent.Txn]
+      new Long.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
+    }
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+      val expr      = ExprImplicits[S]
+      import expr._
+      val model     = new SpinnerNumberModel(0L, _Long.MinValue, _Long.MaxValue, 1L)
+      val ggValue   = new Spinner(model)
+      actionAddPrimitive[S, _Long](folderH, window, tpe = prefix, ggValue = ggValue,
+        prepare = Some(model.getNumber.longValue())) { implicit tx =>
+        value => LongElem(lucre.expr.Long.newVar(value))
+      }
+    }
+
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, LongElem]],
+                                  var name: _String, var value: _Long,
+                                  override val isEditable: _Boolean, val isViewable: _Boolean)
+      extends ObjView.Long[S]
+      with ObjViewImpl.Impl[S]
+      with ExprLike[S, _Long]
+      with StringRenderer {
+
+      def prefix  = Long.prefix
+      def icon    = Long.icon
+      def typeID  = Long.typeID
+
+      def exprType = lucre.expr.Long
+
+      def expr(implicit tx: S#Tx) = obj().elem.peer
+
+      def convertEditValue(v: Any): Option[_Long] = v match {
+        case num: _Long => Some(num)
+        case s: _String => Try(s.toLong).toOption
+      }
+
+      def testValue(v: Any): Option[_Long] = v match {
+        case i: _Long => Some(i)
         case _        => None
       }
     }

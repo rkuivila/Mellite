@@ -4,6 +4,11 @@ val tl = doc.collectObjects {
   case proc.Timeline.Obj(tl) => tl.elem.peer
 } .head.modifiableOption.get
 
+// find a long-number object
+val off = doc.collectObjects {
+  case proc.LongElem.Obj(x) => x.elem.peer
+} .head
+
 // find objects named A and B on that timeline
 val Seq(a, b) = Seq("A", "B").map { n => 
   tl.iterator.flatMap(_._2).toList.find(_.value.attr.name == n).get
@@ -13,7 +18,7 @@ val as      = a.span
 val bs      = b.span.asVar
 // create a new span that is
 // a shifted version of A's span
-val shifted = as shift 4.secframes
+val shifted = as shift (off * 1.secframes)
 
 // (work-around: temporarily remove the objects)
 tl.remove(bs, b.value)
