@@ -29,6 +29,7 @@ import de.sciss.desktop
 import de.sciss.lucre.stm
 import de.sciss.sonogram
 import de.sciss.lucre.stm.{Disposable, Cursor}
+import de.sciss.synth.proc.gui.TransportView
 import de.sciss.synth.{Curve, proc}
 import de.sciss.fingertree.RangedSeq
 import de.sciss.lucre.bitemp.BiGroup

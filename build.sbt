@@ -12,7 +12,7 @@ lazy val projectVersion             = "0.11.0-SNAPSHOT"
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.6.1"
+lazy val soundProcessesVersion      = "2.7.0-SNAPSHOT"
 
 lazy val interpreterPaneVersion     = "1.6.2"
 
@@ -106,7 +106,7 @@ lazy val core: Project = Project(
     description := "Core layer for Mellite",
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
     libraryDependencies ++= Seq(
-      "de.sciss" %% "soundprocesses"        % soundProcessesVersion,  // computer-music framework
+      "de.sciss" %% "soundprocesses-views"  % soundProcessesVersion,  // computer-music framework
       "de.sciss" %% "scalainterpreterpane"  % interpreterPaneVersion, // REPL
       "de.sciss" %% "lucrestm-bdb"          % lucreSTMVersion,        // database backend
       "de.sciss" %% "fscapejobs"            % fscapeJobsVersion,      // remote FScape invocation
