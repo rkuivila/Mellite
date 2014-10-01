@@ -48,7 +48,7 @@ object ActionOpenWorkspace extends Action("Open...") {
         implicit val csr        = eph.cursor
         implicit val workspace  = eph
         csr.step { implicit tx =>
-          DocumentElementsFrame[proc.Durable, proc.Durable](name = None, isWorkspaceRoot = true)
+          FolderFrame[proc.Durable, proc.Durable](name = None, isWorkspaceRoot = true)
         }
     }
   }

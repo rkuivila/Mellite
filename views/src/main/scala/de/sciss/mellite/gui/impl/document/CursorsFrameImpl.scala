@@ -295,8 +295,8 @@ object CursorsFrameImpl {
       }
       val tabCM = t.peer.getColumnModel
       tabCM.getColumn(0).setPreferredWidth(128)
-      tabCM.getColumn(1).setPreferredWidth(184)
-      tabCM.getColumn(2).setPreferredWidth(184)
+      tabCM.getColumn(1).setPreferredWidth(186)
+      tabCM.getColumn(2).setPreferredWidth(186)
 
       val actionAdd = Action(null) {
         t.selection.paths.headOption.foreach { path =>
@@ -320,7 +320,7 @@ object CursorsFrameImpl {
           cursor.step { implicit tx =>
             implicit val dtxView  = workspace.system.durableTx _ // (tx)
             implicit val dtx      = dtxView(tx)
-            DocumentElementsFrame(name = Some(elem.name), isWorkspaceRoot = false)
+            FolderFrame(name = Some(elem.name), isWorkspaceRoot = false)
           }
         }
       }

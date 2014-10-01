@@ -68,10 +68,10 @@ object GUI {
                      window: Option[desktop.Window] = None): Option[String] = {
     val ggName  = new TextField(10)
     ggName.text = defaultName
+    val lbName  = new Label( "Name:", EmptyIcon, Alignment.Right)
+    val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
 
     val box = new GroupPanel {
-      val lbName  = new Label( "Name:", EmptyIcon, Alignment.Right)
-      val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
       horizontal  = Seq(Par(Trailing)(lbName, lbValue), Par          (ggName , value))
       vertical    = Seq(Par(Baseline)(lbName, ggName ), Par(Baseline)(lbValue, value))
     }

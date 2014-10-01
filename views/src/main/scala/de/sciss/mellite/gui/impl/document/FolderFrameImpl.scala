@@ -1,5 +1,5 @@
 /*
- *  ElementsFrameImpl.scala
+ *  FolderFrameImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
@@ -34,11 +34,11 @@ import javax.swing.undo.UndoableEdit
 import proc.FolderElem
 import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
 
-object ElementsFrameImpl {
+object FolderFrameImpl {
   def apply[S <: Sys[S], S1 <: Sys[S1]](nameOpt: Option[Expr[S1, String]],
                                         isWorkspaceRoot: Boolean)(implicit tx: S#Tx,
                                         workspace: Workspace[S], cursor: stm.Cursor[S],
-                                        bridge: S#Tx => S1#Tx): DocumentElementsFrame[S] = {
+                                        bridge: S#Tx => S1#Tx): FolderFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val folderView      = FolderView(workspace.root())
     val name0           = nameOpt.map(_.value(bridge(tx)))
@@ -61,16 +61,18 @@ object ElementsFrameImpl {
     res
   }
 
-  private final class FrameImpl[S <: Sys[S]](view: ViewImpl[S, _], name0: Option[String], isWorkspaceRoot: Boolean)
-    extends CollectionFrameImpl[S](view) with DocumentElementsFrame[S] {
+  private final class FrameImpl[S <: Sys[S]](_view: ViewImpl[S, _], name0: Option[String], isWorkspaceRoot: Boolean)
+    extends CollectionFrameImpl[S](_view) with FolderFrame[S] {
 
-    def workspace = view.workspace
+    def workspace = _view.workspace
+
+    // override def view: FolderView[S] = _view.peer
 
     override protected def initGUI(): Unit = {
-      view.addListener {
+      _view.addListener {
         case CollectionViewImpl.NamedChanged(n) => title = n
       }
-      view.nameUpdate(name0)
+      _view.nameUpdate(name0)
     }
 
     override protected def placement: (Float, Float, Int) = (0.5f, 0.0f, 20)

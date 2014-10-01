@@ -19,9 +19,10 @@ import de.sciss.synth.proc.{Confluent, BooleanElem, Elem, ExprImplicits, FolderE
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.{Expr, ExprType, Int => IntEx}
-import de.sciss.lucre.{event => evt, confluent, stm}
+import de.sciss.lucre.expr.{Expr, ExprType, Int => IntEx, Double => DoubleEx, Boolean => BooleanEx, Long => LongEx}
+import de.sciss.lucre.{event => evt, stm}
 import de.sciss.{desktop, mellite, lucre}
+import scala.swing.Swing.EmptyIcon
 import scala.util.Try
 import de.sciss.icons.raphael
 import de.sciss.synth.proc
@@ -29,8 +30,8 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{View, Window, deferTx}
 import de.sciss.file._
-import scala.swing.{CheckBox, Label, TextField, Component}
-import de.sciss.swingplus.{ComboBox, Spinner}
+import scala.swing.{Dimension, Dialog, Alignment, CheckBox, Label, TextField, Component}
+import de.sciss.swingplus.{GroupPanel, ComboBox, Spinner}
 import java.awt.geom.Path2D
 import de.sciss.desktop.{OptionPane, FileDialog}
 import de.sciss.synth.io.{SampleFormat, AudioFile}
@@ -44,7 +45,8 @@ object ObjViewImpl {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean, Long => _Long}
   import mellite.{Recursion => _Recursion, Code => _Code, Action => _Action}
-  import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline, ArtifactLocation => _ArtifactLocation, FadeSpec => _FadeSpec}
+  import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline, ArtifactLocation => _ArtifactLocation,
+    FadeSpec => _FadeSpec, Ensemble => _Ensemble}
 
   private val sync = new AnyRef
 
@@ -76,7 +78,8 @@ object ObjViewImpl {
     Timeline        .typeID -> Timeline,
     Code            .typeID -> Code,
     FadeSpec        .typeID -> FadeSpec,
-    Action          .typeID -> Action
+    Action          .typeID -> Action,
+    Ensemble        .typeID -> Ensemble
   )
 
   // -------- Generic --------
@@ -142,7 +145,7 @@ object ObjViewImpl {
                                  override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ObjView.String[S]
       with ObjViewImpl.Impl[S]
-      with ExprLike[S, _String]
+      with SimpleExpr[S, _String]
       with StringRenderer {
 
       def prefix  = String.prefix
@@ -200,7 +203,7 @@ object ObjViewImpl {
                                   override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ObjView.Int[S]
       with ObjViewImpl.Impl[S]
-      with ExprLike[S, _Int]
+      with SimpleExpr[S, _Int]
       with StringRenderer
       /* with NonViewable[S] */ {
 
@@ -262,7 +265,7 @@ object ObjViewImpl {
                                   override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ObjView.Long[S]
       with ObjViewImpl.Impl[S]
-      with ExprLike[S, _Long]
+      with SimpleExpr[S, _Long]
       with StringRenderer {
 
       def prefix  = Long.prefix
@@ -323,7 +326,7 @@ object ObjViewImpl {
                                                    override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ObjView.Double[S]
       with ObjViewImpl.Impl[S]
-      with ExprLike[S, _Double]
+      with SimpleExpr[S, _Double]
       with StringRenderer {
 
       def prefix  = Double.prefix
@@ -378,38 +381,18 @@ object ObjViewImpl {
       }
     }
 
-    private final val ggCheckBox = new CheckBox()
-
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, BooleanElem]],
                                   var name: _String, var value: _Boolean,
                                   override val isEditable: _Boolean, val isViewable: Boolean)
       extends ObjView.Boolean[S]
       with ObjViewImpl.Impl[S]
-      with ExprLike[S, _Boolean] {
+      with BooleanExprLike[S] with SimpleExpr[S, _Boolean] {
 
       def prefix  = Boolean.prefix
       def icon    = Boolean.icon
       def typeID  = Boolean.typeID
 
-      def exprType = lucre.expr.Boolean
-
       def expr(implicit tx: S#Tx) = obj().elem.peer
-
-      def convertEditValue(v: Any): Option[_Boolean] = v match {
-        case num: _Boolean  => Some(num)
-        case s: _String     => Try(s.toBoolean).toOption
-      }
-
-      def testValue(v: Any): Option[_Boolean] = v match {
-        case i: _Boolean  => Some(i)
-        case _            => None
-      }
-
-      def configureRenderer(label: Label): Component = {
-        ggCheckBox.selected   = value
-        ggCheckBox.background = label.background
-        ggCheckBox
-      }
     }
   }
 
@@ -961,6 +944,96 @@ object ObjViewImpl {
     }
   }
 
+  // -------- Ensemble --------
+
+  object Ensemble extends Factory {
+    type E[S <: evt.Sys[S]] = _Ensemble.Elem[S]
+    val icon            = raphaelIcon(raphael.Shapes.Cube2)
+    val prefix          = "Ensemble"
+    def typeID          = _Ensemble.typeID
+
+    def apply[S <: Sys[S]](obj: _Ensemble.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
+      val name    = obj.attr.name
+      // val value   = obj.elem.peer.value
+      val ens     = obj.elem.peer
+      val playingEx = ens.playing
+      val playing = playingEx.value
+      val isEditable  = playingEx match {
+        case Expr.Var(_)  => true
+        case _            => false
+      }
+      new Ensemble.Impl(tx.newHandle(obj), name, playing = playing, isEditable = isEditable)
+    }
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
+                                window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+      val ggName    = new TextField(10)
+      ggName.text   = prefix
+      val offModel  = new SpinnerNumberModel(0.0, 0.0, 1.0e6 /* _Double.MaxValue */, 0.1)
+      val ggOff     = new Spinner(offModel)
+      // doesn't work
+      //      // using Double.MaxValue causes panic in spinner's preferred-size
+      //      ggOff.preferredSize = new Dimension(ggName.preferredSize.width, ggOff.preferredSize.height)
+      //      ggOff.maximumSize   = ggOff.preferredSize
+      val ggPlay    = new CheckBox
+
+      val lbName  = new Label(       "Name:", EmptyIcon, Alignment.Right)
+      val lbOff   = new Label( "Offset [s]:", EmptyIcon, Alignment.Right)
+      val lbPlay  = new Label(    "Playing:", EmptyIcon, Alignment.Right)
+
+      val box = new GroupPanel {
+        horizontal  = Seq(Par(Trailing)(lbName, lbOff, lbPlay), Par(ggName , ggOff, ggPlay))
+        vertical    = Seq(Par(Baseline)(lbName, ggName),
+                          Par(Baseline)(lbOff , ggOff ),
+                          Par(Baseline)(lbPlay, ggPlay))
+      }
+
+      val pane = desktop.OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,
+        messageType = Dialog.Message.Question, focus = Some(ggName))
+      pane.title  = s"New $prefix"
+      val res = pane.show(window)
+
+      if (res != Dialog.Result.Ok) None else {
+        cursor.step { implicit tx =>
+          val name      = ggName.text
+          val folder    = _Folder[S] // XXX TODO - can we ask the user to pick one?
+          val seconds   = offModel.getNumber.doubleValue()
+          val offset    = LongEx   .newVar(LongEx   .newConst[S]((seconds * _Timeline.SampleRate + 0.5).toLong))
+          val playing   = BooleanEx.newVar(BooleanEx.newConst[S](ggPlay.selected))
+          val elem      = _Ensemble.Elem(_Ensemble[S](folder, offset, playing))
+          val obj       = Obj(elem)
+          obj.attr.name = name
+          val edit      = addObject(prefix, folderH(), obj)
+          Some(edit)
+        }
+      }
+    }
+
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Ensemble.Obj[S]],
+                                  var name: _String, var playing: _Boolean, val isEditable: Boolean)
+      extends ObjView.Ensemble[S]
+      with ObjViewImpl.Impl[S]
+      with BooleanExprLike[S] {
+
+      def icon    = Ensemble.icon
+      def prefix  = Ensemble.prefix
+      def typeID  = Ensemble.typeID
+
+      def isViewable = true
+
+      protected def exprValue: _Boolean = playing
+      protected def exprValue_=(x: _Boolean): Unit = playing = x
+      protected def expr(implicit tx: S#Tx): Expr[S, _Boolean] = obj().elem.peer.playing
+
+      def value: Any = ()
+
+      override def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        ???
+      }
+    }
+  }
+
   // -----------------------------
 
   def addObject[S <: Sys[S]](name: String, parent: _Folder[S], obj: Obj[S])
@@ -997,14 +1070,14 @@ object ObjViewImpl {
 
   /** A trait that when mixed in provides `isEditable` and `tryEdit` as non-op methods. */
   trait NonEditable[S <: Sys[S]] {
-    def isEditable: Boolean = false
+    def isEditable: _Boolean = false
 
     def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = None
   }
 
   /** A trait that when mixed in provides `isViewable` and `openView` as non-op methods. */
   trait NonViewable[S <: Sys[S]] {
-    def isViewable: Boolean = false
+    def isViewable: _Boolean = false
 
     def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = None
   }
@@ -1026,7 +1099,8 @@ object ObjViewImpl {
 
   trait ExprLike[S <: Sys[S], A] {
     _: ObjView[S] =>
-    var value: A
+
+    protected var exprValue: A
 
     // def obj: stm.Source[S#Tx, Obj.T[S, Elem { type Peer = Expr[S, A] }]]
 
@@ -1061,7 +1135,7 @@ object ObjViewImpl {
       case Change(_, now) =>
         testValue(now).exists { valueNew =>
           deferTx {
-            value = valueNew
+            exprValue = valueNew
           }
           true
         }
@@ -1082,6 +1156,40 @@ object ObjViewImpl {
           Some(w.asInstanceOf[Window[S]])
         case _ => None
       }
+    }
+  }
+
+  trait SimpleExpr[S <: Sys[S], A] extends ExprLike[S, A] with ObjView[S] {
+    // _: ObjView[S] =>
+
+    override def value: A
+    protected def value_=(x: A): Unit
+
+    protected def exprValue: A = value
+    protected def exprValue_=(x: A): Unit = value = x
+  }
+
+  private final val ggCheckBox = new CheckBox()
+
+  trait BooleanExprLike[S <: Sys[S]] extends ExprLike[S, _Boolean] {
+    _: ObjView[S] =>
+
+    def exprType = lucre.expr.Boolean
+
+    def convertEditValue(v: Any): Option[_Boolean] = v match {
+      case num: _Boolean  => Some(num)
+      case s: _String     => Try(s.toBoolean).toOption
+    }
+
+    def testValue(v: Any): Option[_Boolean] = v match {
+      case i: _Boolean  => Some(i)
+      case _            => None
+    }
+
+    def configureRenderer(label: Label): Component = {
+      ggCheckBox.selected   = exprValue
+      ggCheckBox.background = label.background
+      ggCheckBox
     }
   }
 }

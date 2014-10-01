@@ -34,7 +34,8 @@ object ObjView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean, Long => _Long}
   import mellite.{Code => _Code, Recursion => _Recursion, Action => _Action}
-  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, Proc => _Proc, Timeline => _Timeline, FadeSpec => _FadeSpec}
+  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, Proc => _Proc, Timeline => _Timeline,
+    FadeSpec => _FadeSpec, Ensemble => _Ensemble}
 
   //  final case class SelectionDrag[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
   //    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
@@ -147,6 +148,12 @@ object ObjView {
   trait Action[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, _Action.Obj[S]]
     // def value: _Action
+  }
+
+  val Ensemble: Factory { type E[S <: evt.Sys[S]] = _Ensemble.Elem[S] } = Impl.Ensemble
+  trait Ensemble[S <: Sys[S]] extends ObjView[S] {
+    def obj: stm.Source[S#Tx, _Ensemble.Obj[S]]
+    def playing: _Boolean
   }
 }
 trait ObjView[S <: Sys[S]] {
