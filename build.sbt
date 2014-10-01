@@ -14,17 +14,17 @@ lazy val projectVersion             = "0.11.0-SNAPSHOT"
 
 lazy val soundProcessesVersion      = "2.7.0-SNAPSHOT"
 
-lazy val interpreterPaneVersion     = "1.6.2"
+lazy val interpreterPaneVersion     = "1.7.0"
 
 lazy val lucreSTMVersion            = "2.1.0"
 
 lazy val fscapeJobsVersion          = "1.4.1"
 
-lazy val strugatzkiVersion          = "2.5.0"
+lazy val strugatzkiVersion          = "2.6.0"
 
 // ---- views dependencies ----
 
-lazy val scalaColliderSwingVersion  = "1.19.0"
+lazy val scalaColliderSwingVersion  = "1.20.0"
 
 lazy val lucreSwingVersion          = "0.5.0"
 

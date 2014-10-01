@@ -108,7 +108,7 @@ object CodeViewImpl {
         val inp  = io.Source.fromFile(s"codeview$idx.txt", "UTF-8")
         val text = inp.getLines().mkString("\n")
         inp.close()
-        codePane.editor.setText(text)
+        codePane.editor.text = text
       } catch {
         case NonFatal(e) => e.printStackTrace()
       }
@@ -134,12 +134,12 @@ object CodeViewImpl {
       futCompile.isDefined
     }
 
-    protected def currentText: String = codePane.editor.getText
+    protected def currentText: String = codePane.editor.text
 
     def dispose()(implicit tx: S#Tx) = ()
 
-    def undoAction: Action = Action.wrap(codePane.editor.getActionMap.get("undo"))
-    def redoAction: Action = Action.wrap(codePane.editor.getActionMap.get("redo"))
+    def undoAction: Action = Action.wrap(codePane.editor.peer.getActionMap.get("undo"))
+    def redoAction: Action = Action.wrap(codePane.editor.peer.getActionMap.get("redo"))
 
     private def saveSource(newSource: String)(implicit tx: S#Tx): Option[UndoableEdit] = {
       val expr  = ExprImplicits[S]
@@ -161,7 +161,7 @@ object CodeViewImpl {
       // component.setDirty(value = false) // do not erase undo history
 
       // so let's clear the undo history now...
-      codePane.editor.getDocument.asInstanceOf[SyntaxDocument].clearUndos()
+      codePane.editor.peer.getDocument.asInstanceOf[SyntaxDocument].clearUndos()
     }
 
     def save(): Future[Unit] = {
@@ -267,7 +267,7 @@ object CodeViewImpl {
       actionApply = Action("Apply")(save())
       actionApply.enabled = false
 
-      lazy val doc = codePane.editor.getDocument.asInstanceOf[SyntaxDocument]
+      lazy val doc = codePane.editor.peer.getDocument.asInstanceOf[SyntaxDocument]
       doc.addUndoableEditListener(
         new UndoableEditListener {
           def undoableEditHappened(e: UndoableEditEvent): Unit =
@@ -301,13 +301,12 @@ object CodeViewImpl {
       val panelBottom = new FlowPanel(FlowPanel.Alignment.Trailing)(bot2: _*)
 
       val iPaneC  = iPane.component
-      val iPaneCW = Component.wrap(iPaneC)
-      val top     = iPaneC.getComponent(iPaneC.getComponentCount - 1) match {
+      val top     = iPaneC.peer.getComponent(iPaneC.peer.getComponentCount - 1) match {
         case jc: javax.swing.JComponent =>
           jc.add(panelBottom.peer)
-          iPaneCW
+          iPaneC
         case _ => new BorderPanel {
-          add(iPaneCW    , BorderPanel.Position.Center)
+          add(iPaneC     , BorderPanel.Position.Center)
           add(panelBottom, BorderPanel.Position.South )
         }
       }

@@ -81,12 +81,12 @@ object ProcEditorFrameImpl {
       val cCfg = CodePane.Config()
       initGraphSource.foreach(cCfg.text = _)
       ggSource = CodePane(cCfg)
-      ggSource.editor.setEnabled(false)
-      ggSource.editor.setPreferredSize(new Dimension(300, 300))
+      ggSource.editor.enabled = false
+      ggSource.editor.preferredSize = new Dimension(300, 300)
       InterpreterSingleton { in =>
         defer {
           intOpt = Some(in)
-          ggSource.editor.setEnabled(true)
+          ggSource.editor.enabled = true
         }
       }
 
@@ -108,7 +108,7 @@ object ProcEditorFrameImpl {
 
       val ggCommit = Button("Commit") {
         intOpt.foreach { in =>
-          val code = ggSource.editor.getText
+          val code = ggSource.editor.text
           if (code != "") {
             val wrapped = /* InterpreterSingleton.wrap( */ "SynthGraph {\n" + code + "\n}" /* ) */
             val intRes = in.interpret(wrapped)
@@ -154,7 +154,7 @@ object ProcEditorFrameImpl {
         contents = new BorderPanel {
           import BorderPanel.Position._
           add(topPanel, North)
-          add(Component.wrap(ggSource.component), Center)
+          add(ggSource.component, Center)
           add(botPanel, South)
         }
         pack()

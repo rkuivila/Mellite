@@ -22,6 +22,8 @@
 17  IncompleteProduct (SoundDesigner)
 18  UGenSource (SoundDesigner)
 19  Action (Function0[Unit])
+20  Warp
+21  ParamSpec
 
 :: non-expr elements (mutables) ::
 
@@ -34,6 +36,7 @@
 0x10005     Proc
 
 0x10006     Timeline
+0x10007     Ensemble
 
 :: indeterminus ::
 
@@ -53,3 +56,20 @@
 
 0x1000 | A.typeID   Option[A]
 0x2000 | A.typeID   Vec[A]
+
+::::::::::::::::
+:: Extensions ::
+::::::::::::::::
+
+Double
+	   0 to   36 - standard Numbers
+	1000 to 1002 - ParamSpec
+
+String
+	0 to 0	 - standard Numbers
+	1000 to 1000 - ParamSpec
+
+Warp
+	1000 to 1000 - ParamSpec
+
+

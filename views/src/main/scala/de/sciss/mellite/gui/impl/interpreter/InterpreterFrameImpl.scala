@@ -7,7 +7,6 @@ import de.sciss.desktop
 import de.sciss.scalainterpreter.{InterpreterPane, Interpreter, CodePane}
 import java.io.{IOException, FileInputStream, File}
 import scala.swing.event.Key
-import swing.Component
 import de.sciss.desktop.{KeyStrokes, Window}
 
 // careful... tripping over SI-3809 "illegal cyclic reference involving class Array"...
@@ -40,7 +39,8 @@ private[gui] object InterpreterFrameImpl {
     // var txnCount      = 0
 
     def txnExecute(): Unit = {
-      intp.codePane.getSelectedTextOrCurrentLine.foreach { txt =>
+      val codePane = intp.codePane
+      codePane.activeRange.foreach { range =>
         // val txnId = txnCount
         // txnCount += 1
         Application.documentHandler.activeDocument.foreach {
@@ -52,6 +52,7 @@ private[gui] object InterpreterFrameImpl {
             //             |}
             //             |val _txnRes$txnId = doc.cursor.atomic(implicit t => new _txnBody$txnId)
             //             |import _txnRes$txnId._""".stripMargin
+            val txt = codePane.getTextSlice(range)
             val txnTxt =
               s"""confluentDocument.cursors.cursor.step { implicit tx =>
              |import de.sciss.mellite.gui.InterpreterFrame.Bindings.{confluentDocument => doc}
@@ -59,7 +60,12 @@ private[gui] object InterpreterFrameImpl {
              |import _imp._
              |$txt
              |}""".stripMargin
-            intp.interpret(txnTxt)
+
+            codePane.flash(range)
+            val res  = intp.interpret(txnTxt)
+            val succ = res.exists(_.isSuccess)
+            if (!succ) codePane.abortFlash()
+            res
           case _ =>
         }
       }
@@ -96,7 +102,7 @@ private[gui] object InterpreterFrameImpl {
         // override def style = Window.Auxiliary
 
         title           = "Interpreter"
-        contents        = Component.wrap(intp.component)
+        contents        = intp.component
         closeOperation  = Window.CloseDispose
         pack()
         desktop.Util.centerOnScreen(this)
