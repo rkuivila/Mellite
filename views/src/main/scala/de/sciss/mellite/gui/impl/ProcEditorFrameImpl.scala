@@ -41,8 +41,8 @@ object ProcEditorFrameImpl {
     }
 
     val attr            = proc.attr
-    val initName        = attr.expr[String](ObjKeys.attrName).fold("<unnamed>")(_.value)
-    val initGraphSource = attr.expr[String](Proc.Obj.attrSource).map(_.value) // graph.source
+    val initName        = attr[StringElem](ObjKeys.attrName).fold("<unnamed>")(_.value)
+    val initGraphSource = attr[StringElem](Proc.Obj.attrSource).map(_.value) // graph.source
 
     deferTx {
       view.guiInit(initName, initGraphSource)

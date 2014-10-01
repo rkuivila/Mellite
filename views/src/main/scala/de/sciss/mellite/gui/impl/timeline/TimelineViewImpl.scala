@@ -37,7 +37,7 @@ import de.sciss.audiowidgets.TimelineModel
 import de.sciss.desktop.{UndoManager, KeyStrokes, Window}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.expr.{Int => IntEx}
-import de.sciss.synth.proc.{ObjKeys, IntElem, TimeRef, Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, Proc, Scan}
+import de.sciss.synth.proc.{BooleanElem, StringElem, DoubleElem, ObjKeys, IntElem, TimeRef, Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, Proc, Scan}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.synth.io.AudioFile
 import de.sciss.model.Change
@@ -158,37 +158,37 @@ object TimelineViewImpl {
 
     def muteChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val muted   = attr.expr[Boolean](ObjKeys.attrMute).exists(_.value)
+      val muted   = attr[BooleanElem](ObjKeys.attrMute).exists(_.value)
       tlView.objMuteChanged(timed, muted)
     }
 
     def nameChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val nameOpt = attr.expr[String](ObjKeys.attrName).map(_.value)
+      val nameOpt = attr[StringElem](ObjKeys.attrName).map(_.value)
       tlView.objNameChanged(timed, nameOpt)
     }
 
     def gainChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr  = timed.value.attr
-      val gain  = attr.expr[Double](ObjKeys.attrGain).fold(1.0)(_.value)
+      val gain  = attr[DoubleElem](ObjKeys.attrGain).fold(1.0)(_.value)
       tlView.objGainChanged(timed, gain)
     }
 
     def busChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val busOpt  = attr.expr[Int](ObjKeys.attrBus).map(_.value)
+      val busOpt  = attr[IntElem](ObjKeys.attrBus).map(_.value)
       tlView.procBusChanged(timed, busOpt)
     }
 
     def fadeChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val fadeIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-      val fadeOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
+      val fadeIn  = attr[FadeSpec.Elem](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
+      val fadeOut = attr[FadeSpec.Elem](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
       tlView.objFadeChanged(timed, fadeIn, fadeOut)
     }
 
     def trackIndexChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val trackNow = timed.value.attr.expr[Int](TimelineObjView.attrTrackIndex).fold(0)(_.value)
+      val trackNow = timed.value.attr[IntElem](TimelineObjView.attrTrackIndex).fold(0)(_.value)
       tlView.objMoved(timed, spanCh = Change(Span.Void, Span.Void),
         trackCh = Change(trackNow - 1, trackNow))
     }

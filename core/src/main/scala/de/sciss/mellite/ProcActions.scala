@@ -97,7 +97,7 @@ object ProcActions {
     import imp._
     name match {
       case Some(n) =>
-        attr.expr[String](ObjKeys.attrName) match {
+        attr[StringElem](ObjKeys.attrName) match {
           case Some(Expr.Var(vr)) => vr() = n
           case _                  => attr.put(ObjKeys.attrName, Obj(StringElem(StringEx.newVar(n))))
         }
@@ -167,7 +167,7 @@ object ProcActions {
     if (gain == 1.0) {
       attr.remove(ObjKeys.attrGain)
     } else {
-      attr.expr[Double](ObjKeys.attrGain) match {
+      attr[DoubleElem](ObjKeys.attrGain) match {
         case Some(Expr.Var(vr)) => vr() = gain
         case _                  => attr.put(ObjKeys.attrGain, Obj(DoubleElem(DoubleEx.newVar(gain))))
       }
@@ -181,7 +181,7 @@ object ProcActions {
     val imp   = ExprImplicits[S]
     import imp._
 
-    attr.expr[Double](ObjKeys.attrGain) match {
+    attr[DoubleElem](ObjKeys.attrGain) match {
       case Some(Expr.Var(vr)) => vr.transform(_ * factor)
       case other =>
         val newGain = other.fold(1.0)(_.value) * factor
@@ -201,7 +201,7 @@ object ProcActions {
     import imp._
 
     val attr = obj.attr
-    attr.expr[Boolean](ObjKeys.attrMute) match {
+    attr[BooleanElem](ObjKeys.attrMute) match {
       // XXX TODO: BooleanEx should have `not` operator
       case Some(Expr.Var(vr)) => vr.transform { old => val vOld = old.value; !vOld: Expr[S, Boolean] }
       case _                  => attr.put(ObjKeys.attrMute, Obj(BooleanElem(BooleanEx.newVar(true))))

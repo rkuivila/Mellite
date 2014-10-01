@@ -17,7 +17,7 @@ package impl
 package timeline
 
 import de.sciss.lucre.event.Sys
-import de.sciss.synth.proc.{ObjKeys, Obj, FadeSpec, Grapheme, Scan, Proc}
+import de.sciss.synth.proc.{IntElem, ObjKeys, Obj, FadeSpec, Grapheme, Scan, Proc}
 import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.sonogram.{Overview => SonoOverview}
@@ -86,7 +86,7 @@ object ProcView extends TimelineObjView.Factory {
     }
 
     val attr    = obj.attr
-    val bus     = attr.expr[Int     ](ObjKeys.attrBus    ).map(_.value)
+    val bus     = attr[IntElem](ObjKeys.attrBus    ).map(_.value)
     val res = new Impl(span = tx.newHandle(span), obj = tx.newHandle(obj), audio = audio, busOption = bus,
       context = context)
 

@@ -22,7 +22,7 @@ import evt.Sys
 import javax.swing.undo.{UndoableEdit, AbstractUndoableEdit}
 import de.sciss.synth.proc.{Elem, AttrMap, Obj}
 
-import scala.reflect.ClassTag
+import scala.language.higherKinds
 
 object EditAttrMap {
   def apply[S <: Sys[S]](name: String, obj: Obj[S], key: String, value: Option[Obj[S]])
@@ -36,22 +36,24 @@ object EditAttrMap {
     res
   }
 
-  def expr[S <: Sys[S], A](name: String, obj: Obj[S], key: String, value: Option[Expr[S, A]])
-                          (mkElem: Expr[S, A] => Elem[S] { type Peer = Expr[S, A] })
-                          (implicit tx: S#Tx, cursor: stm.Cursor[S], tag: ClassTag[Expr[S, A]],
+  def expr[S <: Sys[S], A, E[~ <: Sys[~]] <: Elem[~] { type Peer = Expr[~, A] }](name: String, obj: Obj[S],
+                                                                                 key: String, value: Option[Expr[S, A]])
+                          (mkElem: Expr[S, A] => E[S])
+                          (implicit tx: S#Tx, cursor: stm.Cursor[S], companion: Elem.Companion[E],
                            serializer: Serializer[S#Tx, S#Acc, Expr[S, A]]): UndoableEdit = {
     // what we do in `expr` is preserve an existing variable.
     // that is, if there is an existing value which is a variable,
     // we do not overwrite that value, but preserve that
     // variable's current child and overwrite that variable's child.
-    val before    = obj.attr.expr[A](key) match {
+    val befOpt: Option[Expr[S, A]] = obj.attr[E](key)
+    val before    = befOpt match {
       case Some(Expr.Var(vr)) => Some(vr())
       case other => other
     }
     val objH      = tx.newHandle(obj)
     val beforeH   = tx.newHandle(before)
     val nowH      = tx.newHandle(value)
-    val res       = new ExprImpl[S, A](name, key, objH, beforeH, nowH, mkElem)
+    val res       = new ExprImpl[S, A, E](name, key, objH, beforeH, nowH, mkElem)
     res.perform()
     res
   }
@@ -67,16 +69,17 @@ object EditAttrMap {
       map.put(key, elem)
   }
 
-  private final class ExprImpl[S <: Sys[S], B](val name: String, val key: String,
+  private final class ExprImpl[S <: Sys[S], B, E[~ <: Sys[~]] <: Elem[~] { type Peer = Expr[~, B] }](
+                                               val name: String, val key: String,
                                                val objH   : stm.Source[S#Tx, Obj[S]],
                                                val beforeH: stm.Source[S#Tx, Option[Expr[S, B]]],
                                                val nowH   : stm.Source[S#Tx, Option[Expr[S, B]]],
                                                mkElem: Expr[S, B] => Elem[S] { type Peer = Expr[S, B]})
-                                              (implicit val cursor: stm.Cursor[S], tag: ClassTag[Expr[S, B]])
+                                              (implicit val cursor: stm.Cursor[S], companion: Elem.Companion[E])
     extends Impl[S, Expr[S, B]] {
 
     protected def put(map: AttrMap.Modifiable[S], elem: Expr[S, B])(implicit tx: S#Tx): Unit =
-      map.expr(key) match {
+      map[E](key) match {
         case Some(Expr.Var(vr)) =>
           // see above for an explanation about how we preserve a variable
           if (vr == elem) throw new IllegalArgumentException(s"Cyclic reference setting variable $vr")

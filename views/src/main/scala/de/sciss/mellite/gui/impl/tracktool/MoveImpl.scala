@@ -70,7 +70,7 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       val expr = ExprImplicits[S]
       import expr._
 
-      val newTrack: Expr[S, Int] = obj.attr.expr[Int](TimelineObjView.attrTrackIndex) match {
+      val newTrack: Expr[S, Int] = obj.attr[IntElem](TimelineObjView.attrTrackIndex) match {
         case Some(Expr.Var(vr)) => vr() + deltaTrack
         case other => other.fold(0)(_.value) + deltaTrack
       }

@@ -35,11 +35,12 @@ import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameI
 
 object FolderFrameImpl {
   def apply[S <: Sys[S], S1 <: Sys[S1]](nameObs: ExprView[S1#Tx, Option[String]],
+                                        folder: Folder[S],
                                         isWorkspaceRoot: Boolean)(implicit tx: S#Tx,
                                         workspace: Workspace[S], cursor: stm.Cursor[S],
                                         bridge: S#Tx => S1#Tx): FolderFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
-    val folderView      = FolderView(workspace.root())
+    val folderView      = FolderView(folder)
     val name0           = nameObs()(bridge(tx))
     val view            = new ViewImpl[S, S1](folderView) {
       protected val nameObserver = nameObs.react { implicit tx => now =>

@@ -17,10 +17,14 @@ import de.sciss.lucre.event.{Sys, Observable}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Disposable
+import de.sciss.model.Change
 import de.sciss.serial.Serializer
+import de.sciss.synth.proc.{Elem, Obj}
 import de.sciss.synth.proc.impl.ObservableImpl
 
 import scala.concurrent.stm.Ref
+import scala.reflect.ClassTag
+import scala.language.higherKinds
 
 // XXX TODO - should go somewhere else - LucreExpr or LucreSwing
 object ExprView {
@@ -32,6 +36,10 @@ object ExprView {
                                             (implicit tx: S#Tx,
                                              serializer: Serializer[S#Tx, S#Acc, Ex]): ExprView[S#Tx, A] =
     new ExImpl[S, A, Ex](tx.newHandle(x))
+
+  def attrExpr[S <: Sys[S], A, E[~ <: Sys[~]] <: Elem[~] { type Peer = Expr[~, A] }](obj: Obj[S], key: String)
+                              (implicit tx: S#Tx, companion: Elem.Companion[E]): ExprView[S#Tx, Option[A]] =
+    new AttrImpl[S, A, E](tx.newHandle(obj), key)
 
   def const[S <: Sys[S], A](value: A): ExprView[S#Tx, A] = new ConstImpl(value)
 
@@ -48,6 +56,40 @@ object ExprView {
       h().changed.react { implicit tx => ch => fun(tx)(ch.now) }
 
     def apply()(implicit tx: S#Tx): A = h().value
+  }
+
+  private final class AttrImpl[S <: Sys[S], A, E[~ <: Sys[~]] <: Elem[~] { type Peer = Expr[~, A] }](
+      h: stm.Source[S#Tx, Obj[S]], key: String)(implicit companion: Elem.Companion[E])
+    extends Impl[S, Option[A]] {
+
+    private def map[B](aObj: Obj[S])(fun: Expr[S, A] => B): Option[B] = {
+      if (aObj.elem.typeID == companion.typeID) Some(fun(aObj.elem.asInstanceOf[E[S]].peer)) else None
+      // tag.unapply(aObj.elem.peer).map(fun)
+    }
+
+    def react(fun: S#Tx => Option[A] => Unit)(implicit tx: S#Tx): Disposable[S#Tx] =
+      h().changed.react { implicit tx => ch =>
+        ch.changes.foreach {
+          case Obj.AttrAdded  (`key`, aObj) => map(aObj) { expr =>
+            fun(tx)(Some(expr.value))
+          }
+          case Obj.AttrRemoved(`key`, aObj) => map(aObj) { expr =>
+            fun(tx)(None)
+          }
+          case Obj.AttrChange (`key`, aObj, changes) =>
+            map(aObj) { expr =>
+              val hasValue = changes.exists {
+                case Obj.ElemChange(Change(_, _)) => true
+                case _ => false
+              }
+              if (hasValue) fun(tx)(Some(expr.value))
+            }
+
+          case _ =>
+        }
+      }
+
+    def apply()(implicit tx: S#Tx): Option[A] = h().attr[E](key).map(_.value)
   }
 
   private final class MapImpl[S <: Sys[S], A, B](in: ExprView[S#Tx, A], f: A => B)

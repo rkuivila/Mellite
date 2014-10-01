@@ -49,7 +49,7 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     val imp = ExprImplicits[S]
     import imp._
-    val newMute: Expr[S, Boolean] = obj.attr.expr[Boolean](ObjKeys.attrMute) match {
+    val newMute: Expr[S, Boolean] = obj.attr[BooleanElem](ObjKeys.attrMute) match {
       // XXX TODO: BooleanEx should have `not` operator
       case Some(Expr.Var(vr)) => val vOld = vr().value; !vOld
       case other => !other.exists(_.value)

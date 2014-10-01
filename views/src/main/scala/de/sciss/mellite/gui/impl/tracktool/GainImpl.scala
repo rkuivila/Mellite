@@ -56,7 +56,7 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     val imp = ExprImplicits[S]
     import imp._
     if (factor == 1f) None else {
-      val newGain: Expr[S, Double] = obj.attr.expr[Double](ObjKeys.attrGain) match {
+      val newGain: Expr[S, Double] = obj.attr[DoubleElem](ObjKeys.attrGain) match {
         case Some(Expr.Var(vr)) => vr() * factor.toDouble
         case other =>
           other.fold(1.0)(_.value) * factor

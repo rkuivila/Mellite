@@ -15,6 +15,7 @@ package de.sciss
 package mellite
 package gui
 
+import de.sciss.synth.proc.Folder
 import impl.document.{FolderFrameImpl => Impl}
 import lucre.stm
 import de.sciss.lucre.synth.Sys
@@ -30,7 +31,13 @@ object FolderFrame {
   def apply[S <: Sys[S], S1 <: Sys[S1]](name: ExprView[S1#Tx, Option[String]], isWorkspaceRoot: Boolean)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          bridge: S#Tx => S1#Tx): FolderFrame[S] =
-    Impl(nameObs = name, isWorkspaceRoot = isWorkspaceRoot)
+    Impl(nameObs = name, folder = workspace.root(), isWorkspaceRoot = isWorkspaceRoot)
+
+  def apply[S <: Sys[S], S1 <: Sys[S1]](name: ExprView[S1#Tx, Option[String]], folder: Folder[S])
+                                       (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                                        bridge: S#Tx => S1#Tx): FolderFrame[S] = {
+    Impl(nameObs = name, folder = folder, isWorkspaceRoot = false)
+  }
 }
 
 trait FolderFrame[S <: Sys[S]] extends lucre.swing.Window[S] {

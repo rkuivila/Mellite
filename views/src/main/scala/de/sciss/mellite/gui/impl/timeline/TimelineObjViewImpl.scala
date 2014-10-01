@@ -7,7 +7,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Source
 import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
 import de.sciss.span.SpanLike
-import de.sciss.synth.proc.{FadeSpec, Timeline, ObjKeys, Proc, Obj}
+import de.sciss.synth.proc.{DoubleElem, BooleanElem, StringElem, IntElem, FadeSpec, Timeline, ObjKeys, Proc, Obj}
 import de.sciss.lucre.expr.{String => StringEx, Expr}
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.mellite.{Action => _Action}
@@ -42,29 +42,29 @@ object TimelineObjViewImpl {
   def initAttrs[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S], view: TimelineObjView[S])
                             (implicit tx: S#Tx): Unit = {
     val attr          = obj.attr
-    view.nameOption   = attr.expr[String](ObjKeys        .attrName       ).map    (_.value)
-    view.trackIndex   = attr.expr[Int   ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
-    view.trackHeight  = attr.expr[Int   ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
+    view.nameOption   = attr[StringElem](ObjKeys        .attrName       ).map    (_.value)
+    view.trackIndex   = attr[IntElem   ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
+    view.trackHeight  = attr[IntElem   ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
     view.spanValue    = span.value
   }
 
   def initGainAttrs[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S], view: TimelineObjView.HasGain)
                                 (implicit tx: S#Tx): Unit = {
     val attr    = obj.attr
-    view.gain   = attr.expr[Double](ObjKeys.attrGain).fold(1.0)(_.value)
+    view.gain   = attr[DoubleElem](ObjKeys.attrGain).fold(1.0)(_.value)
   }
 
   def initMuteAttrs[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S], view: TimelineObjView.HasMute)
                                 (implicit tx: S#Tx): Unit = {
     val attr    = obj.attr
-    view.muted  = attr.expr[Boolean](ObjKeys.attrMute).exists(_.value)
+    view.muted  = attr[BooleanElem](ObjKeys.attrMute).exists(_.value)
   }
 
   def initFadeAttrs[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S], view: TimelineObjView.HasFade)
                                 (implicit tx: S#Tx): Unit = {
     val attr          = obj.attr
-    view.fadeIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-    view.fadeOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
+    view.fadeIn  = attr[FadeSpec.Elem](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
+    view.fadeOut = attr[FadeSpec.Elem](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
   }
 
   trait BasicImpl[S <: Sys[S]] extends TimelineObjView[S] {

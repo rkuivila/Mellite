@@ -73,8 +73,8 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     import FadeSpec.Expr.serializer
 
     val attr    = obj.attr
-    val exprIn  = attr.expr[FadeSpec](ObjKeys.attrFadeIn )
-    val exprOut = attr.expr[FadeSpec](ObjKeys.attrFadeOut)
+    val exprIn  = attr[FadeSpec.Elem](ObjKeys.attrFadeIn )
+    val exprOut = attr[FadeSpec.Elem](ObjKeys.attrFadeOut)
     val valIn   = exprIn .fold(EmptyFade)(_.value)
     val valOut  = exprOut.fold(EmptyFade)(_.value)
     val total   = span.value match {

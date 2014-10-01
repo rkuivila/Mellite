@@ -15,7 +15,8 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Confluent, BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem, LongElem}
+import de.sciss.lucre.stm.Cursor
+import de.sciss.synth.proc.{ObjKeys, Confluent, BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem, LongElem}
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -630,12 +631,19 @@ object ObjViewImpl {
       extends ObjView.Folder[S]
       with ObjViewImpl.Impl[S]
       with EmptyRenderer[S]
-      with NonEditable[S]
-      with NonViewable[S] {
+      with NonEditable[S] {
 
       def prefix  = Folder.prefix
       def icon    = Folder.icon
       def typeID  = Folder.typeID
+
+      def isViewable = true
+
+      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        val folderObj = obj()
+        val nameView  = ExprView.attrExpr[S, String, StringElem](folderObj, ObjKeys.attrName)
+        Some(FolderFrame(nameView, folderObj.elem.peer))
+      }
     }
   }
 
