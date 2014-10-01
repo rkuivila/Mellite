@@ -18,7 +18,6 @@ package gui
 import impl.document.{FolderFrameImpl => Impl}
 import lucre.stm
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.Expr
 
 object FolderFrame {
   /** Creates a new frame for document elements.
@@ -28,10 +27,10 @@ object FolderFrame {
     * @param isWorkspaceRoot  if `true`, closes the workspace when the window closes; if `false` does nothing
     *                         upon closing the window
     */
-  def apply[S <: Sys[S], S1 <: Sys[S1]](name: Option[Expr[S1, String]], isWorkspaceRoot: Boolean)
+  def apply[S <: Sys[S], S1 <: Sys[S1]](name: ExprView[S1#Tx, Option[String]], isWorkspaceRoot: Boolean)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          bridge: S#Tx => S1#Tx): FolderFrame[S] =
-    Impl(nameOpt = name, isWorkspaceRoot = isWorkspaceRoot)
+    Impl(nameObs = name, isWorkspaceRoot = isWorkspaceRoot)
 }
 
 trait FolderFrame[S <: Sys[S]] extends lucre.swing.Window[S] {

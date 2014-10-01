@@ -25,7 +25,6 @@ import de.sciss.desktop.{UndoManager, Menu}
 import de.sciss.file._
 import de.sciss.swingplus.PopupMenu
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.swing.deferTx
 import de.sciss.synth.proc
 import de.sciss.desktop.impl.UndoManagerImpl
@@ -35,19 +34,17 @@ import proc.FolderElem
 import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
 
 object FolderFrameImpl {
-  def apply[S <: Sys[S], S1 <: Sys[S1]](nameOpt: Option[Expr[S1, String]],
+  def apply[S <: Sys[S], S1 <: Sys[S1]](nameObs: ExprView[S1#Tx, Option[String]],
                                         isWorkspaceRoot: Boolean)(implicit tx: S#Tx,
                                         workspace: Workspace[S], cursor: stm.Cursor[S],
                                         bridge: S#Tx => S1#Tx): FolderFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val folderView      = FolderView(workspace.root())
-    val name0           = nameOpt.map(_.value(bridge(tx)))
+    val name0           = nameObs()(bridge(tx))
     val view            = new ViewImpl[S, S1](folderView) {
-      protected val nameObserver = nameOpt.map { name =>
-        name.changed.react { implicit tx => upd =>
-          deferTx(nameUpdate(Some(upd.now)))
-        } (bridge(tx))
-      }
+      protected val nameObserver = nameObs.react { implicit tx => now =>
+        deferTx(nameUpdate(now))
+      } (bridge(tx))
 
       //      deferTx {
       //        guiInit()
@@ -95,7 +92,7 @@ object FolderFrameImpl {
 
     impl =>
 
-    protected def nameObserver: Option[stm.Disposable[S1#Tx]]
+    protected def nameObserver: stm.Disposable[S1#Tx]
 
     protected def mkTitle(sOpt: Option[String]): String =
       s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Elements"

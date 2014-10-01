@@ -27,6 +27,7 @@ import de.sciss.desktop
 import de.sciss.treetable.TreeTableSelectionChanged
 import de.sciss.model.Change
 import de.sciss.synth.proc.ExprImplicits
+import de.sciss.lucre.expr.{String => StringEx}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.icons.raphael
@@ -320,7 +321,8 @@ object CursorsFrameImpl {
           cursor.step { implicit tx =>
             implicit val dtxView  = workspace.system.durableTx _ // (tx)
             implicit val dtx      = dtxView(tx)
-            FolderFrame(name = Some(elem.name), isWorkspaceRoot = false)
+            import StringEx.serializer
+            FolderFrame(name = ExprView.expr[D, String](elem.name).map(Some(_)), isWorkspaceRoot = false)
           }
         }
       }

@@ -46,7 +46,7 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
 
   protected def bridge: S#Tx => S1#Tx
 
-  protected def nameObserver: Option[stm.Disposable[S1#Tx]]
+  protected def nameObserver: stm.Disposable[S1#Tx]
   protected def mkTitle(sOpt: Option[String]): String
 
   protected def actionAdd   : Action
@@ -161,7 +161,7 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
   }
 
   def dispose()(implicit tx: S#Tx): Unit = {
-    nameObserver.foreach(_.dispose()(bridge(tx)))
+    nameObserver.dispose()(bridge(tx))
   }
 }
 

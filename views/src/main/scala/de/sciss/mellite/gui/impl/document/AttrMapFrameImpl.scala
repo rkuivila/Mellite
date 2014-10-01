@@ -23,7 +23,7 @@ import de.sciss.synth.proc.Obj
 import de.sciss.lucre.stm
 
 import scala.swing.Action
-import de.sciss.mellite.Workspace
+import de.sciss.mellite.{ExprView, Workspace}
 import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
 import de.sciss.lucre.stm.Disposable
 import de.sciss.desktop.impl.UndoManagerImpl
@@ -39,7 +39,7 @@ object AttrMapFrameImpl {
     implicit val undoMgr  = new UndoManagerImpl
     val contents  = AttrMapView[S](obj)
     val view      = new ViewImpl[S](contents) {
-      protected def nameObserver: Option[Disposable[S#Tx]] = None
+      protected def nameObserver: Disposable[S#Tx] = ExprView.DummyDisposable
     }
     view.init()
     val name      = obj.attr.name
@@ -58,7 +58,7 @@ object AttrMapFrameImpl {
 
     protected val bridge: S#Tx => S#Tx = identity
 
-    protected def nameObserver: Option[stm.Disposable[S#Tx]]
+    protected def nameObserver: stm.Disposable[S#Tx]
 
     protected def mkTitle(sOpt: Option[String]): String =
       s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Attributes"
