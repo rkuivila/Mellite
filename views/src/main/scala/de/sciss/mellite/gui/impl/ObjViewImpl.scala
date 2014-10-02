@@ -46,9 +46,9 @@ object ObjViewImpl {
   import ObjView.Factory
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean, Long => _Long}
-  import mellite.{Recursion => _Recursion, Code => _Code, Action => _Action}
+  import mellite.{Recursion => _Recursion}
   import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline, ArtifactLocation => _ArtifactLocation,
-    FadeSpec => _FadeSpec, Ensemble => _Ensemble}
+    FadeSpec => _FadeSpec, Ensemble => _Ensemble, Code => _Code, Action => _Action}
 
   private val sync = new AnyRef
 
@@ -584,6 +584,7 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        import Mellite.compiler
         val frame = RecursionFrame(obj())
         Some(frame)
       }
@@ -694,6 +695,7 @@ object ObjViewImpl {
       // currently this just opens a code editor. in the future we should
       // add a scans map editor, and a convenience button for the attributes
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        import Mellite.compiler
         val frame = CodeFrame.proc(obj())
         Some(frame)
       }
@@ -829,6 +831,7 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        import Mellite.compiler
         val frame = CodeFrame(obj(), hasExecute = false)
         Some(frame)
       }
@@ -947,6 +950,7 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        import Mellite.compiler
         val frame = CodeFrame.action(obj())
         Some(frame)
       }

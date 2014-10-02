@@ -383,6 +383,7 @@ object TimelineViewImpl {
         settings = _settings
         _settings.file match {
           case Some(file) if ok =>
+            import Mellite.compiler
             performGUI(workspace, _settings, groupEH, file, window = window)
           case _ =>
         }
@@ -870,6 +871,7 @@ object TimelineViewImpl {
 
         case DnD.ObjectDrag(_, view: ObjView.Code[S]) => withProcRegions { implicit tx => regions =>
           val codeElem = view.obj()
+          import Mellite.compiler
           Edits.setSynthGraph[S](regions.map(_.obj()), codeElem)
         }
 

@@ -19,21 +19,22 @@ package interpreter
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.desktop.{UndoManager, OptionPane, Window}
+import de.sciss.desktop.{OptionPane, Window}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IDPeek
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.event.Sys
-import de.sciss.mellite.impl.ActionImpl
+import de.sciss.synth.proc.impl.ActionImpl
 import de.sciss.synth.{SynthGraph, proc}
 import proc.Implicits._
-import de.sciss.synth.proc.{SynthGraphs, Proc, Obj}
+import de.sciss.synth.proc.{Code, Action, SynthGraphs, Proc, Obj}
 
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
 
   def proc[S <: Sys[S]](obj: Obj.T[S, Proc.Elem])
-                       (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
+                       (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                        compiler: Code.Compiler): CodeFrame[S] = {
     val codeObj = mkSource(obj = obj, codeID = Code.SynthGraph.id, key = Proc.Obj.attrSource,
       init = "// graph function source code\n\n")
     
@@ -63,7 +64,8 @@ object CodeFrameImpl {
   // ---- adapter for editing a Action's source ----
 
   def action[S <: Sys[S]](obj: Action.Obj[S])
-                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
+                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                          compiler: Code.Compiler): CodeFrame[S] = {
     val codeObj = mkSource(obj = obj, codeID = Code.Action.id, key = Action.attrSource,
       init = "// action source code\n\n")
 
@@ -108,7 +110,8 @@ object CodeFrameImpl {
   // ---- general constructor ----
 
   def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], hasExecute: Boolean)
-                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                         compiler: Code.Compiler): CodeFrame[S] = {
     val _codeEx = obj.elem.peer
     val _code   = _codeEx.value
     make[S, _code.In, _code.Out](obj, _code, obj.attr.name, None, hasExecute = hasExecute)
@@ -116,7 +119,8 @@ object CodeFrameImpl {
   
   private def make[S <: Sys[S], In0, Out0](obj: Code.Obj[S], code0: Code { type In = In0; type Out = Out0 },
                                 _name: String, handler: Option[CodeView.Handler[S, In0, Out0]], hasExecute: Boolean)
-                               (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): CodeFrame[S] = {
+                               (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                                compiler: Code.Compiler): CodeFrame[S] = {
     implicit val undoMgr = new UndoManagerImpl
     // val _name   = /* title getOrElse */ obj.attr.name
     val view    = CodeView(obj, code0, hasExecute = hasExecute)(handler)

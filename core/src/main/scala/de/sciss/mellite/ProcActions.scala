@@ -16,7 +16,7 @@ package mellite
 
 import lucre.expr.Expr
 import span.{Span, SpanLike}
-import de.sciss.synth.proc.{ObjKeys, Timeline, Obj, SynthGraphs, ExprImplicits, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
+import de.sciss.synth.proc.{Code, ObjKeys, Timeline, Obj, SynthGraphs, ExprImplicits, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
 import de.sciss.lucre.bitemp.BiExpr
 import de.sciss.synth.proc
 import scala.util.control.NonFatal
@@ -209,7 +209,7 @@ object ProcActions {
   }
 
   def setSynthGraph[S <: Sys[S]](procs: Iterable[Proc.Obj[S]], codeElem: Code.Obj[S])
-                                (implicit tx: S#Tx): Boolean = {
+                                (implicit tx: S#Tx, compiler: Code.Compiler): Boolean = {
     val code = codeElem.elem.peer.value
     code match {
       case csg: Code.SynthGraph =>

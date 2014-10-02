@@ -17,14 +17,14 @@ package impl
 
 import de.sciss.synth.io.AudioFileSpec
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{Timeline, Elem, Obj, AudioGraphemeElem, ExprImplicits, Artifact}
-import de.sciss.lucre.{event => evt, stm, expr}
+import de.sciss.synth.proc.{Code, Timeline, Elem, Obj, AudioGraphemeElem, ExprImplicits, Artifact}
+import de.sciss.lucre.{event => evt, expr}
 import expr.Expr
-import de.sciss.span.{Span, SpanLike}
+import de.sciss.span.SpanLike
 import de.sciss.serial.{ImmutableSerializer, DataInput, DataOutput}
 import scala.annotation.switch
 import de.sciss.lucre.synth.InMemory
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx, Span => SpanEx}
+import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.event.Sys
 
 object RecursionImpl {
@@ -37,7 +37,7 @@ object RecursionImpl {
 
   // ---- elem ----
 
-  object ElemImpl extends proc.impl.ElemImpl.Companion[Recursion.Elem] {
+  object ElemImpl extends proc.impl.ElemCompanionImpl[Recursion.Elem] {
     def typeID = Recursion.typeID
 
     Elem.registerExtension(this)
@@ -68,7 +68,7 @@ object RecursionImpl {
     private final class Impl[S <: Sys[S]](protected val targets: evt.Targets[S],
                                           val peer: Recursion[S])
       extends Recursion.Elem[S]
-      with proc.impl.ElemImpl.Active[S] {
+      with proc.impl.ActiveElemImpl[S] {
 
       def typeID = ElemImpl.typeID
       def prefix = "Recursion"

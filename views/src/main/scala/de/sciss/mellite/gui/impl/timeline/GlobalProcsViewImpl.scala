@@ -242,6 +242,7 @@ object GlobalProcsViewImpl {
                   case iv: ObjView.Code[S] =>
                     atomic { implicit tx =>
                       val objT = iv.obj()
+                      import Mellite.compiler
                       ProcActions.setSynthGraph(pv.proc :: Nil, objT)
                       true
                     }

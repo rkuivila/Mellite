@@ -26,7 +26,7 @@ import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.mellite.ProcActions.Resize
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{ExprImplicits, StringElem, Scan, SynthGraphs, Proc, ObjKeys, IntElem, Obj}
+import de.sciss.synth.proc.{Code, ExprImplicits, StringElem, Scan, SynthGraphs, Proc, ObjKeys, IntElem, Obj}
 
 import scala.collection.breakOut
 import scala.util.control.NonFatal
@@ -45,7 +45,8 @@ object Edits {
   }
 
   def setSynthGraph[S <: Sys[S]](procs: Iterable[Proc.Obj[S]], codeElem: Code.Obj[S])
-                                (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+                                (implicit tx: S#Tx, cursor: stm.Cursor[S],
+                                 compiler: Code.Compiler): Option[UndoableEdit] = {
     val code = codeElem.elem.peer.value
     code match {
       case csg: Code.SynthGraph =>

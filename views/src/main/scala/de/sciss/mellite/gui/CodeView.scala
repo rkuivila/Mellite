@@ -20,7 +20,7 @@ import de.sciss.lucre.event.Sys
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Disposable
-import de.sciss.synth.proc.Obj
+import de.sciss.synth.proc.{Code, Obj}
 import impl.interpreter.{CodeViewImpl => Impl}
 import de.sciss.model.Model
 import scala.swing.Action
@@ -34,9 +34,10 @@ object CodeView {
   }
 
   /** If `graph` is given, the `apply` action is tied to updating the graph variable. */
-  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], code0: Code, hasExecute: Boolean)
+  def apply[S <: Sys[S]](obj: Code.Obj[S], code0: Code, hasExecute: Boolean)
                         (handler: Option[Handler[S, code0.In, code0.Out]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                         compiler: Code.Compiler,
                          undoManager: UndoManager): CodeView[S] =
     Impl(obj, code0, hasExecute = hasExecute)(handler)
 

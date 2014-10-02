@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{Obj, AuralSystem}
+import de.sciss.synth.proc.{Code, Obj, AuralSystem}
 import lucre.stm
 import stm.Disposable
 import impl.{RecursionFrameImpl => Impl}
@@ -24,7 +24,8 @@ import de.sciss.lucre.swing.View
 
 object RecursionFrame {
   def apply[S <: Sys[S]](obj: Obj.T[S, Recursion.Elem])
-                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): RecursionFrame[S] =
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                         compiler: Code.Compiler): RecursionFrame[S] =
     Impl(obj)
 }
 

@@ -14,6 +14,8 @@
 package de.sciss.mellite
 
 import java.io.File
+import de.sciss.synth.proc.Code
+
 import scala.concurrent.Future
 import de.sciss.processor.Processor
 import de.sciss.serial.{DataOutput, DataInput, ImmutableSerializer}
@@ -25,7 +27,8 @@ object Transform {
   case object Unmodified extends Transform
 
   final case class Coded(source: Code.FileTransform) extends Transform {
-    def perform(in: File, out: File, procHandler: Processor[Any, _] => Unit = _ => ()): Future[Unit] =
+    def perform(in: File, out: File, procHandler: Processor[Any, _] => Unit = _ => ())
+               (implicit compiler: Code.Compiler): Future[Unit] =
       source.execute((in, out, procHandler))
   }
 

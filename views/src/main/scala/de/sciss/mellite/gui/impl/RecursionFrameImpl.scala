@@ -16,7 +16,7 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Obj, AuralSystem, Artifact}
+import de.sciss.synth.proc.{Code, Obj, AuralSystem, Artifact}
 import lucre.stm
 import java.io.File
 import de.sciss.desktop.{Desktop, DialogSource}
@@ -44,7 +44,8 @@ object RecursionFrameImpl {
   }
 
   def apply[S <: Sys[S]](obj: Obj.T[S, Recursion.Elem])
-                        (implicit tx: S#Tx, _workspace: Workspace[S], cursor: stm.Cursor[S]): RecursionFrame[S] = {
+                        (implicit tx: S#Tx, _workspace: Workspace[S],
+                         cursor: stm.Cursor[S], compiler: Code.Compiler): RecursionFrame[S] = {
     val view = new ViewImpl[S] {
       val recH      = tx.newHandle(obj)
       val _spec     = obj.elem.peer.productSpec
@@ -134,7 +135,8 @@ object RecursionFrameImpl {
       }
   }
 
-  private abstract class ViewImpl[S <: Sys[S]](implicit val workspace: Workspace[S], val cursor: stm.Cursor[S])
+  private abstract class ViewImpl[S <: Sys[S]](implicit val workspace: Workspace[S], val cursor: stm.Cursor[S],
+                                               compiler: Code.Compiler)
     extends ViewHasWorkspace[S]
     with ComponentHolder[Component]
     with ModelImpl[ViewData] {

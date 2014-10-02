@@ -7,10 +7,9 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Source
 import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
 import de.sciss.span.SpanLike
-import de.sciss.synth.proc.{DoubleElem, BooleanElem, StringElem, IntElem, FadeSpec, Timeline, ObjKeys, Proc, Obj}
+import de.sciss.synth.proc.{DoubleElem, BooleanElem, StringElem, IntElem, FadeSpec, Timeline, ObjKeys, Proc, Obj, Action => _Action}
 import de.sciss.lucre.expr.{String => StringEx, Expr}
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
-import de.sciss.mellite.{Action => _Action}
 
 object TimelineObjViewImpl {
   private val sync = new AnyRef

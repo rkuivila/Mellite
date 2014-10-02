@@ -17,7 +17,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{Timeline, ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Artifact, Bounce}
+import de.sciss.synth.proc.{Code, Timeline, ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Artifact, Bounce}
 import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -90,7 +90,7 @@ object ActionBounceTimeline {
     config.audioBusChannels   = config.outputBusChannels + numPrivate
   }
 
-  type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Obj.T[S, Code.Elem]]
+  type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Code.Obj[S]]
 
   def findTransforms[S <: Sys[S]](document: Workspace[S])(implicit tx: S#Tx): Vec[Labeled[CodeSource[S]]] = {
     type Res = Vec[Labeled[CodeSource[S]]]
@@ -341,7 +341,7 @@ object ActionBounceTimeline {
                               settings: QuerySettings[S],
                               group: stm.Source[S#Tx, Timeline.Obj[S]], file: File,
                               window: Option[Window] = None)
-                             (implicit cursor: stm.Cursor[S]): Unit = {
+                             (implicit cursor: stm.Cursor[S], compiler: Code.Compiler): Unit = {
 
     val hasTransform= settings.importFile && settings.transform.isDefined
     val bounceFile  = if (hasTransform) {

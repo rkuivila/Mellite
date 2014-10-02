@@ -13,7 +13,7 @@
 
 package de.sciss
 
-import de.sciss.mellite.impl.{RecursionImpl, AuralActionImpl, ActionImpl, CodeImpl}
+import de.sciss.mellite.impl.RecursionImpl
 import de.sciss.synth.proc.Confluent
 import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
@@ -38,9 +38,6 @@ package object mellite {
 
   def initTypes(): Unit = {
     de.sciss.lucre.synth.expr.initTypes()
-    CodeImpl.ElemImpl
     RecursionImpl.ElemImpl
-    ActionImpl.ElemImpl
-    AuralActionImpl
   }
 }

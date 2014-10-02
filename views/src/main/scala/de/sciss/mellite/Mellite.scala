@@ -18,7 +18,8 @@ import de.sciss.lucre.synth.{Txn, Server}
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
-import de.sciss.synth.proc.{SensorSystem, AuralSystem}
+import de.sciss.synth.proc
+import de.sciss.synth.proc.{Code, SensorSystem, AuralSystem}
 import de.sciss.lucre.event.Sys
 import javax.swing.UIManager
 import scala.concurrent.stm.TxnExecutor
@@ -50,11 +51,13 @@ object Mellite extends SwingApplicationImpl("Mellite") {
 
   protected def menuFactory = MenuBar.instance
 
-  private lazy val _aural   = AuralSystem ()
-  private lazy val _sensor: SensorSystem = SensorSystem()
+  private lazy val _aural     = AuralSystem ()
+  private lazy val _sensor    = SensorSystem()
+  private lazy val _compiler  = proc.Compiler()
 
-  implicit def auralSystem : AuralSystem  = _aural
-  implicit def sensorSystem: SensorSystem = _sensor
+  implicit def auralSystem : AuralSystem   = _aural
+  implicit def sensorSystem: SensorSystem  = _sensor
+  implicit def compiler    : Code.Compiler = _compiler
 
   def clearLog  (): Unit = LogFrame.instance.log.clear()
   def logToFront(): Unit = LogFrame.instance.front()  // XXX TODO - should avoid focus transfer

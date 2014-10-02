@@ -43,7 +43,7 @@ import de.sciss.model.impl.ModelImpl
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{defer, deferTx, requireEDT}
 import javax.swing.undo.UndoableEdit
-import de.sciss.synth.proc.Obj
+import de.sciss.synth.proc.{Code, Obj}
 
 import scala.util.control.NonFatal
 
@@ -65,6 +65,7 @@ object CodeViewImpl {
   def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], code0: Code, hasExecute: Boolean)
                         (handlerOpt: Option[CodeView.Handler[S, code0.In, code0.Out]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                         compiler: Code.Compiler,
                          undoManager: UndoManager): CodeView[S] = {
     // val source0 = sourceCode.value
     // val objH        = tx.newHandle(obj)
@@ -88,7 +89,7 @@ object CodeViewImpl {
                                         handlerOpt: Option[CodeView.Handler[S, In0, Out0]],
                                         hasExecute: Boolean)
                                        (implicit undoManager: UndoManager, val workspace: Workspace[S],
-                                        val cursor: stm.Cursor[S])
+                                        val cursor: stm.Cursor[S], compiler: Code.Compiler)
     extends ComponentHolder[Component] with CodeView[S] with ModelImpl[CodeView.Update] {
 
     // import ExecutionContext.Implicits.global
