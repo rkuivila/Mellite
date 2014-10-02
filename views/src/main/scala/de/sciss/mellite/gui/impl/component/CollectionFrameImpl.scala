@@ -87,7 +87,10 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
   final protected var ggView  : Button = _
   final protected var ggAttr  : Button = _
 
-  final def init()(implicit tx: S#Tx): Unit = deferTx(guiInit())
+  final def init()(implicit tx: S#Tx): this.type = {
+    deferTx(guiInit())
+    this
+  }
 
   private var _title: String = ""
 

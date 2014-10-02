@@ -15,6 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
+import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.lucre.stm.Cursor
 import de.sciss.synth.proc.{ObjKeys, Confluent, BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem, LongElem}
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
@@ -27,7 +28,7 @@ import scala.swing.Swing.EmptyIcon
 import scala.util.Try
 import de.sciss.icons.raphael
 import de.sciss.synth.proc
-import javax.swing.undo.UndoableEdit
+import javax.swing.undo.{UndoManager, UndoableEdit}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{View, Window, deferTx}
 import de.sciss.file._
@@ -1037,7 +1038,12 @@ object ObjViewImpl {
       def value: Any = ()
 
       override def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        ???
+        val ens   = obj()
+        val w = new WindowImpl[S](ens.attr.name) {  // XXX TODO - dynamic name
+          val view = EnsembleView(ens)(tx, workspace, cursor, new UndoManagerImpl)
+          init()
+        }
+        Some(w.asInstanceOf[Window[S]])
       }
     }
   }

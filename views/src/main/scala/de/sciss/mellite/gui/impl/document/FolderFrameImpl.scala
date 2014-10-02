@@ -84,7 +84,7 @@ object FolderFrameImpl {
     }
   }
 
-  private abstract class ViewImpl[S <: Sys[S], S1 <: Sys[S1]](val peer: FolderView[S])
+  abstract class ViewImpl[S <: Sys[S], S1 <: Sys[S1]](val peer: FolderView[S])
                                        (implicit val workspace: Workspace[S],
                                         val cursor: stm.Cursor[S], val undoManager: UndoManager,
                                         protected val bridge: S#Tx => S1#Tx)

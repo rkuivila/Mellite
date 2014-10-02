@@ -89,10 +89,10 @@ object GUI {
     }
   }
 
-  private def iconNormal(fun: Path2D => Unit): Icon =
+  def iconNormal(fun: Path2D => Unit): Icon =
     raphael.Icon(extent = 20, fill = raphael.TexturePaint(24), shadow = raphael.WhiteShadow)(fun)
 
-  private def iconDisabled(fun: Path2D => Unit): Icon =
+  def iconDisabled(fun: Path2D => Unit): Icon =
     raphael.Icon(extent = 20, fill = new Color(0, 0, 0, 0x7F), shadow = raphael.WhiteShadow)(fun)
 
   def toolButton(action: Action, iconFun: Path2D => Unit, tooltip: String = ""): Button = {
