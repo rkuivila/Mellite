@@ -77,7 +77,8 @@ object CodeFrameImpl {
 
     val handlerOpt = obj.elem.peer match {
       case Action.Var(vr) =>
-        val objH = tx.newHandle(vr)
+        val varH  = tx.newHandle(vr)
+        val objH  = tx.newHandle(obj)
         val handler = new CodeView.Handler[S, String, Array[Byte]] {
           def in(): String = cursor.step { implicit tx =>
             val id = tx.newID()
@@ -86,14 +87,15 @@ object CodeFrameImpl {
           }
 
           def save(in: String, out: Array[Byte])(implicit tx: S#Tx): UndoableEdit = {
-            val obj = objH()
+            val obj = varH()
             val value = ActionImpl.newConst[S](name = in, jar = out)
             EditVar[S, Action[S], Action.Var[S]](name = "Change Action Body", expr = obj, value = value)
           }
 
           def execute()(implicit tx: S#Tx): Unit = {
-            val obj = objH()
-            obj.execute()
+            val obj       = objH()
+            val universe  = Action.Universe(obj)
+            obj.elem.peer.execute(universe)
             // ActionImpl.execute[S](name = in, jar = out)
           }
 
