@@ -13,8 +13,9 @@
 
 package de.sciss.mellite
 
+import de.sciss.lucre.artifact.ArtifactLocation
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{ArtifactLocation, Obj, FolderElem, ExprImplicits, Folder, AudioGraphemeElem, Grapheme}
+import de.sciss.synth.proc.{Obj, FolderElem, ExprImplicits, Folder, AudioGraphemeElem, Grapheme}
 import de.sciss.synth.io.AudioFileSpec
 import de.sciss.file._
 import de.sciss.lucre.expr.{Double => DoubleEx, Long => LongEx}

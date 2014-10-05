@@ -15,9 +15,10 @@ package de.sciss
 package mellite
 package impl
 
+import de.sciss.lucre.artifact.Artifact
 import de.sciss.synth.io.AudioFileSpec
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{Code, Timeline, Elem, Obj, AudioGraphemeElem, ExprImplicits, Artifact}
+import de.sciss.synth.proc.{Code, Timeline, Elem, Obj, AudioGraphemeElem, ExprImplicits}
 import de.sciss.lucre.{event => evt, expr}
 import expr.Expr
 import de.sciss.span.SpanLike

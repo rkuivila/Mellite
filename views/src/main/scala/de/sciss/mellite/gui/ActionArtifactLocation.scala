@@ -15,7 +15,8 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{ArtifactLocation, Obj, Folder, FolderElem, Artifact}
+import de.sciss.lucre.artifact.{ArtifactLocation, Artifact}
+import de.sciss.synth.proc.{ArtifactLocationElem, Obj, Folder, FolderElem}
 import de.sciss.lucre.stm
 import collection.immutable.{IndexedSeq => Vec}
 import scala.util.Try
@@ -36,16 +37,16 @@ object ActionArtifactLocation {
          root: stm.Source[S#Tx, Folder[S]], file: File,
          folder: Option[stm.Source[S#Tx, Obj.T[S, FolderElem]]] = None,
          window: Option[desktop.Window] = None)
-        (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]] = {
+        (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
 
-    type LocSource = stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]
+    type LocSource = stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]
 
     val options = cursor.step { implicit tx =>
       /* @tailrec */ def loop(xs: List[Obj[S]], res: Vec[Labeled[LocSource]]): Vec[Labeled[LocSource]] =
         xs match {
           case head :: tail =>
             val res1 = head match {
-              case ArtifactLocation.Obj(objT) =>
+              case ArtifactLocationElem.Obj(objT) =>
                 val parent = objT.elem.peer.directory
                 if (Try(Artifact.relativize(parent, file)).isSuccess) {
                   res :+ Labeled(tx.newHandle(objT))(objT.attr.name)
@@ -98,7 +99,7 @@ object ActionArtifactLocation {
   }
 
   def queryNew(child: Option[File] = None, window: Option[Window] = None): Option[(File, String)] = {
-    val dlg = FileDialog.folder(title = "Choose Artifact Base Location")
+    val dlg = FileDialog.folder(init = child.flatMap(_.parentOption), title = "Choose Artifact Base Location")
     dlg.show(None) match {
       case Some(dir) =>
         child match {
@@ -114,9 +115,9 @@ object ActionArtifactLocation {
   }
 
   def create[S <: Sys[S]](directory: File, name: String, parent: Folder[S])
-                         (implicit tx: S#Tx): Obj.T[S, ArtifactLocation.Elem] = {
+                         (implicit tx: S#Tx): Obj.T[S, ArtifactLocationElem] = {
     val peer  = ArtifactLocation[S](directory)
-    val elem  = ArtifactLocation.Elem(peer)
+    val elem  = ArtifactLocationElem(peer)
     val obj   = Obj(elem)
     obj.attr.name = name
     parent.addLast(obj)

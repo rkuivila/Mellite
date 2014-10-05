@@ -16,8 +16,9 @@ package gui
 package impl
 package audiofile
 
+import de.sciss.lucre.artifact.ArtifactLocation
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{Timeline, Transport, ArtifactLocation, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
+import de.sciss.synth.proc.{Timeline, Transport, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
 import de.sciss.lucre.stm
 import scala.swing.{Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
 import java.awt.Color

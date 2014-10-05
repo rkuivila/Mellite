@@ -16,10 +16,10 @@ package gui
 package edit
 
 import de.sciss.file.File
+import de.sciss.lucre.artifact.ArtifactLocation
 import de.sciss.lucre.{stm, event => evt}
 import evt.Sys
 import javax.swing.undo.{UndoableEdit, AbstractUndoableEdit}
-import de.sciss.synth.proc.ArtifactLocation
 
 object EditArtifactLocation {
   def apply[S <: Sys[S]](obj: ArtifactLocation.Modifiable[S], directory: File)

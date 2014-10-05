@@ -15,9 +15,10 @@ package de.sciss
 package mellite
 package gui
 
+import de.sciss.lucre.artifact.Artifact
 import de.sciss.lucre.stm
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{Code, Timeline, ArtifactLocation, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Artifact, Bounce}
+import de.sciss.synth.proc.{ArtifactLocationElem, Code, Timeline, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Bounce}
 import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
@@ -61,7 +62,7 @@ object ActionBounceTimeline {
     span: SpanOrVoid    = Span.Void,
     channels: Vec[Range.Inclusive] = Vector(0 to 0 /* 1 */),
     importFile: Boolean = false,
-    location:  Option[stm.Source[S#Tx, ArtifactLocation.Obj[S]]] = None,
+    location:  Option[stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]] = None,
     transform: Option[stm.Source[S#Tx, Code.Obj[S]]] = None
   ) {
     def prepare(group: stm.Source[S#Tx, Timeline.Obj[S]], f: File): PerformSettings[S] = {

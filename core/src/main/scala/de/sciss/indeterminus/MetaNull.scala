@@ -14,6 +14,7 @@
 package de.sciss.indeterminus
 
 import java.io.FileFilter
+import de.sciss.lucre.artifact.ArtifactLocation
 import de.sciss.synth.io.{AudioFileSpec, AudioFile}
 import de.sciss.span.Span
 import collection.immutable.{IndexedSeq => Vec}
@@ -24,7 +25,7 @@ import de.sciss.strugatzki.{FeatureCorrelation, FeatureExtraction}
 import de.sciss.processor.Processor
 import de.sciss.synth.proc
 import de.sciss.mellite._
-import de.sciss.synth.proc.{ObjKeys, Timeline, Obj, ExprImplicits, FadeSpec, ArtifactLocation, Grapheme}
+import de.sciss.synth.proc.{ObjKeys, Timeline, Obj, ExprImplicits, FadeSpec, Grapheme}
 import de.sciss.file._
 import de.sciss.lucre.synth.InMemory
 

@@ -17,7 +17,8 @@ package impl
 package document
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.synth.proc.{ObjKeys, ArtifactLocation, FolderElem, Folder, Artifact, Obj, StringElem}
+import de.sciss.lucre.artifact.Artifact
+import de.sciss.synth.proc.{ArtifactLocationElem, ObjKeys, FolderElem, Folder, Obj, StringElem}
 import swing.Component
 import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
@@ -431,7 +432,7 @@ object FolderViewImpl {
       }
     } (breakOut)
 
-    def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocation.Elem]]] = {
+    def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
       val locationsOk = locations.flatMap { view =>
         try {
           Artifact.relativize(view.directory, f)

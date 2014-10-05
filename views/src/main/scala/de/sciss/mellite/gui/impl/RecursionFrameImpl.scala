@@ -16,7 +16,8 @@ package mellite
 package gui
 package impl
 
-import de.sciss.synth.proc.{Code, Obj, AuralSystem, Artifact}
+import de.sciss.lucre.artifact.Artifact
+import de.sciss.synth.proc.{Code, Obj, AuralSystem}
 import lucre.stm
 import java.io.File
 import de.sciss.desktop.{Desktop, DialogSource}

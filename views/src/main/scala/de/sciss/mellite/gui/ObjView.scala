@@ -15,7 +15,7 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{BooleanElem, Elem, FolderElem, AudioGraphemeElem, Obj, DoubleElem, IntElem, LongElem, StringElem, Grapheme}
+import de.sciss.synth.proc.{ArtifactLocationElem, BooleanElem, Elem, FolderElem, AudioGraphemeElem, Obj, DoubleElem, IntElem, LongElem, StringElem, Grapheme}
 import de.sciss.lucre.stm
 import java.io.File
 import javax.swing.Icon
@@ -27,15 +27,13 @@ import scala.language.higherKinds
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.{event => evt}
 import scala.swing.{Component, Label}
-import scala.collection.immutable.{IndexedSeq => Vec}
-import scala.collection.breakOut
 
 object ObjView {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean, Long => _Long}
-  import mellite.{Recursion => _Recursion}
-  import proc.{Folder => _Folder, ArtifactLocation => _ArtifactLocation, Proc => _Proc, Timeline => _Timeline,
+  import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline,
     FadeSpec => _FadeSpec, Ensemble => _Ensemble, Code => _Code, Action => _Action}
+  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
 
   //  final case class SelectionDrag[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
   //    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
@@ -103,11 +101,11 @@ object ObjView {
     def value: Grapheme.Value.Audio
   }
 
-  val ArtifactLocation: Factory { type E[S <: evt.Sys[S]] = _ArtifactLocation.Elem[S] } =
+  val ArtifactLocation: Factory { type E[S <: evt.Sys[S]] = ArtifactLocationElem[S] } =
     Impl.ArtifactLocation
 
   trait ArtifactLocation[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, _ArtifactLocation.Elem]]
+    def obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]
     def directory: File
   }
 

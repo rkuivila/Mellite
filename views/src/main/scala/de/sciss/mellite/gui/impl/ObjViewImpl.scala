@@ -17,7 +17,7 @@ package impl
 
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{ObjKeys, Confluent, BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem, LongElem}
+import de.sciss.synth.proc.{ArtifactLocationElem, ObjKeys, Confluent, BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem, LongElem}
 import javax.swing.{UIManager, Icon, SpinnerNumberModel}
 import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
 import de.sciss.lucre.synth.Sys
@@ -47,8 +47,9 @@ object ObjViewImpl {
   import java.lang.{String => _String}
   import scala.{Int => _Int, Double => _Double, Boolean => _Boolean, Long => _Long}
   import mellite.{Recursion => _Recursion}
-  import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline, ArtifactLocation => _ArtifactLocation,
+  import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline,
     FadeSpec => _FadeSpec, Ensemble => _Ensemble, Code => _Code, Action => _Action}
+  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
 
   private val sync = new AnyRef
 
@@ -428,6 +429,7 @@ object ObjViewImpl {
             val loc = locSource()
             loc.elem.peer.modifiableOption.map { locM =>
               val obj = ObjectActions.mkAudioFile(locM, f, spec)
+              // XXX TODO - adding artifact-location should go into a compound edit
               addObject(prefix, folderH(), obj)
             }
           }
@@ -486,12 +488,12 @@ object ObjViewImpl {
     // -------- ArtifactLocation --------
 
     object ArtifactLocation extends Factory {
-      type E[S <: evt.Sys[S]] = _ArtifactLocation.Elem[S]
+      type E[S <: evt.Sys[S]] = ArtifactLocationElem[S]
       val icon    = raphaelIcon(raphael.Shapes.Location)
       val prefix  = "ArtifactStore"
       def typeID  = ElemImpl.ArtifactLocation.typeID
 
-      def apply[S <: Sys[S]](obj: Obj.T[S, _ArtifactLocation.Elem])(implicit tx: S#Tx): ObjView[S] = {
+      def apply[S <: Sys[S]](obj: ArtifactLocationElem.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
         val name      = obj.attr.name
         val peer      = obj.elem.peer
         val value     = peer.directory
@@ -507,7 +509,7 @@ object ObjViewImpl {
           cursor.step { implicit tx =>
             // ActionArtifactLocation.create(directory, _name, targetFolder)
             val peer  = _ArtifactLocation[S](directory)
-            val elem  = _ArtifactLocation.Elem(peer)
+            val elem  = ArtifactLocationElem(peer)
             val obj   = Obj(elem)
             obj.attr.name = _name
             addObject(prefix, folderH(), obj)
@@ -515,7 +517,7 @@ object ObjViewImpl {
         }
       }
 
-      final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _ArtifactLocation.Elem]],
+      final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]],
                                     var name: _String, var directory: File, val isEditable: _Boolean)
         extends ObjView.ArtifactLocation[S]
         with ObjViewImpl.Impl[S]

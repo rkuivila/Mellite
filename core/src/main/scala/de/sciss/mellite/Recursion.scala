@@ -14,9 +14,9 @@
 package de.sciss
 package mellite
 
+import de.sciss.lucre.artifact.Artifact
 import de.sciss.synth.io.AudioFileSpec
-import de.sciss.synth.proc.{Code, Timeline, Obj, AudioGraphemeElem, Artifact}
-import de.sciss.span.Span.SpanOrVoid
+import de.sciss.synth.proc.{Code, Timeline, Obj, AudioGraphemeElem}
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.{event => evt}
 import evt.Sys
