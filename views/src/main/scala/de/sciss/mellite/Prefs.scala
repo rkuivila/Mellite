@@ -19,6 +19,7 @@ import de.sciss.file._
 import javax.swing.UIManager
 import UIManager.LookAndFeelInfo
 import de.sciss.osc
+import de.sciss.synth.proc.SensorSystem
 import scala.util.{Success, Try}
 
 object Prefs {
@@ -58,6 +59,7 @@ object Prefs {
   final val defaultAudioSampleRate  = 0
 
   final val defaultAudioBlockSize   = 64
+  final val defaultAudioNumInputs   = 8
   final val defaultAudioNumOutputs  = 8
   final val defaultAudioNumPrivate  = 512
   final val defaultAudioNumWireBufs = 256
@@ -65,6 +67,7 @@ object Prefs {
 
   def superCollider   : Entry[File   ] = userPrefs("supercollider"      )
   def audioDevice     : Entry[String ] = userPrefs("audio-device"       )
+  def audioNumInputs  : Entry[Int    ] = userPrefs("audio-num-inputs"   )
   def audioNumOutputs : Entry[Int    ] = userPrefs("audio-num-outputs"  )
   def audioSampleRate : Entry[Int    ] = userPrefs("audio-sample-rate"  )
 
@@ -77,8 +80,12 @@ object Prefs {
   // ---- sensor ----
 
   final val defaultSensorProtocol = osc.UDP: osc.Transport.Net
-  final val defaultSensorPort     = 0x4D6C  // "Ml"
+  def defaultSensorPort     = SensorSystem.defaultPort // 0x4D6C  // "Ml"
+  def defaultSensorCommand  = SensorSystem.defaultCommand
+  final val defaultSensorChannels = 16
 
   def sensorProtocol : Entry[osc.Transport.Net] = userPrefs("sensor-protocol")
   def sensorPort     : Entry[Int              ] = userPrefs("sensor-port"    )
+  def sensorCommand  : Entry[String           ] = userPrefs("sensor-command" )
+  def sensorChannels : Entry[Int              ] = userPrefs("sensor-channels")
 }

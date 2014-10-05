@@ -43,10 +43,8 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   private lazy val ggSensors = {
     val res = new PeakMeter
     res.orientation   = Orientation.Horizontal
-    res.numChannels   = 16
     res.holdPainted   = false
     res.rmsPainted    = false
-    res.preferredSize = (260, 64 + 2)
     res
   }
 
@@ -355,15 +353,13 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     }
 
   def startSensorSystem(): Unit = {
-    // val config = SensorSystem.defaultConfig
-    val config = Prefs.defaultSensorProtocol match {
+    val config = SensorSystem.Config()
+    config.osc = Prefs.defaultSensorProtocol match {
       case osc.UDP => osc.UDP.Config()
       case osc.TCP => osc.TCP.Config()
     }
-    config.localPort = Prefs.defaultSensorPort
-    // builder.localIsLoopback = true
-
-    // de.sciss.synth.proc.impl.SensorSystemImpl.dumpOSC = true
+    config.osc.localPort  = Prefs.sensorPort   .getOrElse(Prefs.defaultSensorPort   )
+    config.command        = Prefs.sensorCommand.getOrElse(Prefs.defaultSensorCommand)
 
     atomic { implicit itx =>
       implicit val tx = TxnLike.wrap(itx)
@@ -376,6 +372,8 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     deferTx {
       actionStartStopSensors.title = "Stop"
       ggDumpSensors.enabled = true
+      ggSensors.numChannels   = Prefs.sensorChannels.getOrElse(Prefs.defaultSensorChannels)
+      ggSensors.preferredSize = (260, ggSensors.numChannels * 4 + 2)
       sensorServerPane.contents += ggSensors
       pack()
     }
@@ -422,6 +420,10 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
   title           = Mellite.name
   closeOperation  = Window.CloseIgnore
+
+  reactions += {
+    case Window.Closing(_) => Application.quit()
+  }
 
   pack()
   front()
