@@ -17,9 +17,10 @@ package gui
 
 import de.sciss.lucre.artifact.Artifact
 import de.sciss.lucre.stm
+import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
 import de.sciss.synth.proc.{ArtifactLocationElem, Code, Timeline, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Bounce}
-import de.sciss.desktop.{Desktop, DialogSource, OptionPane, FileDialog, Window}
+import de.sciss.desktop.{UndoManager, Desktop, DialogSource, OptionPane, FileDialog, Window}
 import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
 import java.io.File
@@ -115,7 +116,7 @@ object ActionBounceTimeline {
 
   def query[S <: Sys[S]](init: QuerySettings[S], document: Workspace[S], timelineModel: TimelineModel,
                          window: Option[Window])
-                        (implicit cursor: stm.Cursor[S]) : (QuerySettings[S], Boolean) = {
+                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager) : (QuerySettings[S], Boolean) = {
 
     val ggFileType      = new ComboBox[AudioFileType](AudioFileType.writable)
     ggFileType.selection.item = init.spec.fileType // AudioFileType.AIFF
@@ -318,7 +319,23 @@ object ActionBounceTimeline {
 
           case _ => // either no location was set, or it's not parent of the file
             ActionArtifactLocation.query[S](document.root, f) match {
-              case res @ Some(_)  => settings = settings.copy(location = res)
+              case Some(either) =>
+                either match {
+                  case Left(source) =>
+                    settings = settings.copy(location = Some(source))
+
+                  case Right((name, directory)) =>
+                    val (edit, source) = cursor.step { implicit tx =>
+                      val locObj  = ActionArtifactLocation.create(name = name, directory = directory)
+                      val folder  = document.root()
+                      val index   = folder.size
+                      val _edit   = EditFolderInsertObj("Location", folder, index, locObj)
+                      (_edit, tx.newHandle(locObj))
+                    }
+                    undoManager.add(edit)
+                    settings = settings.copy(location = Some(source))
+                }
+
               case _              => return (settings, false)
             }
         }

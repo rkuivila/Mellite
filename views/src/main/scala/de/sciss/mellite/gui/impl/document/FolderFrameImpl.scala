@@ -16,22 +16,22 @@ package gui
 package impl
 package document
 
+import javax.swing.undo.UndoableEdit
+
 import de.sciss.desktop.edit.CompoundEdit
+import de.sciss.desktop.impl.UndoManagerImpl
+import de.sciss.desktop.UndoManager
+import de.sciss.file._
+import de.sciss.lucre.stm
+import de.sciss.lucre.swing.deferTx
+import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
+import de.sciss.mellite.gui.impl.component.{CollectionFrameImpl, CollectionViewImpl}
+import de.sciss.swingplus.PopupMenu
+import de.sciss.synth.proc.{Obj, Folder, FolderElem}
 
 import scala.swing.Action
-import de.sciss.lucre.stm
-import de.sciss.synth.proc.Folder
-import de.sciss.desktop.{UndoManager, Menu}
-import de.sciss.file._
-import de.sciss.swingplus.PopupMenu
-import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing.deferTx
-import de.sciss.synth.proc
-import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.mellite.gui.edit.EditFolderRemoveObj
-import javax.swing.undo.UndoableEdit
-import proc.FolderElem
-import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
+import scala.collection.breakOut
 
 object FolderFrameImpl {
   def apply[S <: Sys[S], S1 <: Sys[S1]](nameObs: ExprView[S1#Tx, Option[String]],
@@ -46,11 +46,6 @@ object FolderFrameImpl {
       protected val nameObserver = nameObs.react { implicit tx => now =>
         deferTx(nameUpdate(now))
       } (bridge(tx))
-
-      //      deferTx {
-      //        guiInit()
-      //        nameUpdate(name0)
-      //      }
     }
     view.init()
 
@@ -63,8 +58,6 @@ object FolderFrameImpl {
     extends CollectionFrameImpl[S](_view) with FolderFrame[S] {
 
     def workspace = _view.workspace
-
-    // override def view: FolderView[S] = _view.peer
 
     override protected def initGUI(): Unit = {
       _view.addListener {
@@ -98,32 +91,16 @@ object FolderFrameImpl {
     protected def mkTitle(sOpt: Option[String]): String =
       s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Elements"
 
-    private final class AddAction(f: ObjView.Factory) extends Action(f.prefix) {
-      icon = f.icon
+    protected type InsertConfig = Unit
 
-      def apply(): Unit = {
-        implicit val folderSer = Folder.serializer[S]
-        val parentH = cursor.step { implicit tx => tx.newHandle(impl.peer.insertionPoint._1) }
-        f.initDialog[S](workspace, parentH, None /* XXX TODO: Some(window) */).foreach(undoManager.add)
-      }
-    }
+    protected def prepareInsert(f: ObjView.Factory): Option[InsertConfig] = Some(())
 
-    private lazy val addPopup: PopupMenu = {
-      import Menu._
-      val pop = Popup()
-      ObjView.factories.toList.sortBy(_.prefix).foreach { f =>
-        pop.add(Item(f.prefix, new AddAction(f)))
-      }
-
-      val window = GUI.findWindow(component).getOrElse(sys.error(s"No window for $impl"))
-      val res = pop.create(window)
-      res.peer.pack() // so we can read `size` correctly
-      res
-    }
-
-    final protected lazy val actionAdd: Action = Action(null) {
-      val bp = ggAdd
-      addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
+    protected def editInsert(f: ObjView.Factory, xs: List[Obj[S]], config: Unit)(implicit tx: S#Tx): Option[UndoableEdit] = {
+      val (parent, idx) = impl.peer.insertionPoint
+      val edits: List[UndoableEdit] = xs.zipWithIndex.map { case (x, j) =>
+        EditFolderInsertObj(f.prefix, parent, idx + j, x)
+      } (breakOut)
+      CompoundEdit(edits, "Create Objects")
     }
 
     final protected lazy val actionDelete: Action = Action(null) {

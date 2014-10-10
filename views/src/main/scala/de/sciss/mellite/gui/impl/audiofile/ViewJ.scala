@@ -20,6 +20,7 @@ import de.sciss.{desktop, sonogram}
 import java.awt.{Color, Graphics2D}
 import de.sciss.synth.proc.Timeline
 
+import scala.swing.event.MousePressed
 import scala.util.Failure
 import scala.util.Success
 import scala.swing.{Swing, Component}
@@ -95,6 +96,11 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
     sono.onComplete {
       case Success(_) => /* println("SUCCESS"); */ defer(ready())
       case Failure(e) => /* println("FAILURE"); */ defer(failed(e))
+    }
+
+    listenTo(mouse.clicks)
+    reactions += {
+      case _: MousePressed => requestFocus()
     }
   }
 

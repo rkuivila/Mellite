@@ -63,35 +63,6 @@ object AttrMapFrameImpl {
     protected def mkTitle(sOpt: Option[String]): String =
       s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Attributes"
 
-  //    private final class AddAction(f: ObjView.Factory) extends Action(f.prefix) {
-  //      icon = f.icon
-  //
-  //      def apply(): Unit = {
-  //        implicit val folderSer = Folder.serializer[S]
-  //        val parentH = cursor.step { implicit tx => tx.newHandle(impl.peer.insertionPoint._1) }
-  //        f.initDialog[S](parentH, None /* XXX TODO: Some(window) */).foreach(undoManager.add)
-  //      }
-  //    }
-
-    //    private lazy val addPopup: PopupMenu = {
-    //      import Menu._
-    //      val pop = Popup()
-    //      ObjView.factories.toList.sortBy(_.prefix).foreach { f =>
-    //        pop.add(Item(f.prefix, new AddAction(f)))
-    //      }
-    //
-    //      val window = GUI.findWindow(component).getOrElse(sys.error(s"No window for $impl"))
-    //      val res = pop.create(window)
-    //      res.peer.pack() // so we can read `size` correctly
-    //      res
-    //    }
-
-    final protected lazy val actionAdd: Action = Action(null) {
-      println("TODO: Add")
-//      val bp = ggAdd
-//      addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
-    }
-
     final protected lazy val actionDelete: Action = Action(null) {
       val sel = peer.selection
       val edits: List[UndoableEdit] = cursor.step { implicit tx =>
@@ -102,6 +73,18 @@ object AttrMapFrameImpl {
       }
       val ceOpt = CompoundEdit(edits, "Delete Attributes")
       ceOpt.foreach(undoManager.add)
+    }
+
+    protected type InsertConfig = String
+
+    protected def prepareInsert(f: ObjView.Factory): Option[String] = peer.queryKey()
+
+    protected def editInsert(f: ObjView.Factory, xs: List[Obj[S]], key: String)(implicit tx: S#Tx): Option[UndoableEdit] = {
+      val edits = xs.map { value =>
+        val editName = s"Create Attribute '$key'"
+        EditAttrMap(name = editName, obj = peer.obj, key = key, value = Some(value))
+      }
+      CompoundEdit(edits, "Create Attributes")
     }
 
     final protected def initGUI2(): Unit = {
@@ -129,10 +112,6 @@ object AttrMapFrameImpl {
     protected def mkTitle(sOpt: Option[String]): String = sOpt.getOrElse("<Untitled>")
 
     protected def selectedObjects: List[ObjView[S]] = contents.selection.map(_._2)
-
-    protected lazy val actionAdd: Action = Action(null) {
-      println("TODO: add")
-    }
 
     protected lazy val actionDelete: Action = Action(null) {
       val sel = contents.selection

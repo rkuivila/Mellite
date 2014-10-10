@@ -15,25 +15,26 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{ArtifactLocationElem, BooleanElem, Elem, FolderElem, AudioGraphemeElem, Obj, DoubleElem, IntElem, LongElem, StringElem, Grapheme}
-import de.sciss.lucre.stm
 import java.io.File
 import javax.swing.Icon
-import de.sciss.synth.proc
-import de.sciss.lucre.synth.Sys
 import javax.swing.undo.UndoableEdit
-import impl.{ObjViewImpl => Impl}
-import scala.language.higherKinds
+
 import de.sciss.lucre.swing.Window
-import de.sciss.lucre.{event => evt}
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.{stm, event => evt}
+import de.sciss.mellite.gui.impl.{ObjViewImpl => Impl}
+import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, BooleanElem, DoubleElem, Elem, FolderElem, Grapheme, IntElem, LongElem, Obj, StringElem}
+
+import scala.language.higherKinds
 import scala.swing.{Component, Label}
 
 object ObjView {
   import java.lang.{String => _String}
-  import scala.{Int => _Int, Double => _Double, Boolean => _Boolean, Long => _Long}
-  import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline,
-    FadeSpec => _FadeSpec, Ensemble => _Ensemble, Code => _Code, Action => _Action}
-  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
+
+import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
+  import de.sciss.synth.proc.{Action => _Action, Code => _Code, Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Proc => _Proc, Timeline => _Timeline}
+
+import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long}
 
   //  final case class SelectionDrag[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
   //    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
@@ -54,9 +55,12 @@ object ObjView {
 
     def apply[S <: Sys[S]](obj: Obj.T[S, E])(implicit tx: S#Tx): ObjView[S]
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], parentH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit]
+    type Config[S <: Sys[S]]
+
+    def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]]
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] // List[Obj[S]]
   }
 
   def addFactory(f: Factory): Unit = Impl.addFactory(f)

@@ -16,13 +16,19 @@ package gui
 package impl
 package component
 
-import scala.swing.{Component, FlowPanel, Action, Button, BorderPanel}
+import javax.swing.undo.UndoableEdit
+
+import de.sciss.swingplus.PopupMenu
+
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
 import de.sciss.icons.raphael
 import de.sciss.lucre.swing.{View, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.model.impl.ModelImpl
+import de.sciss.synth.proc.Obj
+
+import scala.swing.{Component, FlowPanel, Action, Button, BorderPanel}
 
 object CollectionViewImpl {
   sealed trait Update
@@ -49,14 +55,17 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
   protected def nameObserver: stm.Disposable[S1#Tx]
   protected def mkTitle(sOpt: Option[String]): String
 
-  protected def actionAdd   : Action
   protected def actionDelete: Action
-  // protected def actionView  : Action
-  // protected def actionAttr  : Action
 
   protected def selectedObjects: List[ObjView[S]]
 
   protected def initGUI2(): Unit
+
+  protected type InsertConfig
+
+  protected def prepareInsert(f: ObjView.Factory): Option[InsertConfig]
+
+  protected def editInsert(f: ObjView.Factory, xs: List[Obj[S]], config: InsertConfig)(implicit tx: S#Tx): Option[UndoableEdit]
 
   // ---- implemented ----
 
@@ -101,52 +110,44 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
     dispatch(CollectionViewImpl.NamedChanged(_title))
   }
 
+  private final class AddAction(f: ObjView.Factory) extends Action(f.prefix) {
+    icon = f.icon
+
+    def apply(): Unit = {
+      val winOpt    = GUI.findWindow(component)
+      val confOpt   = f.initDialog[S](workspace, /* parentH, */ winOpt)
+      confOpt.foreach { conf =>
+        val confOpt2  = prepareInsert(f)
+        confOpt2.foreach { insConf =>
+          val editOpt = cursor.step { implicit tx =>
+            val xs = f.make(conf)
+            editInsert(f, xs, insConf)
+          }
+          editOpt.foreach(undoManager.add)
+        }
+      }
+    }
+  }
+
+  private lazy val addPopup: PopupMenu = {
+    import de.sciss.desktop.Menu._
+    val pop = Popup()
+    ObjView.factories.toList.sortBy(_.prefix).foreach { f =>
+      pop.add(Item(f.prefix, new AddAction(f)))
+    }
+
+    val window = GUI.findWindow(component).getOrElse(sys.error(s"No window for $impl"))
+    val res = pop.create(window)
+    res.peer.pack() // so we can read `size` correctly
+    res
+  }
+
+  final protected lazy val actionAdd: Action = Action(null) {
+    val bp = ggAdd
+    addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
+  }
+
   private def guiInit(): Unit = {
-    //    lazy val addPopup: PopupMenu = {
-    //      import Menu._
-    //      val pop = Popup()
-    //      ObjView.factories.toList.sortBy(_.prefix).foreach { f =>
-    //        pop.add(Item(f.prefix, new AddAction(f)))
-    //      }
-    //      val res = pop.create(window)
-    //      res.peer.pack() // so we can read `size` correctly
-    //      res
-    //    }
-    //
-    //    lazy val actionAdd: Action = Action(null) {
-    //      val bp = ggAdd
-    //      addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
-    //    }
-
-    //    val actionDelete = Action(null) {
-    //      val sel = contents.selection
-    //      val edits: List[UndoableEdit] = atomic { implicit tx =>
-    //        sel.map { nodeView =>
-    //          val parent = nodeView.parentOption.flatMap { pView =>
-    //            pView.modelData() match {
-    //              case FolderElem.Obj(objT) => Some(objT.elem.peer)
-    //              case _ => None
-    //            }
-    //          }.getOrElse(contents.root())
-    //          val childH  = nodeView.modelData
-    //          val child   = childH()
-    //          val idx     = parent.indexOf(child)
-    //          implicit val folderSer = Folder.serializer[S]
-    //          val parentH = tx.newHandle(parent)
-    //          EditRemoveObj[S](nodeView.renderData.prefix, parentH, idx, childH)
-    //        }
-    //      }
-    //      edits match {
-    //        case single :: Nil => undoManager.add(single)
-    //        case Nil =>
-    //        case several =>
-    //          val ce = new CompoundEdit
-    //          several.foreach(ce.addEdit)
-    //          ce.end()
-    //          undoManager.add(ce)
-    //      }
-    //    }
-
     ggAdd     = GUI.toolButton(actionAdd, raphael.Shapes.Plus, "Add Element")
     ggDelete  = GUI.toolButton(actionDelete, raphael.Shapes.Minus, "Remove Selected Element")
     ggAttr    = GUI.toolButton(actionAttr, raphael.Shapes.Wrench, "Attributes Editor")
@@ -168,76 +169,7 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
   }
 }
 
-class CollectionFrameImpl[S <: Sys[S]](val view: View[S] /* CollectionViewImpl[S, _] */)
-  extends WindowImpl[S] /* with WindowHolder[CollectionFrameImplPeer[S]] with CursorHolder[S] */ {
+class CollectionFrameImpl[S <: Sys[S]](val view: View[S])
+  extends WindowImpl[S] {
   impl =>
-
-  //  final def component: Component = contents.component
-  //
-  //  final def dispose()(implicit tx: S#Tx): Unit = {
-  //    disposeData()
-  //    deferTx(window.dispose())
-  //  }
-
-  //  final protected def nameUpdate(name: Option[String]): Unit = {
-  //    requireEDT()
-  //    // window.title = mkTitle(name)
-  //    title = mkTitle(name)
-  //  }
-
-  //  private def disposeData()(implicit tx: S#Tx): Unit = {
-  //    contents  .dispose()
-  //  }
-  //
-  //  final def frameClosing(): Unit =
-  //    cursor.step { implicit tx =>
-  //      disposeData()
-  //    }
-
-  //  private final class AddAction(f: ObjView.Factory) extends Action(f.prefix) {
-  //    icon = f.icon
-  //
-  //    def apply(): Unit = {
-  //      implicit val folderSer = Folder.serializer[S]
-  //      val parentH = cursor.step { implicit tx => tx.newHandle(contents.insertionPoint._1) }
-  //      f.initDialog[S](parentH, Some(window)).foreach(undoManager.add)
-  //    }
-  //  }
-
-  //    window = new CollectionFrameImplPeer(this, compoundPanel, _fileOpt = file)
-  //
-  //    //    contents.addListener {
-  //    //      case FolderView.SelectionChanged(_, sel) =>
-  //    //        val nonEmpty = sel.nonEmpty
-  //    //        actionAdd   .enabled  = sel.size < 2
-  //    //        actionDelete.enabled  = nonEmpty
-  //    //        actionView  .enabled  = nonEmpty && sel.exists(_.renderData.isViewable)
-  //    //        actionAttr  .enabled  = nonEmpty
-  //    //    }
-  //
-  //    initGUI2()
-  //
-  //    selectionChanged(selectedObjects)
-  //    window.pack()
-  //    GUI.placeWindow(window, frameX, frameY, 24)
 }
-
-//final class CollectionFrameImplPeer[S <: Sys[S]](view: CollectionFrameImpl[S, _], _contents: Component,
-//                                                 _fileOpt: Option[File])
-//  extends WindowImpl {
-//
-//  file            = _fileOpt
-//  closeOperation  = Window.CloseDispose
-//  reactions += {
-//    case Window.Closing(_) => view.frameClosing()
-//  }
-//
-//  bindMenus(
-//    "edit.undo" -> view.contents.undoManager.undoAction,
-//    "edit.redo" -> view.contents.undoManager.redoAction
-//  )
-//
-//  contents = _contents
-//
-//  def show[A](source: DialogSource[A]): A = showDialog(source)
-//}

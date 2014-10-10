@@ -43,40 +43,6 @@ object FrameImpl {
     extends WindowImpl[S](title0)
     with AudioFileFrame[S] {
 
-    //    def component: Component = contents.component
-    //
-    //    def contents: AudioFileView[S] = afv
-
-    //    def dispose()(implicit tx: S#Tx): Unit = {
-    //      disposeData()
-    //      deferTx(window.dispose())
-    //    }
-    //
-    //    private def disposeData()(implicit tx: S#Tx): Unit =
-    //      afv.dispose()
-
-    //    private def frameClosing(): Unit =
-    //      cursor.step { implicit tx =>
-    //        disposeData()
-    //      }
-
-    //    def guiInit(): Unit = {
-    //      val fileName = _file.base
-    //      window = new WindowImpl {
-    //        component.peer.getRootPane.putClientProperty("apple.awt.brushMetalLook", true)
-    //        title       = if (name == fileName) name else s"$name - $fileName"
-    //        file        = Some(_file)
-    //        contents    = afv.component
-    //        reactions += {
-    //          case Window.Closing(_) => frameClosing()
-    //        }
-    //        pack()
-    //        // centerOnScreen()
-    //        GUI.placeWindow(this, 1f, 0.75f, 24)
-    //        front()
-    //      }
-    //    }
-
     override protected def initGUI(): Unit = windowFile = Some(_file)
   }
 }

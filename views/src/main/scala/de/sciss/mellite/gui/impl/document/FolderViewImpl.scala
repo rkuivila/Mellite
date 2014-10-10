@@ -18,7 +18,7 @@ package document
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.artifact.Artifact
-import de.sciss.synth.proc.{ArtifactLocationElem, ObjKeys, FolderElem, Folder, Obj, StringElem}
+import de.sciss.synth.proc.{ObjKeys, FolderElem, Folder, Obj, StringElem}
 import swing.Component
 import scala.collection.{JavaConversions, breakOut}
 import collection.immutable.{IndexedSeq => Vec}
@@ -44,7 +44,7 @@ import javax.swing.event.{ChangeEvent, CellEditorListener}
 import de.sciss.desktop.UndoManager
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj, EditAttrMap}
 import de.sciss.lucre
-import de.sciss.synth.io.AudioFile
+import de.sciss.synth.io.{AudioFileSpec, AudioFile}
 import scala.util.Try
 import javax.swing.undo.UndoableEdit
 
@@ -374,22 +374,28 @@ object FolderViewImpl {
         private def importFiles(support: TransferSupport, parent: Folder[S], index: Int)
                                (implicit tx: S#Tx): Option[UndoableEdit] = {
           import JavaConversions._
-          val data  = support.getTransferable.getTransferData(DataFlavor.javaFileListFlavor)
+          val data: List[File] = support.getTransferable.getTransferData(DataFlavor.javaFileListFlavor)
             .asInstanceOf[java.util.List[File]].toList
-          val tup   = data.flatMap { f =>
+          val tup: List[(File, AudioFileSpec)] = data.flatMap { f =>
             Try(AudioFile.readSpec(f)).toOption.map(f -> _)
           }
-          val trip  = tup.flatMap { case (f, spec) =>
-            findLocation(f).map { loc => (f, spec, loc) }
-          }
+          val trip: List[(File, AudioFileSpec, ActionArtifactLocation.QueryResult[S])] =
+            tup.flatMap { case (f, spec) =>
+              findLocation(f).map { loc => (f, spec, loc) }
+            }
 
           implicit val folderSer = Folder.serializer[S]
-          val edits: List[UndoableEdit] = trip.flatMap {
-            case (f, spec, locS) =>
-              val loc = locS()
-              loc.elem.peer.modifiableOption.map { locM =>
-                val obj     = ObjectActions.mkAudioFile(locM, f, spec)
-                EditFolderInsertObj[S]("Audio File", parent, index, obj)
+          // damn, this is annoying threading of state
+          val (_, edits: List[UndoableEdit]) = ((index, List.empty[UndoableEdit]) /: trip) {
+            case ((idx0, list0), (f, spec, either)) =>
+              ActionArtifactLocation.merge(either).fold((idx0, list0)) { case (xs, locM) =>
+                val (idx2, list2) = ((idx0, list0) /: xs) { case ((idx1, list1), x) =>
+                  val edit1 = EditFolderInsertObj[S]("Location", parent, idx1, x)
+                  (idx1 + 1, list0 :+ edit1)
+                }
+                val obj   = ObjectActions.mkAudioFile(locM, f, spec)
+                val edit2 = EditFolderInsertObj[S]("Audio File", parent, idx2, obj)
+                (idx2 + 1, list2 :+ edit2)
               }
           }
           CompoundEdit(edits, "Insert Audio Files")
@@ -432,7 +438,7 @@ object FolderViewImpl {
       }
     } (breakOut)
 
-    def findLocation(f: File): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
+    def findLocation(f: File): Option[ActionArtifactLocation.QueryResult[S]] = {
       val locationsOk = locations.flatMap { view =>
         try {
           Artifact.relativize(view.directory, f)
@@ -443,7 +449,7 @@ object FolderViewImpl {
       } .headOption
 
       locationsOk match {
-        case Some(loc)  => Some(loc.obj)
+        case Some(loc)  => Some(Left(loc.obj))
         case _          =>
           val parent = selection.flatMap { nodeView =>
             nodeView.renderData match {
@@ -451,7 +457,7 @@ object FolderViewImpl {
               case _ => None
             }
           } .headOption
-          ActionArtifactLocation.query[S](treeView.root, file = f, folder = parent) // , window = Some(comp))
+          ActionArtifactLocation.query[S](treeView.root, file = f /*, folder = parent */) // , window = Some(comp))
       }
     }
   }

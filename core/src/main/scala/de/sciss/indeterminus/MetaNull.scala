@@ -91,7 +91,7 @@ object MetaNull {
         val gOffset   = (span.start / srRatio).toLong
         val tlSpan    = Span(time, time + (span.length / srRatio).toLong)
         val (_, proc) = ProcActions.insertAudioRegion(group = group, time = tlSpan, grapheme = grapheme,
-                                                      gOffset = gOffset, bus = None)
+                                                      gOffset = gOffset /* , bus = None */)
         val fdInLen   = (0.02 * Timeline.SampleRate).toLong
         val fdIn      = FadeSpec.Expr.newConst[I](FadeSpec(fdInLen))
         val fdOut     = FadeSpec.Expr.newConst[I](FadeSpec(math.min(tlSpan.length - fdInLen, (0.5 * Timeline.SampleRate).toLong)))

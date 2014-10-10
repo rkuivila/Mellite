@@ -15,41 +15,43 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.lucre.stm.Cursor
-import de.sciss.synth.proc.{ArtifactLocationElem, ObjKeys, Confluent, BooleanElem, Elem, ExprImplicits, FolderElem, Grapheme, AudioGraphemeElem, StringElem, DoubleElem, Obj, IntElem, LongElem}
-import javax.swing.{UIManager, Icon, SpinnerNumberModel}
-import de.sciss.synth.proc.impl.{FolderElemImpl, ElemImpl}
-import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.{Expr, ExprType, Int => IntEx, Double => DoubleEx, Boolean => BooleanEx, Long => LongEx}
-import de.sciss.lucre.{event => evt, stm}
-import de.sciss.{desktop, mellite, lucre}
-import scala.swing.Swing.EmptyIcon
-import scala.util.Try
-import de.sciss.icons.raphael
-import de.sciss.synth.proc
-import javax.swing.undo.{UndoManager, UndoableEdit}
-import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.swing.{View, Window, deferTx}
-import de.sciss.file._
-import scala.swing.{Dimension, Dialog, Alignment, CheckBox, Label, TextField, Component}
-import de.sciss.swingplus.{GroupPanel, ComboBox, Spinner}
 import java.awt.geom.Path2D
-import de.sciss.desktop.{OptionPane, FileDialog}
-import de.sciss.synth.io.{SampleFormat, AudioFile}
-import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditFolderInsertObj}
-import proc.Implicits._
+import javax.swing.undo.UndoableEdit
+import javax.swing.{Icon, SpinnerNumberModel, UIManager}
+
 import de.sciss.audiowidgets.AxisFormat
+import de.sciss.desktop.impl.UndoManagerImpl
+import de.sciss.desktop.{FileDialog, OptionPane}
+import de.sciss.file._
+import de.sciss.icons.raphael
+import de.sciss.lucre.expr.{Expr, ExprType, Boolean => BooleanEx, Double => DoubleEx, Int => IntEx, Long => LongEx, String => StringEx}
+import de.sciss.lucre.swing.edit.EditVar
+import de.sciss.lucre.swing.{Window, deferTx}
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.{stm, event => evt}
+import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditFolderInsertObj}
 import de.sciss.model.Change
+import de.sciss.swingplus.{ComboBox, GroupPanel, Spinner}
+import de.sciss.synth.io.{AudioFileSpec, AudioFile, SampleFormat}
+import de.sciss.synth.proc
+import de.sciss.synth.proc.Implicits._
+import de.sciss.synth.proc.impl.{ElemImpl, FolderElemImpl}
+import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, Grapheme, IntElem, LongElem, Obj, ObjKeys, StringElem}
+import de.sciss.{desktop, lucre, mellite}
+
+import scala.swing.Swing.EmptyIcon
+import scala.swing.{Alignment, CheckBox, Component, Dialog, Label, TextField}
+import scala.util.Try
 
 object ObjViewImpl {
-  import ObjView.Factory
   import java.lang.{String => _String}
-  import scala.{Int => _Int, Double => _Double, Boolean => _Boolean, Long => _Long}
-  import mellite.{Recursion => _Recursion}
-  import proc.{Folder => _Folder, Proc => _Proc, Timeline => _Timeline,
-    FadeSpec => _FadeSpec, Ensemble => _Ensemble, Code => _Code, Action => _Action}
-  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
+
+import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
+  import de.sciss.mellite.gui.ObjView.Factory
+  import de.sciss.mellite.{Recursion => _Recursion}
+  import de.sciss.synth.proc.{Action => _Action, Code => _Code, Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Proc => _Proc, Timeline => _Timeline}
+
+import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long}
 
   private val sync = new AnyRef
 
@@ -131,16 +133,20 @@ object ObjViewImpl {
       new String.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-      val expr      = ExprImplicits[S]
-      import expr._
+    type Config[S <: Sys[S]] = PrimitiveConfig[_String]
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val ggValue   = new TextField(20)
       ggValue.text  = "Value"
-      actionAddPrimitive(folderH, window, tpe = prefix, ggValue = ggValue, prepare = Some(ggValue.text)) {
-        implicit tx => value => StringElem(lucre.expr.String.newVar(value))
-      }
+      primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = Some(ggValue.text))
+    }
+
+    def make[S <: Sys[S]](config: (_String, _String))(implicit tx: S#Tx): List[Obj[S]] = {
+      val (name, value) = config
+      val obj = Obj(StringElem(StringEx.newVar(StringEx.newConst[S](value))))
+      obj.attr.name = name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, StringElem]],
@@ -188,17 +194,21 @@ object ObjViewImpl {
       new Int.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-      val expr      = ExprImplicits[S]
-      import expr._
+    type Config[S <: Sys[S]] = PrimitiveConfig[_Int]
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val model     = new SpinnerNumberModel(0, _Int.MinValue, _Int.MaxValue, 1)
       val ggValue   = new Spinner(model)
-      actionAddPrimitive[S, _Int](folderH, window, tpe = prefix, ggValue = ggValue,
-        prepare = Some(model.getNumber.intValue())) { implicit tx =>
-          value => IntElem(lucre.expr.Int.newVar(value))
-      }
+      primitiveConfig[S, _Int](window, tpe = prefix, ggValue = ggValue,
+        prepare = Some(model.getNumber.intValue()))
+    }
+
+    def make[S <: Sys[S]](config: (String, _Int))(implicit tx: S#Tx): List[Obj[S]] = {
+      val (name, value) = config
+      val obj = Obj(IntElem(IntEx.newVar(IntEx.newConst[S](value))))
+      obj.attr.name = name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, IntElem]],
@@ -250,17 +260,20 @@ object ObjViewImpl {
       new Long.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-      val expr      = ExprImplicits[S]
-      import expr._
+    type Config[S <: Sys[S]] = PrimitiveConfig[_Long]
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val model     = new SpinnerNumberModel(0L, _Long.MinValue, _Long.MaxValue, 1L)
       val ggValue   = new Spinner(model)
-      actionAddPrimitive[S, _Long](folderH, window, tpe = prefix, ggValue = ggValue,
-        prepare = Some(model.getNumber.longValue())) { implicit tx =>
-        value => LongElem(lucre.expr.Long.newVar(value))
-      }
+      primitiveConfig[S, _Long](window, tpe = prefix, ggValue = ggValue, prepare = Some(model.getNumber.longValue()))
+    }
+
+    def make[S <: Sys[S]](config: (String, _Long))(implicit tx: S#Tx): List[Obj[S]] = {
+      val (name, value) = config
+      val obj = Obj(LongElem(LongEx.newVar(LongEx.newConst[S](value))))
+      obj.attr.name = name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, LongElem]],
@@ -311,17 +324,20 @@ object ObjViewImpl {
       new Double.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-      val expr      = ExprImplicits[S]
-      import expr._
+    type Config[S <: Sys[S]] = PrimitiveConfig[_Double]
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val model     = new SpinnerNumberModel(0.0, _Double.NegativeInfinity, _Double.PositiveInfinity, 1.0)
       val ggValue   = new Spinner(model)
-      actionAddPrimitive(folderH, window, tpe = prefix, ggValue = ggValue,
-        prepare = Some(model.getNumber.doubleValue)) { implicit tx =>
-          value => DoubleElem(lucre.expr.Double.newVar(value))
-      }
+      primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = Some(model.getNumber.doubleValue))
+    }
+
+    def make[S <: Sys[S]](config: (String, _Double))(implicit tx: S#Tx): List[Obj[S]] = {
+      val (name, value) = config
+      val obj = Obj(DoubleElem(DoubleEx.newVar(DoubleEx.newConst[S](value))))
+      obj.attr.name = name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]],
@@ -372,16 +388,19 @@ object ObjViewImpl {
       new Boolean.Impl(tx.newHandle(obj), name, value, isEditable = isEditable, isViewable = isViewable)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-      val expr      = ExprImplicits[S]
-      import expr._
-      val ggValue   = new CheckBox()
-      actionAddPrimitive[S, _Boolean](folderH, window, tpe = prefix, ggValue = ggValue,
-        prepare = Some(ggValue.selected)) { implicit tx =>
-        value => BooleanElem(lucre.expr.Boolean.newVar(value))
-      }
+    type Config[S <: Sys[S]] = PrimitiveConfig[_Boolean]
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+      val ggValue = new CheckBox()
+      primitiveConfig[S, _Boolean](window, tpe = prefix, ggValue = ggValue, prepare = Some(ggValue.selected))
+    }
+
+    def make[S <: Sys[S]](config: (String, _Boolean))(implicit tx: S#Tx): List[Obj[S]] = {
+      val (name, value) = config
+      val obj = Obj(BooleanElem(BooleanEx.newVar(BooleanEx.newConst[S](value))))
+      obj.attr.name = name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, BooleanElem]],
@@ -413,27 +432,33 @@ object ObjViewImpl {
       new AudioGrapheme.Impl(tx.newHandle(obj), name, value)
     }
 
+    final case class Config[S <: Sys[S]](file: File, spec: AudioFileSpec,
+                                         location: Either[stm.Source[S#Tx, ArtifactLocationElem.Obj[S]], (String, File)])
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-      // val locViews  = folderView.locations
-      val dlg       = FileDialog.open(init = None /* locViews.headOption.map(_.directory) */, title = "Add Audio File")
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+      val dlg = FileDialog.open(init = None /* locViews.headOption.map(_.directory) */, title = "Add Audio File")
       dlg.setFilter(f => Try(AudioFile.identify(f).isDefined).getOrElse(false))
       val fOpt = dlg.show(window)
 
       fOpt.flatMap { f =>
-        ActionArtifactLocation.query[S](folderH, file = f, folder = None, window = window).flatMap { locSource =>
+        ActionArtifactLocation.query[S](workspace.root, file = f, window = window).map { location =>
           val spec = AudioFile.readSpec(f)
-          cursor.step { implicit tx =>
-            val loc = locSource()
-            loc.elem.peer.modifiableOption.map { locM =>
-              val obj = ObjectActions.mkAudioFile(locM, f, spec)
-              // XXX TODO - adding artifact-location should go into a compound edit
-              addObject(prefix, folderH(), obj)
-            }
-          }
+          Config(file = f, spec = spec, location = location)
         }
+      }
+    }
+
+    def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = {
+      val (list0: List[Obj[S]], loc /* : ArtifactLocationElem.Obj[S] */) = config.location match {
+        case Left(source) => (Nil, source())
+        case Right((name, directory)) =>
+          val objLoc  = ActionArtifactLocation.create(name = name, directory = directory)
+          (objLoc :: Nil, objLoc)
+      }
+      loc.elem.peer.modifiableOption.fold(list0) { locM =>
+        val audioObj = ObjectActions.mkAudioFile(locM, config.file, config.spec)
+        audioObj :: list0
       }
     }
 
@@ -501,20 +526,20 @@ object ObjViewImpl {
         new ArtifactLocation.Impl(tx.newHandle(obj), name, value, isEditable = editable)
       }
 
-      def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                  window: Option[desktop.Window])
-                                 (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-        val query = ActionArtifactLocation.queryNew(window = window)
-        query.map { case (directory, _name) =>
-          cursor.step { implicit tx =>
-            // ActionArtifactLocation.create(directory, _name, targetFolder)
-            val peer  = _ArtifactLocation[S](directory)
-            val elem  = ArtifactLocationElem(peer)
-            val obj   = Obj(elem)
-            obj.attr.name = _name
-            addObject(prefix, folderH(), obj)
-          }
-        }
+      type Config[S <: Sys[S]] = PrimitiveConfig[File]
+
+      def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] =
+        ActionArtifactLocation.queryNew(window = window)
+
+      def make[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = {
+        // ActionArtifactLocation.create(directory, _name, targetFolder)
+        val (name, directory) = config
+        val peer  = _ArtifactLocation[S](directory)
+        val elem  = ArtifactLocationElem(peer)
+        val obj   = Obj(elem)
+        obj.attr.name = name
+        obj :: Nil
       }
 
       final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]],
@@ -567,9 +592,12 @@ object ObjViewImpl {
       new Recursion.Impl(tx.newHandle(obj), name, value)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = None
+    type Config[S <: Sys[S]] = Unit
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = None
+
+    def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = Nil
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Recursion.Elem]],
                                   var name: _String, var deployed: File)
@@ -586,7 +614,7 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        import Mellite.compiler
+        import de.sciss.mellite.Mellite.compiler
         val frame = RecursionFrame(obj())
         Some(frame)
       }
@@ -611,23 +639,23 @@ object ObjViewImpl {
       new Folder.Impl(tx.newHandle(obj), name)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    type Config[S <: Sys[S]] = _String
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S],window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
         messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = "New Folder"
       val res = opt.show(window)
-      res.map { name =>
-        cursor.step { implicit tx =>
-          val elem  = FolderElem(_Folder[S])
-          val obj   = Obj(elem)
-          val imp   = ExprImplicits[S]
-          import imp._
-          obj.attr.name = name
-          addObject(prefix, folderH(), obj)
-        }
-      }
+      res
+    }
+
+    def make[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
+      val elem  = FolderElem(_Folder[S])
+      val obj   = Obj(elem)
+      val imp   = ExprImplicits[S]
+      obj.attr.name = name
+      obj :: Nil
     }
 
     // XXX TODO: could be viewed as a new folder view with this folder as root
@@ -664,22 +692,25 @@ object ObjViewImpl {
       new Proc.Impl(tx.newHandle(obj), name)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    type Config[S <: Sys[S]] = _String
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
         messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = s"New $prefix"
       val res = opt.show(window)
-      res.map { name =>
-        cursor.step { implicit tx =>
-          val peer  = _Proc[S]
-          val elem  = _Proc.Elem(peer)
-          val obj   = Obj(elem)
-          obj.attr.name = name
-          addObject(prefix, folderH(), obj)
-        }
-      }
+      res
+    }
+
+
+
+    def make[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
+      val peer  = _Proc[S]
+      val elem  = _Proc.Elem(peer)
+      val obj   = Obj(elem)
+      obj.attr.name = name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Proc.Elem]], var name: _String)
@@ -697,7 +728,7 @@ object ObjViewImpl {
       // currently this just opens a code editor. in the future we should
       // add a scans map editor, and a convenience button for the attributes
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        import Mellite.compiler
+        import de.sciss.mellite.Mellite.compiler
         val frame = CodeFrame.proc(obj())
         Some(frame)
       }
@@ -717,22 +748,23 @@ object ObjViewImpl {
       new Timeline.Impl(tx.newHandle(obj), name)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    type Config[S <: Sys[S]] = _String
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
         messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = s"New $prefix"
       val res = opt.show(window)
-      res.map { name =>
-        cursor.step { implicit tx =>
-          val peer  = _Timeline[S] // .Modifiable[S]
-          val elem  = _Timeline.Elem(peer)
-          val obj   = Obj(elem)
-          obj.attr.name = name
-          addObject(prefix, folderH(), obj)
-        }
-      }
+      res
+    }
+
+    def make[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
+      val peer = _Timeline[S] // .Modifiable[S]
+      val elem = _Timeline.Elem(peer)
+      val obj = Obj(elem)
+      obj.attr.name = name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]], var name: _String)
@@ -780,11 +812,12 @@ object ObjViewImpl {
       new Code.Impl(tx.newHandle(obj), name, value)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    type Config[S <: Sys[S]] = PrimitiveConfig[_Code]
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val ggValue = new ComboBox(Seq(_Code.FileTransform.name, _Code.SynthGraph.name))
-      actionAddPrimitive(folderH, window, tpe = prefix, ggValue = ggValue, prepare = ggValue.selection.index match {
+      primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = ggValue.selection.index match {
         case 0 => Some(_Code.FileTransform(
           """|val aIn   = AudioFile.openRead(in)
             |val aOut  = AudioFile.openWrite(out, aIn.spec)
@@ -811,11 +844,15 @@ object ObjViewImpl {
         ))
 
         case _  => None
-      }) { implicit tx =>
-        value =>
-          val peer  = _Code.Expr.newVar[S](_Code.Expr.newConst(value))
-          _Code.Elem(peer)
-      }
+      })
+    }
+
+    def make[S <: Sys[S]](config: (String, _Code))(implicit tx: S#Tx): List[Obj[S]] = {
+      val (name, value) = config
+      val peer  = _Code.Expr.newVar[S](_Code.Expr.newConst(value))
+      val obj   = Obj(_Code.Elem(peer))
+      obj.attr.name = name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Code.Elem]],
@@ -833,7 +870,7 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        import Mellite.compiler
+        import de.sciss.mellite.Mellite.compiler
         val frame = CodeFrame(obj(), hasExecute = false)
         Some(frame)
       }
@@ -859,9 +896,10 @@ object ObjViewImpl {
       new FadeSpec.Impl(tx.newHandle(obj), name, value)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    type Config[S <: Sys[S]] = Unit
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       None
 //      val ggShape = new ComboBox()
 //      Curve.cubed
@@ -873,6 +911,8 @@ object ObjViewImpl {
 //          _FadeSpec.Elem(peer)
 //      }
     }
+
+    def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = Nil
 
     private val timeFmt = AxisFormat.Time(hours = false, millis = true)
 
@@ -920,22 +960,23 @@ object ObjViewImpl {
       new Action.Impl(tx.newHandle(obj), name)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    type Config[S <: Sys[S]] = _String
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
         messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = s"New $prefix"
       val res = opt.show(window)
-      res.map { name =>
-        cursor.step { implicit tx =>
-          val peer  = _Action.Var(_Action.empty[S])
-          val elem  = _Action.Elem(peer)
-          val obj   = Obj(elem)
-          obj.attr.name = name
-          addObject(prefix, folderH(), obj)
-        }
-      }
+      res
+    }
+
+    def make[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
+      val peer = _Action.Var(_Action.empty[S])
+      val elem = _Action.Elem(peer)
+      val obj = Obj(elem)
+      obj.attr.name = name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Action.Obj[S]],
@@ -952,7 +993,7 @@ object ObjViewImpl {
       def isViewable = true
 
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        import Mellite.compiler
+        import de.sciss.mellite.Mellite.compiler
         val frame = CodeFrame.action(obj())
         Some(frame)
       }
@@ -980,9 +1021,10 @@ object ObjViewImpl {
       new Ensemble.Impl(tx.newHandle(obj), name, playing = playing, isEditable = isEditable)
     }
 
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], folderH: stm.Source[S#Tx, _Folder[S]],
-                                window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    final case class Config[S <: Sys[S]](name: String, offset: Long, playing: Boolean)
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
       val ggName    = new TextField(10)
       ggName.text   = prefix
       val offModel  = new SpinnerNumberModel(0.0, 0.0, 1.0e6 /* _Double.MaxValue */, 0.1)
@@ -1010,19 +1052,22 @@ object ObjViewImpl {
       val res = pane.show(window)
 
       if (res != Dialog.Result.Ok) None else {
-        cursor.step { implicit tx =>
-          val name      = ggName.text
-          val folder    = _Folder[S] // XXX TODO - can we ask the user to pick one?
-          val seconds   = offModel.getNumber.doubleValue()
-          val offset    = LongEx   .newVar(LongEx   .newConst[S]((seconds * _Timeline.SampleRate + 0.5).toLong))
-          val playing   = BooleanEx.newVar(BooleanEx.newConst[S](ggPlay.selected))
-          val elem      = _Ensemble.Elem(_Ensemble[S](folder, offset, playing))
-          val obj       = Obj(elem)
-          obj.attr.name = name
-          val edit      = addObject(prefix, folderH(), obj)
-          Some(edit)
-        }
+        val name      = ggName.text
+        val seconds   = offModel.getNumber.doubleValue()
+        val offset    = (seconds * _Timeline.SampleRate + 0.5).toLong
+        val playing   = ggPlay.selected
+        Some(Config(name = name, offset = offset, playing = playing))
       }
+    }
+
+    def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = {
+      val folder    = _Folder[S] // XXX TODO - can we ask the user to pick one?
+      val offset    = LongEx   .newVar(LongEx   .newConst[S](config.offset ))
+      val playing   = BooleanEx.newVar(BooleanEx.newConst[S](config.playing))
+      val elem      = _Ensemble.Elem(_Ensemble[S](folder, offset, playing))
+      val obj       = Obj(elem)
+      obj.attr.name = config.name
+      obj :: Nil
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Ensemble.Obj[S]],
@@ -1064,23 +1109,26 @@ object ObjViewImpl {
     implicit val folderSer = _Folder.serializer[S]
     EditFolderInsertObj[S](name, parent, idx, obj)
   }
+  
+  type PrimitiveConfig[A] = (String, A)
 
-  def actionAddPrimitive[S <: Sys[S], A](parentH: stm.Source[S#Tx, _Folder[S]], window: Option[desktop.Window],
-                                         tpe: String, ggValue: Component, prepare: => Option[A])
-                           (create: S#Tx => A => Elem[S])(implicit cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+  def primitiveConfig[S <: Sys[S], A](window: Option[desktop.Window], tpe: String, ggValue: Component,
+                                      prepare: => Option[A]): Option[PrimitiveConfig[A]] = {
     val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe, window = window)
     for {
       name  <- nameOpt
       value <- prepare
     } yield {
-      cursor.step { implicit tx =>
-        val elem      = create(tx)(value)
-        val obj       = Obj(elem)
-        obj.attr.name = name
-        addObject(tpe, parentH(), obj)
-      }
+      (name, value)
     }
   }
+
+  //  cursor.step { implicit tx =>
+  //    val elem      = create(tx)(value)
+  //    val obj       = Obj(elem)
+  //    obj.attr.name = name
+  //    addObject(tpe, parentH(), obj)
+  //  }
 
   def raphaelIcon(shape: Path2D => Unit): Icon = raphael.Icon(16)(shape)
 

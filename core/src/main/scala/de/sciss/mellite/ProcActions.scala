@@ -254,8 +254,8 @@ object ProcActions {
   def mkAudioRegion[S <: Sys[S]](
       time      : Span,
       grapheme  : Grapheme.Expr.Audio[S],
-      gOffset   : Long,
-      bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
+      gOffset   : Long
+      /* bus       : Option[Expr[S, Int]] */) // stm.Source[S#Tx, Element.Int[S]]])
      (implicit tx: S#Tx): (Expr[S, Span], Proc.Obj[S]) = {
 
     val imp = ExprImplicits[S]
@@ -268,10 +268,11 @@ object ProcActions {
     val obj     = Obj(Proc.Elem(proc))
     val attr    = obj.attr
 //    if (track >= 0) attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(track))))
-    bus.foreach { busEx =>
-      val bus = IntElem(busEx)
-      attr.put(ObjKeys.attrBus, Obj(bus))
-    }
+
+    //    bus.foreach { busEx =>
+    //      val bus = IntElem(busEx)
+    //      attr.put(ObjKeys.attrBus, Obj(bus))
+    //    }
 
     val scanIn  = proc.scans.add(Proc.Obj.graphAudio )
     /*val sOut=*/ proc.scans.add(Proc.Obj.scanMainOut)
@@ -298,16 +299,14 @@ object ProcActions {
     * @param gOffset    the selection start with respect to the grapheme.
     *                   This is inside the underlying audio file (but using timeline sample-rate),
     *                   whereas the proc will be placed in the group aligned with `time`.
-    * @param bus        an optional bus to assign
     * @return           a tuple consisting of the span expression and the newly created proc.
     */
   def insertAudioRegion[S <: Sys[S]](group     : TimelineMod[S],
                                      time      : Span,
                                      grapheme  : Grapheme.Expr.Audio[S],
-                                     gOffset   : Long,
-                                     bus       : Option[Expr[S, Int]]) // stm.Source[S#Tx, Element.Int[S]]])
+                                     gOffset   : Long)
                                     (implicit tx: S#Tx): (Expr[S, Span], Proc.Obj[S]) = {
-    val res @ (span, obj) = mkAudioRegion(time, grapheme, gOffset, bus)
+    val res @ (span, obj) = mkAudioRegion(time, grapheme, gOffset)
     group.add(span, obj)
     res
   }

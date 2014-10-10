@@ -20,7 +20,7 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.mellite.gui.edit.{Edits, EditTimelineInsertObj}
+import de.sciss.mellite.gui.edit.{EditFolderInsertObj, Edits, EditTimelineInsertObj}
 import de.sciss.swingplus.ScrollBar
 
 import de.sciss.span.{Span, SpanLike}
@@ -54,7 +54,6 @@ import scala.swing.Swing._
 import scala.swing.event.{Key, ValueChanged}
 import scala.concurrent.stm.{TSet, Ref}
 import scala.util.Try
-import scala.collection.breakOut
 
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, LinearGradientPaint}
 import javax.swing.UIManager
@@ -799,7 +798,7 @@ object TimelineViewImpl {
         logT(s"insertAudioRegion($drop, ${drag.selection}, $grapheme)")
         val tlSpan = Span(drop.frame, drop.frame + drag.selection.length)
         val (span, obj) = ProcActions.mkAudioRegion(time = tlSpan,
-          grapheme = grapheme, gOffset = drag.selection.start, bus = None) // , bus = ad.bus.map(_.apply().entity))
+          grapheme = grapheme, gOffset = drag.selection.start /*, bus = None */) // , bus = ad.bus.map(_.apply().entity))
         val track = canvasView.screenToTrack(drop.y)
         obj.attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(IntEx.newConst(track)))))
         val edit = EditTimelineInsertObj("Audio Region", groupM, span, obj)
@@ -850,14 +849,16 @@ object TimelineViewImpl {
           resOpt.orElse[UndoableEdit] {
             val tr = Try(AudioFile.readSpec(file)).toOption
             tr.flatMap { spec =>
-              ActionArtifactLocation.query[S](workspace.root, file).flatMap { src =>
+              ActionArtifactLocation.query[S](workspace.root, file).flatMap { either =>
                 step { implicit tx =>
-                  src().elem.peer.modifiableOption.flatMap { loc =>
-                    val elems = workspace.root()
+                  ActionArtifactLocation.merge(either).flatMap { case (list0, locM) =>
+                    val folder  = workspace.root()
                     // val obj   = ObjectActions.addAudioFile(elems, elems.size, loc, file, spec)
-                    val obj   = ObjectActions.mkAudioFile(loc, file, spec)
-                    elems.addLast(obj)
-                    insertAudioRegion(drop, ed, obj.elem.peer)
+                    val obj     = ObjectActions.mkAudioFile(locM, file, spec)
+                    val edits0  = list0.map(obj => EditFolderInsertObj("Location"  , folder, folder.size, obj)).toList
+                    val edits1  = edits0 :+        EditFolderInsertObj("Audio File", folder, folder.size, obj)
+                    val edits2  = insertAudioRegion(drop, ed, obj.elem.peer).fold(edits1)(edits1 :+ _)
+                    CompoundEdit(edits2, "Insert Audio Region")
                   }
                 }
               }

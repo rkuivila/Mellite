@@ -36,4 +36,6 @@ object AttrMapView {
 trait AttrMapView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] with Model[AttrMapView.Update[S]] {
   def selection: AttrMapView.Selection[S]
   def obj(implicit tx: S#Tx): Obj[S]
+
+  def queryKey(initial: String = "key"): Option[String]
 }

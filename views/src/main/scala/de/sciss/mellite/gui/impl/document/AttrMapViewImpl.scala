@@ -324,12 +324,8 @@ object AttrMapViewImpl {
             val dl        = support.getDropLocation.asInstanceOf[JTable.DropLocation]
             val isInsert  = dl.isInsertRow
             val view      = support.getTransferable.getTransferData(ObjView.Flavor).asInstanceOf[ObjView.Drag[S]].view
-            val keyOpt = if (isInsert) {   // ---- create new entry with key via dialog ----
-              // XXX TODO: initial key could use sensible default depending on value type
-              val opt   = OptionPane.textInput(message = "Key Name", initial = "key")
-              opt.title = "Create Attribute"
-              opt.show(GUI.findWindow(component))
-
+            val keyOpt = if (isInsert) { // ---- create new entry with key via dialog ----
+              queryKey()
             } else {          // ---- update value of existing entrywith key via dialog ----
               val rowV  = dl.getRow
               val row   = jt.convertRowIndexToModel(rowV)
@@ -361,6 +357,12 @@ object AttrMapViewImpl {
           val sel     = indices.map(model.apply)
           dispatch(AttrMapView.SelectionChanged(impl, sel))
       }
+    }
+
+    final def queryKey(initial: String): Option[String] = {
+      val opt   = OptionPane.textInput(message = "Key Name", initial = initial)
+      opt.title = "Create Attribute"
+      opt.show(GUI.findWindow(component))
     }
 
     final def selection: List[(String, ObjView[S])] =
