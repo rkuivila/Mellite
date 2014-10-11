@@ -38,5 +38,5 @@ object CodeFrame {
 }
 
 trait CodeFrame[S <: Sys[S]] extends lucre.swing.Window[S] {
-  def view: CodeView[S]
+  def codeView: CodeView[S]
 }

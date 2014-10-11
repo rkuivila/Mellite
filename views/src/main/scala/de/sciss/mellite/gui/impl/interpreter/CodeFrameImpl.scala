@@ -19,15 +19,19 @@ package interpreter
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.desktop.{OptionPane, Window}
+import de.sciss.desktop.{UndoManager, OptionPane, Window}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IDPeek
+import de.sciss.lucre.swing.View
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.event.Sys
+import de.sciss.swingplus.Separator
 import de.sciss.synth.proc.impl.ActionImpl
 import de.sciss.synth.{SynthGraph, proc}
 import proc.Implicits._
 import de.sciss.synth.proc.{Code, Action, SynthGraphs, Proc, Obj}
+
+import scala.swing.{SplitPane, Component, BoxPanel, Orientation}
 
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
@@ -58,7 +62,10 @@ object CodeFrameImpl {
       def execute()(implicit tx: S#Tx) = ()
     }
 
-    make(codeObj, code0, obj.attr.name, Some(handler), hasExecute = false)
+    implicit val undo = new UndoManagerImpl
+    val bottomView = ScansView[S](obj)
+
+    make(codeObj, code0, obj.attr.name, Some(handler), hasExecute = false, bottomViewOpt = Some(bottomView))
   }
 
   // ---- adapter for editing a Action's source ----
@@ -106,7 +113,8 @@ object CodeFrameImpl {
       case _ => None
     }
 
-    make(codeObj, code0, obj.attr.name, handlerOpt, hasExecute = true)
+    implicit val undo = new UndoManagerImpl
+    make(codeObj, code0, obj.attr.name, handlerOpt, hasExecute = true, bottomViewOpt = None)
   }
 
   // ---- general constructor ----
@@ -116,17 +124,32 @@ object CodeFrameImpl {
                          compiler: Code.Compiler): CodeFrame[S] = {
     val _codeEx = obj.elem.peer
     val _code   = _codeEx.value
-    make[S, _code.In, _code.Out](obj, _code, obj.attr.name, None, hasExecute = hasExecute)
+    implicit val undo = new UndoManagerImpl
+    make[S, _code.In, _code.Out](obj, _code, obj.attr.name, None, hasExecute = hasExecute, bottomViewOpt = None)
   }
   
   private def make[S <: Sys[S], In0, Out0](obj: Code.Obj[S], code0: Code { type In = In0; type Out = Out0 },
-                                _name: String, handler: Option[CodeView.Handler[S, In0, Out0]], hasExecute: Boolean)
-                               (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
-                                compiler: Code.Compiler): CodeFrame[S] = {
-    implicit val undoMgr = new UndoManagerImpl
+                                _name: String, handler: Option[CodeView.Handler[S, In0, Out0]], hasExecute: Boolean,
+                                bottomViewOpt: Option[View[S]])
+                               (implicit tx: S#Tx, ws: Workspace[S], csr: stm.Cursor[S],
+                                undoMgr: UndoManager, compiler: Code.Compiler): CodeFrame[S] = {
     // val _name   = /* title getOrElse */ obj.attr.name
-    val view    = CodeView(obj, code0, hasExecute = hasExecute)(handler)
-    val res     = new FrameImpl(view, name0 = _name, contextName = code0.contextName)
+    val codeView  = CodeView(obj, code0, hasExecute = hasExecute)(handler)
+    val view      = bottomViewOpt.fold[View[S]](codeView) { bottomView =>
+      new View.Editable[S] with ViewHasWorkspace[S] {
+        val undoManager = undoMgr
+        val cursor      = csr
+        val workspace   = ws
+
+        lazy val component: Component = new SplitPane(Orientation.Vertical, codeView.component, bottomView.component)
+
+        def dispose()(implicit tx: S#Tx): Unit = {
+          codeView  .dispose()
+          bottomView.dispose()
+        }
+      }
+    }
+    val res       = new FrameImpl(codeView = codeView, view = view, name0 = _name, contextName = code0.contextName)
     res.init()
     res
   }
@@ -151,18 +174,19 @@ object CodeFrameImpl {
 
   // ---- frame impl ----
 
-  private final class FrameImpl[S <: Sys[S]](val view: CodeView[S], name0: String, contextName: String)
+  private final class FrameImpl[S <: Sys[S]](val codeView: CodeView[S], val view: View[S],
+                                             name0: String, contextName: String)
     extends WindowImpl[S](s"$name0 : $contextName Code") with CodeFrame[S] {
 
     private var name = name0
 
     override protected def checkClose(): Boolean = {
-      if (view.isCompiling) {
+      if (codeView.isCompiling) {
         // ggStatus.text = "busy!"
         false
       }
 
-      !view.dirty || {
+      !codeView.dirty || {
         val message = "The code has been edited.\nDo you want to save the changes?"
         val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
           messageType = OptionPane.Message.Warning)
@@ -170,7 +194,7 @@ object CodeFrameImpl {
         opt.show(Some(window)) match {
           case OptionPane.Result.No => true
           case OptionPane.Result.Yes =>
-            /* val fut = */ view.save()
+            /* val fut = */ codeView.save()
             true
 
           case OptionPane.Result.Cancel | OptionPane.Result.Closed =>
@@ -179,6 +203,6 @@ object CodeFrameImpl {
       }
     }
 
-    override def style = Window.Auxiliary
+    // override def style = Window.Auxiliary
   }
 }

@@ -703,8 +703,6 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       res
     }
 
-
-
     def make[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
       val peer  = _Proc[S]
       val elem  = _Proc.Elem(peer)
