@@ -22,8 +22,12 @@ import de.sciss.synth.proc.Proc
 import impl.{ScansViewImpl => Impl}
 
 object ScansView {
+  final case class Drag[S <: Sys[S]](workspace: Workspace[S], proc: stm.Source[S#Tx, Proc.Obj[S]], key: String)
+
+  final val flavor = DragAndDrop.internalFlavor[Drag[_]]
+
   def apply[S <: Sys[S]](obj: Proc.Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
-                                           undoManager: UndoManager): ScansView[S] =
+                                           workspace: Workspace[S], undoManager: UndoManager): ScansView[S] =
     Impl(obj)
 }
-trait ScansView[S <: Sys[S]] extends View.Editable[S]
+trait ScansView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S]

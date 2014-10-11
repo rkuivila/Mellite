@@ -16,8 +16,12 @@ package gui
 package impl
 package audiofile
 
+import java.awt.datatransfer.Transferable
+
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.lucre.artifact.ArtifactLocation
+import de.sciss.mellite.gui.impl.component.DragSourceButton
+import de.sciss.mellite.gui.impl.timeline.DnD
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.graph.ScanIn
 import de.sciss.synth.proc.gui.TransportView
@@ -130,7 +134,19 @@ object ViewImpl {
       //      }
       val sonogramView = new ViewJ(_sonogram, timelineModel)
 
-      val ggDragRegion = new DnD.Button(holder, snapshot, timelineModel)
+      // val ggDragRegion = new DnD.Button(holder, snapshot, timelineModel)
+      val ggDragRegion = new DragSourceButton() {
+        protected def createTransferable(): Option[Transferable] = {
+          val sp    = timelineModel.selection match {
+            case sp0: Span if sp0.nonEmpty =>  sp0
+            case _ => timelineModel.bounds
+          }
+          val drag  = timeline.DnD.AudioDrag(workspace, holder, selection = sp)
+          val t     = DragAndDrop.Transferable(timeline.DnD.flavor)(drag)
+          Some(t)
+        }
+        tooltip = "Drag Selected Region"
+      }
 
       val topPane = new BoxPanel(Orientation.Horizontal) {
         contents ++= Seq(
@@ -160,7 +176,7 @@ object ViewImpl {
     def obj(implicit tx: S#Tx): Obj.T[S, AudioGraphemeElem] = holder()
   }
 
-  private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: DnD.Button[S])
+  private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: Button)
     extends Button("Drop bus") {
 
     icon        = new ImageIcon(Mellite.getClass.getResource("dropicon16.png"))
@@ -187,7 +203,7 @@ object ViewImpl {
           data.selection.exists { nodeView =>
             nodeView.renderData match {
               case ev: ObjView.Int[S] =>
-                export.bus  = Some(ev.obj)
+                // export.bus  = Some(ev.obj)
                 text        = ev.name
                 foreground  = null
                 repaint()

@@ -15,6 +15,10 @@ package de.sciss.mellite
 package gui
 package impl
 
+import java.awt.datatransfer.Transferable
+import javax.swing.TransferHandler.TransferSupport
+import javax.swing.TransferHandler
+
 import de.sciss.desktop.{OptionPane, UndoManager}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
@@ -22,10 +26,11 @@ import de.sciss.lucre.data
 import de.sciss.lucre.stm.IdentifierMap
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.event.Sys
-import de.sciss.mellite.gui.edit.EditAddScan
+import de.sciss.mellite.gui.edit.{EditAddScanLink, EditAddScan}
+import de.sciss.mellite.gui.impl.component.DragSourceButton
 import de.sciss.swingplus.ListView
 import de.sciss.synth.proc.{Grapheme, Scan, Proc}
-import de.sciss.lucre.swing.{deferTx, requireEDT}
+import de.sciss.lucre.swing.deferTx
 
 import scala.concurrent.stm.TMap
 import scala.swing.TabbedPane.Page
@@ -34,7 +39,7 @@ import Swing._
 
 object ScansViewImpl {
   def apply[S <: Sys[S]](obj: Proc.Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
-                                        undoManager: UndoManager): ScansView[S] = {
+                                           workspace: Workspace[S], undoManager: UndoManager): ScansView[S] = {
     new Impl(tx.newHandle(obj)) {
       protected val observer = obj.elem.peer.changed.react { implicit tx => upd =>
         upd.changes.foreach {
@@ -60,55 +65,84 @@ object ScansViewImpl {
     }
   }
 
-  private sealed trait LinkView[S <: Sys[S]] {
-    def repr: String
-
-    override def toString = repr
-  }
-  private final class ScanLinkView    [S <: Sys[S]](val repr: String, scanH: stm.Source[S#Tx, Scan[S]])
-    extends LinkView[S]
-
-  private final class GraphemeLinkView[S <: Sys[S]](val repr: String, graphemeH: stm.Source[S#Tx, Grapheme[S]])
-    extends LinkView[S]
-
-  private final class ScanSectionView[S <: Sys[S]](title: String, val map: IdentifierMap[S#ID, S#Tx, LinkView[S]]) {
-    val model     = ListView.Model.empty[LinkView[S]]
-    var list      : ListView[LinkView[S]] = _
-    var component : Component = _
-
-    def guiInit(): Unit = {
-      list      = new ListView(model)
-      component = new ScrollPane(list) {
-        columnHeaderView = new Label(s"<html><body><i>$title</i></body></html>")
-      }
-    }
-  }
-
-  private final class ScanView[S <: Sys[S]](val key: String, sourcesMap: IdentifierMap[S#ID, S#Tx, LinkView[S]],
-                                                             sinksMap  : IdentifierMap[S#ID, S#Tx, LinkView[S]]) {
-    val sources   = new ScanSectionView[S]("Sources", sourcesMap)
-    val sinks     = new ScanSectionView[S]("Sinks"  , sinksMap  )
-    var component : Component = _
-    var page      : Page      = _
-
-    def guiInit(): Unit = {
-      sources.guiInit()
-      sinks  .guiInit()
-      component = new BoxPanel(Orientation.Vertical) {
-        contents += sources.component
-        contents += sinks  .component
-      }
-      page = new Page(key, component)
-    }
-  }
-
   private abstract class Impl[S <: Sys[S]](objH: stm.Source[S#Tx, Proc.Obj[S]])
-                                       (implicit val cursor: stm.Cursor[S], val undoManager: UndoManager)
+                                       (implicit val cursor: stm.Cursor[S], val workspace: Workspace[S],
+                                        val undoManager: UndoManager)
     extends ScansView[S] with ComponentHolder[Component] {
+
+    private sealed trait LinkView {
+      def repr: String
+      override def toString = repr
+    }
+    private final class ScanLinkView    (val repr: String, scanH: stm.Source[S#Tx, Scan[S]])
+      extends LinkView
+
+    private final class GraphemeLinkView(val repr: String, graphemeH: stm.Source[S#Tx, Grapheme[S]])
+      extends LinkView
+
+    private final class ScanSectionView(parent: ScanView, isSources: Boolean,
+                                        val map: IdentifierMap[S#ID, S#Tx, LinkView]) {
+      val model     = ListView.Model.empty[LinkView]
+      var list      : ListView[LinkView] = _
+      var component : Component = _
+
+      def guiInit(): Unit = {
+        list      = new ListView(model)
+        list.peer.setTransferHandler(new TransferHandler {
+          override def canImport(support: TransferSupport): Boolean =
+            support.isDataFlavorSupported(ScansView.flavor)
+
+          override def importData(support: TransferSupport): Boolean = {
+            support.isDataFlavorSupported(ScansView.flavor) && {
+              val drag = support.getTransferable.getTransferData(ScansView.flavor).asInstanceOf[ScansView.Drag[S]]
+              drag.workspace == workspace && {
+                val editOpt = cursor.step { implicit tx =>
+                  val thisScanOpt   = objH     ().elem.peer.scans.get(parent.key)
+                  val thatScanOpt   = drag.proc().elem.peer.scans.get(drag  .key)
+                  for {
+                    thisScan <- thisScanOpt
+                    thatScan <- thatScanOpt
+                  } yield
+                    if (isSources) {
+                      EditAddScanLink(source = thatScan, sourceKey = drag  .key, sink = thisScan, sinkKey = parent.key)
+                    } else {
+                      EditAddScanLink(source = thisScan, sourceKey = parent.key, sink = thatScan, sinkKey = drag  .key)
+                    }
+                }
+                editOpt.foreach(undoManager.add)
+                editOpt.isDefined
+              }
+            }
+          }
+        })
+        list.visibleRowCount = 2
+        component = new ScrollPane(list) {
+          columnHeaderView = new Label(s"<html><body><i>${if (isSources) "Sources" else "Sinks"}</i></body></html>")
+        }
+      }
+    }
+
+    private final class ScanView(val key: String, sourcesMap: IdentifierMap[S#ID, S#Tx, LinkView],
+                                                  sinksMap  : IdentifierMap[S#ID, S#Tx, LinkView]) {
+      val sources   = new ScanSectionView(this, isSources = true , map = sourcesMap)
+      val sinks     = new ScanSectionView(this, isSources = false, map = sinksMap  )
+      var component : Component = _
+      var page      : Page      = _
+
+      def guiInit(): Unit = {
+        sources.guiInit()
+        sinks  .guiInit()
+        component = new BoxPanel(Orientation.Vertical) {
+          contents += sources.component
+          contents += sinks  .component
+        }
+        page = new Page(key, component)
+      }
+    }
 
     protected def observer: stm.Disposable[S#Tx]
 
-    private val scanMap = TMap.empty[String, ScanView[S]]
+    private val scanMap = TMap.empty[String, ScanView]
 
     private var tab: TabbedPane = _
 
@@ -129,23 +163,35 @@ object ScansViewImpl {
 
     final protected def guiInit(): Unit = {
       tab           = new TabbedPane
+
       // tab.preferredSize = (400, 100)
       val ggAdd     = GUI.toolButton(Action(null)(guiAddScan   ()), raphael.Shapes.Plus , "Add Scan"   )
       val ggDelete  = GUI.toolButton(Action(null)(guiRemoveScan()), raphael.Shapes.Minus, "Remove Scan")
+      val ggDrag    = new DragSourceButton() {
+        protected def createTransferable(): Option[Transferable] = {
+          val idx = tab.selection.index
+          if (idx < 0) None else {
+            val key = tab.selection.page.title
+            val d = DragAndDrop.Transferable(ScansView.flavor)(ScansView.Drag[S](workspace, objH, key))
+            Some(d)
+          }
+        }
+      }
+
       val box = new BoxPanel(Orientation.Vertical) {
         contents += tab
-        contents += new FlowPanel(new Label("Scans:"), ggAdd, ggDelete, HGlue)
+        contents += new FlowPanel(/* new Label("Scans:"), */ ggAdd, ggDelete, ggDrag, HGlue)
       }
       box.preferredSize = box.minimumSize
       component = box
     }
 
-    private def mkLinkView(link: Scan.Link[S])(implicit tx: S#Tx): LinkView[S] = link match {
+    private def mkLinkView(link: Scan.Link[S])(implicit tx: S#Tx): LinkView = link match {
       case Scan.Link.Scan    (peer) => new ScanLinkView    (peer.toString(), tx.newHandle(peer))
       case Scan.Link.Grapheme(peer) => new GraphemeLinkView(peer.toString(), tx.newHandle(peer))
     }
 
-    final protected def addLink(key: String, link: Scan.Link[S])(section: ScanView[S] => ScanSectionView[S])
+    final protected def addLink(key: String, link: Scan.Link[S])(section: ScanView => ScanSectionView)
                                (implicit tx: S#Tx): Unit = {
       val linkView    = mkLinkView(link)
       val sectionView = section(scanMap(key)(tx.peer))
@@ -154,7 +200,7 @@ object ScansViewImpl {
       }
     }
 
-    final protected def removeLink(key: String, link: Scan.Link[S])(section: ScanView[S] => ScanSectionView[S])
+    final protected def removeLink(key: String, link: Scan.Link[S])(section: ScanView => ScanSectionView)
                                   (implicit tx: S#Tx): Unit =
       scanMap.get(key)(tx.peer).foreach { scanView =>
         val sectionView = section(scanView)
@@ -169,16 +215,16 @@ object ScansViewImpl {
       }
 
     final protected def addLinks(key: String, links: data.Iterator[S#Tx, Scan.Link[S]])
-                                (section: ScanView[S] => ScanSectionView[S])
+                                (section: ScanView => ScanSectionView)
                                 (implicit tx: S#Tx): Unit =
       links.foreach { link =>
         addLink(key, link)(section)
       }
 
     final protected def addScan(key: String, scan: Scan[S])(implicit tx: S#Tx): Unit = {
-      val sourcesMap  = tx.newInMemoryIDMap[LinkView[S]]
-      val sinksMap    = tx.newInMemoryIDMap[LinkView[S]]
-      val scanView    = new ScanView[S](key, sourcesMap, sinksMap)
+      val sourcesMap  = tx.newInMemoryIDMap[LinkView]
+      val sinksMap    = tx.newInMemoryIDMap[LinkView]
+      val scanView    = new ScanView(key, sourcesMap, sinksMap)
       scanMap.put(key, scanView)(tx.peer)
 
       deferTx(scanView.guiInit())

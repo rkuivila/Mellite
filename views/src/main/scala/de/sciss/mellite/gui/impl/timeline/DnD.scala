@@ -39,8 +39,7 @@ object DnD {
     def selection: Span
   }
   final case class AudioDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
-                                          /* grapheme: Grapheme.Value.Audio, */ selection: Span,
-                                          bus: Option[stm.Source[S#Tx, Obj.T[S, IntElem]]])
+                                          selection: Span)
     extends AudioDragLike[S]
 
   //  final case class IntDrag [S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]

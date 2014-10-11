@@ -134,4 +134,24 @@ object Shapes {
     p.curveTo(21.25f, 20.4065f, 20.596998f, 18.9285f, 19.625f, 17.8125f)
     p.lineTo(19.625f, 17.8125f)
   }
+
+  /////////////////////////////////////////////////////////////
+  // the following shapes are taken from the Open-Iconic project
+  // https://github.com/iconic/open-iconic
+  //
+  // The MIT License (MIT)
+  //
+  // Copyright (c) 2014 Waybury
+
+  def Share(p: Path2D): Unit = {
+    p.moveTo(20.0f, 0.0f)
+    p.lineTo(20.0f, 8.0f)
+    p.curveTo(4.0f, 8.0f, 0.0f, 16.2f, 0.0f, 28.0f)
+    p.curveTo(2.08f, 20.08f, 8.0f, 16.0f, 16.0f, 16.0f)
+    p.lineTo(20.0f, 16.0f)
+    p.lineTo(20.0f, 24.0f)
+    p.lineTo(32.0f, 11.36f)
+    p.lineTo(20.0f, 0.0f)
+    p.lineTo(20.0f, 0.0f)
+  }
 }
