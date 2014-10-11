@@ -119,14 +119,14 @@ object Edits {
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     log(s"Link $sourceKey / $source to $sinkKey / $sink")
     // source.addSink(Scan.Link.Scan(sink))
-    EditAddScanLink(source, sourceKey, sink, sinkKey)
+    EditAddScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
   }
 
   def removeLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
                              (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     log(s"Unlink $sourceKey / $source from $sinkKey / $sink")
     // source.removeSink(Scan.Link.Scan(sink))
-    EditRemoveScanLink(source, sourceKey, sink, sinkKey)
+    EditRemoveScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
   }
 
   def linkOrUnlink[S <: Sys[S]](out: Proc.Obj[S], in: Proc.Obj[S])

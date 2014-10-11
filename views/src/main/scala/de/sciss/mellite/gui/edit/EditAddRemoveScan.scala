@@ -29,7 +29,7 @@ private[edit] final class EditAddRemoveScan[S <: Sys[S]](isAdd: Boolean,
   extends AbstractUndoableEdit {
 
   override def undo(): Unit = {
-    super.redo()
+    super.undo()
     cursor.step { implicit tx => perform(isUndo = true) }
   }
 
@@ -56,7 +56,7 @@ private[edit] final class EditAddRemoveScan[S <: Sys[S]](isAdd: Boolean,
       scans.remove(key)
   }
 
-  override def getPresentationName = s"${if (isAdd) "Add" else "Remove"} Link"
+  override def getPresentationName = s"${if (isAdd) "Add" else "Remove"} Scan"
 }
 object EditAddScan {
   def apply[S <: Sys[S]](proc: Proc.Obj[S], key: String)(implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {

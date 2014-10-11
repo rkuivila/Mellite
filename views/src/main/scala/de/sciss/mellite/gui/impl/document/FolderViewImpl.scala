@@ -74,7 +74,7 @@ object FolderViewImpl {
     view =>
 
     private type Data     = ObjView[S]
-    private type NodeView = TreeTableView.NodeView[S, Obj[S], Data]
+    private type NodeView = TreeTableView.NodeView[S, Obj[S], Folder[S], Data]
 
     protected object TTHandler
       extends TreeTableView.Handler[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]] {
@@ -326,7 +326,7 @@ object FolderViewImpl {
           // we will first remove all children, then re-insert them.
           val idx0 = if (idx >= 0) idx else newParent /* .children */.size
           val idx1 = idx0 - sel1.count { nv =>
-            val isInNewParent = nv.parentOption.map(_.modelData()) == Some(newParent)
+            val isInNewParent = nv.parent == newParent
             val child = nv.modelData()
             isInNewParent && newParent.indexOf(child) <= idx0
           }
@@ -334,17 +334,17 @@ object FolderViewImpl {
 
           implicit val folderSer = Folder.serializer[S]
 
-          val editRemove = sel1.map { nv =>
-            val parent: Folder[S] = nv.parentOption.flatMap { pv =>
-              pv.modelData() match {
-                case FolderElem.Obj(objT) => Some(objT.elem.peer)
-                case _ => None
-              }
-            } .getOrElse(treeView.root())
-
+          val editRemove = sel1.flatMap { nv =>
+            val parent: Folder[S] = nv.parent
             val childH  = nv.modelData
             val idx     = parent.indexOf(childH())
-            EditFolderRemoveObj[S](nv.renderData.prefix, parent, idx, childH())
+            if (idx < 0) {
+              println("WARNING: Parent of drag object not found")
+              None
+            } else {
+              val edit = EditFolderRemoveObj[S](nv.renderData.prefix, parent, idx, childH())
+              Some(edit)
+            }
           }
 
           val editInsert = sel1.zipWithIndex.map { case (nv, off) =>

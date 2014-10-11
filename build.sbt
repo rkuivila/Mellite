@@ -26,7 +26,7 @@ lazy val strugatzkiVersion          = "2.6.0"
 
 lazy val scalaColliderSwingVersion  = "1.20.0"
 
-lazy val lucreSwingVersion          = "0.5.0"
+lazy val lucreSwingVersion          = "0.6.0-SNAPSHOT"
 
 lazy val audioWidgetsVersion        = "1.7.0"
 
@@ -49,8 +49,8 @@ lazy val commonSettings = Project.defaultSettings ++ Seq(
   organization       := "de.sciss",
   homepage           := Some(url("https://github.com/Sciss/" + name.value)),
   licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
-  scalaVersion       := "2.11.2",
-  crossScalaVersions := Seq("2.11.2", "2.10.4"),
+  scalaVersion       := "2.11.3",
+  crossScalaVersions := Seq("2.11.3", "2.10.4"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")

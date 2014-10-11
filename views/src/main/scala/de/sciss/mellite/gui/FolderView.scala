@@ -20,21 +20,22 @@ import de.sciss.model.Model
 import de.sciss.lucre.stm
 import java.io.File
 import de.sciss.synth.proc.{Folder, Obj}
-import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.Sys // => SSys}
+// import de.sciss.lucre.event.Sys
 import de.sciss.lucre.swing.{View, TreeTableView}
 import de.sciss.desktop.UndoManager
 import scala.collection.breakOut
 
 object FolderView {
   def apply[S <: Sys[S]](root: Folder[S])
-                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
-                         undoManager: UndoManager): FolderView[S] = Impl(root)
+                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                          undoManager: UndoManager): FolderView[S] = Impl(root)
 
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
     */
   // type Selection[S <: Sys[S]] = Vec[(Vec[ObjView.FolderLike[S]], ObjView[S])]
-  type Selection[S <: Sys[S]] = List[TreeTableView.NodeView[S, Obj[S], ObjView[S]]]
+  type Selection[S <: Sys[S]] = List[TreeTableView.NodeView[S, Obj[S], Folder[S], ObjView[S]]]
   // type Selection[S <: Sys[S]] = Vec[stm.Source[S#Tx, Obj[S]]]
 
   final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], selection: Selection[S]) {

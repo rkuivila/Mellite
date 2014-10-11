@@ -18,7 +18,9 @@ package impl
 import java.awt.datatransfer.Transferable
 import javax.swing.TransferHandler.TransferSupport
 import javax.swing.TransferHandler
+import javax.swing.undo.UndoableEdit
 
+import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{OptionPane, UndoManager}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
@@ -26,15 +28,16 @@ import de.sciss.lucre.data
 import de.sciss.lucre.stm.IdentifierMap
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.event.Sys
-import de.sciss.mellite.gui.edit.{EditAddScanLink, EditAddScan}
+import de.sciss.mellite.gui.edit.{EditRemoveScanLink, EditRemoveScan, EditAddScanLink, EditAddScan}
 import de.sciss.mellite.gui.impl.component.DragSourceButton
-import de.sciss.swingplus.ListView
+import de.sciss.swingplus.{PopupMenu, ListView}
 import de.sciss.synth.proc.{Grapheme, Scan, Proc}
 import de.sciss.lucre.swing.deferTx
 
 import scala.concurrent.stm.TMap
 import scala.swing.TabbedPane.Page
-import scala.swing.{Swing, Action, FlowPanel, Label, ScrollPane, BoxPanel, Orientation, TabbedPane, Component}
+import scala.swing.event.{MouseButtonEvent, MouseReleased, MousePressed}
+import scala.swing.{MenuItem, Button, Swing, Action, FlowPanel, Label, ScrollPane, BoxPanel, Orientation, TabbedPane, Component}
 import Swing._
 
 object ScansViewImpl {
@@ -68,16 +71,16 @@ object ScansViewImpl {
   private abstract class Impl[S <: Sys[S]](objH: stm.Source[S#Tx, Proc.Obj[S]])
                                        (implicit val cursor: stm.Cursor[S], val workspace: Workspace[S],
                                         val undoManager: UndoManager)
-    extends ScansView[S] with ComponentHolder[Component] {
+    extends ScansView[S] with ComponentHolder[Component] { impl =>
 
     private sealed trait LinkView {
       def repr: String
       override def toString = repr
     }
-    private final class ScanLinkView    (val repr: String, scanH: stm.Source[S#Tx, Scan[S]])
+    private final class ScanLinkView    (val repr: String, val scanH: stm.Source[S#Tx, Scan[S]])
       extends LinkView
 
-    private final class GraphemeLinkView(val repr: String, graphemeH: stm.Source[S#Tx, Grapheme[S]])
+    private final class GraphemeLinkView(val repr: String, val graphemeH: stm.Source[S#Tx, Grapheme[S]])
       extends LinkView
 
     private final class ScanSectionView(parent: ScanView, isSources: Boolean,
@@ -104,9 +107,9 @@ object ScansViewImpl {
                     thatScan <- thatScanOpt
                   } yield
                     if (isSources) {
-                      EditAddScanLink(source = thatScan, sourceKey = drag  .key, sink = thisScan, sinkKey = parent.key)
+                      EditAddScanLink(source = thatScan, sink = thisScan)
                     } else {
-                      EditAddScanLink(source = thisScan, sourceKey = parent.key, sink = thatScan, sinkKey = drag  .key)
+                      EditAddScanLink(source = thisScan, sink = thatScan)
                     }
                 }
                 editOpt.foreach(undoManager.add)
@@ -116,6 +119,36 @@ object ScansViewImpl {
           }
         })
         list.visibleRowCount = 2
+
+        val pop = new PopupMenu {
+          contents += new MenuItem(Action("Remove Link") {
+            list.selection.items.headOption.foreach {
+              case slv: ScanLinkView =>
+                implicit val cursor = impl.cursor
+                val editOpt = cursor.step { implicit tx =>
+                  for {
+                    source <- objH().elem.peer.scans.get(parent.key)
+                  } yield {
+                    val sink = slv.scanH()
+                    EditRemoveScanLink(source = source, sink = sink)
+                  }
+                }
+                editOpt.foreach(undoManager.add)
+
+              case glv: GraphemeLinkView =>
+                println("TODO: Remove Grapheme Link")
+            }
+          })
+        }
+
+        def handleMouse(e: MouseButtonEvent): Unit =
+          if (e.triggersPopup && model.nonEmpty) pop.show(list, e.point.x, e.point.y)
+
+        list.listenTo(list.mouse.clicks)
+        list.reactions += {
+          case e: MousePressed  => handleMouse(e)
+          case e: MouseReleased => handleMouse(e)
+        }
         component = new ScrollPane(list) {
           columnHeaderView = new Label(s"<html><body><i>${if (isSources) "Sources" else "Sinks"}</i></body></html>")
         }
@@ -157,8 +190,40 @@ object ScansViewImpl {
       }
     }
 
-    private def guiRemoveScan(): Unit = {
-      println("TODO: Remove")
+    private lazy val actionRemove = Action(null) {
+      currentKeyOption.foreach { key =>
+        val editOpt = cursor.step { implicit tx =>
+          val obj    = objH()
+          val edits3 = obj.elem.peer.scans.get(key).fold(List.empty[UndoableEdit]) { thisScan =>
+            val edits1 = thisScan.sources.toList.collect {
+              case Scan.Link.Scan(source) =>
+                EditRemoveScanLink(source = source, sink = thisScan)
+            }
+            val edits2 = thisScan.sinks .toList.collect {
+              case Scan.Link.Scan(sink) =>
+                EditRemoveScanLink(source = thisScan, sink = sink)
+            }
+            edits1 ++ edits2
+          }
+          edits3.foreach(e => println(e.getPresentationName))
+          val editMain = EditRemoveScan(objH(), key)
+          CompoundEdit(edits3 :+ editMain, "Remove Scan")
+        }
+        editOpt.foreach(undoManager.add)
+      }
+    }
+
+    private var ggDrag: Button = _
+
+    private def tabsUpdated(): Unit = {
+      val enabled = tab.pages.nonEmpty
+      actionRemove.enabled  = enabled
+      ggDrag      .enabled  = enabled
+    }
+
+    private def currentKeyOption: Option[String] = {
+      val idx = tab.selection.index
+      if (idx < 0) None else Some(tab.selection.page.title)
     }
 
     final protected def guiInit(): Unit = {
@@ -166,17 +231,15 @@ object ScansViewImpl {
 
       // tab.preferredSize = (400, 100)
       val ggAdd     = GUI.toolButton(Action(null)(guiAddScan   ()), raphael.Shapes.Plus , "Add Scan"   )
-      val ggDelete  = GUI.toolButton(Action(null)(guiRemoveScan()), raphael.Shapes.Minus, "Remove Scan")
-      val ggDrag    = new DragSourceButton() {
-        protected def createTransferable(): Option[Transferable] = {
-          val idx = tab.selection.index
-          if (idx < 0) None else {
-            val key = tab.selection.page.title
-            val d = DragAndDrop.Transferable(ScansView.flavor)(ScansView.Drag[S](workspace, objH, key))
-            Some(d)
+      val ggDelete  = GUI.toolButton(actionRemove                 , raphael.Shapes.Minus, "Remove Scan")
+      ggDrag        = new DragSourceButton() {
+        protected def createTransferable(): Option[Transferable] =
+          currentKeyOption.map { key =>
+            DragAndDrop.Transferable(ScansView.flavor)(ScansView.Drag[S](workspace, objH, key))
           }
-        }
       }
+
+      tabsUpdated()
 
       val box = new BoxPanel(Orientation.Vertical) {
         contents += tab
@@ -195,6 +258,7 @@ object ScansViewImpl {
                                (implicit tx: S#Tx): Unit = {
       val linkView    = mkLinkView(link)
       val sectionView = section(scanMap(key)(tx.peer))
+      sectionView.map.put(link.id, linkView)
       deferTx {
         sectionView.model += linkView
       }
@@ -202,12 +266,12 @@ object ScansViewImpl {
 
     final protected def removeLink(key: String, link: Scan.Link[S])(section: ScanView => ScanSectionView)
                                   (implicit tx: S#Tx): Unit =
-      scanMap.get(key)(tx.peer).foreach { scanView =>
+      scanMap.get(key)(tx.peer).fold(println(s"WARNING: Scan not found: $key")) { scanView =>
         val sectionView = section(scanView)
         val id          = link.id
         val listViewOpt = sectionView.map.get(id)
         sectionView.map.remove(id)
-        listViewOpt.foreach { listView =>
+        listViewOpt.fold(println(s"WARNING: Link not found: $key, $link")) { listView =>
           deferTx {
             sectionView.model -= listView
           }
@@ -234,6 +298,7 @@ object ScansViewImpl {
 
       deferTx {
         tab.pages += scanView.page
+        tabsUpdated()
       }
     }
 
@@ -242,6 +307,7 @@ object ScansViewImpl {
       viewOpt.foreach { scanView =>
         deferTx {
           tab.pages -= scanView.page
+          tabsUpdated()
         }
       }
     }

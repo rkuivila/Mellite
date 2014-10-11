@@ -97,7 +97,7 @@ object RecursionImpl {
       }
 
     def read(in: DataInput): Range.Inclusive = {
-      (in.readByte(): @switch) match {
+      (in.readByte() /* : @switch */) match {
         case 0  =>
           val start = in.readInt()
           new Range.Inclusive(start, start, 1)

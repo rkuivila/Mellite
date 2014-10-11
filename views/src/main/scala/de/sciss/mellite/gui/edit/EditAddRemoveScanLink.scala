@@ -24,13 +24,12 @@ import de.sciss.lucre.event.Sys
 // direction: true = insert, false = remove
 private[edit] final class EditAddRemoveScanLink[S <: Sys[S]](isAdd: Boolean,
                                                        sourceH: stm.Source[S#Tx, Scan[S]],
-                                                       sourceKey: String,
-                                                       sinkH: stm.Source[S#Tx, Scan[S]],
-                                                       sinkKey: String)(implicit cursor: stm.Cursor[S])
+                                                       sinkH  : stm.Source[S#Tx, Scan[S]])
+                                                      (implicit cursor: stm.Cursor[S])
   extends AbstractUndoableEdit {
 
   override def undo(): Unit = {
-    super.redo()
+    super.undo()
     cursor.step { implicit tx => perform(isUndo = true) }
   }
 
@@ -67,28 +66,20 @@ private[edit] final class EditAddRemoveScanLink[S <: Sys[S]](isAdd: Boolean,
   override def getPresentationName = s"${if (isAdd) "Add" else "Remove"} Link"
 }
 object EditAddScanLink {
-  def apply[S <: Sys[S]](source   : Scan[S],
-                         sourceKey: String,
-                         sink     : Scan[S],
-                         sinkKey  : String)(implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
+  def apply[S <: Sys[S]](source: Scan[S], sink: Scan[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val sourceH = tx.newHandle(source)
     val sinkH   = tx.newHandle(sink)
-    val res = new EditAddRemoveScanLink(isAdd = true, sourceH = sourceH, sourceKey = sourceKey,
-      sinkH = sinkH, sinkKey = sinkKey)
+    val res = new EditAddRemoveScanLink(isAdd = true, sourceH = sourceH, sinkH = sinkH)
     res.perform()
     res
   }
 }
 
 object EditRemoveScanLink {
-  def apply[S <: Sys[S]](source   : Scan[S],
-                         sourceKey: String,
-                         sink     : Scan[S],
-                         sinkKey  : String)(implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
+  def apply[S <: Sys[S]](source: Scan[S], sink: Scan[S])(implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val sourceH = tx.newHandle(source)
     val sinkH   = tx.newHandle(sink)
-    val res = new EditAddRemoveScanLink(isAdd = false, sourceH = sourceH, sourceKey = sourceKey,
-      sinkH = sinkH, sinkKey = sinkKey)
+    val res = new EditAddRemoveScanLink(isAdd = false, sourceH = sourceH, sinkH = sinkH)
     res.perform()
     res
   }

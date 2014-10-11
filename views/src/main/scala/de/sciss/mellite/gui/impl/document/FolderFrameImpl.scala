@@ -22,7 +22,7 @@ import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.UndoManager
 import de.sciss.file._
-import de.sciss.lucre.stm
+import de.sciss.lucre.{stm, event => evt}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
@@ -103,21 +103,32 @@ object FolderFrameImpl {
       CompoundEdit(edits, "Create Objects")
     }
 
+//    private def screwScala[T <: evt.Sys[T]](in: FolderView.Selection[T]): Option[Folder[T]] =
+//      nodeView.parent match {
+//        case FolderElem.Obj(objT) => Some(objT.elem.peer)
+//        case _ => None
+//      }
+
     final protected lazy val actionDelete: Action = Action(null) {
       val sel = peer.selection
       val edits: List[UndoableEdit] = cursor.step { implicit tx =>
-        sel.map { nodeView =>
-          val parent = nodeView.parentOption.flatMap { pView =>
-            pView.modelData() match {
-              case FolderElem.Obj(objT) => Some(objT.elem.peer)
-              case _ => None
-            }
-          }.getOrElse(peer.root())
+        sel.flatMap { nodeView =>
+          val parent = nodeView.parent
+          //          val parentOption: Option[Folder[S]] = nodeView.parent match {
+          //            case FolderElem.Obj(objT) => Some(objT.elem.peer)
+          //            case _ => None
+          //          }
           val childH  = nodeView.modelData
           val child   = childH()
           val idx     = parent.indexOf(child)
-          implicit val folderSer = Folder.serializer[S]
-          EditFolderRemoveObj[S](nodeView.renderData.prefix, parent, idx, child)
+          if (idx < 0) {
+            println("WARNING: Parent folder of object not found")
+            None
+          } else {
+            implicit val folderSer = Folder.serializer[S]
+            val edit = EditFolderRemoveObj[S](nodeView.renderData.prefix, parent, idx, child)
+            Some(edit)
+          }
         }
       }
       val ceOpt = CompoundEdit(edits, "Delete Elements")

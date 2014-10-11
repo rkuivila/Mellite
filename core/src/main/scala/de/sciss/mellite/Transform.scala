@@ -47,7 +47,7 @@ object Transform {
     def read(in: DataInput): Transform = {
       val cookie = in.readInt()
       require(cookie == COOKIE, s"Unexpected cookie $cookie (requires $COOKIE)")
-      (in.readByte(): @switch) match {
+      (in.readByte() /* : @switch */) match {
         case 0 => Unmodified
         case 1 =>
           val source = Code.serializer.read(in) match {
