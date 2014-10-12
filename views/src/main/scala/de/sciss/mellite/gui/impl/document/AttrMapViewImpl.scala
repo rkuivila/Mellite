@@ -314,7 +314,9 @@ object AttrMapViewImpl {
               modelCol >= 1   // should drop on the 'type' or 'value' column
             }
             // println(s"locOk? $locOk")
-            locOk && support.isDataFlavorSupported(ObjView.Flavor)
+            val allOk = locOk && support.isDataFlavorSupported(ObjView.Flavor)
+            if (allOk) support.setDropAction(TransferHandler.LINK)
+            allOk
           }
           res
         }

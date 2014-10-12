@@ -21,19 +21,15 @@ import java.awt.datatransfer.Transferable
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.lucre.artifact.ArtifactLocation
 import de.sciss.mellite.gui.impl.component.DragSourceButton
-import de.sciss.mellite.gui.impl.timeline.DnD
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.graph.ScanIn
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{ObjKeys, Proc, Timeline, Transport, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
+import de.sciss.synth.proc.{Proc, Timeline, Transport, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
 import de.sciss.lucre.stm
-import scala.swing.{Label, Button, BoxPanel, Orientation, Swing, BorderPanel, Component}
-import java.awt.Color
+import scala.swing.{Label, BoxPanel, Orientation, Swing, BorderPanel, Component}
 import Swing._
 import de.sciss.span.Span
 import de.sciss.{synth, sonogram}
-import javax.swing.{TransferHandler, ImageIcon}
-import javax.swing.TransferHandler.TransferSupport
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.lucre.synth.Sys
@@ -176,45 +172,45 @@ object ViewImpl {
     def obj(implicit tx: S#Tx): Obj.T[S, AudioGraphemeElem] = holder()
   }
 
-  private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: Button)
-    extends Button("Drop bus") {
-
-    icon        = new ImageIcon(Mellite.getClass.getResource("dropicon16.png"))
-    // this doesn't have any effect?
-    // GUI.fixWidth(this)
-    foreground  = Color.gray
-    focusable   = false
-
-    // private var item = Option.empty[stm.Source[S#Tx, Element.Int[S]]]
-
-    private val trns = new TransferHandler {
-      // how to enforce a drop action: https://weblogs.java.net/blog/shan_man/archive/2006/02/choosing_the_dr.html
-      override def canImport(support: TransferSupport): Boolean =
-        if (support.isDataFlavorSupported(FolderView.SelectionFlavor) &&
-           ((support.getSourceDropActions & TransferHandler.COPY) != 0)) {
-          support.setDropAction(TransferHandler.COPY)
-          true
-        } else false
-
-      override def importData(support: TransferSupport): Boolean = {
-        val t     = support.getTransferable
-        val data  = t.getTransferData(FolderView.SelectionFlavor).asInstanceOf[FolderView.SelectionDnDData[S]]
-        (data.workspace == view.workspace) && {
-          data.selection.exists { nodeView =>
-            nodeView.renderData match {
-              case ev: ObjView.Int[S] =>
-                // export.bus  = Some(ev.obj)
-                text        = ev.name
-                foreground  = null
-                repaint()
-                true
-
-              case _ => false
-            }
-          }
-        }
-      }
-    }
-    peer.setTransferHandler(trns)
-  }
+  //  private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: Button)
+  //    extends Button("Drop bus") {
+  //
+  //    icon        = new ImageIcon(Mellite.getClass.getResource("dropicon16.png"))
+  //    // this doesn't have any effect?
+  //    // GUI.fixWidth(this)
+  //    foreground  = Color.gray
+  //    focusable   = false
+  //
+  //    // private var item = Option.empty[stm.Source[S#Tx, Element.Int[S]]]
+  //
+  //    private val trns = new TransferHandler {
+  //      // how to enforce a drop action: https://weblogs.java.net/blog/shan_man/archive/2006/02/choosing_the_dr.html
+  //      override def canImport(support: TransferSupport): Boolean =
+  //        if (support.isDataFlavorSupported(FolderView.SelectionFlavor) &&
+  //           ((support.getSourceDropActions & TransferHandler.COPY) != 0)) {
+  //          support.setDropAction(TransferHandler.COPY)
+  //          true
+  //        } else false
+  //
+  //      override def importData(support: TransferSupport): Boolean = {
+  //        val t     = support.getTransferable
+  //        val data  = t.getTransferData(FolderView.SelectionFlavor).asInstanceOf[FolderView.SelectionDnDData[S]]
+  //        (data.workspace == view.workspace) && {
+  //          data.selection.exists { nodeView =>
+  //            nodeView.renderData match {
+  //              case ev: ObjView.Int[S] =>
+  //                // export.bus  = Some(ev.obj)
+  //                text        = ev.name
+  //                foreground  = null
+  //                repaint()
+  //                true
+  //
+  //              case _ => false
+  //            }
+  //          }
+  //        }
+  //      }
+  //    }
+  //    peer.setTransferHandler(trns)
+  //  }
 }

@@ -34,8 +34,6 @@ import de.sciss.lucre.stm
 import de.sciss.model.Change
 import de.sciss.lucre.swing.{TreeTableView, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.synth.proc
-import proc.Implicits._
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc.Folder.Update
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
@@ -240,7 +238,7 @@ object FolderViewImpl {
         // ---- export ----
 
         override def getSourceActions(c: JComponent): Int =
-          TransferHandler.COPY | TransferHandler.MOVE // dragging only works when MOVE is included. Why?
+          TransferHandler.COPY | TransferHandler.MOVE | TransferHandler.LINK // dragging only works when MOVE is included. Why?
 
         override def createTransferable(c: JComponent): Transferable = {
           val sel     = selection
@@ -296,9 +294,8 @@ object FolderViewImpl {
                 // println(s"File? ${support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)}")
                 // println(s"Action = ${support.getUserDropAction}")
 
-                support   .isDataFlavorSupported(DataFlavor.javaFileListFlavor) ||
-                  (support.isDataFlavorSupported(FolderView.SelectionFlavor   ) &&
-                   support.getUserDropAction == TransferHandler.MOVE)
+                support.isDataFlavorSupported(DataFlavor.javaFileListFlavor) ||
+                support.isDataFlavorSupported(FolderView.SelectionFlavor   )
 
               } else {
                 false
@@ -308,7 +305,7 @@ object FolderViewImpl {
           }
 
         // XXX TODO: not sure whether removal should be in exportDone or something
-        private def insertData(sel: FolderView.Selection[S], newParent: Folder[S], idx: Int)
+        private def insertData(sel: FolderView.Selection[S], newParent: Folder[S], idx: Int, dropAction: Int)
                               (implicit tx: S#Tx): Option[UndoableEdit] = {
           // println(s"insert into $parent at index $idx")
 
@@ -318,14 +315,17 @@ object FolderViewImpl {
             case _ => false
           }
 
+          val isMove  = dropAction == TransferHandler.MOVE
+          val isCopy  = dropAction == TransferHandler.COPY
+
           // make sure we are not moving a folder within itself (it will magically disappear :)
-          val sel1 = sel.filterNot(nv => isNested(nv.modelData()))
+          val sel1 = if (!isMove) sel else sel.filterNot(nv => isNested(nv.modelData()))
 
           // if we move children within the same folder, adjust the insertion index by
           // decrementing it for any child which is above the insertion index, because
           // we will first remove all children, then re-insert them.
           val idx0 = if (idx >= 0) idx else newParent /* .children */.size
-          val idx1 = idx0 - sel1.count { nv =>
+          val idx1 = if (!isMove) idx0 else idx0 - sel1.count { nv =>
             val isInNewParent = nv.parent == newParent
             val child = nv.modelData()
             isInNewParent && newParent.indexOf(child) <= idx0
@@ -334,7 +334,7 @@ object FolderViewImpl {
 
           implicit val folderSer = Folder.serializer[S]
 
-          val editRemove = sel1.flatMap { nv =>
+          val editRemove: List[UndoableEdit] = if (!isMove) Nil else sel1.flatMap { nv =>
             val parent: Folder[S] = nv.parent
             val childH  = nv.modelData
             val idx     = parent.indexOf(childH())
@@ -348,15 +348,19 @@ object FolderViewImpl {
           }
 
           val editInsert = sel1.zipWithIndex.map { case (nv, off) =>
-            val childH = nv.modelData
-            EditFolderInsertObj[S](nv.renderData.prefix, newParent, idx1 + off, childH())
+            val childH  = nv.modelData
+            val child0  = childH()
+            val child   = if (!isCopy) child0 else Obj.copy(child0)
+            EditFolderInsertObj[S](nv.renderData.prefix, newParent, idx1 + off, child)
           }
           val edits: List[UndoableEdit] = editRemove ++ editInsert
           val name = sel1 match {
             case single :: Nil  => single.renderData.prefix
             case _              => "Elements"
           }
-          CompoundEdit(edits, s"Move $name")
+
+          val prefix = if (isMove) "Move" else if (isCopy) "Copy" else "Link"
+          CompoundEdit(edits, s"$prefix $name")
         }
 
         private def importSelection(support: TransferSupport, parent: Folder[S], index: Int)
@@ -365,7 +369,7 @@ object FolderViewImpl {
             .asInstanceOf[FolderView.SelectionDnDData[S]]
           if (data.workspace == workspace) {
             val sel     = data.selection
-            insertData(sel, parent, index)
+            insertData(sel, parent, idx = index, dropAction = support.getDropAction)
           } else {
             None
           }
