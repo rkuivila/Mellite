@@ -127,10 +127,13 @@ object ScansViewImpl {
                 implicit val cursor = impl.cursor
                 val editOpt = cursor.step { implicit tx =>
                   for {
-                    source <- objH().elem.peer.scans.get(parent.key)
+                    thisScan <- objH().elem.peer.scans.get(parent.key)
                   } yield {
-                    val sink = slv.scanH()
-                    EditRemoveScanLink(source = source, sink = sink)
+                    val thatScan = slv.scanH()
+                    if (isSources)
+                      EditRemoveScanLink(source = thatScan, sink = thisScan)
+                    else
+                      EditRemoveScanLink(source = thisScan, sink = thatScan)
                   }
                 }
                 editOpt.foreach(undoManager.add)

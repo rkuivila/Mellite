@@ -78,14 +78,16 @@ object EditAttrMap {
                                               (implicit val cursor: stm.Cursor[S], companion: Elem.Companion[E])
     extends Impl[S, Expr[S, B]] {
 
-    protected def put(map: AttrMap.Modifiable[S], elem: Expr[S, B])(implicit tx: S#Tx): Unit =
-      map[E](key) match {
+    protected def put(map: AttrMap.Modifiable[S], elem: Expr[S, B])(implicit tx: S#Tx): Unit = {
+      val opt = map[E](key)
+      opt match {
         case Some(Expr.Var(vr)) =>
           // see above for an explanation about how we preserve a variable
           if (vr == elem) throw new IllegalArgumentException(s"Cyclic reference setting variable $vr")
           vr() = elem
         case _ => map.put(key, Obj(mkElem(elem)))
       }
+    }
   }
 
   private abstract class Impl[S <: Sys[S], A] extends AbstractUndoableEdit {

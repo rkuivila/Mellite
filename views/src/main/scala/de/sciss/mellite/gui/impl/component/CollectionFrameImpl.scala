@@ -59,6 +59,7 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
 
   protected def selectedObjects: List[ObjView[S]]
 
+  /** Called after the main GUI has been initialized. */
   protected def initGUI2(): Unit
 
   protected type InsertConfig
@@ -148,10 +149,10 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
   }
 
   private def guiInit(): Unit = {
-    ggAdd     = GUI.toolButton(actionAdd, raphael.Shapes.Plus, "Add Element")
-    ggDelete  = GUI.toolButton(actionDelete, raphael.Shapes.Minus, "Remove Selected Element")
-    ggAttr    = GUI.toolButton(actionAttr, raphael.Shapes.Wrench, "Attributes Editor")
-    ggView    = GUI.toolButton(actionView, raphael.Shapes.View, "View Selected Element")
+    ggAdd     = GUI.toolButton(actionAdd   , raphael.Shapes.Plus  , "Add Element")
+    ggDelete  = GUI.toolButton(actionDelete, raphael.Shapes.Minus , "Remove Selected Element")
+    ggAttr    = GUI.toolButton(actionAttr  , raphael.Shapes.Wrench, "Attributes Editor")
+    ggView    = GUI.toolButton(actionView  , raphael.Shapes.View  , "View Selected Element")
 
     val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggAttr, ggView)
 
@@ -164,9 +165,8 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
     selectionChanged(selectedObjects)
   }
 
-  def dispose()(implicit tx: S#Tx): Unit = {
+  def dispose()(implicit tx: S#Tx): Unit =
     nameObserver.dispose()(bridge(tx))
-  }
 }
 
 class CollectionFrameImpl[S <: Sys[S]](val view: View[S])

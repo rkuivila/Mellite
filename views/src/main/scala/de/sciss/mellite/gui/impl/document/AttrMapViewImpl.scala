@@ -16,6 +16,7 @@ package gui
 package impl
 package document
 
+import java.awt.datatransfer.Transferable
 import javax.swing.TransferHandler.TransferSupport
 
 import de.sciss.desktop.edit.CompoundEdit
@@ -36,7 +37,7 @@ import de.sciss.model.Change
 import scala.swing.event.TableColumnsSelected
 import de.sciss.model.impl.ModelImpl
 import Swing._
-import javax.swing.{TransferHandler, AbstractCellEditor, JTable}
+import javax.swing.{JComponent, TransferHandler, AbstractCellEditor, JTable}
 import de.sciss.mellite.gui.edit.EditAttrMap
 import java.util.EventObject
 import java.awt.event.MouseEvent
@@ -305,6 +306,20 @@ object AttrMapViewImpl {
       jt.setDragEnabled(true)
       jt.setDropMode(DropMode.OnOrInsertRows)
       jt.setTransferHandler(new TransferHandler {
+        override def getSourceActions(c: JComponent): Int = TransferHandler.LINK
+
+        override def createTransferable(c: JComponent): Transferable = {
+          val sel     = selection
+          val trans1 = if (sel.size == 1) {
+            val _res = DragAndDrop.Transferable(ObjView.Flavor) {
+              new ObjView.Drag(workspace, sel.head._2)
+            }
+            _res
+          } else null
+
+          trans1
+        }
+
         override def canImport(support: TransferSupport): Boolean = {
           val res = support.isDrop && {
             val dl = support.getDropLocation.asInstanceOf[JTable.DropLocation]

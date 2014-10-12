@@ -18,6 +18,7 @@ package document
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.artifact.Artifact
+import de.sciss.lucre.expr.{Expr, String => StringEx}
 import de.sciss.synth.proc.{ObjKeys, FolderElem, Folder, Obj, StringElem}
 import swing.Component
 import scala.collection.{JavaConversions, breakOut}
@@ -171,13 +172,18 @@ object FolderViewImpl {
           def editingCanceled(e: ChangeEvent) = ()
           def editingStopped (e: ChangeEvent): Unit = editView.foreach { objView =>
             editView = None
-            val editOpt = cursor.step { implicit tx =>
+            val editOpt: Option[UndoableEdit] = cursor.step { implicit tx =>
               val text = defaultEditorJ.getText
               if (editColumn == 0) {
-                val valueOpt: Option[Obj[S]] = if (text.isEmpty || text.toLowerCase == "<unnamed>") None else {
-                  Some(Obj(StringElem(lucre.expr.String.newConst[S](text))))
+                val valueOpt: Option[Expr[S, String]] /* Obj[S] */ = if (text.isEmpty || text.toLowerCase == "<unnamed>") None else {
+                  val expr = StringEx.newConst[S](text)
+                  // Some(Obj(StringElem(elem)))
+                  Some(expr)
                 }
-                val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName, valueOpt)
+                // val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName, valueOpt)
+                import StringEx.serializer
+                val ed = EditAttrMap.expr(s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName,
+                  valueOpt)(StringElem[S](_))
                 Some(ed)
               } else {
                 objView.tryEdit(text)
@@ -245,9 +251,6 @@ object FolderViewImpl {
           val trans0  = DragAndDrop.Transferable(FolderView.SelectionFlavor) {
             new FolderView.SelectionDnDData(workspace, sel)
           }
-          // val lSel            = DragAndDrop.Transferable(ObjView.SelectionFlavor) {
-          //   new ObjView.SelectionDnDData(workspace, sel.map(_.renderData)(breakOut))
-          // }
           val trans1 = if (sel.size == 1) {
             val _res = DragAndDrop.Transferable(ObjView.Flavor) {
               new ObjView.Drag(workspace, sel.head.renderData)
@@ -256,28 +259,6 @@ object FolderViewImpl {
           } else trans0
 
           trans1
-
-          //          // except for the general selection flavour, see if there is more specific types
-          //          // (current Int and Code are supported)
-          //          cursor.step { implicit tx =>
-          //            sel.headOption.fold(tSel) { nodeView =>
-          //              nodeView.modelData() match {
-          //                case IntElem.Obj(objT) =>
-          //                  val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
-          //                    timeline.DnD.IntDrag[S](document, tx.newHandle(objT))
-          //                  }
-          //                  DragAndDrop.Transferable.seq(tSel, tElem)
-          //
-          //                case Code.Elem.Obj(objT) /* if elemView.value.id == Code.SynthGraph.id */ =>
-          //                  val tElem = DragAndDrop.Transferable(timeline.DnD.flavor) {
-          //                    timeline.DnD.CodeDrag[S](document, tx.newHandle(objT))
-          //                  }
-          //                  DragAndDrop.Transferable.seq(tSel, tElem)
-          //
-          //                case _ => tSel
-          //              }
-          //            }
-          //          }
         }
 
         // ---- import ----
