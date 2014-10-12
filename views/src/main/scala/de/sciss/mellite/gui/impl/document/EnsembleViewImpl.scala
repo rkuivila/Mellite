@@ -32,7 +32,7 @@ import Swing._
 
 object EnsembleViewImpl {
   def apply[S <: Sys[S]](ensObj: Ensemble.Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
-                                                cursor: stm.Cursor[S], undoManager: UndoManager): EnsembleView[S] = {
+                                                cursor: stm.Cursor[S], undoManager: UndoManager): Impl[S] = {
     val ens     = ensObj.elem.peer
     val folder  = FolderView(ens.folder)
     val folder1 = new FolderFrameImpl.ViewImpl[S, S](folder) {
@@ -49,13 +49,15 @@ object EnsembleViewImpl {
     res
   }
 
-  private final class Impl[S <: Sys[S]](ensembleH: stm.Source[S#Tx, Ensemble.Obj[S]], transport: Transport[S],
-                                        folder: View[S], playing: View[S])
+  final class Impl[S <: Sys[S]](ensembleH: stm.Source[S#Tx, Ensemble.Obj[S]], transport: Transport[S],
+                                        val view: FolderFrameImpl.ViewImpl[S, S], playing: View[S])
                                        (implicit val undoManager: UndoManager, val workspace: Workspace[S],
                                         val cursor: stm.Cursor[S])
     extends ComponentHolder[Component] with EnsembleView[S] { impl =>
 
     def ensemble(implicit tx: S#Tx): Ensemble[S] = ensembleH().elem.peer
+
+    def folderView = view.peer
 
     def guiInit(): Unit = {
       val ggPower = new ToggleButton {
@@ -75,7 +77,7 @@ object EnsembleViewImpl {
       ggPower.tooltip = "Toggle DSP"
 
       component = new BoxPanel(Orientation.Vertical) {
-        contents += folder.component
+        contents += folderView.component
         contents += Separator()
         contents += VStrut(2)
         contents += new BoxPanel(Orientation.Horizontal) {
@@ -90,9 +92,9 @@ object EnsembleViewImpl {
     }
 
     def dispose()(implicit tx: S#Tx): Unit = {
-      transport.dispose()
-      folder   .dispose()
-      playing  .dispose()
+      transport .dispose()
+      folderView.dispose()
+      playing   .dispose()
     }
   }
 }

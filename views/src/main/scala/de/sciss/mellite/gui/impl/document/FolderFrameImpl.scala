@@ -29,7 +29,7 @@ import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{String => StringEx}
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
-import de.sciss.mellite.gui.impl.component.{CollectionFrameImpl, CollectionViewImpl}
+import de.sciss.mellite.gui.impl.component.CollectionViewImpl
 import de.sciss.swingplus.{Spinner, GroupPanel}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{ExprImplicits, ObjKeys, StringElem, Obj, Folder}
@@ -60,23 +60,29 @@ object FolderFrameImpl {
     res
   }
 
-  private final class FrameImpl[S <: Sys[S]](_view: ViewImpl[S, _], name0: Option[String], isWorkspaceRoot: Boolean)
-    extends CollectionFrameImpl[S](_view) with FolderFrame[S] {
+  def addDuplicateAction[S <: Sys[S]](w: WindowImpl[S], action: Action): Unit =
+    Application.windowHandler.menuFactory.get("edit") match {
+      case Some(mEdit: Menu.Group) =>
+        val itDup = Menu.Item("duplicate", action)
+        mEdit.add(Some(w.window), itDup)    // XXX TODO - should be insert-after "Select All"
+      case _ =>
+    }
 
-    def workspace = _view.workspace
+  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S, _], name0: Option[String],
+                                             isWorkspaceRoot: Boolean)
+    extends WindowImpl[S] with FolderFrame[S] {
+
+    def workspace = view.workspace
+
+    def folderView = view.peer
 
     override protected def initGUI(): Unit = {
-      _view.addListener {
+      view.addListener {
         case CollectionViewImpl.NamedChanged(n) => title = n
       }
-      _view.nameUpdate(name0)
+      view.nameUpdate(name0)
 
-      Application.windowHandler.menuFactory.get("edit") match {
-        case Some(mEdit: Menu.Group) =>
-          val itDup = Menu.Item("duplicate", _view.actionDuplicate)
-          mEdit.add(Some(window), itDup)    // XXX TODO - should be insert-after "Select All"
-        case _ =>
-      }
+      addDuplicateAction(this, view.actionDuplicate)
     }
 
     override protected def placement: (Float, Float, Int) = (0.5f, 0.0f, 20)

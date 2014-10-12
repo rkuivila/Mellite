@@ -27,5 +27,7 @@ object EnsembleView {
     Impl(ensemble)
 }
 trait EnsembleView[S <: Sys[S]] extends /* Model[EnsembleView.Update[S]] with */ View.Editable[S] {
+  def folderView: FolderView[S]
+
   def ensemble(implicit tx: S#Tx): Ensemble[S]
 }

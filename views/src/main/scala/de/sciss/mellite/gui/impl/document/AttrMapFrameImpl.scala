@@ -24,7 +24,7 @@ import de.sciss.lucre.stm
 
 import scala.swing.Action
 import de.sciss.mellite.{ExprView, Workspace}
-import de.sciss.mellite.gui.impl.component.{CollectionViewImpl, CollectionFrameImpl}
+import de.sciss.mellite.gui.impl.component.CollectionViewImpl
 import de.sciss.lucre.stm.Disposable
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.UndoManager
@@ -97,10 +97,10 @@ object AttrMapFrameImpl {
     protected def selectedObjects: List[ObjView[S]] = peer.selection.map(_._2)
   }
 
-  private final class FrameImpl[S <: Sys[S]](objH: stm.Source[S#Tx, Obj[S]], view: ViewImpl[S],
+  private final class FrameImpl[S <: Sys[S]](objH: stm.Source[S#Tx, Obj[S]], val view: ViewImpl[S],
                                              title0: String)
                                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager)
-    extends CollectionFrameImpl[S](view)
+    extends WindowImpl[S]
     with AttrMapFrame[S] {
 
     def contents: AttrMapView[S] = view.peer

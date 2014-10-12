@@ -30,6 +30,7 @@ import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{stm, event => evt}
 import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditFolderInsertObj}
+import de.sciss.mellite.gui.impl.document.FolderFrameImpl
 import de.sciss.model.Change
 import de.sciss.swingplus.{ComboBox, GroupPanel, Spinner}
 import de.sciss.synth.io.{AudioFileSpec, AudioFile, SampleFormat}
@@ -1088,11 +1089,8 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
 
       override def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         val ens   = obj()
-        val w = new WindowImpl[S](ens.attr.name) {  // XXX TODO - dynamic name
-          val view = EnsembleView(ens)(tx, workspace, cursor, new UndoManagerImpl)
-          init()
-        }
-        Some(w.asInstanceOf[Window[S]])
+        val w     = EnsembleFrame(ens)
+        Some(w)
       }
     }
   }

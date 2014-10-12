@@ -1,5 +1,5 @@
 /*
- *  DocumentElementsFrame.scala
+ *  FolderFrame.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
@@ -21,7 +21,7 @@ import lucre.stm
 import de.sciss.lucre.synth.Sys
 
 object FolderFrame {
-  /** Creates a new frame for document elements.
+  /** Creates a new frame for a folder view.
     *
     * @param workspace        the workspace whose root to display
     * @param name             optional window name
@@ -41,5 +41,5 @@ object FolderFrame {
 }
 
 trait FolderFrame[S <: Sys[S]] extends lucre.swing.Window[S] {
-  // def view: FolderView[S]
+  def folderView: FolderView[S]
 }

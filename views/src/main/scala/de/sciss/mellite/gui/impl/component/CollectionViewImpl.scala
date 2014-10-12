@@ -1,5 +1,5 @@
 /*
- *  CollectionFrameImpl.scala
+ *  CollectionViewImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
@@ -169,7 +169,7 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
     nameObserver.dispose()(bridge(tx))
 }
 
-class CollectionFrameImpl[S <: Sys[S]](val view: View[S])
-  extends WindowImpl[S] {
-  impl =>
-}
+//class CollectionFrameImpl[S <: Sys[S]](val view: View[S])
+//  extends WindowImpl[S] {
+//  impl =>
+//}
