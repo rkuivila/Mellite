@@ -17,21 +17,17 @@ package document
 
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.synth.proc
-import de.sciss.synth.proc.Obj
-import de.sciss.lucre.stm
-
-import scala.swing.Action
-import de.sciss.mellite.{ExprView, Workspace}
-import de.sciss.mellite.gui.impl.component.CollectionViewImpl
-import de.sciss.lucre.stm.Disposable
-import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.UndoManager
+import de.sciss.desktop.edit.CompoundEdit
+import de.sciss.desktop.impl.UndoManagerImpl
+import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditAttrMap
-import de.sciss.file._
-import proc.Implicits._
+import de.sciss.mellite.gui.impl.component.CollectionViewImpl
+import de.sciss.mellite.{ExprView, Workspace}
+import de.sciss.synth.proc.Obj
+
+import scala.swing.Action
 
 object AttrMapFrameImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
