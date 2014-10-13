@@ -17,31 +17,32 @@ package impl
 package document
 
 import java.awt.datatransfer.Transferable
+import java.awt.event.MouseEvent
+import java.util.EventObject
 import javax.swing.TransferHandler.TransferSupport
+import javax.swing.table.{AbstractTableModel, DefaultTableCellRenderer, TableCellEditor}
+import javax.swing.{AbstractCellEditor, JComponent, JTable, TransferHandler}
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.swingplus.DropMode
-import de.sciss.synth.proc.{ObjKeys, StringElem, Obj}
-import de.sciss.lucre.stm
-import de.sciss.lucre.swing.impl.ComponentHolder
-import scala.swing.{TextField, Label, Swing, ScrollPane, Table}
-import de.sciss.lucre.swing.deferTx
 import de.sciss.desktop.{OptionPane, UndoManager}
-import de.sciss.lucre.synth.Sys
-import javax.swing.table.{TableCellEditor, DefaultTableCellRenderer, AbstractTableModel}
-import scala.collection.immutable.{IndexedSeq => Vec}
-import scala.annotation.switch
+import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Disposable
-import scala.concurrent.stm.TMap
-import de.sciss.model.Change
-import scala.swing.event.TableColumnsSelected
-import de.sciss.model.impl.ModelImpl
-import Swing._
-import javax.swing.{JComponent, TransferHandler, AbstractCellEditor, JTable}
+import de.sciss.lucre.swing.deferTx
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditAttrMap
-import java.util.EventObject
-import java.awt.event.MouseEvent
-import de.sciss.swingplus
+import de.sciss.model.Change
+import de.sciss.model.impl.ModelImpl
+import de.sciss.swingplus.DropMode
+import de.sciss.synth.proc.{Obj, ObjKeys, StringElem}
+
+import scala.annotation.switch
+import scala.collection.breakOut
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.concurrent.stm.TMap
+import scala.swing.Swing._
+import scala.swing.event.TableRowsSelected
+import scala.swing.{Label, ScrollPane, Table, TextField}
 
 object AttrMapViewImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
@@ -76,8 +77,6 @@ object AttrMapViewImpl {
 
     res
   }
-
-  // private final class EntryView[S <: Sys[S]](var name: String, val obj: ObjView[S])
 
   private abstract class Impl[S <: Sys[S]](mapH: stm.Source[S#Tx, Obj[S]],
                                            list0: Vec[(String, ObjView[S])])(implicit val cursor: stm.Cursor[S],
@@ -291,16 +290,16 @@ object AttrMapViewImpl {
 
         def getCellEditorValue: AnyRef = editor.text // currentValue.asInstanceOf[AnyRef]
 
-        def getTableCellEditorComponent(table: JTable, value: Any, isSelected: Boolean, row: Int,
+        def getTableCellEditorComponent(table: JTable, value: Any, isSelected: Boolean, rowV: Int,
                                         col: Int): java.awt.Component = {
-          // println("AQUI")
+          val row = table.convertRowIndexToModel(rowV)
           val view      = model(row)._2
           // currentValue  = view.value
           editor.text   = view.value.toString
           editor.peer
         }
       })
-      import swingplus.Implicits._
+      import de.sciss.swingplus.Implicits._
       tab.sort(0)
 
       jt.setDragEnabled(true)
@@ -368,10 +367,9 @@ object AttrMapViewImpl {
       component     = scroll
       tab.listenTo(tab.selection)
       tab.reactions += {
-        case TableColumnsSelected(_, _, _) => // note: range is range of _changes_ rows, not current selection
-          val indices = tab.selection.rows /* range */.toList.sorted
-          // println(s"indices = $indices")
-          val sel     = indices.map(model.apply)
+        case TableRowsSelected(_, _, false) => // note: range is range of _changes_ rows, not current selection
+          val sel = selection
+          // println(sel.map(_._1))
           dispatch(AttrMapView.SelectionChanged(impl, sel))
       }
     }
@@ -382,7 +380,10 @@ object AttrMapViewImpl {
       opt.show(GUI.findWindow(component))
     }
 
-    final def selection: List[(String, ObjView[S])] =
-      tab.selection.rows.toList.sorted.map(model.apply)
+    final def selection: List[(String, ObjView[S])] = {
+      val ind0: List[Int] = tab.selection.rows.map(tab.peer.convertRowIndexToModel)(breakOut)
+      val indices = ind0.sorted
+      indices.map(model.apply)
+    }
   }
 }

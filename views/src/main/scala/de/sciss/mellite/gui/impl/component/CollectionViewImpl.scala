@@ -126,10 +126,10 @@ trait CollectionViewImpl[S <: Sys[S]]
   }
 
   private def guiInit(): Unit = {
-    ggAdd     = GUI.toolButton(actionAdd   , raphael.Shapes.Plus  , "Add Element")
-    ggDelete  = GUI.toolButton(actionDelete, raphael.Shapes.Minus , "Remove Selected Element")
-    ggAttr    = GUI.toolButton(actionAttr  , raphael.Shapes.Wrench, "Attributes Editor")
-    ggView    = GUI.toolButton(actionView  , raphael.Shapes.View  , "View Selected Element")
+    ggAdd     = GUI.addButton   (actionAdd   , "Add Element")
+    ggDelete  = GUI.removeButton(actionDelete, "Remove Selected Element")
+    ggAttr    = GUI.attrButton  (actionAttr  , "Attributes Editor")
+    ggView    = GUI.viewButton  (actionView  , "View Selected Element")
 
     val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggAttr, ggView)
 

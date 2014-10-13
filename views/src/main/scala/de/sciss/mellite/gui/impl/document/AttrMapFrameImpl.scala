@@ -50,12 +50,9 @@ object AttrMapFrameImpl {
 
     def workspace = peer.workspace
 
-    //    protected def mkTitle(sOpt: Option[String]): String =
-    //      s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Attributes"
+    def dispose()(implicit tx: S#Tx) = ()
 
-    final def dispose()(implicit tx: S#Tx) = ()
-
-    final protected lazy val actionDelete: Action = Action(null) {
+    protected lazy val actionDelete: Action = Action(null) {
       val sel = peer.selection
       val edits: List[UndoableEdit] = cursor.step { implicit tx =>
         val obj0 = peer.obj
@@ -79,7 +76,7 @@ object AttrMapFrameImpl {
       CompoundEdit(edits, "Create Attributes")
     }
 
-    final protected def initGUI2(): Unit = {
+    protected def initGUI2(): Unit = {
       peer.addListener {
         case AttrMapView.SelectionChanged(_, sel) =>
           selectionChanged(sel.map(_._2))

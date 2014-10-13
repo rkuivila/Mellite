@@ -15,10 +15,13 @@ package de.sciss
 package mellite
 package gui
 
+import de.sciss.desktop.KeyStrokes
+
 import scala.swing.Swing._
+import scala.swing.event.Key
 import scala.swing.{Action, Color, Button, AbstractButton, Dialog, Component, TextField, Label, Alignment}
-import javax.swing.{JComponent, Icon}
-import de.sciss.swingplus.GroupPanel
+import javax.swing.{KeyStroke, JComponent, Icon}
+import de.sciss.swingplus.{DoClickAction, GroupPanel}
 import de.sciss.icons.raphael
 import java.awt.geom.Path2D
 import de.sciss.mellite.gui.impl.WindowImpl
@@ -101,6 +104,40 @@ object GUI {
     res.disabledIcon  = iconDisabled(iconFun)
     res.peer.putClientProperty("JButton.buttonType", "textured")
     if (!tooltip.isEmpty) res.tooltip = tooltip
+    res
+  }
+
+  /** Adds a global key-triggered click action to a button. The key
+    * is active if the action appears in the focused window. The added action
+    * simulates a button click.
+    */
+  def addGlobalKey(b: AbstractButton, keyStroke: KeyStroke): Unit = {
+    val click = DoClickAction(b)
+    b.peer.getActionMap.put("click", click.peer)
+    b.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, "click")
+  }
+
+  def viewButton(action: Action, tooltip: String = ""): Button = {
+    val res = toolButton(action, raphael.Shapes.View, tooltip)
+    addGlobalKey(res, KeyStrokes.menu1 + Key.Enter)
+    res
+  }
+
+  def attrButton(action: Action, tooltip: String = ""): Button = {
+    val res = toolButton(action, raphael.Shapes.Wrench, tooltip)
+    addGlobalKey(res, KeyStrokes.menu1 + Key.Semicolon)
+    res
+  }
+
+  def addButton(action: Action, tooltip: String = ""): Button = {
+    val res = toolButton(action, raphael.Shapes.Plus, tooltip)
+    addGlobalKey(res, KeyStrokes.menu1 + Key.N)
+    res
+  }
+
+  def removeButton(action: Action, tooltip: String = ""): Button = {
+    val res = toolButton(action, raphael.Shapes.Minus, tooltip)
+    addGlobalKey(res, KeyStrokes.menu1 + Key.BackSpace)
     res
   }
 }

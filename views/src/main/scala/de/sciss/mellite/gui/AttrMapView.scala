@@ -29,13 +29,6 @@ object AttrMapView {
 
   type Selection[S <: Sys[S]] = List[(String, ObjView[S])]
 
-  //  val SelectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]
-  //
-  //  // TO DO -- unify with FolderView.SelectionDnDData
-  //  final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], selection: Selection[S]) {
-  //    lazy val types: Set[Int] = selection.map(_._2.typeID)(breakOut)
-  //  }
-
   sealed trait Update[S <: Sys[S]] { def view: AttrMapView[S] }
   final case class SelectionChanged[S <: Sys[S]](view: AttrMapView[S], selection: Selection[S])
     extends Update[S]

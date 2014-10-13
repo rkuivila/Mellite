@@ -24,7 +24,7 @@ object ActionNewWorkspace extends Action("Workspace...") {
 
   import KeyStrokes._
 
-  accelerator = Some(menu1 + Key.N)
+  accelerator = Some(menu1 + shift + Key.N)
 
   private def deleteRecursive(f: File): Boolean = {
     if (f.isDirectory) {

@@ -16,24 +16,23 @@ package gui
 package impl
 package document
 
-import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.{confluent, stm}
-import java.util.{Locale, Date}
 import java.text.SimpleDateFormat
-import de.sciss.file._
-import de.sciss.treetable.{TreeTableCellRenderer, TreeColumnModel, TreeTable, AbstractTreeModel}
-import de.sciss.synth.proc
+import java.util.{Date, Locale}
+
 import de.sciss.desktop
-import de.sciss.treetable.TreeTableSelectionChanged
-import de.sciss.model.Change
-import de.sciss.synth.proc.ExprImplicits
-import de.sciss.lucre.expr.{String => StringEx}
-import de.sciss.lucre.swing.deferTx
-import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.file._
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.swing.deferTx
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.{confluent, stm}
+import de.sciss.model.Change
+import de.sciss.synth.proc
+import de.sciss.synth.proc.ExprImplicits
+import de.sciss.treetable.{AbstractTreeModel, TreeColumnModel, TreeTable, TreeTableCellRenderer, TreeTableSelectionChanged}
 
-import scala.swing.{FormattedTextField, BorderPanel, ScrollPane, FlowPanel, Button, Action, Component}
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.swing.{Action, BorderPanel, Button, Component, FlowPanel, FormattedTextField, ScrollPane}
 
 object CursorsFrameImpl {
   type S = proc.Confluent
@@ -322,16 +321,16 @@ object CursorsFrameImpl {
           cursor.step { implicit tx =>
             implicit val dtxView  = workspace.system.durableTx _ // (tx)
             implicit val dtx      = dtxView(tx)
-            import StringEx.serializer
+            // import StringEx.serializer
             //            val nameD = ExprView.expr[D, String](elem.name)
             //            val name  = nameD.map()
             val name = ExprView.const[S, String](s"${workspace.folder.base} / ${elem.name.value}")
-            FolderFrame(name = name, isWorkspaceRoot = false)
+            FolderFrame[S](name = name, isWorkspaceRoot = false)
           }
         }
       }
       actionView.enabled = false
-      val ggView: Button = GUI.toolButton(actionView, raphael.Shapes.View, "View Document At Cursor Position")
+      val ggView: Button = GUI.viewButton(actionView, "View Document At Cursor Position")
 
       t.listenTo(t.selection)
       t.reactions += {
