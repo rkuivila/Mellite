@@ -674,7 +674,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
 
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         val folderObj = obj()
-        val nameView  = ExprView.attrExpr[S, String, StringElem](folderObj, ObjKeys.attrName)
+        val nameView  = ExprView.name(folderObj)
         Some(FolderFrame(nameView, folderObj.elem.peer))
       }
     }
@@ -1213,7 +1213,8 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
           // XXX TODO - all this casting is horrible
           implicit val ctx = tx.asInstanceOf[Confluent#Tx]
           implicit val ser = exprType.serializer[Confluent]
-          val w = new WindowImpl[Confluent](s"History for '$name'") {
+          val w = new WindowImpl[Confluent](ExprView.name[Confluent](obj().asInstanceOf[Obj[Confluent]],
+              "History for '", "'")) {
             val view = ExprHistoryView(cf, expr.asInstanceOf[Expr[Confluent, A]])
             init()
           }

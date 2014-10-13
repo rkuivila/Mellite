@@ -28,15 +28,13 @@ object FolderFrame {
     * @param isWorkspaceRoot  if `true`, closes the workspace when the window closes; if `false` does nothing
     *                         upon closing the window
     */
-  def apply[S <: Sys[S], S1 <: Sys[S1]](name: ExprView[S1#Tx, Option[String]], isWorkspaceRoot: Boolean)
-                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
-                         bridge: S#Tx => S1#Tx): FolderFrame[S] =
-    Impl(nameObs = name, folder = workspace.root(), isWorkspaceRoot = isWorkspaceRoot)
+  def apply[S <: Sys[S]](name: ExprView[S#Tx, String], isWorkspaceRoot: Boolean)
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] =
+    Impl(name = name, folder = workspace.root(), isWorkspaceRoot = isWorkspaceRoot)
 
-  def apply[S <: Sys[S], S1 <: Sys[S1]](name: ExprView[S1#Tx, Option[String]], folder: Folder[S])
-                                       (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
-                                        bridge: S#Tx => S1#Tx): FolderFrame[S] = {
-    Impl(nameObs = name, folder = folder, isWorkspaceRoot = false)
+  def apply[S <: Sys[S]](name: ExprView[S#Tx, String], folder: Folder[S])
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] = {
+    Impl(name = name, folder = folder, isWorkspaceRoot = false)
   }
 }
 

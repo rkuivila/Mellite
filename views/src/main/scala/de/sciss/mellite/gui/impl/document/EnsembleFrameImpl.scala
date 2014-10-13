@@ -22,17 +22,18 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc.Ensemble
 
 object EnsembleFrameImpl {
-  def apply[S <: Sys[S]](ensemble: Ensemble.Obj[S])
+  def apply[S <: Sys[S]](obj: Ensemble.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): EnsembleFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
-    val ensembleView      = EnsembleViewImpl(ensemble)
-    val res = new FrameImpl[S](ensembleView)
+    val ensembleView      = EnsembleViewImpl(obj)
+    val name  = ExprView.name(obj)
+    val res   = new FrameImpl[S](ensembleView, name)
     res.init()
     res
   }
 
-  private final class FrameImpl[S <: Sys[S]](val ensembleView: EnsembleViewImpl.Impl[S])
-    extends WindowImpl[S] with EnsembleFrame[S] {
+  private final class FrameImpl[S <: Sys[S]](val ensembleView: EnsembleViewImpl.Impl[S], name: ExprView[S#Tx, String])
+    extends WindowImpl[S](name) with EnsembleFrame[S] {
 
     def view = ensembleView
 

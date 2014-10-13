@@ -30,30 +30,16 @@ import de.sciss.synth.proc.Obj
 
 import scala.swing.{Component, FlowPanel, Action, Button, BorderPanel}
 
-object CollectionViewImpl {
-  sealed trait Update
-  final case class NamedChanged(name: String) extends Update
-
-  //  def apply[S <: Sys[S], S1 <: Sys[S1]](peer: View.Editable[S])(implicit tx: S#Tx): CollectionsViewImpl[S, S1] = {
-  //
-  //  }
-}
-trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
+trait CollectionViewImpl[S <: Sys[S]]
   extends ViewHasWorkspace[S]
   with View.Editable[S]
-  with ComponentHolder[Component]
-  with ModelImpl[CollectionViewImpl.Update] {
+  with ComponentHolder[Component] {
 
   impl =>
 
   // ---- abstract ----
 
   protected def peer: View.Editable[S]
-
-  protected def bridge: S#Tx => S1#Tx
-
-  protected def nameObserver: stm.Disposable[S1#Tx]
-  protected def mkTitle(sOpt: Option[String]): String
 
   protected def actionDelete: Action
 
@@ -100,15 +86,6 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
   final def init()(implicit tx: S#Tx): this.type = {
     deferTx(guiInit())
     this
-  }
-
-  private var _title: String = ""
-
-  def title: String = _title
-
-  final def nameUpdate(sOpt: Option[String]): Unit = {
-    _title = mkTitle(sOpt)
-    dispatch(CollectionViewImpl.NamedChanged(_title))
   }
 
   private final class AddAction(f: ObjView.Factory) extends Action(f.prefix) {
@@ -164,9 +141,6 @@ trait CollectionViewImpl[S <: Sys[S], S1 <: Sys[S1]]
     initGUI2()
     selectionChanged(selectedObjects)
   }
-
-  def dispose()(implicit tx: S#Tx): Unit =
-    nameObserver.dispose()(bridge(tx))
 }
 
 //class CollectionFrameImpl[S <: Sys[S]](val view: View[S])

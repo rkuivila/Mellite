@@ -80,7 +80,8 @@ object RecursionFrameImpl {
       }
     }
 
-    val res = new FrameImpl(view)
+    val name  = ExprView.name(obj)
+    val res   = new FrameImpl(view, name)
     res.init()
     res
   }
@@ -126,8 +127,8 @@ object RecursionFrameImpl {
     }
   }
 
-  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S])
-    extends WindowImpl[S] with RecursionFrame[S] {
+  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: ExprView[S#Tx, String])
+    extends WindowImpl[S](name) with RecursionFrame[S] {
 
     override protected def initGUI(): Unit =
       view.addListener { case viewData =>

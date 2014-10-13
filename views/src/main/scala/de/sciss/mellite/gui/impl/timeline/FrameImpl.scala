@@ -19,20 +19,19 @@ package timeline
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.synth.proc.Timeline
 import de.sciss.lucre.stm
-import de.sciss.desktop.{UndoManager, Window, KeyStrokes, Menu, OptionPane}
+import de.sciss.desktop.{Window, KeyStrokes, Menu, OptionPane}
 import scala.swing.event.Key
 import scala.swing.Action
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc
-import proc.Implicits._
 
 object FrameImpl {
   def apply[S <: Sys[S]](group: Timeline.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val tlv     = TimelineView[S](group)
-    val name    = group.attr.name
+    val name    = ExprView.name(group)
     import Timeline.serializer
     val groupH  = tx.newHandle(group.elem.peer)
     val res     = new Impl(tlv, name, groupH)
@@ -40,10 +39,10 @@ object FrameImpl {
     res
   }
 
-  private final class Impl[S <: Sys[S]](val view: TimelineView[S], name: String,
+  private final class Impl[S <: Sys[S]](val view: TimelineView[S], name: ExprView[S#Tx, String],
                                         groupH: stm.Source[S#Tx, Timeline[S]])
                                        (implicit _cursor: stm.Cursor[S])
-    extends WindowImpl[S](s"$name : Timeline")
+    extends WindowImpl[S](name.map(n => s"$n : Timeline"))
     with TimelineFrame[S] {
 
     override protected def initGUI(): Unit = {

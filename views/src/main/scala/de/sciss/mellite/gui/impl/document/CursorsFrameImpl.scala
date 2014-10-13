@@ -74,7 +74,7 @@ object CursorsFrameImpl {
                                  val created: Long, var updated: Long)
 
   private final class FrameImpl(val view: DocumentCursorsView) // (implicit cursor: stm.Cursor[D])
-    extends WindowImpl[D](s"${view.workspace.folder.base} : Cursors")
+    extends WindowImpl[D]()
     with DocumentCursorsFrame {
 
     impl =>
@@ -86,7 +86,8 @@ object CursorsFrameImpl {
     }
 
     override protected def initGUI(): Unit = {
-      windowFile = Some(workspace.folder)
+      title       = s"${view.workspace.folder.base} : Cursors"
+      windowFile  = Some(workspace.folder)
       // missing from WindowImpl because of system mismatch
       window.reactions += {
         case desktop.Window.Activated(_) =>
@@ -322,7 +323,10 @@ object CursorsFrameImpl {
             implicit val dtxView  = workspace.system.durableTx _ // (tx)
             implicit val dtx      = dtxView(tx)
             import StringEx.serializer
-            FolderFrame(name = ExprView.expr[D, String](elem.name).map(Some(_)), isWorkspaceRoot = false)
+            //            val nameD = ExprView.expr[D, String](elem.name)
+            //            val name  = nameD.map()
+            val name = ExprView.const[S, String](s"${workspace.folder.base} / ${elem.name.value}")
+            FolderFrame(name = name, isWorkspaceRoot = false)
           }
         }
       }

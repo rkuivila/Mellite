@@ -16,6 +16,7 @@ package gui
 package impl
 
 import de.sciss.desktop
+import de.sciss.lucre.stm
 import scala.swing.Action
 import de.sciss.lucre.event.Sys
 import de.sciss.file._
@@ -71,15 +72,18 @@ object WindowImpl {
 //  extends Window[S] with WindowHolder[desktop.Window] {
 //}
 
-abstract class WindowImpl[S <: Sys[S]](title0: Optional[String] = None)
+abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[ExprView[S#Tx, String]])
   extends Window[S] with WindowHolder[desktop.Window] {
-
   impl =>
+
+  def this() = this(None)
+  def this(titleExpr: ExprView[S#Tx, String]) = this(Some(titleExpr))
 
   protected def style: desktop.Window.Style = desktop.Window.Regular
 
   // final def window: desktop.Window = component
   private var windowImpl: WindowImpl.Peer[S] = _
+  private var titleObserver = Option.empty[stm.Disposable[S#Tx]]
 
   final protected def title        : String        = windowImpl.title
   final protected def title_=(value: String): Unit = windowImpl.title = value
@@ -97,12 +101,20 @@ abstract class WindowImpl[S <: Sys[S]](title0: Optional[String] = None)
       case wv: ViewHasWorkspace[S] => wv.workspace.addDependent(impl)
       case _ =>
     }
+
     deferTx(initGUI0())
+
+    titleExpr.foreach { ex =>
+      def update(s: String)(implicit tx: S#Tx): Unit = deferTx { title = s }
+
+      val obs = ex.react { implicit tx => now => update(now) }
+      titleObserver = Some(obs)
+      update(ex())
+    }
   }
 
   private def initGUI0(): Unit = {
     val f       = new WindowImpl.Peer(view, impl, undoRedoActions, style)
-    title0.foreach(f.title_=)
     window      = f
     windowImpl  = f
     val (ph, pv, pp) = placement
@@ -159,6 +171,8 @@ abstract class WindowImpl[S <: Sys[S]](title0: Optional[String] = None)
   def pack(): Unit = windowImpl.pack()
 
   def dispose()(implicit tx: S#Tx): Unit = {
+    titleObserver.foreach(_.dispose())
+
     view match {
       case wv: ViewHasWorkspace[S] => wv.workspace.removeDependent(this)
       case _ =>

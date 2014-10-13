@@ -40,22 +40,16 @@ import scala.collection.breakOut
 import scala.swing.event.Key
 
 object FolderFrameImpl {
-  def apply[S <: Sys[S], S1 <: Sys[S1]](nameObs: ExprView[S1#Tx, Option[String]],
-                                        folder: Folder[S],
-                                        isWorkspaceRoot: Boolean)(implicit tx: S#Tx,
-                                        workspace: Workspace[S], cursor: stm.Cursor[S],
-                                        bridge: S#Tx => S1#Tx): FolderFrame[S] = {
+  def apply[S <: Sys[S]](name: ExprView[S#Tx, String],
+                         folder: Folder[S],
+                         isWorkspaceRoot: Boolean)(implicit tx: S#Tx,
+                         workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val folderView      = FolderView(folder)
-    val name0           = nameObs()(bridge(tx))
-    val view            = new ViewImpl[S, S1](folderView) {
-      protected val nameObserver = nameObs.react { implicit tx => now =>
-        deferTx(nameUpdate(now))
-      } (bridge(tx))
-    }
+    val view            = new ViewImpl[S](folderView)
     view.init()
 
-    val res = new FrameImpl[S](view, name0 = name0, isWorkspaceRoot = isWorkspaceRoot)
+    val res = new FrameImpl[S](view, name = name, isWorkspaceRoot = isWorkspaceRoot)
     res.init()
     res
   }
@@ -68,20 +62,15 @@ object FolderFrameImpl {
       case _ =>
     }
 
-  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S, _], name0: Option[String],
+  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: ExprView[S#Tx, String],
                                              isWorkspaceRoot: Boolean)
-    extends WindowImpl[S] with FolderFrame[S] {
+    extends WindowImpl[S](name) with FolderFrame[S] {
 
     def workspace = view.workspace
 
     def folderView = view.peer
 
     override protected def initGUI(): Unit = {
-      view.addListener {
-        case CollectionViewImpl.NamedChanged(n) => title = n
-      }
-      view.nameUpdate(name0)
-
       addDuplicateAction(this, view.actionDuplicate)
     }
 
@@ -96,19 +85,16 @@ object FolderFrameImpl {
     }
   }
 
-  abstract class ViewImpl[S <: Sys[S], S1 <: Sys[S1]](val peer: FolderView[S])
-                                       (implicit val workspace: Workspace[S],
-                                        val cursor: stm.Cursor[S], val undoManager: UndoManager,
-                                        protected val bridge: S#Tx => S1#Tx)
-    extends CollectionViewImpl[S, S1]
+  final class ViewImpl[S <: Sys[S]](val peer: FolderView[S])
+                                   (implicit val workspace: Workspace[S],
+                                    val cursor: stm.Cursor[S], val undoManager: UndoManager)
+    extends CollectionViewImpl[S]
     {
 
     impl =>
 
-    protected def nameObserver: stm.Disposable[S1#Tx]
-
-    protected def mkTitle(sOpt: Option[String]): String =
-      s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Elements"
+    //    protected def mkTitle(sOpt: Option[String]): String =
+    //      s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Elements"
 
     protected type InsertConfig = Unit
 
@@ -122,6 +108,9 @@ object FolderFrameImpl {
       } (breakOut)
       CompoundEdit(edits, "Create Objects")
     }
+
+    def dispose()(implicit tx: S#Tx): Unit =
+      peer.dispose()
 
     final protected lazy val actionDelete: Action = Action(null) {
       val sel = peer.selection

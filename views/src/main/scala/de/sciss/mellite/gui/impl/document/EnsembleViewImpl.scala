@@ -19,7 +19,6 @@ package document
 import de.sciss.desktop.UndoManager
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.swing.{View, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
@@ -35,9 +34,7 @@ object EnsembleViewImpl {
                                                 cursor: stm.Cursor[S], undoManager: UndoManager): Impl[S] = {
     val ens     = ensObj.elem.peer
     val folder  = FolderView(ens.folder)
-    val folder1 = new FolderFrameImpl.ViewImpl[S, S](folder) {
-      protected def nameObserver: Disposable[S#Tx] = ExprView.DummyDisposable
-    }
+    val folder1 = new FolderFrameImpl.ViewImpl[S](folder)
     folder1.init()
     val playing = BooleanCheckBoxView(ens.playing, "Playing State")
     val transport = Transport[S](Mellite.auralSystem)
@@ -50,7 +47,7 @@ object EnsembleViewImpl {
   }
 
   final class Impl[S <: Sys[S]](ensembleH: stm.Source[S#Tx, Ensemble.Obj[S]], transport: Transport[S],
-                                        val view: FolderFrameImpl.ViewImpl[S, S], playing: View[S])
+                                        val view: FolderFrameImpl.ViewImpl[S], playing: View[S])
                                        (implicit val undoManager: UndoManager, val workspace: Workspace[S],
                                         val cursor: stm.Cursor[S])
     extends ComponentHolder[Component] with EnsembleView[S] { impl =>
@@ -77,7 +74,7 @@ object EnsembleViewImpl {
       ggPower.tooltip = "Toggle DSP"
 
       component = new BoxPanel(Orientation.Vertical) {
-        contents += folderView.component
+        contents += view.component
         contents += Separator()
         contents += VStrut(2)
         contents += new BoxPanel(Orientation.Horizontal) {
@@ -93,7 +90,7 @@ object EnsembleViewImpl {
 
     def dispose()(implicit tx: S#Tx): Unit = {
       transport .dispose()
-      folderView.dispose()
+      view      .dispose()
       playing   .dispose()
     }
   }

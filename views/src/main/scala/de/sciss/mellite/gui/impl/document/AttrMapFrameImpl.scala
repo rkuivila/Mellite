@@ -38,30 +38,26 @@ object AttrMapFrameImpl {
                                       cursor: stm.Cursor[S]): AttrMapFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val contents  = AttrMapView[S](obj)
-    val view      = new ViewImpl[S](contents) {
-      protected def nameObserver: Disposable[S#Tx] = ExprView.DummyDisposable
-    }
+    val view      = new ViewImpl[S](contents)
     view.init()
-    val name      = obj.attr.name
-    val res       = new FrameImpl[S](tx.newHandle(obj), view, title0 = s"$name : Attributes")
+    val name      = ExprView.name(obj)
+    val res       = new FrameImpl[S](tx.newHandle(obj), view, name = name)
     res.init()
     res
   }
 
-  private abstract class ViewImpl[S <: Sys[S]](val peer: AttrMapView[S])
-                                              (implicit val cursor: stm.Cursor[S], val undoManager: UndoManager)
-    extends CollectionViewImpl[S, S] {
+  private final class ViewImpl[S <: Sys[S]](val peer: AttrMapView[S])
+                                           (implicit val cursor: stm.Cursor[S], val undoManager: UndoManager)
+    extends CollectionViewImpl[S] {
 
     impl =>
 
     def workspace = peer.workspace
 
-    protected val bridge: S#Tx => S#Tx = identity
+    //    protected def mkTitle(sOpt: Option[String]): String =
+    //      s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Attributes"
 
-    protected def nameObserver: stm.Disposable[S#Tx]
-
-    protected def mkTitle(sOpt: Option[String]): String =
-      s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Attributes"
+    final def dispose()(implicit tx: S#Tx) = ()
 
     final protected lazy val actionDelete: Action = Action(null) {
       val sel = peer.selection
@@ -98,18 +94,14 @@ object AttrMapFrameImpl {
   }
 
   private final class FrameImpl[S <: Sys[S]](objH: stm.Source[S#Tx, Obj[S]], val view: ViewImpl[S],
-                                             title0: String)
+                                             name: ExprView[S#Tx, String])
                                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager)
-    extends WindowImpl[S]
+    extends WindowImpl[S](name.map(n => s"$n : Attributes"))
     with AttrMapFrame[S] {
 
     def contents: AttrMapView[S] = view.peer
 
     def component = contents.component
-
-    protected def nameObserver: Option[Disposable[S#Tx]] = None
-
-    protected def mkTitle(sOpt: Option[String]): String = sOpt.getOrElse("<Untitled>")
 
     protected def selectedObjects: List[ObjView[S]] = contents.selection.map(_._2)
 
@@ -125,7 +117,5 @@ object AttrMapFrameImpl {
         editOpt.foreach(undoManager.add)
       }
     }
-
-    override protected def initGUI(): Unit = title = title0
   }
 }

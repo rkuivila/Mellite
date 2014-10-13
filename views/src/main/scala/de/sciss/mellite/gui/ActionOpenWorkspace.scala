@@ -47,10 +47,9 @@ object ActionOpenWorkspace extends Action("Open...") {
       case eph: Workspace.Ephemeral =>
         implicit val csr        = eph.cursor
         implicit val workspace  = eph
-        val nameView = ExprView.const[proc.Durable, Option[String]](None)
+        val nameView = ExprView.const[proc.Durable, String](doc.folder.base)
         csr.step { implicit tx =>
-          FolderFrame[proc.Durable, proc.Durable](name = nameView,
-            isWorkspaceRoot = true)
+          FolderFrame[proc.Durable](name = nameView, isWorkspaceRoot = true)
         }
     }
   }

@@ -21,26 +21,27 @@ import de.sciss.synth.proc
 import proc.{AudioGraphemeElem, Obj}
 import de.sciss.file._
 import de.sciss.lucre.synth.Sys
-import proc.Implicits._
 
 object FrameImpl {
   def apply[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): AudioFileFrame[S] = {
     implicit val aural = Mellite.auralSystem
     val afv       = AudioFileView(obj)
-    val name      = obj.attr.name
+    val name0     = ExprView.name(obj)
     val file      = obj.elem.peer.value.artifact
     val fileName  = file.base
-    val title     = if (name == fileName) name else s"$name - $fileName"
-    val res       = new Impl(/* doc, */ view = afv, name = name, _file = file, title0 = title)
+    val name      = name0.map { n =>
+      if (n == fileName) n else s"$n- $fileName"
+    }
+    val res       = new Impl(/* doc, */ view = afv, name = name, _file = file)
     res.init()
     res
   }
 
-  private final class Impl[S <: Sys[S]](/* val document: Workspace[S], */ val view: AudioFileView[S], name: String,
-                                        _file: File, title0: String)
+  private final class Impl[S <: Sys[S]](/* val document: Workspace[S], */ val view: AudioFileView[S],
+                                        name: ExprView[S#Tx, String], _file: File)
                                        (implicit cursor: stm.Cursor[S])
-    extends WindowImpl[S](title0)
+    extends WindowImpl[S](name)
     with AudioFileFrame[S] {
 
     override protected def initGUI(): Unit = windowFile = Some(_file)
