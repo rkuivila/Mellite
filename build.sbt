@@ -8,11 +8,11 @@ lazy val fullDescr                  = "A computer music application based on Sou
 
 lazy val loggingEnabled             = true
 
-lazy val projectVersion             = "0.11.0-SNAPSHOT"
+lazy val projectVersion             = "0.11.0"
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.7.0-SNAPSHOT"
+lazy val soundProcessesVersion      = "2.7.0"
 
 lazy val interpreterPaneVersion     = "1.7.0"
 
@@ -24,9 +24,9 @@ lazy val strugatzkiVersion          = "2.6.0"
 
 // ---- views dependencies ----
 
-lazy val scalaColliderSwingVersion  = "1.20.0"
+lazy val scalaColliderSwingVersion  = "1.20.1"
 
-lazy val lucreSwingVersion          = "0.6.0-SNAPSHOT"
+lazy val lucreSwingVersion          = "0.6.0"
 
 lazy val audioWidgetsVersion        = "1.7.0"
 
