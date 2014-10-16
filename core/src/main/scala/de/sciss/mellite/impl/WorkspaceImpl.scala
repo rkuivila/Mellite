@@ -15,6 +15,7 @@ package de.sciss.mellite
 package impl
 
 import java.io.{FileInputStream, FileOutputStream, IOException, FileNotFoundException}
+import java.util.concurrent.TimeUnit
 import de.sciss.file._
 import de.sciss.lucre.{confluent, stm}
 import stm.store.BerkeleyDB
@@ -24,6 +25,7 @@ import scala.collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.lucre.stm.{TxnLike, DataStoreFactory, Disposable}
+import scala.concurrent.duration.Duration
 import scala.concurrent.stm.{Txn, Ref}
 import java.util.Properties
 import scala.language.existentials
@@ -90,9 +92,12 @@ object WorkspaceImpl {
   }
 
   private def openDataStore(dir: File, create: Boolean, confluent: Boolean): DataStoreFactory[BerkeleyDB] = {
-    val res   = BerkeleyDB.factory(dir, createIfNecessary = create)
-    val fos   = new FileOutputStream(dir / "open")
-    val prop  = new Properties()
+    val config          = BerkeleyDB.Config()
+    config.allowCreate  = create
+    config.lockTimeout  = Duration(1000, TimeUnit.MILLISECONDS)
+    val res             = BerkeleyDB.factory(dir, config)
+    val fos             = new FileOutputStream(dir / "open")
+    val prop            = new Properties()
     prop.setProperty("type", if (confluent) "confluent" else "ephemeral")
     prop.store(fos, "Mellite Workspace Meta-Info")
     fos.close()
@@ -241,6 +246,6 @@ object WorkspaceImpl {
     val inMemoryBridge = (tx: S#Tx) => Dur.inMemory(tx)
     def inMemoryCursor: stm.Cursor[I] = system.inMemory
 
-    protected def masterCursor = cursor
+    protected def masterCursor: stm.Cursor[S] = cursor
   }
 }
