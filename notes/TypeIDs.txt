@@ -61,15 +61,27 @@
 :: Extensions ::
 ::::::::::::::::
 
-Double
-	   0 to   36 - standard Numbers
+Boolean 1
+       0 to    0 - standard Boolean
+
+Boolean 2
+       0 to   15 - standard Boolean
+
+Int 1
+       0 to   13 - standard Int
+     100 to  100 - standard Int
+
+Int 2
+
+Double 1
+	   0 to   36 - standard Double
 	1000 to 1002 - ParamSpec
 
-String
-	0 to 0	 - standard Numbers
+String 1
+	   0 to    0 - standard String
 	1000 to 1000 - ParamSpec
 
-Warp
+Warp 1
 	1000 to 1000 - ParamSpec
 
 
