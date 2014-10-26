@@ -34,7 +34,7 @@ object ObjectActions {
     val name      = f.base
     val elem      = AudioGraphemeElem[S](audio)
     val obj       = Obj(elem)
-    obj.attr.name = name
+    obj.name = name
     // if (index == -1) folder.addLast(obj) else folder.insert(index, obj)
     obj
   }

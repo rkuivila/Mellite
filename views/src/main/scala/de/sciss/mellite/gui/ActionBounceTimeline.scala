@@ -100,7 +100,7 @@ object ActionBounceTimeline {
       xs match {
         case Code.Obj(objT) :: tail =>
           val res1 = objT.elem.peer.value match {
-            case ft: Code.FileTransform => res :+ Labeled(tx.newHandle(objT))(objT.attr.name)
+            case ft: Code.FileTransform => res :+ Labeled(tx.newHandle(objT))(objT.name)
             case _ => res
           }
           loop(tail, res1)
@@ -457,12 +457,12 @@ object ActionBounceTimeline {
               val deployed  = Grapheme.Expr.Audio(depArtif, spec, depOffset, depGain)
               val depElem   = AudioGraphemeElem(deployed)
               val depObj    = Obj(depElem)
-              depObj.attr.name = file.base
+              depObj.name = file.base
               val transformOpt = settings.transform.map(_.apply())
               val recursion = Recursion(group(), settings.span, depObj, settings.gain, settings.channels, transformOpt)
               val recElem   = Recursion.Elem(recursion)
               val recObj    = Obj(recElem)
-              recObj.attr.name = elemName
+              recObj.name = elemName
               document.root().addLast(depObj)
               document.root().addLast(recObj)
             }

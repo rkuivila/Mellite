@@ -53,7 +53,7 @@ object RecursionFrameImpl {
       val _aural    = Mellite.auralSystem
 
       private def mkView()(implicit tx: S#Tx): ViewData = {
-        val name      = obj.attr.name
+        val name      = obj.name
         val rec       = recH()
         val deployed  = rec.elem.peer.deployed.elem.peer.artifact.value
         val product   = rec.elem.peer.product.value

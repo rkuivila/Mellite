@@ -81,7 +81,7 @@ private[gui] object InterpreterFrameImpl {
       // "concurrent.duration._",
       "proc.Implicits._",
       "de.sciss.span.Span",
-      "MelliteDSL._",
+      // "MelliteDSL._",
       "gui.InterpreterFrame.Bindings._"
     )
 

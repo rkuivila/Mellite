@@ -103,7 +103,7 @@ object ActionArtifactLocation {
               case ArtifactLocationElem.Obj(objT) =>
                 val parent = objT.elem.peer.directory
                 if (Try(Artifact.relativize(parent, file)).isSuccess) {
-                  res :+ Labeled(tx.newHandle(objT))(objT.attr.name)
+                  res :+ Labeled(tx.newHandle(objT))(objT.name)
                 } else res
 
               case FolderElem.Obj(objT) =>
@@ -143,7 +143,7 @@ object ActionArtifactLocation {
     val peer  = ArtifactLocation[S](directory)
     val elem  = ArtifactLocationElem(peer)
     val obj   = Obj(elem)
-    obj.attr.name = name
+    obj.name = name
     obj
   }
 }

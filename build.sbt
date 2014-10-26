@@ -22,6 +22,8 @@ lazy val fscapeJobsVersion          = "1.4.1"
 
 lazy val strugatzkiVersion          = "2.6.0"
 
+lazy val bdb = "bdb6" // either "bdb" or "bdb6"
+
 // ---- views dependencies ----
 
 lazy val scalaColliderSwingVersion  = "1.20.1"
@@ -108,7 +110,7 @@ lazy val core: Project = Project(
     libraryDependencies ++= Seq(
       "de.sciss" %% "soundprocesses"        % soundProcessesVersion,  // computer-music framework
       "de.sciss" %% "scalainterpreterpane"  % interpreterPaneVersion, // REPL
-      "de.sciss" %% "lucrestm-bdb"          % lucreSTMVersion,        // database backend
+      "de.sciss" %% s"lucrestm-$bdb"        % lucreSTMVersion,        // database backend
       "de.sciss" %% "fscapejobs"            % fscapeJobsVersion,      // remote FScape invocation
       "de.sciss" %% "strugatzki"            % strugatzkiVersion       // feature extraction
     ),

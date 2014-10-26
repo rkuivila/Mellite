@@ -20,7 +20,6 @@ import javax.swing.undo.UndoableEdit
 import javax.swing.{Icon, SpinnerNumberModel, UIManager}
 
 import de.sciss.audiowidgets.AxisFormat
-import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{FileDialog, OptionPane}
 import de.sciss.file._
 import de.sciss.icons.raphael
@@ -30,15 +29,13 @@ import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{stm, event => evt}
 import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditFolderInsertObj}
-import de.sciss.mellite.gui.impl.document.FolderFrameImpl
 import de.sciss.model.Change
 import de.sciss.swingplus.{ComboBox, GroupPanel, Spinner}
 import de.sciss.synth.io.{AudioFileSpec, AudioFile, SampleFormat}
-import de.sciss.synth.proc
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.impl.{ElemImpl, FolderElemImpl}
 import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, Grapheme, IntElem, LongElem, Obj, ObjKeys, StringElem}
-import de.sciss.{desktop, lucre, mellite}
+import de.sciss.{desktop, lucre}
 
 import scala.swing.Swing.EmptyIcon
 import scala.swing.{Alignment, CheckBox, Component, Dialog, Label, TextField}
@@ -67,7 +64,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ObjView[S] = {
     val tid = obj.elem.typeID
     // getOrElse(sys.error(s"No view for type $tid"))
-    map.get(tid).fold(Generic(obj))(f => f(obj.asInstanceOf[Obj.T[S, f.E]]))
+    map.get(tid).fold[ObjView[S]](Generic(obj))(f => f(obj.asInstanceOf[Obj.T[S, f.E]]))
   }
 
   private var map = scala.Predef.Map[_Int, Factory](
@@ -94,7 +91,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     val icon = raphaelIcon(raphael.Shapes.No)
 
     def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ObjView[S] = {
-      val name = obj.attr.name
+      val name = obj.name
       new Generic.Impl(tx.newHandle(obj), name)
     }
 
@@ -123,7 +120,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = ElemImpl.String.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, StringElem])(implicit tx: S#Tx): ObjView[S] = {
-      val name        = obj.attr.name
+      val name        = obj.name
       val ex          = obj.elem.peer
       val value       = ex.value
       val isEditable  = ex match {
@@ -146,7 +143,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def make[S <: Sys[S]](config: (_String, _String))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = Obj(StringElem(StringEx.newVar(StringEx.newConst[S](value))))
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -184,7 +181,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = ElemImpl.Int.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, IntElem])(implicit tx: S#Tx): ObjView[S] = {
-      val name        = obj.attr.name
+      val name        = obj.name
       val ex          = obj.elem.peer
       val value       = ex.value
       val isEditable  = ex match {
@@ -208,7 +205,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def make[S <: Sys[S]](config: (String, _Int))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = Obj(IntElem(IntEx.newVar(IntEx.newConst[S](value))))
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -225,7 +222,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       def icon    = Int.icon
       def typeID  = Int.typeID
 
-      def exprType = lucre.expr.Int
+      def exprType = IntEx
 
       def expr(implicit tx: S#Tx) = obj().elem.peer
 
@@ -250,7 +247,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = ElemImpl.Long.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, LongElem])(implicit tx: S#Tx): ObjView[S] = {
-      val name        = obj.attr.name
+      val name        = obj.name
       val ex          = obj.elem.peer
       val value       = ex.value
       val isEditable  = ex match {
@@ -273,7 +270,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def make[S <: Sys[S]](config: (String, _Long))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = Obj(LongElem(LongEx.newVar(LongEx.newConst[S](value))))
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -289,9 +286,9 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       def icon    = Long.icon
       def typeID  = Long.typeID
 
-      def exprType = lucre.expr.Long
+      def exprType = LongEx
 
-      def expr(implicit tx: S#Tx) = obj().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Long] = obj().elem.peer
 
       def convertEditValue(v: Any): Option[_Long] = v match {
         case num: _Long => Some(num)
@@ -314,7 +311,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = ElemImpl.Double.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, DoubleElem])(implicit tx: S#Tx): ObjView[S] = {
-      val name        = obj.attr.name
+      val name        = obj.name
       val ex          = obj.elem.peer
       val value       = ex.value
       val isEditable  = ex match {
@@ -337,7 +334,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def make[S <: Sys[S]](config: (String, _Double))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = Obj(DoubleElem(DoubleEx.newVar(DoubleEx.newConst[S](value))))
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -353,9 +350,9 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       def icon    = Double.icon
       def typeID  = Double.typeID
 
-      def exprType = lucre.expr.Double
+      def exprType = DoubleEx
 
-      def expr(implicit tx: S#Tx) = obj().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Double] = obj().elem.peer
 
       def convertEditValue(v: Any): Option[_Double] = v match {
         case num: _Double => Some(num)
@@ -378,7 +375,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = ElemImpl.Boolean.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, BooleanElem])(implicit tx: S#Tx): ObjView[S] = {
-      val name        = obj.attr.name
+      val name        = obj.name
       val ex          = obj.elem.peer
       val value       = ex.value
       val isEditable  = ex match {
@@ -400,7 +397,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def make[S <: Sys[S]](config: (String, _Boolean))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = Obj(BooleanElem(BooleanEx.newVar(BooleanEx.newConst[S](value))))
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -415,7 +412,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       def icon    = Boolean.icon
       def typeID  = Boolean.typeID
 
-      def expr(implicit tx: S#Tx) = obj().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Boolean] = obj().elem.peer
     }
   }
 
@@ -428,7 +425,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = ElemImpl.AudioGrapheme.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])(implicit tx: S#Tx): ObjView[S] = {
-      val name  = obj.attr.name
+      val name  = obj.name
       val value = obj.elem.peer.value
       new AudioGrapheme.Impl(tx.newHandle(obj), name, value)
     }
@@ -457,7 +454,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
           val objLoc  = ActionArtifactLocation.create(name = name, directory = directory)
           (objLoc :: Nil, objLoc)
       }
-      loc.elem.peer.modifiableOption.fold(list0) { locM =>
+      loc.elem.peer.modifiableOption.fold[List[Obj[S]]](list0) { locM =>
         val audioObj = ObjectActions.mkAudioFile(locM, config.file, config.spec)
         audioObj :: list0
       }
@@ -520,7 +517,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       def typeID  = ElemImpl.ArtifactLocation.typeID
 
       def apply[S <: Sys[S]](obj: ArtifactLocationElem.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
-        val name      = obj.attr.name
+        val name      = obj.name
         val peer      = obj.elem.peer
         val value     = peer.directory
         val editable  = peer.modifiableOption.isDefined
@@ -539,7 +536,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
         val peer  = _ArtifactLocation[S](directory)
         val elem  = ArtifactLocationElem(peer)
         val obj   = Obj(elem)
-        obj.attr.name = name
+        obj.name = name
         obj :: Nil
       }
 
@@ -588,7 +585,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = _Recursion.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Recursion.Elem])(implicit tx: S#Tx): ObjView[S] = {
-      val name      = obj.attr.name
+      val name      = obj.name
       val value     = obj.elem.peer.deployed.elem.peer.artifact.value
       new Recursion.Impl(tx.newHandle(obj), name, value)
     }
@@ -636,7 +633,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = FolderElemImpl.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, FolderElem])(implicit tx: S#Tx): ObjView[S] = {
-      val name  = obj.attr.name
+      val name  = obj.name
       new Folder.Impl(tx.newHandle(obj), name)
     }
 
@@ -655,7 +652,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       val elem  = FolderElem(_Folder[S])
       val obj   = Obj(elem)
       val imp   = ExprImplicits[S]
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -689,7 +686,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = ElemImpl.Proc.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Proc.Elem])(implicit tx: S#Tx): ObjView[S] = {
-      val name  = obj.attr.name
+      val name  = obj.name
       new Proc.Impl(tx.newHandle(obj), name)
     }
 
@@ -708,7 +705,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       val peer  = _Proc[S]
       val elem  = _Proc.Elem(peer)
       val obj   = Obj(elem)
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -743,7 +740,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID  = _Timeline.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Timeline.Elem])(implicit tx: S#Tx): ObjView[S] = {
-      val name  = obj.attr.name
+      val name  = obj.name
       new Timeline.Impl(tx.newHandle(obj), name)
     }
 
@@ -762,7 +759,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       val peer = _Timeline[S] // .Modifiable[S]
       val elem = _Timeline.Elem(peer)
       val obj = Obj(elem)
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -806,7 +803,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID          = _Code.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Code.Elem])(implicit tx: S#Tx): ObjView[S] = {
-      val name    = obj.attr.name
+      val name    = obj.name
       val value   = obj.elem.peer.value
       new Code.Impl(tx.newHandle(obj), name, value)
     }
@@ -850,7 +847,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       val (name, value) = config
       val peer  = _Code.Expr.newVar[S](_Code.Expr.newConst(value))
       val obj   = Obj(_Code.Elem(peer))
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -890,7 +887,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID          = ElemImpl.FadeSpec.typeID
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _FadeSpec.Elem])(implicit tx: S#Tx): ObjView[S] = {
-      val name    = obj.attr.name
+      val name    = obj.name
       val value   = obj.elem.peer.value
       new FadeSpec.Impl(tx.newHandle(obj), name, value)
     }
@@ -954,7 +951,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID          = _Action.typeID
 
     def apply[S <: Sys[S]](obj: _Action.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
-      val name    = obj.attr.name
+      val name    = obj.name
       // val value   = obj.elem.peer.value
       new Action.Impl(tx.newHandle(obj), name)
     }
@@ -974,7 +971,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       val peer = _Action.Var(_Action.empty[S])
       val elem = _Action.Elem(peer)
       val obj = Obj(elem)
-      obj.attr.name = name
+      obj.name = name
       obj :: Nil
     }
 
@@ -1008,7 +1005,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     def typeID          = _Ensemble.typeID
 
     def apply[S <: Sys[S]](obj: _Ensemble.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
-      val name    = obj.attr.name
+      val name    = obj.name
       // val value   = obj.elem.peer.value
       val ens     = obj.elem.peer
       val playingEx = ens.playing
@@ -1065,7 +1062,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       val playing   = BooleanEx.newVar(BooleanEx.newConst[S](config.playing))
       val elem      = _Ensemble.Elem(_Ensemble[S](folder, offset, playing))
       val obj       = Obj(elem)
-      obj.attr.name = config.name
+      obj.name = config.name
       obj :: Nil
     }
 
@@ -1239,7 +1236,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
   trait BooleanExprLike[S <: Sys[S]] extends ExprLike[S, _Boolean] {
     _: ObjView[S] =>
 
-    def exprType = lucre.expr.Boolean
+    def exprType = BooleanEx
 
     def convertEditValue(v: Any): Option[_Boolean] = v match {
       case num: _Boolean  => Some(num)
