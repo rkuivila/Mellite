@@ -17,6 +17,7 @@ package impl
 
 import de.sciss.desktop
 import de.sciss.lucre.stm
+import de.sciss.synth.proc.SoundProcesses
 import scala.swing.Action
 import de.sciss.lucre.event.Sys
 import de.sciss.file._
@@ -157,9 +158,11 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[ExprView[S#Tx,
 
   protected def performClose(): Unit =
     view match {
-      case cv: View.Cursor[S] => cv.cursor.step { implicit tx =>
-        dispose()
-      }
+      case cv: View.Cursor[S] =>
+        windowImpl.visible = false
+        SoundProcesses.atomic[S, Unit] { implicit tx =>
+          dispose()
+        } (cv.cursor)
       case _ =>
     }
 

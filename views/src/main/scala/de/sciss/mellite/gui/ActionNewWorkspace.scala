@@ -14,6 +14,11 @@
 package de.sciss.mellite
 package gui
 
+import java.util.concurrent.TimeUnit
+
+import de.sciss.lucre.stm.store.BerkeleyDB
+
+import scala.concurrent.duration.Duration
 import scala.swing.{Label, Dialog, Action}
 import de.sciss.desktop.{OptionPane, FileDialog, KeyStrokes}
 import util.control.NonFatal
@@ -75,12 +80,14 @@ object ActionNewWorkspace extends Action("Workspace...") {
       }
 
       try {
+        val config          = BerkeleyDB.Config()
+        config.lockTimeout  = Duration(Prefs.dbLockTimeout.getOrElse(Prefs.defaultDbLockTimeout), TimeUnit.MILLISECONDS)
         if (confluent) {
-          val doc = Workspace.Confluent.empty(folder)
+          val doc = Workspace.Confluent.empty(folder, config)
           // XXX TODO: SetFile -a E <folder>
           ActionOpenWorkspace.openGUI(doc)
         } else {
-          val doc = Workspace.Ephemeral.empty(folder)
+          val doc = Workspace.Ephemeral.empty(folder, config)
           ActionOpenWorkspace.openGUI(doc)
         }
 

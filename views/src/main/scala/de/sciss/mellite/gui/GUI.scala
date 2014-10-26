@@ -15,17 +15,24 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.desktop.KeyStrokes
+import java.awt.event.{ActionEvent, ActionListener}
+import java.awt.geom.Path2D
+import javax.swing.{SwingUtilities, Icon, JComponent, KeyStroke}
 
+import de.sciss.desktop.{OptionPane, KeyStrokes}
+import de.sciss.icons.raphael
+import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm
+import de.sciss.lucre.swing.{defer, requireEDT}
+import de.sciss.mellite.gui.impl.WindowImpl
+import de.sciss.swingplus.{DoClickAction, GroupPanel}
+import de.sciss.synth.proc.SoundProcesses
+
+import scala.annotation.tailrec
+import scala.concurrent.Future
 import scala.swing.Swing._
 import scala.swing.event.Key
-import scala.swing.{Action, Color, Button, AbstractButton, Dialog, Component, TextField, Label, Alignment}
-import javax.swing.{KeyStroke, JComponent, Icon}
-import de.sciss.swingplus.{DoClickAction, GroupPanel}
-import de.sciss.icons.raphael
-import java.awt.geom.Path2D
-import de.sciss.mellite.gui.impl.WindowImpl
-import scala.annotation.tailrec
+import scala.swing.{AbstractButton, Action, Alignment, Button, Color, Component, Dialog, Label, TextField}
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
@@ -138,6 +145,34 @@ object GUI {
   def removeButton(action: Action, tooltip: String = ""): Button = {
     val res = toolButton(action, raphael.Shapes.Minus, tooltip)
     addGlobalKey(res, KeyStrokes.menu1 + Key.BackSpace)
+    res
+  }
+
+  def atomic[S <: Sys[S], A](title: String, message: String, window: Option[desktop.Window] = None,
+                             timeout: Int = 1000)(fun: S#Tx => A)
+                            (implicit cursor: stm.Cursor[S]): Future[A] = {
+    requireEDT()
+    val res = SoundProcesses.atomic[S, A](fun)
+    var opt: OptionPane[Unit] = null
+    val t = new javax.swing.Timer(timeout, new ActionListener {
+      def actionPerformed(e: ActionEvent): Unit = {
+        if (!res.isCompleted) {
+          opt = OptionPane.message(message = s"$message…")
+          opt.show(window, title)
+        }
+      }
+    })
+    t.setRepeats(false)
+    t.start()
+    res.onComplete { _ =>
+      t.stop()
+      defer {
+        if (opt != null) {
+          val w = SwingUtilities.getWindowAncestor(opt.peer)
+          if (w != null) w.dispose()
+        }
+      }
+    }
     res
   }
 }

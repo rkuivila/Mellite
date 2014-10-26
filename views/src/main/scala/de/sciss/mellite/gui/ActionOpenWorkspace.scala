@@ -14,14 +14,24 @@
 package de.sciss.mellite
 package gui
 
-import swing.{Dialog, Action}
-import de.sciss.desktop.{Menu, RecentFiles, FileDialog, KeyStrokes}
-import util.control.NonFatal
+import java.util.concurrent.TimeUnit
+import javax.swing.SwingUtilities
+
+import de.sciss.desktop
+import de.sciss.desktop.{KeyStrokes, OptionPane, FileDialog, Menu, RecentFiles}
 import de.sciss.file._
+import de.sciss.lucre.stm.store.BerkeleyDB
+import de.sciss.lucre.swing.defer
 import de.sciss.lucre.synth.Sys
-import language.existentials
-import scala.swing.event.Key
 import de.sciss.synth.proc
+import de.sciss.synth.proc.SoundProcesses
+
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Future, blocking}
+import scala.language.existentials
+import scala.swing.event.Key
+import scala.swing.{Action, Dialog}
+import scala.util.{Failure, Success}
 
 object ActionOpenWorkspace extends Action("Open...") {
   import KeyStrokes._
@@ -40,16 +50,17 @@ object ActionOpenWorkspace extends Action("Open...") {
     Application.documentHandler.addDocument(doc)
     doc match {
       case cf: Workspace.Confluent =>
-        implicit val workspace = cf
-        (cf: Workspace.Confluent).system.durable.step { implicit tx =>
-          DocumentCursorsFrame(cf)
+        implicit val workspace: Workspace.Confluent  = cf
+        implicit val cursor = workspace.system.durable
+        GUI.atomic[proc.Durable, Unit](fullTitle, s"Opening cursor window for '${doc.folder.base}'") {
+          implicit tx => DocumentCursorsFrame(cf)
         }
       case eph: Workspace.Ephemeral =>
-        implicit val csr        = eph.cursor
         implicit val workspace  = eph
+        implicit val cursor     = eph.cursor
         val nameView = ExprView.const[proc.Durable, String](doc.folder.base)
-        csr.step { implicit tx =>
-          FolderFrame[proc.Durable](name = nameView, isWorkspaceRoot = true)
+        GUI.atomic[proc.Durable, Unit](fullTitle, s"Opening root elements window for '${doc.folder.base}'") {
+          implicit tx => FolderFrame[proc.Durable](name = nameView, isWorkspaceRoot = true)
         }
     }
   }
@@ -81,21 +92,37 @@ object ActionOpenWorkspace extends Action("Open...") {
       openView(doc1)
     }
 
-  private def doOpen(folder: File): Unit =
-    try {
-      val doc = Workspace /* .Confluent */ .read(folder)
-      doc match {
-        case cf : Workspace.Confluent => openGUI(cf )
-        case dur: Workspace.Ephemeral => openGUI(dur)
-      }
-      // openGUI(doc)
+  private def doOpen(folder: File): Unit = {
+    import SoundProcesses.executionContext
+    val config          = BerkeleyDB.Config()
+    config.lockTimeout  = Duration(Prefs.dbLockTimeout.getOrElse(Prefs.defaultDbLockTimeout), TimeUnit.MILLISECONDS)
+    val fut: Future[WorkspaceLike] = Future(blocking(Workspace.read(folder, config)))
 
-    } catch {
-      case NonFatal(e) =>
-        Dialog.showMessage(
-          message     = s"Unable to create new workspace ${folder.path}\n\n${GUI.formatException(e)}",
-          title       = fullTitle,
-          messageType = Dialog.Message.Error
-        )
+    var opt: OptionPane[Unit] = null
+    desktop.Util.delay(1000) {
+      if (!fut.isCompleted) {
+        opt = OptionPane.message(message = s"Reading '$folder'…")
+        opt.show(None, "Open Workspace")
+      }
     }
+    fut.onComplete { tr =>
+      defer {
+        if (opt != null) {
+          val w = SwingUtilities.getWindowAncestor(opt.peer)
+          if (w != null) w.dispose()
+        }
+        tr match {
+          case Success(cf : Workspace.Confluent) => openGUI(cf )
+          case Success(dur: Workspace.Ephemeral) => openGUI(dur)
+          case Failure(e) =>
+            Dialog.showMessage(
+              message     = s"Unable to create new workspace ${folder.path}\n\n${GUI.formatException(e)}",
+              title       = fullTitle,
+              messageType = Dialog.Message.Error
+            )
+          // case _ =>
+        }
+      }
+    }
+  }
 }

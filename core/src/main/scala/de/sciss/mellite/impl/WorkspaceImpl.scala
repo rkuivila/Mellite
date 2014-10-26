@@ -14,20 +14,23 @@
 package de.sciss.mellite
 package impl
 
-import java.io.{FileInputStream, FileOutputStream, IOException, FileNotFoundException}
-import java.util.concurrent.TimeUnit
-import de.sciss.file._
-import de.sciss.lucre.{confluent, stm}
-import stm.store.BerkeleyDB
-import de.sciss.synth.proc.{Durable => Dur, Confluent, Obj, Folder, FolderElem, ExprImplicits}
-import de.sciss.serial.{DataInput, Serializer, DataOutput}
-import scala.collection.immutable.{IndexedSeq => Vec}
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.synth.{Sys => SSys}
-import de.sciss.lucre.stm.{TxnLike, DataStoreFactory, Disposable}
-import scala.concurrent.duration.Duration
-import scala.concurrent.stm.{Txn, Ref}
+import java.io.{FileInputStream, FileNotFoundException, FileOutputStream, IOException}
 import java.util.Properties
+import java.util.concurrent.TimeUnit
+
+import de.sciss.file._
+import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm.store.BerkeleyDB
+import de.sciss.lucre.stm.{DataStoreFactory, Disposable, TxnLike}
+import de.sciss.lucre.{confluent, stm}
+import de.sciss.lucre.synth.{Sys => SSys}
+import de.sciss.serial.{DataInput, DataOutput, Serializer}
+import de.sciss.synth.proc.{Durable => Dur, SoundProcesses, Confluent, ExprImplicits, Folder, FolderElem, Obj}
+import SoundProcesses.atomic
+
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.concurrent.duration.Duration
+import scala.concurrent.stm.{Ref, Txn}
 import scala.language.existentials
 
 object WorkspaceImpl {
@@ -56,7 +59,7 @@ object WorkspaceImpl {
   private def requireExistsNot(dir: File): Unit =
     if (dir.exists()) throw new IOException(s"Workspace ${dir.path} already exists")
 
-  def read(dir: File): Workspace[_] /* [~ forSome { type ~ <: SSys[~] }] */ = {
+  def read(dir: File, config: BerkeleyDB.Config): WorkspaceLike = {
     requireExists(dir)
     val fis   = new FileInputStream(dir / "open")
     val prop  = new Properties
@@ -67,34 +70,38 @@ object WorkspaceImpl {
       case "ephemeral"  => false
       case other        => sys.error(s"Invalid property 'type': $other")
     }
-    val res = if (confluent) readConfluent(dir) else readEphemeral(dir)
+    val res = if (confluent) readConfluent(dir, config) else readEphemeral(dir, config)
     res // .asInstanceOf[Workspace[~ forSome { type ~ <: SSys[~] }]]
   }
 
-  def readConfluent(dir: File): Workspace.Confluent = {
+  private def setAllowCreate(in: BerkeleyDB.Config, value: Boolean): BerkeleyDB.Config =
+    if (in.allowCreate == value) in else {
+      val b = BerkeleyDB.ConfigBuilder(in)
+      b.allowCreate = value
+      b.build
+    }
+
+  def readConfluent(dir: File, config: BerkeleyDB.Config): Workspace.Confluent = {
     requireExists(dir)
-    applyConfluent(dir, create = false)
+    applyConfluent(dir, config = setAllowCreate(config, value = false))
   }
 
-  def emptyConfluent(dir: File): Workspace.Confluent = {
+  def emptyConfluent(dir: File, config: BerkeleyDB.Config): Workspace.Confluent = {
     requireExistsNot(dir)
-    applyConfluent(dir, create = true)
+    applyConfluent(dir, config = setAllowCreate(config, value = true))
   }
 
-  def readEphemeral(dir: File): Workspace.Ephemeral = {
+  def readEphemeral(dir: File, config: BerkeleyDB.Config): Workspace.Ephemeral = {
     requireExists(dir)
-    applyEphemeral(dir, create = false)
+    applyEphemeral(dir, config = setAllowCreate(config, value = false))
   }
 
-  def emptyEphemeral(dir: File): Workspace.Ephemeral = {
+  def emptyEphemeral(dir: File, config: BerkeleyDB.Config): Workspace.Ephemeral = {
     requireExistsNot(dir)
-    applyEphemeral(dir, create = true)
+    applyEphemeral(dir, config = setAllowCreate(config, value = true))
   }
 
-  private def openDataStore(dir: File, create: Boolean, confluent: Boolean): DataStoreFactory[BerkeleyDB] = {
-    val config          = BerkeleyDB.Config()
-    config.allowCreate  = create
-    config.lockTimeout  = Duration(1000, TimeUnit.MILLISECONDS)
+  private def openDataStore(dir: File, config: BerkeleyDB.Config, confluent: Boolean): DataStoreFactory[BerkeleyDB] = {
     val res             = BerkeleyDB.factory(dir, config)
     val fos             = new FileOutputStream(dir / "open")
     val prop            = new Properties()
@@ -104,9 +111,9 @@ object WorkspaceImpl {
     res
   }
 
-  private def applyConfluent(dir: File, create: Boolean): Workspace.Confluent = {
+  private def applyConfluent(dir: File, config: BerkeleyDB.Config): Workspace.Confluent = {
     type S    = Cf
-    val fact  = openDataStore(dir, create = create, confluent = true)
+    val fact  = openDataStore(dir, config = config, confluent = true)
     implicit val system: S = Confluent(fact)
 
     val (access, cursors) = system.rootWithDurable[Data[S], Cursors[S, S#D]] { implicit tx =>
@@ -126,9 +133,9 @@ object WorkspaceImpl {
     new ConfluentImpl(dir, system, access, cursors)
   }
 
-  private def applyEphemeral(dir: File, create: Boolean): Workspace.Ephemeral = {
+  private def applyEphemeral(dir: File, config: BerkeleyDB.Config): Workspace.Ephemeral = {
     type S    = Dur
-    val fact  = openDataStore(dir, create = create, confluent = false)
+    val fact  = openDataStore(dir, config = config, confluent = false)
     implicit val system: S = Dur(fact)
 
     val access = system.root[Data[S]] { implicit tx =>
@@ -202,8 +209,11 @@ object WorkspaceImpl {
       b.result()
     }
 
-    final def close(): Unit = masterCursor.step { implicit tx =>
-      dispose()
+    final def close(): Unit = {
+      implicit val cursor = masterCursor
+      atomic[S, Unit] { implicit tx =>
+        dispose()
+      }
     }
 
     final def dispose()(implicit tx: S#Tx): Unit = {

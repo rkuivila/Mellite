@@ -40,6 +40,11 @@ object Prefs {
       }
   }
 
+  // ---- system ----
+
+  final val defaultDbLockTimeout = 1000
+  def dbLockTimeout: Entry[Int] = userPrefs("lock-timeout")
+
   // ---- gui ----
 
   def defaultLookAndFeel: LookAndFeelInfo =

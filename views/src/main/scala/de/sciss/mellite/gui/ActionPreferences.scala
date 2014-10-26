@@ -93,17 +93,23 @@ object ActionPreferences extends Action("Preferences...") {
     val lbSensorChannels = label("Sensor Channels")
     val ggSensorChannels = intField(Prefs.sensorChannels, Prefs.defaultSensorChannels)
 
+    // ---- system ----
+    val sepDatabase = Separator()
+
+    val lbLockTimeout   = label("Database Lock Timeout [ms]")
+    val ggLockTimeout   = intField(Prefs.dbLockTimeout, Prefs.defaultDbLockTimeout)
+
     // ---- panel ----
 
     val box = new GroupPanel {
       // val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
-      horizontal = Par(sepAudio, sepSensor, sepAudioAdvanced, sepAudioHeadphones, Seq(
+      horizontal = Par(sepAudio, sepSensor, sepAudioAdvanced, sepAudioHeadphones, sepDatabase, Seq(
         Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAutoBoot, lbAudioDevice, lbNumInputs, lbNumOutputs,
           lbSampleRate, lbBlockSize, lbNumPrivate, lbNumWireBufs, lbHeadphones, lbSensorProtocol, lbSensorPort,
-          lbSensorCommand, lbSensorChannels),
+          lbSensorCommand, lbSensorChannels, lbLockTimeout),
         Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAutoBoot, ggAudioDevice, ggNumInputs, ggNumOutputs,
           ggSampleRate, ggNumPrivate, ggBlockSize, ggNumWireBufs, ggHeadphones, ggSensorProtocol, ggSensorPort,
-          ggSensorCommand, ggSensorChannels)
+          ggSensorCommand, ggSensorChannels, ggLockTimeout)
       ))
       vertical = Seq(
         Par(Baseline)(lbLookAndFeel     , ggLookAndFeel     ),
@@ -125,7 +131,9 @@ object ActionPreferences extends Action("Preferences...") {
         Par(Baseline)(lbSensorProtocol  , ggSensorProtocol  ),
         Par(Baseline)(lbSensorPort      , ggSensorPort      ),
         Par(Baseline)(lbSensorCommand   , ggSensorCommand   ),
-        Par(Baseline)(lbSensorChannels  , ggSensorChannels  )
+        Par(Baseline)(lbSensorChannels  , ggSensorChannels  ),
+        sepDatabase,
+        Par(Baseline)(lbLockTimeout     , ggLockTimeout     )
       )
     }
 

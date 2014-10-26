@@ -23,7 +23,7 @@ import de.sciss.lucre.swing.{View, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
 import de.sciss.swingplus.Separator
-import de.sciss.synth.proc.{Transport, Ensemble}
+import de.sciss.synth.proc.{SoundProcesses, Transport, Ensemble}
 
 import scala.swing.event.ButtonClicked
 import scala.swing.{Swing, Label, ToggleButton, Orientation, BoxPanel, Component}
@@ -61,11 +61,12 @@ object EnsembleViewImpl {
         listenTo(this)
         reactions += {
           case ButtonClicked(_) =>
-            impl.cursor.step { implicit tx =>
+            val sel = selected
+            SoundProcesses.atomic[S, Unit] { implicit tx =>
               transport.stop()
               transport.seek(0L)
-              if (selected) transport.play()
-            }
+              if (sel) transport.play()
+            } (impl.cursor)
         }
       }
       val shpPower = raphael.Shapes.Power _

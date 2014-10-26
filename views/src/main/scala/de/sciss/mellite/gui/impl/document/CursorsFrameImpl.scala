@@ -316,9 +316,10 @@ object CursorsFrameImpl {
 
       val actionView = Action(null) {
         t.selection.paths.foreach { path =>
-          val elem = path.last.elem
+          val view  = path.last
+          val elem  = view.elem
           implicit val cursor = elem.cursor
-          cursor.step { implicit tx =>
+          GUI.atomic[S, Unit]("View Elements", s"Opening root elements window for '${view.name}'") { implicit tx =>
             implicit val dtxView  = workspace.system.durableTx _ // (tx)
             implicit val dtx      = dtxView(tx)
             // import StringEx.serializer

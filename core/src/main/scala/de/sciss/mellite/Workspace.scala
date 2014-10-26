@@ -14,6 +14,7 @@
 package de.sciss.mellite
 
 import java.io.File
+import de.sciss.lucre.stm.store.BerkeleyDB
 import de.sciss.lucre.{expr, event => evt, bitemp, stm}
 import bitemp.BiGroup
 import de.sciss.synth.proc
@@ -37,11 +38,11 @@ object Workspace {
 
   type Transports  [S <: SSys[S]] = expr.List.Modifiable[S, Transport[S], Unit] // Transport.Update[ S, Proc[ S ]]]
 
-  def read (dir: File): Workspace[_] /* [~ forSome { type ~ <: SSys[~] }] */ = Impl.read(dir)
+  def read (dir: File, config: BerkeleyDB.Config): WorkspaceLike = Impl.read(dir, config)
 
   object Confluent {
-    def read (dir: File): Confluent = Impl.readConfluent (dir)
-    def empty(dir: File): Confluent = Impl.emptyConfluent(dir)
+    def read (dir: File, config: BerkeleyDB.Config): Confluent = Impl.readConfluent (dir, config)
+    def empty(dir: File, config: BerkeleyDB.Config): Confluent = Impl.emptyConfluent(dir, config)
   }
 
   trait Confluent extends Workspace[proc.Confluent] {
@@ -55,8 +56,8 @@ object Workspace {
   }
   
   object Ephemeral {
-    def read (dir: File): Ephemeral = Impl.readEphemeral (dir)
-    def empty(dir: File): Ephemeral = Impl.emptyEphemeral(dir)
+    def read (dir: File, config: BerkeleyDB.Config): Ephemeral = Impl.readEphemeral (dir, config)
+    def empty(dir: File, config: BerkeleyDB.Config): Ephemeral = Impl.emptyEphemeral(dir, config)
   }
   trait Ephemeral extends Workspace[proc.Durable] {
     type S = proc.Durable
@@ -69,13 +70,16 @@ object Workspace {
       BiGroup.Modifiable.serializer[S, Proc[S], Proc.Update[S]](_.changed)
   }
 }
+sealed trait WorkspaceLike {
+  def folder: File
 
-sealed trait Workspace[S <: Sys[S]] extends WorkspaceHandle[S] with Disposable[S#Tx] {
+  /** Issues a transaction that closes and disposes the workspace. */
+  def close(): Unit
+}
+sealed trait Workspace[S <: Sys[S]] extends WorkspaceLike with WorkspaceHandle[S] with Disposable[S#Tx] {
   import Workspace.{Group => _}
 
   implicit def system: S
-
-  def folder: File
 
   type I <: SSys[I]
   implicit def inMemoryBridge: S#Tx => I#Tx
@@ -90,7 +94,4 @@ sealed trait Workspace[S <: Sys[S]] extends WorkspaceHandle[S] with Disposable[S
   //  }
 
   implicit def systemType: reflect.runtime.universe.TypeTag[S]
-
-  /** Issues a transaction that closes and disposes the workspace. */
-  def close(): Unit
 }

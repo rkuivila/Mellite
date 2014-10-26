@@ -58,14 +58,16 @@ trait CollectionViewImpl[S <: Sys[S]]
 
   lazy final protected val actionAttr: Action = Action(null) {
     val sel = selectedObjects
-    if (sel.nonEmpty) cursor.step { implicit tx =>
+    val sz  = sel.size
+    if (sz > 0) GUI.atomic[S, Unit](nameAttr, s"Opening ${if (sz == 1) "window" else "windows"}") { implicit tx =>
       sel.foreach(n => AttrMapFrame(n.obj()))
     }
   }
 
   lazy final protected val actionView: Action = Action(null) {
     val sel = selectedObjects.filter(_.isViewable)
-    if (sel.nonEmpty) cursor.step { implicit tx =>
+    val sz  = sel.size
+    if (sz > 0) GUI.atomic[S, Unit](nameView, s"Opening ${if (sz == 1) "window" else "windows"}")  { implicit tx =>
       sel.foreach(_.openView())
     }
   }
@@ -125,11 +127,14 @@ trait CollectionViewImpl[S <: Sys[S]]
     addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
   }
 
+  private def nameAttr = "Attributes Editor"
+  private def nameView = "View Selected Element"
+
   private def guiInit(): Unit = {
     ggAdd     = GUI.addButton   (actionAdd   , "Add Element")
     ggDelete  = GUI.removeButton(actionDelete, "Remove Selected Element")
-    ggAttr    = GUI.attrButton  (actionAttr  , "Attributes Editor")
-    ggView    = GUI.viewButton  (actionView  , "View Selected Element")
+    ggAttr    = GUI.attrButton  (actionAttr  , nameAttr)
+    ggView    = GUI.viewButton  (actionView  , nameView)
 
     val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggAttr, ggView)
 
