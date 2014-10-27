@@ -1084,6 +1084,14 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
 
       def value: Any = ()
 
+      override def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
+        case _Ensemble.Update(_, changes) =>
+          (false /: changes) {
+            case (_, _Ensemble.Playing(Change(_, v))) => playing = v; true
+            case (res, _) => res
+          }
+      }
+
       override def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         val ens   = obj()
         val w     = EnsembleFrame(ens)

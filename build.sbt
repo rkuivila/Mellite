@@ -8,7 +8,7 @@ lazy val fullDescr                  = "A computer music application based on Sou
 
 lazy val loggingEnabled             = true
 
-lazy val projectVersion             = "0.12.0-SNAPSHOT"
+lazy val projectVersion             = "0.12.0"
 
 // ---- core dependencies ----
 

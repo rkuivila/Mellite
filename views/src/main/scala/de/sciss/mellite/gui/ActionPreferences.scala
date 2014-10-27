@@ -14,13 +14,15 @@
 package de.sciss
 package mellite.gui
 
-import de.sciss.desktop.{PrefsGUI, Desktop, OptionPane, KeyStrokes}
-import de.sciss.swingplus.{GroupPanel, Separator}
 import javax.swing.UIManager
+
+import de.sciss.desktop.{Desktop, KeyStrokes, OptionPane, PrefsGUI}
+import de.sciss.file._
+import de.sciss.mellite.Prefs
+import de.sciss.swingplus.{GroupPanel, Separator}
+
 import scala.swing.Action
 import scala.swing.event.Key
-import de.sciss.mellite.Prefs
-import de.sciss.file._
 
 object ActionPreferences extends Action("Preferences...") {
   import KeyStrokes._
@@ -52,8 +54,8 @@ object ActionPreferences extends Action("Preferences...") {
         Some(f2)
       })
 
-    val lbAutoBoot      = label("Automatic Boot")
-    val ggAutoBoot      = checkBox(Prefs.autoBoot, default = false)
+    val lbAudioAutoBoot = label("Automatic Boot")
+    val ggAudioAutoBoot = checkBox(Prefs.audioAutoBoot, default = false)
 
     val lbAudioDevice   = label("Audio Device")
     val ggAudioDevice   = textField(Prefs.audioDevice    , Prefs.defaultAudioDevice     )
@@ -81,17 +83,20 @@ object ActionPreferences extends Action("Preferences...") {
     // ---- sensor ----
     val sepSensor = Separator()
 
-    val lbSensorProtocol = label("Sensor Protocol")
-    val ggSensorProtocol = combo(Prefs.sensorProtocol, Prefs.defaultSensorProtocol, Seq(osc.UDP, osc.TCP))(_.name)
+    val lbSensorProtocol  = label("Sensor Protocol")
+    val ggSensorProtocol  = combo(Prefs.sensorProtocol, Prefs.defaultSensorProtocol, Seq(osc.UDP, osc.TCP))(_.name)
 
-    val lbSensorPort    = label("Sensor Port")
-    val ggSensorPort    = intField(Prefs.sensorPort, Prefs.defaultSensorPort)
+    val lbSensorPort      = label("Sensor Port")
+    val ggSensorPort      = intField(Prefs.sensorPort, Prefs.defaultSensorPort)
 
-    val lbSensorCommand = label("Sensor Command")
-    val ggSensorCommand = textField(Prefs.sensorCommand, Prefs.defaultSensorCommand)
+    val lbSensorAutoStart = label("Automatic Start")
+    val ggSensorAutoStart = checkBox(Prefs.sensorAutoStart, default = false)
 
-    val lbSensorChannels = label("Sensor Channels")
-    val ggSensorChannels = intField(Prefs.sensorChannels, Prefs.defaultSensorChannels)
+    val lbSensorCommand   = label("Sensor Command")
+    val ggSensorCommand   = textField(Prefs.sensorCommand, Prefs.defaultSensorCommand)
+
+    val lbSensorChannels  = label("Sensor Channels")
+    val ggSensorChannels  = intField(Prefs.sensorChannels, Prefs.defaultSensorChannels)
 
     // ---- system ----
     val sepDatabase = Separator()
@@ -104,19 +109,19 @@ object ActionPreferences extends Action("Preferences...") {
     val box = new GroupPanel {
       // val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
       horizontal = Par(sepAudio, sepSensor, sepAudioAdvanced, sepAudioHeadphones, sepDatabase, Seq(
-        Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAutoBoot, lbAudioDevice, lbNumInputs, lbNumOutputs,
+        Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAudioAutoBoot, lbAudioDevice, lbNumInputs, lbNumOutputs,
           lbSampleRate, lbBlockSize, lbNumPrivate, lbNumWireBufs, lbHeadphones, lbSensorProtocol, lbSensorPort,
-          lbSensorCommand, lbSensorChannels, lbLockTimeout),
-        Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAutoBoot, ggAudioDevice, ggNumInputs, ggNumOutputs,
+          lbSensorAutoStart, lbSensorCommand, lbSensorChannels, lbLockTimeout),
+        Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAudioAutoBoot, ggAudioDevice, ggNumInputs, ggNumOutputs,
           ggSampleRate, ggNumPrivate, ggBlockSize, ggNumWireBufs, ggHeadphones, ggSensorProtocol, ggSensorPort,
-          ggSensorCommand, ggSensorChannels, ggLockTimeout)
+          ggSensorAutoStart, ggSensorCommand, ggSensorChannels, ggLockTimeout)
       ))
       vertical = Seq(
         Par(Baseline)(lbLookAndFeel     , ggLookAndFeel     ),
         Par(Baseline)(lbNativeDecoration, ggNativeDecoration),
         sepAudio,
         Par(Baseline)(lbSuperCollider   , ggSuperCollider   ),
-        Par(Baseline)(lbAutoBoot        , ggAutoBoot        ),
+        Par(Baseline)(lbAudioAutoBoot   , ggAudioAutoBoot   ),
         Par(Baseline)(lbAudioDevice     , ggAudioDevice     ),
         Par(Baseline)(lbNumInputs       , ggNumInputs       ),
         Par(Baseline)(lbNumOutputs      , ggNumOutputs      ),
@@ -130,6 +135,7 @@ object ActionPreferences extends Action("Preferences...") {
         sepSensor,
         Par(Baseline)(lbSensorProtocol  , ggSensorProtocol  ),
         Par(Baseline)(lbSensorPort      , ggSensorPort      ),
+        Par(Baseline)(lbSensorAutoStart , ggSensorAutoStart ),
         Par(Baseline)(lbSensorCommand   , ggSensorCommand   ),
         Par(Baseline)(lbSensorChannels  , ggSensorChannels  ),
         sepDatabase,

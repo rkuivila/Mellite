@@ -14,20 +14,23 @@
 package de.sciss
 package mellite
 
-import de.sciss.lucre.synth.{Txn, Server}
-import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
-import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
-import de.sciss.desktop.{OptionPane, WindowHandler}
-import de.sciss.synth.proc
-import de.sciss.synth.proc.{Code, SensorSystem, AuralSystem}
-import de.sciss.lucre.event.Sys
+import java.awt.Color
 import javax.swing.UIManager
-import scala.concurrent.stm.TxnExecutor
-import scala.swing.Label
-import scala.util.control.NonFatal
+
 import com.alee.laf.checkbox.WebCheckBoxStyle
 import com.alee.laf.progressbar.WebProgressBarStyle
-import java.awt.Color
+import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
+import de.sciss.desktop.{OptionPane, WindowHandler}
+import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm.TxnLike
+import de.sciss.lucre.synth.{Server, Txn}
+import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
+import de.sciss.synth.proc
+import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
+
+import scala.concurrent.stm.{TxnExecutor, atomic}
+import scala.swing.Label
+import scala.util.control.NonFatal
 
 object Mellite extends SwingApplicationImpl("Mellite") {
   type Document = mellite.Workspace[_ <: Sys[_]]
@@ -113,6 +116,21 @@ object Mellite extends SwingApplicationImpl("Mellite") {
       auralSystem.start(config)
     }
     true
+  }
+
+  def startSensorSystem(): Unit = {
+    val config = SensorSystem.Config()
+    config.osc = Prefs.defaultSensorProtocol match {
+      case osc.UDP => osc.UDP.Config()
+      case osc.TCP => osc.TCP.Config()
+    }
+    config.osc.localPort  = Prefs.sensorPort   .getOrElse(Prefs.defaultSensorPort   )
+    config.command        = Prefs.sensorCommand.getOrElse(Prefs.defaultSensorCommand)
+
+    atomic { implicit itx =>
+      implicit val tx = TxnLike.wrap(itx)
+      sensorSystem.start(config.build)
+    }
   }
 
   override protected def init(): Unit = {

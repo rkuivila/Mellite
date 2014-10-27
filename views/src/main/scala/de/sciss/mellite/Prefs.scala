@@ -80,7 +80,7 @@ object Prefs {
   def audioNumPrivate : Entry[Int    ] = userPrefs("audio-num-private"  )
   def audioNumWireBufs: Entry[Int    ] = userPrefs("audio-num-wire-bufs")
   def headphonesBus   : Entry[Int    ] = userPrefs("headphones-bus"     )
-  def autoBoot        : Entry[Boolean] = userPrefs("auto-boot"          )
+  def audioAutoBoot   : Entry[Boolean] = userPrefs("audio-auto-boot"    )
 
   // ---- sensor ----
 
@@ -93,4 +93,5 @@ object Prefs {
   def sensorPort     : Entry[Int              ] = userPrefs("sensor-port"    )
   def sensorCommand  : Entry[String           ] = userPrefs("sensor-command" )
   def sensorChannels : Entry[Int              ] = userPrefs("sensor-channels")
+  def sensorAutoStart: Entry[Boolean          ] = userPrefs("sensor-auto-start")
 }

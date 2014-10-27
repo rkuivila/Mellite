@@ -55,15 +55,17 @@ object ActionOpenWorkspace extends Action("Open...") {
         GUI.atomic[proc.Durable, Unit](fullTitle, s"Opening cursor window for '${doc.folder.base}'") {
           implicit tx => DocumentCursorsFrame(cf)
         }
-      case eph: Workspace.Ephemeral =>
-        implicit val workspace  = eph
-        implicit val cursor     = eph.cursor
-        val nameView = ExprView.const[proc.Durable, String](doc.folder.base)
-        GUI.atomic[proc.Durable, Unit](fullTitle, s"Opening root elements window for '${doc.folder.base}'") {
-          implicit tx => FolderFrame[proc.Durable](name = nameView, isWorkspaceRoot = true)
+      case eph =>
+        implicit val workspace: Workspace[S] = eph
+        implicit val cursor = eph.cursor
+        val nameView = ExprView.const[S, String](doc.folder.base)
+        GUI.atomic[S, Unit](fullTitle, s"Opening root elements window for '${doc.folder.base}'") {
+          implicit tx => FolderFrame[S](name = nameView, isWorkspaceRoot = true)
         }
     }
   }
+
+  // private def openEphGUI[S <: Sys[S]](doc: Workspace)
 
   def recentFiles: RecentFiles  = _recent
   def recentMenu : Menu.Group   = _recent.menu
@@ -113,7 +115,8 @@ object ActionOpenWorkspace extends Action("Open...") {
         }
         tr match {
           case Success(cf : Workspace.Confluent) => openGUI(cf )
-          case Success(dur: Workspace.Ephemeral) => openGUI(dur)
+          case Success(eph: Workspace.Durable)   => openGUI(eph)
+          case Success(eph: Workspace.InMemory)  => openGUI(eph)
           case Failure(e) =>
             Dialog.showMessage(
               message     = s"Unable to create new workspace ${folder.path}\n\n${GUI.formatException(e)}",

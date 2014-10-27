@@ -45,17 +45,25 @@ object ActionNewWorkspace extends Action("Workspace...") {
   def apply(): Unit = {
     val tpeMessage = new Label( """<HTML><BODY><B>Workspaces can be confluent or ephemeral.</B><P><br>
         |A <I>confluent</I> workspace keeps a trace of its history.<P><br>
-        |An <I>ephemeral</I> workspace does not remember its history.
+        |An <I>ephemeral</I> workspace does not remember its history.<br>
+        |An ephemeral workspace can either <I>durable</I> (stored on disk) or purely <I>in-memory</I>.
         |""".stripMargin
     )
 
-    val tpeEntries  = Seq("Confluent", "Ephemeral")
+    val tpeEntries  = Seq("Confluent", "Durable", "In-Memory")
     val tpeInitial  = tpeEntries.headOption
     val tpeDlg      = OptionPane(message = tpeMessage, entries = tpeEntries, initial = tpeInitial)
     tpeDlg.title    = fullTitle
     val tpeRes      = tpeDlg.show().id
     if (tpeRes < 0) return
-    val confluent   = tpeRes != 1
+    val confluent   = tpeRes == 0
+    val inMemory    = tpeRes == 2
+
+    if (inMemory) {
+      val doc = Workspace.InMemory()
+      ActionOpenWorkspace.openGUI(doc)
+      return
+    }
 
     val fileDlg = FileDialog.save(title = "Location for New Workspace")
     fileDlg.show(None).foreach { folder0 =>
@@ -87,7 +95,7 @@ object ActionNewWorkspace extends Action("Workspace...") {
           // XXX TODO: SetFile -a E <folder>
           ActionOpenWorkspace.openGUI(doc)
         } else {
-          val doc = Workspace.Ephemeral.empty(folder, config)
+          val doc = Workspace.Durable.empty(folder, config)
           ActionOpenWorkspace.openGUI(doc)
         }
 

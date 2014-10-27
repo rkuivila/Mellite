@@ -85,7 +85,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
         implicit val tx = TxnLike.wrap(itx)
         sensorSystem.serverOption.isDefined
       }
-      if (isRunning) stopSensorSystem() else startSensorSystem()
+      if (isRunning) stopSensorSystem() else Mellite.startSensorSystem()
     }
   }
 
@@ -352,21 +352,6 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
       sensorSystem.stop()
     }
 
-  def startSensorSystem(): Unit = {
-    val config = SensorSystem.Config()
-    config.osc = Prefs.defaultSensorProtocol match {
-      case osc.UDP => osc.UDP.Config()
-      case osc.TCP => osc.TCP.Config()
-    }
-    config.osc.localPort  = Prefs.sensorPort   .getOrElse(Prefs.defaultSensorPort   )
-    config.command        = Prefs.sensorCommand.getOrElse(Prefs.defaultSensorCommand)
-
-    atomic { implicit itx =>
-      implicit val tx = TxnLike.wrap(itx)
-      sensorSystem.start(config.build)
-    }
-  }
-
   private def sensorSystemStarted(s: SensorSystem.Server)(implicit tx: TxnLike): Unit = {
     log("MainFrame: SensorSystem started")
     deferTx {
@@ -428,5 +413,6 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   pack()
   front()
 
-  if (Prefs.autoBoot.getOrElse(false)) Mellite.startAuralSystem()
+  if (Prefs.audioAutoBoot  .getOrElse(false)) Mellite.startAuralSystem()
+  if (Prefs.sensorAutoStart.getOrElse(false)) Mellite.startSensorSystem()
 }

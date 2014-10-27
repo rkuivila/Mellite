@@ -14,17 +14,20 @@
 package de.sciss.mellite
 
 import java.io.File
-import de.sciss.lucre.stm.store.BerkeleyDB
-import de.sciss.lucre.{expr, event => evt, bitemp, stm}
-import bitemp.BiGroup
-import de.sciss.synth.proc
-import impl.{WorkspaceImpl => Impl}
-import de.sciss.synth.proc.{Timeline, WorkspaceHandle, Transport, Obj, Folder, Proc}
-import de.sciss.serial.Serializer
-import collection.immutable.{IndexedSeq => Vec}
+
+import de.sciss.lucre
+import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.stm.store.BerkeleyDB
 import de.sciss.lucre.synth.{Sys => SSys}
-import de.sciss.lucre.stm.{TxnLike, Disposable}
+import de.sciss.lucre.{expr, stm, event => evt}
+import de.sciss.mellite.impl.{WorkspaceImpl => Impl}
+import de.sciss.serial.Serializer
+import de.sciss.synth.proc
+import de.sciss.synth.proc.{Folder, Obj, Proc, Transport, WorkspaceHandle}
+
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 object Workspace {
   /** File name extension (excluding leading period) */
@@ -54,15 +57,20 @@ object Workspace {
 
     def cursors: Cursors[S, S#D]
   }
-  
-  object Ephemeral {
-    def read (dir: File, config: BerkeleyDB.Config): Ephemeral = Impl.readEphemeral (dir, config)
-    def empty(dir: File, config: BerkeleyDB.Config): Ephemeral = Impl.emptyEphemeral(dir, config)
-  }
-  trait Ephemeral extends Workspace[proc.Durable] {
-    type S = proc.Durable
 
-    def cursor: stm.Cursor[S] = system
+  object Durable {
+    def read (dir: File, config: BerkeleyDB.Config): Durable = Impl.readDurable (dir, config)
+    def empty(dir: File, config: BerkeleyDB.Config): Durable = Impl.emptyDurable(dir, config)
+  }
+  trait Durable extends Workspace[proc.Durable] {
+    type S = proc.Durable
+  }
+
+  object InMemory {
+    def apply(): InMemory = Impl.applyInMemory()
+  }
+  trait InMemory extends Workspace[lucre.synth.InMemory] {
+    type S = lucre.synth.InMemory
   }
 
   object Serializers {
@@ -77,10 +85,12 @@ sealed trait WorkspaceLike {
   def close(): Unit
 }
 sealed trait Workspace[S <: Sys[S]] extends WorkspaceLike with WorkspaceHandle[S] with Disposable[S#Tx] {
-  import Workspace.{Group => _}
+  import de.sciss.mellite.Workspace.{Group => _}
 
   implicit def system: S
 
+  def cursor: stm.Cursor[S]
+  
   type I <: SSys[I]
   implicit def inMemoryBridge: S#Tx => I#Tx
   implicit def inMemoryCursor: stm.Cursor[I]

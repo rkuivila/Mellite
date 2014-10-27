@@ -21,6 +21,7 @@ import de.sciss.file._
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm.store.BerkeleyDB
 import de.sciss.lucre.stm.{DataStoreFactory, Disposable, TxnLike}
+import de.sciss.lucre.synth.{InMemory => InMem}
 import de.sciss.lucre.{confluent, stm}
 import de.sciss.serial.{DataInput, DataOutput, Serializer}
 import de.sciss.synth.proc.{Durable => Dur, SoundProcesses, Confluent, ExprImplicits, Folder, FolderElem, Obj}
@@ -47,8 +48,9 @@ object WorkspaceImpl {
     }
   }
 
-  private implicit val ConfluentSer: Ser[Cf]  = new Ser[Cf]
-  private implicit def EphemeralSer: Ser[Dur] = ConfluentSer.asInstanceOf[Ser[Dur]]
+  private implicit val ConfluentSer: Ser[Cf]    = new Ser[Cf]
+  private implicit def DurableSer  : Ser[Dur]   = ConfluentSer.asInstanceOf[Ser[Dur]]
+  private implicit def InMemorySer : Ser[InMem] = ConfluentSer.asInstanceOf[Ser[InMem]]
 
   private def requireExists(dir: File): Unit =
     if (!dir.isDirectory) throw new FileNotFoundException(s"Workspace ${dir.path} does not exist")
@@ -67,7 +69,7 @@ object WorkspaceImpl {
       case "ephemeral"  => false
       case other        => sys.error(s"Invalid property 'type': $other")
     }
-    val res = if (confluent) readConfluent(dir, config) else readEphemeral(dir, config)
+    val res = if (confluent) readConfluent(dir, config) else readDurable(dir, config)
     res // .asInstanceOf[Workspace[~ forSome { type ~ <: SSys[~] }]]
   }
 
@@ -88,14 +90,28 @@ object WorkspaceImpl {
     applyConfluent(dir, config = setAllowCreate(config, value = true))
   }
 
-  def readEphemeral(dir: File, config: BerkeleyDB.Config): Workspace.Ephemeral = {
+  def readDurable(dir: File, config: BerkeleyDB.Config): Workspace.Durable = {
     requireExists(dir)
-    applyEphemeral(dir, config = setAllowCreate(config, value = false))
+    applyDurable(dir, config = setAllowCreate(config, value = false))
   }
 
-  def emptyEphemeral(dir: File, config: BerkeleyDB.Config): Workspace.Ephemeral = {
+  def emptyDurable(dir: File, config: BerkeleyDB.Config): Workspace.Durable = {
     requireExistsNot(dir)
-    applyEphemeral(dir, config = setAllowCreate(config, value = true))
+    applyDurable(dir, config = setAllowCreate(config, value = true))
+  }
+
+  def applyInMemory(): Workspace.InMemory = {
+    type S    = InMem
+    implicit val system: S = InMem()
+
+    val access = system.root[Data[S]] { implicit tx =>
+      val data: Data[S] = new Data[S] {
+        val root = Folder[S](tx)
+      }
+      data
+    }
+
+    new InMemoryImpl(system, access)
   }
 
   private def openDataStore(dir: File, config: BerkeleyDB.Config, confluent: Boolean): DataStoreFactory[BerkeleyDB] = {
@@ -130,7 +146,7 @@ object WorkspaceImpl {
     new ConfluentImpl(dir, system, access, cursors)
   }
 
-  private def applyEphemeral(dir: File, config: BerkeleyDB.Config): Workspace.Ephemeral = {
+  private def applyDurable(dir: File, config: BerkeleyDB.Config): Workspace.Durable = {
     type S    = Dur
     val fact  = openDataStore(dir, config = config, confluent = false)
     implicit val system: S = Dur(fact)
@@ -142,7 +158,7 @@ object WorkspaceImpl {
       data
     }
 
-    new EphemeralImpl(dir, system, access)
+    new DurableImpl(dir, system, access)
   }
 
   private final val COOKIE  = 0x4D656C6C69746500L  // "Mellite\0"
@@ -168,8 +184,6 @@ object WorkspaceImpl {
     // ---- abstract ----
 
     protected def access: stm.Source[S#Tx, Data[S]]
-
-    protected def masterCursor: stm.Cursor[S]
 
     // ---- implemented ----
 
@@ -209,10 +223,9 @@ object WorkspaceImpl {
     }
 
     final def close(): Unit = {
-      implicit val cursor = masterCursor
       atomic[S, Unit] { implicit tx =>
         dispose()
-      }
+      } (cursor)
     }
 
     final def dispose()(implicit tx: S#Tx): Unit = {
@@ -242,12 +255,12 @@ object WorkspaceImpl {
     val inMemoryBridge = (tx: S#Tx) => tx.inMemory  // Confluent.inMemory(tx)
     def inMemoryCursor: stm.Cursor[I] = system.inMemory
 
-    protected def masterCursor = cursors.cursor
+    def cursor = cursors.cursor
   }
 
-  private final class EphemeralImpl(val folder: File, val system: Dur,
-                                    protected val access: stm.Source[Dur#Tx, Data[Dur]])
-    extends Workspace.Ephemeral with Impl[Dur] {
+  private final class DurableImpl(val folder: File, val system: Dur,
+                                  protected val access: stm.Source[Dur#Tx, Data[Dur]])
+    extends Workspace.Durable with Impl[Dur] {
 
     val systemType = implicitly[reflect.runtime.universe.TypeTag[Dur]]
 
@@ -255,6 +268,20 @@ object WorkspaceImpl {
     val inMemoryBridge = (tx: S#Tx) => Dur.inMemory(tx)
     def inMemoryCursor: stm.Cursor[I] = system.inMemory
 
-    protected def masterCursor: stm.Cursor[S] = cursor
+    def cursor: stm.Cursor[S] = system
+  }
+
+  private final class InMemoryImpl(val system: InMem, protected val access: stm.Source[InMem#Tx, Data[InMem]])
+    extends Workspace.InMemory with Impl[InMem] {
+
+    val systemType = implicitly[reflect.runtime.universe.TypeTag[InMem]]
+
+    type I = system.I
+    val inMemoryBridge = (tx: S#Tx) => tx
+    def inMemoryCursor: stm.Cursor[I] = system.inMemory
+
+    def cursor: stm.Cursor[S] = system
+
+    def folder: File = file("<in-memory>")  // XXX TODO - good?
   }
 }
