@@ -12,17 +12,17 @@ lazy val projectVersion             = "0.12.0-SNAPSHOT"
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.8.0-SNAPSHOT"
+lazy val soundProcessesVersion      = "2.8.0"
 
 lazy val interpreterPaneVersion     = "1.7.0"
 
-lazy val lucreSTMVersion            = "2.1.1-SNAPSHOT"
+lazy val lucreSTMVersion            = "2.1.1"
 
 lazy val fscapeJobsVersion          = "1.4.1"
 
 lazy val strugatzkiVersion          = "2.6.0"
 
-lazy val bdb = "bdb6" // either "bdb" or "bdb6"
+lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
