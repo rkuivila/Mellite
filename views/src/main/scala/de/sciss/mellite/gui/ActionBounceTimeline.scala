@@ -111,7 +111,7 @@ object ActionBounceTimeline {
         case Nil        => res
       }
 
-    loop(document.root().iterator.toList, Vector.empty)
+    loop(document.rootH().iterator.toList, Vector.empty)
   }
 
   def query[S <: Sys[S]](init: QuerySettings[S], document: Workspace[S], timelineModel: TimelineModel,
@@ -318,7 +318,7 @@ object ActionBounceTimeline {
             } =>  // ok, keep previous location
 
           case _ => // either no location was set, or it's not parent of the file
-            ActionArtifactLocation.query[S](document.root, f) match {
+            ActionArtifactLocation.query[S](document.rootH, f) match {
               case Some(either) =>
                 either match {
                   case Left(source) =>
@@ -327,7 +327,7 @@ object ActionBounceTimeline {
                   case Right((name, directory)) =>
                     val (edit, source) = cursor.step { implicit tx =>
                       val locObj  = ActionArtifactLocation.create(name = name, directory = directory)
-                      val folder  = document.root()
+                      val folder  = document.rootH()
                       val index   = folder.size
                       val _edit   = EditFolderInsertObj("Location", folder, index, locObj)
                       (_edit, tx.newHandle(locObj))
@@ -463,8 +463,8 @@ object ActionBounceTimeline {
               val recElem   = Recursion.Elem(recursion)
               val recObj    = Obj(recElem)
               recObj.name = elemName
-              document.root().addLast(depObj)
-              document.root().addLast(recObj)
+              document.rootH().addLast(depObj)
+              document.rootH().addLast(recObj)
             }
           }
 
@@ -484,6 +484,7 @@ object ActionBounceTimeline {
   def perform[S <: Sys[S]](document: Workspace[S], settings: PerformSettings[S])
                           (implicit cursor: stm.Cursor[S]): Processor[File, _] = {
     import document.inMemoryBridge
+    implicit val workspace = document
     val bounce  = Bounce[S, document.I]
     val bnc     = Bounce.Config[S]
     bnc.group   = settings.group :: Nil

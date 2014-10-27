@@ -85,13 +85,9 @@ sealed trait Workspace[S <: Sys[S]] extends WorkspaceLike with WorkspaceHandle[S
   implicit def inMemoryBridge: S#Tx => I#Tx
   implicit def inMemoryCursor: stm.Cursor[I]
 
-  def root: stm.Source[S#Tx, Folder[S]]
+  def rootH: stm.Source[S#Tx, Folder[S]]
 
   def collectObjects[A](pf: PartialFunction[Obj[S], A])(implicit tx: S#Tx): Vec[A]
-
-  //  def timelines(implicit tx: S#Tx): Vec[Timeline[S]] = collectObjects {
-  //    case Timeline.Obj(tl) => tl.elem.peer
-  //  }
 
   implicit def systemType: reflect.runtime.universe.TypeTag[S]
 }

@@ -840,7 +840,7 @@ object TimelineViewImpl {
         case ed: DnD.ExtAudioRegionDrag[S] =>
           val file = ed.file
           val resOpt = step { implicit tx =>
-            val ex = ObjectActions.findAudioFile(workspace.root(), file)
+            val ex = ObjectActions.findAudioFile(workspace.rootH(), file)
             ex.flatMap { grapheme =>
               insertAudioRegion(drop, ed, grapheme.elem.peer)
             }
@@ -849,10 +849,10 @@ object TimelineViewImpl {
           resOpt.orElse[UndoableEdit] {
             val tr = Try(AudioFile.readSpec(file)).toOption
             tr.flatMap { spec =>
-              ActionArtifactLocation.query[S](workspace.root, file).flatMap { either =>
+              ActionArtifactLocation.query[S](workspace.rootH, file).flatMap { either =>
                 step { implicit tx =>
                   ActionArtifactLocation.merge(either).flatMap { case (list0, locM) =>
-                    val folder  = workspace.root()
+                    val folder  = workspace.rootH()
                     // val obj   = ObjectActions.addAudioFile(elems, elems.size, loc, file, spec)
                     val obj     = ObjectActions.mkAudioFile(locM, file, spec)
                     val edits0  = list0.map(obj => EditFolderInsertObj("Location"  , folder, folder.size, obj)).toList

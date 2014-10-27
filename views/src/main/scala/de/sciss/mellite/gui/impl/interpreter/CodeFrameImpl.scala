@@ -101,7 +101,7 @@ object CodeFrameImpl {
 
           def execute()(implicit tx: S#Tx): Unit = {
             val obj       = objH()
-            val universe  = Action.Universe(obj)
+            val universe  = Action.Universe(obj, workspace)
             obj.elem.peer.execute(universe)
             // ActionImpl.execute[S](name = in, jar = out)
           }

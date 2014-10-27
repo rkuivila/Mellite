@@ -30,7 +30,7 @@ object FolderFrame {
     */
   def apply[S <: Sys[S]](name: ExprView[S#Tx, String], isWorkspaceRoot: Boolean)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] =
-    Impl(name = name, folder = workspace.root(), isWorkspaceRoot = isWorkspaceRoot)
+    Impl(name = name, folder = workspace.rootH(), isWorkspaceRoot = isWorkspaceRoot)
 
   def apply[S <: Sys[S]](name: ExprView[S#Tx, String], folder: Folder[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] = {

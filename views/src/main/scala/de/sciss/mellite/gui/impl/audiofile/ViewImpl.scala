@@ -24,7 +24,7 @@ import de.sciss.mellite.gui.impl.component.DragSourceButton
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.graph.ScanIn
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{Proc, Timeline, Transport, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
+import de.sciss.synth.proc.{WorkspaceHandle, Proc, Timeline, Transport, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
 import de.sciss.lucre.stm
 import scala.swing.{Label, BoxPanel, Orientation, Swing, BorderPanel, Component}
 import Swing._
@@ -79,6 +79,7 @@ object ViewImpl {
 
     import _workspace.inMemoryCursor
     // val transport     = Transport[I, I](group, sampleRate = sampleRate)
+    import WorkspaceHandle.Implicits._
     val transport = Transport[I](aural)
     transport.addObject(Obj(Timeline.Elem(timeline)))
     transport.addObject(diffObj)

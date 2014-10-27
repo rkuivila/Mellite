@@ -25,7 +25,7 @@ import de.sciss.strugatzki.{FeatureCorrelation, FeatureExtraction}
 import de.sciss.processor.Processor
 import de.sciss.synth.proc
 import de.sciss.mellite._
-import de.sciss.synth.proc.{ObjKeys, Timeline, Obj, ExprImplicits, FadeSpec, Grapheme}
+import de.sciss.synth.proc.{WorkspaceHandle, ObjKeys, Timeline, Obj, ExprImplicits, FadeSpec, Grapheme}
 import de.sciss.file._
 import de.sciss.lucre.synth.InMemory
 
@@ -99,6 +99,7 @@ object MetaNull {
         proc.attr.put(ObjKeys.attrFadeOut, Obj(FadeSpec.Elem(fdOut)))
       }
 
+      import WorkspaceHandle.Implicits._
       val bnc   = proc.Bounce[I, I]
       val bc    = proc.Bounce.Config[I]
       // implicit val ser = proc.ProcGroup.Modifiable.serializer[I]

@@ -440,7 +440,7 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       val fOpt = dlg.show(window)
 
       fOpt.flatMap { f =>
-        ActionArtifactLocation.query[S](workspace.root, file = f, window = window).map { location =>
+        ActionArtifactLocation.query[S](workspace.rootH, file = f, window = window).map { location =>
           val spec = AudioFile.readSpec(f)
           Config(file = f, spec = spec, location = location)
         }

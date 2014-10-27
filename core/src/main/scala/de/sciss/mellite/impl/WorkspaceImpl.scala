@@ -16,20 +16,17 @@ package impl
 
 import java.io.{FileInputStream, FileNotFoundException, FileOutputStream, IOException}
 import java.util.Properties
-import java.util.concurrent.TimeUnit
 
 import de.sciss.file._
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm.store.BerkeleyDB
 import de.sciss.lucre.stm.{DataStoreFactory, Disposable, TxnLike}
 import de.sciss.lucre.{confluent, stm}
-import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.serial.{DataInput, DataOutput, Serializer}
 import de.sciss.synth.proc.{Durable => Dur, SoundProcesses, Confluent, ExprImplicits, Folder, FolderElem, Obj}
 import SoundProcesses.atomic
 
 import scala.collection.immutable.{IndexedSeq => Vec}
-import scala.concurrent.duration.Duration
 import scala.concurrent.stm.{Ref, Txn}
 import scala.language.existentials
 
@@ -180,7 +177,9 @@ object WorkspaceImpl {
 
     private val dependents  = Ref(Vec.empty[Disposable[S#Tx]])
 
-    final val root: stm.Source[S#Tx, Folder[S]] = stm.Source.map(access)(_.root)
+    final val rootH: stm.Source[S#Tx, Folder[S]] = stm.Source.map(access)(_.root)
+
+    final def root(implicit tx: S#Tx): Folder[S] = access().root
 
     final def addDependent   (dep: Disposable[S#Tx])(implicit tx: TxnLike): Unit =
       dependents.transform(_ :+ dep)(tx.peer)
@@ -205,7 +204,7 @@ object WorkspaceImpl {
           }
         }
 
-      loop(root())
+      loop(root)
       b.result()
     }
 
