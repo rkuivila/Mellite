@@ -68,6 +68,8 @@ object Prefs {
   final val defaultAudioNumOutputs  = 8
   final val defaultAudioNumPrivate  = 512
   final val defaultAudioNumWireBufs = 256
+  final val defaultAudioMemorySize  = 64
+
   final val defaultHeadphonesBus    = 0
 
   def superCollider   : Entry[File   ] = userPrefs("supercollider"      )
@@ -79,6 +81,8 @@ object Prefs {
   def audioBlockSize  : Entry[Int    ] = userPrefs("audio-block-size"   )
   def audioNumPrivate : Entry[Int    ] = userPrefs("audio-num-private"  )
   def audioNumWireBufs: Entry[Int    ] = userPrefs("audio-num-wire-bufs")
+  def audioMemorySize : Entry[Int    ] = userPrefs("audio-memory-size"  )
+
   def headphonesBus   : Entry[Int    ] = userPrefs("headphones-bus"     )
   def audioAutoBoot   : Entry[Boolean] = userPrefs("audio-auto-boot"    )
 
@@ -94,4 +98,23 @@ object Prefs {
   def sensorCommand  : Entry[String           ] = userPrefs("sensor-command" )
   def sensorChannels : Entry[Int              ] = userPrefs("sensor-channels")
   def sensorAutoStart: Entry[Boolean          ] = userPrefs("sensor-auto-start")
+
+  // ---- sub-applications ----
+  // they are here, because right now Mellite is `DelayedInit` which
+  // can cause trouble with `var`s.
+
+  /** The initial setting of the master volume slider, in decibels.
+    * This value will only be read once upon application start.
+    * Defaults to `0`.
+    */
+  var initialMasterVolume: Int  = 0
+
+  /** Whether to create a log (post) window or not. Defaults to `true`. */
+  var useLogFrame: Boolean = true
+
+  /** Whether to create a bus meters for the audio server or not. Defaults to `true`. */
+  var useAudioMeters: Boolean = true
+
+  /** Whether to create a meters for the sensors or not. Defaults to `true`. */
+  var useSensorMeters: Boolean = true
 }

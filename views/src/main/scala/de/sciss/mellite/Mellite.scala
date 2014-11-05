@@ -108,6 +108,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     config.wireBuffers  = Prefs.audioNumWireBufs.getOrElse(Prefs.defaultAudioNumWireBufs)
     config.sampleRate   = Prefs.audioSampleRate .getOrElse(Prefs.defaultAudioSampleRate)
     config.blockSize    = Prefs.audioBlockSize  .getOrElse(Prefs.defaultAudioBlockSize)
+    config.memorySize   = Prefs.audioMemorySize .getOrElse(Prefs.defaultAudioMemorySize) * 1024
     config.transport    = osc.TCP
     config.pickPort()
 
@@ -159,7 +160,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     WebProgressBarStyle.highlightWhite      = new Color(255, 255, 255, 0)
     WebProgressBarStyle.highlightDarkWhite  = new Color(255, 255, 255, 0)
 
-    LogFrame           .instance    // init
+    if (Prefs.useLogFrame) LogFrame.instance    // init
     DocumentHandler    .instance    // init
     DocumentViewHandler.instance    // init
 

@@ -15,25 +15,28 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.desktop.{Menu, WindowHandler, Window}
-import scala.swing.{Alignment, CheckBox, Button, FlowPanel, ToggleButton, Action, Label, Slider, Component, Orientation, BoxPanel, Swing}
-import de.sciss.synth.proc.{SensorSystem, AuralSystem}
-import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
-import de.sciss.synth.{proc, addToTail, SynthDef, addToHead, AudioBus}
-import Swing._
 import java.awt.{Color, Font}
-import scala.swing.event.{ButtonClicked, ValueChanged}
-import collection.breakOut
 import javax.swing.border.Border
-import de.sciss.lucre.synth.{Txn, Server}
-import scala.concurrent.stm.atomic
-import de.sciss.lucre.swing.deferTx
-import de.sciss.lucre.stm.TxnLike
-import scala.collection.immutable.{IndexedSeq => Vec}
+
 import de.sciss.audiowidgets.PeakMeter
+import de.sciss.desktop.{Menu, Window, WindowHandler}
+import de.sciss.lucre.stm.TxnLike
+import de.sciss.lucre.swing.deferTx
+import de.sciss.lucre.synth.{Server, Txn}
+import de.sciss.numbers.Implicits._
+import de.sciss.synth.proc.{AuralSystem, SensorSystem}
+import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
+import de.sciss.synth.{AudioBus, SynthDef, addToHead, addToTail, proc}
+
+import scala.collection.breakOut
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.concurrent.stm.atomic
+import scala.swing.Swing._
+import scala.swing.event.{ButtonClicked, ValueChanged}
+import scala.swing.{Action, Alignment, BoxPanel, Button, CheckBox, Component, FlowPanel, Label, Orientation, Slider, ToggleButton}
 
 final class MainFrame extends desktop.impl.WindowImpl { me =>
-  import Mellite.{auralSystem, sensorSystem}
+  import de.sciss.mellite.Mellite.{auralSystem, sensorSystem}
 
   def handler: WindowHandler = Application.windowHandler
 
@@ -51,10 +54,12 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   locally {
     lbSensors.horizontalAlignment = Alignment.Trailing
     lbAudio  .horizontalAlignment = Alignment.Trailing
-    ggSensors.focusable = false
-    // this is so it looks the same as the audio-boot button on OS X
-    ggSensors.peer.putClientProperty("JButton.buttonType", "bevel")
-    ggSensors.peer.putClientProperty("JComponent.sizeVariant", "small")
+    if (Prefs.useSensorMeters) {
+      ggSensors.focusable = false
+      // this is so it looks the same as the audio-boot button on OS X
+      ggSensors.peer.putClientProperty("JButton.buttonType", "bevel")
+      ggSensors.peer.putClientProperty("JComponent.sizeVariant", "small")
+    }
     val p1    = lbSensors.preferredSize
     val p2    = lbAudio  .preferredSize
     p1.width  = math.max(p1.width, p2.width)
@@ -167,7 +172,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     for(_ <- 1 to 4) s.nextNodeID()
 
     deferTx {
-      import synth.Ops._
+      import de.sciss.synth.Ops._
 
       ActionShowTree.server = Some(s)
 
@@ -178,8 +183,8 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
       val group   = synth.Group.after(s.peer.defaultGroup)
       val mGroup  = synth.Group.head(group)
       val df = SynthDef("$mellite-master") {
-        import synth._
-        import ugen._
+        import de.sciss.synth._
+        import de.sciss.synth.ugen._
         val in        = In.ar(0, numOuts)
         val mainAmp   = Lag.ar(K2A.ar("amp".kr(1f)))
         val mainIn    = in * mainAmp
@@ -205,23 +210,28 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
         ReplaceOut.ar(0, out)
       }
+      val hpBus = Prefs.headphonesBus.getOrElse(Prefs.defaultHeadphonesBus)
       val syn = df.play(target = group, addAction = addToTail,
-        args = Seq("hp-bus" -> Prefs.headphonesBus.getOrElse(Prefs.defaultHeadphonesBus)))
+        args = Seq("hp-bus" -> hpBus, "amp" -> Prefs.initialMasterVolume.dbamp))
 
-      val m = AudioBusMeter(AudioBusMeter.Strip(outBus, mGroup, addToHead) :: Nil)
-      meter = Some(m)
       val p = new FlowPanel() // new BoxPanel(Orientation.Horizontal)
-      p.contents += m.component
-      p.contents += HStrut(8)
 
-      def mkAmpFader(ctl: String) = mkFader { db =>
-        import synth._
+      if (Prefs.useAudioMeters) {
+        val m = AudioBusMeter(AudioBusMeter.Strip(outBus, mGroup, addToHead) :: Nil)
+        meter = Some(m)
+        p.contents += m.component
+        p.contents += HStrut(8)
+      }
+
+      def mkAmpFader(ctl: String): Slider = mkFader { db =>
+        import de.sciss.synth._
         val amp = if (db == -72) 0f else db.dbamp
         syn.set(ctl -> amp)
       }
 
-      val ggMainVolume  = mkAmpFader("amp")
-      val ggHPVolume    = mkAmpFader("hp-amp")
+      val ggMainVolume    = mkAmpFader("amp")
+      ggMainVolume.value  = Prefs.initialMasterVolume
+      val ggHPVolume      = mkAmpFader("hp-amp")
 
       def mkToggle(label: String, selected: Boolean = false)(fun: Boolean => Unit): ToggleButton = {
         val res = new ToggleButton
@@ -357,9 +367,11 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     deferTx {
       actionStartStopSensors.title = "Stop"
       ggDumpSensors.enabled = true
-      ggSensors.numChannels   = Prefs.sensorChannels.getOrElse(Prefs.defaultSensorChannels)
-      ggSensors.preferredSize = (260, ggSensors.numChannels * 4 + 2)
-      sensorServerPane.contents += ggSensors
+      if (Prefs.useSensorMeters) {
+        ggSensors.numChannels   = Prefs.sensorChannels.getOrElse(Prefs.defaultSensorChannels)
+        ggSensors.preferredSize = (260, ggSensors.numChannels * 4 + 2)
+        sensorServerPane.contents += ggSensors
+      }
       pack()
     }
   }
@@ -370,14 +382,15 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
       actionStartStopSensors.title = "Start"
       ggDumpSensors.enabled   = false
       ggDumpSensors.selected  = false
-      sensorServerPane.contents.remove(sensorServerPane.contents.size - 1)
+      if (Prefs.useSensorMeters) {
+        sensorServerPane.contents.remove(sensorServerPane.contents.size - 1)
+      }
       pack()
     }
   }
 
   private def updateSensorMeter(value: Vec[Float]): Unit = {
     val b = Vec.newBuilder[Float]
-    import de.sciss.numbers.Implicits._
     b.sizeHint(32)
     value.foreach { peak =>
       b += peak.pow(0.65f).linexp(0f, 1f, 0.99e-3f, 1f) // XXX TODO roughly linearized
@@ -396,9 +409,9 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     sensorSystem.addClient(new SensorSystem.Client {
       def sensorsStarted(s: SensorSystem.Server)(implicit tx: TxnLike): Unit = me.sensorSystemStarted(s)
       def sensorsStopped()                      (implicit tx: TxnLike): Unit = me.sensorSystemStopped()
-      def sensorsUpdate(values: Vec[Float])     (implicit tx: TxnLike): Unit = {
-        deferTx(updateSensorMeter(values))
-      }
+
+      def sensorsUpdate(values: Vec[Float])     (implicit tx: TxnLike): Unit =
+        if (Prefs.useSensorMeters) deferTx(updateSensorMeter(values))
     })
   }
   // XXX TODO: removeClient

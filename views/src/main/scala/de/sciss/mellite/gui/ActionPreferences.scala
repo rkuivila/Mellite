@@ -74,6 +74,8 @@ object ActionPreferences extends Action("Preferences...") {
     val ggNumPrivate    = intField(Prefs.audioNumPrivate , Prefs.defaultAudioNumPrivate, min = 4)
     val lbNumWireBufs   = label("Wire Buffers")
     val ggNumWireBufs   = intField(Prefs.audioNumWireBufs, Prefs.defaultAudioNumWireBufs, min = 4, max = 262144)
+    val lbMemorySize    = label("Real-Time Memory [KB]")
+    val ggMemorySize    = intField(Prefs.audioMemorySize , Prefs.defaultAudioMemorySize , min = 1, max = 8388608)
 
     val sepAudioHeadphones = Separator()
 
@@ -110,10 +112,10 @@ object ActionPreferences extends Action("Preferences...") {
       // val lbValue = new Label("Value:", EmptyIcon, Alignment.Right)
       horizontal = Par(sepAudio, sepSensor, sepAudioAdvanced, sepAudioHeadphones, sepDatabase, Seq(
         Par(lbLookAndFeel, lbNativeDecoration, lbSuperCollider, lbAudioAutoBoot, lbAudioDevice, lbNumInputs, lbNumOutputs,
-          lbSampleRate, lbBlockSize, lbNumPrivate, lbNumWireBufs, lbHeadphones, lbSensorProtocol, lbSensorPort,
+          lbSampleRate, lbBlockSize, lbNumPrivate, lbNumWireBufs, lbMemorySize, lbHeadphones, lbSensorProtocol, lbSensorPort,
           lbSensorAutoStart, lbSensorCommand, lbSensorChannels, lbLockTimeout),
         Par(ggLookAndFeel, ggNativeDecoration, ggSuperCollider, ggAudioAutoBoot, ggAudioDevice, ggNumInputs, ggNumOutputs,
-          ggSampleRate, ggNumPrivate, ggBlockSize, ggNumWireBufs, ggHeadphones, ggSensorProtocol, ggSensorPort,
+          ggSampleRate, ggNumPrivate, ggBlockSize, ggNumWireBufs, ggMemorySize, ggHeadphones, ggSensorProtocol, ggSensorPort,
           ggSensorAutoStart, ggSensorCommand, ggSensorChannels, ggLockTimeout)
       ))
       vertical = Seq(
@@ -130,6 +132,7 @@ object ActionPreferences extends Action("Preferences...") {
         Par(Baseline)(lbBlockSize       , ggBlockSize       ),
         Par(Baseline)(lbNumPrivate      , ggNumPrivate      ),
         Par(Baseline)(lbNumWireBufs     , ggNumWireBufs     ),
+        Par(Baseline)(lbMemorySize      , ggMemorySize      ),
         sepAudioHeadphones,
         Par(Baseline)(lbHeadphones      , ggHeadphones      ),
         sepSensor,
