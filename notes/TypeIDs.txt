@@ -38,6 +38,8 @@
 0x10006     Timeline
 0x10007     Ensemble
 
+0x10008     Artifact
+
 :: indeterminus ::
 
 0x20000     Recursion
