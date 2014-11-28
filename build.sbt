@@ -8,11 +8,11 @@ lazy val fullDescr                  = "A computer music application based on Sou
 
 lazy val loggingEnabled             = true
 
-lazy val projectVersion             = "0.13.1"
+lazy val projectVersion             = "0.14.0"
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.8.1"
+lazy val soundProcessesVersion      = "2.9.0"
 
 lazy val interpreterPaneVersion     = "1.7.0"
 
@@ -26,9 +26,9 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val scalaColliderSwingVersion  = "1.20.1"
+lazy val scalaColliderSwingVersion  = "1.20.2"
 
-lazy val lucreSwingVersion          = "0.6.1"
+lazy val lucreSwingVersion          = "0.6.2"
 
 lazy val audioWidgetsVersion        = "1.7.0"
 
@@ -51,8 +51,8 @@ lazy val commonSettings = Project.defaultSettings ++ Seq(
   organization       := "de.sciss",
   homepage           := Some(url("https://github.com/Sciss/" + name.value)),
   licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
-  scalaVersion       := "2.11.2",
-  crossScalaVersions := Seq("2.11.2", "2.10.4"),
+  scalaVersion       := "2.11.4",
+  crossScalaVersions := Seq("2.11.4", "2.10.4"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
