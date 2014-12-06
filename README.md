@@ -8,6 +8,10 @@ Mellite is a computer music application, implemented as a graphical front end fo
 
 The `licenses` folder contains the license headers for all dependencies and transitive dependencies. For the binary release of Mellite, source code is not included but available via the respective OSS project pages, as indicated in the license files, or&mdash;in compliance with GPL/LGPL&mdash;on request via E-Mail. All source code with group-ID `de.sciss` is available from [github.com/Sciss](https://github.com/Sciss).
 
+## download
+
+A binary version is provided through [Bintray](https://bintray.com/sciss/generic/Mellite).
+
 ## linking
 
 The following artifact is available from Maven Central:
