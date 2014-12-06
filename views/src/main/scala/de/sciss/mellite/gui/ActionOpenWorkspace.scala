@@ -46,20 +46,20 @@ object ActionOpenWorkspace extends Action("Open...") {
 
   // XXX TODO: should be in another place
   def openGUI[S <: Sys[S]](doc: Workspace[S]): Unit = {
-    recentFiles.add(doc.folder)
+    doc.folder.foreach(recentFiles.add)
     Application.documentHandler.addDocument(doc)
     doc match {
       case cf: Workspace.Confluent =>
         implicit val workspace: Workspace.Confluent  = cf
         implicit val cursor = workspace.system.durable
-        GUI.atomic[proc.Durable, Unit](fullTitle, s"Opening cursor window for '${doc.folder.base}'") {
+        GUI.atomic[proc.Durable, Unit](fullTitle, s"Opening cursor window for '${doc.name}'") {
           implicit tx => DocumentCursorsFrame(cf)
         }
       case eph =>
         implicit val workspace: Workspace[S] = eph
         implicit val cursor = eph.cursor
-        val nameView = ExprView.const[S, String](doc.folder.base)
-        GUI.atomic[S, Unit](fullTitle, s"Opening root elements window for '${doc.folder.base}'") {
+        val nameView = ExprView.const[S, String](doc.name)
+        GUI.atomic[S, Unit](fullTitle, s"Opening root elements window for '${doc.name}'") {
           implicit tx => FolderFrame[S](name = nameView, isWorkspaceRoot = true)
         }
     }

@@ -35,11 +35,12 @@ object DocumentHandlerImpl {
     // def openRead(path: String): Document = ...
 
     def addDocument[S <: Sys[S]](doc: Workspace[S])(implicit tx: S#Tx): Unit = {
-      // doc.addListener(docListener)
-      val p = doc.folder
-      require(!map.contains(p)(tx.peer), s"Workspace for path '$p' is already registered")
-      all.transform(_ :+ doc)(tx.peer)
-      map.+=(p -> doc)(tx.peer)
+      implicit val itx = tx.peer
+      doc.folder.foreach { p =>
+        require(!map.contains(p), s"Workspace for path '$p' is already registered")
+        all.transform(_ :+ doc)
+        map += p -> doc
+      }
 
       doc.addDependent(new Disposable[S#Tx] {
         def dispose()(implicit tx: S#Tx): Unit = removeDoc(doc)
@@ -53,12 +54,13 @@ object DocumentHandlerImpl {
     private def deferTx(code: => Unit)(implicit tx: TxnLike): Unit = tx.afterCommit(code)
 
     private def removeDoc[S <: Sys[S]](doc: Workspace[S])(implicit tx: S#Tx): Unit = {
+      implicit val itx = tx.peer
       all.transform { in =>
         val idx = in.indexOf(doc)
-        require(idx >= 0, s"Workspace for path '${doc.folder.path}' was not registered")
+        require(idx >= 0, s"Workspace ${doc.folder.fold("") { p => s"for path '$p'" }} was not registered")
         in.patch(idx, Nil, 1)
       } (tx.peer)
-      map.-=(doc.folder)(tx.peer)
+      doc.folder.foreach(map -= _)
 
       deferTx {
         dispatch(DocumentHandler.Closed(doc))

@@ -8,11 +8,11 @@ lazy val fullDescr                  = "A computer music application based on Sou
 
 lazy val loggingEnabled             = true
 
-lazy val projectVersion             = "0.14.0"
+lazy val projectVersion             = "1.0.0"
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.9.0"
+lazy val soundProcessesVersion      = "2.10.0"
 
 lazy val interpreterPaneVersion     = "1.7.0"
 
@@ -26,7 +26,7 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val scalaColliderSwingVersion  = "1.20.2"
+lazy val scalaColliderSwingVersion  = "1.21.0"
 
 lazy val lucreSwingVersion          = "0.6.2"
 
@@ -145,7 +145,7 @@ lazy val views = Project(
     appbundle.icon      := Some(baseDirectory.value / ".." / "icons" / "application.png"),
     appbundle.target    := baseDirectory.value / "..",
     appbundle.signature := "Ttm ",
-    appbundle.javaOptions ++= Seq("-XX:+CMSClassUnloadingEnabled", "-XX:+UseConcMarkSweepGC", "-XX:MaxPermSize=128m"),
+    appbundle.javaOptions ++= Seq("-Xms2048m", "-Xmx2048m", "-XX:PermSize=256m", "-XX:MaxPermSize=512m"),
     appbundle.documents += appbundle.Document(
       name       = "Mellite Document",
       role       = appbundle.Document.Editor,

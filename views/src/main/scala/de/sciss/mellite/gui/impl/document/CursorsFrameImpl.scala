@@ -20,7 +20,6 @@ import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
 
 import de.sciss.desktop
-import de.sciss.file._
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.swing.deferTx
@@ -85,8 +84,8 @@ object CursorsFrameImpl {
     }
 
     override protected def initGUI(): Unit = {
-      title       = s"${view.workspace.folder.base} : Cursors"
-      windowFile  = Some(workspace.folder)
+      title       = s"${view.workspace.name} : Cursors"
+      windowFile  = workspace.folder
       // missing from WindowImpl because of system mismatch
       window.reactions += {
         case desktop.Window.Activated(_) =>
@@ -325,7 +324,7 @@ object CursorsFrameImpl {
             // import StringEx.serializer
             //            val nameD = ExprView.expr[D, String](elem.name)
             //            val name  = nameD.map()
-            val name = ExprView.const[S, String](s"${workspace.folder.base} / ${elem.name.value}")
+            val name = ExprView.const[S, String](s"${workspace.name} / ${elem.name.value}")
             FolderFrame[S](name = name, isWorkspaceRoot = false)
           }
         }

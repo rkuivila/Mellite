@@ -79,7 +79,8 @@ object Workspace {
   }
 }
 sealed trait WorkspaceLike {
-  def folder: File
+  def folder: Option[File]
+  def name: String
 
   /** Issues a transaction that closes and disposes the workspace. */
   def close(): Unit

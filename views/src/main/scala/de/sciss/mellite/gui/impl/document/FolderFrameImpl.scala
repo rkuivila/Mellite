@@ -22,7 +22,7 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.desktop.{KeyStrokes, Menu, UndoManager}
+import de.sciss.desktop.{Desktop, KeyStrokes, Menu, UndoManager}
 import de.sciss.file._
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.deferTx
@@ -46,10 +46,11 @@ object FolderFrameImpl {
                          workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val folderView      = FolderView(folder)
+    val interceptQuit   = isWorkspaceRoot && workspace.folder.isEmpty
     val view            = new ViewImpl[S](folderView)
     view.init()
 
-    val res = new FrameImpl[S](view, name = name, isWorkspaceRoot = isWorkspaceRoot)
+    val res = new FrameImpl[S](view, name = name, isWorkspaceRoot = isWorkspaceRoot, interceptQuit = interceptQuit)
     res.init()
     res
   }
@@ -63,25 +64,40 @@ object FolderFrameImpl {
     }
 
   private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: ExprView[S#Tx, String],
-                                             isWorkspaceRoot: Boolean)
+                                             isWorkspaceRoot: Boolean, interceptQuit: Boolean)
     extends WindowImpl[S](name) with FolderFrame[S] {
 
     def workspace = view.workspace
 
     def folderView = view.peer
 
+    private var quitAcceptor = Option.empty[() => Boolean]
+
     override protected def initGUI(): Unit = {
       addDuplicateAction(this, view.actionDuplicate)
+      if (interceptQuit) quitAcceptor = Some(Desktop.addQuitAcceptor(checkClose()))
     }
 
     override protected def placement: (Float, Float, Int) = (0.5f, 0.0f, 20)
 
-    override protected def performClose(): Unit = if (isWorkspaceRoot) {
-      log(s"Closing workspace ${workspace.folder}")
-      Application.documentHandler.removeDocument(workspace)
-      workspace.close()
-    } else {
-      super.performClose()
+    override protected def checkClose(): Boolean = !interceptQuit || {
+      val msg = "<html><body>Closing an in-memory workspace means<br>" +
+        "all contents will be <b>irrevocably lost</b>.<br>" +
+        "<p>Ok to proceed?</body></html>"
+      val opt = desktop.OptionPane.confirmation(message = msg, messageType = desktop.OptionPane.Message.Warning,
+        optionType = desktop.OptionPane.Options.OkCancel)
+      opt.show(Some(window), "Close Workspace") == desktop.OptionPane.Result.Ok
+    }
+
+    override protected def performClose(): Unit = {
+      quitAcceptor.foreach(Desktop.removeQuitAcceptor)
+      if (isWorkspaceRoot) {
+        log(s"Closing workspace ${workspace.folder}")
+        Application.documentHandler.removeDocument(workspace)
+        workspace.close()
+      } else {
+        super.performClose()
+      }
     }
   }
 

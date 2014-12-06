@@ -187,7 +187,7 @@ object WorkspaceImpl {
 
     // ---- implemented ----
 
-    override def toString = s"Workspace<${folder.name}>" // + hashCode().toHexString
+    override def toString = s"Workspace<${folder.fold("in-memory")(_.name)}>" // + hashCode().toHexString
 
     private val dependents  = Ref(Vec.empty[Disposable[S#Tx]])
 
@@ -245,9 +245,12 @@ object WorkspaceImpl {
     }
   }
 
-  private final class ConfluentImpl(val folder: File, val system: Cf, protected val access: stm.Source[Cf#Tx, Data[Cf]],
+  private final class ConfluentImpl(_folder: File, val system: Cf, protected val access: stm.Source[Cf#Tx, Data[Cf]],
                                     val cursors: Cursors[Cf, Cf#D])
     extends Workspace.Confluent with Impl[Cf] {
+
+    def folder  = Some(_folder)
+    def name    = _folder.base
 
     val systemType = implicitly[reflect.runtime.universe.TypeTag[Cf]]
 
@@ -258,11 +261,14 @@ object WorkspaceImpl {
     def cursor = cursors.cursor
   }
 
-  private final class DurableImpl(val folder: File, val system: Dur,
+  private final class DurableImpl(_folder: File, val system: Dur,
                                   protected val access: stm.Source[Dur#Tx, Data[Dur]])
     extends Workspace.Durable with Impl[Dur] {
 
     val systemType = implicitly[reflect.runtime.universe.TypeTag[Dur]]
+
+    def folder  = Some(_folder)
+    def name    = _folder.base
 
     type I = system.I
     val inMemoryBridge = (tx: S#Tx) => Dur.inMemory(tx)
@@ -282,6 +288,7 @@ object WorkspaceImpl {
 
     def cursor: stm.Cursor[S] = system
 
-    def folder: File = file("<in-memory>")  // XXX TODO - good?
+    def folder = None
+    def name = "in-memory"
   }
 }

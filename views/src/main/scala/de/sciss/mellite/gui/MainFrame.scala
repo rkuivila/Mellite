@@ -19,7 +19,7 @@ import java.awt.{Color, Font}
 import javax.swing.border.Border
 
 import de.sciss.audiowidgets.PeakMeter
-import de.sciss.desktop.{Menu, Window, WindowHandler}
+import de.sciss.desktop.{Desktop, Menu, Window, WindowHandler}
 import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.synth.{Server, Txn}
@@ -420,7 +420,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   closeOperation  = Window.CloseIgnore
 
   reactions += {
-    case Window.Closing(_) => Application.quit()
+    case Window.Closing(_) => if (Desktop.mayQuit()) Application.quit()
   }
 
   pack()
