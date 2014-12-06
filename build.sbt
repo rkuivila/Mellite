@@ -8,7 +8,7 @@ lazy val fullDescr                  = "A computer music application based on Sou
 
 lazy val loggingEnabled             = true
 
-lazy val projectVersion             = "1.0.0"
+lazy val projectVersion             = "1.1.0-SNAPSHOT"
 
 // ---- core dependencies ----
 
@@ -20,7 +20,7 @@ lazy val lucreSTMVersion            = "2.1.1"
 
 lazy val fscapeJobsVersion          = "1.5.0"
 
-lazy val strugatzkiVersion          = "2.6.0"
+lazy val strugatzkiVersion          = "2.7.0"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
