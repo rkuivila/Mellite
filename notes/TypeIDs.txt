@@ -40,6 +40,8 @@
 
 0x10008     Artifact
 
+0x10009  	Scan
+
 :: indeterminus ::
 
 0x20000     Recursion
