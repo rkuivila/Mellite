@@ -219,7 +219,7 @@ object ProcActions {
           val scanKeys: Set[String] = sg.sources.collect {
             case proc.graph.ScanIn   (key)    => key
             case proc.graph.ScanOut  (key, _) => key
-            // case proc.graph.ScanInFix(key, _) => key
+            case proc.graph.ScanInFix(key, _) => key
           } (breakOut)
           // sg.sources.foreach(println)
           if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
