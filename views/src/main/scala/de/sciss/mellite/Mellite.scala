@@ -141,6 +141,9 @@ object Mellite extends SwingApplicationImpl("Mellite") {
 
     mellite.initTypes()
 
+    new de.sciss.audiowidgets.impl.ActionGoToTime(null,
+      de.sciss.desktop.KeyStrokes.plain + scala.swing.event.Key.G) // , de.sciss.desktop.FocusType.Window)
+
     // ---- look and feel
 
     try {

@@ -84,12 +84,12 @@ object ProcActions {
         case _ =>
       }
 
-      if (dStartC != 0L) for {
+      if (dStartCC != 0L) for {
         objT <- Proc.Obj.unapply(obj)
         (Expr.Var(time), audio) <- getAudioRegion(objT)
       } {
         // println(s"Found audio region at ${time.value}: ${audio.value}")
-        time.transform(_ - dStartC)
+        time.transform(_ - dStartCC)
       }
     }
   }

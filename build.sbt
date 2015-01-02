@@ -30,7 +30,7 @@ lazy val scalaColliderSwingVersion  = "1.21.0"
 
 lazy val lucreSwingVersion          = "0.6.2"
 
-lazy val audioWidgetsVersion        = "1.7.1-SNAPSHOT"
+lazy val audioWidgetsVersion        = "1.7.2"
 
 lazy val desktopVersion             = "0.6.0"
 
@@ -108,7 +108,7 @@ lazy val core: Project = Project(
     description := "Core layer for Mellite",
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
     libraryDependencies ++= Seq(
-      "de.sciss" %% "soundprocesses"        % soundProcessesVersion,  // computer-music framework
+      "de.sciss" %% "soundprocesses-core"   % soundProcessesVersion,  // computer-music framework
       "de.sciss" %% "scalainterpreterpane"  % interpreterPaneVersion, // REPL
       "de.sciss" %% s"lucrestm-$bdb"        % lucreSTMVersion,        // database backend
       "de.sciss" %% "fscapejobs"            % fscapeJobsVersion,      // remote FScape invocation
@@ -126,6 +126,8 @@ lazy val views = Project(
     name        := s"$baseName-views",
     description := fullDescr,
     libraryDependencies ++= Seq(
+      "de.sciss" %% "soundprocesses-views"            % soundProcessesVersion,      // computer-music framework
+      "de.sciss" %% "soundprocesses-compiler"         % soundProcessesVersion,      // computer-music framework
       "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL
       "de.sciss" %% "lucreswing"                      % lucreSwingVersion,          // reactive Swing components
       "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets

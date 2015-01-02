@@ -207,7 +207,7 @@ object Edits {
 
         if (newSpan == oldSpan) None else {
           import SpanLikeEx.{serializer => spanSer, varSerializer => spanVarSer}
-          import LongEx    .{serializer => longSer, varSerializer => longVarSer}
+          import LongEx    .{serializer => longSer, varSerializer}
           val name  = "Resize"
           val edit0 = EditVar.Expr(name, vr, newSpan)
           val edit1Opt = if (dStartCC == 0L) None else
@@ -215,6 +215,15 @@ object Edits {
               objT <- Proc.Obj.unapply(obj)
               (Expr.Var(time), audio) <- ProcActions.getAudioRegion(objT)
             } yield {
+
+              for {
+                scan <- objT.elem.peer.scans.get(Proc.Obj.graphAudio)
+                Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
+              } {
+                val list = g.debugList()
+                println(list)
+              }
+
               val newAudioSpan = time() - dStartCC
               EditVar.Expr(name, time, newAudioSpan)
             }
