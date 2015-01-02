@@ -186,10 +186,11 @@ object TimelineViewImpl {
       tlView.objFadeChanged(timed, fadeIn, fadeOut)
     }
 
-    def trackIndexChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val trackNow = timed.value.attr[IntElem](TimelineObjView.attrTrackIndex).fold(0)(_.value)
+    def trackPositionChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
+      val trackIdxNow = timed.value.attr[IntElem](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
+      val trackHNow   = timed.value.attr[IntElem](TimelineObjView.attrTrackHeight).fold(4)(_.value)
       tlView.objMoved(timed, spanCh = Change(Span.Void, Span.Void),
-        trackCh = Change(trackNow - 1, trackNow))
+        trackCh = Some(trackIdxNow -> trackHNow))
     }
 
     def attrChanged(timed: Timeline.Timed[S], name: String)(implicit tx: S#Tx): Unit =
@@ -199,7 +200,7 @@ object TimelineViewImpl {
         case ObjKeys.attrName  => nameChanged(timed)
         case ObjKeys.attrGain  => gainChanged(timed)
         case ObjKeys.attrBus   => busChanged (timed)
-        case TimelineObjView.attrTrackIndex => trackIndexChanged(timed)
+        case TimelineObjView.attrTrackIndex | TimelineObjView.attrTrackHeight => trackPositionChanged(timed)
         case _ =>
       }
 
@@ -246,15 +247,15 @@ object TimelineViewImpl {
 
       case BiGroup.ElementMoved  (timed, spanChange) =>
         // println(s"Moved   $timed, $spanCh")
-        tlView.objMoved(timed, spanCh = spanChange, trackCh = Change(0, 0))
+        tlView.objMoved(timed, spanCh = spanChange, trackCh = None)
 
       case BiGroup.ElementMutated(timed0, procUpd) =>
         if (DEBUG) println(s"Mutated $timed0, $procUpd")
         procUpd.changes.foreach {
           case Obj.ElemChange(updP0) =>
             (timed0.value, updP0) match {
-              case (Timeline.Obj(tl), updP1: Proc.Update[_]) =>
-                val timed = timed0.asInstanceOf[TimedProc  [S]]
+              case (Proc.Obj(procObj), updP1: Proc.Update[_]) =>
+                val timed = timed0.asInstanceOf[TimedProc  [S]] // XXX not good
                 val updP  = updP1 .asInstanceOf[Proc.Update[S]]
                 updP.changes.foreach {
                   case Proc.ScanAdded  (key, _) => scanAdded  (timed, key)
@@ -263,6 +264,7 @@ object TimelineViewImpl {
                     scanUpdates.foreach {
                       case Scan.GraphemeChange(grapheme, segments) =>
                         if (name == Proc.Obj.graphAudio) {
+                          // XXX TODO: This doesn't work. Somehow we get a segment that _ends_ at 0L
                           val segmOpt = segments.find(_.span.contains(0L)) match {
                             case Some(segm: Grapheme.Segment.Audio) => Some(segm)
                             case _ => None
@@ -285,20 +287,9 @@ object TimelineViewImpl {
               case _ =>
             }
 
-          case Obj.AttrAdded  (key, _) => attrChanged(timed0, key)
-          case Obj.AttrRemoved(key, _) => attrChanged(timed0, key)
-
-          case Obj.AttrChange(name, attr, ach) =>
-            (name, ach) match {
-              case (TimelineObjView.attrTrackIndex, changes) =>
-                changes.foreach {
-                  case Obj.ElemChange(Change(before: Int, now: Int)) =>
-                    tlView.objMoved(timed0, spanCh = Change(Span.Void, Span.Void), trackCh = Change(before, now))
-                  case _ =>
-                }
-
-              case _ => attrChanged(timed0, name)
-            }
+          case Obj.AttrAdded  (key, _)    => attrChanged(timed0, key)
+          case Obj.AttrRemoved(key, _)    => attrChanged(timed0, key)
+          case Obj.AttrChange (key, _, _) => attrChanged(timed0, key)
         }
     }}
     disposables ::= obsGroup
@@ -440,7 +431,8 @@ object TimelineViewImpl {
     def splitObjects(time: Long)(views: TraversableOnce[TimelineObjView[S]])
                     (implicit tx: S#Tx): Option[UndoableEdit] = plainGroup.modifiableOption.flatMap { group =>
       val edits: List[UndoableEdit] = views.flatMap { pv =>
-        pv.span() match {
+        val oldSpanEx = pv.span()
+        oldSpanEx match {
           case Expr.Var(oldSpan) =>
             val imp = ExprImplicits[S]
             import imp._
@@ -463,7 +455,7 @@ object TimelineViewImpl {
               case Span.HasStop(rightStop) =>
                 val minStart  = timelineModel.bounds.start
                 val resize    = ProcActions.Resize(0L, time - rightStop)
-                Edits.resize(oldSpan, resize, minStart = minStart)
+                Edits.resize(oldSpan, leftObj, resize, minStart = minStart)
 
               case Span.HasStart(leftStart) =>
                 val leftSpan  = Span(leftStart, time)
@@ -614,7 +606,7 @@ object TimelineViewImpl {
 
     // insignificant changes are ignored, therefore one can just move the span without the track
     // by using trackCh = Change(0,0), and vice versa
-    def objMoved(timed: BiGroup.TimedElem[S, Obj[S]], spanCh: Change[SpanLike], trackCh: Change[Int])
+    def objMoved(timed: BiGroup.TimedElem[S, Obj[S]], spanCh: Change[SpanLike], trackCh: Option[(Int, Int)])
                  (implicit tx: S#Tx): Unit =
       viewMap.get(timed.id).foreach { view =>
         deferTx {
@@ -624,7 +616,10 @@ object TimelineViewImpl {
           }
 
           if (spanCh .isSignificant) view.spanValue   = spanCh .now
-          if (trackCh.isSignificant) view.trackIndex  = trackCh.now
+          trackCh.foreach { case (idx, h) =>
+            view.trackIndex   = idx
+            view.trackHeight  = h
+          }
 
           view match {
             case pv: ProcView[S] if pv.isGlobal => globalView.add(pv)
@@ -1104,7 +1099,8 @@ object TimelineViewImpl {
                       // to the region's left margin. That is, if the grapheme segment
                       // starts early than the region (its start is less than zero),
                       // the frame accordingly increases.
-                      val dStart  = audio.offset - segm.span.start * srRatio
+                      val dStart  = (audio.offset - segm.span.start +
+                                     (if (selected) resizeState.deltaStart else 0L)) * srRatio
                       // a factor to convert from pixel space to audio-file frames
                       val s2f     = timelineModel.visible.length.toDouble / canvasComponent.peer.getWidth * srRatio
                       val lenC    = (px2C - px1C) * s2f

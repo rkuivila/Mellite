@@ -19,7 +19,7 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.event.Sys
-import de.sciss.lucre.expr.{Expr, Int => IntEx, String => StringEx}
+import de.sciss.lucre.expr.{Expr, Int => IntEx, String => StringEx, Long => LongEx}
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.edit.EditVar
@@ -171,7 +171,7 @@ object Edits {
     }
   }
 
-  def resize[S <: Sys[S]](span: Expr[S, SpanLike], amount: Resize, minStart: Long)
+  def resize[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S], amount: Resize, minStart: Long)
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
     Expr.Var.unapply(span).flatMap { vr =>
       import amount.{deltaStart, deltaStop}
@@ -206,9 +206,19 @@ object Edits {
         }
 
         if (newSpan == oldSpan) None else {
-          import SpanLikeEx.{serializer, varSerializer}
-          val edit = EditVar.Expr("Resize", vr, newSpan)
-          Some(edit)
+          import SpanLikeEx.{serializer => spanSer, varSerializer => spanVarSer}
+          import LongEx    .{serializer => longSer, varSerializer => longVarSer}
+          val name  = "Resize"
+          val edit0 = EditVar.Expr(name, vr, newSpan)
+          val edit1Opt = if (dStartCC == 0L) None else
+            for {
+              objT <- Proc.Obj.unapply(obj)
+              (Expr.Var(time), audio) <- ProcActions.getAudioRegion(objT)
+            } yield {
+              val newAudioSpan = time() - dStartCC
+              EditVar.Expr(name, time, newAudioSpan)
+            }
+          CompoundEdit(edit0 :: edit1Opt.toList, name)
         }
       } else None
     }
