@@ -22,7 +22,7 @@ import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.mellite.gui.edit.EditAttrMap
+import de.sciss.mellite.gui.edit.{Edits, EditAttrMap}
 import de.sciss.synth.proc.{IntElem, Obj, ExprImplicits}
 import java.awt.Cursor
 import de.sciss.span.{SpanLike, Span}
@@ -58,9 +58,8 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   }
 
   protected def commitObj(drag: Move)(span: Expr[S, SpanLike], obj: Obj[S])
-                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-    ???
-  }
+                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
+    Edits.move(span, obj, drag, minStart = canvas.timelineModel.bounds.start)
 
   protected def dialog(): Option[Move] = {
     println("Not yet implemented - movement dialog")
