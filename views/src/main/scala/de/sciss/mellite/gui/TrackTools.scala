@@ -92,7 +92,8 @@ object TrackTool {
   /** Direct adjustment without drag period. */
   case class Adjust[A](value: A) extends Update[A]
 
-  final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean)
+  type Move   = ProcActions.Move
+  val  Move   = ProcActions.Move
   type Resize = ProcActions.Resize
   val  Resize = ProcActions.Resize
   final case class Gain    (factor: Float)

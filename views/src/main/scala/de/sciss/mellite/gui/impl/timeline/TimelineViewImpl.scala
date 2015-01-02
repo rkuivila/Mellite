@@ -430,15 +430,31 @@ object TimelineViewImpl {
       enabled = false
 
       def apply(): Unit = {
-        println("TODO: actionRemoveSpan")
-        if (true) return
         timelineModel.selection.nonEmptyOption.foreach { selSpan =>
-          step { implicit tx =>
-            plainGroup.modifiableOption.foreach { groupMod =>
+          val minStart = timelineModel.bounds.start
+          val editOpt = step { implicit tx =>
+            plainGroup.modifiableOption.flatMap { groupMod =>
               // ---- remove ----
-              // - move everything right of the selection span's stop to the left
+              // - first call 'clear'
+              // - then move everything right of the selection span's stop to the left
               //   by the selection span's length
+              val editClear = editClearSpan(groupMod, selSpan)
+              val affected  = groupMod.intersect(Span.From(selSpan.stop))
+              val amount    = ProcActions.Move(deltaTime = -selSpan.length, deltaTrack = 0, copy = false)
+              val editsMove = affected.flatMap {
+                case (_ /* elemSpan */, elems) =>
+                  elems.flatMap { timed =>
+                    Edits.move(timed.span, timed.value, amount, minStart = minStart)
+                  }
+              } .toList
+
+              CompoundEdit(editClear.toList ++ editsMove, title)
             }
+          }
+          editOpt.foreach(undoManager.add)
+          timelineModel.modifiableOption.foreach { tlm =>
+            tlm.selection = Span.Void
+            tlm.position  = selSpan.start
           }
         }
       }

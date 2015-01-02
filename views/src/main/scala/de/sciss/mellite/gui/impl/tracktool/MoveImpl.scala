@@ -59,51 +59,7 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   protected def commitObj(drag: Move)(span: Expr[S, SpanLike], obj: Obj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-    var edits = List.empty[UndoableEdit]
-
-    import drag._
-    if (deltaTrack != 0) {
-      // in the case of const, just overwrite, in the case of
-      // var, check the value stored in the var, and update the var
-      // instead (recursion). otherwise, it will be some combinatorial
-      // expression, and we could decide to construct a binary op instead!
-      val expr = ExprImplicits[S]
-      import expr._
-
-      val newTrack: Expr[S, Int] = obj.attr[IntElem](TimelineObjView.attrTrackIndex) match {
-        case Some(Expr.Var(vr)) => vr() + deltaTrack
-        case other => other.fold(0)(_.value) + deltaTrack
-      }
-      val newTrackOpt = if (newTrack == IntEx.newConst[S](0)) None else Some(newTrack)
-
-      import IntEx.serializer
-      val edit = EditAttrMap.expr("Adjust Track Placement", obj, TimelineObjView.attrTrackIndex, newTrackOpt) { ex =>
-        IntElem(IntEx.newVar(ex))
-      }
-      edits ::= edit
-    }
-
-    val oldSpan   = span.value
-    val minStart  = canvas.timelineModel.bounds.start
-    val deltaC    = if (deltaTime >= 0) deltaTime else oldSpan match {
-      case Span.HasStart(oldStart)  => math.max(-(oldStart - minStart)         , deltaTime)
-      case Span.HasStop (oldStop)   => math.max(-(oldStop  - minStart + MinDur), deltaTime)
-    }
-    if (deltaC != 0L) {
-      val imp = ExprImplicits[S]
-      import imp._
-      span match {
-        case Expr.Var(vr) =>
-          // s.transform(_ shift deltaC)
-          val newSpan = vr() shift deltaC
-          import SpanLikeEx.{serializer, varSerializer}
-          val edit    = EditVar.Expr(name, vr, newSpan)
-          edits ::= edit
-        case _ =>
-      }
-    }
-
-    CompoundEdit(edits, name)
+    ???
   }
 
   protected def dialog(): Option[Move] = {

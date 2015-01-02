@@ -35,6 +35,7 @@ object ProcActions {
   private type TimelineMod[S <: Sys[S]] = Timeline.Modifiable[S]
 
   final case class Resize(deltaStart: Long, deltaStop: Long)
+  final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean)
 
   /** Queries the audio region's grapheme segment start and audio element. */
   def getAudioRegion[S <: Sys[S]](/* span: Expr[S, SpanLike], */ proc: Proc.Obj[S])
