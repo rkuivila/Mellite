@@ -438,13 +438,22 @@ object TimelineViewImpl {
             import imp._
             val leftObj   = pv.obj()
             val rightObj  = ProcActions.copy[S](leftObj /*, Some(oldSpan) */)
+
             val oldVal    = oldSpan.value
             val rightSpan = oldVal match {
               case Span.HasStart(leftStart) =>
                 val _rightSpan  = SpanLikeEx.newVar(oldSpan())
                 val resize      = ProcActions.Resize(time - leftStart, 0L)
                 val minStart    = timelineModel.bounds.start
+                // println("----BEFORE LEFT----")
+                // debugPrintAudioGrapheme(leftObj)
+                // println("----BEFORE RIGHT----")
+                // debugPrintAudioGrapheme(rightObj)
                 ProcActions.resize(_rightSpan, rightObj, resize, minStart = minStart)
+                // println("----AFTER LEFT----")
+                // debugPrintAudioGrapheme(leftObj)
+                // println("----AFTER RIGHT ----")
+                // debugPrintAudioGrapheme(rightObj)
                 _rightSpan
 
               case Span.HasStop(rightStop) =>
@@ -467,6 +476,7 @@ object TimelineViewImpl {
 
             // group.add(rightSpan, rightObj)
             val editAdd = EditTimelineInsertObj("Region", group, rightSpan, rightObj)
+
             debugCheckConsistency(s"Split left = $leftObj, oldSpan = $oldVal; right = $rightObj, rightSpan = ${rightSpan.value}")
             val list1 = editAdd :: Nil
             editLeftSpan.fold(list1)(_ :: list1)
@@ -476,6 +486,18 @@ object TimelineViewImpl {
       } .toList
 
       CompoundEdit(edits, "Split Objects")
+    }
+
+    private def debugPrintAudioGrapheme(obj: Obj[S])(implicit tx: S#Tx): Unit = {
+      for {
+        objT <- Proc.Obj.unapply(obj)
+        scan <- objT.elem.peer.scans.get(Proc.Obj.graphAudio)
+        Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
+      } {
+        println(s"GRAPHEME: $g")
+        val list = g.debugList()
+        println(list)
+      }
     }
 
     def guiInit(): Unit = {

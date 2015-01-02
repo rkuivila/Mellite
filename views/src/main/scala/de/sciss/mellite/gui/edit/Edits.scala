@@ -213,19 +213,15 @@ object Edits {
           val edit1Opt = if (dStartCC == 0L) None else
             for {
               objT <- Proc.Obj.unapply(obj)
-              (Expr.Var(time), audio) <- ProcActions.getAudioRegion(objT)
+              (Expr.Var(time), g, audio) <- ProcActions.getAudioRegion2(objT)
             } yield {
-
-              for {
-                scan <- objT.elem.peer.scans.get(Proc.Obj.graphAudio)
-                Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
-              } {
-                val list = g.debugList()
-                println(list)
-              }
-
+              // XXX TODO --- crazy work-around. BiPin / Grapheme
+              // must be observed, otherwise underlying SkipList is not updated !!!
+              val temp = g.changed.react(_ => _ => ())
               val newAudioSpan = time() - dStartCC
-              EditVar.Expr(name, time, newAudioSpan)
+              val res = EditVar.Expr(name, time, newAudioSpan)
+              temp.dispose()
+              res
             }
           CompoundEdit(edit0 :: edit1Opt.toList, name)
         }

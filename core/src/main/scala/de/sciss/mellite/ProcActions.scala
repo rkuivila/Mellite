@@ -46,6 +46,16 @@ object ProcActions {
     } yield (time, audio)
   }
 
+  /** FOR DEBUGGING PURPOSES, ALSO RETURNS THE GRAPHEME **/
+  def getAudioRegion2[S <: Sys[S]](/* span: Expr[S, SpanLike], */ proc: Proc.Obj[S])
+                                 (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme[S], Grapheme.Expr.Audio[S])] = {
+    for {
+      scan <- proc.elem.peer.scans.get(Proc.Obj.graphAudio)
+      Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
+      BiExpr(time, audio: Grapheme.Expr.Audio[S]) <- g.at(0L)
+    } yield (time, g, audio)
+  }
+
   def resize[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S],
                           amount: Resize, minStart: Long /* timelineModel: TimelineModel */)
                          (implicit tx: S#Tx): Unit = {
@@ -86,10 +96,13 @@ object ProcActions {
 
       if (dStartCC != 0L) for {
         objT <- Proc.Obj.unapply(obj)
-        (Expr.Var(time), audio) <- getAudioRegion(objT)
+        (Expr.Var(time), g, audio) <- getAudioRegion2(objT)
       } {
-        // println(s"Found audio region at ${time.value}: ${audio.value}")
+        // XXX TODO --- crazy work-around. BiPin / Grapheme
+        // must be observed, otherwise underlying SkipList is not updated !!!
+        val temp = g.changed.react(_ => _ => ())
         time.transform(_ - dStartCC)
+        temp.dispose()
       }
     }
   }
