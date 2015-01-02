@@ -122,9 +122,9 @@ object Edits {
     EditAddScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
   }
 
-  def removeLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
+  def removeLink[S <: Sys[S]](source: Scan[S], sink: Scan[S])
                              (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    log(s"Unlink $sourceKey / $source from $sinkKey / $sink")
+    log(s"Unlink $source from $sink")
     // source.removeSink(Scan.Link.Scan(sink))
     EditRemoveScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
   }
@@ -146,8 +146,8 @@ object Edits {
     }
 
     if (existIt.hasNext) {
-      val (sourceKey, source, sinkKey, sink) = existIt.next()
-      val edit = removeLink(sourceKey, source, sinkKey, sink)
+      val (_ /* sourceKey */, source, _ /* sinkKey */, sink) = existIt.next()
+      val edit = removeLink(/* sourceKey, */ source, /* sinkKey, */ sink)
       Some(edit)
 
     } else {
@@ -228,31 +228,26 @@ object Edits {
       } else None
     }
 
-  //  def unlinkAndRemove[S <: Sys[S]](timeline: Timeline.Modifiable[S], span: Expr[S, SpanLike], obj: Obj[S])
-  //                                  (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-  //    obj match {
-  //      case Proc.Obj(proc) =>
-  //        def deleteLinks(map: ProcView.LinkMap[S])(fun: (String, Scan[S], String, Scan[S]) => Unit): Unit =
-  //          for {
-  //            (thisKey, links) <- map
-  //            ProcView.Link(thatView, thatKey) <- links
-  //            thisScan <- proc.elem.peer.scans.get(thisKey)
-  //            thatScan <- thatView.proc.elem.peer.scans.get(thatKey)
-  //          } {
-  //            fun(thisKey, thisScan, thatKey, thatScan)
-  //          }
-  //
-  //        deleteLinks(pv.inputs) { (thisKey, thisScan, thatKey, thatScan) =>
-  //          ProcActions.removeLink(sourceKey = thatKey, source = thatScan, sinkKey = thisKey, sink = thisScan)
-  //        }
-  //        deleteLinks(pv.outputs) { (thisKey, thisScan, thatKey, thatScan) =>
-  //          ProcActions.removeLink(sourceKey = thisKey, source = thisScan, sinkKey = thatKey, sink = thatScan)
-  //        }
-  //
-  //      case _ =>
-  //    }
-  //
-  //    // group.remove(span, obj)
-  //    EditTimelineRemoveObj("Object", timeline, span, obj)
-  //  }
+  def unlinkAndRemove[S <: Sys[S]](timeline: proc.Timeline.Modifiable[S], span: Expr[S, SpanLike], obj: Obj[S])
+                                  (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
+    val scanEdits = obj match {
+      case Proc.Obj(objT) =>
+        val scans = objT.elem.peer.scans
+        scans.iterator.toList.flatMap { case (key, scan) =>
+          val edits1 = scan.sources.collect {
+            case Scan.Link.Scan(source) =>
+              removeLink(source, scan)
+          } .toList
+          val edits2 = scan.sinks.collect {
+            case Scan.Link.Scan(sink) =>
+              removeLink(scan, sink)
+          } .toList
+          edits1 ++ edits2
+        }
+
+      case _ => Nil
+    }
+    val objEdit = EditTimelineRemoveObj("Object", timeline, span, obj)
+    CompoundEdit(scanEdits :+ objEdit, "Remove Object").get // XXX TODO - not nice, `get`
+  }
 }

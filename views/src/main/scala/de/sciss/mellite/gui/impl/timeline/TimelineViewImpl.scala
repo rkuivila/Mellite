@@ -49,6 +49,7 @@ import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.icons.raphael
 import TimelineView.TrackScale
 
+import scala.annotation.tailrec
 import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
 import scala.swing.Swing._
 import scala.swing.event.{Key, ValueChanged}
@@ -383,8 +384,8 @@ object TimelineViewImpl {
     object actionDelete extends Action("Delete") {
       def apply(): Unit = {
         val editOpt = withSelection { implicit tx => views =>
-          plainGroup.modifiableOption.flatMap { mod =>
-            ProcGUIActions.removeProcs(mod, views)
+          plainGroup.modifiableOption.flatMap { groupMod =>
+            ProcGUIActions.removeProcs(groupMod, views) // XXX TODO - probably should be replaced by Edits.unlinkAndRemove
           }
         }
         editOpt.foreach(undoManager.add)
@@ -394,7 +395,7 @@ object TimelineViewImpl {
     object actionSplitObjects extends Action("Split Selected Objects") {
       import KeyStrokes.menu2
       accelerator = Some(menu2 + Key.Y)
-      enabled = false
+      enabled     = false
 
       def apply(): Unit = {
         val pos     = timelineModel.position
@@ -407,6 +408,22 @@ object TimelineViewImpl {
       }
     }
 
+    object actionClearSpan extends Action("Clear Selected Span") {
+      import KeyStrokes._
+      accelerator = Some(menu1 + Key.BackSlash)
+      enabled     = false
+
+      def apply(): Unit =
+        timelineModel.selection.nonEmptyOption.foreach { selSpan =>
+          val editOpt = step { implicit tx =>
+            plainGroup.modifiableOption.flatMap { groupMod =>
+              editClearSpan(groupMod, selSpan)
+            }
+          }
+          editOpt.foreach(undoManager.add)
+        }
+    }
+
     object actionRemoveSpan extends Action("Remove Selected Span") {
       import KeyStrokes._
       accelerator = Some(menu1 + shift + Key.BackSlash)
@@ -414,7 +431,48 @@ object TimelineViewImpl {
 
       def apply(): Unit = {
         println("TODO: actionRemoveSpan")
+        if (true) return
+        timelineModel.selection.nonEmptyOption.foreach { selSpan =>
+          step { implicit tx =>
+            plainGroup.modifiableOption.foreach { groupMod =>
+              // ---- remove ----
+              // - move everything right of the selection span's stop to the left
+              //   by the selection span's length
+            }
+          }
+        }
       }
+    }
+
+    // ---- clear ----
+    // - find the objects that overlap with the selection span
+    // - if the object is contained in the span, remove it
+    // - if the object overlaps the span, split it once or twice,
+    //   then remove the fragments that are contained in the span
+    private def editClearSpan(groupMod: proc.Timeline.Modifiable[S], selSpan: Span)
+                             (implicit tx: S#Tx): Option[UndoableEdit] = {
+      val allEdits = groupMod.intersect(selSpan).flatMap {
+        case (elemSpan, elems) =>
+          elems.flatMap { timed =>
+            if (selSpan contains elemSpan) {
+              Edits.unlinkAndRemove(groupMod, timed.span, timed.value) :: Nil
+            } else {
+              timed.span match {
+                case Expr.Var(oldSpan) =>
+                  val (edits1, span2, obj2) = splitObject(groupMod, selSpan.start, oldSpan, timed.value)
+                  val edits3 = if (selSpan contains span2.value) edits1 else {
+                    val (edits2, _, _) = splitObject(groupMod, selSpan.stop, span2, obj2)
+                    edits1 ++ edits2
+                  }
+                  val edit4 = Edits.unlinkAndRemove(groupMod, span2, obj2)
+                  edits3 ++ List(edit4)
+
+                case _ => Nil
+              }
+            }
+          }
+      } .toList
+      CompoundEdit(allEdits, "Clear Span")
     }
 
     private def withSelection[A](fun: S#Tx => TraversableOnce[TimelineObjView[S]] => Option[A]): Option[A] =
@@ -440,59 +498,64 @@ object TimelineViewImpl {
     }
 
     def splitObjects(time: Long)(views: TraversableOnce[TimelineObjView[S]])
-                    (implicit tx: S#Tx): Option[UndoableEdit] = plainGroup.modifiableOption.flatMap { group =>
+                    (implicit tx: S#Tx): Option[UndoableEdit] = plainGroup.modifiableOption.flatMap { groupMod =>
       val edits: List[UndoableEdit] = views.flatMap { pv =>
-        val oldSpanEx = pv.span()
-        oldSpanEx match {
+        pv.span() match {
           case Expr.Var(oldSpan) =>
-            val imp = ExprImplicits[S]
-            import imp._
-            val leftObj   = pv.obj()
-            val rightObj  = ProcActions.copy[S](leftObj /*, Some(oldSpan) */)
-
-            val oldVal    = oldSpan.value
-            val rightSpan = oldVal match {
-              case Span.HasStart(leftStart) =>
-                val _rightSpan  = SpanLikeEx.newVar(oldSpan())
-                val resize      = ProcActions.Resize(time - leftStart, 0L)
-                val minStart    = timelineModel.bounds.start
-                // println("----BEFORE RIGHT----")
-                // debugPrintAudioGrapheme(rightObj)
-                ProcActions.resize(_rightSpan, rightObj, resize, minStart = minStart)
-                // println("----AFTER RIGHT ----")
-                // debugPrintAudioGrapheme(rightObj)
-                _rightSpan
-
-              case Span.HasStop(rightStop) =>
-                SpanLikeEx.newVar(Span(time, rightStop))
-            }
-
-            val editLeftSpan: Option[UndoableEdit] = oldVal match {
-              case Span.HasStop(rightStop) =>
-                val minStart  = timelineModel.bounds.start
-                val resize    = ProcActions.Resize(0L, time - rightStop)
-                Edits.resize(oldSpan, leftObj, resize, minStart = minStart)
-
-              case Span.HasStart(leftStart) =>
-                val leftSpan  = Span(leftStart, time)
-                // oldSpan()     = leftSpan
-                import SpanLikeEx.{serializer, varSerializer}
-                val edit = EditVar.Expr("Resize", oldSpan, leftSpan)
-                Some(edit)
-            }
-
-            // group.add(rightSpan, rightObj)
-            val editAdd = EditTimelineInsertObj("Region", group, rightSpan, rightObj)
-
-            debugCheckConsistency(s"Split left = $leftObj, oldSpan = $oldVal; right = $rightObj, rightSpan = ${rightSpan.value}")
-            val list1 = editAdd :: Nil
-            editLeftSpan.fold(list1)(_ :: list1)
-
+            val (edits, _, _) = splitObject(groupMod, time, oldSpan, pv.obj())
+            edits
           case _ => Nil
         }
       } .toList
 
       CompoundEdit(edits, "Split Objects")
+    }
+
+    private def splitObject(groupMod: proc.Timeline.Modifiable[S], time: Long, oldSpan: Expr.Var[S, SpanLike],
+                            obj: Obj[S])(implicit tx: S#Tx): (List[UndoableEdit], Expr.Var[S, SpanLike], Obj[S]) = {
+      val imp = ExprImplicits[S]
+      import imp._
+      val leftObj   = obj // pv.obj()
+      val rightObj  = ProcActions.copy[S](leftObj /*, Some(oldSpan) */)
+
+      val oldVal    = oldSpan.value
+      val rightSpan = oldVal match {
+        case Span.HasStart(leftStart) =>
+          val _rightSpan  = SpanLikeEx.newVar(oldSpan())
+          val resize      = ProcActions.Resize(time - leftStart, 0L)
+          val minStart    = timelineModel.bounds.start
+          // println("----BEFORE RIGHT----")
+          // debugPrintAudioGrapheme(rightObj)
+          ProcActions.resize(_rightSpan, rightObj, resize, minStart = minStart)
+          // println("----AFTER RIGHT ----")
+          // debugPrintAudioGrapheme(rightObj)
+          _rightSpan
+
+        case Span.HasStop(rightStop) =>
+          SpanLikeEx.newVar(Span(time, rightStop))
+      }
+
+      val editLeftSpan: Option[UndoableEdit] = oldVal match {
+        case Span.HasStop(rightStop) =>
+          val minStart  = timelineModel.bounds.start
+          val resize    = ProcActions.Resize(0L, time - rightStop)
+          Edits.resize(oldSpan, leftObj, resize, minStart = minStart)
+
+        case Span.HasStart(leftStart) =>
+          val leftSpan  = Span(leftStart, time)
+          // oldSpan()     = leftSpan
+          import SpanLikeEx.{serializer, varSerializer}
+          val edit = EditVar.Expr("Resize", oldSpan, leftSpan)
+          Some(edit)
+      }
+
+      // group.add(rightSpan, rightObj)
+      val editAdd = EditTimelineInsertObj("Region", groupMod, rightSpan, rightObj)
+
+      debugCheckConsistency(s"Split left = $leftObj, oldSpan = $oldVal; right = $rightObj, rightSpan = ${rightSpan.value}")
+      val list1 = editAdd :: Nil
+      val list2 = editLeftSpan.fold(list1)(_ :: list1)
+      (list2, rightSpan, rightObj)
     }
 
     private def debugPrintAudioGrapheme(obj: Obj[S])(implicit tx: S#Tx): Unit = {
@@ -575,7 +638,9 @@ object TimelineViewImpl {
 
       timelineModel.addListener {
         case TimelineModel.Selection(_, span) if span.before.isEmpty != span.now.isEmpty =>
-          actionRemoveSpan.enabled = span.now.nonEmpty
+          val hasSome = span.now.nonEmpty
+          actionClearSpan .enabled = hasSome
+          actionRemoveSpan.enabled = hasSome
       }
 
       val pane2 = new SplitPane(Orientation.Vertical, globalView.component, canvasView.component)

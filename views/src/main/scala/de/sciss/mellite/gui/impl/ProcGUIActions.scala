@@ -41,12 +41,10 @@ object ProcGUIActions {
             } (breakOut)
 
           val e1 = deleteLinks(pv.inputs) { (thisKey, thisScan, thatKey, thatScan) =>
-            // ProcActions.removeLink(sourceKey = thatKey, source = thatScan, sinkKey = thisKey, sink = thisScan)
-            Edits.removeLink(sourceKey = thatKey, source = thatScan, sinkKey = thisKey, sink = thisScan)
+            Edits.removeLink(/* sourceKey = thatKey, */ source = thatScan, /* sinkKey = thisKey, */ sink = thisScan)
           }
           val e2 = deleteLinks(pv.outputs) { (thisKey, thisScan, thatKey, thatScan) =>
-            // ProcActions.removeLink(sourceKey = thisKey, source = thisScan, sinkKey = thatKey, sink = thatScan)
-            Edits.removeLink(sourceKey = thisKey, source = thisScan, sinkKey = thatKey, sink = thatScan)
+            Edits.removeLink(/* sourceKey = thisKey, */ source = thisScan, /* sinkKey = thatKey, */ sink = thatScan)
           }
 
           e1 ++ e2

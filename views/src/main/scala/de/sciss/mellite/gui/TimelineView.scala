@@ -44,5 +44,6 @@ trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S
   def actionDelete      : Action
   def actionSplitObjects: Action
   def actionStopAllSound: Action
+  def actionClearSpan   : Action
   def actionRemoveSpan  : Action
 }
