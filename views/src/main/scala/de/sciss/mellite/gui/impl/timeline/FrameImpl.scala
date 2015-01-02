@@ -24,7 +24,6 @@ import scala.swing.event.Key
 import scala.swing.Action
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
-import de.sciss.synth.proc
 
 object FrameImpl {
   def apply[S <: Sys[S]](group: Timeline.Obj[S])
@@ -47,9 +46,9 @@ object FrameImpl {
 
     override protected def initGUI(): Unit = {
       bindMenus(
-        "file.bounce"             -> view.bounceAction,
-        "edit.delete"             -> view.deleteAction,
-        "actions.stop-all-sound"  -> view.stopAllSoundAction,
+        "file.bounce"             -> view.actionBounce,
+        "edit.delete"             -> view.actionDelete,
+        "actions.stop-all-sound"  -> view.actionStopAllSound,
         // "timeline.splitObjects" -> view.splitObjectsAction,
 
         "actions.debug-print"     -> Action(null) {
@@ -91,7 +90,7 @@ object FrameImpl {
         // .add(Item("trimToSelection",    proxy("Trim to Selection",        (menu1 + Key.F5))))
         .add(Item("insert-span",        proxy("Insert Span...",           menu1 + shift + Key.E)))
         .add(Item("clear-span",         proxy("Clear Selected Span",      menu1 + Key.BackSlash)))
-        .add(Item("remove-span",        proxy("Remove Selected Span",     menu1 + shift + Key.BackSlash)))
+        .add(Item("remove-span", view.actionRemoveSpan))
         .add(Item("dup-span-to-pos",    "Duplicate Span to Cursor"))
         .addLine()
         .add(Item("nudge-amount",       "Nudge Amount..."))
@@ -101,7 +100,7 @@ object FrameImpl {
         .add(Item("select-following",   proxy("Select Following Objects", menu2 + Key.F)))
         .add(Item("align-obj-start-to-pos", "Align Objects Start To Cursor"))
         // .add(Item("splitObjects",       proxy("Split Selected Objects",   menu2 + Key.Y)))
-        .add(Item("split-objects", view.splitObjectsAction))
+        .add(Item("split-objects", view.actionSplitObjects))
         .addLine()
         .add(Item("sel-stop-to-start",     "Flip Selection Backward"))
         .add(Item("sel-start-to-stop",     "Flip Selection Forward"))

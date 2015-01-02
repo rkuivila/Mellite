@@ -354,7 +354,7 @@ object TimelineViewImpl {
 
     // ---- actions ----
 
-    object stopAllSoundAction extends Action("StopAllSound") {
+    object actionStopAllSound extends Action("StopAllSound") {
       def apply(): Unit =
         cursor.step { implicit tx =>
           transportView.transport.stop()  // XXX TODO - what else could we do?
@@ -362,7 +362,7 @@ object TimelineViewImpl {
         }
     }
 
-    object bounceAction extends Action("Bounce") {
+    object actionBounce extends Action("Bounce") {
       private var settings = ActionBounceTimeline.QuerySettings[S]()
 
       def apply(): Unit = {
@@ -380,7 +380,7 @@ object TimelineViewImpl {
       }
     }
 
-    object deleteAction extends Action("Delete") {
+    object actionDelete extends Action("Delete") {
       def apply(): Unit = {
         val editOpt = withSelection { implicit tx => views =>
           plainGroup.modifiableOption.flatMap { mod =>
@@ -391,9 +391,10 @@ object TimelineViewImpl {
       }
     }
 
-    object splitObjectsAction extends Action("Split Selected Objects") {
+    object actionSplitObjects extends Action("Split Selected Objects") {
       import KeyStrokes.menu2
       accelerator = Some(menu2 + Key.Y)
+      enabled = false
 
       def apply(): Unit = {
         val pos     = timelineModel.position
@@ -403,6 +404,16 @@ object TimelineViewImpl {
           splitObjects(pos)
         }
         editOpt.foreach(undoManager.add)
+      }
+    }
+
+    object actionRemoveSpan extends Action("Remove Selected Span") {
+      import KeyStrokes._
+      accelerator = Some(menu1 + shift + Key.BackSlash)
+      enabled = false
+
+      def apply(): Unit = {
+        println("TODO: actionRemoveSpan")
       }
     }
 
@@ -445,13 +456,9 @@ object TimelineViewImpl {
                 val _rightSpan  = SpanLikeEx.newVar(oldSpan())
                 val resize      = ProcActions.Resize(time - leftStart, 0L)
                 val minStart    = timelineModel.bounds.start
-                // println("----BEFORE LEFT----")
-                // debugPrintAudioGrapheme(leftObj)
                 // println("----BEFORE RIGHT----")
                 // debugPrintAudioGrapheme(rightObj)
                 ProcActions.resize(_rightSpan, rightObj, resize, minStart = minStart)
-                // println("----AFTER LEFT----")
-                // debugPrintAudioGrapheme(leftObj)
                 // println("----AFTER RIGHT ----")
                 // debugPrintAudioGrapheme(rightObj)
                 _rightSpan
@@ -560,7 +567,15 @@ object TimelineViewImpl {
       }
 
       selectionModel.addListener {
-        case _ => actionAttr.enabled = selectionModel.nonEmpty
+        case _ =>
+          val hasSome = selectionModel.nonEmpty
+          actionAttr        .enabled = hasSome
+          actionSplitObjects.enabled = hasSome
+      }
+
+      timelineModel.addListener {
+        case TimelineModel.Selection(_, span) if span.before.isEmpty != span.now.isEmpty =>
+          actionRemoveSpan.enabled = span.now.nonEmpty
       }
 
       val pane2 = new SplitPane(Orientation.Vertical, globalView.component, canvasView.component)

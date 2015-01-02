@@ -40,8 +40,9 @@ trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S
   def canvasComponent: Component
 
   // ---- GUI actions ----
-  def bounceAction      : Action
-  def deleteAction      : Action
-  def splitObjectsAction: Action
-  def stopAllSoundAction: Action
+  def actionBounce      : Action
+  def actionDelete      : Action
+  def actionSplitObjects: Action
+  def actionStopAllSound: Action
+  def actionRemoveSpan  : Action
 }
