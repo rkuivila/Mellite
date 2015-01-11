@@ -2,7 +2,7 @@
  *  Transform.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -17,9 +17,8 @@ import java.io.File
 import de.sciss.synth.proc.Code
 
 import scala.concurrent.Future
-import de.sciss.processor.Processor
+import de.sciss.processor.ProcessorLike
 import de.sciss.serial.{DataOutput, DataInput, ImmutableSerializer}
-import scala.annotation.switch
 
 object Transform {
   private final val COOKIE  = 0x66726D00  // "frm\0"
@@ -27,7 +26,7 @@ object Transform {
   case object Unmodified extends Transform
 
   final case class Coded(source: Code.FileTransform) extends Transform {
-    def perform(in: File, out: File, procHandler: Processor[Any, _] => Unit = _ => ())
+    def perform(in: File, out: File, procHandler: ProcessorLike[Any, Any] => Unit = _ => ())
                (implicit compiler: Code.Compiler): Future[Unit] =
       source.execute((in, out, procHandler))
   }
@@ -47,7 +46,7 @@ object Transform {
     def read(in: DataInput): Transform = {
       val cookie = in.readInt()
       require(cookie == COOKIE, s"Unexpected cookie $cookie (requires $COOKIE)")
-      (in.readByte() /* : @switch */) match {
+      in.readByte() match {
         case 0 => Unmodified
         case 1 =>
           val source = Code.serializer.read(in) match {

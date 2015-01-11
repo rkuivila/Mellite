@@ -2,7 +2,7 @@
  *  ExprHistoryView.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -24,7 +24,7 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm.Identifiable
 import de.sciss.lucre.swing.{defer, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.processor.GenericProcessor
+import de.sciss.processor.Processor
 import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.serial.Serializer
 import de.sciss.swingplus.{SpinningProgressBar, ListView}
@@ -76,7 +76,7 @@ object ExprHistoryView {
       s"$date    $value"
     }
 
-    private object proc extends GenericProcessor[Unit] with ProcessorImpl[Unit, GenericProcessor[Unit]] {
+    private object proc extends Processor[Unit] with ProcessorImpl[Unit, Processor[Unit]] {
       protected def body(): Unit = {
         var path    = pos0
         var ok      = true

@@ -1,8 +1,8 @@
 /*
  *  VisualProcControl.scala
- *  (SoundProcesses)
+ *  (Mellite)
  *
- *  Copyright (c) 2010-2012 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *

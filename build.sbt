@@ -12,7 +12,7 @@ lazy val projectVersion             = "1.1.0-SNAPSHOT"
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.11.1-SNAPSHOT"
+lazy val soundProcessesVersion      = "2.12.0"
 
 lazy val interpreterPaneVersion     = "1.7.0"
 
@@ -20,13 +20,13 @@ lazy val lucreSTMVersion            = "2.1.1"
 
 lazy val fscapeJobsVersion          = "1.5.0"
 
-lazy val strugatzkiVersion          = "2.7.0"
+lazy val strugatzkiVersion          = "2.8.0"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val scalaColliderSwingVersion  = "1.21.0"
+lazy val scalaColliderSwingVersion  = "1.22.0"
 
 lazy val lucreSwingVersion          = "0.6.2"
 
@@ -34,7 +34,7 @@ lazy val audioWidgetsVersion        = "1.7.2"
 
 lazy val desktopVersion             = "0.6.0"
 
-lazy val sonogramVersion            = "1.7.1"
+lazy val sonogramVersion            = "1.8.0"
 
 lazy val treetableVersion           = "1.3.7"
 
@@ -51,8 +51,8 @@ lazy val commonSettings = Project.defaultSettings ++ Seq(
   organization       := "de.sciss",
   homepage           := Some(url("https://github.com/Sciss/" + name.value)),
   licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
-  scalaVersion       := "2.11.4",
-  crossScalaVersions := Seq("2.11.4", "2.10.4"),
+  scalaVersion       := "2.11.5",
+  crossScalaVersions := Seq("2.11.5", "2.10.4"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")

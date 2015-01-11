@@ -2,7 +2,7 @@
  *  ActionBounceTimeline.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -34,7 +34,7 @@ import scala.util.control.NonFatal
 import java.text.ParseException
 import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.util.{Failure, Try}
-import de.sciss.processor.Processor
+import de.sciss.processor.{ProcessorLike, Processor}
 import de.sciss.file._
 import de.sciss.lucre.swing._
 import de.sciss.swingplus.{SpinnerComboBox, ComboBox, Spinner, Labeled}
@@ -363,12 +363,12 @@ object ActionBounceTimeline {
 
     val hasTransform= settings.importFile && settings.transform.isDefined
     val bounceFile  = if (hasTransform) {
-      File.createTempFile("bounce", "." + settings.spec.fileType.extension)
+      File.createTempFile("bounce", s".${settings.spec.fileType.extension}")
     } else {
       file
     }
     val pSet        = settings.prepare(group, bounceFile)
-    var process: Processor[Any, _] = perform(document, pSet)
+    var process: ProcessorLike[Any, Any] = perform(document, pSet)
 
     var processCompleted = false
 
@@ -482,7 +482,7 @@ object ActionBounceTimeline {
   }
 
   def perform[S <: Sys[S]](document: Workspace[S], settings: PerformSettings[S])
-                          (implicit cursor: stm.Cursor[S]): Processor[File, _] = {
+                          (implicit cursor: stm.Cursor[S]): Processor[File] = {
     import document.inMemoryBridge
     implicit val workspace = document
     val bounce  = Bounce[S, document.I]

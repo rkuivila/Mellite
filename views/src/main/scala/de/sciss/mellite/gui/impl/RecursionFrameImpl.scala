@@ -2,7 +2,7 @@
  *  RecursionFrameImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -23,7 +23,7 @@ import java.io.File
 import de.sciss.desktop.{Desktop, DialogSource}
 import scala.swing.{Component, BorderPanel, FlowPanel, ProgressBar, Button, Alignment, Label}
 import de.sciss.synth.proc
-import de.sciss.processor.Processor
+import de.sciss.processor.{ProcessorLike, Processor}
 import scala.util.{Success, Failure}
 import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.synth.io.{AudioFileSpec, AudioFile}
@@ -167,7 +167,7 @@ object RecursionFrameImpl {
     private var ggDeployed: Label = _
     private var ggProduct : Label = _
     private var updateDeployed: Button = _
-    private var currentProc = Option.empty[Processor[Any, _]]
+    private var currentProc = Option.empty[ProcessorLike[Any, Any]]
 
     final protected def guiUpdate(): Unit = {
       ggDeployed.text = viewData.deployed.name
@@ -299,7 +299,7 @@ object RecursionFrameImpl {
       }
 
       // `onSuccess` is called on EDT!
-      def monitor[A](title: String, p: Processor[A, _])(onSuccess: A => Unit): Unit = {
+      def monitor[A](title: String, p: ProcessorLike[A, Any])(onSuccess: A => Unit): Unit = {
         updateGadgets(enabled = false)
         ggStopProcess.requestFocus()
         currentProc = Some(p)

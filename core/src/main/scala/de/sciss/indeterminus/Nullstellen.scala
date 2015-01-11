@@ -2,7 +2,7 @@
  *  Nullstellen.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2014 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -20,10 +20,9 @@ import FeatureSegmentation.Break
 import FeatureCorrelation.Match
 import collection.immutable.{IndexedSeq => Vec}
 import xml.{XML, NodeSeq}
-import de.sciss.processor.ProcessorFactory
+import de.sciss.processor.{ProcessorLike, ProcessorFactory, Processor}
 import de.sciss.span.Span
 import de.sciss.processor.impl.ProcessorImpl
-import de.sciss.processor.Processor
 import scala.concurrent.Await
 import language.implicitConversions
 import scala.concurrent.duration.Duration
@@ -720,7 +719,7 @@ class Nullstellen private(config: Nullstellen.Config)
   //    destCh.transferFrom(sourceCh, 0, sourceCh.size())
   //  }
 
-  private def handleProcessOption[A](perc: Float, po: Option[Processor[A, _] with Processor.Prepared]): Option[A] = {
+  private def handleProcessOption[A](perc: Float, po: Option[ProcessorLike[A, _] with Processor.Prepared]): Option[A] = {
     po match {
       case Some(p) =>
         Some(handleProcess[A](perc, p))
@@ -732,7 +731,7 @@ class Nullstellen private(config: Nullstellen.Config)
     }
   }
 
-  private def handleProcess[A](perc: Float, p: Processor[A, _] with Processor.Prepared): A = {
+  private def handleProcess[A](perc: Float, p: ProcessorLike[A, _] with Processor.Prepared): A = {
     progressFactor = perc
     p.start()
     p.addListener {
