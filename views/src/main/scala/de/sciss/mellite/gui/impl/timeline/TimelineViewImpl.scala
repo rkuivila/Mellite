@@ -20,7 +20,7 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.mellite.gui.edit.{EditFolderInsertObj, Edits, EditTimelineInsertObj}
+import de.sciss.mellite.gui.edit.{EditAttrMap, EditFolderInsertObj, Edits, EditTimelineInsertObj}
 import de.sciss.swingplus.ScrollBar
 
 import de.sciss.span.{Span, SpanLike}
@@ -49,7 +49,6 @@ import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.icons.raphael
 import TimelineView.TrackScale
 
-import scala.annotation.tailrec
 import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
 import scala.swing.Swing._
 import scala.swing.event.{Key, ValueChanged}
@@ -533,6 +532,7 @@ object TimelineViewImpl {
       import imp._
       val leftObj   = obj // pv.obj()
       val rightObj  = ProcActions.copy[S](leftObj /*, Some(oldSpan) */)
+      rightObj.attr.remove(ObjKeys.attrFadeIn)
 
       val oldVal    = oldSpan.value
       val rightSpan = oldVal match {
@@ -550,6 +550,8 @@ object TimelineViewImpl {
         case Span.HasStop(rightStop) =>
           SpanLikeEx.newVar(Span(time, rightStop))
       }
+
+      val editRemoveFadeOut = EditAttrMap("Remove Fade Out", leftObj, ObjKeys.attrFadeOut, None)
 
       val editLeftSpan: Option[UndoableEdit] = oldVal match {
         case Span.HasStop(rightStop) =>
@@ -571,7 +573,8 @@ object TimelineViewImpl {
       debugCheckConsistency(s"Split left = $leftObj, oldSpan = $oldVal; right = $rightObj, rightSpan = ${rightSpan.value}")
       val list1 = editAdd :: Nil
       val list2 = editLeftSpan.fold(list1)(_ :: list1)
-      (list2, rightSpan, rightObj)
+      val list3 = editRemoveFadeOut :: list2
+      (list3, rightSpan, rightObj)
     }
 
     private def debugPrintAudioGrapheme(obj: Obj[S])(implicit tx: S#Tx): Unit = {
