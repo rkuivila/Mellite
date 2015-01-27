@@ -1,5 +1,3 @@
-import AssemblyKeys._
-
 lazy val baseName                   = "Mellite"
 
 lazy val baseNameL                  = baseName.toLowerCase
@@ -8,7 +6,7 @@ lazy val fullDescr                  = "A computer music application based on Sou
 
 lazy val loggingEnabled             = true
 
-lazy val projectVersion             = "1.1.0"
+lazy val projectVersion             = "1.1.1-SNAPSHOT"
 
 // ---- core dependencies ----
 
@@ -122,7 +120,7 @@ lazy val views = Project(
   id        = s"$baseNameL-views",
   base      = file("views"),
   dependencies = Seq(core),
-  settings  = commonSettings ++ assemblySettings ++ appbundle.settings ++ Seq(
+  settings  = commonSettings ++ /* assemblySettings ++ */ appbundle.settings ++ Seq(
     name        := s"$baseName-views",
     description := fullDescr,
     libraryDependencies ++= Seq(

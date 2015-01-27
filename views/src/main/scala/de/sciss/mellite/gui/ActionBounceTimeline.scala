@@ -21,7 +21,7 @@ import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
 import de.sciss.synth.proc.{ArtifactLocationElem, Code, Timeline, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Bounce}
 import de.sciss.desktop.{UndoManager, Desktop, DialogSource, OptionPane, FileDialog, Window}
-import scala.swing.{ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, Button, TextField}
+import scala.swing.{Dialog, ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, Button, TextField}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
 import java.io.File
 import javax.swing.{SwingUtilities, JFormattedTextField, SpinnerNumberModel}
@@ -114,8 +114,19 @@ object ActionBounceTimeline {
     loop(document.rootH().iterator.toList, Vector.empty)
   }
 
+  sealed trait Selection
+  case object SpanSelection     extends Selection
+  case object DurationSelection extends Selection
+  case object NoSelection       extends Selection
+
   def query[S <: Sys[S]](init: QuerySettings[S], document: Workspace[S], timelineModel: TimelineModel,
                          window: Option[Window])
+                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager) : (QuerySettings[S], Boolean) =
+    query1(init, document, timelineModel, window, showSelection = SpanSelection, showTransform = true, showImport = true)
+
+  def query1[S <: Sys[S]](init: QuerySettings[S], document: Workspace[S], timelineModel: TimelineModel,
+                         window: Option[Window], showSelection: Selection, showTransform: Boolean,
+                         showImport: Boolean)
                         (implicit cursor: stm.Cursor[S], undoManager: UndoManager) : (QuerySettings[S], Boolean) = {
 
     val ggFileType      = new ComboBox[AudioFileType](AudioFileType.writable)
@@ -176,11 +187,10 @@ object ActionBounceTimeline {
       case _ =>
         ""
     }
-    val ggSpanUser  = new RadioButton(s"Current Selection $selectionText")
-    val ggSpanGroup = new ButtonGroup(ggSpanAll, ggSpanUser)
+    lazy val ggSpanUser  = new RadioButton(s"Current Selection $selectionText")
+    lazy val ggSpanGroup = new ButtonGroup(ggSpanAll, ggSpanUser)
 
-    ggSpanGroup.select(if (init.span.isEmpty) ggSpanAll else ggSpanUser)
-    ggSpanUser.enabled   = tlSel.nonEmpty
+    lazy val mDuration   = new SpinnerNumberModel(tlSel.length / Timeline.SampleRate, 0.0, 10000.0, 0.1)
 
     var transformItemsCollected = false
 
@@ -206,8 +216,7 @@ object ActionBounceTimeline {
         case ButtonClicked(_) => updateTransformEnabled()
       }
     }
-    ggImport.selected = init.importFile
-    updateTransformEnabled()
+    if (showTransform) updateTransformEnabled()
 
     lazy val checkTransform = new CheckBox() {
       listenTo(this)
@@ -269,22 +278,33 @@ object ActionBounceTimeline {
     import Alignment.Trailing
     val pPath     = new FlowPanel(ggPathText, ggPathDialog)
     val pFormat   = new FlowPanel(ggFileType, ggSampleFormat, ggSampleRate, ggGainAmt, new Label("dB"), ggGainType)
-    val pSpan     = new GridPanel(6, 2) {
-      contents ++= Seq(new Label("Channels:"                         , EmptyIcon, Trailing), ggChannels,
-                       new Label("Timeline Span:"                    , EmptyIcon, Trailing), ggSpanAll,
-                       HStrut(1),                                                            ggSpanUser,
-                       HStrut(1),                                                            VStrut(32),
-                       new Label("Import Output File Into Workspace:", EmptyIcon, Trailing), ggImport,
-                       new Label("Apply Transformation:"             , EmptyIcon, Trailing), pTransform)
+    val pSpan     = new GridPanel(0, 2)
+    pSpan.contents ++= Seq(new Label("Channels:", EmptyIcon, Trailing), ggChannels)
+    if (showSelection == SpanSelection) {
+      ggSpanGroup.select(if (init.span.isEmpty) ggSpanAll else ggSpanUser)
+      ggSpanUser.enabled   = tlSel.nonEmpty
+      pSpan.contents ++= Seq(new Label("Timeline Span:", EmptyIcon, Trailing), ggSpanAll,
+                             HStrut(1),                                        ggSpanUser)
+    } else if (showSelection == DurationSelection) {
+      val ggDuration = new Spinner(mDuration)
+      pSpan.contents ++= Seq(new Label("Duration [sec]:", EmptyIcon, Trailing), ggDuration)
     }
-
+    pSpan.contents ++= Seq(HStrut(1), VStrut(32))
+    if (showImport) {
+      ggImport.selected = init.importFile
+      pSpan.contents ++= Seq(new Label("Import Output File Into Workspace:", EmptyIcon, Trailing), ggImport)
+    }
+    if (showTransform) {
+      pSpan.contents ++= Seq(new Label("Apply Transformation:", EmptyIcon, Trailing), pTransform)
+    }
     val box       = new BoxPanel(Orientation.Vertical) {
       contents ++= Seq(pPath, pFormat, pSpan)
     }
 
     val opt = OptionPane.confirmation(message = box, optionType = OptionPane.Options.OkCancel,
       messageType = OptionPane.Message.Plain)
-    opt.title = "Bounce Timeline to Disk"
+    val title = "Bounce to Disk"
+    opt.title = title
     val ok    = opt.show(window) == OptionPane.Result.Ok
     val file  = if (ggPathText.text == "") None else Some(new File(ggPathText.text))
 
@@ -294,15 +314,21 @@ object ActionBounceTimeline {
       case _: ParseException => init.channels
     }
 
-    val importFile  = ggImport.selected
+    val importFile  = if (showImport) ggImport.selected else init.importFile
     val numChannels = channels.map(_.size).sum
+
+    val spanOut = showSelection match {
+      case SpanSelection      => if (ggSpanUser.selected) tlSel else Span.Void
+      case DurationSelection  => Span(0L, (mDuration.getNumber.doubleValue() * Timeline.SampleRate + 0.5).toLong)
+      case NoSelection        => init.span
+    }
 
     var settings = QuerySettings(
       file        = file,
       spec        = AudioFileSpec(ggFileType.selection.item, ggSampleFormat.selection.item,
         numChannels = numChannels, sampleRate = ggSampleRate.value),
       gain        = Gain(gainModel.getNumber.floatValue(), if (ggGainType.selection.index == 0) true else false),
-      span        = if (ggSpanUser.selected) tlSel else Span.Void,
+      span        = spanOut,
       channels    = channels,
       importFile  = importFile,
       location    = init.location,
@@ -342,9 +368,21 @@ object ActionBounceTimeline {
       case _ =>
     }
 
-    if (ok && file.isEmpty) return query(settings, document, timelineModel, window)
+    file match {
+      case Some(f) if ok && f.exists() =>
+        val ok1 = Dialog.showConfirmation(
+          message     = s"<HTML><BODY>File<BR><B>${f.path}</B><BR>already exists.<P>Are you sure you want to overwrite it?</BODY>",
+          title       = title,
+          optionType  = Dialog.Options.OkCancel,
+          messageType = Dialog.Message.Warning
+        ) == Dialog.Result.Ok
+        (settings, ok1)
 
-    (settings, ok)
+      case None if ok =>
+        query(settings, document, timelineModel, window)
+      case _ =>
+        (settings, ok)
+    }
   }
 
   //  final case class QuerySettings[S <: Sys[S]](

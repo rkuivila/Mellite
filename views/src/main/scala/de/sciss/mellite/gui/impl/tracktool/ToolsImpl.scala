@@ -16,13 +16,33 @@ package gui
 package impl
 package tracktool
 
+import java.awt.{Font, Color}
+import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
+
 import de.sciss.model.impl.ModelImpl
 import javax.swing.ImageIcon
 import de.sciss.model.Change
 import de.sciss.lucre.synth.Sys
 
 object ToolsImpl {
-  def getIcon(name: String) = new ImageIcon(Mellite.getClass.getResource(s"icon-$name.png"))
+  def getIcon(name: String): ImageIcon = {
+    val is = Mellite.getClass.getResourceAsStream(s"icon-$name.png")
+    val image = if (is != null) {
+      val res = ImageIO.read(is)
+      is.close()
+      res
+    } else {
+      val res = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB)
+      val g2  = res.createGraphics()
+      g2.setColor(Color.black)
+      g2.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 18))
+      g2.drawString("?", 4, 16)
+      g2.dispose()
+      res
+    }
+    new ImageIcon(image)
+  }
 }
 final class ToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
   extends TrackTools[S] with ModelImpl[TrackTools.Update[S]] {
