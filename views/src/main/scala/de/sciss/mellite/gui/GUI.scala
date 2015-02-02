@@ -24,11 +24,9 @@ import de.sciss.icons.raphael
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.{defer, requireEDT}
-import de.sciss.mellite.gui.impl.WindowImpl
 import de.sciss.swingplus.{DoClickAction, GroupPanel}
 import de.sciss.synth.proc.SoundProcesses
 
-import scala.annotation.tailrec
 import scala.concurrent.Future
 import scala.swing.Swing._
 import scala.swing.event.Key
@@ -60,19 +58,6 @@ object GUI {
 
   def round(b: AbstractButton*): Unit =
     b.foreach(_.peer.putClientProperty("JButton.buttonType", "roundRect"))
-
-  def findWindow(c: Component): Option[desktop.Window] = {
-    @tailrec def loop(p: JComponent): Option[desktop.Window] =
-      p.getClientProperty(WindowImpl.WindowKey) match {
-        case f: desktop.Window => Some(f)
-        case _ => c.peer.getParent match {
-          case pp: JComponent => loop(pp)
-          case _ => None
-        }
-      }
-
-    loop(c.peer)
-  }
 
   def keyValueDialog(value: Component, title: String = "New Entry", defaultName: String = "Name",
                      window: Option[desktop.Window] = None): Option[String] = {
@@ -145,6 +130,12 @@ object GUI {
   def removeButton(action: Action, tooltip: String = ""): Button = {
     val res = toolButton(action, raphael.Shapes.Minus, tooltip)
     addGlobalKey(res, KeyStrokes.menu1 + Key.BackSpace)
+    res
+  }
+
+  def duplicateButton(action: Action, tooltip: String = ""): Button = {
+    val res = toolButton(action, raphael.Shapes.SplitArrows, tooltip)
+    addGlobalKey(res, KeyStrokes.menu1 + Key.D)
     res
   }
 

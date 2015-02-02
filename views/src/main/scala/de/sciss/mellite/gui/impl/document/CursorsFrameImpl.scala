@@ -20,6 +20,7 @@ import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
 
 import de.sciss.desktop
+import de.sciss.desktop.Window
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.swing.deferTx
@@ -176,7 +177,7 @@ object CursorsFrameImpl {
       val ggValue = new FormattedTextField(format)
       ggValue.peer.setValue(new Date(parent.updated))
       val nameOpt = GUI.keyValueDialog(value = ggValue, title = nameAdd,
-        defaultName = "branch", window = GUI.findWindow(component))
+        defaultName = "branch", window = Window.find(component))
       (nameOpt, ggValue.peer.getValue) match {
         case (Some(name), seminalDate: Date) =>
           val parentElem = parent.elem

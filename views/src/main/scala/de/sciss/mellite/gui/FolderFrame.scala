@@ -15,10 +15,10 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.Folder
-import impl.document.{FolderFrameImpl => Impl}
-import lucre.stm
+import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.impl.document.{FolderFrameImpl => Impl}
+import de.sciss.synth.proc.Folder
 
 object FolderFrame {
   /** Creates a new frame for a folder view.

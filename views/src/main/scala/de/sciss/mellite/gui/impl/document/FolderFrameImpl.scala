@@ -22,16 +22,13 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.desktop.{Desktop, KeyStrokes, Menu, UndoManager}
-import de.sciss.file._
+import de.sciss.desktop.{Window, Desktop, KeyStrokes, Menu, UndoManager}
 import de.sciss.lucre.stm
-import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{String => StringEx}
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
 import de.sciss.mellite.gui.impl.component.CollectionViewImpl
 import de.sciss.swingplus.{Spinner, GroupPanel}
-import de.sciss.synth.proc
 import de.sciss.synth.proc.{ExprImplicits, ObjKeys, StringElem, Obj, Folder}
 
 import scala.swing.Swing.EmptyIcon
@@ -125,10 +122,21 @@ object FolderFrameImpl {
       CompoundEdit(edits, "Create Objects")
     }
 
+    //    override protected def canDuplicate = true
+    //
+    //    override protected def editDuplicate(xs: List[Obj[S]])(implicit tx: S#Tx): Option[UndoableEdit] = {
+    //      val (parent, idx) = impl.peer.insertionPoint
+    //      val copies = xs.map(Obj.copy(_))
+    //      val edits: List[UndoableEdit] = copies.zipWithIndex.map { case (x, j) =>
+    //        EditFolderInsertObj("Duplicate", parent, idx + j, x)
+    //      } (breakOut)
+    //      CompoundEdit(edits, "Duplicate Objects")
+    //    }
+
     def dispose()(implicit tx: S#Tx): Unit =
       peer.dispose()
 
-    final protected lazy val actionDelete: Action = Action(null) {
+    protected lazy val actionDelete: Action = Action(null) {
       val sel = peer.selection
       val edits: List[UndoableEdit] = cursor.step { implicit tx =>
         sel.flatMap { nodeView =>
@@ -150,7 +158,7 @@ object FolderFrameImpl {
       ceOpt.foreach(undoManager.add)
     }
 
-    final protected def initGUI2(): Unit = {
+    protected def initGUI2(): Unit = {
       peer.addListener {
         case FolderView.SelectionChanged(_, sel) =>
           selectionChanged(sel.map(_.renderData))
@@ -158,7 +166,7 @@ object FolderFrameImpl {
       }
     }
 
-    final lazy val actionDuplicate: Action = new Action("Duplicate...") {
+    lazy val actionDuplicate: Action = new Action("Duplicate...") {
       accelerator = Some(KeyStrokes.menu1 + Key.D)
       enabled     = impl.peer.selection.nonEmpty
 
@@ -211,7 +219,7 @@ object FolderFrameImpl {
         val pane = desktop.OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,
           messageType = Dialog.Message.Question, focus = Some(ggCount))
         pane.title  = "Duplicate"
-        val window  = GUI.findWindow(component)
+        val window  = Window.find(component)
         val res     = pane.show(window)
 
         if (res == Dialog.Result.Ok) {
@@ -231,7 +239,6 @@ object FolderFrameImpl {
                 val cpy = Obj.copy(orig)
                 if (append) {
                   val suffix = incLast(appendText, n)
-                  import proc.Implicits._
                   orig.attr[StringElem](ObjKeys.attrName).foreach { oldName =>
                     val imp = ExprImplicits[S]
                     import imp._

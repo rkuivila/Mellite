@@ -21,7 +21,7 @@ import javax.swing.TransferHandler
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.desktop.{OptionPane, UndoManager}
+import de.sciss.desktop.{Window, OptionPane, UndoManager}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.data
@@ -185,7 +185,7 @@ object ScansViewImpl {
     private def guiAddScan(): Unit = {
       val opt   = OptionPane.textInput(message = "Scan Name", initial = "scan")
       opt.title = "Add Scan"
-      opt.show(GUI.findWindow(component)).foreach { key =>
+      opt.show(Window.find(component)).foreach { key =>
         val edit = cursor.step { implicit tx =>
           EditAddScan(objH(), key)
         }

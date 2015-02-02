@@ -24,7 +24,7 @@ import javax.swing.table.{AbstractTableModel, DefaultTableCellRenderer, TableCel
 import javax.swing.{AbstractCellEditor, JComponent, JTable, TransferHandler}
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.desktop.{OptionPane, UndoManager}
+import de.sciss.desktop.{Window, OptionPane, UndoManager}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.swing.deferTx
@@ -377,7 +377,7 @@ object AttrMapViewImpl {
     final def queryKey(initial: String): Option[String] = {
       val opt   = OptionPane.textInput(message = "Key Name", initial = initial)
       opt.title = "Create Attribute"
-      opt.show(GUI.findWindow(component))
+      opt.show(Window.find(component))
     }
 
     final def selection: List[(String, ObjView[S])] = {

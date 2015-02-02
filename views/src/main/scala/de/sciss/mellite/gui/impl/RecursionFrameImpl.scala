@@ -272,7 +272,7 @@ object RecursionFrameImpl {
       }
 
       def performMatch(): Unit = {
-        val file = File.createTempFile("bounce", "." + _spec.fileType.extension)
+        val file = File.createTempFile("bounce", s".${_spec.fileType.extension}")
         performBounce(file) {
           val pCompare = new FileComparison(viewData.deployed, file)
           pCompare.start()

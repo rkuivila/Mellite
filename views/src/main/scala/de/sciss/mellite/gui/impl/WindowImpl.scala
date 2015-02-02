@@ -16,17 +16,15 @@ package gui
 package impl
 
 import de.sciss.desktop
-import de.sciss.lucre.stm
-import de.sciss.synth.proc.SoundProcesses
-import scala.swing.Action
-import de.sciss.lucre.event.Sys
 import de.sciss.file._
-import de.sciss.synth.Optional
+import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm
 import de.sciss.lucre.swing.{View, Window, deferTx, requireEDT}
+import de.sciss.synth.proc.SoundProcesses
+
+import scala.swing.Action
 
 object WindowImpl {
-  final val WindowKey = "de.sciss.mellite.Window"
-
   private final class Peer[S <: Sys[S]](view: View[S], impl: WindowImpl[S],
                                         undoRedoActions: Option[(Action, Action)],
                                         override val style: desktop.Window.Style)
@@ -121,10 +119,6 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[ExprView[S#Tx,
     val (ph, pv, pp) = placement
     desktop.Util.placeWindow(f, ph, pv, pp)
     f.front()
-
-    // so that the component may find a "window ancestor"
-    view.component.peer.putClientProperty(WindowImpl.WindowKey, f)
-
     initGUI()
   }
 

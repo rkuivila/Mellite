@@ -45,6 +45,9 @@ object FrameImpl {
     with TimelineFrame[S] {
 
     override protected def initGUI(): Unit = {
+      val mf = Application.windowHandler.menuFactory
+      val me = Some(window)
+
       bindMenus(
         "file.bounce"             -> view.actionBounce,
         "edit.delete"             -> view.actionDelete,
@@ -110,7 +113,7 @@ object FrameImpl {
         case Window.Activated(_) => view.canvasComponent.requestFocusInWindow()
       }
 
-      Application.windowHandler.menuFactory.add(Some(window), mTimeline)
+      mf.add(me, mTimeline)
     }
 
     // GUI.placeWindow(this, 0f, 0.25f, 24)

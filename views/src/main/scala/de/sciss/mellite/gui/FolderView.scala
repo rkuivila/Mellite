@@ -14,16 +14,18 @@
 package de.sciss.mellite
 package gui
 
-import impl.document.{FolderViewImpl => Impl}
-import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.model.Model
-import de.sciss.lucre.stm
 import java.io.File
+
+import de.sciss.lucre.stm
+import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.impl.document.{FolderViewImpl => Impl}
+import de.sciss.model.Model
 import de.sciss.synth.proc.{Folder, Obj}
-import de.sciss.lucre.synth.Sys // => SSys}
-// import de.sciss.lucre.event.Sys
-import de.sciss.lucre.swing.{View, TreeTableView}
+
+import scala.collection.immutable.{IndexedSeq => Vec}
 import de.sciss.desktop.UndoManager
+import de.sciss.lucre.swing.{TreeTableView, View}
+
 import scala.collection.breakOut
 
 object FolderView {

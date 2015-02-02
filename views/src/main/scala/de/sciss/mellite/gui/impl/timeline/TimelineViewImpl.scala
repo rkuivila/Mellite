@@ -367,7 +367,7 @@ object TimelineViewImpl {
 
       def apply(): Unit = {
         import ActionBounceTimeline._
-        val window  = GUI.findWindow(component)
+        val window  = Window.find(component)
         val setUpd  = settings.copy(span = timelineModel.selection)
         val (_settings, ok) = query(setUpd, workspace, timelineModel, window = window)
         settings = _settings

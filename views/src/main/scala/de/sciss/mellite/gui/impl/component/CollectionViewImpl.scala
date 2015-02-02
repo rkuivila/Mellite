@@ -18,17 +18,15 @@ package component
 
 import javax.swing.undo.UndoableEdit
 
+import de.sciss.desktop.Window
 import de.sciss.swingplus.PopupMenu
 
-import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
-import de.sciss.icons.raphael
 import de.sciss.lucre.swing.{View, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.proc.Obj
 
-import scala.swing.{Component, FlowPanel, Action, Button, BorderPanel}
+import scala.swing.{Swing, Component, FlowPanel, Action, Button, BorderPanel}
 
 trait CollectionViewImpl[S <: Sys[S]]
   extends ViewHasWorkspace[S]
@@ -56,6 +54,12 @@ trait CollectionViewImpl[S <: Sys[S]]
 
   // ---- implemented ----
 
+  //  /** Override with `true` if duplication is supported. */
+  //  protected def canDuplicate: Boolean = false
+  //
+  //  /** Override if duplication is supported. */
+  //  protected def editDuplicate(xs: List[Obj[S]])(implicit tx: S#Tx): Option[UndoableEdit] = None
+
   lazy final protected val actionAttr: Action = Action(null) {
     val sel = selectedObjects
     val sz  = sel.size
@@ -74,16 +78,18 @@ trait CollectionViewImpl[S <: Sys[S]]
 
   protected def selectionChanged(sel: List[ObjView[S]]): Unit = {
     val nonEmpty  = sel.nonEmpty
-    actionAdd   .enabled  = sel.size < 2
-    actionDelete.enabled  = nonEmpty
-    actionView  .enabled  = nonEmpty && sel.exists(_.isViewable)
-    actionAttr  .enabled  = nonEmpty
+    actionAdd      .enabled  = sel.size < 2
+    actionDelete   .enabled  = nonEmpty
+    // actionDuplicate.enabled  = nonEmpty
+    actionView     .enabled  = nonEmpty && sel.exists(_.isViewable)
+    actionAttr     .enabled  = nonEmpty
   }
 
-  final protected var ggAdd   : Button = _
-  final protected var ggDelete: Button = _
-  final protected var ggView  : Button = _
-  final protected var ggAttr  : Button = _
+  final protected var ggAdd       : Button = _
+  final protected var ggDelete    : Button = _
+  // final protected var ggDuplicate : Button = _
+  final protected var ggView      : Button = _
+  final protected var ggAttr      : Button = _
 
   final def init()(implicit tx: S#Tx): this.type = {
     deferTx(guiInit())
@@ -94,7 +100,7 @@ trait CollectionViewImpl[S <: Sys[S]]
     icon = f.icon
 
     def apply(): Unit = {
-      val winOpt    = GUI.findWindow(component)
+      val winOpt    = Window.find(component)
       val confOpt   = f.initDialog[S](workspace, /* parentH, */ winOpt)
       confOpt.foreach { conf =>
         val confOpt2  = prepareInsert(f)
@@ -116,7 +122,7 @@ trait CollectionViewImpl[S <: Sys[S]]
       pop.add(Item(f.prefix, new AddAction(f)))
     }
 
-    val window = GUI.findWindow(component).getOrElse(sys.error(s"No window for $impl"))
+    val window = Window.find(component).getOrElse(sys.error(s"No window for $impl"))
     val res = pop.create(window)
     res.peer.pack() // so we can read `size` correctly
     res
@@ -127,16 +133,25 @@ trait CollectionViewImpl[S <: Sys[S]]
     addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
   }
 
+  //  final protected lazy val actionDuplicate: Action = Action(null) {
+  //    val editOpt = cursor.step { implicit tx =>
+  //      editDuplicate(selectedObjects.map(_.obj()))
+  //    }
+  //    editOpt.foreach(undoManager.add)
+  //  }
+
   private def nameAttr = "Attributes Editor"
   private def nameView = "View Selected Element"
 
   private def guiInit(): Unit = {
-    ggAdd     = GUI.addButton   (actionAdd   , "Add Element")
-    ggDelete  = GUI.removeButton(actionDelete, "Remove Selected Element")
-    ggAttr    = GUI.attrButton  (actionAttr  , nameAttr)
-    ggView    = GUI.viewButton  (actionView  , nameView)
+    ggAdd       = GUI.addButton       (actionAdd      , "Add Element")
+    ggDelete    = GUI.removeButton    (actionDelete   , "Remove Selected Element")
+    // ggDuplicate = GUI.duplicateButton (actionDuplicate, "Duplicate Selected Elements")
+    ggAttr      = GUI.attrButton      (actionAttr     , nameAttr)
+    ggView      = GUI.viewButton      (actionView     , nameView)
 
-    val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggAttr, ggView)
+    // if (!canDuplicate) ggDuplicate.visible = false
+    val buttonPanel = new FlowPanel(ggAdd, ggDelete, /* ggDuplicate, */ ggView, Swing.HStrut(32), ggAttr)
 
     component = new BorderPanel {
       add(impl.peer.component, BorderPanel.Position.Center)

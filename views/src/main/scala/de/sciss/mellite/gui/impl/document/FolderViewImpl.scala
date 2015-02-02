@@ -16,42 +16,39 @@ package gui
 package impl
 package document
 
+import java.awt.datatransfer.{DataFlavor, Transferable}
+import java.io.File
+import javax.swing.TransferHandler.TransferSupport
+import javax.swing.event.{CellEditorListener, ChangeEvent}
+import javax.swing.undo.UndoableEdit
+import javax.swing.{CellEditor, DropMode, JComponent, TransferHandler}
+
+import de.sciss.desktop.UndoManager
 import de.sciss.desktop.edit.CompoundEdit
+import de.sciss.lucre
 import de.sciss.lucre.artifact.Artifact
 import de.sciss.lucre.expr.{Expr, String => StringEx}
-import de.sciss.synth.proc.{ObjKeys, FolderElem, Folder, Obj, StringElem}
-import swing.Component
-import scala.collection.{JavaConversions, breakOut}
-import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.model.impl.ModelImpl
-import scala.util.control.NonFatal
-import javax.swing.{CellEditor, DropMode, JComponent, TransferHandler}
-import java.awt.datatransfer.{Transferable, DataFlavor}
-import javax.swing.TransferHandler.TransferSupport
-import de.sciss.treetable.TreeTableSelectionChanged
-import de.sciss.treetable.TreeTableCellRenderer
-import java.io.File
 import de.sciss.lucre.stm
-import de.sciss.model.Change
-import de.sciss.lucre.swing.{TreeTableView, deferTx}
-import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.lucre.synth.Sys
-import de.sciss.synth.proc.Folder.Update
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
-import de.sciss.treetable.j.{TreeTableCellEditor, DefaultTreeTableCellEditor}
-import javax.swing.event.{ChangeEvent, CellEditorListener}
-import de.sciss.desktop.UndoManager
-import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj, EditAttrMap}
-import de.sciss.lucre
-import de.sciss.synth.io.{AudioFileSpec, AudioFile}
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing.{TreeTableView, deferTx}
+import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.edit.{EditAttrMap, EditFolderInsertObj, EditFolderRemoveObj}
+import de.sciss.model.Change
+import de.sciss.model.impl.ModelImpl
+import de.sciss.synth.io.{AudioFile, AudioFileSpec}
+import de.sciss.synth.proc.Folder.Update
+import de.sciss.synth.proc.{Folder, FolderElem, Obj, ObjKeys, StringElem}
+import de.sciss.treetable.{TreeTableCellRenderer, TreeTableSelectionChanged}
+import de.sciss.treetable.j.{DefaultTreeTableCellEditor, TreeTableCellEditor}
+
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.collection.breakOut
+import scala.swing.Component
 import scala.util.Try
-import javax.swing.undo.UndoableEdit
+import scala.util.control.NonFatal
 
 object FolderViewImpl {
-  // private final val DEBUG = false
-
-  // TreeTableViewImpl.DEBUG = true
-
   def apply[S <: Sys[S]](root0: Folder[S])
                         (implicit tx: S#Tx, workspace: Workspace[S],
                          cursor: stm.Cursor[S], undoManager: UndoManager): FolderView[S] = {
@@ -358,7 +355,7 @@ object FolderViewImpl {
 
         private def importFiles(support: TransferSupport, parent: Folder[S], index: Int)
                                (implicit tx: S#Tx): Option[UndoableEdit] = {
-          import JavaConversions._
+          import scala.collection.JavaConversions._
           val data: List[File] = support.getTransferable.getTransferData(DataFlavor.javaFileListFlavor)
             .asInstanceOf[java.util.List[File]].toList
           val tup: List[(File, AudioFileSpec)] = data.flatMap { f =>
@@ -436,12 +433,12 @@ object FolderViewImpl {
       locationsOk match {
         case Some(loc)  => Some(Left(loc.obj))
         case _          =>
-          val parent = selection.flatMap { nodeView =>
-            nodeView.renderData match {
-              case f: ObjView.Folder[S] => Some(f.obj)
-              case _ => None
-            }
-          } .headOption
+          //          val parent = selection.flatMap { nodeView =>
+          //            nodeView.renderData match {
+          //              case f: ObjView.Folder[S] => Some(f.obj)
+          //              case _ => None
+          //            }
+          //          } .headOption
           ActionArtifactLocation.query[S](treeView.root, file = f /*, folder = parent */) // , window = Some(comp))
       }
     }
