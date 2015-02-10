@@ -55,6 +55,7 @@
 0x30003     Dimension.Selection
 0x30004     Sonification
 0x30005     DataSource
+0x30006     Plot
 
 :: higher-order ::
 

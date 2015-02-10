@@ -151,7 +151,7 @@ trait CollectionViewImpl[S <: Sys[S]]
     ggView      = GUI.viewButton      (actionView     , nameView)
 
     // if (!canDuplicate) ggDuplicate.visible = false
-    val buttonPanel = new FlowPanel(ggAdd, ggDelete, /* ggDuplicate, */ ggView, Swing.HStrut(32), ggAttr)
+    val buttonPanel = new FlowPanel(ggAdd, ggDelete, /* ggDuplicate, */ ggAttr, Swing.HStrut(32), ggView)
 
     component = new BorderPanel {
       add(impl.peer.component, BorderPanel.Position.Center)
