@@ -2,6 +2,9 @@
 
 # Mellite
 
+[![Flattr this](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=sciss&url=https%3A%2F%2Fgithub.com%2FSciss%2FMellite&title=Mellite%20Computer%20Music%20Environment&language=Scala&tags=github&category=software)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sciss/mellite_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sciss/mellite_2.11)
+
 ## statement
 
 Mellite is a computer music application, implemented as a graphical front end for [SoundProcesses](http://github.com/Sciss/SoundProcesses). It is (C)opyright 2012&ndash;2015 by Hanns Holger Rutz. All rights reserved. Mellite is released under the [GNU General Public License](http://github.com/Sciss/Mellite/blob/master/licenses/Mellite-License.txt) v3+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
