@@ -1,10 +1,15 @@
 package de.sciss.impuls2015
 
+import java.text.SimpleDateFormat
+import java.util.concurrent.TimeUnit
+import java.util.{Date, Locale}
+
 import de.sciss.file._
-import de.sciss.lucre.artifact.ArtifactLocation
+import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
+import de.sciss.lucre.{event => evt, stm}
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.io.AudioFile
-import de.sciss.synth.proc.{ExprImplicits, AudioGraphemeElem, Obj, Grapheme}
+import de.sciss.synth.proc.{SoundProcesses, ArtifactElem, Action, ExprImplicits, AudioGraphemeElem, Obj, Grapheme}
 import de.sciss.{synth, nuages}
 import de.sciss.nuages.{DbFaderWarp, NamedBusConfig, IntWarp, ExpWarp, TrigSpec, ParamSpec, ScissProcs, Nuages}
 import de.sciss.synth.GE
@@ -32,10 +37,56 @@ object Populate {
     pm + zm
   }
 
-  def apply[S <: Sys[S]](n: Nuages[S], nConfig: Nuages.Config, sConfig: ScissProcs.Config)
-                        (implicit tx: S#Tx): Unit = {
+  def mkLoop[S <: Sys[S]](f: File)(implicit tx: S#Tx): Unit = {
     val dsl = new nuages.DSL[S]
+    import dsl._
+    val imp = ExprImplicits[S]
+    import imp._
+
+    val loc   = ??? : ArtifactLocation.Modifiable[S] // ArtifactLocation[S](file(sys.props("java.io.tmpdir")))
+    implicit val _n: Nuages[S] = ???
+
+    val procObj = generator(f.base) {
+      import synth._; import ugen._
+      val pSpeed      = pAudio  ("speed", ParamSpec(0.125, 2.3511, ExpWarp), default = 1)
+      val pStart      = pControl("start", ParamSpec(0, 1), default = 0)
+      val pDur        = pControl("dur"  , ParamSpec(0, 1), default = 1)
+      val bufID       = proc.graph.Buffer("file")
+      val loopFrames  = BufFrames.kr(bufID)
+
+      val trig1       = LocalIn.kr(1)
+      val gateTrig1   = PulseDivider.kr(trig = trig1, div = 2, start = 1)
+      val gateTrig2   = PulseDivider.kr(trig = trig1, div = 2, start = 0)
+      val startFrame  = pStart * loopFrames
+      val numFrames   = pDur * (loopFrames - startFrame)
+      val lOffset     = Latch.kr(in = startFrame, trig = trig1)
+      val lLength     = Latch.kr(in = numFrames, trig = trig1)
+      val speed       = A2K.kr(pSpeed)
+      val duration    = lLength / (speed * SampleRate.ir) - 2
+      val gate1       = Trig1.kr(in = gateTrig1, dur = duration)
+      val env         = Env.asr(2, 1, 2, Curve.lin) // \sin
+      // val bufID       = Select.kr(pBuf, loopBufIDs)
+      val play1       = PlayBuf.ar(2, bufID, speed, gateTrig1, lOffset, loop = 0) // XXX TODO - numChannels
+      val play2       = PlayBuf.ar(2, bufID, speed, gateTrig2, lOffset, loop = 0)
+      val amp0        = EnvGen.kr(env, gate1) // 0.999 = bug fix !!!
+      val amp2        = 1.0 - amp0.squared
+      val amp1        = 1.0 - (1.0 - amp0).squared
+      val sig         = (play1 * amp1) + (play2 * amp2)
+      LocalOut.kr(Impulse.kr(1.0 / duration.max(0.1)))
+      sig
+    }
+    val art   = loc /* locH() */.add(f)
+    val spec  = AudioFile.readSpec(f)
+    val gr    = Grapheme.Expr.Audio(art, spec, 0L, 1.0)
+    procObj.attr.put("file", Obj(AudioGraphemeElem(gr)))
+    // val artObj  = Obj(ArtifactElem(art))
+    // procObj.attr.put("file", artObj)
+  }
+
+  def apply[S <: Sys[S]](n: Nuages[S], nConfig: Nuages.Config, sConfig: ScissProcs.Config)
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): Unit = {
     implicit val _n = n
+    val dsl = new nuages.DSL[S]
     import dsl._
     val imp = ExprImplicits[S]
     import imp._
@@ -43,8 +94,7 @@ object Populate {
 
     val masterChansOption = nConfig.masterChannels
 
-    val loc   = ArtifactLocation[S](file(sys.props("java.io.tmpdir")))
-    val locH  = tx.newHandle(loc)
+    val loc: ArtifactLocation.Modifiable[S] = ???
 
     def ForceChan(in: GE): GE = if (sConfig.generatorChannels <= 0) in else {
       WrapExtendChannels(sConfig.generatorChannels, in)
@@ -111,43 +161,6 @@ object Populate {
     //    val loopBufIDs  = loopBuffers.map(_.id)
 
     //    if (settings.numLoops > 0) {
-
-    def mkLoop(f: File)(implicit tx: S#Tx): Unit = {
-      val procObj = generator(f.base) {
-        val pSpeed      = pAudio  ("speed", ParamSpec(0.125, 2.3511, ExpWarp), default = 1)
-        val pStart      = pControl("start", ParamSpec(0, 1), default = 0)
-        val pDur        = pControl("dur"  , ParamSpec(0, 1), default = 1)
-        val bufID       = proc.graph.Buffer("file")
-        val loopFrames  = BufFrames.kr(bufID)
-
-        val trig1       = LocalIn.kr(1)
-        val gateTrig1   = PulseDivider.kr(trig = trig1, div = 2, start = 1)
-        val gateTrig2   = PulseDivider.kr(trig = trig1, div = 2, start = 0)
-        val startFrame  = pStart * loopFrames
-        val numFrames   = pDur * (loopFrames - startFrame)
-        val lOffset     = Latch.kr(in = startFrame, trig = trig1)
-        val lLength     = Latch.kr(in = numFrames, trig = trig1)
-        val speed       = A2K.kr(pSpeed)
-        val duration    = lLength / (speed * SampleRate.ir) - 2
-        val gate1       = Trig1.kr(in = gateTrig1, dur = duration)
-        val env         = Env.asr(2, 1, 2, Curve.lin) // \sin
-        // val bufID       = Select.kr(pBuf, loopBufIDs)
-        val play1       = PlayBuf.ar(2, bufID, speed, gateTrig1, lOffset, loop = 0) // XXX TODO - numChannels
-        val play2       = PlayBuf.ar(2, bufID, speed, gateTrig2, lOffset, loop = 0)
-        val amp0        = EnvGen.kr(env, gate1) // 0.999 = bug fix !!!
-        val amp2        = 1.0 - amp0.squared
-        val amp1        = 1.0 - (1.0 - amp0).squared
-        val sig         = (play1 * amp1) + (play2 * amp2)
-        LocalOut.kr(Impulse.kr(1.0 / duration.max(0.1)))
-        sig
-      }
-      val art   = locH().add(f)
-      val spec  = AudioFile.readSpec(f)
-      val gr    = Grapheme.Expr.Audio(art, spec, 0L, 1.0)
-      procObj.attr.put("file", Obj(AudioGraphemeElem(gr)))
-      // val artObj  = Obj(ArtifactElem(art))
-      // procObj.attr.put("file", artObj)
-    }
 
     //      masterBusOption.foreach { masterBus =>
     //        gen( "sum_rec" ) {
@@ -724,6 +737,56 @@ object Populate {
       val flt     = in * pulse
       mix(in, flt, pMix)
     }
+
+    // -------------- SINKS --------------
+    // val recFormat = new SimpleDateFormat("'rec_'yyMMdd'_'HHmmss'.aif'", Locale.US)
+    val recFormat = new SimpleDateFormat("'rec_'HHmmss'.aif'", Locale.US)
+
+    val sinkRecPrepare = new Action.Body {
+      def apply[T <: evt.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
+        import universe._
+        for {
+          art  <- self.attr[ArtifactElem]("file")
+          artM <- art.modifiableOption
+        } {
+          val name  = recFormat.format(new Date)
+          artM.child = Artifact.Child(name) // XXX TODO - should check that it is different from previous value
+          // println(name)
+        }
+      }
+    }
+    Action.registerPredef("nuages-prepare-rec", sinkRecPrepare)
+
+    val sinkRecDispose = new Action.Body {
+      def apply[T <: evt.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
+        import universe._
+        for {
+          art <- self.attr[ArtifactElem]("file")
+        } {
+          val f = art.value
+          SoundProcesses.scheduledExecutorService.schedule(new Runnable {
+            def run(): Unit = SoundProcesses.atomic[S, Unit] { implicit tx =>
+              println(f)
+              mkLoop[S](f)
+            }
+          }, 1000, TimeUnit.MILLISECONDS)
+        }
+      }
+    }
+    Action.registerPredef("nuages-dispose-rec", sinkRecDispose)
+
+    val sinkRec = sink("rec") { in =>
+      proc.graph.DiskOut.ar("file", in)
+    }
+    val sinkPrepObj = Obj(Action.Elem(Action.predef("nuages-prepare-rec")))
+    val sinkDispObj = Obj(Action.Elem(Action.predef("nuages-dispose-rec")))
+    val artRec      = loc.add(loc.directory / "undefined")
+    val artRecObj   = Obj(ArtifactElem(artRec))
+    sinkPrepObj.attr.put("file"   , artRecObj  )
+    sinkDispObj.attr.put("file"   , artRecObj  )
+    sinkRec    .attr.put("file"   , artRecObj  )
+    sinkRec    .attr.put("nuages-prepare", sinkPrepObj)
+    sinkRec    .attr.put("nuages-dispose", sinkDispObj)
 
     // -------------- DIFFUSIONS --------------
 
