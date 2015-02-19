@@ -41,7 +41,8 @@ object RecursionImpl {
   object ElemImpl extends proc.impl.ElemCompanionImpl[Recursion.Elem] {
     def typeID = Recursion.typeID
 
-    Elem.registerExtension(this)
+    private lazy val _init: Unit = Elem.registerExtension(this)
+    def init(): Unit = _init
 
     def apply[S <: Sys[S]](peer: Recursion[S])(implicit tx: S#Tx): Recursion.Elem[S] = {
       val targets = evt.Targets[S]

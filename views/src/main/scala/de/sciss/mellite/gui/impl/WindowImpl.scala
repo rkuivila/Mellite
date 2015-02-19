@@ -27,8 +27,11 @@ import scala.swing.Action
 object WindowImpl {
   private final class Peer[S <: Sys[S]](view: View[S], impl: WindowImpl[S],
                                         undoRedoActions: Option[(Action, Action)],
-                                        override val style: desktop.Window.Style)
+                                        override val style: desktop.Window.Style,
+                                        undecorated: Boolean)
     extends desktop.impl.WindowImpl {
+
+    if (undecorated) makeUndecorated()
 
     def handler = Application.windowHandler
 
@@ -90,6 +93,8 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[ExprView[S#Tx,
   final protected def dirty        : Boolean        = windowImpl.dirty
   final protected def dirty_=(value: Boolean): Unit = windowImpl.dirty = value
 
+  protected def undecorated: Boolean = false
+
   final protected def windowFile        : Option[File]        = windowImpl.file
   final protected def windowFile_=(value: Option[File]): Unit = windowImpl.file = value
 
@@ -113,7 +118,7 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[ExprView[S#Tx,
   }
 
   private def initGUI0(): Unit = {
-    val f       = new WindowImpl.Peer(view, impl, undoRedoActions, style)
+    val f = new WindowImpl.Peer(view, impl, undoRedoActions, style, undecorated = undecorated)
     window      = f
     windowImpl  = f
     val (ph, pv, pp) = placement

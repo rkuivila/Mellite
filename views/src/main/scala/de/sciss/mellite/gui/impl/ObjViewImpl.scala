@@ -23,18 +23,20 @@ import de.sciss.audiowidgets.AxisFormat
 import de.sciss.desktop.{FileDialog, OptionPane}
 import de.sciss.file._
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.{Expr, ExprType, Boolean => BooleanEx, Double => DoubleEx, Int => IntEx, Long => LongEx, String => StringEx}
+import de.sciss.lucre.expr.{Boolean => BooleanEx, Double => DoubleEx, Expr, ExprType, Int => IntEx, Long => LongEx, String => StringEx}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{stm, event => evt}
+import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditFolderInsertObj}
+import de.sciss.mellite.gui.impl.document.NuagesFolderFrameImpl
 import de.sciss.model.Change
+import de.sciss.nuages.{NuagesView, ScissProcs}
 import de.sciss.swingplus.{ComboBox, GroupPanel, Spinner}
-import de.sciss.synth.io.{AudioFileSpec, AudioFile, SampleFormat}
+import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.impl.{ElemImpl, FolderElemImpl}
-import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, Grapheme, IntElem, LongElem, Obj, ObjKeys, StringElem}
+import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, Grapheme, IntElem, LongElem, Obj, StringElem}
 import de.sciss.{desktop, lucre}
 
 import scala.swing.Swing.EmptyIcon
@@ -44,12 +46,13 @@ import scala.util.Try
 object ObjViewImpl {
   import java.lang.{String => _String}
 
-import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
+  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
   import de.sciss.mellite.gui.ObjView.Factory
   import de.sciss.mellite.{Recursion => _Recursion}
+  import de.sciss.nuages.{Nuages => _Nuages}
   import de.sciss.synth.proc.{Action => _Action, Code => _Code, Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Proc => _Proc, Timeline => _Timeline}
 
-import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long}
+  import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long}
 
   private val sync = new AnyRef
 
@@ -82,7 +85,8 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
     Code            .typeID -> Code,
     FadeSpec        .typeID -> FadeSpec,
     Action          .typeID -> Action,
-    Ensemble        .typeID -> Ensemble
+    Ensemble        .typeID -> Ensemble,
+    Nuages          .typeID -> Nuages
   )
 
   // -------- Generic --------
@@ -1038,8 +1042,8 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
       val box = new GroupPanel {
         horizontal  = Seq(Par(Trailing)(lbName, lbOff, lbPlay), Par(ggName , ggOff, ggPlay))
         vertical    = Seq(Par(Baseline)(lbName, ggName),
-                          Par(Baseline)(lbOff , ggOff ),
-                          Par(Baseline)(lbPlay, ggPlay))
+          Par(Baseline)(lbOff , ggOff ),
+          Par(Baseline)(lbPlay, ggPlay))
       }
 
       val pane = desktop.OptionPane.confirmation(box, optionType = Dialog.Options.OkCancel,
@@ -1096,6 +1100,58 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
         val ens   = obj()
         val w     = EnsembleFrame(ens)
         Some(w)
+      }
+    }
+  }
+
+  // -------- Nuages --------
+
+  object Nuages extends Factory {
+    type E[S <: evt.Sys[S]] = _Nuages.Elem[S]
+    val icon            = raphaelIcon(raphael.Shapes.CloudWhite)
+    val prefix          = "Nuages"
+    def typeID          = _Nuages.typeID
+
+    def apply[S <: Sys[S]](obj: _Nuages.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
+      val name = obj.name
+      new Nuages.Impl(tx.newHandle(obj), name)
+    }
+
+    type Config[S <: Sys[S]] = _String
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+      val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
+        messageType = OptionPane.Message.Question, initial = prefix)
+      opt.title = s"New $prefix"
+      val res = opt.show(window)
+      res
+    }
+
+    def make[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
+      val peer = _Nuages[S]
+      val elem = _Nuages.Elem(peer)
+      val obj = Obj(elem)
+      obj.name = name
+      obj :: Nil
+    }
+
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Nuages.Obj[S]],
+                                  var name: _String)
+      extends ObjView.Nuages[S]
+      with ObjViewImpl.Impl[S]
+      with NonEditable[S]
+      with EmptyRenderer[S] {
+
+      def icon    = Nuages.icon
+      def prefix  = Nuages.prefix
+      def typeID  = Nuages.typeID
+
+      def isViewable = true
+
+      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        val frame = NuagesFolderFrameImpl(obj())
+        Some(frame)
       }
     }
   }

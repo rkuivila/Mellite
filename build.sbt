@@ -24,6 +24,8 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
+lazy val nuagesVersion              = "1.1.0-SNAPSHOT"
+
 lazy val scalaColliderSwingVersion  = "1.25.0"
 
 lazy val lucreSwingVersion          = "0.8.0"
@@ -126,6 +128,7 @@ lazy val views = Project(
     libraryDependencies ++= Seq(
       "de.sciss" %% "soundprocesses-views"            % soundProcessesVersion,      // computer-music framework
       "de.sciss" %% "soundprocesses-compiler"         % soundProcessesVersion,      // computer-music framework
+      "de.sciss" %% "wolkenpumpe"                     % nuagesVersion,              // live improv
       "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL
       "de.sciss" %% "lucreswing"                      % lucreSwingVersion,          // reactive Swing components
       "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets

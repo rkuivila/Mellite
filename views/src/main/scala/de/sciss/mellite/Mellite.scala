@@ -140,6 +140,7 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     // ---- type extensions ----
 
     mellite.initTypes()
+    de.sciss.nuages.initTypes()
 
     new de.sciss.audiowidgets.impl.ActionGoToTime(null,
       de.sciss.desktop.KeyStrokes.plain + scala.swing.event.Key.G) // , de.sciss.desktop.FocusType.Window)

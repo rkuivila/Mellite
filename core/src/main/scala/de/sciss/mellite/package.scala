@@ -38,6 +38,6 @@ package object mellite {
 
   def initTypes(): Unit = {
     de.sciss.lucre.synth.expr.initTypes()
-    RecursionImpl.ElemImpl
+    RecursionImpl.ElemImpl.init()
   }
 }

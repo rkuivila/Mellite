@@ -21,7 +21,7 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{stm, event => evt}
+import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.impl.{ObjViewImpl => Impl}
 import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, BooleanElem, DoubleElem, Elem, FolderElem, Grapheme, IntElem, LongElem, Obj, StringElem}
 
@@ -31,10 +31,11 @@ import scala.swing.{Component, Label}
 object ObjView {
   import java.lang.{String => _String}
 
-import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
+  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
   import de.sciss.synth.proc.{Action => _Action, Code => _Code, Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Proc => _Proc, Timeline => _Timeline}
+  import de.sciss.nuages.{Nuages => _Nuages}
 
-import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long}
+  import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long}
 
   //  final case class SelectionDrag[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
   //    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
@@ -156,6 +157,11 @@ import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long
   trait Ensemble[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, _Ensemble.Obj[S]]
     def playing: _Boolean
+  }
+
+  val Nuages: Factory { type E[S <: evt.Sys[S]] = _Nuages.Elem[S] } = Impl.Nuages
+  trait Nuages[S <: Sys[S]] extends ObjView[S] {
+    def obj: stm.Source[S#Tx, _Nuages.Obj[S]]
   }
 }
 trait ObjView[S <: Sys[S]] {
