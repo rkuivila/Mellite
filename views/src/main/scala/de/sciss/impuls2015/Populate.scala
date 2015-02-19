@@ -89,8 +89,8 @@ object Populate {
     if (DEBUG) println(s"mkloop ---2. root = $root")
 
     for {
-      FolderElem.Obj(nuagesF) <- root / "Nuages"
-      FolderElem.Obj(genF)    <- nuagesF.elem.peer / Nuages.NameGenerators
+      nuagesObj <- getNuages(root)
+      FolderElem.Obj(genF) <- nuagesObj.elem.peer.folder / Nuages.NameGenerators
     } {
       if (DEBUG) println("mkloop ---3")
       insertByName(genF.elem.peer, procObj)
@@ -103,6 +103,8 @@ object Populate {
 
   private val _registerActions = Ref(initialValue = false)
 
+  private final val KeyRecArtifact  = "file"
+
   def registerActions[S <: Sys[S]]()(implicit tx: S#Tx): Unit = {
     if (_registerActions.swap(true)(tx.peer)) return    // already registered
 
@@ -114,14 +116,16 @@ object Populate {
         if (DEBUG) println("prepare ---1")
         import universe._
         for {
-          art  <- self.attr[ArtifactElem]("file")
-          artM <- art.modifiableOption
+          Proc.Obj(procObj) <- invoker
+          nuagesObj <- getNuages(root)
         } {
-          if (DEBUG) println(s"prepare ---2: $artM")
-          val name  = recFormat.format(new Date)
-          artM.child = Artifact.Child(name) // XXX TODO - should check that it is different from previous value
+          if (DEBUG) println("prepare ---2")
+          val name    = recFormat.format(new Date)
+          val loc     = getRecLocation(nuagesObj.elem.peer.folder)
+          val artM    = loc.add(loc.directory / name) // XXX TODO - should check that it is different from previous value
           // println(name)
-          if (DEBUG) println("prepare ---3")
+          procObj.attr.put(KeyRecArtifact, Obj(ArtifactElem(artM)))
+          if (DEBUG) println(s"prepare ---3: $name")
         }
       }
     }
@@ -132,16 +136,15 @@ object Populate {
         if (DEBUG) println("dispose ---1")
         import universe._
         for {
-          ArtifactElem.Obj(artObj) <- self.attr.get("file")
+          Proc.Obj(procObj) <- invoker
+          ArtifactElem.Obj(artObj) <- procObj.attr.get(KeyRecArtifact)
         } {
           if (DEBUG) println("dispose ---2")
-          val artCpy: ArtifactElem.Obj[T] = Obj.copyT[T, ArtifactElem](artObj, artObj.elem.mkCopy())
-          if (DEBUG) println("dispose ---3")
           SoundProcesses.scheduledExecutorService.schedule(new Runnable {
             def run(): Unit = SoundProcesses.atomic[T, Unit] { implicit tx =>
               // println(f)
-              if (DEBUG) println("dispose ---4")
-              mkLoop[T](root, artCpy)
+              if (DEBUG) println("dispose ---3")
+              mkLoop[T](root, artObj)
             }
           }, 1000, TimeUnit.MILLISECONDS)
         }
@@ -156,7 +159,12 @@ object Populate {
 
   private final val RecDir  = BaseDir / "rec"
 
-  def getRecLocation[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx): ArtifactLocation.Modifiable[S] = {
+  final val NuagesName = "Nuages"
+
+  def getNuages[S <: evt.Sys[S]](root: Folder[S])(implicit tx: S#Tx): Option[Nuages.Obj[S]] =
+    (root / NuagesName).flatMap(Nuages.Obj.unapply)
+
+  def getRecLocation[S <: evt.Sys[S]](root: Folder[S])(implicit tx: S#Tx): ArtifactLocation.Modifiable[S] = {
     val it = root.iterator.flatMap {
       case ArtifactLocationElem.Obj(objT) if objT.name == RecName => objT.elem.peer.modifiableOption
       case _ => None
@@ -827,16 +835,16 @@ object Populate {
     // -------------- SINKS --------------
 
     val sinkRec = sink("rec") { in =>
-      proc.graph.DiskOut.ar("file", in)
+      proc.graph.DiskOut.ar(KeyRecArtifact, in)
     }
     val sinkPrepObj = Obj(Action.Elem(Action.predef(ActionKeyRecPrepare)))
     val sinkDispObj = Obj(Action.Elem(Action.predef(ActionKeyRecDispose)))
-    val locRec      = getRecLocation(n.folder)
-    val artRec      = locRec.add(locRec.directory / "undefined")
-    val artRecObj   = Obj(ArtifactElem(artRec))
-    sinkPrepObj.attr.put("file"   , artRecObj  )
-    sinkDispObj.attr.put("file"   , artRecObj  )
-    sinkRec    .attr.put("file"   , artRecObj  )
+    // val locRec      = getRecLocation(n.folder)
+    // val artRec      = locRec.add(locRec.directory / "undefined")
+    // val artRecObj   = Obj(ArtifactElem(artRec))
+    // sinkPrepObj.attr.put(KeyRecArtifact, artRecObj  )
+    // sinkDispObj.attr.put(KeyRecArtifact, artRecObj  )
+    // sinkRec    .attr.put(KeyRecArtifact, artRecObj  )
     sinkRec    .attr.put("nuages-prepare", sinkPrepObj)
     sinkRec    .attr.put("nuages-dispose", sinkDispObj)
 
