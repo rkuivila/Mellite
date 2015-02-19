@@ -1,5 +1,6 @@
 package de.sciss.impuls2015
 
+import de.sciss.file._
 import de.sciss.nuages.{NamedBusConfig, ScissProcs, Nuages}
 
 object Settings {
@@ -9,7 +10,7 @@ object Settings {
     sConfig.generatorChannels = 0
     sConfig.micInputs         = Vector(
       // NamedBusConfig("m-at" , 0, 2),
-      NamedBusConfig("m-dpa" , 10, 1),
+      // NamedBusConfig("m-dpa" , 10, 1),
       NamedBusConfig("m-hole",  0, 1),
       NamedBusConfig("m-keys",  1, 1)
     )
@@ -20,5 +21,6 @@ object Settings {
     sConfig.lineOutputs     = Vector(
       NamedBusConfig("sum", 4, 2)
     )
+    sConfig.audioFilesFolder  = Some(userHome / "IEM" / "Impuls2015" / "tapes")
   }
 }
