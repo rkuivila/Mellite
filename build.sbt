@@ -10,7 +10,7 @@ lazy val projectVersion             = "1.2.0-SNAPSHOT"
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.15.0"
+lazy val soundProcessesVersion      = "2.16.0-SNAPSHOT"
 
 lazy val interpreterPaneVersion     = "1.7.0"
 

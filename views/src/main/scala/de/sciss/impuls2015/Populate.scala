@@ -9,13 +9,19 @@ import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.io.AudioFile
-import de.sciss.synth.proc.{SoundProcesses, ArtifactElem, Action, ExprImplicits, AudioGraphemeElem, Obj, Grapheme}
+import de.sciss.synth.proc.graph.ScanOut
+import de.sciss.synth.proc.{FolderElem, Folder, ArtifactLocationElem, Proc, SoundProcesses, ArtifactElem, Action, ExprImplicits, AudioGraphemeElem, Obj, Grapheme}
+import de.sciss.synth.proc.Implicits._
 import de.sciss.{synth, nuages}
 import de.sciss.nuages.{DbFaderWarp, NamedBusConfig, IntWarp, ExpWarp, TrigSpec, ParamSpec, ScissProcs, Nuages}
 import de.sciss.synth.GE
 import de.sciss.synth.ugen.Constant
 
+import scala.concurrent.stm.Ref
+
 object Populate {
+  private final val DEBUG = true
+
   //  private def mkTransition(name: String)(fun: (GE, GE) => GE)(implicit tx: S#Tx, nuages: Nuages[S]) = filter(name) { in =>
   //    import de.sciss.synth._
   //    import de.sciss.synth.ugen._
@@ -37,16 +43,15 @@ object Populate {
     pm + zm
   }
 
-  def mkLoop[S <: Sys[S]](f: File)(implicit tx: S#Tx): Unit = {
+  def mkLoop[S <: evt.Sys[S]](root: Folder[S], artObj: ArtifactElem.Obj[S])(implicit tx: S#Tx): Unit = {
     val dsl = new nuages.DSL[S]
     import dsl._
     val imp = ExprImplicits[S]
     import imp._
 
-    val loc   = ??? : ArtifactLocation.Modifiable[S] // ArtifactLocation[S](file(sys.props("java.io.tmpdir")))
-    implicit val _n: Nuages[S] = ???
+    val f = artObj.elem.peer.value
 
-    val procObj = generator(f.base) {
+    val procObj = mkProcObj(f.base) {
       import synth._; import ugen._
       val pSpeed      = pAudio  ("speed", ParamSpec(0.125, 2.3511, ExpWarp), default = 1)
       val pStart      = pControl("start", ParamSpec(0, 1), default = 0)
@@ -73,14 +78,97 @@ object Populate {
       val amp1        = 1.0 - (1.0 - amp0).squared
       val sig         = (play1 * amp1) + (play2 * amp2)
       LocalOut.kr(Impulse.kr(1.0 / duration.max(0.1)))
-      sig
+      ScanOut(Proc.Obj.scanMainOut, sig)
     }
-    val art   = loc /* locH() */.add(f)
+    procObj.elem.peer.scans.add(Proc.Obj.scanMainOut)
     val spec  = AudioFile.readSpec(f)
-    val gr    = Grapheme.Expr.Audio(art, spec, 0L, 1.0)
+    if (DEBUG) println("mkloop ---1")
+    val gr    = Grapheme.Expr.Audio(artObj.elem.peer, spec, 0L, 1.0)
     procObj.attr.put("file", Obj(AudioGraphemeElem(gr)))
-    // val artObj  = Obj(ArtifactElem(art))
-    // procObj.attr.put("file", artObj)
+
+    if (DEBUG) println(s"mkloop ---2. root = $root")
+
+    for {
+      FolderElem.Obj(nuagesF) <- root / "Nuages"
+      FolderElem.Obj(genF)    <- nuagesF.elem.peer / Nuages.NameGenerators
+    } {
+      if (DEBUG) println("mkloop ---3")
+      insertByName(genF.elem.peer, procObj)
+      if (DEBUG) println("mkloop ---4")
+    }
+  }
+
+  private final val ActionKeyRecPrepare = "nuages-prepare-rec"
+  private final val ActionKeyRecDispose = "nuages-dispose-rec"
+
+  private val _registerActions = Ref(initialValue = false)
+
+  def registerActions[S <: Sys[S]]()(implicit tx: S#Tx): Unit = {
+    if (_registerActions.swap(true)(tx.peer)) return    // already registered
+
+    val recFormat = new SimpleDateFormat("'rec_'yyMMdd'_'HHmmss'.aif'", Locale.US)
+    // val recFormat = new SimpleDateFormat("'rec_'HHmmss'.aif'", Locale.US)
+
+    val sinkRecPrepare = new Action.Body {
+      def apply[T <: evt.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
+        if (DEBUG) println("prepare ---1")
+        import universe._
+        for {
+          art  <- self.attr[ArtifactElem]("file")
+          artM <- art.modifiableOption
+        } {
+          if (DEBUG) println(s"prepare ---2: $artM")
+          val name  = recFormat.format(new Date)
+          artM.child = Artifact.Child(name) // XXX TODO - should check that it is different from previous value
+          // println(name)
+          if (DEBUG) println("prepare ---3")
+        }
+      }
+    }
+    Action.registerPredef(ActionKeyRecPrepare, sinkRecPrepare)
+
+    val sinkRecDispose = new Action.Body {
+      def apply[T <: evt.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
+        if (DEBUG) println("dispose ---1")
+        import universe._
+        for {
+          ArtifactElem.Obj(artObj) <- self.attr.get("file")
+        } {
+          if (DEBUG) println("dispose ---2")
+          val artCpy: ArtifactElem.Obj[T] = Obj.copyT[T, ArtifactElem](artObj, artObj.elem.mkCopy())
+          if (DEBUG) println("dispose ---3")
+          SoundProcesses.scheduledExecutorService.schedule(new Runnable {
+            def run(): Unit = SoundProcesses.atomic[T, Unit] { implicit tx =>
+              // println(f)
+              if (DEBUG) println("dispose ---4")
+              mkLoop[T](root, artCpy)
+            }
+          }, 1000, TimeUnit.MILLISECONDS)
+        }
+      }
+    }
+    Action.registerPredef(ActionKeyRecDispose, sinkRecDispose)
+  }
+
+  private final val RecName = "rec"
+
+  final val BaseDir = userHome / "IEM" / "Impuls2015"
+
+  private final val RecDir  = BaseDir / "rec"
+
+  def getRecLocation[S <: Sys[S]](root: Folder[S])(implicit tx: S#Tx): ArtifactLocation.Modifiable[S] = {
+    val it = root.iterator.flatMap {
+      case ArtifactLocationElem.Obj(objT) if objT.name == RecName => objT.elem.peer.modifiableOption
+      case _ => None
+    }
+    if (it.hasNext) it.next() else {
+      if (!RecDir.exists()) tx.afterCommit(RecDir.mkdirs())
+      val newLoc    = ArtifactLocation[S](RecDir)
+      val newLocObj = Obj(ArtifactLocationElem(newLoc))
+      newLocObj.name = RecName
+      root.modifiableOption.foreach(_.addLast(newLocObj))
+      newLoc
+    }
   }
 
   def apply[S <: Sys[S]](n: Nuages[S], nConfig: Nuages.Config, sConfig: ScissProcs.Config)
@@ -93,8 +181,6 @@ object Populate {
     import synth._; import ugen._
 
     val masterChansOption = nConfig.masterChannels
-
-    val loc: ArtifactLocation.Modifiable[S] = ???
 
     def ForceChan(in: GE): GE = if (sConfig.generatorChannels <= 0) in else {
       WrapExtendChannels(sConfig.generatorChannels, in)
@@ -739,48 +825,14 @@ object Populate {
     }
 
     // -------------- SINKS --------------
-    // val recFormat = new SimpleDateFormat("'rec_'yyMMdd'_'HHmmss'.aif'", Locale.US)
-    val recFormat = new SimpleDateFormat("'rec_'HHmmss'.aif'", Locale.US)
-
-    val sinkRecPrepare = new Action.Body {
-      def apply[T <: evt.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
-        import universe._
-        for {
-          art  <- self.attr[ArtifactElem]("file")
-          artM <- art.modifiableOption
-        } {
-          val name  = recFormat.format(new Date)
-          artM.child = Artifact.Child(name) // XXX TODO - should check that it is different from previous value
-          // println(name)
-        }
-      }
-    }
-    Action.registerPredef("nuages-prepare-rec", sinkRecPrepare)
-
-    val sinkRecDispose = new Action.Body {
-      def apply[T <: evt.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
-        import universe._
-        for {
-          art <- self.attr[ArtifactElem]("file")
-        } {
-          val f = art.value
-          SoundProcesses.scheduledExecutorService.schedule(new Runnable {
-            def run(): Unit = SoundProcesses.atomic[S, Unit] { implicit tx =>
-              println(f)
-              mkLoop[S](f)
-            }
-          }, 1000, TimeUnit.MILLISECONDS)
-        }
-      }
-    }
-    Action.registerPredef("nuages-dispose-rec", sinkRecDispose)
 
     val sinkRec = sink("rec") { in =>
       proc.graph.DiskOut.ar("file", in)
     }
-    val sinkPrepObj = Obj(Action.Elem(Action.predef("nuages-prepare-rec")))
-    val sinkDispObj = Obj(Action.Elem(Action.predef("nuages-dispose-rec")))
-    val artRec      = loc.add(loc.directory / "undefined")
+    val sinkPrepObj = Obj(Action.Elem(Action.predef(ActionKeyRecPrepare)))
+    val sinkDispObj = Obj(Action.Elem(Action.predef(ActionKeyRecDispose)))
+    val locRec      = getRecLocation(n.folder)
+    val artRec      = locRec.add(locRec.directory / "undefined")
     val artRecObj   = Obj(ArtifactElem(artRec))
     sinkPrepObj.attr.put("file"   , artRecObj  )
     sinkDispObj.attr.put("file"   , artRecObj  )

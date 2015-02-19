@@ -32,6 +32,7 @@ import scala.swing.{BoxPanel, Button, Component, Orientation}
 object NuagesFolderViewImpl {
   def apply[S <: Sys[S]](nuagesObj: Nuages.Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
                                                    cursor: stm.Cursor[S], undoManager: UndoManager): Impl[S] = {
+    de.sciss.impuls2015.Populate.registerActions[S]()
     val nuages  = nuagesObj.elem.peer
     val folder  = FolderView(nuages.folder)
     val folder1 = new FolderFrameImpl.ViewImpl[S](folder)

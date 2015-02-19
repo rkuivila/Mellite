@@ -36,7 +36,7 @@ import de.sciss.swingplus.{ComboBox, GroupPanel, Spinner}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.impl.{ElemImpl, FolderElemImpl}
-import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, Grapheme, IntElem, LongElem, Obj, StringElem}
+import de.sciss.synth.proc.{ArtifactElem, ArtifactLocationElem, AudioGraphemeElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, Grapheme, IntElem, LongElem, Obj, StringElem}
 import de.sciss.{desktop, lucre}
 
 import scala.swing.Swing.EmptyIcon
@@ -46,7 +46,7 @@ import scala.util.Try
 object ObjViewImpl {
   import java.lang.{String => _String}
 
-  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
+  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation, Artifact => _Artifact}
   import de.sciss.mellite.gui.ObjView.Factory
   import de.sciss.mellite.{Recursion => _Recursion}
   import de.sciss.nuages.{Nuages => _Nuages}
@@ -78,6 +78,7 @@ object ObjViewImpl {
     Boolean         .typeID -> Boolean,
     AudioGrapheme   .typeID -> AudioGrapheme,
     ArtifactLocation.typeID -> ArtifactLocation,
+    Artifact        .typeID -> Artifact,
     Recursion       .typeID -> Recursion,
     Folder          .typeID -> Folder,
     Proc            .typeID -> Proc,
@@ -512,73 +513,120 @@ object ObjViewImpl {
     }
   }
 
-    // -------- ArtifactLocation --------
+    // -------- Artifact --------
 
-    object ArtifactLocation extends Factory {
-      type E[S <: evt.Sys[S]] = ArtifactLocationElem[S]
-      val icon    = raphaelIcon(raphael.Shapes.Location)
-      val prefix  = "ArtifactStore"
-      def typeID  = ElemImpl.ArtifactLocation.typeID
+    object Artifact extends Factory {
+      type E[S <: evt.Sys[S]] = ArtifactElem[S]
+      val icon    = raphaelIcon(raphael.Shapes.PagePortrait)
+      val prefix  = "Artifact"
+      def typeID  = ElemImpl.Artifact.typeID
 
-      def apply[S <: Sys[S]](obj: ArtifactLocationElem.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
+      def apply[S <: Sys[S]](obj: ArtifactElem.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
         val name      = obj.name
         val peer      = obj.elem.peer
-        val value     = peer.directory
-        val editable  = peer.modifiableOption.isDefined
-        new ArtifactLocation.Impl(tx.newHandle(obj), name, value, isEditable = editable)
+        val value     = peer.value  // peer.child.path
+        val editable  = false // XXX TODO -- peer.modifiableOption.isDefined
+        new Artifact.Impl(tx.newHandle(obj), name, value, isEditable = editable)
       }
 
       type Config[S <: Sys[S]] = PrimitiveConfig[File]
 
       def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] =
-        ActionArtifactLocation.queryNew(window = window)
+                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] = None // XXX TODO
 
-      def make[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = {
-        // ActionArtifactLocation.create(directory, _name, targetFolder)
-        val (name, directory) = config
-        val peer  = _ArtifactLocation[S](directory)
-        val elem  = ArtifactLocationElem(peer)
-        val obj   = Obj(elem)
-        obj.name = name
-        obj :: Nil
-      }
+      def make[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???
 
-      final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]],
-                                    var name: _String, var directory: File, val isEditable: _Boolean)
-        extends ObjView.ArtifactLocation[S]
+      final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactElem.Obj[S]],
+                                    var name: _String, var file: File, val isEditable: _Boolean)
+        extends ObjView.Artifact[S]
         with ObjViewImpl.Impl[S]
         with StringRenderer
         with NonViewable[S] {
 
-        def icon    = ArtifactLocation.icon
-        def prefix  = ArtifactLocation.prefix
-        def typeID  = ArtifactLocation.typeID
+        def icon    = Artifact.icon
+        def prefix  = Artifact.prefix
+        def typeID  = Artifact.typeID
 
-        def value   = directory
+        def value   = file
 
         def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
-          case _ArtifactLocation.Moved(_, Change(_, now)) =>
-            deferTx { directory = now }
+          case Change(_, now: File) =>
+            deferTx { file = now }
             true
           case _ => false
         }
 
-        def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-          val dirOpt = value match {
-            case s: String  => Some(file(s))
-            case f: File    => Some(f)
-            case _          => None
-          }
-          dirOpt.flatMap { newDir =>
-            val loc = obj().elem.peer
-            if (loc.directory == newDir) None else loc.modifiableOption.map { mod =>
-              EditArtifactLocation(mod, newDir)
-            }
+        def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = None // XXX TODO
+      }
+    }
+
+  // -------- ArtifactLocation --------
+
+  object ArtifactLocation extends Factory {
+    type E[S <: evt.Sys[S]] = ArtifactLocationElem[S]
+    val icon    = raphaelIcon(raphael.Shapes.Location)
+    val prefix  = "ArtifactStore"
+    def typeID  = ElemImpl.ArtifactLocation.typeID
+
+    def apply[S <: Sys[S]](obj: ArtifactLocationElem.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
+      val name      = obj.name
+      val peer      = obj.elem.peer
+      val value     = peer.directory
+      val editable  = peer.modifiableOption.isDefined
+      new ArtifactLocation.Impl(tx.newHandle(obj), name, value, isEditable = editable)
+    }
+
+    type Config[S <: Sys[S]] = PrimitiveConfig[File]
+
+    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] =
+      ActionArtifactLocation.queryNew(window = window)
+
+    def make[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = {
+      // ActionArtifactLocation.create(directory, _name, targetFolder)
+      val (name, directory) = config
+      val peer  = _ArtifactLocation[S](directory)
+      val elem  = ArtifactLocationElem(peer)
+      val obj   = Obj(elem)
+      obj.name = name
+      obj :: Nil
+    }
+
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]],
+                                  var name: _String, var directory: File, val isEditable: _Boolean)
+      extends ObjView.ArtifactLocation[S]
+      with ObjViewImpl.Impl[S]
+      with StringRenderer
+      with NonViewable[S] {
+
+      def icon    = ArtifactLocation.icon
+      def prefix  = ArtifactLocation.prefix
+      def typeID  = ArtifactLocation.typeID
+
+      def value   = directory
+
+      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
+        case _ArtifactLocation.Moved(_, Change(_, now)) =>
+          deferTx { directory = now }
+          true
+        case _ => false
+      }
+
+      def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+        val dirOpt = value match {
+          case s: String  => Some(file(s))
+          case f: File    => Some(f)
+          case _          => None
+        }
+        dirOpt.flatMap { newDir =>
+          val loc = obj().elem.peer
+          if (loc.directory == newDir) None else loc.modifiableOption.map { mod =>
+            EditArtifactLocation(mod, newDir)
           }
         }
       }
     }
+  }
 
   // -------- Recursion --------
 

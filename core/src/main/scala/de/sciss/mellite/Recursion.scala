@@ -53,8 +53,7 @@ object Recursion {
   trait Elem[S <: Sys[S]] extends proc.Elem[S] {
     type Peer       = Recursion[S]
     type PeerUpdate = Recursion.Update[S]
-
-    def mkCopy()(implicit tx: S#Tx): Elem[S]
+    type This       = Elem[S]
   }
 
   object Obj {

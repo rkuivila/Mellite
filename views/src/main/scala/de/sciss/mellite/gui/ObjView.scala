@@ -23,7 +23,7 @@ import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.impl.{ObjViewImpl => Impl}
-import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, BooleanElem, DoubleElem, Elem, FolderElem, Grapheme, IntElem, LongElem, Obj, StringElem}
+import de.sciss.synth.proc.{ArtifactElem, ArtifactLocationElem, AudioGraphemeElem, BooleanElem, DoubleElem, Elem, FolderElem, Grapheme, IntElem, LongElem, Obj, StringElem}
 
 import scala.language.higherKinds
 import scala.swing.{Component, Label}
@@ -112,6 +112,11 @@ object ObjView {
   trait ArtifactLocation[S <: Sys[S]] extends ObjView[S] {
     def obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]
     def directory: File
+  }
+
+  trait Artifact[S <: Sys[S]] extends ObjView[S] {
+    def obj: stm.Source[S#Tx, ArtifactElem.Obj[S]]
+    def file: File
   }
 
   val Recursion: Factory { type E[S <: evt.Sys[S]] = mellite.Recursion.Elem[S] } = Impl.Recursion
