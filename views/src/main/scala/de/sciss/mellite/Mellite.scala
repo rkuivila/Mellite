@@ -103,8 +103,10 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     if (audioDevice != Prefs.defaultAudioDevice) config.deviceName = Some(audioDevice)
     val numOutputs      = Prefs.audioNumOutputs .getOrElse(Prefs.defaultAudioNumOutputs)
     config.outputBusChannels = numOutputs
+    val numInputs       = Prefs.audioNumInputs  .getOrElse(Prefs.defaultAudioNumInputs)
+    config.inputBusChannels  = numInputs
     val numPrivate      = Prefs.audioNumPrivate .getOrElse(Prefs.defaultAudioNumPrivate)
-    config.audioBusChannels = numOutputs + numPrivate
+    config.audioBusChannels = numInputs + numOutputs + numPrivate
     config.wireBuffers  = Prefs.audioNumWireBufs.getOrElse(Prefs.defaultAudioNumWireBufs)
     config.sampleRate   = Prefs.audioSampleRate .getOrElse(Prefs.defaultAudioSampleRate)
     config.blockSize    = Prefs.audioBlockSize  .getOrElse(Prefs.defaultAudioBlockSize)

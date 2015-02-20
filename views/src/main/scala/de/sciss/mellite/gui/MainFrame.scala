@@ -190,7 +190,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
         val mainIn    = in * mainAmp
         val ceil      = -0.2.dbamp
         val mainLim   = Limiter.ar(mainIn, level = ceil)
-        val lim       = Lag.ar(K2A.ar("limiter".kr(1f) * 2 - 1))
+        val lim       = Lag.ar(K2A.ar("limiter".kr(0f /* XXX TODO -- temporary off by default 1f */) * 2 - 1))
         val mainOut   = LinXFade2.ar(mainIn, mainLim, pan = lim)
         val hpBusL    = "hp-bus".kr(0f)
         val hpBusR    = hpBusL + 1
@@ -216,7 +216,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
       val p = new FlowPanel() // new BoxPanel(Orientation.Horizontal)
 
-      if (Prefs.useAudioMeters) {
+      if (Prefs.useAudioMeters && false /* XXX TODO - temporary switched off */) {
         val m = AudioBusMeter(AudioBusMeter.Strip(outBus, mGroup, addToHead) :: Nil)
         meter = Some(m)
         p.contents += m.component
@@ -249,7 +249,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
         if (post) mGroup.moveToTail(group) else mGroup.moveToHead(group)
       }
 
-      val ggLim = mkToggle("limiter", selected = true) { lim =>
+      val ggLim = mkToggle("limiter", selected = false /* true */) { lim =>
         val on = if (lim) 1f else 0f
         syn.set("limiter" -> on)
       }
