@@ -103,11 +103,15 @@ object Prefs {
   // they are here, because right now Mellite is `DelayedInit` which
   // can cause trouble with `var`s.
 
-  /** The initial setting of the master volume slider, in decibels.
-    * This value will only be read once upon application start.
-    * Defaults to `0`.
+  /** The master volume in decibels. A value of -72 or less
+    * is mapped to -inf.
     */
-  var initialMasterVolume: Int  = 0
+  def audioMasterVolume   : Entry[Int] = userPrefs("audio-master-volume")
+  def headphonesVolume    : Entry[Int] = userPrefs("headphones-volume")
+
+  def audioMasterLimiter  : Entry[Boolean]  = userPrefs("audio-master-limiter")
+  def audioMasterPostMeter: Entry[Boolean]  = userPrefs("audio-master-post-meter")
+  def headphonesActive    : Entry[Boolean]  = userPrefs("headphones-active")
 
   /** Whether to create a log (post) window or not. Defaults to `true`. */
   var useLogFrame: Boolean = true

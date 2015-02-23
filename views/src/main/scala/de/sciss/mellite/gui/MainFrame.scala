@@ -19,7 +19,7 @@ import java.awt.{Color, Font}
 import javax.swing.border.Border
 
 import de.sciss.audiowidgets.PeakMeter
-import de.sciss.desktop.{Desktop, Menu, Window, WindowHandler}
+import de.sciss.desktop.{Preferences, Desktop, Menu, Window, WindowHandler}
 import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.synth.{Server, Txn}
@@ -186,21 +186,21 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
         import de.sciss.synth._
         import de.sciss.synth.ugen._
         val in        = In.ar(0, numOuts)
-        val mainAmp   = Lag.ar(K2A.ar("amp".kr(1f)))
+        val mainAmp   = Lag.ar("amp".kr(0f))
         val mainIn    = in * mainAmp
         val ceil      = -0.2.dbamp
         val mainLim   = Limiter.ar(mainIn, level = ceil)
-        val lim       = Lag.ar(K2A.ar("limiter".kr(0f /* XXX TODO -- temporary off by default 1f */) * 2 - 1))
+        val lim       = Lag.ar("limiter".kr(0f) * 2 - 1)
         val mainOut   = LinXFade2.ar(mainIn, mainLim, pan = lim)
         val hpBusL    = "hp-bus".kr(0f)
         val hpBusR    = hpBusL + 1
-        val hpAmp     = Lag.ar(K2A.ar("hp-amp".kr(1f)))
+        val hpAmp     = Lag.ar("hp-amp".kr(0f))
         val hpInL     = Mix.tabulate((numOuts + 1) / 2)(i => in \ (i * 2))
         val hpInR     = Mix.tabulate( numOuts      / 2)(i => in \ (i * 2 + 1))
         val hpLimL    = Limiter.ar(hpInL * hpAmp, level = ceil)
         val hpLimR    = Limiter.ar(hpInR * hpAmp, level = ceil)
 
-        val hpActive  = Lag.ar(K2A.ar("hp".kr(0f)))
+        val hpActive  = Lag.ar("hp".kr(0f))
         val out       = (0 until numOuts).map { i =>
           val isL   = hpActive & (hpBusL sig_== i)
           val isR   = hpActive & (hpBusR sig_== i)
@@ -210,51 +210,55 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
         ReplaceOut.ar(0, out)
       }
+
       val hpBus = Prefs.headphonesBus.getOrElse(Prefs.defaultHeadphonesBus)
-      val syn = df.play(target = group, addAction = addToTail,
-        args = Seq("hp-bus" -> hpBus, "amp" -> Prefs.initialMasterVolume.dbamp))
+      val syn = df.play(target = group, addAction = addToTail, args = Seq("hp-bus" -> hpBus))
 
       val p = new FlowPanel() // new BoxPanel(Orientation.Horizontal)
 
-      if (Prefs.useAudioMeters && false /* XXX TODO - temporary switched off */) {
+      if (Prefs.useAudioMeters) {
         val m = AudioBusMeter(AudioBusMeter.Strip(outBus, mGroup, addToHead) :: Nil)
         meter = Some(m)
         p.contents += m.component
         p.contents += HStrut(8)
       }
 
-      def mkAmpFader(ctl: String): Slider = mkFader { db =>
+      def mkAmpFader(ctl: String, prefs: Preferences.Entry[Int]): Slider = mkFader(prefs, 0) { db =>
         import de.sciss.synth._
         val amp = if (db == -72) 0f else db.dbamp
         syn.set(ctl -> amp)
       }
 
-      val ggMainVolume    = mkAmpFader("amp")
-      ggMainVolume.value  = Prefs.initialMasterVolume
-      val ggHPVolume      = mkAmpFader("hp-amp")
+      val ggMainVolume    = mkAmpFader("amp"   , Prefs.audioMasterVolume)
+      val ggHPVolume      = mkAmpFader("hp-amp", Prefs.headphonesVolume )
 
-      def mkToggle(label: String, selected: Boolean = false)(fun: Boolean => Unit): ToggleButton = {
+      def mkToggle(label: String, prefs: Preferences.Entry[Boolean], default: Boolean = false)
+                  (fun: Boolean => Unit): ToggleButton = {
         val res = new ToggleButton
         res.action = Action(label) {
-          fun(res.selected)
+          val v = res.selected
+          fun(v)
+          prefs.put(v)
         }
         res.peer.putClientProperty("JComponent.sizeVariant", "mini")
         res.peer.putClientProperty("JButton.buttonType", "square")
-        res.selected  = selected
+        val v0 = prefs.getOrElse(default)
+        res.selected  = v0
         res.focusable = false
+        fun(v0)
         res
       }
 
-      val ggPost = mkToggle("post") { post =>
+      val ggPost = mkToggle("post", Prefs.audioMasterPostMeter) { post =>
         if (post) mGroup.moveToTail(group) else mGroup.moveToHead(group)
       }
 
-      val ggLim = mkToggle("limiter", selected = false /* true */) { lim =>
+      val ggLim = mkToggle("limiter", Prefs.audioMasterLimiter) { lim =>
         val on = if (lim) 1f else 0f
         syn.set("limiter" -> on)
       }
 
-      val ggHPActive = mkToggle("active") { active =>
+      val ggHPActive = mkToggle("active", Prefs.headphonesActive) { active =>
         val on = if (active) 1f else 0f
         syn.set("hp" -> on)
       }
@@ -292,7 +296,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     }
   }
 
-  private def mkFader(fun: Int => Unit): Slider = {
+  private def mkFader(prefs: Preferences.Entry[Int], default: Int)(fun: Int => Unit): Slider = {
     val zeroMark    = "0\u25C0"
     val lbMap: Map[Int, Label] = (-72 to 18 by 12).map { dec =>
       val txt = if (dec == -72) "-\u221E" else if (dec == 0) zeroMark else dec.toString
@@ -301,40 +305,47 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
       (dec, lb)
     } (breakOut)
     val lbZero = lbMap(0)
-    var isZero = true
 
     val sl    = new Slider {
       orientation       = Orientation.Vertical
       min               = -72
       max               =  18
-      value             =   0
+      value             =   prefs.getOrElse(default)
       minorTickSpacing  =   3
       majorTickSpacing  =  12
       paintTicks        = true
       paintLabels       = true
 
+      private var isZero = true  // will be initialized
+
       peer.putClientProperty("JComponent.sizeVariant", "small")
       peer.putClientProperty("JSlider.isFilled", true)   // used by Metal-lnf
       labels            = lbMap
 
+      private def perform(store: Boolean): Unit = {
+        val v = value
+        fun(v)
+        if (isZero) {
+          if (v != 0) {
+            isZero = false
+            lbZero.text = "0"
+            repaint()
+          }
+        } else {
+          if (v == 0) {
+            isZero = true
+            lbZero.text = zeroMark
+            repaint()
+          }
+        }
+        if (store) prefs.put(v)
+      }
+
       listenTo(this)
       reactions += {
-        case ValueChanged(_) =>
-          fun(value)
-          if (isZero) {
-            if (value != 0) {
-              isZero = false
-              lbZero.text = "0"
-              repaint()
-            }
-          } else {
-            if (value == 0) {
-              isZero = true
-              lbZero.text = zeroMark
-              repaint()
-            }
-          }
+        case ValueChanged(_) => perform(store = true)
       }
+      perform(store = false)
     }
 
     sl
