@@ -13,17 +13,16 @@
 
 package de.sciss.mellite
 
-import de.sciss.lucre.event.{Sys, Observable}
+import de.sciss.lucre.event.{Observable, Sys}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{TxnLike, Disposable}
+import de.sciss.lucre.stm.Disposable
 import de.sciss.model.Change
 import de.sciss.serial.Serializer
-import de.sciss.synth.proc.{ObjKeys, StringElem, Elem, Obj}
 import de.sciss.synth.proc.impl.ObservableImpl
+import de.sciss.synth.proc.{Elem, Obj, ObjKeys, StringElem}
 
 import scala.concurrent.stm.Ref
-import scala.reflect.ClassTag
 import scala.language.higherKinds
 
 // XXX TODO - should go somewhere else - LucreExpr or LucreSwing

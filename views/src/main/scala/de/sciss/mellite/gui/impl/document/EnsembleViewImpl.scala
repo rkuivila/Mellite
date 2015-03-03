@@ -19,7 +19,7 @@ package document
 import de.sciss.desktop.UndoManager
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
-import de.sciss.lucre.swing.{View, deferTx}
+import de.sciss.lucre.swing.{BooleanCheckBoxView, View, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
 import de.sciss.swingplus.Separator
