@@ -23,7 +23,7 @@ import de.sciss.desktop
 import de.sciss.desktop.Window
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm.Disposable
-import de.sciss.lucre.swing.deferTx
+import de.sciss.lucre.swing.{CellView, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.{confluent, stm}
 import de.sciss.model.Change
@@ -325,7 +325,7 @@ object CursorsFrameImpl {
             // import StringEx.serializer
             //            val nameD = ExprView.expr[D, String](elem.name)
             //            val name  = nameD.map()
-            val name = ExprView.const[S, String](s"${workspace.name} / ${elem.name.value}")
+            val name = CellView.const[S, String](s"${workspace.name} / ${elem.name.value}")
             FolderFrame[S](name = name, isWorkspaceRoot = false)
           }
         }

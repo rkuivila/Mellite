@@ -18,7 +18,7 @@ package document
 
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.lucre.stm
-import de.sciss.lucre.swing.Window
+import de.sciss.lucre.swing.{CellView, Window}
 import de.sciss.lucre.synth.Sys
 import de.sciss.nuages.Nuages
 
@@ -27,13 +27,13 @@ object NuagesFolderFrameImpl {
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Window[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val ensembleView      = NuagesFolderViewImpl(obj)
-    val name  = ExprView.name(obj)
+    val name  = AttrCellView.name(obj)
     val res   = new FrameImpl[S](ensembleView, name)
     res.init()
     res
   }
 
-  private final class FrameImpl[S <: Sys[S]](val view: NuagesFolderViewImpl.Impl[S], name: ExprView[S#Tx, String])
+  private final class FrameImpl[S <: Sys[S]](val view: NuagesFolderViewImpl.Impl[S], name: CellView[S#Tx, String])
     extends WindowImpl[S](name) {
 
     override protected def initGUI(): Unit = {

@@ -19,7 +19,7 @@ import de.sciss.desktop
 import de.sciss.file._
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm
-import de.sciss.lucre.swing.{View, Window, deferTx, requireEDT}
+import de.sciss.lucre.swing.{CellView, View, Window, deferTx, requireEDT}
 import de.sciss.synth.proc.SoundProcesses
 
 import scala.swing.Action
@@ -74,12 +74,12 @@ object WindowImpl {
 //  extends Window[S] with WindowHolder[desktop.Window] {
 //}
 
-abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[ExprView[S#Tx, String]])
+abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx, String]])
   extends Window[S] with WindowHolder[desktop.Window] {
   impl =>
 
   def this() = this(None)
-  def this(titleExpr: ExprView[S#Tx, String]) = this(Some(titleExpr))
+  def this(titleExpr: CellView[S#Tx, String]) = this(Some(titleExpr))
 
   protected def style: desktop.Window.Style = desktop.Window.Regular
 

@@ -34,7 +34,7 @@ import de.sciss.lucre.stm.Disposable
 import de.sciss.file._
 import de.sciss.lucre.synth.{Server, Sys}
 import de.sciss.swingplus.GroupPanel
-import de.sciss.lucre.swing.{defer, deferTx}
+import de.sciss.lucre.swing.{CellView, defer, deferTx}
 import proc.Implicits._
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.model.impl.ModelImpl
@@ -80,7 +80,7 @@ object RecursionFrameImpl {
       }
     }
 
-    val name  = ExprView.name(obj)
+    val name  = AttrCellView.name(obj)
     val res   = new FrameImpl(view, name)
     res.init()
     res
@@ -127,7 +127,7 @@ object RecursionFrameImpl {
     }
   }
 
-  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: ExprView[S#Tx, String])
+  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: CellView[S#Tx, String])
     extends WindowImpl[S](name) with RecursionFrame[S] {
 
     override protected def initGUI(): Unit =

@@ -17,6 +17,7 @@ package impl
 package audiofile
 
 import de.sciss.lucre.stm
+import de.sciss.lucre.swing.CellView
 import de.sciss.synth.proc
 import proc.{AudioGraphemeElem, Obj}
 import de.sciss.file._
@@ -27,7 +28,7 @@ object FrameImpl {
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): AudioFileFrame[S] = {
     implicit val aural = Mellite.auralSystem
     val afv       = AudioFileView(obj)
-    val name0     = ExprView.name(obj)
+    val name0     = AttrCellView.name(obj)
     val file      = obj.elem.peer.value.artifact
     val fileName  = file.base
     val name      = name0.map { n =>
@@ -39,7 +40,7 @@ object FrameImpl {
   }
 
   private final class Impl[S <: Sys[S]](/* val document: Workspace[S], */ val view: AudioFileView[S],
-                                        name: ExprView[S#Tx, String], _file: File)
+                                        name: CellView[S#Tx, String], _file: File)
                                        (implicit cursor: stm.Cursor[S])
     extends WindowImpl[S](name)
     with AudioFileFrame[S] {

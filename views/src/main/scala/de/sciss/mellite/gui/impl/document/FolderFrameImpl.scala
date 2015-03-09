@@ -24,6 +24,7 @@ import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{Window, Desktop, KeyStrokes, Menu, UndoManager}
 import de.sciss.lucre.stm
+import de.sciss.lucre.swing.CellView
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{String => StringEx}
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
@@ -37,7 +38,7 @@ import scala.collection.breakOut
 import scala.swing.event.Key
 
 object FolderFrameImpl {
-  def apply[S <: Sys[S]](name: ExprView[S#Tx, String],
+  def apply[S <: Sys[S]](name: CellView[S#Tx, String],
                          folder: Folder[S],
                          isWorkspaceRoot: Boolean)(implicit tx: S#Tx,
                          workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] = {
@@ -60,7 +61,7 @@ object FolderFrameImpl {
       case _ =>
     }
 
-  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: ExprView[S#Tx, String],
+  private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: CellView[S#Tx, String],
                                              isWorkspaceRoot: Boolean, interceptQuit: Boolean)
     extends WindowImpl[S](name) with FolderFrame[S] {
 

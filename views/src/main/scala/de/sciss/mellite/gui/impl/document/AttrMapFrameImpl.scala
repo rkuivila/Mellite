@@ -21,10 +21,11 @@ import de.sciss.desktop.UndoManager
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.lucre.stm
+import de.sciss.lucre.swing.CellView
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.mellite.gui.impl.component.CollectionViewImpl
-import de.sciss.mellite.{ExprView, Workspace}
+import de.sciss.mellite.Workspace
 import de.sciss.synth.proc.Obj
 
 import scala.swing.Action
@@ -36,7 +37,7 @@ object AttrMapFrameImpl {
     val contents  = AttrMapView[S](obj)
     val view      = new ViewImpl[S](contents)
     view.init()
-    val name      = ExprView.name(obj)
+    val name      = AttrCellView.name(obj)
     val res       = new FrameImpl[S](tx.newHandle(obj), view, name = name)
     res.init()
     res
@@ -87,7 +88,7 @@ object AttrMapFrameImpl {
   }
 
   private final class FrameImpl[S <: Sys[S]](objH: stm.Source[S#Tx, Obj[S]], val view: ViewImpl[S],
-                                             name: ExprView[S#Tx, String])
+                                             name: CellView[S#Tx, String])
                                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager)
     extends WindowImpl[S](name.map(n => s"$n : Attributes"))
     with AttrMapFrame[S] {

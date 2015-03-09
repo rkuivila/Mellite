@@ -22,7 +22,7 @@ import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{UndoManager, OptionPane, Window}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IDPeek
-import de.sciss.lucre.swing.View
+import de.sciss.lucre.swing.{CellView, View}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.event.Sys
 import de.sciss.swingplus.Separator
@@ -149,7 +149,7 @@ object CodeFrameImpl {
         }
       }
     }
-    val _name = ExprView.name(pObj)
+    val _name = AttrCellView.name(pObj)
     val res = new FrameImpl(codeView = codeView, view = view, name = _name, contextName = code0.contextName)
     res.init()
     res
@@ -176,7 +176,7 @@ object CodeFrameImpl {
   // ---- frame impl ----
 
   private final class FrameImpl[S <: Sys[S]](val codeView: CodeView[S], val view: View[S],
-                                             name: ExprView[S#Tx, String], contextName: String)
+                                             name: CellView[S#Tx, String], contextName: String)
     extends WindowImpl[S](name.map(n => s"$n : $contextName Code")) with CodeFrame[S] {
 
     override protected def checkClose(): Boolean = {

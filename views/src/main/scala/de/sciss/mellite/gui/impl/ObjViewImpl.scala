@@ -723,7 +723,7 @@ object ObjViewImpl {
 
       def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         val folderObj = obj()
-        val nameView  = ExprView.name(folderObj)
+        val nameView  = AttrCellView.name(folderObj)
         Some(FolderFrame(nameView, folderObj.elem.peer))
       }
     }
@@ -1322,8 +1322,9 @@ object ObjViewImpl {
           // XXX TODO - all this casting is horrible
           implicit val ctx = tx.asInstanceOf[Confluent#Tx]
           implicit val ser = exprType.serializer[Confluent]
-          val w = new WindowImpl[Confluent](ExprView.name[Confluent](obj().asInstanceOf[Obj[Confluent]],
-              "History for '", "'")) {
+          val name = AttrCellView.name[Confluent](obj().asInstanceOf[Obj[Confluent]])
+            .map(n => s"History for '$n'")
+          val w = new WindowImpl[Confluent](name) {
             val view = ExprHistoryView(cf, expr.asInstanceOf[Expr[Confluent, A]])
             init()
           }

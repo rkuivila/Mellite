@@ -16,6 +16,7 @@ package mellite
 package gui
 
 import de.sciss.lucre.stm
+import de.sciss.lucre.swing.CellView
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.document.{FolderFrameImpl => Impl}
 import de.sciss.synth.proc.Folder
@@ -28,11 +29,11 @@ object FolderFrame {
     * @param isWorkspaceRoot  if `true`, closes the workspace when the window closes; if `false` does nothing
     *                         upon closing the window
     */
-  def apply[S <: Sys[S]](name: ExprView[S#Tx, String], isWorkspaceRoot: Boolean)
+  def apply[S <: Sys[S]](name: CellView[S#Tx, String], isWorkspaceRoot: Boolean)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] =
     Impl(name = name, folder = workspace.rootH(), isWorkspaceRoot = isWorkspaceRoot)
 
-  def apply[S <: Sys[S]](name: ExprView[S#Tx, String], folder: Folder[S])
+  def apply[S <: Sys[S]](name: CellView[S#Tx, String], folder: Folder[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] = {
     Impl(name = name, folder = folder, isWorkspaceRoot = false)
   }

@@ -21,7 +21,7 @@ import de.sciss.desktop
 import de.sciss.desktop.{KeyStrokes, OptionPane, FileDialog, Menu, RecentFiles}
 import de.sciss.file._
 import de.sciss.lucre.stm.store.BerkeleyDB
-import de.sciss.lucre.swing.defer
+import de.sciss.lucre.swing.{CellView, defer}
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc
 import de.sciss.synth.proc.SoundProcesses
@@ -58,7 +58,7 @@ object ActionOpenWorkspace extends Action("Open...") {
       case eph =>
         implicit val workspace: Workspace[S] = eph
         implicit val cursor = eph.cursor
-        val nameView = ExprView.const[S, String](doc.name)
+        val nameView = CellView.const[S, String](doc.name)
         GUI.atomic[S, Unit](fullTitle, s"Opening root elements window for '${doc.name}'") {
           implicit tx => FolderFrame[S](name = nameView, isWorkspaceRoot = true)
         }
