@@ -52,7 +52,7 @@ lazy val commonSettings = Project.defaultSettings ++ Seq(
   homepage           := Some(url("https://github.com/Sciss/" + name.value)),
   licenses           := Seq("GPL v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
   scalaVersion       := "2.11.6",
-  crossScalaVersions := Seq("2.11.6", "2.10.4"),
+  crossScalaVersions := Seq("2.11.6", "2.10.5"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
