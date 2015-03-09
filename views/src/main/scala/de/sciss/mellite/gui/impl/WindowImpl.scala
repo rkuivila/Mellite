@@ -35,7 +35,7 @@ object WindowImpl {
 
     def handler = Application.windowHandler
 
-    // bindMenu("action.window-shot", new ActionWindowShot(this))
+    bindMenu("actions.window-shot", new ActionWindowShot(this))
 
     // addAction("window-shot", new ActionWindowShot(this))
 

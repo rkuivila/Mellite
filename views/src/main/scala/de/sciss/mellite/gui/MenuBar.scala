@@ -57,7 +57,7 @@ object MenuBar {
     val mActions = Group("actions", "Actions")
       .add(Item("stop-all-sound",     proxy("Stop All Sound",           menu1 + Key.Period)))
       .add(Item("debug-print",        proxy("Debug Print",              menu2 + Key.P)))
-      // .add(Item("window-shot",        proxy("Export Window as PDF...")))
+      .add(Item("window-shot",        proxy("Export Window as PDF...")))
 
     val mView = Group("view", "View")
       .add(Item("show-log" )("Show Log Window"  -> (menu1         + Key.P))(Mellite.logToFront()))
