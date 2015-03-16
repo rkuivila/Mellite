@@ -64,7 +64,13 @@ object AttrCellViewImpl {
         }
       }
 
-    def repr(implicit tx: S#Tx): Repr = h().attr[E](key)
+    def repr(implicit tx: S#Tx): Repr = {
+      val opt = h().attr[E](key)
+      opt.map {
+        case Expr.Var(vr) => vr()
+        case other => other
+      }
+    }
 
     def apply()(implicit tx: S#Tx): Option[A] = repr.map(_.value)
   }
