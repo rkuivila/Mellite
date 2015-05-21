@@ -18,19 +18,19 @@ package impl
 import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
 
-import de.sciss.lucre.stm
-import de.sciss.lucre.confluent.{Sys, Cursor}
+import de.sciss.lucre.confluent.Cursor
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm.Identifiable
-import de.sciss.lucre.swing.{defer, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing.{defer, deferTx}
+import de.sciss.lucre.{confluent, stm}
 import de.sciss.processor.Processor
 import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.serial.Serializer
-import de.sciss.swingplus.{SpinningProgressBar, ListView}
+import de.sciss.swingplus.{ListView, SpinningProgressBar}
 import de.sciss.synth.proc.Confluent
 
-import scala.swing.{Orientation, BoxPanel, ScrollPane, Component}
+import scala.swing.{BoxPanel, Component, Orientation, ScrollPane}
 
 object ExprHistoryView {
   type S = Confluent
@@ -49,8 +49,8 @@ object ExprHistoryView {
 
     val stop = expr match {
       case hid: Identifiable[_] =>
-        val id    = hid.id.asInstanceOf[Sys.ID[S]]
-        val head  = de.sciss.lucre.confluent.Peek.head(id.path).toInt
+        val id    = hid.id.asInstanceOf[confluent.Identifier[S]]
+        val head  = id.path.head.toInt
         if (DEBUG) println(s"ID = $id, head = $head")
         head
       case _ => 0
@@ -115,7 +115,7 @@ object ExprHistoryView {
             time      = newTime
           }
 
-          ok    = path != newPath && (de.sciss.lucre.confluent.Peek.last(newPath).toInt >= stop)
+          ok    = path != newPath && (newPath.last.toInt >= stop)
           path  = newPath
         }
         addEntry()

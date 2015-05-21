@@ -62,8 +62,8 @@ object CursorsFrameImpl {
                         (implicit tx: D#Tx): CursorView = {
     import document._
     val name    = elem.name.value
-    val created = confluent.Sys.Acc.info(elem.seminal        ).timeStamp
-    val updated = confluent.Sys.Acc.info(elem.cursor.position).timeStamp
+    val created = confluent.Access.info(elem.seminal        ).timeStamp
+    val updated = confluent.Access.info(elem.cursor.position).timeStamp
     new CursorView(elem = elem, parent = parent, children = Vector.empty,
       name = name, created = created, updated = updated)
   }

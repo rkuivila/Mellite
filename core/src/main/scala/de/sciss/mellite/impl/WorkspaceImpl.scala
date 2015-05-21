@@ -136,7 +136,7 @@ object WorkspaceImpl {
       data
 
     } { implicit tx =>
-      val c   = Cursors[S, S#D](confluent.Sys.Acc.root[S])
+      val c   = Cursors[S, S#D](confluent.Access.root[S])
       val imp = ExprImplicits[S#D]
       import imp._
       c.name_=("master")
