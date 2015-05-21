@@ -38,7 +38,7 @@ object DragAndDrop {
         // flavors.contains(flavor)
       }
       def getTransferData(_flavor: DataFlavor): AnyRef  = {
-        if (!isDataFlavorSupported(_flavor)) throw new UnsupportedFlavorException(flavor)
+        if (!isDataFlavorSupported(_flavor)) throw new UnsupportedFlavorException(_flavor)
         data  /* .getOrElse(throw new IOException()) */ .asInstanceOf[AnyRef]
       }
     }
