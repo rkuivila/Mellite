@@ -1,6 +1,5 @@
 package de.sciss.tallin
 
-import java.awt.event.KeyEvent
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import java.util.{Date, Locale}
@@ -190,6 +189,8 @@ object Populate {
     import imp._
     import synth._
     import ugen._
+
+    Mutagens(dsl, sConfig, nConfig)
 
     val masterChansOption = nConfig.masterChannels
 
