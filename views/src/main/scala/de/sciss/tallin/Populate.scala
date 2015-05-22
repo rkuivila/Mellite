@@ -1,5 +1,6 @@
 package de.sciss.tallin
 
+import java.awt.event.KeyEvent
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import java.util.{Date, Locale}
@@ -640,10 +641,10 @@ object Populate {
     }
 
     filter("*") { in =>
-      shortcut = "shift ASTERISK"
+      shortcut = "ASTERISK"
       val pMix  = mkMix()
       val in2   = pAudio("in2", ParamSpec(0 /* -1 */, 1), default = 0.0)
-      val pLag  = pAudio("lag", ParamSpec(0.001, 0.1, ExpWarp), default = 0.01)
+      val pLag  = pAudio("lag", ParamSpec(0.001, 0.1, ExpWarp), default = 0.001)
       val flt   = in * Lag.ar(in2, pLag - 0.001)
       mix(in, flt, pMix)
     }
@@ -850,6 +851,11 @@ object Populate {
       val sig     = DelayN.ar(tr /* pulse */, 1.0, pTime)
 
       sig
+    }
+
+    filter(">mono") { in =>
+      shortcut = "GREATER"
+      Mix.mono(in) / NumChannels(in)
     }
 
     // -------------- SINKS --------------
