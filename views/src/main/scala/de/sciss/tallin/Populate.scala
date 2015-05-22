@@ -156,7 +156,7 @@ object Populate {
 
   private final val RecName = "rec"
 
-  final val BaseDir = userHome / "IEM" / "Impuls2015"
+  final val BaseDir = userHome/"Documents"/"applications"/"140616_SteiermarkRiga"/"tallin"
 
   private final val RecDir  = BaseDir / "rec"
 
@@ -200,7 +200,6 @@ object Populate {
     def mkMix(): GE = pAudio("mix", ParamSpec(0, 1), default = 0)
 
     def mkMix4(): GE = {
-      
       val f1 = pAudio("mix1", ParamSpec(0, 1), default = 0)
       val f2 = pAudio("mix2", ParamSpec(0, 1), default = 0)
       Lag.ar(Seq(f1, f1 * 0.667 + f2 * 0.333, f1 * 0.333, f2 * 0.667, f2))
@@ -640,14 +639,14 @@ object Populate {
       mix(in, play, pMix)
     }
 
-    //    filter("*") { in =>
-    //      val pmix = mkMix
-    //      val bin2 = pAudioIn("in2")
-    //
-    //      val in2 = bin2.ar
-    //      val flt = in * in2
-    //      mix(in, flt, pmix)
-    //    }
+    filter("*") { in =>
+      shortcut = "shift ASTERISK"
+      val pMix  = mkMix()
+      val in2   = pAudio("in2", ParamSpec(0 /* -1 */, 1), default = 0.0)
+      val pLag  = pAudio("lag", ParamSpec(0.001, 0.1, ExpWarp), default = 0.01)
+      val flt   = in * Lag.ar(in2, pLag - 0.001)
+      mix(in, flt, pMix)
+    }
 
     filter("gain") { in =>
       shortcut = "G"
@@ -832,6 +831,25 @@ object Populate {
       val pulse   = Lag.ar(LFPulse.ar(freq / div, 0, width) * amp, lagTime)
       val flt     = in * pulse
       mix(in, flt, pMix)
+    }
+
+    // -------------- TALLIN --------------
+
+    filter("pulse-div") { in0 =>
+      val pThresh = pAudio("thresh", ParamSpec(0.01, 1, ExpWarp), default = 0.1)
+      val in      = (in0 - pThresh).max(0.0)
+      val pDiv    = pAudio("div", ParamSpec(1, 16, IntWarp), default = 1)
+      val pMul    = pAudio("mul", ParamSpec(1, 16, IntWarp), default = 1)
+      val pulse   = PulseDivider.ar(in, pDiv)
+      val timer   = Timer.ar(pulse).max(0.0001)
+      val freq    = timer.reciprocal * pMul
+      val phSpeed = freq / SampleRate.ir
+      val phasor  = Phasor.ar(trig = pulse, speed = phSpeed)
+      val tr      = HPZ1.ar(phasor) < 0
+      val pTime   = pAudio("time", ParamSpec(0.0 , 1.0), default = 0)
+      val sig     = DelayN.ar(tr /* pulse */, 1.0, pTime)
+
+      sig
     }
 
     // -------------- SINKS --------------
