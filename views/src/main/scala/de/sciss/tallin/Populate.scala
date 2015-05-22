@@ -1,21 +1,21 @@
-package de.sciss.impuls2015
+package de.sciss.tallin
 
 import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import java.util.{Date, Locale}
 
 import de.sciss.file._
-import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.artifact.ArtifactLocation
 import de.sciss.lucre.synth.Sys
-import de.sciss.synth.io.AudioFile
-import de.sciss.synth.proc.graph.ScanOut
-import de.sciss.synth.proc.{FolderElem, Folder, ArtifactLocationElem, Proc, SoundProcesses, ArtifactElem, Action, ExprImplicits, AudioGraphemeElem, Obj, Grapheme}
-import de.sciss.synth.proc.Implicits._
-import de.sciss.{synth, nuages}
-import de.sciss.nuages.{DbFaderWarp, NamedBusConfig, IntWarp, ExpWarp, TrigSpec, ParamSpec, ScissProcs, Nuages}
+import de.sciss.lucre.{event => evt, stm}
+import de.sciss.nuages.{DbFaderWarp, ExpWarp, IntWarp, NamedBusConfig, Nuages, ParamSpec, ScissProcs, TrigSpec}
 import de.sciss.synth.GE
+import de.sciss.synth.io.AudioFile
+import de.sciss.synth.proc.Implicits._
+import de.sciss.synth.proc.graph.ScanOut
+import de.sciss.synth.proc.{Action, ArtifactElem, ArtifactLocationElem, AudioGraphemeElem, ExprImplicits, Folder, FolderElem, Grapheme, Obj, Proc, SoundProcesses}
 import de.sciss.synth.ugen.Constant
+import de.sciss.{nuages, synth}
 
 import scala.concurrent.stm.Ref
 
@@ -52,7 +52,8 @@ object Populate {
     val f = artObj.elem.peer.value
 
     val procObj = mkProcObj(f.base) {
-      import synth._; import ugen._
+      import synth._
+      import ugen._
       val pSpeed      = pAudio  ("speed", ParamSpec(0.125, 2.3511, ExpWarp), default = 1)
       val pStart      = pControl("start", ParamSpec(0, 1), default = 0)
       val pDur        = pControl("dur"  , ParamSpec(0, 1), default = 1)
@@ -186,7 +187,8 @@ object Populate {
     import dsl._
     val imp = ExprImplicits[S]
     import imp._
-    import synth._; import ugen._
+    import synth._
+    import ugen._
 
     val masterChansOption = nConfig.masterChannels
 

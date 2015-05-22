@@ -32,14 +32,14 @@ import scala.swing.{BoxPanel, Button, Component, Orientation}
 object NuagesFolderViewImpl {
   def apply[S <: Sys[S]](nuagesObj: Nuages.Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
                                                    cursor: stm.Cursor[S], undoManager: UndoManager): Impl[S] = {
-    de.sciss.impuls2015.Populate.registerActions[S]()
+    de.sciss.tallin.Populate.registerActions[S]()
     val nuages  = nuagesObj.elem.peer
     val folder  = FolderView(nuages.folder)
     val folder1 = new FolderFrameImpl.ViewImpl[S](folder)
     folder1.init()
     val nCfg    = Nuages.Config()
     val sCfg    = ScissProcs.Config()
-    de.sciss.impuls2015.Settings(nCfg, sCfg)
+    de.sciss.tallin.Settings(nCfg, sCfg)
     val res     = new Impl(tx.newHandle(nuagesObj), folder1, nCfg, sCfg)
     deferTx {
       res.guiInit()
@@ -76,7 +76,7 @@ object NuagesFolderViewImpl {
 
       val ggPopulate = Button("Populate") {
         cursor.step { implicit tx =>
-          de.sciss.impuls2015.Populate(nuagesH().elem.peer, nConfig, sConfig)
+          de.sciss.tallin.Populate(nuagesH().elem.peer, nConfig, sConfig)
         }
       }
 
