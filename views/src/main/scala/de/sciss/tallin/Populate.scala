@@ -875,6 +875,15 @@ object Populate {
     sinkRec    .attr.put("nuages-prepare", sinkPrepObj)
     sinkRec    .attr.put("nuages-dispose", sinkDispObj)
 
+    val sumRec = generator("rec-sum") {
+      val numCh = masterChansOption.map(_.size).getOrElse(1)
+      val in    = InFeedback.ar(0, numCh)   // XXX TODO --- should find correct indices!
+      proc.graph.DiskOut.ar(KeyRecArtifact, in)
+      DC.ar(0)
+    }
+    sumRec.attr.put("nuages-prepare", sinkPrepObj)
+    sumRec.attr.put("nuages-dispose", sinkDispObj)
+
     // -------------- DIFFUSIONS --------------
 
     masterChansOption.foreach { masterChans =>
