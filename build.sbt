@@ -6,7 +6,7 @@ lazy val fullDescr                  = "A computer music application based on Sou
 
 lazy val loggingEnabled             = true
 
-lazy val projectVersion             = "1.4.0-SNAPSHOT"
+lazy val projectVersion             = "1.4.0"
 
 // ---- core dependencies ----
 
@@ -24,7 +24,7 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "1.3.0-SNAPSHOT"
+lazy val nuagesVersion              = "1.3.0"
 
 lazy val scalaColliderSwingVersion  = "1.25.0"
 
