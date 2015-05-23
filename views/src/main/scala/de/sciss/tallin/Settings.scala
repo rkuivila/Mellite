@@ -6,7 +6,7 @@ import de.sciss.nuages.{NamedBusConfig, ScissProcs, Nuages}
 object Settings {
   def apply(nConfig: Nuages.ConfigBuilder, sConfig: ScissProcs.ConfigBuilder): Unit = {
     nConfig.masterChannels    = Some(0 to 1)
-    nConfig.soloChannels      = None // Some(6 to 7)
+    nConfig.soloChannels      = Some(2 to 3)
     sConfig.generatorChannels = 0
     sConfig.micInputs         = Vector(
       // NamedBusConfig("m-at" , 0, 2),
