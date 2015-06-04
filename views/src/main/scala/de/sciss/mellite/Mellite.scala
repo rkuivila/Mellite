@@ -44,9 +44,11 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   //  showLog                 = true
   //  showTimelineLog         = true
 
-  lazy val version: String = buildInfoString("version")
+  def version : String = buildInfString("version")
+  def license : String = buildInfString("license")
+  def homepage: String = buildInfString("homepage")
 
-  private def buildInfoString(key: String): String = try {
+  private def buildInfString(key: String): String = try {
     val clazz = Class.forName("de.sciss.mellite.BuildInfo")
     val m     = clazz.getMethod(key)
     m.invoke(null).toString

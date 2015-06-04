@@ -12,6 +12,8 @@ Mellite is a computer music application, implemented as a graphical front end fo
 
 The `licenses` folder contains the license headers for all dependencies and transitive dependencies. For the binary release of Mellite, source code is not included but available via the respective OSS project pages, as indicated in the license files, or&mdash;in compliance with GPL/LGPL&mdash;on request via E-Mail. All source code with group-ID `de.sciss` is available from [github.com/Sciss](https://github.com/Sciss).
 
+The Mellite icon is based on the file [MELLITE Taillée Hongrie.jpg](https://de.wikipedia.org/wiki/Mellit#/media/File:MELLITE_Taill%C3%A9e_Hongrie.jpg), provided by Didier Descouens under CC BY 4.0 license.
+
 ## download
 
 A binary version is provided through [Bintray](https://bintray.com/sciss/generic/Mellite).
@@ -30,7 +32,7 @@ Mellite builds with sbt 0.13 and Scala 2.11, 2.10. The dependencies should be do
 
 Dependencies not found are all available from their respective [GitHub repositories](https://github.com/Sciss?tab=repositories), so in case you want to build a snapshot version, you may need to check out these projects and publish them yourself using `sbt publish-local`.
 
-To build a standalone application, run `sbt assembly`. This creates a fat `.jar` file in the root directory that can be executed via double-click. There is also a tiny shell script `./mellite` that will launch this jar file.
+To build a standalone application, run `sbt assembly`. This creates a fat `.jar` file in the root directory that can be executed via double-click. There is also a tiny shell script `Mellite.command` that will launch this jar file.
 
 On Linux, you can copy `Mellite.desktop` into `~/.local/share/applications` and edit this file to use the correct installation paths. You can then add Mellite to your desktop manager (GNOME, KDE, etc.)
 

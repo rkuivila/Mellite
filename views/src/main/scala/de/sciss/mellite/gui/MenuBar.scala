@@ -22,16 +22,15 @@ import scala.swing.event.{MouseClicked, Key}
 
 object MenuBar {
   private def showAbout(): Unit = {
-    val addr    = "github.com/Sciss/Mellite"
-    val url     = s"http://$addr/"
-    val version = Mellite.version
-    val html =
+    val url   = Mellite.homepage
+    val addr  = url // url.substring(math.min(url.length, url.indexOf("//") + 2))
+    val html  =
       s"""<html><center>
          |<font size=+1><b>${Mellite.name}</b></font><p>
-         |Version $version<p>
+         |Version ${Mellite.version}<p>
          |<p>
          |Copyright (c) 2012&ndash;2015 Hanns Holger Rutz. All rights reserved.<p>
-         |This software is published under the GNU General Public License v3+<p>
+         |This software is published under the ${Mellite.license}<p>
          |<p>
          |<a href="$url">$addr</a>
          |""".stripMargin
