@@ -1,4 +1,4 @@
-![icon](icons/application.svg)
+![icon](icons/application.png)
 
 # Mellite
 
