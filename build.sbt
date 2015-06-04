@@ -6,7 +6,7 @@ lazy val fullDescr                  = "A computer music application based on Sou
 
 lazy val loggingEnabled             = true
 
-lazy val projectVersion             = "1.4.0"
+lazy val projectVersion             = "1.5.0-SNAPSHOT"
 
 // ---- core dependencies ----
 
@@ -94,6 +94,7 @@ lazy val full = Project(
   settings      = commonSettings ++ Seq(
     name := baseName,
     description := fullDescr,
+    mainClass in (Compile,run) := Some("de.sciss.mellite.Mellite"),
     publishArtifact in (Compile, packageBin) := false, // there are no binaries
     publishArtifact in (Compile, packageDoc) := false, // there are no javadocs
     publishArtifact in (Compile, packageSrc) := false  // there are no sources

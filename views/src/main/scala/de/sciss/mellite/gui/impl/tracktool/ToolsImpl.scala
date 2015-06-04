@@ -26,8 +26,8 @@ import de.sciss.model.Change
 import de.sciss.lucre.synth.Sys
 
 object ToolsImpl {
-  def getIcon(name: String): ImageIcon = {
-    val is = Mellite.getClass.getResourceAsStream(s"icon-$name.png")
+  def getImage(name: String): BufferedImage = {
+    val is = Mellite.getClass.getResourceAsStream(name)
     val image = if (is != null) {
       val res = ImageIO.read(is)
       is.close()
@@ -41,6 +41,11 @@ object ToolsImpl {
       g2.dispose()
       res
     }
+    image
+  }
+
+  def getIcon(name: String): ImageIcon = {
+    val image = getImage(s"icon-$name.png")
     new ImageIcon(image)
   }
 }

@@ -60,6 +60,8 @@ object ObjView {
 
     def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]]
 
+    def hasDialog: _Boolean
+
     def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] // List[Obj[S]]
   }

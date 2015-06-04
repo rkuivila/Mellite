@@ -120,9 +120,10 @@ object ObjViewImpl {
 
   object String extends Factory {
     type E[S <: evt.Sys[S]] = StringElem[S]
-    val icon    = raphaelIcon(raphael.Shapes.Font)
-    val prefix  = "String"
-    def typeID  = ElemImpl.String.typeID
+    val icon      = raphaelIcon(raphael.Shapes.Font)
+    val prefix    = "String"
+    def typeID    = ElemImpl.String.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, StringElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.name
@@ -181,9 +182,10 @@ object ObjViewImpl {
 
   object Int extends Factory {
     type E[S <: evt.Sys[S]] = IntElem[S]
-    val icon    = raphaelIcon(Shapes.IntegerNumbers)
-    val prefix  = "Int"
-    def typeID  = ElemImpl.Int.typeID
+    val icon      = raphaelIcon(Shapes.IntegerNumbers)
+    val prefix    = "Int"
+    def typeID    = ElemImpl.Int.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, IntElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.name
@@ -247,9 +249,10 @@ object ObjViewImpl {
 
   object Long extends Factory {
     type E[S <: evt.Sys[S]] = LongElem[S]
-    val icon    = raphaelIcon(Shapes.IntegerNumbers)  // XXX TODO
-    val prefix  = "Long"
-    def typeID  = ElemImpl.Long.typeID
+    val icon      = raphaelIcon(Shapes.IntegerNumbers)  // XXX TODO
+    val prefix    = "Long"
+    def typeID    = ElemImpl.Long.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, LongElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.name
@@ -311,9 +314,10 @@ object ObjViewImpl {
 
   object Double extends Factory {
     type E[S <: evt.Sys[S]] = DoubleElem[S]
-    val icon    = raphaelIcon(Shapes.RealNumbers)
-    val prefix  = "Double"
-    def typeID  = ElemImpl.Double.typeID
+    val icon      = raphaelIcon(Shapes.RealNumbers)
+    val prefix    = "Double"
+    def typeID    = ElemImpl.Double.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, DoubleElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.name
@@ -375,9 +379,10 @@ object ObjViewImpl {
 
   object Boolean extends Factory {
     type E[S <: evt.Sys[S]] = BooleanElem[S]
-    val icon    = raphaelIcon(Shapes.BooleanNumbers)
-    val prefix  = "Boolean"
-    def typeID  = ElemImpl.Boolean.typeID
+    val icon      = raphaelIcon(Shapes.BooleanNumbers)
+    val prefix    = "Boolean"
+    def typeID    = ElemImpl.Boolean.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, BooleanElem])(implicit tx: S#Tx): ObjView[S] = {
       val name        = obj.name
@@ -425,9 +430,10 @@ object ObjViewImpl {
 
   object AudioGrapheme extends Factory {
     type E[S <: evt.Sys[S]] = AudioGraphemeElem[S]
-    val icon    = raphaelIcon(raphael.Shapes.Music)
-    val prefix  = "AudioGrapheme"
-    def typeID  = ElemImpl.AudioGrapheme.typeID
+    val icon      = raphaelIcon(raphael.Shapes.Music)
+    val prefix    = "AudioGrapheme"
+    def typeID    = ElemImpl.AudioGrapheme.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.name
@@ -435,32 +441,35 @@ object ObjViewImpl {
       new AudioGrapheme.Impl(tx.newHandle(obj), name, value)
     }
 
-    final case class Config[S <: Sys[S]](file: File, spec: AudioFileSpec,
+    final case class Config1[S <: Sys[S]](file: File, spec: AudioFileSpec,
                                          location: Either[stm.Source[S#Tx, ArtifactLocationElem.Obj[S]], (String, File)])
+    type Config[S <: Sys[S]] = List[Config1[S]]
 
     def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
-      val dlg = FileDialog.open(init = None /* locViews.headOption.map(_.directory) */, title = "Add Audio File")
+      val dlg = FileDialog.open(init = None /* locViews.headOption.map(_.directory) */, title = "Add Audio Files")
       dlg.setFilter(f => Try(AudioFile.identify(f).isDefined).getOrElse(false))
-      val fOpt = dlg.show(window)
+      dlg.multiple = true
+      val ok = dlg.show(window).isDefined
 
-      fOpt.flatMap { f =>
+      val list = if (!ok) Nil else dlg.files.flatMap { f =>
         ActionArtifactLocation.query[S](workspace.rootH, file = f, window = window).map { location =>
           val spec = AudioFile.readSpec(f)
-          Config(file = f, spec = spec, location = location)
+          Config1(file = f, spec = spec, location = location)
         }
       }
+      if (list == Nil) None else Some(list)
     }
 
-    def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = {
-      val (list0: List[Obj[S]], loc /* : ArtifactLocationElem.Obj[S] */) = config.location match {
+    def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = config.flatMap { cfg =>
+      val (list0: List[Obj[S]], loc /* : ArtifactLocationElem.Obj[S] */) = cfg.location match {
         case Left(source) => (Nil, source())
         case Right((name, directory)) =>
           val objLoc  = ActionArtifactLocation.create(name = name, directory = directory)
           (objLoc :: Nil, objLoc)
       }
       loc.elem.peer.modifiableOption.fold[List[Obj[S]]](list0) { locM =>
-        val audioObj = ObjectActions.mkAudioFile(locM, config.file, config.spec)
+        val audioObj = ObjectActions.mkAudioFile(locM, cfg.file, cfg.spec)
         audioObj :: list0
       }
     }
@@ -517,9 +526,10 @@ object ObjViewImpl {
 
     object Artifact extends Factory {
       type E[S <: evt.Sys[S]] = ArtifactElem[S]
-      val icon    = raphaelIcon(raphael.Shapes.PagePortrait)
-      val prefix  = "Artifact"
-      def typeID  = ElemImpl.Artifact.typeID
+      val icon      = raphaelIcon(raphael.Shapes.PagePortrait)
+      val prefix    = "Artifact"
+      def typeID    = ElemImpl.Artifact.typeID
+      def hasDialog = false
 
       def apply[S <: Sys[S]](obj: ArtifactElem.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
         val name      = obj.name
@@ -564,9 +574,10 @@ object ObjViewImpl {
 
   object ArtifactLocation extends Factory {
     type E[S <: evt.Sys[S]] = ArtifactLocationElem[S]
-    val icon    = raphaelIcon(raphael.Shapes.Location)
-    val prefix  = "ArtifactStore"
-    def typeID  = ElemImpl.ArtifactLocation.typeID
+    val icon      = raphaelIcon(raphael.Shapes.Location)
+    val prefix    = "ArtifactStore"
+    def typeID    = ElemImpl.ArtifactLocation.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: ArtifactLocationElem.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
       val name      = obj.name
@@ -632,9 +643,10 @@ object ObjViewImpl {
 
   object Recursion extends Factory {
     type E[S <: evt.Sys[S]] = _Recursion.Elem[S]
-    val icon    = raphaelIcon(raphael.Shapes.Quote)
-    val prefix  = "Recursion"
-    def typeID  = _Recursion.typeID
+    val icon      = raphaelIcon(raphael.Shapes.Quote)
+    val prefix    = "Recursion"
+    def typeID    = _Recursion.typeID
+    def hasDialog = false
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Recursion.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name      = obj.name
@@ -680,9 +692,10 @@ object ObjViewImpl {
 
   object Folder extends Factory {
     type E[S <: evt.Sys[S]] = FolderElem[S]
-    def icon    = UIManager.getIcon("Tree.openIcon")  // Swing.EmptyIcon
-    val prefix  = "Folder"
-    def typeID  = FolderElemImpl.typeID
+    def icon      = UIManager.getIcon("Tree.openIcon")  // Swing.EmptyIcon
+    val prefix    = "Folder"
+    def typeID    = FolderElemImpl.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, FolderElem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.name
@@ -733,9 +746,10 @@ object ObjViewImpl {
 
   object Proc extends Factory {
     type E[S <: evt.Sys[S]] = _Proc.Elem[S]
-    val icon    = raphaelIcon(raphael.Shapes.Cogs)
-    val prefix  = "Proc"
-    def typeID  = ElemImpl.Proc.typeID
+    val icon      = raphaelIcon(raphael.Shapes.Cogs)
+    val prefix    = "Proc"
+    def typeID    = ElemImpl.Proc.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Proc.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.name
@@ -787,9 +801,10 @@ object ObjViewImpl {
 
   object Timeline extends Factory {
     type E[S <: evt.Sys[S]] = _Timeline.Elem[S]
-    val icon    = raphaelIcon(raphael.Shapes.Ruler)
-    val prefix  = "Timeline"
-    def typeID  = _Timeline.typeID
+    val icon      = raphaelIcon(raphael.Shapes.Ruler)
+    val prefix    = "Timeline"
+    def typeID    = _Timeline.typeID
+    def hasDialog = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Timeline.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name  = obj.name
@@ -850,9 +865,10 @@ object ObjViewImpl {
 
   object Code extends Factory {
     type E[S <: evt.Sys[S]] = _Code.Elem[S]
-    val icon            = raphaelIcon(raphael.Shapes.Code)
-    val prefix          = "Code"
-    def typeID          = _Code.typeID
+    val icon        = raphaelIcon(raphael.Shapes.Code)
+    val prefix      = "Code"
+    def typeID      = _Code.typeID
+    def hasDialog   = true
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _Code.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name    = obj.name
@@ -934,9 +950,10 @@ object ObjViewImpl {
 
   object FadeSpec extends Factory {
     type E[S <: evt.Sys[S]] = _FadeSpec.Elem[S]
-    val icon            = raphaelIcon(raphael.Shapes.Up)
-    val prefix          = "FadeSpec"
-    def typeID          = ElemImpl.FadeSpec.typeID
+    val icon        = raphaelIcon(raphael.Shapes.Up)
+    val prefix      = "FadeSpec"
+    def typeID      = ElemImpl.FadeSpec.typeID
+    def hasDialog   = false
 
     def apply[S <: Sys[S]](obj: Obj.T[S, _FadeSpec.Elem])(implicit tx: S#Tx): ObjView[S] = {
       val name    = obj.name
@@ -998,9 +1015,10 @@ object ObjViewImpl {
 
   object Action extends Factory {
     type E[S <: evt.Sys[S]] = _Action.Elem[S]
-    val icon            = raphaelIcon(raphael.Shapes.Bolt)
-    val prefix          = "Action"
-    def typeID          = _Action.typeID
+    val icon        = raphaelIcon(raphael.Shapes.Bolt)
+    val prefix      = "Action"
+    def typeID      = _Action.typeID
+    def hasDialog   = true
 
     def apply[S <: Sys[S]](obj: _Action.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
       val name    = obj.name
@@ -1052,9 +1070,10 @@ object ObjViewImpl {
 
   object Ensemble extends Factory {
     type E[S <: evt.Sys[S]] = _Ensemble.Elem[S]
-    val icon            = raphaelIcon(raphael.Shapes.Cube2)
-    val prefix          = "Ensemble"
-    def typeID          = _Ensemble.typeID
+    val icon        = raphaelIcon(raphael.Shapes.Cube2)
+    val prefix      = "Ensemble"
+    def typeID      = _Ensemble.typeID
+    def hasDialog   = true
 
     def apply[S <: Sys[S]](obj: _Ensemble.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
       val name    = obj.name
@@ -1156,9 +1175,10 @@ object ObjViewImpl {
 
   object Nuages extends Factory {
     type E[S <: evt.Sys[S]] = _Nuages.Elem[S]
-    val icon            = raphaelIcon(raphael.Shapes.CloudWhite)
-    val prefix          = "Nuages"
-    def typeID          = _Nuages.typeID
+    val icon        = raphaelIcon(raphael.Shapes.CloudWhite)
+    val prefix      = "Nuages"
+    def typeID      = _Nuages.typeID
+    def hasDialog   = true
 
     def apply[S <: Sys[S]](obj: _Nuages.Obj[S])(implicit tx: S#Tx): ObjView[S] = {
       val name = obj.name

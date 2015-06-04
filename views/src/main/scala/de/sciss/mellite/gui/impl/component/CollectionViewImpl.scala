@@ -119,7 +119,7 @@ trait CollectionViewImpl[S <: Sys[S]]
     import de.sciss.desktop.Menu._
     val pop = Popup()
     ObjView.factories.toList.sortBy(_.prefix).foreach { f =>
-      pop.add(Item(f.prefix, new AddAction(f)))
+      if (f.hasDialog) pop.add(Item(f.prefix, new AddAction(f)))
     }
 
     val window = Window.find(component).getOrElse(sys.error(s"No window for $impl"))

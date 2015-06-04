@@ -32,7 +32,8 @@ import de.sciss.lucre.synth.Sys
 object MuteImpl {
   private lazy val cursor = {
     val tk  = Toolkit.getDefaultToolkit
-    val img = tk.createImage(Mellite.getClass.getResource("cursor-mute.png"))
+    // val img = tk.createImage(Mellite.getClass.getResource("cursor-mute.png"))
+    val img = ToolsImpl.getImage("cursor-mute.png")
     tk.createCustomCursor(img, new Point(4, 4), "Mute")
   }
 }
