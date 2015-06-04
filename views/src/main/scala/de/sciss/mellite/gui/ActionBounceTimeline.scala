@@ -16,6 +16,7 @@ package mellite
 package gui
 
 import de.sciss.lucre.artifact.Artifact
+import de.sciss.lucre.geom.LongSquare
 import de.sciss.lucre.stm
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
@@ -535,11 +536,19 @@ object ActionBounceTimeline {
           val tl = settings.group().elem.peer
           val start = spanL match {
             case hs: Span.HasStart => hs.start
-            case _ => tl.nearestEventAfter(Long.MinValue + 1).getOrElse(0L)
+            case _ =>
+              // XXX TODO -- should be exposed in BiGroup!
+              val MAX_SQUARE  = LongSquare(0, 0, 0x2000000000000000L)
+              val MIN_COORD   = MAX_SQUARE.left
+              tl.nearestEventAfter(MIN_COORD + 1).getOrElse(0L)
           }
           val stop = spanL match {
             case hs: Span.HasStop => hs.stop
-            case _ => tl.nearestEventBefore(Long.MaxValue - 1).getOrElse(start)
+            case _ =>
+              // XXX TODO -- should be exposed in BiGroup!
+              val MAX_SQUARE  = LongSquare(0, 0, 0x2000000000000000L)
+              val MAX_COORD   = MAX_SQUARE.right
+              tl.nearestEventBefore(MAX_COORD - 1).getOrElse(start)
           }
           Span(start, stop)
         }
