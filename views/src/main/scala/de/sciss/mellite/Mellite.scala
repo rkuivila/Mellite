@@ -44,6 +44,16 @@ object Mellite extends SwingApplicationImpl("Mellite") {
   //  showLog                 = true
   //  showTimelineLog         = true
 
+  lazy val version: String = buildInfoString("version")
+
+  private def buildInfoString(key: String): String = try {
+    val clazz = Class.forName("de.sciss.mellite.BuildInfo")
+    val m     = clazz.getMethod(key)
+    m.invoke(null).toString
+  } catch {
+    case NonFatal(e) => "?"
+  }
+
   override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
     override lazy val usesInternalFrames = {
       false // XXX TODO: eventually a preferences entry
