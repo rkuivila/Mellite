@@ -18,7 +18,7 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 // ---- views dependencies ----
 
 lazy val nuagesVersion              = "1.3.0"
-lazy val scalaColliderSwingVersion  = "1.25.0"
+lazy val scalaColliderSwingVersion  = "1.25.1"
 lazy val lucreSwingVersion          = "0.9.1"
 lazy val audioWidgetsVersion        = "1.9.0"
 lazy val desktopVersion             = "0.7.0"
