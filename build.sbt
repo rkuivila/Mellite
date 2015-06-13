@@ -27,6 +27,7 @@ lazy val sonogramVersion            = "1.9.0"
 lazy val treetableVersion           = "1.3.7"
 lazy val raphaelIconsVersion        = "1.0.2"
 lazy val pdflitzVersion             = "1.2.1"
+lazy val xstreamVersion             = "1.4.8"  // 1.4.7 corrupt sha1 on Maven Central
 lazy val webLaFVersion              = "1.28"
 
 // ----
@@ -119,6 +120,7 @@ lazy val `mellite-views` = project.in(file("views")).dependsOn(`mellite-core`)
       "de.sciss" %% "treetable-scala"                 % treetableVersion,           // tree-table component
       "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
       "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
+      "com.thoughtworks.xstream" % "xstream"          % xstreamVersion,             // PROBLEM WITH MAVEN CENTRAL
       "de.sciss" %  "weblaf"                          % webLaFVersion               // Swing look-and-feel
     ),
     mainClass in (Compile,run) := Some("de.sciss.mellite.Mellite"),
