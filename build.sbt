@@ -7,6 +7,7 @@ lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
+lazy val scalaColliderVersion       = "1.17.2"   // required due to sbt bug
 lazy val soundProcessesVersion      = "2.18.1"
 lazy val interpreterPaneVersion     = "1.7.1"
 lazy val lucreSTMVersion            = "2.1.1"
@@ -90,6 +91,7 @@ lazy val `mellite-core` = project.in(file("core"))
     description := "Core layer for Mellite",
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
     libraryDependencies ++= Seq(
+      "de.sciss" %% "scalacollider"         % scalaColliderVersion,   // required due to sbt bug
       "de.sciss" %% "soundprocesses-core"   % soundProcessesVersion,  // computer-music framework
       "de.sciss" %% "scalainterpreterpane"  % interpreterPaneVersion, // REPL
       "de.sciss" %% s"lucrestm-$bdb"        % lucreSTMVersion,        // database backend
