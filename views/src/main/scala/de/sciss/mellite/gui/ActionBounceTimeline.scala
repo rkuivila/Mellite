@@ -577,6 +577,7 @@ object ActionBounceTimeline {
 
     val settings1: PerformSettings[S] = if (!needsTemp) settings else {
       val fTmp    = File.createTempFile("bounce", ".w64")
+      fTmp.deleteOnExit()
       val sConfig = Server.ConfigBuilder(settings.server)
       sConfig.nrtOutputPath   = fTmp.path
       sConfig.nrtHeaderFormat = AudioFileType.Wave64
@@ -649,8 +650,16 @@ object ActionBounceTimeline {
 
     def body(): File = blocking {
       val fileIn  = await(bounce, weight = if (gain.normalized) 0.8 else 0.9)   // arbitrary weight
-      // println(fileIn)
+
+      // tricky --- scsynth flush might not yet be seen
+      // thus wait a few seconds until header becomes available
+      val t0 = System.currentTimeMillis()
+      while (AudioFile.readSpec(fileIn).numFrames == 0L && System.currentTimeMillis() - t0 < 4000) {
+        blocking(Thread.sleep(500))
+      }
+
       val afIn    = AudioFile.openRead(fileIn)
+
       import numbers.Implicits._
       try {
         val bufSz       = 8192

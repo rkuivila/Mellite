@@ -1,14 +1,14 @@
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val fullDescr                  = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "1.5.0-SNAPSHOT"
+lazy val projectVersion             = "1.5.0"
 
 lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
 lazy val scalaColliderVersion       = "1.17.2"   // required due to sbt bug
-lazy val soundProcessesVersion      = "2.19.0-SNAPSHOT"
+lazy val soundProcessesVersion      = "2.19.0"
 lazy val interpreterPaneVersion     = "1.7.1"
 lazy val confluentVersion           = "2.11.2"
 lazy val lucreSTMVersion            = "2.1.2"
@@ -19,7 +19,7 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "1.3.0"
+lazy val nuagesVersion              = "1.4.0"
 lazy val scalaColliderSwingVersion  = "1.25.1"
 lazy val lucreSwingVersion          = "0.9.1"
 lazy val spanVersion                = "1.3.1"
@@ -46,6 +46,7 @@ lazy val commonSettings = Seq(
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
   },
   javacOptions ++= Seq("-source", "1.6", "-target", "1.6"),
+  aggregate in assembly := false,
   // ---- publishing ----
   publishMavenStyle := true,
   publishTo := {
@@ -84,7 +85,27 @@ lazy val root = Project(id = baseNameL, base = file(".")).
     mainClass in (Compile,run) := Some("de.sciss.mellite.Mellite"),
     publishArtifact in (Compile, packageBin) := false, // there are no binaries
     publishArtifact in (Compile, packageDoc) := false, // there are no javadocs
-    publishArtifact in (Compile, packageSrc) := false  // there are no sources
+    publishArtifact in (Compile, packageSrc) := false,  // there are no sources
+    // ---- packaging ----
+    //    appbundle.icon      := Some(baseDirectory.value / ".." / "icons" / "application.png"),
+    //    appbundle.target    := baseDirectory.value / "..",
+    //    appbundle.signature := "Ttm ",
+    //    appbundle.javaOptions ++= Seq("-Xms2048m", "-Xmx2048m", "-XX:PermSize=256m", "-XX:MaxPermSize=512m"),
+    //    appbundle.documents += appbundle.Document(
+    //      name       = "Mellite Document",
+    //      role       = appbundle.Document.Editor,
+    //      icon       = Some(baseDirectory.value / ".." / "icons" / "document.png"),
+    //      extensions = Seq("mllt"),
+    //      isPackage  = true
+    //    ),
+    target in assembly := baseDirectory.value,
+    assemblyJarName in assembly := s"$baseName.jar",
+    assemblyMergeStrategy in assembly := {
+      case PathList("org", "xmlpull", xs @ _*) => MergeStrategy.first
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
   )
 
 lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
@@ -140,19 +161,5 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       BuildInfoKey.map(homepage) { case (k, opt) => k -> opt.get },
       BuildInfoKey.map(licenses) { case (_, Seq( (lic, _) )) => "license" -> lic }
     ),
-    buildInfoPackage := "de.sciss.mellite",
-    // ---- packaging ----
-    //    appbundle.icon      := Some(baseDirectory.value / ".." / "icons" / "application.png"),
-    //    appbundle.target    := baseDirectory.value / "..",
-    //    appbundle.signature := "Ttm ",
-    //    appbundle.javaOptions ++= Seq("-Xms2048m", "-Xmx2048m", "-XX:PermSize=256m", "-XX:MaxPermSize=512m"),
-    //    appbundle.documents += appbundle.Document(
-    //      name       = "Mellite Document",
-    //      role       = appbundle.Document.Editor,
-    //      icon       = Some(baseDirectory.value / ".." / "icons" / "document.png"),
-    //      extensions = Seq("mllt"),
-    //      isPackage  = true
-    //    ),
-    target in assembly := baseDirectory.value / "..",
-    assemblyJarName in assembly := s"$baseName.jar"
+    buildInfoPackage := "de.sciss.mellite"
   )
