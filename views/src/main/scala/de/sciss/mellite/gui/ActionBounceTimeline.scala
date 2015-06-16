@@ -27,7 +27,7 @@ import de.sciss.lucre.expr.{Double => DoubleEx, Long => LongEx}
 import de.sciss.lucre.geom.LongSquare
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing._
-import de.sciss.lucre.synth.{Buffer, Resource, Server, Synth, Sys}
+import de.sciss.lucre.synth.{Buffer, Server, Synth, Sys}
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.processor.{Processor, ProcessorLike}
@@ -37,28 +37,17 @@ import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, Bounce, Code, ExprImplicits, FolderElem, Grapheme, Obj, Timeline}
-import de.sciss.synth.{ControlSet, SynthGraph, addToTail}
+import de.sciss.synth.{SynthGraph, addToTail}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.blocking
 import scala.swing.Swing._
 import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.swing.{Alignment, BoxPanel, Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Orientation, ProgressBar, RadioButton, Swing, TextField}
+import scala.util.Try
 import scala.util.control.NonFatal
-import scala.util.{Failure, Try}
 
 object ActionBounceTimeline {
-
-  //  object GainType {
-  //    def apply(id: Int): GainType = (id: @switch) match {
-  //      case Normalized.id  => Normalized
-  //      case Immediate .id  => Immediate
-  //    }
-  //  }
-  //  sealed trait GainType { def id: Int }
-  //  case object Normalized extends GainType { final val id = 0 }
-  //  case object Immediate  extends GainType { final val id = 1 }
-
   private val DEBUG = false
 
   final case class QuerySettings[S <: Sys[S]](
@@ -592,13 +581,14 @@ object ActionBounceTimeline {
       sConfig.nrtOutputPath   = fTmp.path
       sConfig.nrtHeaderFormat = AudioFileType.Wave64
       sConfig.nrtSampleFormat = SampleFormat.Float
-      if (realtime) sConfig.outputBusChannels = 0
+      // if (realtime) sConfig.outputBusChannels = 0
       settings.copy(server = sConfig)
     }
 
     val bounce    = Bounce[S, document.I]
     val bnc       = Bounce.Config[S]
     bnc.group     = settings1.group :: Nil
+    bnc.realtime  = realtime
     bnc.server.read(settings1.server)
 
     val bncGainFactor = if (settings1.gain.normalized) 1f else settings1.gain.linear
@@ -608,19 +598,18 @@ object ActionBounceTimeline {
 
     val span1 = if (!realtime) span else {
       val bufDur    = Buffer.defaultRecBufferSize.toDouble / bnc.server.sampleRate
-      val bufFrames = (bufDur * Timeline.SampleRate + 0.5).toLong
-      val numFrames = (span.length + bufFrames - 1) / bufFrames * bufFrames
+      // apart from DiskOut buffer, add a bit of head-room (100ms) to account for jitter
+      val bufFrames = ((bufDur + 0.1) * Timeline.SampleRate + 0.5).toLong
+      val numFrames = span.length + bufFrames // (span.length + bufFrames - 1) / bufFrames * bufFrames
       Span(span.start, span.start + numFrames)
     }
     bnc.span    = span1
-    bnc.init    = { (_tx, s) =>
+    bnc.beforePrepare = { (_tx, s) =>
       implicit val tx = _tx
-
       // make sure no private bus overlaps with the virutal output
       if (numInChans > numChannels) {
         s.allocAudioBus(numInChans - numChannels)
       }
-
       val graph = SynthGraph {
         import synth._
         import ugen._
@@ -629,30 +618,20 @@ object ActionBounceTimeline {
           val chIn = sigIn \ in
           chIn * bncGainFactor
         }
-        if (realtime) {
-          DiskOut.ar("$bnc_disk".ir, sigOut)
-        } else {
-          ReplaceOut.ar(0, sigOut)
-        }
+        ReplaceOut.ar(0, sigOut)
       }
-      val (args, deps) = if (realtime) {
-        val buf = Buffer.diskOut(s)(path          = settings1.server.nrtOutputPath,
-                                    fileType      = settings1.server.nrtHeaderFormat,
-                                    sampleFormat  = settings1.server.nrtSampleFormat,
-                                    /* numFrames = ..., */ numChannels = numChannels)
-        (List[ControlSet]("$bnc_disk" -> buf.id), List[Resource](buf))
-      } else {
-        (Nil, Nil)
-      }
-      Synth.play(graph)(s.defaultGroup, addAction = addToTail, args = args, dependencies = deps)
+      Synth.play(graph)(s.defaultGroup, addAction = addToTail)
     }
 
     val bProcess  = bounce.apply(bnc)
+    // bProcess.addListener {
+    //   case u => println(s"UPDATE: $u")
+    // }
     bProcess.start()
-    val process   = if (!normalized) bProcess else {
+    val process   = if (!needsTemp) bProcess else {
       val nProcess = new Normalizer(bounce = bProcess,
         fileOut = fileOut, fileType = fileType, sampleFormat = sampleFormat,
-        ceil = settings1.gain.linear, numFrames = fileFrames)
+        gain = if (normalized) settings1.gain else Gain.immediate(0f), numFrames = fileFrames)
       nProcess.start()
       nProcess
     }
@@ -663,53 +642,59 @@ object ActionBounceTimeline {
   // measure max gain already during bounce
   private final class Normalizer[S <: Sys[S]](bounce: Processor[File],
                                               fileOut: File, fileType: AudioFileType, sampleFormat: SampleFormat,
-                                              ceil: Float, numFrames: Long)
+                                              gain: Gain, numFrames: Long)
     extends ProcessorImpl[File, Processor[File]] with Processor[File] {
 
     override def toString = s"Normalize bounce $fileOut"
 
     def body(): File = blocking {
-      val fileIn  = await(bounce, weight = 0.8)   // arbitrary weight
+      val fileIn  = await(bounce, weight = if (gain.normalized) 0.8 else 0.9)   // arbitrary weight
+      // println(fileIn)
       val afIn    = AudioFile.openRead(fileIn)
       import numbers.Implicits._
       try {
-        val bufSz   = 8192
-        val buf     = afIn.buffer(bufSz)
-        var rem     = numFrames
-        if (rem >= afIn.numFrames)
-          throw new EOFException(s"Bounced file is too short (${afIn.numFrames} -- expected at least $rem)")
+        val bufSz       = 8192
+        val buf         = afIn.buffer(bufSz)
+        val numFrames0  = math.min(afIn.numFrames, numFrames) // whatever...
+        var rem         = numFrames0
+//        if (rem >= afIn.numFrames)
+//          throw new EOFException(s"Bounced file is too short (${afIn.numFrames} -- expected at least $rem)")
+        if (afIn.numFrames == 0)
+          throw new EOFException("Bounced file is empty")
 
-        var max     = 0.0f
-        while (rem > 0) {
-          val chunk = math.min(bufSz, rem).toInt
-          afIn.read(buf, 0, chunk)
-          var ch = 0; while (ch < buf.length) {
-            val cBuf = buf(ch)
-            var i = 0; while (i < chunk) {
-              val f = math.abs(cBuf(i))
-              if (f > max) max = f
-              i += 1
-            }
-            ch += 1
-          }
-          rem -= chunk
-          progress = (rem.toDouble / numFrames).linlin(0, 1, 0.9, 0.8)
-          checkAborted()
-        }
-        val gain = if (max == 0) 1f else ceil / max
-        afIn.seek(0L)
-        val afOut = AudioFile.openWrite(fileOut,
-          afIn.spec.copy(fileType = fileType, sampleFormat = sampleFormat, byteOrder = None))
-        try {
-          rem = numFrames
+        val mul = if (!gain.normalized) gain.linear else {
+          var max = 0f
           while (rem > 0) {
             val chunk = math.min(bufSz, rem).toInt
             afIn.read(buf, 0, chunk)
-            if (gain != 1) {
+            var ch = 0; while (ch < buf.length) {
+              val cBuf = buf(ch)
+              var i = 0; while (i < chunk) {
+                val f = math.abs(cBuf(i))
+                if (f > max) max = f
+                i += 1
+              }
+              ch += 1
+            }
+            rem -= chunk
+            progress = (rem.toDouble / numFrames0).linlin(0, 1, 0.9, 0.8)
+            checkAborted()
+          }
+          afIn.seek(0L)
+          if (max == 0) 1f else gain.linear / max
+        }
+        val afOut = AudioFile.openWrite(fileOut,
+          afIn.spec.copy(fileType = fileType, sampleFormat = sampleFormat, byteOrder = None))
+        try {
+          rem = numFrames0
+          while (rem > 0) {
+            val chunk = math.min(bufSz, rem).toInt
+            afIn.read(buf, 0, chunk)
+            if (mul != 1) {
               var ch = 0; while (ch < buf.length) {
                 val cBuf = buf(ch)
                 var i = 0; while (i < chunk) {
-                  cBuf(i) *= gain
+                  cBuf(i) *= mul
                   i += 1
                 }
                 ch += 1
@@ -717,7 +702,7 @@ object ActionBounceTimeline {
             }
             afOut.write(buf, 0, chunk)
             rem -= chunk
-            progress = (rem.toDouble / numFrames).linlin(0, 1, 1.0, 0.9)
+            progress = (rem.toDouble / numFrames0).linlin(0, 1, 1.0, 0.9)
             checkAborted()
           }
           afOut.close()
