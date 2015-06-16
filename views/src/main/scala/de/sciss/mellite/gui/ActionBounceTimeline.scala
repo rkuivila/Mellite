@@ -15,33 +15,37 @@ package de.sciss
 package mellite
 package gui
 
+import java.io.{EOFException, File}
+import java.text.ParseException
+import javax.swing.{JFormattedTextField, SpinnerNumberModel, SwingUtilities}
+
+import de.sciss.audiowidgets.{AxisFormat, TimelineModel}
+import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, UndoManager, Window}
+import de.sciss.file._
 import de.sciss.lucre.artifact.Artifact
+import de.sciss.lucre.expr.{Double => DoubleEx, Long => LongEx}
 import de.sciss.lucre.geom.LongSquare
 import de.sciss.lucre.stm
-import de.sciss.mellite.gui.edit.EditFolderInsertObj
-import de.sciss.synth.{ugen, SynthGraph, addToTail, proc}
-import de.sciss.synth.proc.{ArtifactLocationElem, Code, Timeline, AudioGraphemeElem, Obj, ExprImplicits, FolderElem, Grapheme, Bounce}
-import de.sciss.desktop.{UndoManager, Desktop, DialogSource, OptionPane, FileDialog, Window}
-import scala.swing.{Dialog, ProgressBar, Swing, Alignment, Label, GridPanel, Orientation, BoxPanel, FlowPanel, ButtonGroup, RadioButton, CheckBox, Component, Button, TextField}
-import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat, AudioFileType}
-import java.io.File
-import javax.swing.{SwingUtilities, JFormattedTextField, SpinnerNumberModel}
-import de.sciss.span.{SpanLike, Span}
-import Swing._
-import de.sciss.audiowidgets.{TimelineModel, AxisFormat}
-import de.sciss.span.Span.SpanOrVoid
-import collection.immutable.{IndexedSeq => Vec}
-import scala.util.control.NonFatal
-import java.text.ParseException
-import scala.swing.event.{ButtonClicked, SelectionChanged}
-import scala.util.{Failure, Try}
-import de.sciss.processor.{ProcessorLike, Processor}
-import de.sciss.file._
 import de.sciss.lucre.swing._
-import de.sciss.swingplus.{SpinnerComboBox, ComboBox, Spinner, Labeled}
-import de.sciss.lucre.synth.{Server, Synth, Sys}
-import de.sciss.lucre.expr.{Long => LongEx, Double => DoubleEx}
-import proc.Implicits._
+import de.sciss.lucre.synth.{Buffer, Resource, Server, Synth, Sys}
+import de.sciss.mellite.gui.edit.EditFolderInsertObj
+import de.sciss.processor.impl.ProcessorImpl
+import de.sciss.processor.{Processor, ProcessorLike}
+import de.sciss.span.Span.SpanOrVoid
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
+import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
+import de.sciss.synth.proc.Implicits._
+import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, Bounce, Code, ExprImplicits, FolderElem, Grapheme, Obj, Timeline}
+import de.sciss.synth.{ControlSet, SynthGraph, addToTail}
+
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.concurrent.blocking
+import scala.swing.Swing._
+import scala.swing.event.{ButtonClicked, SelectionChanged}
+import scala.swing.{Alignment, BoxPanel, Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Orientation, ProgressBar, RadioButton, Swing, TextField}
+import scala.util.control.NonFatal
+import scala.util.{Failure, Try}
 
 object ActionBounceTimeline {
 
@@ -58,25 +62,30 @@ object ActionBounceTimeline {
   private val DEBUG = false
 
   final case class QuerySettings[S <: Sys[S]](
-    file: Option[File]  = None,
-    spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
-    gain: Gain          = Gain.normalized(-0.2f),
-    span: SpanOrVoid    = Span.Void,
-    channels: Vec[Range.Inclusive] = Vector(0 to 0 /* 1 */),
-    importFile: Boolean = false,
-    location:  Option[stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]] = None,
-    transform: Option[stm.Source[S#Tx, Code.Obj[S]]] = None
+    file        : Option[File]          = None,
+    spec        : AudioFileSpec         = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
+    gain        : Gain                  = Gain.normalized(-0.2f),
+    span        : SpanOrVoid            = Span.Void,
+    channels    : Vec[Range.Inclusive]  = Vector(0 to 0 /* 1 */),
+    realtime    : Boolean               = false,
+    fineControl : Boolean               = false,
+    importFile  : Boolean               = false,
+    location    : Option[stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]] = None,
+    transform   : Option[stm.Source[S#Tx, Code.Obj[S]]] = None
   ) {
     def prepare(group: stm.Source[S#Tx, Timeline.Obj[S]], f: File): PerformSettings[S] = {
-      val server = Server.Config()
+      val server        = Server.Config()
+      Mellite.applyAudioPrefs(server, useDevice = realtime, pickPort = realtime)
+      if (fineControl) server.blockSize = 1
       specToServerConfig(f, spec, server)
       PerformSettings(
-        group = group, server = server, gain = gain, span = span, channels = channels
+        realtime = realtime, group = group, server = server, gain = gain, span = span, channels = channels
       )
     }
   }
 
   final case class PerformSettings[S <: Sys[S]](
+    realtime: Boolean,
     group: stm.Source[S#Tx, Timeline.Obj[S]],
     server: Server.Config,
     gain: Gain = Gain.normalized(-0.2f),
@@ -195,6 +204,11 @@ object ActionBounceTimeline {
 
     var transformItemsCollected = false
 
+    val ggRealtime = new CheckBox()
+    ggRealtime.selected = init.realtime
+    val ggFineControl = new CheckBox()
+    ggFineControl.selected = init.fineControl
+
     def updateTransformEnabled(): Unit = {
       val enabled = ggImport.selected
       checkTransform.enabled = enabled
@@ -274,12 +288,14 @@ object ActionBounceTimeline {
     ggChannelsJ.setValue(init.channels)
     ggChannelsJ.setFocusLostBehavior(JFormattedTextField.COMMIT_OR_REVERT)
     val ggChannels  = Component.wrap(ggChannelsJ)
+    ggChannels.tooltip = "Ranges of channels to bounce, such as 1-4 or 1,3,5"
 
-    import Swing.EmptyIcon
     import Alignment.Trailing
+    import Swing.EmptyIcon
     val pPath     = new FlowPanel(ggPathText, ggPathDialog)
     val pFormat   = new FlowPanel(ggFileType, ggSampleFormat, ggSampleRate, ggGainAmt, new Label("dB"), ggGainType)
     val pSpan     = new GridPanel(0, 2)
+    pSpan.hGap    = 4
     pSpan.contents ++= Seq(new Label("Channels:", EmptyIcon, Trailing), ggChannels)
     if (showSelection == SpanSelection) {
       ggSpanGroup.select(if (init.span.isEmpty) ggSpanAll else ggSpanUser)
@@ -290,7 +306,11 @@ object ActionBounceTimeline {
       val ggDuration = new Spinner(mDuration)
       pSpan.contents ++= Seq(new Label("Duration [sec]:", EmptyIcon, Trailing), ggDuration)
     }
-    pSpan.contents ++= Seq(HStrut(1), VStrut(32))
+    pSpan.contents ++= Seq(
+      HStrut(1), VStrut(32),
+      new Label("Run in Real-Time:" , EmptyIcon, Trailing), ggRealtime,
+      new Label("Fine Control Rate:", EmptyIcon, Trailing), ggFineControl
+    )
     if (showImport) {
       ggImport.selected = init.importFile
       pSpan.contents ++= Seq(new Label("Import Output File Into Workspace:", EmptyIcon, Trailing), ggImport)
@@ -325,6 +345,8 @@ object ActionBounceTimeline {
     }
 
     var settings = QuerySettings(
+      realtime    = ggRealtime   .selected,
+      fineControl = ggFineControl.selected,
       file        = file,
       spec        = AudioFileSpec(ggFileType.selection.item, ggSampleFormat.selection.item,
         numChannels = numChannels, sampleRate = ggSampleRate.value),
@@ -363,7 +385,7 @@ object ActionBounceTimeline {
                     settings = settings.copy(location = Some(source))
                 }
 
-              case _              => return (settings, false)
+              case _ => return (settings, false)
             }
         }
       case _ =>
@@ -433,13 +455,13 @@ object ActionBounceTimeline {
       case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt / progDiv)
     }
 
-    val onFailure: PartialFunction[Any, Unit] = {
-      case Failure(Processor.Aborted()) =>
+    val onFailure: PartialFunction[Throwable, Unit] = {
+      case Processor.Aborted() =>
         defer(fDispose())
-      case Failure(e) =>
+      case ex =>
         defer {
           fDispose()
-          DialogSource.Exception(e -> title).show(window)
+          DialogSource.Exception(ex -> title).show(window)
         }
     }
 
@@ -524,17 +546,20 @@ object ActionBounceTimeline {
                           (implicit cursor: stm.Cursor[S]): Processor[File] = {
     import document.inMemoryBridge
     implicit val workspace = document
-    val bounce  = Bounce[S, document.I]
-    val bnc     = Bounce.Config[S]
-    bnc.group   = settings.group :: Nil
-    bnc.server.read(settings.server)
-    val spanL   = settings.span
-    val span    = spanL match {
+
+    // for real-time, we generally have to overshoot because in SC 3.6, DiskOut's
+    // buffer is not flushed after synth is stopped.
+    val realtime      = settings.realtime
+    val normalized    = settings.gain.normalized
+    val needsTemp     = realtime || normalized
+    val numChannels   = settings.server.outputBusChannels
+
+    val span = settings.span match {
       case sp: Span => sp
       case _ =>
         cursor.step { implicit tx =>
           val tl = settings.group().elem.peer
-          val start = spanL match {
+          val start = settings.span match {
             case hs: Span.HasStart => hs.start
             case _ =>
               // XXX TODO -- should be exposed in BiGroup!
@@ -542,7 +567,7 @@ object ActionBounceTimeline {
               val MIN_COORD   = MAX_SQUARE.left
               tl.nearestEventAfter(MIN_COORD + 1).getOrElse(0L)
           }
-          val stop = spanL match {
+          val stop = settings.span match {
             case hs: Span.HasStop => hs.stop
             case _ =>
               // XXX TODO -- should be exposed in BiGroup!
@@ -553,23 +578,159 @@ object ActionBounceTimeline {
           Span(start, stop)
         }
     }
-    bnc.span    = span
-    bnc.init    = { (_tx, s) =>
-      implicit val tx = _tx
-      val graph = SynthGraph {
-        import ugen._
-        val inChans = settings.channels.flatten
-        val mxChan  = inChans.max
-        val sigIn   = In.ar(0, mxChan + 1 ) // XXX TODO: immediate gain could be applied here
-        inChans.zipWithIndex.foreach { case (in, out) =>
-          ReplaceOut.ar(out, sigIn \ in)
-        }
-      }
-      Synth.play(graph)(s.defaultGroup, addAction = addToTail)
+
+    val fileOut       = file(settings.server.nrtOutputPath)
+    val fileType      = settings.server.nrtHeaderFormat
+    val sampleFormat  = settings.server.nrtSampleFormat
+    val sampleRate    = settings.server.sampleRate
+    val fileFrames0   = (span.length * sampleRate / Timeline.SampleRate + 0.5).toLong
+    val fileFrames    = fileFrames0 // - (fileFrames0 % settings.server.blockSize)
+
+    val settings1: PerformSettings[S] = if (!needsTemp) settings else {
+      val fTmp    = File.createTempFile("bounce", ".w64")
+      val sConfig = Server.ConfigBuilder(settings.server)
+      sConfig.nrtOutputPath   = fTmp.path
+      sConfig.nrtHeaderFormat = AudioFileType.Wave64
+      sConfig.nrtSampleFormat = SampleFormat.Float
+      if (realtime) sConfig.outputBusChannels = 0
+      settings.copy(server = sConfig)
     }
 
-    val process = bounce(bnc)
-    process.start()
+    val bounce    = Bounce[S, document.I]
+    val bnc       = Bounce.Config[S]
+    bnc.group     = settings1.group :: Nil
+    bnc.server.read(settings1.server)
+
+    val bncGainFactor = if (settings1.gain.normalized) 1f else settings1.gain.linear
+    val inChans       = settings1.channels.flatten
+    val numInChans    = if (inChans.isEmpty) 0 else inChans.max + 1
+    assert(numInChans >= numChannels)
+
+    val span1 = if (!realtime) span else {
+      val bufDur    = Buffer.defaultRecBufferSize.toDouble / bnc.server.sampleRate
+      val bufFrames = (bufDur * Timeline.SampleRate + 0.5).toLong
+      val numFrames = (span.length + bufFrames - 1) / bufFrames * bufFrames
+      Span(span.start, span.start + numFrames)
+    }
+    bnc.span    = span1
+    bnc.init    = { (_tx, s) =>
+      implicit val tx = _tx
+
+      // make sure no private bus overlaps with the virutal output
+      if (numInChans > numChannels) {
+        s.allocAudioBus(numInChans - numChannels)
+      }
+
+      val graph = SynthGraph {
+        import synth._
+        import ugen._
+        val sigIn   = In.ar(0, numInChans)
+        val sigOut: GE = inChans.map { in =>
+          val chIn = sigIn \ in
+          chIn * bncGainFactor
+        }
+        if (realtime) {
+          DiskOut.ar("$bnc_disk".ir, sigOut)
+        } else {
+          ReplaceOut.ar(0, sigOut)
+        }
+      }
+      val (args, deps) = if (realtime) {
+        val buf = Buffer.diskOut(s)(path          = settings1.server.nrtOutputPath,
+                                    fileType      = settings1.server.nrtHeaderFormat,
+                                    sampleFormat  = settings1.server.nrtSampleFormat,
+                                    /* numFrames = ..., */ numChannels = numChannels)
+        (List[ControlSet]("$bnc_disk" -> buf.id), List[Resource](buf))
+      } else {
+        (Nil, Nil)
+      }
+      Synth.play(graph)(s.defaultGroup, addAction = addToTail, args = args, dependencies = deps)
+    }
+
+    val bProcess  = bounce.apply(bnc)
+    bProcess.start()
+    val process   = if (!normalized) bProcess else {
+      val nProcess = new Normalizer(bounce = bProcess,
+        fileOut = fileOut, fileType = fileType, sampleFormat = sampleFormat,
+        ceil = settings1.gain.linear, numFrames = fileFrames)
+      nProcess.start()
+      nProcess
+    }
     process
+  }
+
+  // XXX TODO --- could use filtered console output via Poll to
+  // measure max gain already during bounce
+  private final class Normalizer[S <: Sys[S]](bounce: Processor[File],
+                                              fileOut: File, fileType: AudioFileType, sampleFormat: SampleFormat,
+                                              ceil: Float, numFrames: Long)
+    extends ProcessorImpl[File, Processor[File]] with Processor[File] {
+
+    override def toString = s"Normalize bounce $fileOut"
+
+    def body(): File = blocking {
+      val fileIn  = await(bounce, weight = 0.8)   // arbitrary weight
+      val afIn    = AudioFile.openRead(fileIn)
+      import numbers.Implicits._
+      try {
+        val bufSz   = 8192
+        val buf     = afIn.buffer(bufSz)
+        var rem     = numFrames
+        if (rem >= afIn.numFrames)
+          throw new EOFException(s"Bounced file is too short (${afIn.numFrames} -- expected at least $rem)")
+
+        var max     = 0.0f
+        while (rem > 0) {
+          val chunk = math.min(bufSz, rem).toInt
+          afIn.read(buf, 0, chunk)
+          var ch = 0; while (ch < buf.length) {
+            val cBuf = buf(ch)
+            var i = 0; while (i < chunk) {
+              val f = math.abs(cBuf(i))
+              if (f > max) max = f
+              i += 1
+            }
+            ch += 1
+          }
+          rem -= chunk
+          progress = (rem.toDouble / numFrames).linlin(0, 1, 0.9, 0.8)
+          checkAborted()
+        }
+        val gain = if (max == 0) 1f else ceil / max
+        afIn.seek(0L)
+        val afOut = AudioFile.openWrite(fileOut,
+          afIn.spec.copy(fileType = fileType, sampleFormat = sampleFormat, byteOrder = None))
+        try {
+          rem = numFrames
+          while (rem > 0) {
+            val chunk = math.min(bufSz, rem).toInt
+            afIn.read(buf, 0, chunk)
+            if (gain != 1) {
+              var ch = 0; while (ch < buf.length) {
+                val cBuf = buf(ch)
+                var i = 0; while (i < chunk) {
+                  cBuf(i) *= gain
+                  i += 1
+                }
+                ch += 1
+              }
+            }
+            afOut.write(buf, 0, chunk)
+            rem -= chunk
+            progress = (rem.toDouble / numFrames).linlin(0, 1, 1.0, 0.9)
+            checkAborted()
+          }
+          afOut.close()
+          afIn .close()
+        } finally {
+          if (afOut.isOpen) afOut.cleanUp()
+        }
+
+      } finally {
+        if (afIn.isOpen) afIn.cleanUp()
+      }
+
+      fileOut
+    }
   }
 }

@@ -266,7 +266,7 @@ object RecursionFrameImpl {
         val server            = Server.Config()
         ActionBounceTimeline.specToServerConfig(file, audio.spec, server)
 
-        val pSet    = ActionBounceTimeline.PerformSettings(groupH, server, gain, span, channels)
+        val pSet    = ActionBounceTimeline.PerformSettings(realtime = false, groupH, server, gain, span, channels)
         val pBounce = ActionBounceTimeline.perform(workspace, pSet)
         monitor("Bounce", pBounce) { _ => success }
       }

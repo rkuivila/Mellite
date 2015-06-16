@@ -8,9 +8,10 @@ lazy val loggingEnabled             = true
 // ---- core dependencies ----
 
 lazy val scalaColliderVersion       = "1.17.2"   // required due to sbt bug
-lazy val soundProcessesVersion      = "2.18.1"
+lazy val soundProcessesVersion      = "2.19.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.1"
-lazy val lucreSTMVersion            = "2.1.1"
+lazy val confluentVersion           = "2.11.2"
+lazy val lucreSTMVersion            = "2.1.2"
 lazy val fscapeJobsVersion          = "1.5.0"
 lazy val strugatzkiVersion          = "2.9.0"
 
@@ -21,7 +22,8 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 lazy val nuagesVersion              = "1.3.0"
 lazy val scalaColliderSwingVersion  = "1.25.1"
 lazy val lucreSwingVersion          = "0.9.1"
-lazy val audioWidgetsVersion        = "1.9.0"
+lazy val spanVersion                = "1.3.1"
+lazy val audioWidgetsVersion        = "1.9.1"
 lazy val desktopVersion             = "0.7.0"
 lazy val sonogramVersion            = "1.9.0"
 lazy val treetableVersion           = "1.3.7"
@@ -72,11 +74,11 @@ lazy val commonSettings = Seq(
 
 // ---- projects ----
 
-lazy val mellite = project.in(file("."))
-  .aggregate(`mellite-core`, `mellite-views`)
-  .dependsOn(`mellite-core`, `mellite-views`)
-  .settings(commonSettings)
-  .settings(
+lazy val root = Project(id = baseNameL, base = file(".")).
+  aggregate(core, views).
+  dependsOn(core, views).
+  settings(commonSettings).
+  settings(
     name := baseName,
     description := fullDescr,
     mainClass in (Compile,run) := Some("de.sciss.mellite.Mellite"),
@@ -85,9 +87,9 @@ lazy val mellite = project.in(file("."))
     publishArtifact in (Compile, packageSrc) := false  // there are no sources
   )
 
-lazy val `mellite-core` = project.in(file("core"))
-  .settings(commonSettings)
-  .settings(
+lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
+  settings(commonSettings).
+  settings(
     name        := s"$baseName-core",
     description := "Core layer for Mellite",
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
@@ -95,17 +97,21 @@ lazy val `mellite-core` = project.in(file("core"))
       "de.sciss" %% "scalacollider"         % scalaColliderVersion,   // required due to sbt bug
       "de.sciss" %% "soundprocesses-core"   % soundProcessesVersion,  // computer-music framework
       "de.sciss" %% "scalainterpreterpane"  % interpreterPaneVersion, // REPL
+      "de.sciss" %% "lucreconfluent"        % confluentVersion,
+      "de.sciss" %% "lucrestm-core"         % lucreSTMVersion,
       "de.sciss" %% s"lucrestm-$bdb"        % lucreSTMVersion,        // database backend
       "de.sciss" %% "fscapejobs"            % fscapeJobsVersion,      // remote FScape invocation
-      "de.sciss" %% "strugatzki"            % strugatzkiVersion       // feature extraction
+      "de.sciss" %% "strugatzki"            % strugatzkiVersion,      // feature extraction
+      "de.sciss" %% "span"                  % spanVersion             // makes sbt happy :-E
     ),
     initialCommands in console := "import de.sciss.mellite._"
   )
 
-lazy val `mellite-views` = project.in(file("views")).dependsOn(`mellite-core`)
-  .settings(commonSettings)
-  .enablePlugins(BuildInfoPlugin)
-  .settings(
+lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
+  dependsOn(core).
+  enablePlugins(BuildInfoPlugin).
+  settings(commonSettings).
+  settings(
     name        := s"$baseName-views",
     description := fullDescr,
     libraryDependencies ++= Seq(
@@ -114,6 +120,7 @@ lazy val `mellite-views` = project.in(file("views")).dependsOn(`mellite-core`)
       "de.sciss" %% "wolkenpumpe"                     % nuagesVersion,              // live improv
       "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL
       "de.sciss" %% "lucreswing"                      % lucreSwingVersion,          // reactive Swing components
+      "de.sciss" %% "span"                            % spanVersion,
       "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets
       "de.sciss" %% "desktop-mac"                     % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component

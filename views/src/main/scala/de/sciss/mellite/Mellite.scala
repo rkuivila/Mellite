@@ -23,6 +23,7 @@ import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm.TxnLike
+import de.sciss.lucre.swing.requireEDT
 import de.sciss.lucre.synth.{Server, Txn}
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.synth.proc
@@ -91,11 +92,10 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     * @return `true` if the attempt to boot was made, `false` if the program was not found
     */
   def startAuralSystem(): Boolean = {
-    lucre.swing.requireEDT()
-    import de.sciss.file._
+    requireEDT()
     val config        = Server.Config()
-    val programPath   = Prefs.superCollider.getOrElse(Prefs.defaultSuperCollider)
-    if (programPath != Prefs.defaultSuperCollider) config.program = programPath.path
+    applyAudioPrefs(config, useDevice = true, pickPort = true)
+    import de.sciss.file._
 
     val f = file(config.program)
     if (!f.isFile && (f.parentOption.nonEmpty || {
@@ -111,8 +111,23 @@ object Mellite extends SwingApplicationImpl("Mellite") {
       return false
     }
 
-    val audioDevice     = Prefs.audioDevice     .getOrElse(Prefs.defaultAudioDevice)
-    if (audioDevice != Prefs.defaultAudioDevice) config.deviceName = Some(audioDevice)
+    TxnExecutor.defaultAtomic { implicit itx =>
+      implicit val tx = Txn.wrap(itx)
+      auralSystem.start(config)
+    }
+    true
+  }
+
+  def applyAudioPrefs(config: Server.ConfigBuilder, useDevice: Boolean, pickPort: Boolean): Unit = {
+    requireEDT()
+    import de.sciss.file._
+    val programPath   = Prefs.superCollider.getOrElse(Prefs.defaultSuperCollider)
+    if (programPath != Prefs.defaultSuperCollider) config.program = programPath.path
+
+    if (useDevice) {
+      val audioDevice     = Prefs.audioDevice     .getOrElse(Prefs.defaultAudioDevice)
+      if (audioDevice != Prefs.defaultAudioDevice) config.deviceName = Some(audioDevice)
+    }
     val numOutputs      = Prefs.audioNumOutputs .getOrElse(Prefs.defaultAudioNumOutputs)
     config.outputBusChannels = numOutputs
     val numInputs       = Prefs.audioNumInputs  .getOrElse(Prefs.defaultAudioNumInputs)
@@ -123,14 +138,11 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     config.sampleRate   = Prefs.audioSampleRate .getOrElse(Prefs.defaultAudioSampleRate)
     config.blockSize    = Prefs.audioBlockSize  .getOrElse(Prefs.defaultAudioBlockSize)
     config.memorySize   = Prefs.audioMemorySize .getOrElse(Prefs.defaultAudioMemorySize) * 1024
-    config.transport    = osc.TCP
-    config.pickPort()
 
-    TxnExecutor.defaultAtomic { implicit itx =>
-      implicit val tx = Txn.wrap(itx)
-      auralSystem.start(config)
+    if (pickPort) {
+      config.transport = osc.TCP
+      config.pickPort()
     }
-    true
   }
 
   def startSensorSystem(): Unit = {

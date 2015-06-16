@@ -19,19 +19,17 @@ package interpreter
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.desktop.{UndoManager, OptionPane, Window}
+import de.sciss.desktop.{OptionPane, UndoManager}
+import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IDPeek
-import de.sciss.lucre.swing.{CellView, View}
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.event.Sys
-import de.sciss.swingplus.Separator
+import de.sciss.lucre.swing.{CellView, View}
+import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.impl.ActionImpl
-import de.sciss.synth.{SynthGraph, proc}
-import proc.Implicits._
-import de.sciss.synth.proc.{Code, Action, SynthGraphs, Proc, Obj}
+import de.sciss.synth.proc.{Action, Code, Obj, Proc, SynthGraphs}
 
-import scala.swing.{SplitPane, Component, BoxPanel, Orientation}
+import scala.swing.{Component, Orientation, SplitPane}
 
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
@@ -182,7 +180,7 @@ object CodeFrameImpl {
     override protected def checkClose(): Boolean = {
       if (codeView.isCompiling) {
         // ggStatus.text = "busy!"
-        false
+        return false
       }
 
       !codeView.dirty || {
