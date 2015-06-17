@@ -34,6 +34,8 @@ lazy val webLaFVersion              = "1.28"
 
 // ----
 
+lazy val main = "de.sciss.mellite.Mellite"
+
 lazy val commonSettings = Seq(
   version            := projectVersion,
   organization       := "de.sciss",
@@ -82,7 +84,7 @@ lazy val root = Project(id = baseNameL, base = file(".")).
   settings(
     name := baseName,
     description := fullDescr,
-    mainClass in (Compile,run) := Some("de.sciss.mellite.Mellite"),
+    mainClass in (Compile,run) := Some(main),
     publishArtifact in (Compile, packageBin) := false, // there are no binaries
     publishArtifact in (Compile, packageDoc) := false, // there are no javadocs
     publishArtifact in (Compile, packageSrc) := false,  // there are no sources
@@ -98,6 +100,7 @@ lazy val root = Project(id = baseNameL, base = file(".")).
     //      extensions = Seq("mllt"),
     //      isPackage  = true
     //    ),
+    mainClass in assembly := Some(main),
     target in assembly := baseDirectory.value,
     assemblyJarName in assembly := s"$baseName.jar",
     assemblyMergeStrategy in assembly := {
@@ -151,7 +154,7 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       "com.thoughtworks.xstream" % "xstream"          % xstreamVersion,             // PROBLEM WITH MAVEN CENTRAL
       "de.sciss" %  "weblaf"                          % webLaFVersion               // Swing look-and-feel
     ),
-    mainClass in (Compile,run) := Some("de.sciss.mellite.Mellite"),
+    mainClass in (Compile,run) := Some(main),
     initialCommands in console :=
       """import de.sciss.mellite._""".stripMargin,
     fork in run := true,  // required for shutdown hook, and also the scheduled thread pool, it seems
