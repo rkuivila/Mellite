@@ -22,6 +22,7 @@ import de.sciss.lucre.{stm, expr}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.sonogram.{Overview => SonoOverview}
 import expr.Expr
+import org.scalautils.TypeCheckedTripleEquals
 import language.implicitConversions
 import scala.util.control.NonFatal
 import de.sciss.file._
@@ -47,7 +48,8 @@ object ProcView extends TimelineObjView.Factory {
     map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
 
   private def removeLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] = {
-    val newVec = map.getOrElse(key, Vec.empty).filterNot(_ == value)
+    import TypeCheckedTripleEquals._
+    val newVec = map.getOrElse(key, Vec.empty).filterNot(_ === value)
     if (newVec.isEmpty) map - key else map + (key -> newVec)
   }
 
@@ -239,7 +241,10 @@ object ProcView extends TimelineObjView.Factory {
     def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
       outputs = removeLink(outputs, thisKey, Link(thatView, thatKey))
 
-    def isGlobal = spanValue == Span.All
+    def isGlobal: Boolean = {
+      import TypeCheckedTripleEquals._
+      spanValue === Span.All
+    }
 
     def proc(implicit tx: S#Tx): Obj.T[S, Proc.Elem] = obj()
   }

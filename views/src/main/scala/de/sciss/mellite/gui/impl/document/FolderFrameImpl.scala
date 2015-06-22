@@ -31,6 +31,7 @@ import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
 import de.sciss.mellite.gui.impl.component.CollectionViewImpl
 import de.sciss.swingplus.{Spinner, GroupPanel}
 import de.sciss.synth.proc.{ExprImplicits, ObjKeys, StringElem, Obj, Folder}
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.swing.Swing.EmptyIcon
 import scala.swing.{CheckBox, Swing, Alignment, Label, TextField, Dialog, Action}
@@ -220,7 +221,8 @@ object FolderFrameImpl {
         val window  = Window.find(component)
         val res     = pane.show(window)
 
-        if (res == Dialog.Result.Ok) {
+        import TypeCheckedTripleEquals._
+        if (res === Dialog.Result.Ok) {
           // save state
           count       = mCount.getNumber.intValue()
           appendText  = ggName.text

@@ -38,6 +38,7 @@ import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, Bounce, Code, ExprImplicits, FolderElem, Grapheme, Obj, Timeline}
 import de.sciss.synth.{SynthGraph, addToTail}
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.blocking
@@ -208,7 +209,8 @@ object ActionBounceTimeline {
         }
         transformItemsCollected =  true
         ggTransform.items = transform
-        for (t <- init.transform; lb <- transform.find(_.value == t)) {
+        import TypeCheckedTripleEquals._
+        for (t <- init.transform; lb <- transform.find(_.value === t)) {
           ggTransform.selection.item = lb
         }
       }
@@ -286,12 +288,13 @@ object ActionBounceTimeline {
     val pSpan     = new GridPanel(0, 2)
     pSpan.hGap    = 4
     pSpan.contents ++= Seq(new Label("Channels:", EmptyIcon, Trailing), ggChannels)
-    if (showSelection == SpanSelection) {
+    import TypeCheckedTripleEquals._
+    if (showSelection === SpanSelection) {
       ggSpanGroup.select(if (init.span.isEmpty) ggSpanAll else ggSpanUser)
       ggSpanUser.enabled   = tlSel.nonEmpty
       pSpan.contents ++= Seq(new Label("Timeline Span:", EmptyIcon, Trailing), ggSpanAll,
                              HStrut(1),                                        ggSpanUser)
-    } else if (showSelection == DurationSelection) {
+    } else if (showSelection === DurationSelection) {
       val ggDuration = new Spinner(mDuration)
       pSpan.contents ++= Seq(new Label("Duration [sec]:", EmptyIcon, Trailing), ggDuration)
     }
@@ -315,8 +318,8 @@ object ActionBounceTimeline {
       messageType = OptionPane.Message.Plain)
     val title = "Bounce to Disk"
     opt.title = title
-    val ok    = opt.show(window) == OptionPane.Result.Ok
-    val file  = if (ggPathText.text == "") None else Some(new File(ggPathText.text))
+    val ok    = opt.show(window) === OptionPane.Result.Ok
+    val file  = if (ggPathText.text === "") None else Some(new File(ggPathText.text))
 
     val channels: Vec[Range.Inclusive] = try {
       fmtRanges.stringToValue(ggChannelsJ.getText)
@@ -387,7 +390,7 @@ object ActionBounceTimeline {
           title       = title,
           optionType  = Dialog.Options.OkCancel,
           messageType = Dialog.Message.Warning
-        ) == Dialog.Result.Ok
+        ) === Dialog.Result.Ok
         (settings, ok1)
 
       case None if ok =>

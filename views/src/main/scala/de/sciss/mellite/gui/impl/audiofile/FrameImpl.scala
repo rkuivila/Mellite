@@ -19,6 +19,7 @@ package audiofile
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.CellView
 import de.sciss.synth.proc
+import org.scalautils.TypeCheckedTripleEquals
 import proc.{AudioGraphemeElem, Obj}
 import de.sciss.file._
 import de.sciss.lucre.synth.Sys
@@ -31,8 +32,9 @@ object FrameImpl {
     val name0     = AttrCellView.name(obj)
     val file      = obj.elem.peer.value.artifact
     val fileName  = file.base
+    import TypeCheckedTripleEquals._
     val name      = name0.map { n =>
-      if (n == fileName) n else s"$n- $fileName"
+      if (n === fileName) n else s"$n- $fileName"
     }
     val res       = new Impl(/* doc, */ view = afv, name = name, _file = file)
     res.init()

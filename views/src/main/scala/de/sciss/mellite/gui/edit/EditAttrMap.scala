@@ -21,6 +21,7 @@ import de.sciss.serial.Serializer
 import evt.Sys
 import javax.swing.undo.{UndoableEdit, AbstractUndoableEdit}
 import de.sciss.synth.proc.{Elem, AttrMap, Obj}
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.language.higherKinds
 
@@ -83,7 +84,8 @@ object EditAttrMap {
       opt match {
         case Some(Expr.Var(vr)) =>
           // see above for an explanation about how we preserve a variable
-          if (vr == elem) throw new IllegalArgumentException(s"Cyclic reference setting variable $vr")
+          import TypeCheckedTripleEquals._
+          if (vr === elem) throw new IllegalArgumentException(s"Cyclic reference setting variable $vr")
           vr() = elem
         case _ => map.put(key, Obj(mkElem(elem)))
       }

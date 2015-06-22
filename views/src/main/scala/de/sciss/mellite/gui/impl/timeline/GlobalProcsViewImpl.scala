@@ -18,6 +18,7 @@ package timeline
 
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.Timeline
+import org.scalautils.TypeCheckedTripleEquals
 import scala.swing.{Action, Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
 import scala.collection.immutable.{IndexedSeq => Vec}
 import javax.swing.table.{TableColumnModel, AbstractTableModel}
@@ -229,7 +230,8 @@ object GlobalProcsViewImpl {
               val pv    = procSeq(dl.getRow)
               val drag  = support.getTransferable.getTransferData(ObjView.Flavor)
                 .asInstanceOf[ObjView.Drag[S]]
-              drag.workspace == workspace && {
+              import TypeCheckedTripleEquals._
+              drag.workspace === workspace && {
                 drag.view match {
                   case iv: ObjView.Int[S] =>
                     atomic { implicit tx =>

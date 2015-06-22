@@ -18,6 +18,7 @@ package gui
 import de.sciss.lucre.artifact.{ArtifactLocation, Artifact}
 import de.sciss.synth.proc.{ArtifactLocationElem, Obj, Folder, FolderElem}
 import de.sciss.lucre.stm
+import org.scalautils.TypeCheckedTripleEquals
 import collection.immutable.{IndexedSeq => Vec}
 import scala.util.Try
 import de.sciss.desktop.{OptionPane, Window, FileDialog}
@@ -80,9 +81,10 @@ object ActionArtifactLocation {
         opt.title = s"Choose Location for ${file.name}"
         val optRes = opt.show(window).id
         // println(s"res = $optRes, ok = ${OptionPane.Result.Ok.id}, cancel = ${OptionPane.Result.Cancel.id}")
-        if (optRes == 0) {
+        import TypeCheckedTripleEquals._
+        if (optRes === 0) {
           ggList.selection.items.headOption.map(v => Left(v.value))
-        } else if (optRes == 1) {
+        } else if (optRes === 1) {
           createNew().map(Right.apply)
         } else {
           None

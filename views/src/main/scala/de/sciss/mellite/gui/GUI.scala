@@ -26,6 +26,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.swing.{defer, requireEDT}
 import de.sciss.swingplus.{DoClickAction, GroupPanel}
 import de.sciss.synth.proc.SoundProcesses
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.concurrent.Future
 import scala.swing.Swing._
@@ -75,8 +76,8 @@ object GUI {
       messageType = Dialog.Message.Question, focus = Some(value))
     pane.title  = title
     val res = pane.show(window)
-
-    if (res == Dialog.Result.Ok) {
+    import TypeCheckedTripleEquals._
+    if (res === Dialog.Result.Ok) {
       val name    = ggName.text
       Some(name)
     } else {

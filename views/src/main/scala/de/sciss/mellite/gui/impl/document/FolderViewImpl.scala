@@ -41,6 +41,7 @@ import de.sciss.synth.proc.Folder.Update
 import de.sciss.synth.proc.{Folder, FolderElem, Obj, ObjKeys, StringElem}
 import de.sciss.treetable.{TreeTableCellRenderer, TreeTableSelectionChanged}
 import de.sciss.treetable.j.{DefaultTreeTableCellEditor, TreeTableCellEditor}
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.collection.breakOut
@@ -289,12 +290,14 @@ object FolderViewImpl {
 
           def isNested(c: Obj[S]): Boolean = c match {
             case FolderElem.Obj(objT) =>
-              objT.elem.peer == newParent || objT.elem.peer.iterator.toList.exists(isNested)
+              import TypeCheckedTripleEquals._
+              objT.elem.peer === newParent || objT.elem.peer.iterator.toList.exists(isNested)
             case _ => false
           }
 
-          val isMove  = dropAction == TransferHandler.MOVE
-          val isCopy  = dropAction == TransferHandler.COPY
+          import TypeCheckedTripleEquals._
+          val isMove  = dropAction === TransferHandler.MOVE
+          val isCopy  = dropAction === TransferHandler.COPY
 
           // make sure we are not moving a folder within itself (it will magically disappear :)
           val sel1 = if (!isMove) sel else sel.filterNot(nv => isNested(nv.modelData()))
@@ -304,7 +307,7 @@ object FolderViewImpl {
           // we will first remove all children, then re-insert them.
           val idx0 = if (idx >= 0) idx else newParent /* .children */.size
           val idx1 = if (!isMove) idx0 else idx0 - sel1.count { nv =>
-            val isInNewParent = nv.parent == newParent
+            val isInNewParent = nv.parent === newParent
             val child = nv.modelData()
             isInNewParent && newParent.indexOf(child) <= idx0
           }
@@ -345,7 +348,8 @@ object FolderViewImpl {
                                    (implicit tx: S#Tx): Option[UndoableEdit] = {
           val data = support.getTransferable.getTransferData(FolderView.SelectionFlavor)
             .asInstanceOf[FolderView.SelectionDnDData[S]]
-          if (data.workspace == workspace) {
+          import TypeCheckedTripleEquals._
+          if (data.workspace === workspace) {
             val sel     = data.selection
             insertData(sel, parent, idx = index, dropAction = support.getDropAction)
           } else {

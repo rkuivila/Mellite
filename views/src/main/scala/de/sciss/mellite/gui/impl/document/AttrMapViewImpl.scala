@@ -35,6 +35,7 @@ import de.sciss.model.Change
 import de.sciss.model.impl.ModelImpl
 import de.sciss.swingplus.DropMode
 import de.sciss.synth.proc.{Obj, ObjKeys, StringElem}
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.annotation.switch
 import scala.collection.breakOut
@@ -111,7 +112,8 @@ object AttrMapViewImpl {
     final protected def attrRemoved(key: String)(implicit tx: S#Tx): Unit = {
       viewMap.-=(key)(tx.peer)
       deferTx {
-        val row = model.indexWhere(_._1 == key)
+        import TypeCheckedTripleEquals._
+        val row = model.indexWhere(_._1 === key)
         if (row < 0) {
           warnNoView(key)
         } else {
@@ -158,7 +160,8 @@ object AttrMapViewImpl {
       } { view =>
         val isDirty = updateObject(view, changes)
         if (isDirty) deferTx {
-          val row = model.indexWhere(_._1 == key)
+          import TypeCheckedTripleEquals._
+          val row = model.indexWhere(_._1 === key)
           if (row < 0) {
             warnNoView(key)
           } else {
@@ -250,7 +253,8 @@ object AttrMapViewImpl {
 
         override def setValue(value: Any): Unit = value match {
           case view: ObjView[_] =>
-            wrap.text = if (view.name == "<unnamed>") "" else view.name
+            import TypeCheckedTripleEquals._
+            wrap.text = if (view.name === "<unnamed>") "" else view.name
             wrap.icon = view.icon
           case _ =>
         }

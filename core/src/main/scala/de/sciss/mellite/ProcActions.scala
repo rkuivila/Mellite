@@ -15,6 +15,7 @@ package de.sciss
 package mellite
 
 import lucre.expr.Expr
+import org.scalautils.TypeCheckedTripleEquals
 import span.{Span, SpanLike}
 import de.sciss.synth.proc.{Code, ObjKeys, Timeline, Obj, SynthGraphs, ExprImplicits, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
 import de.sciss.lucre.bitemp.BiExpr
@@ -370,8 +371,9 @@ object ProcActions {
 
     // if there is already a link between the two, take the drag gesture as a command to remove it
     val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
+      import TypeCheckedTripleEquals._
       srcScan.sinks.toList.flatMap {
-        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
+        case Scan.Link.Scan(peer) => insSeq0.find(_._2 === peer).map {
           case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
         }
 

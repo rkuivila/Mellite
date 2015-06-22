@@ -25,6 +25,7 @@ import de.sciss.lucre.swing.{CellView, defer}
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc
 import de.sciss.synth.proc.SoundProcesses
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Future, blocking}
@@ -75,10 +76,8 @@ object ActionOpenWorkspace extends Action("Open...") {
 
   def apply(): Unit = {
     val dlg = FileDialog.open(title = fullTitle)
-    // if (!isWebLaF) {
-      // filter currently doesn't work with WebLaF
-      dlg.setFilter { f => f.isDirectory && f.ext.toLowerCase == Workspace.ext}
-    // }
+    import TypeCheckedTripleEquals._
+    dlg.setFilter { f => f.isDirectory && f.ext.toLowerCase === Workspace.ext}
     dlg.show(None).foreach(perform)
   }
 
@@ -88,11 +87,14 @@ object ActionOpenWorkspace extends Action("Open...") {
 //      case dcv: DocumentCursorsView => dcv.window
 //    } .foreach(_.front())
 
-  def perform(folder: File): Unit =
-    dh.documents.find(_.folder == folder).fold(doOpen(folder)) { doc =>
+  def perform(folder: File): Unit = {
+    import TypeCheckedTripleEquals._
+    val fOpt = Some(folder)
+    dh.documents.find(_.folder === fOpt).fold(doOpen(folder)) { doc =>
       val doc1 = doc.asInstanceOf[Workspace[S] forSome { type S <: Sys[S] }]
       openView(doc1)
     }
+  }
 
   private def doOpen(folder: File): Unit = {
     import SoundProcesses.executionContext

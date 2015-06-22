@@ -6,6 +6,7 @@ import de.sciss.lucre.swing.defer
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.{DocumentHandler, Mellite, Workspace}
 import de.sciss.model.impl.ModelImpl
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.language.existentials
 
@@ -43,8 +44,10 @@ class DocumentHandlerImpl extends desktop.DocumentHandler with ModelImpl[DH.Upda
       dispatch(DH.Added(doc.asInstanceOf[Workspace[~] forSome {type ~ <: Sys[~]}]))
     }
     case DocumentHandler.Closed(doc) => defer {
-      if (activeDocument.exists(_ == doc)) activeDocument = None
-      dispatch(DH.Removed(doc.asInstanceOf[Workspace[~] forSome {type ~ <: Sys[~]}]))
+      import TypeCheckedTripleEquals._
+      val docC = doc.asInstanceOf[Workspace[~] forSome {type ~ <: Sys[~]}]
+      if (activeDocument === Some(docC)) activeDocument = None
+      dispatch(DH.Removed(docC))
     }
   }
 }

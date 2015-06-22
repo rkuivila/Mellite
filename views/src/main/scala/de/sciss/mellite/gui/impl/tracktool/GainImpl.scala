@@ -26,6 +26,7 @@ import de.sciss.lucre.expr.{Double => DoubleEx}
 import de.sciss.span.SpanLike
 import de.sciss.synth
 import de.sciss.lucre.synth.Sys
+import org.scalautils.TypeCheckedTripleEquals
 
 final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Gain] {
@@ -61,7 +62,8 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
         case other =>
           other.fold(1.0)(_.value) * factor
       }
-      val newGainOpt = if (newGain == DoubleEx.newConst[S](1.0)) None else Some(newGain)
+      import TypeCheckedTripleEquals._
+      val newGainOpt = if (newGain === DoubleEx.newConst[S](1.0)) None else Some(newGain)
       import DoubleEx.serializer
       val edit = EditAttrMap.expr(s"Adjust $name", obj, ObjKeys.attrGain, newGainOpt) { ex =>
         DoubleElem(DoubleEx.newVar(ex))

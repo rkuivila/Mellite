@@ -48,6 +48,7 @@ import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.icons.raphael
 import TimelineView.TrackScale
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
 import scala.swing.Swing._
@@ -263,7 +264,8 @@ object TimelineViewImpl {
                   case Proc.ScanChange (name, scan, scanUpdates) =>
                     scanUpdates.foreach {
                       case Scan.GraphemeChange(grapheme, segments) =>
-                        if (name == Proc.Obj.graphAudio) {
+                        import TypeCheckedTripleEquals._
+                        if (name === Proc.Obj.graphAudio) {
                           // XXX TODO: This doesn't work. Somehow we get a segment that _ends_ at 0L
                           val segmOpt = segments.find(_.span.contains(0L)) match {
                             case Some(segm: Grapheme.Segment.Audio) => Some(segm)
@@ -1388,6 +1390,7 @@ object TimelineViewImpl {
               pv.outputs.foreach { case (_, links) =>
                 links.foreach { link =>
                   if (link.target.isGlobal) {
+                    import TypeCheckedTripleEquals._
                     if (regionViewMode == RegionViewMode.TitledBox) {
                       // XXX TODO: extra info such as gain
                     }

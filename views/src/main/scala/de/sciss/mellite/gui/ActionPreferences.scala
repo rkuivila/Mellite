@@ -20,6 +20,7 @@ import de.sciss.desktop.{Desktop, KeyStrokes, OptionPane, PrefsGUI}
 import de.sciss.file._
 import de.sciss.mellite.Prefs
 import de.sciss.swingplus.{GroupPanel, Separator}
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.swing.Action
 import scala.swing.event.Key
@@ -47,7 +48,8 @@ object ActionPreferences extends Action("Preferences...") {
     val lbSuperCollider = label("SuperCollider (scsynth)")
     val ggSuperCollider = pathField(Prefs.superCollider, Prefs.defaultSuperCollider,
       title = "SuperCollider Server Location (scsynth)", accept = { f =>
-        val f2 = if (Desktop.isMac && f.ext == "app") {
+        import TypeCheckedTripleEquals._
+        val f2 = if (Desktop.isMac && f.ext === "app") {
           val f1 = f / "Contents" / "Resources" / "scsynth"
           if (f1.exists) f1 else f
         } else f

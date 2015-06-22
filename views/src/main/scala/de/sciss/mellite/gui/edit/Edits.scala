@@ -27,6 +27,7 @@ import de.sciss.mellite.ProcActions.{Move, Resize}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{Code, ExprImplicits, StringElem, Scan, SynthGraphs, Proc, ObjKeys, IntElem, Obj}
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.breakOut
 import scala.util.control.NonFatal
@@ -136,8 +137,9 @@ object Edits {
 
     // if there is already a link between the two, take the drag gesture as a command to remove it
     val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
+      import TypeCheckedTripleEquals._
       srcScan.sinks.toList.flatMap {
-        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
+        case Scan.Link.Scan(peer) => insSeq0.find(_._2 === peer).map {
           case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
         }
 
@@ -205,11 +207,13 @@ object Edits {
           case other => other
         }
 
-        if (newSpan == oldSpan) None else {
+        import TypeCheckedTripleEquals._
+        val newSpanEx = SpanLikeEx.newConst[S](newSpan)
+        if (newSpanEx === oldSpan) None else {
           import SpanLikeEx.{serializer => spanSer, varSerializer => spanVarSer}
           import LongEx    .{serializer => longSer, varSerializer}
           val name  = "Resize"
-          val edit0 = EditVar.Expr(name, vr, newSpan)
+          val edit0 = EditVar.Expr(name, vr, newSpanEx)
           val edit1Opt = if (dStartCC == 0L) None else
             for {
               objT <- Proc.Obj.unapply(obj)
@@ -245,7 +249,8 @@ object Edits {
         case Some(Expr.Var(vr)) => vr() + deltaTrack
         case other => other.fold(0)(_.value) + deltaTrack
       }
-      val newTrackOpt = if (newTrack == IntEx.newConst[S](0)) None else Some(newTrack)
+      import TypeCheckedTripleEquals._
+      val newTrackOpt = if (newTrack === IntEx.newConst[S](0)) None else Some(newTrack)
 
       import IntEx.serializer
       val edit = EditAttrMap.expr("Adjust Track Placement", obj, TimelineObjView.attrTrackIndex, newTrackOpt) { ex =>

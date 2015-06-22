@@ -38,6 +38,7 @@ import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.impl.{ElemImpl, FolderElemImpl}
 import de.sciss.synth.proc.{ArtifactElem, ArtifactLocationElem, AudioGraphemeElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, Grapheme, IntElem, LongElem, Obj, StringElem}
 import de.sciss.{desktop, lucre}
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.swing.Swing.EmptyIcon
 import scala.swing.{Alignment, CheckBox, Component, Dialog, Label, TextField}
@@ -458,7 +459,7 @@ object ObjViewImpl {
           Config1(file = f, spec = spec, location = location)
         }
       }
-      if (list == Nil) None else Some(list)
+      if (list.isEmpty) None else Some(list)
     }
 
     def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = config.flatMap { cfg =>
@@ -631,7 +632,8 @@ object ObjViewImpl {
         }
         dirOpt.flatMap { newDir =>
           val loc = obj().elem.peer
-          if (loc.directory == newDir) None else loc.modifiableOption.map { mod =>
+          import TypeCheckedTripleEquals._
+          if (loc.directory === newDir) None else loc.modifiableOption.map { mod =>
             EditArtifactLocation(mod, newDir)
           }
         }
@@ -1308,8 +1310,9 @@ object ObjViewImpl {
       convertEditValue(value).flatMap { newValue =>
         expr match {
           case Expr.Var(vr) =>
+            import TypeCheckedTripleEquals._
             vr() match {
-              case Expr.Const(x) if x == newValue => None
+              case Expr.Const(x) if x === newValue => None
               case _ =>
                 // val imp = ExprImplicits[S]
                 // import imp._

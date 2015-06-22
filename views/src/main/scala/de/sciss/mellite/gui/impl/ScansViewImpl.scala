@@ -33,6 +33,7 @@ import de.sciss.mellite.gui.impl.component.DragSourceButton
 import de.sciss.swingplus.{PopupMenu, ListView}
 import de.sciss.synth.proc.{Grapheme, Scan, Proc}
 import de.sciss.lucre.swing.deferTx
+import org.scalautils.TypeCheckedTripleEquals
 
 import scala.concurrent.stm.TMap
 import scala.swing.TabbedPane.Page
@@ -98,7 +99,8 @@ object ScansViewImpl {
           override def importData(support: TransferSupport): Boolean = {
             support.isDataFlavorSupported(ScansView.flavor) && {
               val drag = support.getTransferable.getTransferData(ScansView.flavor).asInstanceOf[ScansView.Drag[S]]
-              drag.workspace == workspace && {
+              import TypeCheckedTripleEquals._
+              drag.workspace === workspace && {
                 val editOpt = cursor.step { implicit tx =>
                   val thisScanOpt   = objH     ().elem.peer.scans.get(parent.key)
                   val thatScanOpt   = drag.proc().elem.peer.scans.get(drag  .key)

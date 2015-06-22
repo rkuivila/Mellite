@@ -21,6 +21,7 @@ import de.sciss.lucre.swing.CellView
 import de.sciss.synth.proc.Timeline
 import de.sciss.lucre.stm
 import de.sciss.desktop.{Window, KeyStrokes, Menu, OptionPane}
+import org.scalautils.TypeCheckedTripleEquals
 import scala.swing.event.Key
 import scala.swing.Action
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
@@ -81,7 +82,8 @@ object FrameImpl {
                 optionType = OptionPane.Options.YesNo, messageType = OptionPane.Message.Warning)
               pane.title = "Sanitize Timeline"
               val sel = pane.show(Some(window))
-              if (sel == OptionPane.Result.Yes) _cursor.step { implicit tx =>
+              import TypeCheckedTripleEquals._
+              if (sel === OptionPane.Result.Yes) _cursor.step { implicit tx =>
                 BiGroupImpl.verifyConsistency(groupH(), reportOnly = false)
               }
             }

@@ -19,6 +19,7 @@ import de.sciss.synth.proc.{Obj, FolderElem, ExprImplicits, Folder, AudioGraphem
 import de.sciss.synth.io.AudioFileSpec
 import de.sciss.file._
 import de.sciss.lucre.expr.{Double => DoubleEx, Long => LongEx}
+import org.scalautils.TypeCheckedTripleEquals
 import proc.Implicits._
 import de.sciss.lucre.event.Sys
 
@@ -41,12 +42,14 @@ object ObjectActions {
 
   def findAudioFile[S <: Sys[S]](root: Folder[S], file: File)
                                 (implicit tx: S#Tx): Option[Obj.T[S, AudioGraphemeElem]] = {
-    def loop(folder: Folder[S]): Option[Obj.T[S, AudioGraphemeElem]] =
+    def loop(folder: Folder[S]): Option[Obj.T[S, AudioGraphemeElem]] = {
+      import TypeCheckedTripleEquals._
       folder.iterator.flatMap {
-        case AudioGraphemeElem.Obj(objT) if objT.elem.peer.value.artifact == file => Some(objT)
+        case AudioGraphemeElem.Obj(objT) if objT.elem.peer.value.artifact === file => Some(objT)
         case FolderElem.Obj(objT) => loop(objT.elem.peer)
         case _ => None
       } .toList.headOption
+    }
 
     loop(root)
   }
