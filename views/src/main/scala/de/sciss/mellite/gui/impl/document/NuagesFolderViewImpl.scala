@@ -52,7 +52,7 @@ object NuagesFolderViewImpl {
                                 nConfig: Nuages.Config, sConfig: ScissProcs.Config)
                                (implicit val undoManager: UndoManager, val workspace: Workspace[S],
                                 val cursor: stm.Cursor[S])
-    extends ComponentHolder[Component] with View.Editable[S] { impl =>
+    extends ComponentHolder[Component] with View.Editable[S] with ViewHasWorkspace[S] { impl =>
 
     def guiInit(): Unit = {
       val ggPower = new Button("Live!") {

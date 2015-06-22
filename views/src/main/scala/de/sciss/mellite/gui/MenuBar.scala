@@ -65,7 +65,7 @@ object MenuBar {
       .add(Item("open", ActionOpenWorkspace))
       .add(ActionOpenWorkspace.recentMenu)
       .add(Item("close",              proxy("Close",                    menu1 + Key.W)))
-      .add(Item("close-all",          "Close All"))
+      .add(Item("close-all", ActionCloseAllWorkspaces))
       .addLine()
       .add(Item("bounce",             proxy("Bounce...",                menu1 + Key.B)))
       // .add(Item("bounce-transform",   proxy("Bounce And Transform...",  (menu1 + shift + Key.B))))

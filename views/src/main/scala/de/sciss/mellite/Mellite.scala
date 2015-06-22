@@ -25,11 +25,13 @@ import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.requireEDT
 import de.sciss.lucre.synth.{Server, Txn}
+import de.sciss.mellite.gui.impl.document.DocumentHandlerImpl
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
 import scala.concurrent.stm.{TxnExecutor, atomic}
+import scala.language.existentials
 import scala.swing.Label
 import scala.util.control.NonFatal
 
@@ -191,9 +193,16 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     WebProgressBarStyle.highlightDarkWhite  = new Color(255, 255, 255, 0)
 
     if (Prefs.useLogFrame) LogFrame.instance    // init
-    DocumentHandler    .instance    // init
+    // DocumentHandler    .instance    // init
     DocumentViewHandler.instance    // init
 
     new MainFrame
   }
+
+  /** We are bridging between the transactional and non-EDT `mellite.DocumentHandler` and
+    * the GUI-based `de.sciss.desktop.DocumentHandler`. This is a bit ugly. In theory it
+    * should be fine to call into either, as this bridge is backed up by the peer
+    * `mellite.DocumentHandler.instance`.
+    */
+  override lazy val documentHandler: DocumentHandler = new DocumentHandlerImpl
 }

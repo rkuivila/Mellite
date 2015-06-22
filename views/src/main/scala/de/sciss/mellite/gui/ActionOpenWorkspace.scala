@@ -42,12 +42,13 @@ object ActionOpenWorkspace extends Action("Open...") {
 
   accelerator = Some(menu1 + Key.O)
 
+  private def dh = Application.documentHandler
   private def fullTitle = "Open Workspace"
 
   // XXX TODO: should be in another place
   def openGUI[S <: Sys[S]](doc: Workspace[S]): Unit = {
     doc.folder.foreach(recentFiles.add)
-    Application.documentHandler.addDocument(doc)
+    dh.addDocument(doc)
     doc match {
       case cf: Workspace.Confluent =>
         implicit val workspace: Workspace.Confluent  = cf
@@ -88,8 +89,7 @@ object ActionOpenWorkspace extends Action("Open...") {
 //    } .foreach(_.front())
 
   def perform(folder: File): Unit =
-    Application.documentHandler.documents.find(_.folder == folder).fold(doOpen(folder)) { doc =>
-
+    dh.documents.find(_.folder == folder).fold(doOpen(folder)) { doc =>
       val doc1 = doc.asInstanceOf[Workspace[S] forSome { type S <: Sys[S] }]
       openView(doc1)
     }

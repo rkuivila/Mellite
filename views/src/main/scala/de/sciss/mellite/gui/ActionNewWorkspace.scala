@@ -16,17 +16,17 @@ package gui
 
 import java.util.concurrent.TimeUnit
 
+import de.sciss.desktop.{FileDialog, KeyStrokes, OptionPane}
+import de.sciss.file._
 import de.sciss.lucre.stm.store.BerkeleyDB
+import de.sciss.synth.proc
 
 import scala.concurrent.duration.Duration
-import scala.swing.{Label, Dialog, Action}
-import de.sciss.desktop.{OptionPane, FileDialog, KeyStrokes}
-import util.control.NonFatal
 import scala.swing.event.Key
-import de.sciss.file._
+import scala.swing.{Action, Dialog, Label}
+import scala.util.control.NonFatal
 
 object ActionNewWorkspace extends Action("Workspace...") {
-
   import KeyStrokes._
 
   accelerator = Some(menu1 + shift + Key.N)
@@ -59,54 +59,67 @@ object ActionNewWorkspace extends Action("Workspace...") {
     val confluent   = tpeRes == 0
     val inMemory    = tpeRes == 2
 
-    if (inMemory) {
-      val doc = Workspace.InMemory()
-      ActionOpenWorkspace.openGUI(doc)
-      return
-    }
+    if      (inMemory)  performInMemory()
+    else if (confluent) performConfluent()
+    else                performDurable()
+  }
 
+  def performInMemory(): Workspace.InMemory = {
+    val doc = Workspace.InMemory()
+    ActionOpenWorkspace.openGUI(doc)
+    doc
+  }
+
+  def performDurable(): Option[Workspace.Durable] = create[proc.Durable, Workspace.Durable] { (folder, config) =>
+    Workspace.Durable.empty(folder, config)
+  }
+
+  def performConfluent(): Option[Workspace.Confluent] = create[proc.Confluent, Workspace.Confluent] { (folder, config) =>
+    Workspace.Confluent.empty(folder, config)
+  }
+
+  private def selectFile(): Option[File] = {
     val fileDlg = FileDialog.save(title = "Location for New Workspace")
-    fileDlg.show(None).foreach { folder0 =>
+    fileDlg.show(None).flatMap { folder0 =>
       val name    = folder0.getName
       val folder  = if (name.endsWith(s".${Workspace.ext}")) folder0 else folder0.parent / s"$name.${Workspace.ext}"
-      if (folder.exists()) {
-        if (Dialog.showConfirmation(
+      if (!folder.exists()) Some(folder0) else {
+        val isOk = Dialog.showConfirmation(
           message     = s"Document ${folder.getPath} already exists.\nAre you sure you want to overwrite it?",
           title       = fullTitle,
           optionType  = Dialog.Options.OkCancel,
           messageType = Dialog.Message.Warning
-        ) != Dialog.Result.Ok) return
+        ) != Dialog.Result.Ok
 
-        if (!deleteRecursive(folder)) {
+        if (!isOk) None else if (deleteRecursive(folder)) Some(folder) else {
           Dialog.showMessage(
             message     = s"Unable to delete existing document ${folder.getPath}",
             title       = fullTitle,
             messageType = Dialog.Message.Error
           )
-          return
+          None
         }
       }
+    }
+  }
 
+  private def create[S <: de.sciss.lucre.synth.Sys[S], A <: Workspace[S]](fun: (File, BerkeleyDB.Config) => A): Option[A] =
+    selectFile().flatMap { folder =>
       try {
         val config          = BerkeleyDB.Config()
         config.lockTimeout  = Duration(Prefs.dbLockTimeout.getOrElse(Prefs.defaultDbLockTimeout), TimeUnit.MILLISECONDS)
-        if (confluent) {
-          val doc = Workspace.Confluent.empty(folder, config)
-          // XXX TODO: SetFile -a E <folder>
-          ActionOpenWorkspace.openGUI(doc)
-        } else {
-          val doc = Workspace.Durable.empty(folder, config)
-          ActionOpenWorkspace.openGUI(doc)
-        }
+        val doc             = fun(folder, config)
+        ActionOpenWorkspace.openGUI(doc)
+        Some(doc)
 
       } catch {
         case NonFatal(e) =>
           Dialog.showMessage(
-            message     = s"Unable to create new document ${folder.getPath} \n\n${GUI.formatException(e)}",
+            message     = s"Unable to create new document ${folder.path} \n\n${GUI.formatException(e)}",
             title       = fullTitle,
             messageType = Dialog.Message.Error
           )
+          None
       }
     }
-  }
 }

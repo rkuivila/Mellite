@@ -24,7 +24,7 @@ import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{Window, Desktop, KeyStrokes, Menu, UndoManager}
 import de.sciss.lucre.stm
-import de.sciss.lucre.swing.CellView
+import de.sciss.lucre.swing.{CellView, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.expr.{String => StringEx}
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
@@ -78,23 +78,20 @@ object FolderFrameImpl {
 
     override protected def placement: (Float, Float, Int) = (0.5f, 0.0f, 20)
 
-    override protected def checkClose(): Boolean = !interceptQuit || {
-      val msg = "<html><body>Closing an in-memory workspace means<br>" +
-        "all contents will be <b>irrevocably lost</b>.<br>" +
-        "<p>Ok to proceed?</body></html>"
-      val opt = desktop.OptionPane.confirmation(message = msg, messageType = desktop.OptionPane.Message.Warning,
-        optionType = desktop.OptionPane.Options.OkCancel)
-      opt.show(Some(window), "Close Workspace") == desktop.OptionPane.Result.Ok
-    }
+    override protected def checkClose(): Boolean = !interceptQuit ||
+      ActionCloseAllWorkspaces.check(workspace, Some(window))
 
-    override protected def performClose(): Unit = {
-      quitAcceptor.foreach(Desktop.removeQuitAcceptor)
+    override protected def performClose(): Unit =
       if (isWorkspaceRoot) {
-        log(s"Closing workspace ${workspace.folder}")
-        Application.documentHandler.removeDocument(workspace)
-        workspace.close()
+        ActionCloseAllWorkspaces.close(workspace)
       } else {
         super.performClose()
+      }
+
+    override def dispose()(implicit tx: S#Tx): Unit = {
+      super.dispose()
+      deferTx {
+        quitAcceptor.foreach(Desktop.removeQuitAcceptor)
       }
     }
   }

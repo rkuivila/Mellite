@@ -100,10 +100,11 @@ object CursorsFrameImpl {
       super.dispose()
     }
 
+    override protected def checkClose(): Boolean = ActionCloseAllWorkspaces.check(workspace, Some(window))
+
     override protected def performClose(): Unit = {
       log(s"Closing workspace ${workspace.folder}")
-      Application.documentHandler.removeDocument(workspace)
-      workspace.close()
+      ActionCloseAllWorkspaces.close(workspace)
     }
 
     override protected def placement = (1f, 0f, 24)

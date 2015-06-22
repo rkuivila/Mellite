@@ -14,12 +14,13 @@
 package de.sciss.mellite
 package impl
 
-import de.sciss.model.impl.ModelImpl
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.stm.{TxnLike, Disposable}
-import scala.concurrent.stm.{Ref => STMRef, TMap}
 import de.sciss.file._
+import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm.{Disposable, TxnLike}
+import de.sciss.model.impl.ModelImpl
+
 import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.concurrent.stm.{Ref => STMRef, TMap}
 
 object DocumentHandlerImpl {
   import DocumentHandler.Document
@@ -38,9 +39,9 @@ object DocumentHandlerImpl {
       implicit val itx = tx.peer
       doc.folder.foreach { p =>
         require(!map.contains(p), s"Workspace for path '$p' is already registered")
-        all.transform(_ :+ doc)
         map += p -> doc
       }
+      all.transform(_ :+ doc)
 
       doc.addDependent(new Disposable[S#Tx] {
         def dispose()(implicit tx: S#Tx): Unit = removeDoc(doc)

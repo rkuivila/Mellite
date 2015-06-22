@@ -13,12 +13,12 @@
 
 package de.sciss.mellite
 
-import impl.{DocumentHandlerImpl => Impl}
-import de.sciss.model.Model
-import de.sciss.lucre.{event => evt}
-import language.existentials
-import evt.Sys
 import de.sciss.file.File
+import de.sciss.lucre.event.Sys
+import de.sciss.mellite.impl.{DocumentHandlerImpl => Impl}
+import de.sciss.model.Model
+
+import scala.language.existentials
 
 object DocumentHandler {
   type Document = Workspace[_ <: Sys[_]]
