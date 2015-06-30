@@ -1,15 +1,14 @@
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val fullDescr                  = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "1.5.1-SNAPSHOT"
+lazy val projectVersion             = "1.6.0-SNAPSHOT"
 
 lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
-lazy val scalaColliderVersion       = "1.17.2"   // required due to sbt bug
-lazy val soundProcessesVersion      = "2.19.0"
-lazy val interpreterPaneVersion     = "1.7.1"
+lazy val soundProcessesVersion      = "2.20.0-SNAPSHOT"
+lazy val interpreterPaneVersion     = "1.7.2"
 lazy val confluentVersion           = "2.11.2"
 lazy val lucreSTMVersion            = "2.1.2"
 lazy val fscapeJobsVersion          = "1.5.0"
@@ -20,8 +19,8 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "1.4.0"
-lazy val scalaColliderSwingVersion  = "1.25.1"
+lazy val nuagesVersion              = "1.5.0-SNAPSHOT"
+lazy val scalaColliderSwingVersion  = "1.25.2"
 lazy val lucreSwingVersion          = "0.9.1"
 lazy val spanVersion                = "1.3.1"
 lazy val audioWidgetsVersion        = "1.9.1"
@@ -30,7 +29,6 @@ lazy val sonogramVersion            = "1.9.0"
 lazy val treetableVersion           = "1.3.7"
 lazy val raphaelIconsVersion        = "1.0.2"
 lazy val pdflitzVersion             = "1.2.1"
-lazy val xstreamVersion             = "1.4.8"  // 1.4.7 corrupt sha1 on Maven Central
 lazy val webLaFVersion              = "1.28"
 
 // ----
@@ -42,8 +40,8 @@ lazy val commonSettings = Seq(
   organization       := "de.sciss",
   homepage           := Some(url(s"https://github.com/Sciss/$baseName")),
   licenses           := Seq("GNU General Public License v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
-  scalaVersion       := "2.11.6",
-  crossScalaVersions := Seq("2.11.6", "2.10.5"),
+  scalaVersion       := "2.11.7",
+  crossScalaVersions := Seq("2.11.7", "2.10.5"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
@@ -119,7 +117,6 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
     description := "Core layer for Mellite",
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
     libraryDependencies ++= Seq(
-      "de.sciss"        %% "scalacollider"        % scalaColliderVersion,   // required due to sbt bug
       "de.sciss"        %% "soundprocesses-core"  % soundProcessesVersion,  // computer-music framework
       "de.sciss"        %% "scalainterpreterpane" % interpreterPaneVersion, // REPL
       "de.sciss"        %% "lucreconfluent"       % confluentVersion,
@@ -153,7 +150,6 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       "de.sciss" %% "treetable-scala"                 % treetableVersion,           // tree-table component
       "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
       "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
-      "com.thoughtworks.xstream" % "xstream"          % xstreamVersion,             // PROBLEM WITH MAVEN CENTRAL
       "de.sciss" %  "weblaf"                          % webLaFVersion               // Swing look-and-feel
     ),
     mainClass in (Compile,run) := Some(main),
