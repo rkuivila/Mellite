@@ -89,6 +89,7 @@ object MenuBar {
     val mActions = Group("actions", "Actions")
       .add(Item("stop-all-sound",     proxy("Stop All Sound",           menu1 + Key.Period)))
       .add(Item("debug-print",        proxy("Debug Print",              menu2 + Key.P)))
+      .add(Item("debug-threads")("Debug Thread Dump")(debugThreads()))
       .add(Item("window-shot",        proxy("Export Window as PDF...")))
 
     val mView = Group("view", "View")
@@ -133,5 +134,22 @@ object MenuBar {
     }
 
     res
+  }
+
+  private def debugThreads(): Unit = {
+    import scala.collection.JavaConverters._
+    val m = Thread.getAllStackTraces.asScala.toVector.sortBy(_._1.getId)
+    println("Id__ State_________ Name___________________ Pri")
+    m.foreach { case (t, _) =>
+      println(f"${t.getId}%3d  ${t.getState}%-13s  ${t.getName}%-23s  ${t.getPriority}%2d")
+    }
+    m.foreach { case (t, stack) =>
+      println()
+      println(f"${t.getId}%3d  ${t.getState}%-13s  ${t.getName}%-23s")
+      if (t == Thread.currentThread()) println("    (self)")
+      else stack.foreach { elem =>
+        println(s"    $elem")
+      }
+    }
   }
 }
