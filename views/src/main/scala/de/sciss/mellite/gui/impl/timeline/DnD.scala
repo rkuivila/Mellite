@@ -16,19 +16,21 @@ package gui
 package impl
 package timeline
 
-import javax.swing.TransferHandler._
-import java.awt.dnd.{DropTarget, DropTargetDropEvent, DropTargetEvent, DropTargetDragEvent, DropTargetAdapter}
-import de.sciss.synth.proc.{Proc, Obj, AudioGraphemeElem, IntElem}
-import scala.swing.Component
 import java.awt.Point
-import de.sciss.lucre.stm
-import de.sciss.span.Span
-import de.sciss.audiowidgets.TimelineModel
 import java.awt.datatransfer.{DataFlavor, Transferable}
+import java.awt.dnd.{DropTarget, DropTargetAdapter, DropTargetDragEvent, DropTargetDropEvent, DropTargetEvent}
+import javax.swing.TransferHandler._
+
+import de.sciss.audiowidgets.TimelineModel
 import de.sciss.file._
-import scala.util.Try
 import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm
 import de.sciss.lucre.synth.{Sys => SSys}
+import de.sciss.span.Span
+import de.sciss.synth.proc.{AudioGraphemeElem, Obj, Proc}
+
+import scala.swing.Component
+import scala.util.Try
 
 object DnD {
   sealed trait Drag[S <: Sys[S]] {
@@ -115,7 +117,7 @@ trait DnD[S <: SSys[S]] {
 
     private def isSupported(t: Transferable): Boolean =
       t.isDataFlavorSupported(DnD.flavor) ||
-      t.isDataFlavorSupported(ObjView.Flavor) ||
+      t.isDataFlavorSupported(ListObjView.Flavor) ||
       t.isDataFlavorSupported(DataFlavor.stringFlavor)
 
     private def mkDrag(t: Transferable, isDragging: Boolean): Option[Drag[S]] =
@@ -124,9 +126,9 @@ trait DnD[S <: SSys[S]] {
           case d: DnD.Drag[_] if d.workspace == workspace => Some(d.asInstanceOf[DnD.Drag[S]])
           case _ => None
         }
-      } else if (t.isDataFlavorSupported(ObjView.Flavor)) {
-        t.getTransferData(ObjView.Flavor) match {
-          case ObjView.Drag(ws, view) if ws == workspace =>
+      } else if (t.isDataFlavorSupported(ListObjView.Flavor)) {
+        t.getTransferData(ListObjView.Flavor) match {
+          case ListObjView.Drag(ws, view) if ws == workspace =>
             Some(DnD.ObjectDrag(workspace, view.asInstanceOf[ObjView[S]]))
           case _ => None
         }

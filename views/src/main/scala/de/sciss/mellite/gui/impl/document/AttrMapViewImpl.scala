@@ -53,7 +53,7 @@ object AttrMapViewImpl {
 
     val list0 = map.iterator.map {
       case (key, value) =>
-        val view = ObjView(value)
+        val view = ListObjView(value)
         (key, view)
     } .toIndexedSeq
 
@@ -61,7 +61,7 @@ object AttrMapViewImpl {
       val observer = obj.changed.react { implicit tx => upd =>
         upd.changes.foreach {
           case Obj.AttrAdded  (key, value) =>
-            val view = ObjView(value)
+            val view = ListObjView(value)
             attrAdded(key, view)
           case Obj.AttrRemoved(key, value) =>
             attrRemoved(key)
@@ -80,7 +80,7 @@ object AttrMapViewImpl {
   }
 
   private abstract class Impl[S <: Sys[S]](mapH: stm.Source[S#Tx, Obj[S]],
-                                           list0: Vec[(String, ObjView[S])])(implicit val cursor: stm.Cursor[S],
+                                           list0: Vec[(String, ListObjView[S])])(implicit val cursor: stm.Cursor[S],
                                            val workspace: Workspace[S], val undoManager: UndoManager)
     extends AttrMapView[S] with ComponentHolder[ScrollPane] with ModelImpl[AttrMapView.Update[S]] {
     impl =>
@@ -100,7 +100,7 @@ object AttrMapViewImpl {
 
     final def obj(implicit tx: S#Tx): Obj[S] = mapH()
 
-    final protected def attrAdded(key: String, view: ObjView[S])(implicit tx: S#Tx): Unit = {
+    final protected def attrAdded(key: String, view: ListObjView[S])(implicit tx: S#Tx): Unit = {
       viewMap.+=(key -> view)(tx.peer)
       deferTx {
         val row = model.size
@@ -125,25 +125,25 @@ object AttrMapViewImpl {
 
     private def warnNoView(key: String): Unit = println(s"Warning: AttrMapView - no view found for $key")
 
-    private def updateObjectName(objView: ObjView[S], name: String)(implicit tx: S#Tx): Unit =
-      deferTx { objView.name = name }
+    private def updateObjectName(objView: ObjView[S], nameOption: Option[String])(implicit tx: S#Tx): Unit =
+      deferTx { objView.nameOption = nameOption }
 
-    private def updateObject(objView: ObjView[S], changes: Vec[Obj.Change[S, Any]])
+    private def updateObject(objView: ListObjView[S], changes: Vec[Obj.Change[S, Any]])
                             (implicit tx: S#Tx): Boolean =
       (false /: changes) { (p, ch) =>
         val p1 = ch match {
           case Obj.ElemChange(u1) =>
             objView.isUpdateVisible(u1)
           case Obj.AttrAdded  (ObjKeys.attrName, e: StringElem[S]) =>
-            updateObjectName(objView, e.peer.value)
+            updateObjectName(objView, Some(e.peer.value))
             true
           case Obj.AttrRemoved(ObjKeys.attrName, _) =>
-            updateObjectName(objView, "<unnamed>")
+            updateObjectName(objView, None)
             true
           case Obj.AttrChange (ObjKeys.attrName, _, nameChanges) =>
             (false /: nameChanges) {
               case (_, Obj.ElemChange(Change(_, name: String))) =>
-                updateObjectName(objView, name)
+                updateObjectName(objView, Some(name))
                 true
               case (res, _) => res
             }
@@ -278,7 +278,7 @@ object AttrMapViewImpl {
                                                    hasFocus: Boolean, row: Int, column: Int): java.awt.Component = {
           super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column)
           value match {
-            case view: ObjView[_] => view.configureRenderer(wrap).peer
+            case view: ListObjView[_] => view.configureRenderer(wrap).peer
             case _ => outer
           }
         }
@@ -314,8 +314,8 @@ object AttrMapViewImpl {
         override def createTransferable(c: JComponent): Transferable = {
           val sel     = selection
           val trans1 = if (sel.size == 1) {
-            val _res = DragAndDrop.Transferable(ObjView.Flavor) {
-              new ObjView.Drag(workspace, sel.head._2)
+            val _res = DragAndDrop.Transferable(ListObjView.Flavor) {
+              new ListObjView.Drag(workspace, sel.head._2)
             }
             _res
           } else null
@@ -332,7 +332,7 @@ object AttrMapViewImpl {
               modelCol >= 1   // should drop on the 'type' or 'value' column
             }
             // println(s"locOk? $locOk")
-            val allOk = locOk && support.isDataFlavorSupported(ObjView.Flavor)
+            val allOk = locOk && support.isDataFlavorSupported(ListObjView.Flavor)
             if (allOk) support.setDropAction(TransferHandler.LINK)
             allOk
           }
@@ -343,7 +343,7 @@ object AttrMapViewImpl {
           val res = support.isDrop && {
             val dl        = support.getDropLocation.asInstanceOf[JTable.DropLocation]
             val isInsert  = dl.isInsertRow
-            val view      = support.getTransferable.getTransferData(ObjView.Flavor).asInstanceOf[ObjView.Drag[S]].view
+            val view      = support.getTransferable.getTransferData(ListObjView.Flavor).asInstanceOf[ListObjView.Drag[S]].view
             val keyOpt = if (isInsert) { // ---- create new entry with key via dialog ----
               queryKey()
             } else {          // ---- update value of existing entrywith key via dialog ----

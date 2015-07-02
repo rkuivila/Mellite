@@ -1,5 +1,5 @@
 /*
- *  ProcView.scala
+ *  ProcObjView.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
@@ -14,17 +14,24 @@
 package de.sciss.mellite
 package gui
 package impl
-package timeline
 
+import de.sciss.desktop
+import de.sciss.desktop.OptionPane
 import de.sciss.file._
+import de.sciss.icons.raphael
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.stm.IdentifierMap
+import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
-import de.sciss.lucre.stm.IdentifierMap
-import de.sciss.lucre.swing.deferTx
+import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
+import de.sciss.mellite.gui.{ListObjView, SonogramManager, TimelineObjView}
+import de.sciss.mellite.{Workspace, gui}
 import de.sciss.sonogram.{Overview => SonoOverview}
 import de.sciss.span.{Span, SpanLike}
+import de.sciss.synth.proc
+import de.sciss.synth.proc.impl.ElemImpl
 import de.sciss.synth.proc.{FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan}
 import org.scalautils.TypeCheckedTripleEquals
 
@@ -32,16 +39,42 @@ import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.language.implicitConversions
 import scala.util.control.NonFatal
 
-object ProcView extends TimelineObjView.Factory {
-  def typeID: Int = Proc.typeID
-
+object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   type E[S <: evt.Sys[S]] = Proc.Elem[S]
 
-  type LinkMap[S <: Sys[S]] = Map[String, Vec[ProcView.Link[S]]]
-  type ProcMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcView[S]]
+  val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Cogs)
+  val prefix    = "Proc"
+  def typeID    = ElemImpl.Proc.typeID
+  def hasMakeDialog = true
+
+  def mkListView[S <: Sys[S]](obj: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): ProcObjView[S] with ListObjView[S] =
+    new ListImpl(tx.newHandle(obj), ObjViewImpl.nameOption(obj))
+
+  type Config[S <: evt.Sys[S]] = String
+
+  def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+    val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
+      messageType = OptionPane.Message.Question, initial = prefix)
+    opt.title = s"New $prefix"
+    val res = opt.show(window)
+    res
+  }
+
+  def makeObj[S <: Sys[S]](name: String)(implicit tx: S#Tx): List[Obj[S]] = {
+    import proc.Implicits._
+    val peer  = Proc[S]
+    val elem  = Proc.Elem(peer)
+    val obj   = Obj(elem)
+    obj.name = name
+    obj :: Nil
+  }
+
+  type LinkMap[S <: evt.Sys[S]] = Map[String, Vec[ProcObjView.Link[S]]]
+  type ProcMap[S <: evt.Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcObjView[S]]
   type ScanMap[S <: evt.Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
 
-  type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, ProcView[S]]
+  type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, ProcObjView[S]]
 
   private final val DEBUG = false
 
@@ -58,7 +91,7 @@ object ProcView extends TimelineObjView.Factory {
     * This will automatically add the new view to the map!
     */
   def mkTimelineView[S <: Sys[S]](timedID: S#ID, span: Expr[S, SpanLike], obj: Proc.Obj[S],
-                                  context: TimelineObjView.Context[S])(implicit tx: S#Tx): ProcView[S] = {
+                                  context: TimelineObjView.Context[S])(implicit tx: S#Tx): ProcObjView.Timeline[S] = {
     val spanV = span.value
     import SpanLikeEx._
     // println("--- scan keys:")
@@ -90,7 +123,7 @@ object ProcView extends TimelineObjView.Factory {
 
     val attr    = obj.attr
     val bus     = attr[IntElem](ObjKeys.attrBus    ).map(_.value)
-    val res = new Impl(span = tx.newHandle(span), obj = tx.newHandle(obj),
+    val res = new TimelineImpl[S](span = tx.newHandle(span), obj = tx.newHandle(obj),
       nameOption = ObjViewImpl.nameOption(obj), audio = audio, busOption = bus,
       context = context)
 
@@ -112,7 +145,7 @@ object ProcView extends TimelineObjView.Factory {
             val Some((thatKey, thatIdH)) = scanMap.get(peer.id)
             val thatID = thatIdH()
             viewMap.get(thatID).foreach {
-              case thatView: ProcView[S] =>
+              case thatView: ProcObjView.Timeline[S] =>
                 if (DEBUG) println(s"PV $timedID add link from $key to $thatID, $thatKey")
                 if (inp) {
                   res     .addInput (key    , thatView, thatKey)
@@ -143,12 +176,45 @@ object ProcView extends TimelineObjView.Factory {
     res
   }
 
-  private final class Impl[S <: Sys[S]](val span: stm.Source[S#Tx, Expr[S, SpanLike]],
+  // -------- Proc --------
+
+  private final class ListImpl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
+                                           var nameOption: Option[String])
+    extends Impl[S]
+
+  private trait Impl[S <: Sys[S]]
+    extends ProcObjView[S] with ListObjView[S]
+    with ObjViewImpl.Impl[S]
+    with ListObjViewImpl.EmptyRenderer[S]
+    with ListObjViewImpl.NonEditable[S] {
+
+    // type E[~ <: evt.Sys[~]] = _Proc.Elem[~]
+
+    // override def obj: stm.Source[S#Tx, _Proc.Obj[S]]
+
+    final def icon    = ProcObjView.icon
+    final def prefix  = ProcObjView.prefix
+    final def typeID  = ProcObjView.typeID
+
+    final def isViewable = true
+
+    // currently this just opens a code editor. in the future we should
+    // add a scans map editor, and a convenience button for the attributes
+    final def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+      import de.sciss.mellite.Mellite.compiler
+      val frame = CodeFrame.proc(obj())
+      Some(frame)
+    }
+
+    final def proc(implicit tx: S#Tx): Proc.Obj[S] = obj()
+  }
+
+  private final class TimelineImpl[S <: Sys[S]](val span: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
                                         var nameOption: Option[String],
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var busOption : Option[Int], context: TimelineObjView.Context[S])
-    extends ObjViewImpl.Proc[S] with ProcView[S] { self =>
+    extends Impl[S] with ProcObjView.Timeline[S] { self =>
 
     override def toString = s"ProcView($name, $spanValue, $audio)"
 
@@ -169,8 +235,8 @@ object ProcView extends TimelineObjView.Factory {
     private var failedAcquire = false
     var sonogram  = Option.empty[SonoOverview]
 
-    var inputs    = Map.empty[String, Vec[ProcView.Link[S]]]
-    var outputs   = Map.empty[String, Vec[ProcView.Link[S]]]
+    var inputs    = Map.empty[String, Vec[ProcObjView.Link[S]]]
+    var outputs   = Map.empty[String, Vec[ProcObjView.Link[S]]]
 
     def releaseSonogram(): Unit =
       sonogram.foreach { ovr =>
@@ -231,81 +297,74 @@ object ProcView extends TimelineObjView.Factory {
       removeLinks(inp = false)
     }
 
-    def addInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
+    def addInput (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
       inputs  = addLink(inputs , thisKey, Link(thatView, thatKey))
 
-    def addOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
+    def addOutput(thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
       outputs = addLink(outputs, thisKey, Link(thatView, thatKey))
 
-    def removeInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
+    def removeInput (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
       inputs  = removeLink(inputs , thisKey, Link(thatView, thatKey))
 
-    def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit =
+    def removeOutput(thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
       outputs = removeLink(outputs, thisKey, Link(thatView, thatKey))
 
     def isGlobal: Boolean = {
       import TypeCheckedTripleEquals._
       spanValue === Span.All
     }
-
-    def proc(implicit tx: S#Tx): Obj.T[S, Proc.Elem] = obj()
   }
 
-  case class Link[S <: Sys[S]](target: ProcView[S], targetKey: String)
-}
+  case class Link[S <: evt.Sys[S]](target: ProcObjView.Timeline[S], targetKey: String)
 
-/** A data set for graphical display of a proc. Accessors and mutators should
-  * only be called on the event dispatch thread. Mutators are plain variables
-  * and do not affect the underlying model. They should typically only be called
-  * in response to observing a change in the model.
-  */
-trait ProcView[S <: Sys[S]]
-  extends TimelineObjView[S]
-  with TimelineObjView.HasMute
-  with TimelineObjView.HasGain
-  with TimelineObjView.HasFade
+  /** A data set for graphical display of a proc. Accessors and mutators should
+    * only be called on the event dispatch thread. Mutators are plain variables
+    * and do not affect the underlying model. They should typically only be called
+    * in response to observing a change in the model.
+    */
+  trait Timeline[S <: evt.Sys[S]]
+    extends ProcObjView[S] with TimelineObjView[S]
+    with TimelineObjView.HasMute
+    with TimelineObjView.HasGain
+    with TimelineObjView.HasFade
   {
 
-  import ProcView.LinkMap
+    // override type E[~ <: evt.Sys[~]] = Proc.Elem[~]
 
-  // override type E[~ <: evt.Sys[~]] = Proc.Elem[~]
+    /** Convenience check for `span == Span.All` */
+    def isGlobal: Boolean
 
+    var inputs : LinkMap[S]
+    var outputs: LinkMap[S]
+
+    def addInput    (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
+    def addOutput   (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
+
+    def removeInput (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
+    def removeOutput(thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
+
+    var busOption: Option[Int]
+
+    /** If this proc is bound to an audio grapheme for the default scan key, returns
+      * this grapheme segment (underlying audio file of a tape object). */
+    var audio: Option[Grapheme.Segment.Audio]
+
+    var sonogram: Option[SonoOverview]
+
+    /** Releases a sonogram view. If none had been acquired, this is a safe no-op.
+      * Updates the `sono` variable.
+      */
+    def releaseSonogram(): Unit
+
+    /** Attempts to acquire a sonogram view. Updates the `sono` variable if successful. */
+    def acquireSonogram(): Option[SonoOverview]
+
+    def debugString: String
+  }
+}
+trait ProcObjView[S <: evt.Sys[S]] extends ObjView[S] {
   override def obj: stm.Source[S#Tx, Proc.Obj[S]]
 
   /** Convenience for `obj()` */
   def proc(implicit tx: S#Tx): Proc.Obj[S]
-
-  // var track: Int
-
-  // var nameOption: Option[String]
-
-  /** Convenience check for `span == Span.All` */
-  def isGlobal: Boolean
-
-  var inputs : LinkMap[S]
-  var outputs: LinkMap[S]
-
-  def addInput    (thisKey: String, thatView: ProcView[S], thatKey: String): Unit
-  def addOutput   (thisKey: String, thatView: ProcView[S], thatKey: String): Unit
-
-  def removeInput (thisKey: String, thatView: ProcView[S], thatKey: String): Unit
-  def removeOutput(thisKey: String, thatView: ProcView[S], thatKey: String): Unit
-
-  var busOption: Option[Int]
-
-  /** If this proc is bound to an audio grapheme for the default scan key, returns
-    * this grapheme segment (underlying audio file of a tape object). */
-  var audio: Option[Grapheme.Segment.Audio]
-
-  var sonogram: Option[SonoOverview]
-
-  /** Releases a sonogram view. If none had been acquired, this is a safe no-op.
-    * Updates the `sono` variable.
-    */
-  def releaseSonogram(): Unit
-
-  /** Attempts to acquire a sonogram view. Updates the `sono` variable if successful. */
-  def acquireSonogram(): Option[SonoOverview]
-
-  def debugString: String
 }

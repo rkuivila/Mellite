@@ -17,6 +17,7 @@ package impl
 package timeline
 
 import de.sciss.lucre.stm
+import de.sciss.mellite.gui.impl.IntObjView$
 import de.sciss.synth.proc.Timeline
 import org.scalautils.TypeCheckedTripleEquals
 import scala.swing.{Action, Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
@@ -52,7 +53,7 @@ object GlobalProcsViewImpl {
                                        (implicit workspace: Workspace[S], cursor: stm.Cursor[S])
     extends GlobalProcsView[S] with ComponentHolder[Component] {
 
-    private var procSeq = Vec.empty[ProcView[S]]
+    private var procSeq = Vec.empty[ProcObjView.Timeline[S]]
 
     private def atomic[A](block: S#Tx => A): A = cursor.step(block)
 
@@ -60,12 +61,12 @@ object GlobalProcsViewImpl {
 
     def tableComponent = table
 
-    val selectionModel = SelectionModel[S, ProcView[S]]
+    val selectionModel = SelectionModel[S, ProcObjView.Timeline[S]]
 
     private val tlSelListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
       case SelectionModel.Update(_, _) =>
         val items = tlSelModel.iterator.flatMap {
-          case pv: ProcView[S] =>
+          case pv: ProcObjView.Timeline[S] =>
             pv.outputs.flatMap {
               case (_, links) =>
                 links.flatMap { link =>
@@ -162,7 +163,7 @@ object GlobalProcsViewImpl {
         }
       }
 
-    private def removeProcs(pvs: Iterable[ProcView[S]]): Unit =
+    private def removeProcs(pvs: Iterable[ProcObjView.Timeline[S]]): Unit =
       if (pvs.nonEmpty) groupHOpt.foreach { groupH =>
         atomic { implicit tx =>
           ProcGUIActions.removeProcs(groupH(), pvs)
@@ -222,18 +223,18 @@ object GlobalProcsViewImpl {
 
         // ---- import ----
         override def canImport(support: TransferSupport): Boolean =
-          support.isDataFlavorSupported(ObjView.Flavor)
+          support.isDataFlavorSupported(ListObjView.Flavor)
 
         override def importData(support: TransferSupport): Boolean =
-          support.isDataFlavorSupported(ObjView.Flavor) && {
+          support.isDataFlavorSupported(ListObjView.Flavor) && {
             Option(jt.getDropLocation).fold(false) { dl =>
               val pv    = procSeq(dl.getRow)
-              val drag  = support.getTransferable.getTransferData(ObjView.Flavor)
-                .asInstanceOf[ObjView.Drag[S]]
+              val drag  = support.getTransferable.getTransferData(ListObjView.Flavor)
+                .asInstanceOf[ListObjView.Drag[S]]
               import TypeCheckedTripleEquals._
               drag.workspace === workspace && {
                 drag.view match {
-                  case iv: ObjView.Int[S] =>
+                  case iv: IntObjView[S] =>
                     atomic { implicit tx =>
                       val objT = iv.obj()
                       val intExpr = objT.elem.peer
@@ -241,7 +242,7 @@ object GlobalProcsViewImpl {
                       true
                     }
 
-                  case iv: ObjView.Code[S] =>
+                  case iv: CodeObjView[S] =>
                     atomic { implicit tx =>
                       val objT = iv.obj()
                       import Mellite.compiler
@@ -319,21 +320,21 @@ object GlobalProcsViewImpl {
       tlSelModel removeListener  tlSelListener
     }
 
-    def add(proc: ProcView[S]): Unit = {
+    def add(proc: ProcObjView.Timeline[S]): Unit = {
       val row   = procSeq.size
       procSeq :+= proc
       tm.fireTableRowsInserted(row, row)
     }
 
-    def remove(proc: ProcView[S]): Unit = {
+    def remove(proc: ProcObjView.Timeline[S]): Unit = {
       val row   = procSeq.indexOf(proc)
       procSeq   = procSeq.patch(row, Vec.empty, 1)
       tm.fireTableRowsDeleted(row, row)
     }
 
-    def iterator: Iterator[ProcView[S]] = procSeq.iterator
+    def iterator: Iterator[ProcObjView.Timeline[S]] = procSeq.iterator
 
-    def updated(proc: ProcView[S]): Unit = {
+    def updated(proc: ProcObjView.Timeline[S]): Unit = {
       val row   = procSeq.indexOf(proc)
       tm.fireTableRowsUpdated(row, row)
     }

@@ -101,12 +101,12 @@ trait CollectionViewImpl[S <: Sys[S]]
 
     def apply(): Unit = {
       val winOpt    = Window.find(component)
-      val confOpt   = f.initDialog[S](workspace, /* parentH, */ winOpt)
+      val confOpt   = f.initMakeDialog[S](workspace, /* parentH, */ winOpt)
       confOpt.foreach { conf =>
         val confOpt2  = prepareInsert(f)
         confOpt2.foreach { insConf =>
           val editOpt = cursor.step { implicit tx =>
-            val xs = f.make(conf)
+            val xs = f.makeObj(conf)
             editInsert(f, xs, insConf)
           }
           editOpt.foreach(undoManager.add)
@@ -118,8 +118,8 @@ trait CollectionViewImpl[S <: Sys[S]]
   private lazy val addPopup: PopupMenu = {
     import de.sciss.desktop.Menu._
     val pop = Popup()
-    ObjView.factories.toList.sortBy(_.prefix).foreach { f =>
-      if (f.hasDialog) pop.add(Item(f.prefix, new AddAction(f)))
+    ListObjView.factories.toList.sortBy(_.prefix).foreach { f =>
+      if (f.hasMakeDialog) pop.add(Item(f.prefix, new AddAction(f)))
     }
 
     val window = Window.find(component).getOrElse(sys.error(s"No window for $impl"))

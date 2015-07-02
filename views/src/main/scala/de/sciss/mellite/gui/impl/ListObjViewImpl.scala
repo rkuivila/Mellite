@@ -6,13 +6,13 @@ import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.{Boolean => BooleanEx, ExprType, Expr}
+import de.sciss.lucre.expr.{Boolean => BooleanEx, Expr, ExprType}
+import de.sciss.lucre.swing.edit.EditVar
+import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
-import de.sciss.lucre.swing.{Window, deferTx}
-import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.model.Change
-import de.sciss.synth.proc.{Elem, ObjKeys, StringElem, Confluent, Obj}
+import de.sciss.synth.proc.{Confluent, Elem, Obj}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.language.higherKinds
@@ -38,20 +38,20 @@ object ListObjViewImpl {
 
   private var map = scala.Predef.Map[Int, ListObjView.Factory](
     ObjViewImpl.String          .typeID -> ObjViewImpl.String,
-    ObjViewImpl.Int             .typeID -> ObjViewImpl.Int,
+    IntObjView                     .typeID -> IntObjView,
     ObjViewImpl.Long            .typeID -> ObjViewImpl.Long,
     ObjViewImpl.Double          .typeID -> ObjViewImpl.Double,
     ObjViewImpl.Boolean         .typeID -> ObjViewImpl.Boolean,
-    ObjViewImpl.AudioGrapheme   .typeID -> ObjViewImpl.AudioGrapheme,
-    ObjViewImpl.ArtifactLocation.typeID -> ObjViewImpl.ArtifactLocation,
+    AudioGraphemeObjView        .typeID -> AudioGraphemeObjView,
+    ArtifactLocationObjView        .typeID -> ArtifactLocationObjView,
     ObjViewImpl.Artifact        .typeID -> ObjViewImpl.Artifact,
     ObjViewImpl.Recursion       .typeID -> ObjViewImpl.Recursion,
     ObjViewImpl.Folder          .typeID -> ObjViewImpl.Folder,
-    ObjViewImpl.Proc            .typeID -> ObjViewImpl.Proc,
+    ProcObjView                    .typeID -> ProcObjView,
     ObjViewImpl.Timeline        .typeID -> ObjViewImpl.Timeline,
-    ObjViewImpl.Code            .typeID -> ObjViewImpl.Code,
+    CodeObjView                 .typeID -> CodeObjView,
     ObjViewImpl.FadeSpec        .typeID -> ObjViewImpl.FadeSpec,
-    ObjViewImpl.Action          .typeID -> ObjViewImpl.Action,
+    ActionView                  .typeID -> ActionView,
     ObjViewImpl.Ensemble        .typeID -> ObjViewImpl.Ensemble,
     ObjViewImpl.Nuages          .typeID -> ObjViewImpl.Nuages
   )

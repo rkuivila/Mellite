@@ -15,14 +15,18 @@ package de.sciss.mellite
 package gui
 package impl.timeline
 
+import javax.swing.Icon
+
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.event.Sys
-import de.sciss.lucre.expr.{Expr, String => StringEx}
+import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Source
+import de.sciss.lucre.stm.{Cursor, Source}
+import de.sciss.lucre.swing.Window
 import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
+import de.sciss.mellite.gui.impl.{ProcObjView, ActionView}
 import de.sciss.span.SpanLike
-import de.sciss.synth.proc.{Action => _Action, BooleanElem, DoubleElem, FadeSpec, IntElem, Obj, ObjKeys, Proc, StringElem, Timeline}
+import de.sciss.synth.proc.{BooleanElem, DoubleElem, FadeSpec, IntElem, Obj, ObjKeys, Timeline}
 
 object TimelineObjViewImpl {
   private val sync = new AnyRef
@@ -45,8 +49,8 @@ object TimelineObjViewImpl {
   }
 
   private var map = Map[Int, Factory](
-    Proc  .typeID -> ProcView,
-    Action.typeID -> Action
+    ProcObjView .typeID -> ProcObjView,
+    ActionView  .typeID -> ActionView
   )
 
   // -------- Generic --------
@@ -54,7 +58,7 @@ object TimelineObjViewImpl {
   def initAttrs[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S], view: TimelineObjView[S])
                             (implicit tx: S#Tx): Unit = {
     val attr          = obj.attr
-    view.nameOption   = attr[StringElem](ObjKeys        .attrName       ).map    (_.value)
+    // view.nameOption   = attr[StringElem](ObjKeys        .attrName       ).map    (_.value)
     view.trackIndex   = attr[IntElem   ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
     view.trackHeight  = attr[IntElem   ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
     view.spanValue    = span.value
@@ -98,29 +102,15 @@ object TimelineObjViewImpl {
     private final class Impl[S <: Sys[S]](val span: Source[S#Tx, Expr[S, SpanLike]], val obj: stm.Source[S#Tx, Obj[S]])
       extends BasicImpl[S] {
 
-      def dispose()(implicit tx: S#Tx) = ()
-    }
-  }
+      def typeID: Int = ???
 
-  // ---- Action ----
+      def prefix: String = "Generic"
 
-  object Action extends TimelineObjView.Factory {
-    def typeID: Int = _Action.typeID
+      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: Cursor[S]): Option[Window[S]] = None
 
-    type E[S <: Sys[S]] = _Action.Elem[S]
+      def icon: Icon = ???
 
-    def apply[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: _Action.Obj[S], context: Context[S])
-                          (implicit tx: S#Tx): TimelineObjView[S] = {
-      val res = new Action.Impl(tx.newHandle(span), tx.newHandle(obj))
-      initAttrs    (span, obj, res)
-      initMuteAttrs(span, obj, res)
-      res
-    }
-
-    private final class Impl[S <: Sys[S]](val span: Source[S#Tx, Expr[S, SpanLike]], val obj: stm.Source[S#Tx, Obj[S]])
-      extends BasicImpl[S] with TimelineObjView.HasMute {
-
-      var muted: Boolean = _
+      def isViewable: Boolean = false
 
       def dispose()(implicit tx: S#Tx) = ()
     }

@@ -18,6 +18,7 @@ import java.io.File
 
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.impl.ArtifactLocationObjView
 import de.sciss.mellite.gui.impl.document.{FolderViewImpl => Impl}
 import de.sciss.model.Model
 import de.sciss.synth.proc.{Folder, Obj}
@@ -37,7 +38,7 @@ object FolderView {
     * The prefix is guaranteed to be non-empty.
     */
   // type Selection[S <: Sys[S]] = Vec[(Vec[ObjView.FolderLike[S]], ObjView[S])]
-  type Selection[S <: Sys[S]] = List[TreeTableView.NodeView[S, Obj[S], Folder[S], ObjView[S]]]
+  type Selection[S <: Sys[S]] = List[TreeTableView.NodeView[S, Obj[S], Folder[S], ListObjView[S]]]
   // type Selection[S <: Sys[S]] = Vec[stm.Source[S#Tx, Obj[S]]]
 
   final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], selection: Selection[S]) {
@@ -54,7 +55,7 @@ object FolderView {
 trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with View.Editable[S] {
   def selection: FolderView.Selection[S]
 
-  def locations: Vec[ObjView.ArtifactLocation[S]]
+  def locations: Vec[ArtifactLocationObjView[S]]
 
   def insertionPoint(implicit tx: S#Tx): (Folder[S], Int)
 

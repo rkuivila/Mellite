@@ -15,12 +15,13 @@ package de.sciss.mellite
 package gui
 
 import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.stm.IdentifierMap
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
-import de.sciss.lucre.stm.IdentifierMap
-import de.sciss.mellite.gui.impl.timeline.{ProcView, TimelineObjViewImpl => Impl}
+import de.sciss.mellite.gui.impl.ProcObjView
+import de.sciss.mellite.gui.impl.timeline.{TimelineObjViewImpl => Impl}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc.{Elem, FadeSpec, Obj, Timeline}
+import de.sciss.synth.proc.{FadeSpec, Obj, Timeline}
 
 import scala.language.{higherKinds, implicitConversions}
 
@@ -45,7 +46,7 @@ object TimelineObjView {
     /** A map from `TimedProc` ids to their views. This is used to establish scan links. */
     def viewMap: Map[S]
     /** A map from `Scan` ids to their keys and a handle on the timed-proc's id. */
-    def scanMap: ProcView.ScanMap[S]
+    def scanMap: ProcObjView.ScanMap[S]
   }
 
   trait Factory extends ObjView.Factory {

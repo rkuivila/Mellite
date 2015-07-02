@@ -50,6 +50,8 @@ object ObjView {
   }
 }
 trait ObjView[S <: evt.Sys[S]] extends Disposable[S#Tx] {
+  def typeID: Int
+
   // type E[~ <: evt.Sys[~]] <: Elem[~]
 
   // def factory: ObjView.Factory

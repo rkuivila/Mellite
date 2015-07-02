@@ -19,14 +19,13 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.stm
-import de.sciss.mellite.gui.edit.{Edits, EditTimelineRemoveObj}
-import de.sciss.synth.proc.{Proc, Timeline, Scan}
-import de.sciss.mellite.gui.impl.timeline.ProcView
-import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.swing.requireEDT
+import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.edit.{EditTimelineRemoveObj, Edits}
+import de.sciss.synth.proc.{Proc, Scan, Timeline}
 
-import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.collection.breakOut
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 /** These actions require being executed on the EDT. */
 object ProcGUIActions {
@@ -41,10 +40,10 @@ object ProcGUIActions {
       val obj   = pv0.obj()
 
       val editsUnlink: Vec[UndoableEdit] = (pv0, obj) match {
-        case (pv: ProcView[S], Proc.Obj(proc)) =>
-          def deleteLinks[A](map: ProcView.LinkMap[S])(fun: (String, Scan[S], String, Scan[S]) => A): Vec[A] =
+        case (pv: ProcObjView.Timeline[S], Proc.Obj(proc)) =>
+          def deleteLinks[A](map: ProcObjView.LinkMap[S])(fun: (String, Scan[S], String, Scan[S]) => A): Vec[A] =
             map.flatMap { case (thisKey, links) =>
-              links.flatMap { case ProcView.Link(thatView, thatKey) =>
+              links.flatMap { case ProcObjView.Link(thatView, thatKey) =>
                 proc.elem.peer.scans.get(thisKey).flatMap { thisScan =>
                   thatView.proc.elem.peer.scans.get(thatKey).map { thatScan =>
                     fun(thisKey, thisScan, thatKey, thatScan)

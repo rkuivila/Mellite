@@ -189,11 +189,11 @@ object RecursionFrameImpl {
       desktop.Util.fixWidth(ggProgress, 480)
       GUI.round   (ggStopProcess)
 
-      val lbDeployed    = new Label("Deployed Artifact:"   , ObjView.AudioGrapheme.icon, Alignment.Right)
+      val lbDeployed    = new Label("Deployed Artifact:"   , AudioGraphemeObjView.icon, Alignment.Right)
       lbDeployed.peer.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT)
       ggDeployed        = new Label("---") // don't use `null`, it will stick to a width of zero
       desktop.Util.fixWidth(ggDeployed, 128)
-      val lbProduct     = new Label("Most Recent Artifact:", ObjView.AudioGrapheme.icon, Alignment.Right)
+      val lbProduct     = new Label("Most Recent Artifact:", AudioGraphemeObjView.icon, Alignment.Right)
       lbProduct.peer.setComponentOrientation(ComponentOrientation.RIGHT_TO_LEFT)
       ggProduct         = new Label("---")
       desktop.Util.fixWidth(ggProduct, 128)

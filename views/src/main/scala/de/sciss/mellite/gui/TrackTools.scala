@@ -18,6 +18,7 @@ package gui
 import java.awt.Cursor
 import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.stm
+import de.sciss.mellite.gui.impl.ProcObjView
 
 import annotation.switch
 import de.sciss.model.{Change, Model}
@@ -27,7 +28,6 @@ import javax.swing.Icon
 import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.mellite.gui.impl.tracktool.{AuditionImpl, PatchImpl, FunctionImpl, CursorImpl, PaletteImpl, ToolsImpl, ResizeImpl, MuteImpl, MoveImpl, GainImpl, FadeImpl}
 import de.sciss.span.Span
-import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.synth.Sys
 
 object TrackTools {
@@ -106,10 +106,10 @@ object TrackTool {
 
   object Patch {
     sealed trait Sink[+S]
-    case class Linked[S <: Sys[S]](proc: ProcView[S]) extends Sink[S]
+    case class Linked[S <: Sys[S]](proc: ProcObjView.Timeline[S]) extends Sink[S]
     case class Unlinked(frame: Long, y: Int) extends Sink[Nothing]
   }
-  final case class Patch[S <: Sys[S]](source: ProcView[S], sink: Patch.Sink[S])
+  final case class Patch[S <: Sys[S]](source: ProcObjView.Timeline[S], sink: Patch.Sink[S])
 
   final val EmptyFade = FadeSpec(numFrames = 0L)
 
@@ -181,50 +181,4 @@ trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
 //    else
 //      Slide(amt, 0L)
 //  }
-//}
-
-//object TrackAuditionTool {
-//  private lazy val cursor = {
-//    val tk  = Toolkit.getDefaultToolkit
-//    val img = tk.createImage(classOf[TrackMuteTool].getResource("cursor-audition.png"))
-//    tk.createCustomCursor(img, new Point(4, 4), "Audition")
-//  }
-//}
-//
-//class TrackAuditionTool(doc: Session, protected val trackList: TrackList, protected val timelineModel: TimelineView)
-//  extends TrackRegionTool {
-//
-//  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineProcView): Unit = {
-//    val fromStart = e.isAltDown
-//    if (!fromStart) {
-//      timelineModel.editor.foreach { ed =>
-//        val ce = ed.editBegin("Adjust timeline position")
-//        ed.editPosition(ce, pos)
-//        ed.editEnd(ce)
-//      }
-//    }
-//    val trackPlayerO = SuperColliderClient.instance.getPlayer(doc).flatMap(_.session)
-//      .map(_.timeline(timelineModel.timeline).track(tle.track))
-//    (region, trackPlayerO) match {
-//      case (ar: AudioRegion, Some(atp: SCAudioTrackPlayer)) =>
-//        val frameOffset = if (fromStart) 0L
-//        else {
-//          ar.span.clip(pos - (ar.audioFile.sampleRate * 0.1).toLong) - ar.span.start
-//        }
-//        val stopper = atp.play(ar, frameOffset)
-//        val comp = e.getComponent
-//        comp.addMouseListener(new MouseAdapter {
-//          override def mouseReleased(e2: MouseEvent): Unit = {
-//            stopper.stop()
-//            comp.removeMouseListener(this)
-//          }
-//        })
-//        comp.requestFocus()
-//
-//      case _ =>
-//    }
-//  }
-//
-//  val name          = "Audition"
-//  val defaultCursor = TrackAuditionTool.cursor
 //}

@@ -19,8 +19,8 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite
-import de.sciss.mellite.gui.impl.{ListObjViewImpl, ObjViewImpl}
-import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, BooleanElem, DoubleElem, FolderElem, IntElem, LongElem, Obj, StringElem}
+import de.sciss.mellite.gui.impl.{ListObjViewImpl, ObjViewImpl, ProcObjView$}
+import de.sciss.synth.proc.{AudioGraphemeElem, BooleanElem, DoubleElem, FolderElem, IntElem, LongElem, Obj, StringElem}
 
 import scala.language.higherKinds
 import scala.swing.{Component, Label}
@@ -52,17 +52,11 @@ object ListObjView {
 
   def factories: Iterable[Factory] = ListObjViewImpl.factories
 
-  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ObjView[S] = ListObjViewImpl(obj)
+  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ListObjView[S] = ListObjViewImpl(obj)
 
   val String: Factory { type E[S <: evt.Sys[S]] = StringElem[S] } = ObjViewImpl.String
 //  trait String[S <: Sys[S]] extends ObjView[S] {
 //    def obj: stm.Source[S#Tx, Obj.T[S, StringElem]]
-//  }
-
-  val Int: Factory { type E[S <: evt.Sys[S]] = IntElem[S] } = ObjViewImpl.Int
-//  trait Int[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, Obj.T[S, IntElem]]
-//    def value: _Int
 //  }
 
   val Long: Factory { type E[S <: evt.Sys[S]] = LongElem[S] } = ObjViewImpl.Long
@@ -82,22 +76,6 @@ object ListObjView {
 //    def value: _Boolean
 //  }
 
-  val AudioGrapheme: Factory { type E[S <: evt.Sys[S]] = AudioGraphemeElem[S] } =
-    ObjViewImpl.AudioGrapheme
-
-//  trait AudioGrapheme[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
-//    def value: Grapheme.Value.Audio
-//  }
-
-  val ArtifactLocation: Factory { type E[S <: evt.Sys[S]] = ArtifactLocationElem[S] } =
-    ObjViewImpl.ArtifactLocation
-
-//  trait ArtifactLocation[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]
-//    def directory: File
-//  }
-
 //  trait Artifact[S <: Sys[S]] extends ObjView[S] {
 //    def obj: stm.Source[S#Tx, ArtifactElem.Obj[S]]
 //    def file: File
@@ -114,32 +92,15 @@ object ListObjView {
 //    def obj: stm.Source[S#Tx, Obj.T[S, FolderElem]]
 //  }
 
-  val Proc: Factory { type E[S <: evt.Sys[S]] = _Proc.Elem[S] } = ObjViewImpl.Proc
-//  trait Proc[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, _Proc.Obj[S]]
-//  }
-
   val Timeline: Factory { type E[S <: evt.Sys[S]] = _Timeline.Elem[S] } = ObjViewImpl.Timeline
 //  trait Timeline[S <: Sys[S]] extends ObjView[S] {
 //    def obj: stm.Source[S#Tx, _Timeline.Obj[S]]
-//  }
-
-  val Code: Factory { type E[S <: evt.Sys[S]] = _Code.Elem[S] } = ObjViewImpl.Code
-//  trait Code[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, _Code.Obj[S]]
-//    def value: _Code
 //  }
 
   val FadeSpec: Factory { type E[S <: evt.Sys[S]] = _FadeSpec.Elem[S] } = ObjViewImpl.FadeSpec
 //  trait FadeSpec[S <: Sys[S]] extends ObjView[S] {
 //    def obj: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]]
 //    def value: _FadeSpec
-//  }
-
-  val Action: Factory { type E[S <: evt.Sys[S]] = _Action.Elem[S] } = ObjViewImpl.Action
-//  trait Action[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, _Action.Obj[S]]
-//    // def value: _Action
 //  }
 
   val Ensemble: Factory { type E[S <: evt.Sys[S]] = _Ensemble.Elem[S] } = ObjViewImpl.Ensemble

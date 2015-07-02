@@ -57,7 +57,7 @@ object FolderViewImpl {
 
     new Impl[S] {
       val mapViews  = tx.newInMemoryIDMap[ObjView[S]]  // folder IDs to renderers
-      val treeView  = TreeTableView[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]](root0, TTHandler)
+      val treeView  = TreeTableView[S, Obj[S], Folder[S], Folder.Update[S], ListObjView[S]](root0, TTHandler)
 
       deferTx {
         guiInit()
@@ -70,11 +70,11 @@ object FolderViewImpl {
     extends ComponentHolder[Component] with FolderView[S] with ModelImpl[FolderView.Update[S]] {
     view =>
 
-    private type Data     = ObjView[S]
+    private type Data     = ListObjView[S]
     private type NodeView = TreeTableView.NodeView[S, Obj[S], Folder[S], Data]
 
     protected object TTHandler
-      extends TreeTableView.Handler[S, Obj[S], Folder[S], Folder.Update[S], ObjView[S]] {
+      extends TreeTableView.Handler[S, Obj[S], Folder[S], Folder.Update[S], ListObjView[S]] {
 
       def branchOption(node: Obj[S]): Option[Folder[S]] = node.elem match {
         case fe: FolderElem[S] => Some(fe.peer)
@@ -84,11 +84,11 @@ object FolderViewImpl {
       def children(branch: Folder[S])(implicit tx: S#Tx): lucre.data.Iterator[S#Tx, Obj[S]] =
         branch.iterator
 
-      private def updateObjectName(obj: Obj[S], name: String)(implicit tx: S#Tx): Boolean = {
+      private def updateObjectName(obj: Obj[S], nameOption: Option[String])(implicit tx: S#Tx): Boolean = {
         treeView.nodeView(obj).exists { nv =>
           val objView = nv.renderData
           deferTx {
-            objView.name = name
+            objView.nameOption = nameOption
           }
           true
         }
@@ -102,12 +102,14 @@ object FolderViewImpl {
                 val objView = nv.renderData
                 objView.isUpdateVisible(u1)
               }
-            case Obj.AttrAdded  (ObjKeys.attrName, StringElem.Obj(e)) => updateObjectName(obj, e.elem.peer.value)
-            case Obj.AttrRemoved(ObjKeys.attrName, _) => updateObjectName(obj, "<unnamed>")
+            case Obj.AttrAdded  (ObjKeys.attrName, StringElem.Obj(e)) =>
+              updateObjectName(obj, Some(e.elem.peer.value))
+            case Obj.AttrRemoved(ObjKeys.attrName, _) =>
+              updateObjectName(obj, None)
             case Obj.AttrChange (ObjKeys.attrName, _, changes) =>
               (false /: changes) {
                 case (res, Obj.ElemChange(Change(_, name: String))) =>
-                  res | updateObjectName(obj, name)
+                  res | updateObjectName(obj, Some(name))
                 case (res, _) => res
               }
             case _ => false
@@ -160,7 +162,7 @@ object FolderViewImpl {
         }
       }
 
-      private var editView    = Option.empty[ObjView[S]]
+      private var editView    = Option.empty[ListObjView[S]]
       private var editColumn  = 0
 
       private lazy val defaultEditorJ = new javax.swing.JTextField
@@ -208,10 +210,10 @@ object FolderViewImpl {
         (defaultEditorC, defaultEditor)
       }
 
-      def data(node: Obj[S])(implicit tx: S#Tx): Data = ObjView(node)
+      def data(node: Obj[S])(implicit tx: S#Tx): Data = ListObjView(node)
     }
 
-    protected def treeView: TreeTableView[S, Obj[S], Folder[S], ObjView[S]]
+    protected def treeView: TreeTableView[S, Obj[S], Folder[S], ListObjView[S]]
 
     def dispose()(implicit tx: S#Tx): Unit = {
       treeView.dispose()
@@ -250,8 +252,8 @@ object FolderViewImpl {
             new FolderView.SelectionDnDData(workspace, sel)
           }
           val trans1 = if (sel.size == 1) {
-            val _res = DragAndDrop.Transferable(ObjView.Flavor) {
-              new ObjView.Drag(workspace, sel.head.renderData)
+            val _res = DragAndDrop.Transferable(ListObjView.Flavor) {
+              new ListObjView.Drag(workspace, sel.head.renderData)
             }
             DragAndDrop.Transferable.seq(trans0, _res)
           } else trans0
@@ -417,9 +419,9 @@ object FolderViewImpl {
 
     def insertionPoint(implicit tx: S#Tx): (Folder[S], Int) = treeView.insertionPoint
 
-    def locations: Vec[ObjView.ArtifactLocation[S]] = selection.flatMap { nodeView =>
+    def locations: Vec[ArtifactLocationObjView[S]] = selection.flatMap { nodeView =>
       nodeView.renderData match {
-        case view: ObjView.ArtifactLocation[S] => Some(view)
+        case view: ArtifactLocationObjView[S] => Some(view)
         case _ => None
       }
     } (breakOut)

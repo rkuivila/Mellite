@@ -304,7 +304,7 @@ object TimelineViewImpl {
   private final class Impl[S <: Sys[S]](groupH            : stm.Source[S#Tx, proc.Timeline[S]],
                                         groupEH           : stm.Source[S#Tx, Timeline.Obj[S]],
                                         val viewMap       : TimelineObjView.Map[S],
-                                        val scanMap       : ProcView.ScanMap[S],
+                                        val scanMap       : ProcObjView.ScanMap[S],
                                         val timelineModel : TimelineModel,
                                         val selectionModel: SelectionModel[S, TimelineObjView[S]],
                                         val globalView    : GlobalProcsView[S],
@@ -692,7 +692,7 @@ object TimelineViewImpl {
       viewSet.add(view)(tx.peer)
 
       def doAdd(): Unit = view match {
-        case pv: ProcView[S] if pv.isGlobal =>
+        case pv: ProcObjView.Timeline[S] if pv.isGlobal =>
           globalView.add(pv)
         case _ =>
           viewRange += view
@@ -715,7 +715,7 @@ object TimelineViewImpl {
         viewSet.remove(view)(tx.peer)
         deferTx {
           view match {
-            case pv: ProcView[S] if pv.isGlobal => globalView.remove(pv)
+            case pv: ProcObjView.Timeline[S] if pv.isGlobal => globalView.remove(pv)
             case _ =>
               viewRange -= view
               repaintAll() // XXX TODO: optimize dirty rectangle
@@ -732,7 +732,7 @@ object TimelineViewImpl {
       viewMap.get(timed.id).foreach { view =>
         deferTx {
           view match {
-            case pv: ProcView[S] if pv.isGlobal => globalView.remove(pv)
+            case pv: ProcObjView.Timeline[S] if pv.isGlobal => globalView.remove(pv)
             case _                              => viewRange -= view
           }
 
@@ -743,7 +743,7 @@ object TimelineViewImpl {
           }
 
           view match {
-            case pv: ProcView[S] if pv.isGlobal => globalView.add(pv)
+            case pv: ProcObjView.Timeline[S] if pv.isGlobal => globalView.add(pv)
             case _ =>
               viewRange += view
               repaintAll()  // XXX TODO: optimize dirty rectangle
@@ -787,7 +787,7 @@ object TimelineViewImpl {
       val pvo = viewMap.get(timed.id)
       logT(s"procBusChanged(newBus = $newBus, view = $pvo")
       pvo.foreach {
-        case pv: ProcView[S] =>
+        case pv: ProcObjView.Timeline[S] =>
           deferTx {
             pv.busOption = newBus
             objUpdated(pv)
@@ -829,7 +829,7 @@ object TimelineViewImpl {
       val pvo = viewMap.get(timed.id)
       logT(s"procAudioChanged(newAudio = $newAudio, view = $pvo")
       pvo.foreach {
-        case pv: ProcView[S] => deferTx {
+        case pv: ProcObjView.Timeline[S] => deferTx {
           val newSonogram = (pv.audio, newAudio) match {
             case (Some(_), None)  => true
             case (None, Some(_))  => true
@@ -846,14 +846,14 @@ object TimelineViewImpl {
       }
     }
 
-    private def withLink(timed: TimedProc[S], that: Scan[S])(fun: (ProcView[S], ProcView[S], String) => Unit)
+    private def withLink(timed: TimedProc[S], that: Scan[S])(fun: (ProcObjView.Timeline[S], ProcObjView.Timeline[S], String) => Unit)
                         (implicit tx: S#Tx): Unit =
       viewMap.get(timed.id).foreach {
-        case thisView: ProcView[S] =>
+        case thisView: ProcObjView.Timeline[S] =>
           scanMap.get(that .id).foreach {
             case (thatKey, thatIdH) =>
               viewMap.get(thatIdH()).foreach {
-                case thatView: ProcView[S] =>
+                case thatView: ProcObjView.Timeline[S] =>
                   deferTx {
                     fun(thisView, thatView, thatKey)
                     repaintAll()
@@ -895,7 +895,7 @@ object TimelineViewImpl {
     // call on EDT!
     private def defaultDropLength(view: ObjView[S], inProgress: Boolean): Long = {
       val d = view match {
-        case _: ObjView.AudioGrapheme[S] | _: ObjView.Proc[S] =>
+        case _: AudioGraphemeObjView[S] | _: ProcObjView[S] =>
           timelineModel.sampleRate * 2  // two seconds
         case _ =>
           if (inProgress)
@@ -930,12 +930,12 @@ object TimelineViewImpl {
           }
         }
 
-      def withProcRegions[A](fun: S#Tx => List[ProcView[S]] => Option[A]): Option[A] =
+      def withProcRegions[A](fun: S#Tx => List[ProcObjView[S]] => Option[A]): Option[A] =
         canvasView.findRegion(drop.frame, canvasView.screenToTrack(drop.y)).flatMap {
-          case hitRegion: ProcView[S] =>
+          case hitRegion: ProcObjView[S] =>
             val regions = if (selectionModel.contains(hitRegion)) {
               selectionModel.iterator.collect {
-                case pv: ProcView[S] => pv
+                case pv: ProcObjView[S] => pv
               } .toList
             } else hitRegion :: Nil
 
@@ -981,12 +981,12 @@ object TimelineViewImpl {
             }
           }
 
-        case DnD.ObjectDrag(_, view: ObjView.Int[S]) => withRegions { implicit tx => regions =>
+        case DnD.ObjectDrag(_, view: IntObjView[S]) => withRegions { implicit tx => regions =>
           val intExpr = view.obj().elem.peer
           Edits.setBus[S](regions.map(_.obj()), intExpr)
         }
 
-        case DnD.ObjectDrag(_, view: ObjView.Code[S]) => withProcRegions { implicit tx => regions =>
+        case DnD.ObjectDrag(_, view: CodeObjView[S]) => withProcRegions { implicit tx => regions =>
           val codeElem = view.obj()
           import Mellite.compiler
           Edits.setSynthGraph[S](regions.map(_.obj()), codeElem)
@@ -1209,7 +1209,7 @@ object TimelineViewImpl {
 
                 // --- sonogram ---
                 view match {
-                  case pv: ProcView[S] if pv.audio.isDefined =>
+                  case pv: ProcObjView.Timeline[S] if pv.audio.isDefined =>
                     val segm        = pv.audio.get
                     val sonogramOpt = pv.sonogram.orElse(pv.acquireSonogram())
 
@@ -1383,7 +1383,7 @@ object TimelineViewImpl {
           g.setStroke(strkLink)
 
           views.foreach {
-            case pv: ProcView[S] =>
+            case pv: ProcObjView.Timeline[S] =>
               // println(s"For ${pv.name} inputs = ${pv.inputs}, outputs = ${pv.outputs}")
               pv.outputs.foreach { case (_, links) =>
                 links.foreach { link =>
@@ -1430,19 +1430,19 @@ object TimelineViewImpl {
             drawPatch(g, patchState)
         }
 
-        private def linkFrame(pv: ProcView[S]): Long = pv.spanValue match {
+        private def linkFrame(pv: ProcObjView.Timeline[S]): Long = pv.spanValue match {
           case Span(start, stop)  => (start + stop)/2
           case hs: Span.HasStart  => hs.start + (timelineModel.sampleRate * 0.1).toLong
           case _ => 0L
         }
 
-        private def linkY(view: ProcView[S], input: Boolean): Int =
+        private def linkY(view: ProcObjView.Timeline[S], input: Boolean): Int =
           if (input)
             trackToScreen(view.trackIndex) + 4
           else
             trackToScreen(view.trackIndex + view.trackHeight) - 5
 
-        private def drawLink(g: Graphics2D, source: ProcView[S], sink: ProcView[S]): Unit = {
+        private def drawLink(g: Graphics2D, source: ProcObjView.Timeline[S], sink: ProcObjView.Timeline[S]): Unit = {
           val srcFrameC   = linkFrame(source)
           val sinkFrameC  = linkFrame(sink)
           val srcY        = linkY(source, input = false)

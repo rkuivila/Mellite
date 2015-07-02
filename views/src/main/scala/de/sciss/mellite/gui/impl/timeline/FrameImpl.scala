@@ -60,7 +60,7 @@ object FrameImpl {
           val it = view.selectionModel.iterator
           if (it.hasNext)
             it.foreach {
-              case pv: ProcView[S] =>
+              case pv: ProcObjView.Timeline[S] =>
                 println(pv.debugString)
                 println(_cursor.step { implicit tx => pv.obj().elem.peer.toString() })
               case _ =>

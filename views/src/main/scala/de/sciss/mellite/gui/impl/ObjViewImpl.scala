@@ -119,75 +119,6 @@ object ObjViewImpl {
     }
   }
 
-  // -------- Int --------
-
-  object Int extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = IntElem[S]
-    val icon      = raphaelIcon(Shapes.IntegerNumbers)
-    val prefix    = "Int"
-    def typeID    = ElemImpl.Int.typeID
-
-    def mkListView[S <: Sys[S]](obj: Obj.T[S, IntElem])(implicit tx: S#Tx): ListObjView[S] = {
-      val ex          = obj.elem.peer
-      val value       = ex.value
-      val isEditable  = ex match {
-        case Expr.Var(_)  => true
-        case _            => false
-      }
-      val isViewable  = tx.isInstanceOf[Confluent.Txn]
-      new Int.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable = isEditable, isViewable = isViewable)
-    }
-
-    type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Int]
-
-    def hasMakeDialog = true
-
-    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
-      val model     = new SpinnerNumberModel(0, _Int.MinValue, _Int.MaxValue, 1)
-      val ggValue   = new Spinner(model)
-      primitiveConfig[S, _Int](window, tpe = prefix, ggValue = ggValue,
-        prepare = Some(model.getNumber.intValue()))
-    }
-
-    def makeObj[S <: Sys[S]](config: (String, _Int))(implicit tx: S#Tx): List[Obj[S]] = {
-      val (name, value) = config
-      val obj = Obj(IntElem(IntEx.newVar(IntEx.newConst[S](value))))
-      obj.name = name
-      obj :: Nil
-    }
-
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, IntElem]],
-                                  var nameOption: Option[_String], var value: _Int,
-                                  override val isEditable: _Boolean, val isViewable: _Boolean)
-      extends ListObjView /* .Int */[S]
-      with ObjViewImpl.Impl[S]
-      with ListObjViewImpl.SimpleExpr[S, _Int]
-      with ListObjViewImpl.StringRenderer
-      /* with NonViewable[S] */ {
-
-      type E[~ <: evt.Sys[~]] = IntElem[~]
-
-      def prefix  = Int.prefix
-      def icon    = Int.icon
-      def typeID  = Int.typeID
-
-      def exprType = IntEx
-
-      def expr(implicit tx: S#Tx) = obj().elem.peer
-
-      def convertEditValue(v: Any): Option[_Int] = v match {
-        case num: _Int  => Some(num)
-        case s: _String => Try(s.toInt).toOption
-      }
-
-      def testValue(v: Any): Option[_Int] = v match {
-        case i: _Int  => Some(i)
-        case _        => None
-      }
-    }
-  }
-
   // -------- Long --------
 
   object Long extends ListObjView.Factory {
@@ -373,222 +304,52 @@ object ObjViewImpl {
     }
   }
 
-  // -------- AudioGrapheme --------
+  // -------- Artifact --------
 
-  object AudioGrapheme extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = AudioGraphemeElem[S]
-    val icon      = raphaelIcon(raphael.Shapes.Music)
-    val prefix    = "AudioGrapheme"
-    def typeID    = ElemImpl.AudioGrapheme.typeID
-    def hasMakeDialog = true
+  object Artifact extends ListObjView.Factory {
+    type E[S <: evt.Sys[S]] = ArtifactElem[S]
+    val icon      = raphaelIcon(raphael.Shapes.PagePortrait)
+    val prefix    = "Artifact"
+    def typeID    = ElemImpl.Artifact.typeID
+    def hasMakeDialog = false
 
-    def mkListView[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])(implicit tx: S#Tx): ListObjView[S] = {
-      val value = obj.elem.peer.value
-      new AudioGrapheme.Impl(tx.newHandle(obj), nameOption(obj), value)
-    }
-
-    final case class Config1[S <: evt.Sys[S]](file: File, spec: AudioFileSpec,
-                                         location: Either[stm.Source[S#Tx, ArtifactLocationElem.Obj[S]], (String, File)])
-    type Config[S <: evt.Sys[S]] = List[Config1[S]]
-
-    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
-      val dlg = FileDialog.open(init = None /* locViews.headOption.map(_.directory) */, title = "Add Audio Files")
-      dlg.setFilter(f => Try(AudioFile.identify(f).isDefined).getOrElse(false))
-      dlg.multiple = true
-      val ok = dlg.show(window).isDefined
-
-      val list = if (!ok) Nil else dlg.files.flatMap { f =>
-        ActionArtifactLocation.query[S](workspace.rootH, file = f, window = window).map { location =>
-          val spec = AudioFile.readSpec(f)
-          Config1(file = f, spec = spec, location = location)
-        }
-      }
-      if (list.isEmpty) None else Some(list)
-    }
-
-    def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = config.flatMap { cfg =>
-      val (list0: List[Obj[S]], loc /* : ArtifactLocationElem.Obj[S] */) = cfg.location match {
-        case Left(source) => (Nil, source())
-        case Right((name, directory)) =>
-          val objLoc  = ActionArtifactLocation.create(name = name, directory = directory)
-          (objLoc :: Nil, objLoc)
-      }
-      loc.elem.peer.modifiableOption.fold[List[Obj[S]]](list0) { locM =>
-        val audioObj = ObjectActions.mkAudioFile(locM, cfg.file, cfg.spec)
-        audioObj :: list0
-      }
-    }
-
-    private val timeFmt = AxisFormat.Time(hours = false, millis = true)
-
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
-                                  var nameOption: Option[_String], var value: Grapheme.Value.Audio)
-      extends ListObjView /* .AudioGrapheme */[S]
-      with ObjViewImpl.Impl[S]
-      with ListObjViewImpl.NonEditable[S] {
-
-      type E[~ <: evt.Sys[~]] = AudioGraphemeElem[~]
-
-      def prefix  = AudioGrapheme.prefix
-      def icon    = AudioGrapheme.icon
-      def typeID  = AudioGrapheme.typeID
-
-      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
-        case Change(_, now: Grapheme.Value.Audio) =>
-          deferTx { value = now }
-          true
-        case _ => false
-      }
-
-      def isViewable = true
-
-      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        val frame = AudioFileFrame(obj())
-        Some(frame)
-      }
-
-      def configureRenderer(label: Label): Component = {
-        // ex. AIFF, stereo 16-bit int 44.1 kHz, 0:49.492
-        val spec    = value.spec
-        val smp     = spec.sampleFormat
-        val isFloat = smp match {
-          case SampleFormat.Float | SampleFormat.Double => "float"
-          case _ => "int"
-        }
-        val chans   = spec.numChannels match {
-          case 1 => "mono"
-          case 2 => "stereo"
-          case n => s"$n-chan."
-        }
-        val sr  = f"${spec.sampleRate/1000}%1.1f"
-        val dur = timeFmt.format(spec.numFrames.toDouble / spec.sampleRate)
-
-        // XXX TODO: add offset and gain information if they are non-default
-        val txt    = s"${spec.fileType.name}, $chans ${smp.bitsPerSample}-$isFloat $sr kHz, $dur"
-        label.text = txt
-        label
-      }
-    }
-  }
-
-    // -------- Artifact --------
-
-    object Artifact extends ListObjView.Factory {
-      type E[S <: evt.Sys[S]] = ArtifactElem[S]
-      val icon      = raphaelIcon(raphael.Shapes.PagePortrait)
-      val prefix    = "Artifact"
-      def typeID    = ElemImpl.Artifact.typeID
-      def hasMakeDialog = false
-
-      def mkListView[S <: Sys[S]](obj: ArtifactElem.Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
-        val peer      = obj.elem.peer
-        val value     = peer.value  // peer.child.path
-        val editable  = false // XXX TODO -- peer.modifiableOption.isDefined
-        new Artifact.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable = editable)
-      }
-
-      type Config[S <: evt.Sys[S]] = PrimitiveConfig[File]
-
-      def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] = None // XXX TODO
-
-      def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???
-
-      final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactElem.Obj[S]],
-                                    var nameOption: Option[_String], var file: File, val isEditable: _Boolean)
-        extends ListObjView /* .Artifact */[S]
-        with ObjViewImpl.Impl[S]
-        with ListObjViewImpl.StringRenderer
-        with NonViewable[S] {
-
-        type E[~ <: evt.Sys[~]] = ArtifactElem[~]
-
-        def icon    = Artifact.icon
-        def prefix  = Artifact.prefix
-        def typeID  = Artifact.typeID
-
-        def value   = file
-
-        def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
-          case Change(_, now: File) =>
-            deferTx { file = now }
-            true
-          case _ => false
-        }
-
-        def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = None // XXX TODO
-      }
-    }
-
-  // -------- ArtifactLocation --------
-
-  object ArtifactLocation extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = ArtifactLocationElem[S]
-    val icon      = raphaelIcon(raphael.Shapes.Location)
-    val prefix    = "ArtifactStore"
-    def typeID    = ElemImpl.ArtifactLocation.typeID
-    def hasMakeDialog = true
-
-    def mkListView[S <: Sys[S]](obj: ArtifactLocationElem.Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
+    def mkListView[S <: Sys[S]](obj: ArtifactElem.Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
       val peer      = obj.elem.peer
-      val value     = peer.directory
-      val editable  = peer.modifiableOption.isDefined
-      new ArtifactLocation.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable = editable)
+      val value     = peer.value  // peer.child.path
+      val editable  = false // XXX TODO -- peer.modifiableOption.isDefined
+      new Artifact.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable = editable)
     }
 
     type Config[S <: evt.Sys[S]] = PrimitiveConfig[File]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] =
-      ActionArtifactLocation.queryNew(window = window)
+                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = None // XXX TODO
 
-    def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = {
-      // ActionArtifactLocation.create(directory, _name, targetFolder)
-      val (name, directory) = config
-      val peer  = _ArtifactLocation[S](directory)
-      val elem  = ArtifactLocationElem(peer)
-      val obj   = Obj(elem)
-      obj.name = name
-      obj :: Nil
-    }
+    def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]],
-                                  var nameOption: Option[_String], var directory: File, val isEditable: _Boolean)
-      extends ListObjView /* .ArtifactLocation */[S]
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactElem.Obj[S]],
+                                  var nameOption: Option[_String], var file: File, val isEditable: _Boolean)
+      extends ListObjView /* .Artifact */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.StringRenderer
       with NonViewable[S] {
 
-      type E[~ <: evt.Sys[~]] = ArtifactLocationElem[~]
+      type E[~ <: evt.Sys[~]] = ArtifactElem[~]
 
-      def icon    = ArtifactLocation.icon
-      def prefix  = ArtifactLocation.prefix
-      def typeID  = ArtifactLocation.typeID
+      def icon    = Artifact.icon
+      def prefix  = Artifact.prefix
+      def typeID  = Artifact.typeID
 
-      def value   = directory
+      def value   = file
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
-        case _ArtifactLocation.Moved(_, Change(_, now)) =>
-          deferTx { directory = now }
+        case Change(_, now: File) =>
+          deferTx { file = now }
           true
         case _ => false
       }
 
-      def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-        val dirOpt = value match {
-          case s: String  => Some(file(s))
-          case f: File    => Some(f)
-          case _          => None
-        }
-        dirOpt.flatMap { newDir =>
-          val loc = obj().elem.peer
-          import TypeCheckedTripleEquals._
-          if (loc.directory === newDir) None else loc.modifiableOption.map { mod =>
-            EditArtifactLocation(mod, newDir)
-          }
-        }
-      }
+      def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = None // XXX TODO
     }
   }
 
@@ -699,65 +460,6 @@ object ObjViewImpl {
     }
   }
 
-  // -------- Proc --------
-
-  object Proc extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = _Proc.Elem[S]
-    val icon      = raphaelIcon(raphael.Shapes.Cogs)
-    val prefix    = "Proc"
-    def typeID    = ElemImpl.Proc.typeID
-    def hasMakeDialog = true
-
-    def mkListView[S <: Sys[S]](obj: Obj.T[S, _Proc.Elem])(implicit tx: S#Tx): ListObjView[S] =
-      new Proc.Impl(tx.newHandle(obj), nameOption(obj))
-
-    type Config[S <: evt.Sys[S]] = _String
-
-    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
-      val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
-        messageType = OptionPane.Message.Question, initial = prefix)
-      opt.title = s"New $prefix"
-      val res = opt.show(window)
-      res
-    }
-
-    def makeObj[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
-      val peer  = _Proc[S]
-      val elem  = _Proc.Elem(peer)
-      val obj   = Obj(elem)
-      obj.name = name
-      obj :: Nil
-    }
-
-    private final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Proc.Elem]],
-                                  var nameOption: Option[_String]) extends Proc[S]
-  }
-  trait Proc[S <: Sys[S]]
-    extends ListObjView /* .Proc */[S]
-    with ObjViewImpl.Impl[S]
-    with ListObjViewImpl.EmptyRenderer[S]
-    with ListObjViewImpl.NonEditable[S] {
-
-    type E[~ <: evt.Sys[~]] = _Proc.Elem[~]
-
-    override def obj: stm.Source[S#Tx, _Proc.Obj[S]]
-
-    def icon    = Proc.icon
-    def prefix  = Proc.prefix
-    def typeID  = Proc.typeID
-
-    def isViewable = true
-
-    // currently this just opens a code editor. in the future we should
-    // add a scans map editor, and a convenience button for the attributes
-    def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-      import de.sciss.mellite.Mellite.compiler
-      val frame = CodeFrame.proc(obj())
-      Some(frame)
-    }
-  }
-
   // -------- Timeline --------
 
   object Timeline extends ListObjView.Factory {
@@ -819,92 +521,6 @@ object ObjViewImpl {
 //            Some(frame)
 //          case _ => None
 //        }
-      }
-    }
-  }
-
-  // -------- Code --------
-
-  object Code extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = _Code.Elem[S]
-    val icon        = raphaelIcon(raphael.Shapes.Code)
-    val prefix      = "Code"
-    def typeID      = _Code.typeID
-    def hasMakeDialog   = true
-
-    def mkListView[S <: Sys[S]](obj: Obj.T[S, _Code.Elem])(implicit tx: S#Tx): ListObjView[S] = {
-      val value   = obj.elem.peer.value
-      new Code.Impl(tx.newHandle(obj), nameOption(obj), value)
-    }
-
-    type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Code]
-
-    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
-      val ggValue = new ComboBox(Seq(_Code.FileTransform.name, _Code.SynthGraph.name))
-      primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = ggValue.selection.index match {
-        case 0 => Some(_Code.FileTransform(
-          """|val aIn   = AudioFile.openRead(in)
-            |val aOut  = AudioFile.openWrite(out, aIn.spec)
-            |val bufSz = 8192
-            |val buf   = aIn.buffer(bufSz)
-            |var rem   = aIn.numFrames
-            |while (rem > 0) {
-            |  val chunk = math.min(bufSz, rem).toInt
-            |  aIn .read (buf, 0, chunk)
-            |  // ...
-            |  aOut.write(buf, 0, chunk)
-            |  rem -= chunk
-            |  // checkAbort()
-            |}
-            |aOut.close()
-            |aIn .close()
-            |""".stripMargin))
-
-        case 1 => Some(_Code.SynthGraph(
-          """|val in   = ScanIn("in")
-            |val sig  = in
-            |ScanOut("out", sig)
-            |""".stripMargin
-        ))
-
-        case _  => None
-      })
-    }
-
-    def makeObj[S <: Sys[S]](config: (String, _Code))(implicit tx: S#Tx): List[Obj[S]] = {
-      val (name, value) = config
-      val peer  = _Code.Expr.newVar[S](_Code.Expr.newConst(value))
-      val obj   = Obj(_Code.Elem(peer))
-      obj.name = name
-      obj :: Nil
-    }
-
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Code.Elem]],
-                                  var nameOption: Option[_String], var value: _Code)
-      extends ListObjView /* .Code */[S]
-      with ObjViewImpl.Impl[S]
-      with ListObjViewImpl.NonEditable[S] {
-
-      type E[~ <: evt.Sys[~]] = _Code.Elem[~]
-
-      def icon    = Code.icon
-      def prefix  = Code.prefix
-      def typeID  = Code.typeID
-
-      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = false
-
-      def isViewable = true
-
-      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        import de.sciss.mellite.Mellite.compiler
-        val frame = CodeFrame(obj(), hasExecute = false)
-        Some(frame)
-      }
-
-      def configureRenderer(label: Label): Component = {
-        label.text = value.contextName
-        label
       }
     }
   }
@@ -971,60 +587,6 @@ object ObjViewImpl {
         val dur = timeFmt.format(value.numFrames.toDouble / sr)
         label.text = s"$dur, ${value.curve}"
         label
-      }
-    }
-  }
-
-  // -------- Action --------
-
-  object Action extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = _Action.Elem[S]
-    val icon        = raphaelIcon(raphael.Shapes.Bolt)
-    val prefix      = "Action"
-    def typeID      = _Action.typeID
-    def hasMakeDialog   = true
-
-    def mkListView[S <: Sys[S]](obj: _Action.Obj[S])(implicit tx: S#Tx): ListObjView[S] =
-      new Action.Impl(tx.newHandle(obj), nameOption(obj))
-
-    type Config[S <: evt.Sys[S]] = _String
-
-    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
-      val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
-        messageType = OptionPane.Message.Question, initial = prefix)
-      opt.title = s"New $prefix"
-      val res = opt.show(window)
-      res
-    }
-
-    def makeObj[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
-      val peer = _Action.Var(_Action.empty[S])
-      val elem = _Action.Elem(peer)
-      val obj = Obj(elem)
-      obj.name = name
-      obj :: Nil
-    }
-
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Action.Obj[S]],
-                                  var nameOption: Option[_String])
-      extends ListObjView /* .Action */[S]
-      with ObjViewImpl.Impl[S]
-      with ListObjViewImpl.NonEditable[S]
-      with ListObjViewImpl.EmptyRenderer[S] {
-
-      type E[~ <: evt.Sys[~]] = _Action.Elem[~]
-
-      def icon    = Action.icon
-      def prefix  = Action.prefix
-      def typeID  = Action.typeID
-
-      def isViewable = true
-
-      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        import de.sciss.mellite.Mellite.compiler
-        val frame = CodeFrame.action(obj())
-        Some(frame)
       }
     }
   }

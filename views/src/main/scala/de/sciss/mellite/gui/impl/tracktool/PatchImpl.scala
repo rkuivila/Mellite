@@ -28,7 +28,7 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
-import de.sciss.mellite.gui.impl.timeline.ProcView
+import de.sciss.mellite.gui.impl.ProcObjView$
 import de.sciss.span.SpanLike
 import de.sciss.swingplus.PaddedIcon
 import de.sciss.synth.proc.{Obj, Proc}
@@ -67,12 +67,12 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   val name          = "Patch"
   val icon          = new PaddedIcon(new ImageIcon(PatchImpl.image), new Insets(1, 1, 2, 2)) // make it 20x20
 
-  protected type Initial = ProcView[S] // TimelineObjView[S]
+  protected type Initial = ProcObjView.Timeline[S] // TimelineObjView[S]
 
   protected def dragToParam(d: Drag): Patch[S] = {
     val pos   = d.currentPos
     val sink  = canvas.findRegion(frame = pos, hitTrack = d.currentTrack) match {
-      case Some(r: ProcView[S]) if r != d.initial /* && r.inputs.nonEmpty */ =>  // region.inputs only carries linked ones!
+      case Some(r: ProcObjView.Timeline[S]) if r != d.initial /* && r.inputs.nonEmpty */ =>  // region.inputs only carries linked ones!
         Patch.Linked(r)
       case _ =>
         Patch.Unlinked(frame = pos, y = d.currentEvent.getY)
@@ -82,7 +82,7 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit =
     region match {
-      case pv: ProcView[S] => new Drag(e, hitTrack, pos, pv) // region.outputs only carries linked ones!
+      case pv: ProcObjView.Timeline[S] => new Drag(e, hitTrack, pos, pv) // region.outputs only carries linked ones!
       case _ =>
     }
 
