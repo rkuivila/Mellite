@@ -15,14 +15,14 @@ package de.sciss.mellite
 package gui
 package impl.timeline
 
+import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.event.Sys
+import de.sciss.lucre.expr.{Expr, String => StringEx}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Source
 import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
 import de.sciss.span.SpanLike
-import de.sciss.synth.proc.{DoubleElem, BooleanElem, StringElem, IntElem, FadeSpec, Timeline, ObjKeys, Proc, Obj, Action => _Action}
-import de.sciss.lucre.expr.{String => StringEx, Expr}
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.synth.proc.{Action => _Action, BooleanElem, DoubleElem, FadeSpec, IntElem, Obj, ObjKeys, Proc, StringElem, Timeline}
 
 object TimelineObjViewImpl {
   private val sync = new AnyRef
@@ -41,7 +41,7 @@ object TimelineObjViewImpl {
     val obj   = timed.value
     val tid   = obj.elem.typeID
     // getOrElse(sys.error(s"No view for type $tid"))
-    map.get(tid).fold(Generic(span, obj))(f => f(timed.id, span, obj.asInstanceOf[Obj.T[S, f.E]], context))
+    ??? // map.get(tid).fold(Generic(span, obj))(f => f(timed.id, span, obj.asInstanceOf[Obj.T[S, f.E]], context))
   }
 
   private var map = Map[Int, Factory](

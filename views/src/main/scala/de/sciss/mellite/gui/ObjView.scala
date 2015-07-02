@@ -15,170 +15,53 @@ package de.sciss
 package mellite
 package gui
 
-import java.io.File
 import javax.swing.Icon
-import javax.swing.undo.UndoableEdit
 
+import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt, stm}
-import de.sciss.mellite.gui.impl.{ObjViewImpl => Impl}
-import de.sciss.synth.proc.{ArtifactElem, ArtifactLocationElem, AudioGraphemeElem, BooleanElem, DoubleElem, Elem, FolderElem, Grapheme, IntElem, LongElem, Obj, StringElem}
+import de.sciss.synth.proc.{Elem, Obj}
 
 import scala.language.higherKinds
-import scala.swing.{Component, Label}
 
 object ObjView {
-  import java.lang.{String => _String}
-
-  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
-  import de.sciss.synth.proc.{Action => _Action, Code => _Code, Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Proc => _Proc, Timeline => _Timeline}
-  import de.sciss.nuages.{Nuages => _Nuages}
-
-  import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long}
-
-  //  final case class SelectionDrag[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
-  //    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
-  //  }
-
-  final case class Drag[S <: Sys[S]](workspace: Workspace[S], view: ObjView[S])
-
-  // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
-  // val SelectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]
-  val Flavor = DragAndDrop.internalFlavor[Drag[_]]
-
   trait Factory {
-    def prefix: _String
+    def prefix: String
     def icon  : Icon
-    def typeID: _Int
+    def typeID: Int
+
+    type Config[S <: evt.Sys[S]]
 
     type E[~ <: evt.Sys[~]] <: Elem[~]
 
-    def apply[S <: Sys[S]](obj: Obj.T[S, E])(implicit tx: S#Tx): ObjView[S]
+    /** Whether it is possible to create an instance of the object via a GUI dialog. */
+    def hasMakeDialog: Boolean
 
-    type Config[S <: Sys[S]]
+    /** Provides an optional initial configuration for the make-new-instance dialog. */
+    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                                   (implicit cursor: stm.Cursor[S]): Option[Config[S]]
 
-    def make[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]]
-
-    def hasDialog: _Boolean
-
-    def initDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] // List[Obj[S]]
-  }
-
-  def addFactory(f: Factory): Unit = Impl.addFactory(f)
-
-  def factories: Iterable[Factory] = Impl.factories
-
-  def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ObjView[S] = Impl(obj)
-
-  val String: Factory { type E[S <: evt.Sys[S]] = StringElem[S] } = Impl.String
-  trait String[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, StringElem]]
-  }
-
-  val Int: Factory { type E[S <: evt.Sys[S]] = IntElem[S] } = Impl.Int
-  trait Int[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, IntElem]]
-    def value: _Int
-  }
-
-  val Long: Factory { type E[S <: evt.Sys[S]] = LongElem[S] } = Impl.Long
-  trait Long[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, LongElem]]
-    def value: _Long
-  }
-
-  val Double: Factory { type E[S <: evt.Sys[S]] = DoubleElem[S] } = Impl.Double
-  trait Double[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]]
-  }
-
-  val Boolean: Factory { type E[S <: evt.Sys[S]] = BooleanElem[S] } = Impl.Boolean
-  trait Boolean[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, BooleanElem]]
-    def value: _Boolean
-  }
-
-  val AudioGrapheme: Factory { type E[S <: evt.Sys[S]] = AudioGraphemeElem[S] } =
-    Impl.AudioGrapheme
-
-  trait AudioGrapheme[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
-    def value: Grapheme.Value.Audio
-  }
-
-  val ArtifactLocation: Factory { type E[S <: evt.Sys[S]] = ArtifactLocationElem[S] } =
-    Impl.ArtifactLocation
-
-  trait ArtifactLocation[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]
-    def directory: File
-  }
-
-  trait Artifact[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, ArtifactElem.Obj[S]]
-    def file: File
-  }
-
-  val Recursion: Factory { type E[S <: evt.Sys[S]] = mellite.Recursion.Elem[S] } = Impl.Recursion
-  trait Recursion[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, mellite.Recursion.Elem]]
-    def deployed: File
-  }
-
-  val Folder: Factory { type E[S <: evt.Sys[S]] = FolderElem[S] } = Impl.Folder
-  trait Folder[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, FolderElem]]
-  }
-
-  val Proc: Factory { type E[S <: evt.Sys[S]] = _Proc.Elem[S] } = Impl.Proc
-  trait Proc[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, _Proc.Obj[S]]
-  }
-
-  val Timeline: Factory { type E[S <: evt.Sys[S]] = _Timeline.Elem[S] } = Impl.Timeline
-  trait Timeline[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, _Timeline.Obj[S]]
-  }
-
-  val Code: Factory { type E[S <: evt.Sys[S]] = _Code.Elem[S] } = Impl.Code
-  trait Code[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, _Code.Obj[S]]
-    def value: _Code
-  }
-
-  val FadeSpec: Factory { type E[S <: evt.Sys[S]] = _FadeSpec.Elem[S] } = Impl.FadeSpec
-  trait FadeSpec[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]]
-    def value: _FadeSpec
-  }
-
-  val Action: Factory { type E[S <: evt.Sys[S]] = _Action.Elem[S] } = Impl.Action
-  trait Action[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, _Action.Obj[S]]
-    // def value: _Action
-  }
-
-  val Ensemble: Factory { type E[S <: evt.Sys[S]] = _Ensemble.Elem[S] } = Impl.Ensemble
-  trait Ensemble[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, _Ensemble.Obj[S]]
-    def playing: _Boolean
-  }
-
-  val Nuages: Factory { type E[S <: evt.Sys[S]] = _Nuages.Elem[S] } = Impl.Nuages
-  trait Nuages[S <: Sys[S]] extends ObjView[S] {
-    def obj: stm.Source[S#Tx, _Nuages.Obj[S]]
+    /** Creates an object from a configuration.
+      * The reason that the result type is not `Obj.T[S, E]` is
+      * that we allow the returning of a number of auxiliary other objects as well.
+      */
+    def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]]
   }
 }
-trait ObjView[S <: Sys[S]] {
-  def typeID: Int
+trait ObjView[S <: evt.Sys[S]] extends Disposable[S#Tx] {
+  // type E[~ <: evt.Sys[~]] <: Elem[~]
+
+  // def factory: ObjView.Factory
 
   /** The contents of the `"name"` attribute of the object. This is directly
     * set by the table tree view. The object view itself must only make sure that
     * an initial value is provided.
     */
-  var name: String
+  var nameOption: Option[String]
+
+  /** Convenience method that returns an "unnamed" string if no name is set. */
+  def name: String = nameOption.getOrElse(TimelineObjView.Unnamed)
 
   /** The prefix is the type of object represented. For example, `"Int"` for an `Obj.T[S, IntElem]`, etc. */
   def prefix: String
@@ -189,32 +72,7 @@ trait ObjView[S <: Sys[S]] {
   def icon  : Icon
 
   /** The view must store a handle to its underlying model. */
-  def obj: stm.Source[S#Tx, Obj[S]]
-
-  /** Passes in a received opaque update to ask whether the view should be repainted due to this update.
-    * This is a transactional method. If the view wants to update its internal state, it should
-    * do that using `deferTx` to perform mutable state changes on the EDT, and then return `true` to
-    * trigger a refresh of the table row.
-    */
-  def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean
-
-  /** The opaque view value passed into the renderer. */
-  def value: Any
-
-  /** Configures the value cell renderer. The simplest case would be
-    * `label.text = value.toString`. In order to leave the cell blank, just return the label.
-    * One can also set its icon.
-    */
-  def configureRenderer(label: Label): Component
-
-  /** Whether the opaque value part of the view can be edited in-place (inside the table itself). */
-  def isEditable: Boolean
-
-  /** Given that the view is editable, this method is called when the editor gave notification about
-    * the editing being done. It is then the duty of the view to issue a corresponding transactional
-    * mutation, returned in an undoable edit. Views that do not support editing should just return `None`.
-    */
-  def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit]
+  def obj: stm.Source[S#Tx, Obj[S]] // Obj.T[S, E]]
 
   /** Whether a dedicated view/editor window exists for this type of object. */
   def isViewable: Boolean

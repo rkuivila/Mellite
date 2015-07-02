@@ -16,29 +16,30 @@ package gui
 package impl
 package timeline
 
-import de.sciss.lucre.event.Sys
-import de.sciss.synth.proc.{IntElem, ObjKeys, Obj, FadeSpec, Grapheme, Scan, Proc}
-import de.sciss.lucre.{stm, expr}
-import de.sciss.span.{Span, SpanLike}
-import de.sciss.sonogram.{Overview => SonoOverview}
-import expr.Expr
-import org.scalautils.TypeCheckedTripleEquals
-import language.implicitConversions
-import scala.util.control.NonFatal
 import de.sciss.file._
-import de.sciss.lucre.stm.IdentifierMap
-import collection.immutable.{IndexedSeq => Vec}
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm.IdentifierMap
 import de.sciss.lucre.swing.deferTx
+import de.sciss.sonogram.{Overview => SonoOverview}
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.synth.proc.{FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan}
+import org.scalautils.TypeCheckedTripleEquals
+
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.language.implicitConversions
+import scala.util.control.NonFatal
 
 object ProcView extends TimelineObjView.Factory {
   def typeID: Int = Proc.typeID
 
-  type E[S <: Sys[S]] = Proc.Elem[S]
+  type E[S <: evt.Sys[S]] = Proc.Elem[S]
 
   type LinkMap[S <: Sys[S]] = Map[String, Vec[ProcView.Link[S]]]
   type ProcMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcView[S]]
-  type ScanMap[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
+  type ScanMap[S <: evt.Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
 
   type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, ProcView[S]]
 
@@ -56,8 +57,8 @@ object ProcView extends TimelineObjView.Factory {
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
     */
-  def apply[S <: Sys[S]](timedID: S#ID, span: Expr[S, SpanLike], obj: Proc.Obj[S], context: TimelineObjView.Context[S])
-                        (implicit tx: S#Tx): ProcView[S] = {
+  def mkTimelineView[S <: Sys[S]](timedID: S#ID, span: Expr[S, SpanLike], obj: Proc.Obj[S],
+                                  context: TimelineObjView.Context[S])(implicit tx: S#Tx): ProcView[S] = {
     val spanV = span.value
     import SpanLikeEx._
     // println("--- scan keys:")
@@ -89,7 +90,8 @@ object ProcView extends TimelineObjView.Factory {
 
     val attr    = obj.attr
     val bus     = attr[IntElem](ObjKeys.attrBus    ).map(_.value)
-    val res = new Impl(span = tx.newHandle(span), obj = tx.newHandle(obj), audio = audio, busOption = bus,
+    val res = new Impl(span = tx.newHandle(span), obj = tx.newHandle(obj),
+      nameOption = ObjViewImpl.nameOption(obj), audio = audio, busOption = bus,
       context = context)
 
     TimelineObjViewImpl.initAttrs    (span, obj, res)
@@ -143,15 +145,15 @@ object ProcView extends TimelineObjView.Factory {
 
   private final class Impl[S <: Sys[S]](val span: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
+                                        var nameOption: Option[String],
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var busOption : Option[Int], context: TimelineObjView.Context[S])
-    extends ProcView[S] { self =>
+    extends ObjViewImpl.Proc[S] with ProcView[S] { self =>
 
     override def toString = s"ProcView($name, $spanValue, $audio)"
 
     var trackIndex  : Int             = _
     var trackHeight : Int             = _
-    var nameOption  : Option[String]  = _
     var spanValue   : SpanLike        = _
     var gain        : Double          = _
     var muted       : Boolean         = _
@@ -197,7 +199,7 @@ object ProcView extends TimelineObjView.Factory {
       sonogram
     }
 
-    def dispose()(implicit tx: S#Tx): Unit = {
+    override def dispose()(implicit tx: S#Tx): Unit = {
       // procMap.remove(timed.id)
       val proc  = obj().elem.peer
       // val proc = timed.value.elem.peer
@@ -264,8 +266,10 @@ trait ProcView[S <: Sys[S]]
   with TimelineObjView.HasFade
   {
 
-  import ProcView.{LinkMap, ProcMap, ScanMap}
-  
+  import ProcView.LinkMap
+
+  // override type E[~ <: evt.Sys[~]] = Proc.Elem[~]
+
   override def obj: stm.Source[S#Tx, Proc.Obj[S]]
 
   /** Convenience for `obj()` */

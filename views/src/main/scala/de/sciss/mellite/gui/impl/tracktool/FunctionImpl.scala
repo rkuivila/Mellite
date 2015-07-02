@@ -44,6 +44,7 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
     regionOpt match {
       case Some(region) =>
         if (e.getClickCount == 2) {
+          region.name
           println("Edit TODO")
         }
 

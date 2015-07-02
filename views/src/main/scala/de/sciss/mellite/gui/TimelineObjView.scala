@@ -14,10 +14,10 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.lucre.event.Sys
 import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Disposable, IdentifierMap}
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm.IdentifierMap
 import de.sciss.mellite.gui.impl.timeline.{ProcView, TimelineObjViewImpl => Impl}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc.{Elem, FadeSpec, Obj, Timeline}
@@ -25,11 +25,11 @@ import de.sciss.synth.proc.{Elem, FadeSpec, Obj, Timeline}
 import scala.language.{higherKinds, implicitConversions}
 
 object TimelineObjView {
-  type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, TimelineObjView[S]]
+  type SelectionModel[S <: evt.Sys[S]] = gui.SelectionModel[S, TimelineObjView[S]]
 
   final val Unnamed = "<unnamed>"
 
-  implicit def span[S <: Sys[S]](view: TimelineObjView[S]): (Long, Long) = {
+  implicit def span[S <: evt.Sys[S]](view: TimelineObjView[S]): (Long, Long) = {
     view.spanValue match {
       case Span(start, stop)  => (start, stop)
       case Span.From(start)   => (start, Long.MaxValue)
@@ -39,24 +39,18 @@ object TimelineObjView {
     }
   }
 
-  type Map[S <: Sys[S]] = IdentifierMap[S#ID, S#Tx, TimelineObjView[S]]
+  type Map[S <: evt.Sys[S]] = IdentifierMap[S#ID, S#Tx, TimelineObjView[S]]
 
-  trait Context[S <: Sys[S]] {
+  trait Context[S <: evt.Sys[S]] {
     /** A map from `TimedProc` ids to their views. This is used to establish scan links. */
     def viewMap: Map[S]
     /** A map from `Scan` ids to their keys and a handle on the timed-proc's id. */
     def scanMap: ProcView.ScanMap[S]
   }
 
-  trait Factory {
-    //    def prefix: String
-    //    def icon  : Icon
-    def typeID: Int
-
-    type E[~ <: Sys[~]] <: Elem[~]
-
-    def apply[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Obj.T[S, E], context: TimelineObjView.Context[S])
-                          (implicit tx: S#Tx): TimelineObjView[S]
+  trait Factory extends ObjView.Factory {
+    def mkTimelineView[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Obj.T[S, E],
+                                    context: TimelineObjView.Context[S])(implicit tx: S#Tx): TimelineObjView[S]
   }
 
   def addFactory(f: Factory): Unit = Impl.addFactory(f)
@@ -84,17 +78,8 @@ object TimelineObjView {
     var fadeOut: FadeSpec
   }
 }
-trait TimelineObjView[S <: Sys[S]] extends Disposable[S#Tx] {
-  /** The proc's name or a place holder name if no name is set. */
-  //def name: String
-
-  var nameOption: Option[String]
-
-  /** Convenience method that returns an "unnamed" string if no name is set. */
-  def name: String = nameOption.getOrElse(TimelineObjView.Unnamed)
-
+trait TimelineObjView[S <: evt.Sys[S]] extends ObjView[S] {
   def span: stm.Source[S#Tx, Expr[S, SpanLike]]
-  def obj : stm.Source[S#Tx, Obj [S]]
 
   var spanValue: SpanLike
 
