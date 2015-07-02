@@ -16,18 +16,18 @@ package gui
 package impl
 package tracktool
 
+import java.awt.event.MouseEvent
+import java.awt.{Point, Toolkit}
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.lucre.expr.{Expr, Boolean => BooleanEx}
+import de.sciss.lucre.expr.{Boolean => BooleanEx, Expr}
 import de.sciss.lucre.stm
-import de.sciss.lucre.synth.expr.ExprImplicits
-import de.sciss.mellite.gui.edit.EditAttrMap
-import de.sciss.synth.proc.{BooleanElem, ObjKeys, Obj}
-import java.awt.{Point, Toolkit}
-import java.awt.event.MouseEvent
-import de.sciss.span.SpanLike
-import de.sciss.mellite.gui.TrackTool.Mute
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.expr.ExprImplicits
+import de.sciss.mellite.gui.TrackTool.Mute
+import de.sciss.mellite.gui.edit.EditAttrMap
+import de.sciss.span.SpanLike
+import de.sciss.synth.proc.{BooleanElem, Obj, ObjKeys}
 import org.scalautils.TypeCheckedTripleEquals
 
 object MuteImpl {
@@ -59,7 +59,7 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     import TypeCheckedTripleEquals._
     val newMuteOpt = if (newMute === BooleanEx.newConst[S](false)) None else Some(newMute)
     import BooleanEx.serializer
-    val edit = EditAttrMap.expr(s"Adjust $name", obj, ObjKeys.attrMute, newMuteOpt) { ex =>
+    val edit = EditAttrMap.expr[S, Boolean, BooleanElem](s"Adjust $name", obj, ObjKeys.attrMute, newMuteOpt) { ex =>
       BooleanElem(BooleanEx.newVar(ex))
     }
     Some(edit)

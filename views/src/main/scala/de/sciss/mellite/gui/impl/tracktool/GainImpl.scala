@@ -18,14 +18,14 @@ package tracktool
 
 import java.awt.Cursor
 import javax.swing.undo.UndoableEdit
-import de.sciss.lucre.expr.Expr
+
+import de.sciss.lucre.expr.{Double => DoubleEx, Expr}
 import de.sciss.lucre.stm
+import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditAttrMap
-import de.sciss.synth.proc.{DoubleElem, ObjKeys, Obj, ExprImplicits}
-import de.sciss.lucre.expr.{Double => DoubleEx}
 import de.sciss.span.SpanLike
 import de.sciss.synth
-import de.sciss.lucre.synth.Sys
+import de.sciss.synth.proc.{DoubleElem, ExprImplicits, Obj, ObjKeys}
 import org.scalautils.TypeCheckedTripleEquals
 
 final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
@@ -65,7 +65,7 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       import TypeCheckedTripleEquals._
       val newGainOpt = if (newGain === DoubleEx.newConst[S](1.0)) None else Some(newGain)
       import DoubleEx.serializer
-      val edit = EditAttrMap.expr(s"Adjust $name", obj, ObjKeys.attrGain, newGainOpt) { ex =>
+      val edit = EditAttrMap.expr[S, Double, DoubleElem](s"Adjust $name", obj, ObjKeys.attrGain, newGainOpt) { ex =>
         DoubleElem(DoubleEx.newVar(ex))
       }
       Some(edit)

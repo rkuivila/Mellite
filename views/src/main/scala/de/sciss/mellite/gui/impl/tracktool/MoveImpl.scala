@@ -16,24 +16,20 @@ package gui
 package impl
 package tracktool
 
+import java.awt.Cursor
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
-import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.mellite.gui.edit.{Edits, EditAttrMap}
-import de.sciss.synth.proc.{IntElem, Obj, ExprImplicits}
-import java.awt.Cursor
-import de.sciss.span.{SpanLike, Span}
-import de.sciss.lucre.expr.{Expr, Int => IntEx}
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.edit.Edits
+import de.sciss.span.SpanLike
+import de.sciss.synth.proc.Obj
 
 final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Move] {
 
   import TrackTool.{Cursor => _, _}
-  import BasicRegion.MinDur
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
   val name          = "Move"

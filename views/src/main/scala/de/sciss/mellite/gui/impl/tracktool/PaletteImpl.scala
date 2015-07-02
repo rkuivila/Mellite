@@ -16,13 +16,15 @@ package gui
 package impl
 package tracktool
 
-import scala.swing.{ToggleButton, Action, Orientation, BoxPanel}
-import javax.swing.{KeyStroke, ButtonGroup}
-import collection.immutable.{IndexedSeq => Vec}
 import java.awt.event.KeyEvent
-import de.sciss.desktop.FocusType
+import javax.swing.{ButtonGroup, KeyStroke}
+
 import de.sciss.desktop
+import de.sciss.desktop.FocusType
 import de.sciss.lucre.synth.Sys
+
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.swing.{Action, BoxPanel, Orientation, ToggleButton}
 
 final class PaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackTool[S, _]])
   extends BoxPanel(Orientation.Horizontal) {

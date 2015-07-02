@@ -16,11 +16,23 @@ package gui
 package impl
 package tracktool
 
-import java.awt.event.{KeyListener, MouseEvent, KeyEvent}
+import java.awt.event.{KeyEvent, KeyListener, MouseEvent}
 import javax.swing.event.MouseInputAdapter
-import de.sciss.mellite.gui.TrackTool.{DragAdjust, DragBegin, DragEnd, DragCancel}
-import de.sciss.lucre.synth.Sys
 
+import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.TrackTool.{DragAdjust, DragBegin, DragCancel, DragEnd}
+
+/** A mixin trait for region-like track tools that enables updates during mouse dragging.
+  * It adds an internal class `Drag` that embodies that dragging state (initial
+  * and current positions). Dragging is useful for all parameters that can
+  * be continuously changed such as region position but also region gain. It does
+  * not necessarily mean that regions are moved. In other words, whenever the
+  * `mouseDragged` event causes a meaningful change in the editing state.
+  *
+  * Custom data can be added by the sub-class by specifying the type member `Initial`.
+  *
+  * All the sub-class must do is call `new Drag` and provide the body of method `dragToParam`.
+  */
 trait Dragging[S <: Sys[S], A] {
   _: RegionLike[S, A] =>
 
@@ -33,7 +45,15 @@ trait Dragging[S <: Sys[S], A] {
   final protected def dragEnd   ()       : Unit = dispatch(DragEnd   )
   final protected def dragCancel(d: Drag): Unit = dispatch(DragCancel)
 
-  /* final */ protected def dragStarted(d: this.Drag): Boolean =
+  /** Determines if the drag operations should be started or not.
+    * The default behavior is to wait until the mouse is dragged
+    * by around four pixels. Sub-classes may override this, for
+    * example to have the drag start immediately without threshold.
+    *
+    * @return `true` if the parameter data signalize that a drag has started,
+    *         `false` if it is not (yet) sufficient.
+    */
+  protected def dragStarted(d: this.Drag): Boolean =
     d.currentEvent.getPoint.distanceSq(d.firstEvent.getPoint) > 16
 
   final protected def dragBegin(d: Drag): Unit = {
@@ -52,6 +72,16 @@ trait Dragging[S <: Sys[S], A] {
       }
     }
 
+  /** Objects that represents a (potential) drag. When instantiated,
+    * it installs itself on the parent component of `firstEvent` and
+    * automatically removes itself when the mouse is released.
+    *
+    * A drag is only formally started once `dragStarted` returns `true`.
+    * It will then update the drag state by calling repeatedly into
+    * `dragToParam` and dispatching appropriate events.
+    *
+    * A drag can be aborted by pressing the <tt>Escape</tt> key.
+    */
   protected class Drag(val firstEvent: MouseEvent, val firstTrack: Int,
                        val firstPos: Long, val initial: Initial)
     extends MouseInputAdapter with KeyListener {

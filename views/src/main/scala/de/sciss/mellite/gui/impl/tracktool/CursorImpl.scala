@@ -17,16 +17,18 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import javax.swing.undo.UndoableEdit
-import de.sciss.lucre.stm
-import de.sciss.mellite.gui.edit.Edits
-import de.sciss.synth.proc.Obj
 import java.awt.event.MouseEvent
-import de.sciss.lucre.expr.{Expr, String => StringEx}
-import de.sciss.span.{Span, SpanLike}
+import javax.swing.undo.UndoableEdit
+
 import de.sciss.desktop.OptionPane
-import scala.swing.{Label, FlowPanel, TextField}
+import de.sciss.lucre.expr.{Expr, String => StringEx}
+import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.edit.Edits
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.synth.proc.Obj
+
+import scala.swing.{FlowPanel, Label, TextField}
 
 final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends RegionImpl[S, TrackTool.Cursor] {
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)

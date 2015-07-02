@@ -16,14 +16,14 @@ package gui
 package impl
 package tracktool
 
-import java.awt.{Font, Color}
 import java.awt.image.BufferedImage
+import java.awt.{Color, Font}
 import javax.imageio.ImageIO
-
-import de.sciss.model.impl.ModelImpl
 import javax.swing.ImageIcon
-import de.sciss.model.Change
+
 import de.sciss.lucre.synth.Sys
+import de.sciss.model.Change
+import de.sciss.model.impl.ModelImpl
 
 object ToolsImpl {
   def getImage(name: String): BufferedImage = {

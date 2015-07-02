@@ -125,15 +125,34 @@ object TrackTool {
   def patch   [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Patch[S]] = new PatchImpl   (canvas)
 }
 
+/** A tool that operates on object inside the timeline view.
+  *
+  * @tparam A   the type of element that represents an ongoing
+  *             edit state (typically during mouse drag).
+  */
 trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
+  /** The mouse cursor used when the tool is active. */
   def defaultCursor: Cursor
+  /** The icon to use in a tool bar. */
   def icon: Icon
+  /** The human readable name of the tool. */
   def name: String
 
+  /** Called to activate the tool to operate on the given component. */
   def install  (component: Component): Unit
+  /** Called to deactivate the tool before switching to a different tool. */
   def uninstall(component: Component): Unit
+
   // def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineProcView[S]]): Unit
 
+  /** Called after the end of a mouse drag gesture. If this constitutes a
+    * valid edit, the method should return the resulting undoable edit.
+    *
+    * @param drag   the last editing state
+    * @param cursor the cursor that might be needed to construct the undoable edit
+    * @return either `Some` edit or `None` if the action does not constitute an
+    *         edit or the edit parameters are invalid.
+    */
   def commit(drag: A)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit]
 }
 

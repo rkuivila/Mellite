@@ -17,15 +17,16 @@ package impl
 package tracktool
 
 import java.awt.Cursor
-import javax.swing.undo.UndoableEdit
-import de.sciss.lucre.stm
-import de.sciss.mellite.gui.edit.EditTimelineInsertObj
-import de.sciss.synth.proc.{Obj, Proc, IntElem}
-import de.sciss.span.{SpanLike, Span}
 import java.awt.event.MouseEvent
+import javax.swing.undo.UndoableEdit
+
+import de.sciss.lucre.bitemp.{Span => SpanEx}
+import de.sciss.lucre.expr.{Expr, Int => IntEx}
+import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.{Int => IntEx, Expr}
-import de.sciss.lucre.bitemp.{Span => SpanEx, SpanLike => SpanLikeEx}
+import de.sciss.mellite.gui.edit.EditTimelineInsertObj
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.synth.proc.{IntElem, Obj, Proc}
 
 final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends RegionLike[S, TrackTool.Function] with Dragging[S, TrackTool.Function] {
@@ -67,7 +68,7 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
       obj.attr.put(TimelineObjView.attrTrackIndex , Obj(IntElem(IntEx.newVar(IntEx.newConst(drag.trackIndex )))))
       obj.attr.put(TimelineObjView.attrTrackHeight, Obj(IntElem(IntEx.newVar(IntEx.newConst(drag.trackHeight)))))
       log(s"Add function region $p, span = ${drag.span}, trackIndex = ${drag.trackIndex}")
-      import SpanLikeEx.serializer
+      // import SpanLikeEx.serializer
       EditTimelineInsertObj(name, g, span, obj)
       // g.add(span, obj)
 
