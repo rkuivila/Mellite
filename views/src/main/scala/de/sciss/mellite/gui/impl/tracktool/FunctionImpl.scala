@@ -28,7 +28,7 @@ import de.sciss.mellite.gui.edit.EditTimelineInsertObj
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc.{IntElem, Obj, Proc}
 
-final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
+final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv: TimelineView[S])
   extends RegionLike[S, TrackTool.Function] with Dragging[S, TrackTool.Function] {
 
   import TrackTool.{Cursor => _, _}
@@ -43,9 +43,9 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
     handleMouseSelection(e, regionOpt)
     regionOpt match {
       case Some(region) =>
-        if (e.getClickCount == 2) {
-          region.name
-          println("Edit TODO")
+        if (e.getClickCount == 2 && region.isViewable) {
+          import tlv.{cursor, workspace}
+          cursor.step { implicit tx => region.openView() }
         }
 
       case _  => new Drag(e, hitTrack, pos, ())

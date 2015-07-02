@@ -16,26 +16,27 @@ package gui
 package impl
 package timeline
 
+import java.awt.datatransfer.Transferable
+import javax.swing.TransferHandler.TransferSupport
+import javax.swing.table.{AbstractTableModel, TableColumnModel}
+import javax.swing.{DropMode, JComponent, TransferHandler}
+
+import de.sciss.desktop.OptionPane
+import de.sciss.icons.raphael
+import de.sciss.lucre.expr.{Int => IntEx}
 import de.sciss.lucre.stm
-import de.sciss.mellite.gui.impl.IntObjView$
+import de.sciss.lucre.swing.deferTx
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc.Timeline
 import org.scalautils.TypeCheckedTripleEquals
-import scala.swing.{Action, Swing, BorderPanel, FlowPanel, ScrollPane, Button, Table, Component}
-import scala.collection.immutable.{IndexedSeq => Vec}
-import javax.swing.table.{TableColumnModel, AbstractTableModel}
+
 import scala.annotation.switch
-import Swing._
-import de.sciss.desktop.OptionPane
-import javax.swing.{JComponent, TransferHandler, DropMode}
-import javax.swing.TransferHandler.TransferSupport
-import java.awt.datatransfer.Transferable
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.swing.Swing._
 import scala.swing.event.TableRowsSelected
+import scala.swing.{Action, BorderPanel, BoxPanel, Button, Component, FlowPanel, Orientation, ScrollPane, Table}
 import scala.util.Try
-import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.{Int => IntEx}
-import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.lucre.swing._
-import de.sciss.icons.raphael
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](group: Timeline[S], selectionModel: SelectionModel[S, TimelineObjView[S]])
@@ -280,8 +281,19 @@ object GlobalProcsViewImpl {
         }
       }
 
+      val actionEdit: Action = Action(null) {
+        if (selectionModel.nonEmpty) cursor.step { implicit tx =>
+          selectionModel.iterator.foreach { view =>
+            if (view.isViewable) view.openView()
+          }
+        }
+      }
+
       val ggAttr = GUI.toolButton(actionAttr, raphael.Shapes.Wrench, "Attributes Editor")
       actionAttr.enabled = false
+
+      val ggEdit = GUI.toolButton(actionEdit, raphael.Shapes.View, "Proc Editor")
+      actionEdit.enabled = false
 
       table.listenTo(table.selection)
       table.reactions += {
@@ -290,6 +302,7 @@ object GlobalProcsViewImpl {
           val hasSel  = range.nonEmpty
           actionDelete.enabled = hasSel
           actionAttr  .enabled = hasSel
+          actionEdit  .enabled = hasSel
           // println(s"Table range = $range")
           val newSel = range.map(procSeq(_))
           selectionModel.iterator.foreach { v =>
@@ -306,13 +319,18 @@ object GlobalProcsViewImpl {
           }
       }
 
-      val butPanel  = new FlowPanel(ggAdd, ggDelete, ggAttr)
-
       tlSelModel addListener tlSelListener
 
+      val pBottom = new BoxPanel(Orientation.Vertical)
+      if (groupHOpt.isDefined) {
+        // only add buttons if group is modifiable
+        pBottom.contents += new FlowPanel(ggAdd, ggDelete)
+      }
+      pBottom.contents += new FlowPanel(ggAttr, ggEdit)
+
       component = new BorderPanel {
-        add(scroll, BorderPanel.Position.Center)
-        if (groupHOpt.isDefined) add(butPanel, BorderPanel.Position.South) // only add buttons if group is modifiable
+        add(scroll , BorderPanel.Position.Center)
+        add(pBottom, BorderPanel.Position.South )
       }
     }
 

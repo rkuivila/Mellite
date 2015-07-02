@@ -328,7 +328,7 @@ object TimelineViewImpl {
     private lazy val toolGain     = TrackTool.gain    [S](canvasView)
     private lazy val toolMute     = TrackTool.mute    [S](canvasView)
     private lazy val toolFade     = TrackTool.fade    [S](canvasView)
-    private lazy val toolFunction = TrackTool.function[S](canvasView)
+    private lazy val toolFunction = TrackTool.function[S](canvasView, this)
     private lazy val toolPatch    = TrackTool.patch   [S](canvasView)
     private lazy val toolAudition = TrackTool.audition[S](canvasView, this)
 

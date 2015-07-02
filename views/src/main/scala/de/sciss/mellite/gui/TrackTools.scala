@@ -121,7 +121,9 @@ object TrackTool {
   def gain    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Gain    ] = new GainImpl    (canvas)
   def mute    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Mute    ] = new MuteImpl    (canvas)
   def fade    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Fade    ] = new FadeImpl    (canvas)
-  def function[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Function] = new FunctionImpl(canvas)
+  def function[S <: Sys[S]](canvas: TimelineProcCanvas[S], view: TimelineView[S]): TrackTool[S, Function] =
+    new FunctionImpl(canvas, view)
+
   def patch   [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Patch[S]] = new PatchImpl   (canvas)
 
   def audition[S <: Sys[S]](canvas: TimelineProcCanvas[S], view: TimelineView[S]): TrackTool[S, Unit] =
