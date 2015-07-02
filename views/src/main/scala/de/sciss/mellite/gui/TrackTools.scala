@@ -25,7 +25,7 @@ import de.sciss.synth.proc.FadeSpec
 import scala.swing.Component
 import javax.swing.Icon
 import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.mellite.gui.impl.tracktool.{PatchImpl, FunctionImpl, CursorImpl, PaletteImpl, ToolsImpl, ResizeImpl, MuteImpl, MoveImpl, GainImpl, FadeImpl}
+import de.sciss.mellite.gui.impl.tracktool.{AuditionImpl, PatchImpl, FunctionImpl, CursorImpl, PaletteImpl, ToolsImpl, ResizeImpl, MuteImpl, MoveImpl, GainImpl, FadeImpl}
 import de.sciss.span.Span
 import de.sciss.mellite.gui.impl.timeline.ProcView
 import de.sciss.lucre.synth.Sys
@@ -123,6 +123,9 @@ object TrackTool {
   def fade    [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Fade    ] = new FadeImpl    (canvas)
   def function[S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Function] = new FunctionImpl(canvas)
   def patch   [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTool[S, Patch[S]] = new PatchImpl   (canvas)
+
+  def audition[S <: Sys[S]](canvas: TimelineProcCanvas[S], view: TimelineView[S]): TrackTool[S, Unit] =
+    new AuditionImpl(canvas, view)
 }
 
 /** A tool that operates on object inside the timeline view.

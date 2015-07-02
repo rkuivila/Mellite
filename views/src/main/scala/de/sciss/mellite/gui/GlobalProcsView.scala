@@ -32,6 +32,8 @@ trait GlobalProcsView[S <: Sys[S]] extends Disposable[S#Tx] {
 
   def selectionModel: SelectionModel[S, ProcView[S]]
 
+  def iterator: Iterator[ProcView[S]]
+
   def add    (proc: ProcView[S]): Unit
   def remove (proc: ProcView[S]): Unit
   def updated(proc: ProcView[S]): Unit

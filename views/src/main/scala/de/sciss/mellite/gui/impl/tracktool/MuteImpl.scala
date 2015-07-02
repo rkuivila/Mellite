@@ -17,7 +17,7 @@ package impl
 package tracktool
 
 import java.awt.event.MouseEvent
-import java.awt.{Point, Toolkit}
+import java.awt.{Cursor, Point, Toolkit}
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.lucre.expr.{Boolean => BooleanEx, Expr}
@@ -31,7 +31,7 @@ import de.sciss.synth.proc.{BooleanElem, Obj, ObjKeys}
 import org.scalautils.TypeCheckedTripleEquals
 
 object MuteImpl {
-  private lazy val cursor = {
+  private lazy val cursor: Cursor = {
     val tk  = Toolkit.getDefaultToolkit
     // val img = tk.createImage(Mellite.getClass.getResource("cursor-mute.png"))
     val img = ToolsImpl.getImage("cursor-mute.png")

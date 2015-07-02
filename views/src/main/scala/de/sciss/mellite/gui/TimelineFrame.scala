@@ -15,10 +15,10 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{Timeline, Obj}
-import impl.timeline.{FrameImpl => Impl}
-import lucre.stm
+import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.impl.timeline.{FrameImpl => Impl}
+import de.sciss.synth.proc.Timeline
 
 object TimelineFrame {
   def apply[S <: Sys[S]](group: Timeline.Obj[S])

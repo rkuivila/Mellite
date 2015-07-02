@@ -17,6 +17,9 @@ package gui
 import java.net.URL
 
 import de.sciss.desktop.{OptionPane, Desktop, KeyStrokes, Menu}
+import de.sciss.lucre.synth.Txn
+import de.sciss.osc
+import scala.concurrent.stm.TxnExecutor
 import scala.swing.Label
 import scala.swing.event.{MouseClicked, Key}
 
@@ -90,6 +93,7 @@ object MenuBar {
       .add(Item("stop-all-sound",     proxy("Stop All Sound",           menu1 + Key.Period)))
       .add(Item("debug-print",        proxy("Debug Print",              menu2 + Key.P)))
       .add(Item("debug-threads")("Debug Thread Dump")(debugThreads()))
+      .add(Item("dump-osc")("Dump OSC" -> (ctrl + shift + Key.D))(dumpOSC()))
       .add(Item("window-shot",        proxy("Export Window as PDF...")))
 
     val mView = Group("view", "View")
@@ -150,6 +154,23 @@ object MenuBar {
       else stack.foreach { elem =>
         println(s"    $elem")
       }
+    }
+  }
+
+  private var dumpMode: osc.Dump = osc.Dump.Off
+
+  private def dumpOSC(): Unit = {
+    val sOpt = TxnExecutor.defaultAtomic { itx =>
+      implicit val tx = Txn.wrap(itx)
+      Mellite.auralSystem.serverOption
+    }
+    sOpt.foreach { s =>
+      dumpMode = if (dumpMode == osc.Dump.Off) osc.Dump.Text else osc.Dump.Off
+      s.peer.dumpOSC(dumpMode, filter = {
+        case m: osc.Message if m.name == "/$meter" => false
+        case _ => true
+      })
+      println(s"DumpOSC is ${if (dumpMode == osc.Dump.Text) "ON" else "OFF"}")
     }
   }
 }

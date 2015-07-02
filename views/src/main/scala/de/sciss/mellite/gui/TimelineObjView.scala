@@ -18,13 +18,11 @@ import de.sciss.lucre.event.Sys
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Disposable, IdentifierMap}
-import de.sciss.mellite.gui.impl.timeline.ProcView
+import de.sciss.mellite.gui.impl.timeline.{ProcView, TimelineObjViewImpl => Impl}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc.{Timeline, FadeSpec, Obj, Elem}
-import impl.timeline.{TimelineObjViewImpl => Impl}
+import de.sciss.synth.proc.{Elem, FadeSpec, Obj, Timeline}
 
-import scala.language.higherKinds
-import scala.language.implicitConversions
+import scala.language.{higherKinds, implicitConversions}
 
 object TimelineObjView {
   type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, TimelineObjView[S]]

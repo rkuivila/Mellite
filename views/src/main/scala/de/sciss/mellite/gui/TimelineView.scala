@@ -14,14 +14,15 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.desktop.UndoManager
-import de.sciss.lucre.swing.View
-import de.sciss.synth.proc.{Timeline, Obj}
-import scala.swing.{Component, Action}
-import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl}
-import de.sciss.lucre.stm
 import de.sciss.audiowidgets.TimelineModel
+import de.sciss.desktop.UndoManager
+import de.sciss.lucre.stm
+import de.sciss.lucre.swing.View
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl}
+import de.sciss.synth.proc.Timeline
+
+import scala.swing.{Action, Component}
 
 object TimelineView {
   def apply[S <: Sys[S]](group: Timeline.Obj[S])
@@ -38,6 +39,8 @@ trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S
   def group(implicit tx: S#Tx): Timeline.Obj[S]
 
   def canvasComponent: Component
+
+  def globalView: GlobalProcsView[S]
 
   // ---- GUI actions ----
   def actionBounce      : Action

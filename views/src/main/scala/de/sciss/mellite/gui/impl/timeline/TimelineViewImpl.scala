@@ -126,7 +126,6 @@ object TimelineViewImpl {
 
     // XXX TODO --- should use TransportView now!
 
-    import workspace.inMemoryBridge // {cursor, inMemory}
     val viewMap   = tx.newInMemoryIDMap[TimelineObjView[S]]
     val scanMap   = tx.newInMemoryIDMap[(String, stm.Source[S#Tx, S#ID])]
 
@@ -308,7 +307,7 @@ object TimelineViewImpl {
                                         val scanMap       : ProcView.ScanMap[S],
                                         val timelineModel : TimelineModel,
                                         val selectionModel: SelectionModel[S, TimelineObjView[S]],
-                                        globalView        : GlobalProcsView[S],
+                                        val globalView    : GlobalProcsView[S],
                                         transportView     : TransportView[S])
                                        (implicit val workspace: Workspace[S], val cursor: Cursor[S],
                                         val undoManager: UndoManager)
@@ -331,6 +330,7 @@ object TimelineViewImpl {
     private lazy val toolFade     = TrackTool.fade    [S](canvasView)
     private lazy val toolFunction = TrackTool.function[S](canvasView)
     private lazy val toolPatch    = TrackTool.patch   [S](canvasView)
+    private lazy val toolAudition = TrackTool.audition[S](canvasView, this)
 
     def group     (implicit tx: S#Tx) = groupEH()
     def plainGroup(implicit tx: S#Tx) = groupH()
@@ -579,21 +579,19 @@ object TimelineViewImpl {
       (list3, rightSpan, rightObj)
     }
 
-    private def debugPrintAudioGrapheme(obj: Obj[S])(implicit tx: S#Tx): Unit = {
-      for {
-        objT <- Proc.Obj.unapply(obj)
-        scan <- objT.elem.peer.scans.get(Proc.Obj.graphAudio)
-        Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
-      } {
-        println(s"GRAPHEME: $g")
-        val list = g.debugList()
-        println(list)
-      }
-    }
+    //    private def debugPrintAudioGrapheme(obj: Obj[S])(implicit tx: S#Tx): Unit = {
+    //      for {
+    //        objT <- Proc.Obj.unapply(obj)
+    //        scan <- objT.elem.peer.scans.get(Proc.Obj.graphAudio)
+    //        Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
+    //      } {
+    //        println(s"GRAPHEME: $g")
+    //        val list = g.debugList()
+    //        println(list)
+    //      }
+    //    }
 
     def guiInit(): Unit = {
-      import desktop.Implicits._
-
       canvasView = new View
       val ggVisualBoost = new Slider {
         min       = 0
@@ -631,7 +629,7 @@ object TimelineViewImpl {
           HStrut(4),
           TrackTools.palette(canvasView.trackTools, Vector(
             toolCursor, toolMove, toolResize, toolGain, toolFade /* , toolSlide*/ ,
-            toolMute /* , toolAudition */, toolFunction, toolPatch)),
+            toolMute, toolAudition, toolFunction, toolPatch)),
           HStrut(4),
           ggAttr,
           HStrut(4),
@@ -1390,7 +1388,6 @@ object TimelineViewImpl {
               pv.outputs.foreach { case (_, links) =>
                 links.foreach { link =>
                   if (link.target.isGlobal) {
-                    import TypeCheckedTripleEquals._
                     if (regionViewMode == RegionViewMode.TitledBox) {
                       // XXX TODO: extra info such as gain
                     }

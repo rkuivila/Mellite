@@ -331,6 +331,8 @@ object GlobalProcsViewImpl {
       tm.fireTableRowsDeleted(row, row)
     }
 
+    def iterator: Iterator[ProcView[S]] = procSeq.iterator
+
     def updated(proc: ProcView[S]): Unit = {
       val row   = procSeq.indexOf(proc)
       tm.fireTableRowsUpdated(row, row)
