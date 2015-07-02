@@ -33,7 +33,9 @@ object ListObjViewImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
     val tid = obj.elem.typeID
     // getOrElse(sys.error(s"No view for type $tid"))
-    map.get(tid).fold[ListObjView[S]](Generic.mkListView(obj))(f => f.mkListView(obj.asInstanceOf[Obj.T[S, f.E]]))
+    map.get(tid).fold[ListObjView[S]](GenericObjView.mkListView(obj)) { f =>
+      f.mkListView(obj.asInstanceOf[Obj.T[S, f.E]])
+    }
   }
 
   private var map = scala.Predef.Map[Int, ListObjView.Factory](
@@ -55,37 +57,6 @@ object ListObjViewImpl {
     ObjViewImpl.Ensemble        .typeID -> ObjViewImpl.Ensemble,
     ObjViewImpl.Nuages          .typeID -> ObjViewImpl.Nuages
   )
-
-  // -------- Generic --------
-
-  object Generic {
-    val icon = ObjViewImpl.raphaelIcon(raphael.Shapes.No)
-
-    def mkListView[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ListObjView[S] = ???
-//      new Generic.Impl(tx.newHandle(obj), // .asInstanceOf[Obj.T[S, _]]),
-//        ObjViewImpl.nameOption(obj))
-
-    private final class Impl[S <: Sys[S], E1[~ <: evt.Sys[~]] <: Elem[~]](val obj: stm.Source[S#Tx, Obj.T[S, E1]],
-                                                           var nameOption: Option[String])
-      extends ListObjView[S] with NonEditable[S] with ObjViewImpl.NonViewable[S] {
-
-      type E[~ <: evt.Sys[~]] = E1[~]
-
-      // def factory: Option[Factory] = None
-
-      def prefix: String  = "Generic"
-      def typeID: Int     = 0
-      def icon  : Icon    = Generic.icon
-
-      def value: Any = ()
-
-      def configureRenderer(label: Label): Component = label
-
-      def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
-
-      def dispose()(implicit tx: S#Tx): Unit = ()
-    }
-  }
 
   /** A trait that when mixed in provides `isEditable` and `tryEdit` as non-op methods. */
   trait NonEditable[S <: evt.Sys[S]] {

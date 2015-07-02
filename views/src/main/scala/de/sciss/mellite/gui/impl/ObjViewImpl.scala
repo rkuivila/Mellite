@@ -20,23 +20,21 @@ import javax.swing.undo.UndoableEdit
 import javax.swing.{Icon, SpinnerNumberModel, UIManager}
 
 import de.sciss.audiowidgets.AxisFormat
-import de.sciss.desktop.{FileDialog, OptionPane}
+import de.sciss.desktop.OptionPane
 import de.sciss.file._
 import de.sciss.icons.raphael
 import de.sciss.lucre.expr.{Boolean => BooleanEx, Double => DoubleEx, Expr, Int => IntEx, Long => LongEx, String => StringEx}
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
-import de.sciss.mellite.gui.edit.{EditArtifactLocation, EditFolderInsertObj}
+import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.mellite.gui.impl.document.NuagesFolderFrameImpl
 import de.sciss.model.Change
-import de.sciss.swingplus.{ComboBox, GroupPanel, Spinner}
-import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat}
+import de.sciss.swingplus.{GroupPanel, Spinner}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.impl.{ElemImpl, FolderElemImpl}
-import de.sciss.synth.proc.{ArtifactElem, ArtifactLocationElem, AudioGraphemeElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, Grapheme, IntElem, LongElem, Obj, ObjKeys, StringElem}
+import de.sciss.synth.proc.{ArtifactElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, LongElem, Obj, ObjKeys, StringElem}
 import de.sciss.{desktop, lucre}
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.swing.Swing.EmptyIcon
 import scala.swing.{Alignment, CheckBox, Component, Dialog, Label, TextField}

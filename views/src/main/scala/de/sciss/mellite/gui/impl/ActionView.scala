@@ -91,14 +91,15 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
   def mkTimelineView[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Action.Obj[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): TimelineObjView[S] = {
     implicit val spanLikeSer = SpanLikeEx.serializer[S]
-    val res = new TimelineImpl(tx.newHandle(span), tx.newHandle(obj))
+    val res = new TimelineImpl(tx.newHandle(span), tx.newHandle(obj), ObjViewImpl.nameOption(obj))
     TimelineObjViewImpl.initAttrs    (span, obj, res)
     TimelineObjViewImpl.initMuteAttrs(span, obj, res)
     res
   }
 
   private final class TimelineImpl[S <: Sys[S]](val span: Source[S#Tx, Expr[S, SpanLike]],
-                                                val obj: stm.Source[S#Tx, Action.Obj[S]])
+                                                val obj: stm.Source[S#Tx, Action.Obj[S]],
+                                                var nameOption: Option[String])
     extends Impl[S]
     with TimelineObjViewImpl.BasicImpl[S]
     with TimelineObjView.HasMute {
