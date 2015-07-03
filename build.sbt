@@ -9,6 +9,7 @@ lazy val loggingEnabled             = true
 
 lazy val soundProcessesVersion      = "2.20.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.2"
+lazy val scalaColliderUGenVersion   = "1.13.3-SNAPSHOT"
 lazy val confluentVersion           = "2.11.2"
 lazy val lucreSTMVersion            = "2.1.2"
 lazy val fscapeJobsVersion          = "1.5.0"
@@ -117,15 +118,17 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
     description := "Core layer for Mellite",
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
     libraryDependencies ++= Seq(
-      "de.sciss"        %% "soundprocesses-core"  % soundProcessesVersion,  // computer-music framework
-      "de.sciss"        %% "scalainterpreterpane" % interpreterPaneVersion, // REPL
-      "de.sciss"        %% "lucreconfluent"       % confluentVersion,
-      "de.sciss"        %% "lucrestm-core"        % lucreSTMVersion,
-      "de.sciss"        %% s"lucrestm-$bdb"       % lucreSTMVersion,        // database backend
-      "de.sciss"        %% "fscapejobs"           % fscapeJobsVersion,      // remote FScape invocation
-      "de.sciss"        %% "strugatzki"           % strugatzkiVersion,      // feature extraction
-      "de.sciss"        %% "span"                 % spanVersion,            // makes sbt happy :-E
-      "org.scalautils"  %% "scalautils"           % scalaUtilsVersion       // type-safe equals
+      "de.sciss"        %% "soundprocesses-core"      % soundProcessesVersion,    // computer-music framework
+      "de.sciss"        %% "scalainterpreterpane"     % interpreterPaneVersion,   // REPL
+      "de.sciss"        %% "scalacolliderugens-api"   % scalaColliderUGenVersion, // need latest version
+      "de.sciss"        %  "scalacolliderugens-spec"  % scalaColliderUGenVersion, // meta data
+      "de.sciss"        %% "lucreconfluent"           % confluentVersion,
+      "de.sciss"        %% "lucrestm-core"            % lucreSTMVersion,
+      "de.sciss"        %% s"lucrestm-$bdb"           % lucreSTMVersion,          // database backend
+      "de.sciss"        %% "fscapejobs"               % fscapeJobsVersion,        // remote FScape invocation
+      "de.sciss"        %% "strugatzki"               % strugatzkiVersion,        // feature extraction
+      "de.sciss"        %% "span"                     % spanVersion,              // makes sbt happy :-E
+      "org.scalautils"  %% "scalautils"               % scalaUtilsVersion         // type-safe equals
     ),
     initialCommands in console := "import de.sciss.mellite._"
   )

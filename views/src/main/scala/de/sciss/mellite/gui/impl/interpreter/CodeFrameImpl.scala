@@ -34,11 +34,18 @@ import scala.swing.{Component, Orientation, SplitPane}
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
 
-  def proc[S <: Sys[S]](obj: Obj.T[S, Proc.Elem])
+  def proc[S <: Sys[S]](obj: Proc.Obj[S])
                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                         compiler: Code.Compiler): CodeFrame[S] = {
     val codeObj = mkSource(obj = obj, codeID = Code.SynthGraph.id, key = Proc.Obj.attrSource,
-      init = "// graph function source code\n\n")
+      init = {
+        val txt     = ProcActions.extractSource(obj.elem.peer.graph.value)
+        val comment = if (txt.isEmpty)
+            "graph function source code"
+          else
+            "source code automatically extracted"
+        s"// $comment\n\n$txt"
+      })
     
     val codeEx0 = codeObj.elem.peer
     val objH    = tx.newHandle(obj.elem.peer)
@@ -117,7 +124,7 @@ object CodeFrameImpl {
 
   // ---- general constructor ----
 
-  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], hasExecute: Boolean)
+  def apply[S <: Sys[S]](obj: Code.Obj[S], hasExecute: Boolean)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          compiler: Code.Compiler): CodeFrame[S] = {
     val _codeEx = obj.elem.peer
@@ -155,7 +162,8 @@ object CodeFrameImpl {
 
   // ---- util ----
 
-  private def mkSource[S <: Sys[S]](obj: Obj[S], codeID: Int, key: String, init: String)(implicit tx: S#Tx): Code.Obj[S] = {
+  private def mkSource[S <: Sys[S]](obj: Obj[S], codeID: Int, key: String, init: => String)
+                                   (implicit tx: S#Tx): Code.Obj[S] = {
     // if there is no source code attached,
     // create a new code object and add it to the attribute map.
     // let's just do that without undo manager

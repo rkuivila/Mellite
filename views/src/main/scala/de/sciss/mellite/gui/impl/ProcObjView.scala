@@ -30,7 +30,7 @@ import de.sciss.mellite.gui.{ListObjView, SonogramManager, TimelineObjView}
 import de.sciss.mellite.{Workspace, gui}
 import de.sciss.sonogram.{Overview => SonoOverview}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc
+import de.sciss.synth.{SynthGraph, proc}
 import de.sciss.synth.proc.impl.ElemImpl
 import de.sciss.synth.proc.{FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan}
 import org.scalautils.TypeCheckedTripleEquals
@@ -326,8 +326,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     extends ProcObjView[S] with TimelineObjView[S]
     with TimelineObjView.HasMute
     with TimelineObjView.HasGain
-    with TimelineObjView.HasFade
-  {
+    with TimelineObjView.HasFade {
 
     // override type E[~ <: evt.Sys[~]] = Proc.Elem[~]
 

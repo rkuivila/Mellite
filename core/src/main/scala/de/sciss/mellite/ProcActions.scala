@@ -14,19 +14,21 @@
 package de.sciss
 package mellite
 
-import lucre.expr.Expr
-import org.scalautils.TypeCheckedTripleEquals
-import span.{Span, SpanLike}
-import de.sciss.synth.proc.{Code, ObjKeys, Timeline, Obj, SynthGraphs, ExprImplicits, Scan, Grapheme, Proc, StringElem, DoubleElem, IntElem, BooleanElem}
-import de.sciss.lucre.bitemp.BiExpr
-import de.sciss.synth.proc
-import scala.util.control.NonFatal
-import collection.breakOut
-import de.sciss.lucre.expr.{Int => IntEx, Boolean => BooleanEx, Double => DoubleEx, Long => LongEx, String => StringEx}
-import de.sciss.lucre.bitemp.{Span => SpanEx}
-import proc.Implicits._
+import java.{util => ju}
+
+import de.sciss.lucre.bitemp.{BiExpr, Span => SpanEx}
 import de.sciss.lucre.event.Sys
+import de.sciss.lucre.expr.{Boolean => BooleanEx, Double => DoubleEx, Expr, Long => LongEx, String => StringEx}
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.synth.proc.{BooleanElem, Code, DoubleElem, Elem, ExprImplicits, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan, StringElem, SynthGraphs, Timeline}
+import de.sciss.synth.ugen.{BinaryOpUGen, Constant, UnaryOpUGen}
+import de.sciss.synth.{GE, Lazy, Rate, SynthGraph, UGenSpec, proc}
+import org.scalautils.TypeCheckedTripleEquals
+
+import scala.collection.breakOut
+import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.language.existentials
+import scala.util.control.NonFatal
 
 object ProcActions {
   private val MinDur    = 32
@@ -129,16 +131,16 @@ object ProcActions {
     }
   }
 
-  // @param span the process span. if given, tries to copy the audio grapheme as well.
+  // make IntelliJ happy which doesn't like type projections
+  private[this] def copyElem[S <: Sys[S]](elem: Elem[S])(implicit tx: S#Tx): Elem[S] = elem.mkCopy()
+
   /** Makes a copy of a proc. Copies the graph and all attributes, creates scans with the same keys
     * and connects _outgoing_ scans.
     *
     * @param obj the process to copy
-    * @return
     */
   def copy[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Obj[S] = {
-    val elemNew = obj.elem.mkCopy()
-    val res     = Obj(elemNew)
+    val res: Obj[S] = Obj(copyElem(obj.elem))
     val resAttr = res.attr
     obj.attr.iterator.foreach { case (key, value) =>
       val valueCopy = copy(value)
@@ -156,7 +158,7 @@ object ProcActions {
           val grw         = Grapheme[S](audio.spec.numChannels)
           val gStart      = LongEx  .newVar(time        .value)
           val audioOffset = LongEx  .newVar(audio.offset.value) // XXX TODO
-          val audioGain   = DoubleEx.newVar(audio.gain  .value)
+        val audioGain   = DoubleEx.newVar(audio.gain  .value)
           val gElem       = Grapheme.Expr.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
           val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
           grw.add(bi)
@@ -165,19 +167,6 @@ object ProcActions {
 
       case _ =>
     }
-
-    //    // connect outgoing scans
-    //    obj.elem.peer.scans.iterator.foreach {
-    //      case (key, scan) =>
-    //        val sinks = scan.sinks
-    //        if (sinks.nonEmpty) {
-    //          pNew.scans.get(key).foreach { scan2 =>
-    //            scan.sinks.foreach { link =>
-    //              scan2.addSink(link)
-    //            }
-    //          }
-    //        }
-    //    }
 
     res
   }
@@ -289,7 +278,7 @@ object ProcActions {
     val span    = SpanEx.newVar[S](spanV)
     val proc    = Proc[S]
     val obj     = Obj(Proc.Elem(proc))
-    val attr    = obj.attr
+    // val attr    = obj.attr
 //    if (track >= 0) attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(track))))
 
     //    bus.foreach { busEx =>
@@ -405,5 +394,197 @@ object ProcActions {
         false
       }
     }
+  }
+
+  private final case class ArgAssign(name: Option[String], shape: UGenSpec.SignalShape, value: Any)
+
+  private final class GraphLine(val elemName: String, val constructor: String, val args: Vec[ArgAssign]) {
+    var uses    = Set.empty[String]
+    var valName = Option.empty[String]
+  }
+
+  def extractSource(g: SynthGraph): String = {
+    val ugenMap = UGenSpec.standardUGens
+
+    var lines   = Vec.empty[GraphLine]
+    val lazyMap = new ju.IdentityHashMap[Lazy, GraphLine]
+
+    def mkLine(elem: Product): GraphLine = {
+      val elemName  = elem.productPrefix
+      val argVals   = elem.productIterator.toIndexedSeq
+
+      val line = ugenMap.get(elemName).fold[GraphLine] {
+        val ins = argVals.map(new ArgAssign(None, UGenSpec.SignalShape.Generic, _))
+
+        new GraphLine(elemName = elemName, constructor = "apply", args = ins)
+      } { spec =>
+        val (rate: Rate, rateMethod: UGenSpec.RateMethod, argVals1: Vec[Any]) = spec.rates match {
+          case UGenSpec.Rates.Implied(r, m) => (r, m, argVals)
+          case UGenSpec.Rates.Set(_) =>
+            argVals.head match {
+              case r: Rate => (r, UGenSpec.RateMethod.Default, argVals.tail)
+            }
+        }
+        val rateMethodName = rateMethod match {
+          case UGenSpec.RateMethod.Alias (name) => name
+          case UGenSpec.RateMethod.Custom(name) => name
+          case UGenSpec.RateMethod.Default      => rate.methodName
+        }
+        val ins = (spec.args zip argVals1).map { case (arg, argVal) =>
+          val shape = arg.tpe match {
+            case UGenSpec.ArgumentType.GE(sh, _) => sh
+            case _ => UGenSpec.SignalShape.Generic
+          }
+          new ArgAssign(Some(arg.name), shape, argVal)
+        }
+        new GraphLine(elemName = elemName, constructor = rateMethodName, args = ins)
+      }
+      line
+    }
+
+    g.sources.zipWithIndex.foreach { case (elem, elemIdx) =>
+      val line      = mkLine(elem)
+      lines       :+= line
+      lazyMap.put(elem, line)
+      val elemName  = elem.productPrefix
+
+      line.args.foreach {
+        case ArgAssign(argNameOpt, _, argVal: Lazy) =>
+          val ref = lazyMap.get(argVal)
+          if (ref == null) {
+            val argValS = argVal.productPrefix
+            val argS = argNameOpt.fold(argValS)(n => s"$n = $argValS")
+            Console.err.println(s"Missing argument reference for $argS in $elemName in line $elemIdx")
+          } else {
+            val argName = argNameOpt.getOrElse("unnamed")
+            ref.uses   += argName
+          }
+
+        case ArgAssign(argNameOpt, _, argVal: Product) if argVal.productPrefix == "GESeq" => // XXX TODO -- quite hackish
+          val elems = argVal.productIterator.next().asInstanceOf[Vec[GE]]
+          elems.foreach {
+            case elem: Lazy =>
+              val ref = lazyMap.get(elem)
+              if (ref == null) {
+                val argValS = elem.productPrefix
+                val argS = argNameOpt.fold(argValS)(n => s"$n = $argValS")
+                Console.err.println(s"Missing argument reference for $argS in $elemName seq in line $elemIdx")
+              } else {
+                ref.uses   += "unnamed"
+              }
+
+            case _ =>
+          }
+
+        case _ =>
+      }
+    }
+
+    def uncapitalize(in: String): String = if (in.isEmpty) in else
+      in.updated(0, Character.toLowerCase(in.charAt(0)))
+
+    // assign preliminary val-names
+    lines.foreach { line =>
+      val uses = line.uses
+      if (uses.nonEmpty) (uses - "unnamed").toList match {
+        case single :: Nil if single != "unnamed" => line.valName = Some(single)
+        case multiple =>
+          val nameUp0 = if (line.elemName == "BinaryOpUGen") {
+            val x = line.args.head.value.getClass.getName
+            x.substring(0, x.length - 1)
+          } else line.elemName
+
+          val di      = nameUp0.lastIndexOf('$')
+          val nameUp  = nameUp0.substring(di + 1)
+          val nameLo  = uncapitalize(nameUp)
+          line.valName = Some(nameLo)
+      }
+    }
+    // make sure val-names are unique
+    lines.zipWithIndex.foreach { case (line, li) =>
+      line.valName.foreach { name0 =>
+        val same = lines.filter(_.valName == line.valName)
+        // cf. https://issues.scala-lang.org/browse/SI-9353
+        val si9353 = lines.iterator.zipWithIndex.exists { case (line1, lj) =>
+          lj < li && line1.args.exists(_.name == line.valName)
+        }
+        if (same.size > 1 || si9353) {
+          same.zipWithIndex.foreach { case (line1, i) =>
+            line1.valName = Some(s"${name0}_$i")
+          }
+        }
+      }
+    }
+    // calc indentation
+    val maxValNameSz0 = (0 /: lines)((res, line) => line.valName.fold(res)(n => math.max(n.length, res)))
+    val maxValNameSz  = maxValNameSz0 | 1 // odd
+
+    def mkLineSource(line: GraphLine): String = {
+      val numArgs = line.args.size
+      val args    = line.args.zipWithIndex.map { case (arg, ai) =>
+        def mkString(x: Any): String = x match {
+          case Constant(c) =>
+            import UGenSpec.SignalShape._
+            arg.shape match {
+              case Int | Trigger | Gate | Switch if c == c.toInt => c.toInt.toString
+              case DoneAction => synth.DoneAction(c.toInt).toString
+              case _ => if (c.isPosInfinity) "inf" else if (c.isNegInfinity) "-inf" else c.toString
+            }
+
+          case l: Lazy =>
+            val line1 = Option(lazyMap.get(l)).getOrElse(mkLine(l))
+            line1.valName.getOrElse(mkLineSource(line1))
+
+          case sq: Product if sq.productPrefix == "GESeq" =>
+            val peer = sq.productIterator.next().asInstanceOf[Vec[GE]]
+            peer.map(mkString).mkString("Seq[GE](", ", ", ")")
+
+          case s: String =>
+            // cf. https://stackoverflow.com/questions/9913971/scala-how-can-i-get-an-escaped-representation-of-a-string
+            import scala.reflect.runtime.{universe => ru}
+            val escaped = ru.Literal(ru.Constant(s)).toString()
+            escaped
+
+          case other =>
+            other.toString
+        }
+        val valString = mkString(arg.value)
+        if (numArgs == 1) valString else arg.name.fold(valString) { argName =>
+          if (ai == 0 && argName == "in") valString else s"$argName = $valString"
+        }
+      }
+      val invoke = if (line.elemName == "BinaryOpUGen") {
+        line.args.head.value match {
+          case op: BinaryOpUGen.Op =>
+            val opS = uncapitalize(op.name)
+            val Seq(_, a0, b) = args
+            // XXX TODO --- stupid workaround for ScalaCollider #52
+            val a = if ((opS == "min" || opS == "max") && line.args(1).value.isInstanceOf[Constant])
+              s"Constant($a0)"
+            else a0
+            s"$a $opS $b"
+        }
+      } else if (line.elemName == "UnaryOpUGen") {
+        line.args.head.value match {
+          case op: UnaryOpUGen.Op =>
+            val opS = uncapitalize(op.name)
+            val Seq(_, a) = args
+            s"$a.$opS"
+        }
+      } else {
+        val cons      = if (line.constructor == "apply") "" else s".${line.constructor}"
+        val elemName  = line.elemName.replace('$', '.')
+        val select    = s"$elemName$cons"
+        if (args.isEmpty && cons.nonEmpty) select else args.mkString(s"$select(", ", ", ")")
+      }
+      line.valName.fold(invoke) { valName =>
+        val pad = " " * (maxValNameSz - valName.length)
+        s"val $valName$pad = $invoke"
+      }
+    }
+
+    // turn to source
+    val linesS = lines.map(mkLineSource)
+    linesS.mkString("\n")
   }
 }
