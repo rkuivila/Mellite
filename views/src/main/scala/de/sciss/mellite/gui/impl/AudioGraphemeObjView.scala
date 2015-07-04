@@ -41,7 +41,7 @@ object AudioGraphemeObjView extends ListObjView.Factory {
   def mkListView[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])
                              (implicit tx: S#Tx): AudioGraphemeObjView[S] with ListObjView[S] = {
     val value = obj.elem.peer.value
-    new Impl(tx.newHandle(obj), ObjViewImpl.nameOption(obj), value)
+    new Impl(tx.newHandle(obj), value).initAttrs(obj)
   }
 
   final case class Config1[S <: evt.Sys[S]](file: File, spec: AudioFileSpec,
@@ -80,7 +80,7 @@ object AudioGraphemeObjView extends ListObjView.Factory {
   private val timeFmt = AxisFormat.Time(hours = false, millis = true)
 
   final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
-                                var nameOption: Option[String], var value: Grapheme.Value.Audio)
+                                var value: Grapheme.Value.Audio)
     extends AudioGraphemeObjView[S]
     with ListObjView /* .AudioGrapheme */[S]
     with ObjViewImpl.Impl[S]

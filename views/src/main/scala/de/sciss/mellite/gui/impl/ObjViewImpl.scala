@@ -70,7 +70,7 @@ object ObjViewImpl {
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
-      new String.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable = isEditable, isViewable = isViewable)
+      new String.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
     }
 
     type Config[S <: evt.Sys[S]] = PrimitiveConfig[_String]
@@ -92,7 +92,7 @@ object ObjViewImpl {
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, StringElem]],
-                                 var nameOption: Option[_String], var value: _String,
+                                 var value: _String,
                                  override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ListObjView[S]
       with ObjViewImpl.Impl[S]
@@ -135,7 +135,7 @@ object ObjViewImpl {
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
-      new Long.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable = isEditable, isViewable = isViewable)
+      new Long.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
     }
 
     type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Long]
@@ -155,7 +155,7 @@ object ObjViewImpl {
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, LongElem]],
-                                  var nameOption: Option[_String], var value: _Long,
+                                  var value: _Long,
                                   override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ListObjView /* .Long */[S]
       with ObjViewImpl.Impl[S]
@@ -201,7 +201,7 @@ object ObjViewImpl {
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
-      new Double.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable = isEditable, isViewable = isViewable)
+      new Double.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
     }
 
     type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Double]
@@ -220,9 +220,8 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]],
-                                                   var nameOption: Option[_String], var value: _Double,
-                                                   override val isEditable: _Boolean, val isViewable: _Boolean)
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]], var value: _Double,
+                                  override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ListObjView /* .Double */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.SimpleExpr[S, _Double]
@@ -267,7 +266,7 @@ object ObjViewImpl {
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
-      new Boolean.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable = isEditable, isViewable = isViewable)
+      new Boolean.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
     }
 
     type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Boolean]
@@ -286,7 +285,7 @@ object ObjViewImpl {
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, BooleanElem]],
-                                  var nameOption: Option[_String], var value: _Boolean,
+                                  var value: _Boolean,
                                   override val isEditable: _Boolean, val isViewable: Boolean)
       extends ListObjView /* .Boolean */[S]
       with ObjViewImpl.Impl[S]
@@ -319,7 +318,7 @@ object ObjViewImpl {
         case Expr.Var(_)  => true
         case _            => false
       }
-      new Color.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable0 = isEditable)
+      new Color.Impl(tx.newHandle(obj), value, isEditable0 = isEditable).initAttrs(obj)
     }
 
     type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Color]
@@ -352,8 +351,8 @@ object ObjViewImpl {
       (panel, chooser)
     }
 
-    private def toAWT(c: _Color): java.awt.Color = new java.awt.Color(c.rgba)
-    private def fromAWT(c: java.awt.Color): _Color = {
+    def toAWT(c: _Color): java.awt.Color = new java.awt.Color(c.rgba)
+    def fromAWT(c: java.awt.Color): _Color = {
       val rgba = c.getRGB
       _Color.Palette.find(_.rgba == rgba).getOrElse(_Color.User(rgba))
     }
@@ -366,8 +365,7 @@ object ObjViewImpl {
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Color.Elem]],
-                                  var nameOption: Option[_String], var value: _Color,
-                                  isEditable0: _Boolean)
+                                  var value: _Color, isEditable0: _Boolean)
       extends ListObjView /* .Color */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.SimpleExpr[S, _Color] {
@@ -463,7 +461,7 @@ object ObjViewImpl {
       val peer      = obj.elem.peer
       val value     = peer.value  // peer.child.path
       val editable  = false // XXX TODO -- peer.modifiableOption.isDefined
-      new Artifact.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable = editable)
+      new Artifact.Impl(tx.newHandle(obj), value, isEditable = editable).initAttrs(obj)
     }
 
     type Config[S <: evt.Sys[S]] = PrimitiveConfig[File]
@@ -474,7 +472,7 @@ object ObjViewImpl {
     def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactElem.Obj[S]],
-                                  var nameOption: Option[_String], var file: File, val isEditable: _Boolean)
+                                  var file: File, val isEditable: _Boolean)
       extends ListObjView /* .Artifact */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.StringRenderer
@@ -510,7 +508,7 @@ object ObjViewImpl {
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _Recursion.Elem])(implicit tx: S#Tx): ListObjView[S] = {
       val value     = obj.elem.peer.deployed.elem.peer.artifact.value
-      new Recursion.Impl(tx.newHandle(obj), nameOption(obj), value)
+      new Recursion.Impl(tx.newHandle(obj), value).initAttrs(obj)
     }
 
     type Config[S <: evt.Sys[S]] = Unit
@@ -520,8 +518,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = Nil
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Recursion.Elem]],
-                                  var nameOption: Option[_String], var deployed: File)
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Recursion.Elem]], var deployed: File)
       extends ListObjView /* .Recursion */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S] {
@@ -562,7 +559,7 @@ object ObjViewImpl {
     def hasMakeDialog = true
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, FolderElem])(implicit tx: S#Tx): ListObjView[S] =
-      new Folder.Impl(tx.newHandle(obj), nameOption(obj))
+      new Folder.Impl(tx.newHandle(obj)).initAttrs(obj)
 
     type Config[S <: evt.Sys[S]] = _String
 
@@ -584,8 +581,7 @@ object ObjViewImpl {
     }
 
     // XXX TODO: could be viewed as a new folder view with this folder as root
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, FolderElem]],
-                                  var nameOption: Option[_String])
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, FolderElem]])
       extends ListObjView /* .Folder */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.EmptyRenderer[S]
@@ -618,7 +614,7 @@ object ObjViewImpl {
     def hasMakeDialog = true
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _Timeline.Elem])(implicit tx: S#Tx): ListObjView[S] =
-      new Timeline.Impl(tx.newHandle(obj), nameOption(obj))
+      new Timeline.Impl(tx.newHandle(obj)).initAttrs(obj)
 
     type Config[S <: evt.Sys[S]] = _String
 
@@ -639,8 +635,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]],
-                                  var nameOption: Option[_String])
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]])
       extends ListObjView /* .Timeline */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.EmptyRenderer[S]
@@ -685,7 +680,7 @@ object ObjViewImpl {
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _FadeSpec.Elem])(implicit tx: S#Tx): ListObjView[S] = {
       val value   = obj.elem.peer.value
-      new FadeSpec.Impl(tx.newHandle(obj), nameOption(obj), value)
+      new FadeSpec.Impl(tx.newHandle(obj), value).initAttrs(obj)
     }
 
     type Config[S <: evt.Sys[S]] = Unit
@@ -708,8 +703,7 @@ object ObjViewImpl {
 
     private val timeFmt = AxisFormat.Time(hours = false, millis = true)
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]],
-                                  var nameOption: Option[_String], var value: _FadeSpec)
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]], var value: _FadeSpec)
       extends ListObjView /* .FadeSpec */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S]
@@ -757,7 +751,7 @@ object ObjViewImpl {
         case Expr.Var(_)  => true
         case _            => false
       }
-      new Ensemble.Impl(tx.newHandle(obj), nameOption(obj), playing = playing, isEditable = isEditable)
+      new Ensemble.Impl(tx.newHandle(obj), playing = playing, isEditable = isEditable).initAttrs(obj)
     }
 
     final case class Config[S <: evt.Sys[S]](name: String, offset: Long, playing: Boolean)
@@ -810,7 +804,7 @@ object ObjViewImpl {
     }
 
     final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Ensemble.Obj[S]],
-                                  var nameOption: Option[_String], var playing: _Boolean, val isEditable: Boolean)
+                                  var playing: _Boolean, val isEditable: Boolean)
       extends ListObjView /* .Ensemble */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.BooleanExprLike[S] {
@@ -856,7 +850,7 @@ object ObjViewImpl {
     def hasMakeDialog   = true
 
     def mkListView[S <: Sys[S]](obj: _Nuages.Obj[S])(implicit tx: S#Tx): ListObjView[S] =
-      new Nuages.Impl(tx.newHandle(obj), nameOption(obj))
+      new Nuages.Impl(tx.newHandle(obj)).initAttrs(obj)
 
     type Config[S <: evt.Sys[S]] = _String
 
@@ -877,8 +871,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Nuages.Obj[S]],
-                                  var nameOption: Option[_String])
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Nuages.Obj[S]])
       extends ListObjView /* .Nuages */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S]
@@ -924,23 +917,27 @@ object ObjViewImpl {
     }
   }
 
-  //  cursor.step { implicit tx =>
-  //    val elem      = create(tx)(value)
-  //    val obj       = Obj(elem)
-  //    obj.attr.name = name
-  //    addObject(tpe, parentH(), obj)
-  //  }
-
   def raphaelIcon(shape: Path2D => Unit): Icon = raphael.Icon(16)(shape)
 
-  trait Impl[S <: Sys[S]] extends ObjView[S] {
+  trait Impl[S <: evt.Sys[S]] extends ObjView[S] {
     override def toString = s"ElementView.$prefix(name = $name)"
 
+    var nameOption : Option[String]         = None
+    var colorOption: Option[java.awt.Color] = None
+
     def dispose()(implicit tx: S#Tx): Unit = ()
+
+    /** Sets name and color. */
+    def initAttrs(obj: Obj[S])(implicit tx: S#Tx): this.type = {
+      val attr     = obj.attr
+      nameOption   = attr[StringElem ](ObjKeys.attrName ).map(_.value)
+      colorOption  = attr[_Color.Elem](ObjView.attrColor).map(ex => Color.toAWT(ex.value))
+      this
+    }
   }
 
   /** A trait that when mixed in provides `isViewable` and `openView` as non-op methods. */
-  trait NonViewable[S <: Sys[S]] {
+  trait NonViewable[S <: evt.Sys[S]] {
     def isViewable: _Boolean = false
 
     def openView(parent: Option[Window[S]])

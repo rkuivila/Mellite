@@ -44,7 +44,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
     val peer      = obj.elem.peer
     val value     = peer.directory
     val editable  = peer.modifiableOption.isDefined
-    new Impl(tx.newHandle(obj), ObjViewImpl.nameOption(obj), value, isEditable = editable)
+    new Impl(tx.newHandle(obj), value, isEditable = editable).initAttrs(obj)
   }
 
   type Config[S <: evt.Sys[S]] = ObjViewImpl.PrimitiveConfig[File]
@@ -64,7 +64,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
   }
 
   final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]],
-                                var nameOption: Option[String], var directory: File, val isEditable: Boolean)
+                                var directory: File, val isEditable: Boolean)
     extends ArtifactLocationObjView[S]
     with ListObjView /* .ArtifactLocation */[S]
     with ObjViewImpl.Impl[S]

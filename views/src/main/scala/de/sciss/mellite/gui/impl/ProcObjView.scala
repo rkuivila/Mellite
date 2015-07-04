@@ -46,7 +46,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   def hasMakeDialog = true
 
   def mkListView[S <: Sys[S]](obj: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): ProcObjView[S] with ListObjView[S] =
-    new ListImpl(tx.newHandle(obj), ObjViewImpl.nameOption(obj))
+    new ListImpl(tx.newHandle(obj)).initAttrs(obj)
 
   type Config[S <: evt.Sys[S]] = String
 
@@ -122,10 +122,9 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     val attr    = obj.attr
     val bus     = attr[IntElem](ObjKeys.attrBus    ).map(_.value)
     val res = new TimelineImpl[S](span = tx.newHandle(span), obj = tx.newHandle(obj),
-      nameOption = ObjViewImpl.nameOption(obj), audio = audio, busOption = bus,
-      context = context)
+      audio = audio, busOption = bus,
+      context = context).initAttrs(span, obj)
 
-    TimelineObjViewImpl.initAttrs    (span, obj, res)
     TimelineObjViewImpl.initGainAttrs(span, obj, res)
     TimelineObjViewImpl.initMuteAttrs(span, obj, res)
     TimelineObjViewImpl.initFadeAttrs(span, obj, res)
@@ -176,8 +175,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   // -------- Proc --------
 
-  private final class ListImpl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
-                                           var nameOption: Option[String])
+  private final class ListImpl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]])
     extends Impl[S]
 
   private trait Impl[S <: Sys[S]]
@@ -210,16 +208,12 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   private final class TimelineImpl[S <: Sys[S]](val span: stm.Source[S#Tx, Expr[S, SpanLike]],
                                         val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
-                                        var nameOption: Option[String],
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var busOption : Option[Int], context: TimelineObjView.Context[S])
-    extends Impl[S] with ProcObjView.Timeline[S] { self =>
+    extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] with ProcObjView.Timeline[S] { self =>
 
     override def toString = s"ProcView($name, $spanValue, $audio)"
 
-    var trackIndex  : Int             = _
-    var trackHeight : Int             = _
-    var spanValue   : SpanLike        = _
     var gain        : Double          = _
     var muted       : Boolean         = _
     var fadeIn      : FadeSpec        = _

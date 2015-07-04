@@ -36,7 +36,7 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
   def typeID      = Action.typeID
 
   def mkListView[S <: Sys[S]](obj: Action.Obj[S])(implicit tx: S#Tx): ListObjView[S] =
-    new ListImpl(tx.newHandle(obj), ObjViewImpl.nameOption(obj))
+    new ListImpl(tx.newHandle(obj)).initAttrs(obj)
 
   type Config[S <: evt.Sys[S]] = String
 
@@ -85,22 +85,19 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
     final def action(implicit tx: S#Tx): Action.Obj[S] = obj()
   }
 
-  private final class ListImpl[S <: Sys[S]](val obj: stm.Source[S#Tx, Action.Obj[S]],
-                                var nameOption: Option[String])
+  private final class ListImpl[S <: Sys[S]](val obj: stm.Source[S#Tx, Action.Obj[S]])
     extends Impl[S]
 
   def mkTimelineView[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Action.Obj[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): TimelineObjView[S] = {
     implicit val spanLikeSer = SpanLikeEx.serializer[S]
-    val res = new TimelineImpl(tx.newHandle(span), tx.newHandle(obj), ObjViewImpl.nameOption(obj))
-    TimelineObjViewImpl.initAttrs    (span, obj, res)
+    val res = new TimelineImpl(tx.newHandle(span), tx.newHandle(obj)).initAttrs(span, obj)
     TimelineObjViewImpl.initMuteAttrs(span, obj, res)
     res
   }
 
   private final class TimelineImpl[S <: Sys[S]](val span: Source[S#Tx, Expr[S, SpanLike]],
-                                                val obj: stm.Source[S#Tx, Action.Obj[S]],
-                                                var nameOption: Option[String])
+                                                val obj: stm.Source[S#Tx, Action.Obj[S]])
     extends Impl[S]
     with TimelineObjViewImpl.BasicImpl[S]
     with TimelineObjView.HasMute {

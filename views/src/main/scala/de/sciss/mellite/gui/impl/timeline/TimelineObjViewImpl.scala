@@ -19,7 +19,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt}
 import de.sciss.lucre.expr.Expr
 import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
-import de.sciss.mellite.gui.impl.{ActionView, GenericObjView, ProcObjView}
+import de.sciss.mellite.gui.impl.{ObjViewImpl, ActionView, GenericObjView, ProcObjView}
 import de.sciss.span.SpanLike
 import de.sciss.synth.proc.{BooleanElem, DoubleElem, FadeSpec, IntElem, Obj, ObjKeys, Timeline}
 
@@ -52,15 +52,6 @@ object TimelineObjViewImpl {
 
   // -------- Generic --------
 
-  def initAttrs[S <: evt.Sys[S]](span: Expr[S, SpanLike], obj: Obj[S], view: TimelineObjView[S])
-                            (implicit tx: S#Tx): Unit = {
-    val attr          = obj.attr
-    // view.nameOption   = attr[StringElem](ObjKeys        .attrName       ).map    (_.value)
-    view.trackIndex   = attr[IntElem   ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
-    view.trackHeight  = attr[IntElem   ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
-    view.spanValue    = span.value
-  }
-
   def initGainAttrs[S <: evt.Sys[S]](span: Expr[S, SpanLike], obj: Obj[S], view: TimelineObjView.HasGain)
                                 (implicit tx: S#Tx): Unit = {
     val attr    = obj.attr
@@ -80,10 +71,18 @@ object TimelineObjViewImpl {
     view.fadeOut = attr[FadeSpec.Elem](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
   }
 
-  trait BasicImpl[S <: evt.Sys[S]] extends TimelineObjView[S] {
+  trait BasicImpl[S <: evt.Sys[S]] extends TimelineObjView[S] with ObjViewImpl.Impl[S] {
     var trackIndex  : Int = _
     var trackHeight : Int = _
     // var nameOption  : Option[String] = _
     var spanValue   : SpanLike = _
+
+    def initAttrs(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): this.type = {
+      val attr          = obj.attr
+      trackIndex   = attr[IntElem   ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
+      trackHeight  = attr[IntElem   ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
+      spanValue    = span.value
+      initAttrs(obj)
+    }
   }
 }

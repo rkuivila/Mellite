@@ -37,7 +37,7 @@ object CodeObjView extends ListObjView.Factory {
 
   def mkListView[S <: Sys[S]](obj: Obj.T[S, Code.Elem])(implicit tx: S#Tx): CodeObjView[S] with ListObjView[S] = {
     val value   = obj.elem.peer.value
-    new Impl(tx.newHandle(obj), ObjViewImpl.nameOption(obj), value)
+    new Impl(tx.newHandle(obj), value).initAttrs(obj)
   }
 
   type Config[S <: evt.Sys[S]] = ObjViewImpl.PrimitiveConfig[Code]
@@ -84,8 +84,7 @@ object CodeObjView extends ListObjView.Factory {
     obj :: Nil
   }
 
-  final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, Code.Elem]],
-                                var nameOption: Option[String], var value: Code)
+  final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, Code.Elem]], var value: Code)
     extends CodeObjView[S]
     with ListObjView /* .Code */[S]
     with ObjViewImpl.Impl[S]

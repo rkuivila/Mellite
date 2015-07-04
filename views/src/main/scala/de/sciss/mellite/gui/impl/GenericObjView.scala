@@ -22,15 +22,14 @@ object GenericObjView {
 
   def mkTimelineView[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): TimelineObjView[S] = {
     implicit val spanLikeSer = SpanLikeEx.serializer[S]
-    val res = new TimelineImpl(tx.newHandle(span), tx.newHandle(obj), ObjViewImpl.nameOption(obj))
-    TimelineObjViewImpl.initAttrs(span, obj, res)
+    val res = new TimelineImpl(tx.newHandle(span), tx.newHandle(obj)).initAttrs(span, obj)
     res
   }
 
   def mkListView[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ListObjView[S] =
-    new ListImpl(tx.newHandle(obj), ObjViewImpl.nameOption(obj))
+    new ListImpl(tx.newHandle(obj)).initAttrs(obj)
 
-  private trait Impl[S <: evt.Sys[S]] extends ObjView[S] {
+  private trait Impl[S <: evt.Sys[S]] extends ObjViewImpl.Impl[S] {
     final def prefix: String  = "Generic"
     final def typeID: Int     = 0
     final def icon  : Icon    = GenericObjView.icon
@@ -40,16 +39,13 @@ object GenericObjView {
     final def configureRenderer(label: Label): Component = label
 
     final def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
-
-    final def dispose()(implicit tx: S#Tx): Unit = ()
   }
 
-  private final class ListImpl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj[S]], var nameOption: Option[String])
+  private final class ListImpl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj[S]])
     extends Impl[S] with ListObjView[S] with ListObjViewImpl.NonEditable[S] with ObjViewImpl.NonViewable[S]
 
   private final class TimelineImpl[S <: Sys[S]](val span: Source[S#Tx, Expr[S, SpanLike]],
-                                        val obj: stm.Source[S#Tx, Obj[S]],
-                                        var nameOption: Option[String])
+                                        val obj: stm.Source[S#Tx, Obj[S]])
     extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] {
 
     def openView(parent: Option[Window[S]])

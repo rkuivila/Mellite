@@ -42,7 +42,7 @@ object IntObjView extends ListObjView.Factory {
       case _            => false
     }
     val isViewable  = tx.isInstanceOf[Confluent.Txn]
-    new Impl(tx.newHandle(obj), ObjViewImpl.nameOption(obj), value, isEditable = isEditable, isViewable = isViewable)
+    new Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
   }
 
   type Config[S <: evt.Sys[S]] = ObjViewImpl.PrimitiveConfig[Int]
@@ -66,7 +66,7 @@ object IntObjView extends ListObjView.Factory {
   }
 
   final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, IntElem]],
-                                var nameOption: Option[String], var value: Int,
+                                var value: Int,
                                 override val isEditable: Boolean, val isViewable: Boolean)
     extends IntObjView[S]
     with ListObjView /* .Int */[S]
