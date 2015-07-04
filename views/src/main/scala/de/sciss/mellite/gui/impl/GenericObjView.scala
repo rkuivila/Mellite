@@ -52,7 +52,8 @@ object GenericObjView {
                                         var nameOption: Option[String])
     extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] {
 
-    def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: Cursor[S]): Option[Window[S]] = None
+    def openView(parent: Option[Window[S]])
+                (implicit tx: S#Tx, workspace: Workspace[S], cursor: Cursor[S]): Option[Window[S]] = None
 
     def isViewable: Boolean = false
   }

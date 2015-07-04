@@ -284,7 +284,7 @@ object GlobalProcsViewImpl {
       val actionEdit: Action = Action(null) {
         if (selectionModel.nonEmpty) cursor.step { implicit tx =>
           selectionModel.iterator.foreach { view =>
-            if (view.isViewable) view.openView()
+            if (view.isViewable) view.openView(None)  //  /// XXX TODO - find window
           }
         }
       }

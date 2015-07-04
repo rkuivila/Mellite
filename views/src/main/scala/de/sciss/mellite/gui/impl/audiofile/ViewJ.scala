@@ -23,7 +23,7 @@ import de.sciss.synth.proc.Timeline
 import scala.swing.event.MousePressed
 import scala.util.Failure
 import scala.util.Success
-import scala.swing.{Swing, Component}
+import scala.swing.{Action, Swing, Component}
 import Swing._
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl

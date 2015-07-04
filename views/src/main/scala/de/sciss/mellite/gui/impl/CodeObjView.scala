@@ -101,7 +101,8 @@ object CodeObjView extends ListObjView.Factory {
 
     def isViewable = true
 
-    def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+    def openView(parent: Option[Window[S]])
+                (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
       import de.sciss.mellite.Mellite.compiler
       val frame = CodeFrame(obj(), hasExecute = false)
       Some(frame)

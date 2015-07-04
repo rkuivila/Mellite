@@ -18,26 +18,13 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
-import de.sciss.mellite
-import de.sciss.mellite.gui.impl.{ListObjViewImpl, ObjViewImpl, ProcObjView$}
-import de.sciss.synth.proc.{AudioGraphemeElem, BooleanElem, DoubleElem, FolderElem, IntElem, LongElem, Obj, StringElem}
+import de.sciss.mellite.gui.impl.ListObjViewImpl
+import de.sciss.synth.proc.Obj
 
 import scala.language.higherKinds
 import scala.swing.{Component, Label}
 
 object ListObjView {
-  import java.lang.{String => _String}
-
-  import de.sciss.lucre.artifact.{ArtifactLocation => _ArtifactLocation}
-  import de.sciss.nuages.{Nuages => _Nuages}
-  import de.sciss.synth.proc.{Action => _Action, Code => _Code, Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Proc => _Proc, Timeline => _Timeline}
-
-  import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long}
-
-  //  final case class SelectionDrag[S <: Sys[S]](workspace: Workspace[S], selection: Vec[ObjView[S]]) {
-  //    lazy val types: Set[_Int] = selection.map(_.typeID)(breakOut)
-  //  }
-
   final case class Drag[S <: Sys[S]](workspace: Workspace[S], view: ObjView[S])
 
   // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
@@ -54,65 +41,16 @@ object ListObjView {
 
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ListObjView[S] = ListObjViewImpl(obj)
 
-  val String: Factory { type E[S <: evt.Sys[S]] = StringElem[S] } = ObjViewImpl.String
-//  trait String[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, Obj.T[S, StringElem]]
-//  }
-
-  val Long: Factory { type E[S <: evt.Sys[S]] = LongElem[S] } = ObjViewImpl.Long
-//  trait Long[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, Obj.T[S, LongElem]]
-//    def value: _Long
-//  }
-
-  val Double: Factory { type E[S <: evt.Sys[S]] = DoubleElem[S] } = ObjViewImpl.Double
-//  trait Double[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]]
-//  }
-
-  val Boolean: Factory { type E[S <: evt.Sys[S]] = BooleanElem[S] } = ObjViewImpl.Boolean
-//  trait Boolean[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, Obj.T[S, BooleanElem]]
-//    def value: _Boolean
-//  }
-
-//  trait Artifact[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, ArtifactElem.Obj[S]]
-//    def file: File
-//  }
-
-  val Recursion: Factory { type E[S <: evt.Sys[S]] = mellite.Recursion.Elem[S] } = ObjViewImpl.Recursion
-//  trait Recursion[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, Obj.T[S, mellite.Recursion.Elem]]
-//    def deployed: File
-//  }
-
-  val Folder: Factory { type E[S <: evt.Sys[S]] = FolderElem[S] } = ObjViewImpl.Folder
-//  trait Folder[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, Obj.T[S, FolderElem]]
-//  }
-
-  val Timeline: Factory { type E[S <: evt.Sys[S]] = _Timeline.Elem[S] } = ObjViewImpl.Timeline
-//  trait Timeline[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, _Timeline.Obj[S]]
-//  }
-
-  val FadeSpec: Factory { type E[S <: evt.Sys[S]] = _FadeSpec.Elem[S] } = ObjViewImpl.FadeSpec
-//  trait FadeSpec[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]]
-//    def value: _FadeSpec
-//  }
-
-  val Ensemble: Factory { type E[S <: evt.Sys[S]] = _Ensemble.Elem[S] } = ObjViewImpl.Ensemble
-//  trait Ensemble[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, _Ensemble.Obj[S]]
-//    def playing: _Boolean
-//  }
-
-  val Nuages: Factory { type E[S <: evt.Sys[S]] = _Nuages.Elem[S] } = ObjViewImpl.Nuages
-//  trait Nuages[S <: Sys[S]] extends ObjView[S] {
-//    def obj: stm.Source[S#Tx, _Nuages.Obj[S]]
-//  }
+//  val String    : Factory { type E[S <: evt.Sys[S]] = StringElem      [S] } = ObjViewImpl.String
+//  val Long      : Factory { type E[S <: evt.Sys[S]] = LongElem        [S] } = ObjViewImpl.Long
+//  val Double    : Factory { type E[S <: evt.Sys[S]] = DoubleElem      [S] } = ObjViewImpl.Double
+//  val Boolean   : Factory { type E[S <: evt.Sys[S]] = BooleanElem     [S] } = ObjViewImpl.Boolean
+//  val Recursion : Factory { type E[S <: evt.Sys[S]] = _Recursion.Elem [S] } = ObjViewImpl.Recursion
+//  val Folder    : Factory { type E[S <: evt.Sys[S]] = FolderElem      [S] } = ObjViewImpl.Folder
+//  val Timeline  : Factory { type E[S <: evt.Sys[S]] = _Timeline.Elem  [S] } = ObjViewImpl.Timeline
+//  val FadeSpec  : Factory { type E[S <: evt.Sys[S]] = _FadeSpec.Elem  [S] } = ObjViewImpl.FadeSpec
+//  val Ensemble  : Factory { type E[S <: evt.Sys[S]] = _Ensemble.Elem  [S] } = ObjViewImpl.Ensemble
+//  val Nuages    : Factory { type E[S <: evt.Sys[S]] = _Nuages.Elem    [S] } = ObjViewImpl.Nuages
 }
 trait ListObjView[S <: evt.Sys[S]] extends ObjView[S] {
   /** Passes in a received opaque update to ask whether the view should be repainted due to this update.

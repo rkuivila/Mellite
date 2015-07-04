@@ -45,7 +45,9 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
       case Some(region) =>
         if (e.getClickCount == 2 && region.isViewable) {
           import tlv.{cursor, workspace}
-          cursor.step { implicit tx => region.openView() }
+          cursor.step { implicit tx =>
+            region.openView(None)  /// XXX TODO - find window
+          }
         }
 
       case _  => new Drag(e, hitTrack, pos, ())

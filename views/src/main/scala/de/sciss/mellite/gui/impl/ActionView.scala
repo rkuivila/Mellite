@@ -75,7 +75,8 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
 
     final def isViewable = true
 
-    final def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+    final def openView(parent: Option[Window[S]])
+                      (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
       import de.sciss.mellite.Mellite.compiler
       val frame = CodeFrame.action(obj())
       Some(frame)

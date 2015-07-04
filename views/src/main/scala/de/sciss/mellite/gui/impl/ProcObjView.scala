@@ -26,11 +26,9 @@ import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
-import de.sciss.mellite.gui.{ListObjView, SonogramManager, TimelineObjView}
-import de.sciss.mellite.{Workspace, gui}
 import de.sciss.sonogram.{Overview => SonoOverview}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.{SynthGraph, proc}
+import de.sciss.synth.proc
 import de.sciss.synth.proc.impl.ElemImpl
 import de.sciss.synth.proc.{FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan}
 import org.scalautils.TypeCheckedTripleEquals
@@ -200,7 +198,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     // currently this just opens a code editor. in the future we should
     // add a scans map editor, and a convenience button for the attributes
-    final def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+    final def openView(parent: Option[Window[S]])
+                      (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
       import de.sciss.mellite.Mellite.compiler
       val frame = CodeFrame.proc(obj())
       Some(frame)

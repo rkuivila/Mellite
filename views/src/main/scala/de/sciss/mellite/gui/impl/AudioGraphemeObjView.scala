@@ -101,7 +101,8 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
     def isViewable = true
 
-    def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+    def openView(parent: Option[Window[S]])
+                (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
       val frame = AudioFileFrame(obj())
       Some(frame)
     }

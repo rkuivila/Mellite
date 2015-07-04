@@ -170,15 +170,18 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     mellite.initTypes()
     de.sciss.nuages.initTypes()
 
-    new de.sciss.audiowidgets.impl.ActionGoToTime(null,
-      de.sciss.desktop.KeyStrokes.plain + scala.swing.event.Key.G) // , de.sciss.desktop.FocusType.Window)
-
     // ---- look and feel
 
     try {
       val web = "com.alee.laf.WebLookAndFeel"
       UIManager.installLookAndFeel("Web Look And Feel", web)
       UIManager.setLookAndFeel(Prefs.lookAndFeel.getOrElse(Prefs.defaultLookAndFeel).getClassName)
+      /* val former = */ UIManager.getDefaults.remove("SplitPane.ancestorInputMap")
+//      if (former != null) {
+//        // actually this is wrong - it's not an InputMap, so throws an exception that is silently caught below
+//        former.asInstanceOf[javax.swing.InputMap].allKeys().foreach(println)
+//      }
+
     } catch {
       case NonFatal(_) =>
     }

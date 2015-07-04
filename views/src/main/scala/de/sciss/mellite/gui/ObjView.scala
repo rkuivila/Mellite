@@ -26,6 +26,9 @@ import de.sciss.synth.proc.{Elem, Obj}
 import scala.language.higherKinds
 
 object ObjView {
+  /** Standard `AttrMap` key whose value is of type `Color.Obj`. */
+  final val attrColor = "color"
+
   trait Factory {
     def prefix: String
     def icon  : Icon
@@ -82,8 +85,7 @@ trait ObjView[S <: evt.Sys[S]] extends Disposable[S#Tx] {
   /** If the object is viewable, this method is invoked when the user pressed the eye button.
     * The method should return an appropriate view for this object, or `None` if no editor or viewer window
     * can be produced.
-    *
-    * TODO: should have optional window argument
     */
-  def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]]
+  def openView(parent: Option[Window[S]])
+              (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]]
 }

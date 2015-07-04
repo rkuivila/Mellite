@@ -72,7 +72,7 @@ trait CollectionViewImpl[S <: Sys[S]]
     val sel = selectedObjects.filter(_.isViewable)
     val sz  = sel.size
     if (sz > 0) GUI.atomic[S, Unit](nameView, s"Opening ${if (sz == 1) "window" else "windows"}")  { implicit tx =>
-      sel.foreach(_.openView())
+      sel.foreach(_.openView(None)) /// XXX TODO - find window
     }
   }
 

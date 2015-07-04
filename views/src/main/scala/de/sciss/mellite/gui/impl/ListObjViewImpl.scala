@@ -40,16 +40,17 @@ object ListObjViewImpl {
 
   private var map = scala.Predef.Map[Int, ListObjView.Factory](
     ObjViewImpl.String          .typeID -> ObjViewImpl.String,
-    IntObjView                     .typeID -> IntObjView,
+    IntObjView                  .typeID -> IntObjView,
     ObjViewImpl.Long            .typeID -> ObjViewImpl.Long,
     ObjViewImpl.Double          .typeID -> ObjViewImpl.Double,
     ObjViewImpl.Boolean         .typeID -> ObjViewImpl.Boolean,
+    ObjViewImpl.Color           .typeID -> ObjViewImpl.Color,
     AudioGraphemeObjView        .typeID -> AudioGraphemeObjView,
-    ArtifactLocationObjView        .typeID -> ArtifactLocationObjView,
+    ArtifactLocationObjView     .typeID -> ArtifactLocationObjView,
     ObjViewImpl.Artifact        .typeID -> ObjViewImpl.Artifact,
     ObjViewImpl.Recursion       .typeID -> ObjViewImpl.Recursion,
     ObjViewImpl.Folder          .typeID -> ObjViewImpl.Folder,
-    ProcObjView                    .typeID -> ProcObjView,
+    ProcObjView                 .typeID -> ProcObjView,
     ObjViewImpl.Timeline        .typeID -> ObjViewImpl.Timeline,
     CodeObjView                 .typeID -> CodeObjView,
     ObjViewImpl.FadeSpec        .typeID -> ObjViewImpl.FadeSpec,
@@ -87,6 +88,7 @@ object ListObjViewImpl {
 
     // def obj: stm.Source[S#Tx, Obj.T[S, Elem { type Peer = Expr[S, A] }]]
 
+    /** Tests a value from a `Change` update. */
     protected def testValue       (v: Any): Option[A]
     protected def convertEditValue(v: Any): Option[A]
 
@@ -127,7 +129,8 @@ object ListObjViewImpl {
     }
 
     // XXX TODO - this is a quick hack for demo
-    def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+    def openView(parent: Option[Window[S]])
+                (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
       workspace match {
         case cf: Workspace.Confluent =>
           // XXX TODO - all this casting is horrible

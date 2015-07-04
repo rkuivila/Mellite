@@ -57,7 +57,7 @@ import scala.concurrent.stm.{TSet, Ref}
 import scala.util.Try
 
 import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, LinearGradientPaint}
-import javax.swing.UIManager
+import javax.swing.{JComponent, UIManager}
 import java.util.Locale
 import java.awt.geom.Path2D
 import java.awt.image.BufferedImage
@@ -1176,9 +1176,18 @@ object TimelineViewImpl {
 
           g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-          val views = viewRange.filterOverlaps((visStart, visStop)).toList // warning: iterator, we need to traverse twice!
-          views.foreach { view =>
+          var procViews = Nil: List[ProcObjView.Timeline[S]]
+          // warning: iterator, we need to traverse twice!
+          viewRange.filterOverlaps((visStart, visStop)).foreach { view =>
             val selected  = sel.contains(view)
+            val pv = view match {
+              case _pv: ProcObjView.Timeline[S] =>
+                procViews ::= _pv
+                _pv
+
+              case _ =>
+                null
+            }
 
             def drawProc(start: Long, x1: Int, x2: Int, move: Long): Unit = {
               val pTrk  = if (selected) math.max(0, view.trackIndex + moveState.deltaTrack) else view.trackIndex
@@ -1208,34 +1217,31 @@ object TimelineViewImpl {
                 g.clipRect(px + 1, innerY, pw - 2, innerH)
 
                 // --- sonogram ---
-                view match {
-                  case pv: ProcObjView.Timeline[S] if pv.audio.isDefined =>
-                    val segm        = pv.audio.get
-                    val sonogramOpt = pv.sonogram.orElse(pv.acquireSonogram())
+                if (pv != null && pv.audio.isDefined) {
+                  val segm        = pv.audio.get
+                  val sonogramOpt = pv.sonogram.orElse(pv.acquireSonogram())
 
-                    sonogramOpt.foreach { sonogram =>
-                      val audio   = segm.value
-                      val srRatio = sonogram.inputSpec.sampleRate / Timeline.SampleRate
-                      // dStart is the frame inside the audio-file corresponding
-                      // to the region's left margin. That is, if the grapheme segment
-                      // starts early than the region (its start is less than zero),
-                      // the frame accordingly increases.
-                      val dStart  = (audio.offset - segm.span.start +
-                                     (if (selected) resizeState.deltaStart else 0L)) * srRatio
-                      // a factor to convert from pixel space to audio-file frames
-                      val s2f     = timelineModel.visible.length.toDouble / canvasComponent.peer.getWidth * srRatio
-                      val lenC    = (px2C - px1C) * s2f
-                      val boost   = if (selected) visualBoost * gainState.factor else visualBoost
-                      sonogramBoost = (audio.gain * pv.gain).toFloat * boost
-                      val startP  = (px1C - px) * s2f + dStart
-                      val stopP   = startP + lenC
-                      // println(s"${pv.name}; audio.offset = ${audio.offset}, segm.span.start = ${segm.span.start}, dStart = $dStart, px1C = $px1C, startC = $startC, startP = $startP")
-                      // println(s"dStart = $dStart, px = $px, px1C = $px1C, startC = $startC, startP = $startP")
-                      sonogram.paint(spanStart = startP, spanStop = stopP, g2 = g,
-                        tx = px1C, ty = innerY, width = px2C - px1C, height = innerH, ctrl = this)
-                    }
-
-                  case _ =>
+                  sonogramOpt.foreach { sonogram =>
+                    val audio   = segm.value
+                    val srRatio = sonogram.inputSpec.sampleRate / Timeline.SampleRate
+                    // dStart is the frame inside the audio-file corresponding
+                    // to the region's left margin. That is, if the grapheme segment
+                    // starts early than the region (its start is less than zero),
+                    // the frame accordingly increases.
+                    val dStart  = (audio.offset - segm.span.start +
+                                   (if (selected) resizeState.deltaStart else 0L)) * srRatio
+                    // a factor to convert from pixel space to audio-file frames
+                    val s2f     = timelineModel.visible.length.toDouble / canvasComponent.peer.getWidth * srRatio
+                    val lenC    = (px2C - px1C) * s2f
+                    val boost   = if (selected) visualBoost * gainState.factor else visualBoost
+                    sonogramBoost = (audio.gain * pv.gain).toFloat * boost
+                    val startP  = (px1C - px) * s2f + dStart
+                    val stopP   = startP + lenC
+                    // println(s"${pv.name}; audio.offset = ${audio.offset}, segm.span.start = ${segm.span.start}, dStart = $dStart, px1C = $px1C, startC = $startC, startP = $startP")
+                    // println(s"dStart = $dStart, px = $px, px1C = $px1C, startC = $startC, startP = $startP")
+                    sonogram.paint(spanStart = startP, spanStop = stopP, g2 = g,
+                      tx = px1C, ty = innerY, width = px2C - px1C, height = innerH, ctrl = this)
+                  }
                 }
 
                 // --- fades ---
@@ -1376,14 +1382,15 @@ object TimelineViewImpl {
 
               case _ => // don't draw Span.Void
             }
+
+            if (pv != null) procViews ::= pv
           }
 
           // --- links ---
-          g.setColor(colrLink)
-          g.setStroke(strkLink)
-
-          views.foreach {
-            case pv: ProcObjView.Timeline[S] =>
+          if (procViews.nonEmpty) {
+            g.setColor (colrLink)
+            g.setStroke(strkLink)
+            procViews.foreach { pv =>
               // println(s"For ${pv.name} inputs = ${pv.inputs}, outputs = ${pv.outputs}")
               pv.outputs.foreach { case (_, links) =>
                 links.foreach { link =>
@@ -1397,10 +1404,9 @@ object TimelineViewImpl {
                   }
                 }
               }
-
-            case _ =>
+            }
+            g.setStroke(strkOrig)
           }
-          g.setStroke(strkOrig)
 
           // --- timeline cursor and selection ---
           paintPosAndSelection(g, h)

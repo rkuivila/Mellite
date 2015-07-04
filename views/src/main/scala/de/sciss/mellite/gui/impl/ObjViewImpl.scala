@@ -23,11 +23,13 @@ import de.sciss.audiowidgets.AxisFormat
 import de.sciss.desktop.OptionPane
 import de.sciss.file._
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.{Boolean => BooleanEx, Double => DoubleEx, Expr, Int => IntEx, Long => LongEx, String => StringEx}
-import de.sciss.lucre.swing.{Window, deferTx}
+import de.sciss.lucre.expr.{Boolean => BooleanEx, Double => DoubleEx, Expr, Long => LongEx, String => StringEx}
+import de.sciss.lucre.swing.edit.EditVar
+import de.sciss.lucre.swing.{View, Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
+import de.sciss.mellite.gui.impl.component.PaintIcon
 import de.sciss.mellite.gui.impl.document.NuagesFolderFrameImpl
 import de.sciss.model.Change
 import de.sciss.swingplus.{GroupPanel, Spinner}
@@ -37,22 +39,21 @@ import de.sciss.synth.proc.{ArtifactElem, BooleanElem, Confluent, DoubleElem, Ex
 import de.sciss.{desktop, lucre}
 
 import scala.swing.Swing.EmptyIcon
-import scala.swing.{Alignment, CheckBox, Component, Dialog, Label, TextField}
+import scala.swing.{Action, Alignment, BorderPanel, Button, CheckBox, ColorChooser, Component, Dialog, FlowPanel, GridPanel, Label, TextField}
 import scala.util.Try
 
 object ObjViewImpl {
   import java.lang.{String => _String}
 
-  import de.sciss.lucre.artifact.{Artifact => _Artifact, ArtifactLocation => _ArtifactLocation}
-  import de.sciss.mellite.{Recursion => _Recursion}
+  import de.sciss.mellite.{Color => _Color, Recursion => _Recursion}
   import de.sciss.nuages.{Nuages => _Nuages}
-  import de.sciss.synth.proc.{Action => _Action, Code => _Code, Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Proc => _Proc, Timeline => _Timeline}
+  import de.sciss.synth.proc.{Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Timeline => _Timeline}
 
-  import scala.{Boolean => _Boolean, Double => _Double, Int => _Int, Long => _Long}
-  
+  import scala.{Boolean => _Boolean, Double => _Double, Long => _Long}
+
   def nameOption[S <: evt.Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Option[_String] =
     obj.attr[StringElem](ObjKeys.attrName).map(_.value)
-  
+
   // -------- String --------
 
   object String extends ListObjView.Factory {
@@ -60,7 +61,7 @@ object ObjViewImpl {
     val icon      = raphaelIcon(raphael.Shapes.Font)
     val prefix    = "String"
     def typeID    = ElemImpl.String.typeID
-    
+
     def mkListView[S <: Sys[S]](obj: Obj.T[S, StringElem])(implicit tx: S#Tx): ListObjView[S] = {
       val ex          = obj.elem.peer
       val value       = ex.value
@@ -302,6 +303,153 @@ object ObjViewImpl {
     }
   }
 
+  // -------- Color --------
+
+  object Color extends ListObjView.Factory {
+    type E[S <: evt.Sys[S]] = _Color.Elem[S]
+    val icon      = raphaelIcon(raphael.Shapes.Paint)
+    val prefix    = "Color"
+    def typeID    = _Color.typeID
+    def hasMakeDialog = true
+
+    def mkListView[S <: Sys[S]](obj: Obj.T[S, _Color.Elem])(implicit tx: S#Tx): ListObjView[S] = {
+      val ex          = obj.elem.peer
+      val value       = ex.value
+      val isEditable  = ex match {
+        case Expr.Var(_)  => true
+        case _            => false
+      }
+      new Color.Impl(tx.newHandle(obj), nameOption(obj), value, isEditable0 = isEditable)
+    }
+
+    type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Color]
+
+    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                                   (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+      val (ggValue, ggChooser) = mkColorEditor()
+      primitiveConfig[S, _Color](window, tpe = prefix, ggValue = ggValue, prepare = Some(fromAWT(ggChooser.color)))
+    }
+
+    private def mkColorEditor(): (Component, ColorChooser) = {
+      val chooser = new ColorChooser()
+      val bPredef = _Color.Palette.map { colr =>
+        val action = new Action(null /* colr.name */) {
+          private val awtColor = toAWT(colr)
+          icon = new PaintIcon(awtColor, 32, 32)
+          def apply(): Unit = chooser.color = awtColor
+        }
+        val b = new Button(action)
+        // b.horizontalAlignment = Alignment.Left
+        b.focusable = false
+        b
+      }
+      val pPredef = new GridPanel(4, 4)
+      pPredef.contents ++= bPredef
+      val panel = new BorderPanel {
+        add(pPredef, BorderPanel.Position.West  )
+        add(chooser, BorderPanel.Position.Center)
+      }
+      (panel, chooser)
+    }
+
+    private def toAWT(c: _Color): java.awt.Color = new java.awt.Color(c.rgba)
+    private def fromAWT(c: java.awt.Color): _Color = {
+      val rgba = c.getRGB
+      _Color.Palette.find(_.rgba == rgba).getOrElse(_Color.User(rgba))
+    }
+
+    def makeObj[S <: Sys[S]](config: (String, _Color))(implicit tx: S#Tx): List[Obj[S]] = {
+      val (name, value) = config
+      val obj = Obj(_Color.Elem(_Color.Expr.newVar(_Color.Expr.newConst[S](value))))
+      obj.name = name
+      obj :: Nil
+    }
+
+    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Color.Elem]],
+                                  var nameOption: Option[_String], var value: _Color,
+                                  isEditable0: _Boolean)
+      extends ListObjView /* .Color */[S]
+      with ObjViewImpl.Impl[S]
+      with ListObjViewImpl.SimpleExpr[S, _Color] {
+
+      type E[~ <: evt.Sys[~]] = _Color.Elem[~]
+
+      def isEditable = false    // not until we have proper editing components
+
+      def prefix  = Color.prefix
+      def icon    = Color.icon
+      def typeID  = Color.typeID
+
+      def exprType = _Color.Expr
+
+      def expr(implicit tx: S#Tx): Expr[S, _Color] = obj().elem.peer
+
+      def configureRenderer(label: Label): Component = {
+        // renderers are used for "stamping", so we can reuse a single object.
+        label.icon = ListIcon
+        ListIcon.paint = Color.toAWT(value)
+        label
+      }
+
+      def convertEditValue(v: Any): Option[_Color] = testValue(v) // XXX TODO -- what was the difference again
+
+      def testValue(v: Any): Option[_Color] = v match {
+        case c: _Color  => Some(c)
+        case _          => None
+      }
+
+      def isViewable = isEditable0
+
+      override def openView(parent: Option[Window[S]])
+                           (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+//        val opt = OptionPane.confirmation(message = component, optionType = OptionPane.Options.OkCancel,
+//          messageType = OptionPane.Message.Plain)
+//        opt.show(parent) === OptionPane.Result.Ok
+        val title = AttrCellView.name(obj())
+        val w = new WindowImpl[S](title) { self =>
+          val view: View[S] = View.wrap {
+            val (compColor, chooser) = Color.mkColorEditor()
+            chooser.color = Color.toAWT(value)
+            val ggCancel = Button("Cancel") {
+              closeMe() // self.handleClose()
+            }
+            val ggOk = Button("Ok") {
+              val colr = Color.fromAWT(chooser.color)
+              val editOpt = cursor.step { implicit tx =>
+                obj().elem.peer match {
+                  case Expr.Var(vr) =>
+                    import _Color.Expr.{serializer, varSerializer}
+                    Some(EditVar.Expr("Change Color", vr, _Color.Expr.newConst[S](colr)))
+                  case _ => None
+                }
+              }
+              editOpt.foreach { edit =>
+                parent.foreach { p =>
+                  p.view match {
+                    case e: View.Editable[S] => e.undoManager.add(edit)
+                  }
+                }
+              }
+              closeMe() // self.handleClose()
+            }
+            val pane = new BorderPanel {
+              add(compColor, BorderPanel.Position.Center)
+              add(new FlowPanel(ggOk, ggCancel), BorderPanel.Position.South)
+            }
+            pane
+          }
+
+          def closeMe(): Unit = cursor.step { implicit tx => self.dispose() }
+
+          init()
+        }
+        Some(w)
+      }
+    }
+
+    private val ListIcon = new PaintIcon(java.awt.Color.black, 48, 16)
+  }
+
   // -------- Artifact --------
 
   object Artifact extends ListObjView.Factory {
@@ -390,7 +538,8 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+      def openView(parent: Option[Window[S]])
+                  (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         import de.sciss.mellite.Mellite.compiler
         val frame = RecursionFrame(obj())
         Some(frame)
@@ -450,7 +599,8 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+      def openView(parent: Option[Window[S]])
+                  (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         val folderObj = obj()
         val nameView  = AttrCellView.name(folderObj)
         Some(FolderFrame(nameView, folderObj.elem.peer))
@@ -504,7 +654,8 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+      def openView(parent: Option[Window[S]])
+                  (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
 //        val message = s"<html><b>Select View Type for $name:</b></html>"
 //        val entries = Seq("Timeline View", "Real-time View", "Cancel")
 //        val opt = OptionPane(message = message, optionType = OptionPane.Options.YesNoCancel,
@@ -686,7 +837,8 @@ object ObjViewImpl {
           }
       }
 
-      override def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+      override def openView(parent: Option[Window[S]])
+                           (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         val ens   = obj()
         val w     = EnsembleFrame(ens)
         Some(w)
@@ -740,7 +892,8 @@ object ObjViewImpl {
 
       def isViewable = true
 
-      def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+      def openView(parent: Option[Window[S]])
+                  (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         val frame = NuagesFolderFrameImpl(obj())
         Some(frame)
       }
@@ -757,7 +910,7 @@ object ObjViewImpl {
     implicit val folderSer = _Folder.serializer[S]
     EditFolderInsertObj[S](name, parent, idx, obj)
   }
-  
+
   type PrimitiveConfig[A] = (String, A)
 
   def primitiveConfig[S <: Sys[S], A](window: Option[desktop.Window], tpe: String, ggValue: Component,
@@ -790,6 +943,7 @@ object ObjViewImpl {
   trait NonViewable[S <: Sys[S]] {
     def isViewable: _Boolean = false
 
-    def openView()(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = None
+    def openView(parent: Option[Window[S]])
+                (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = None
   }
 }
