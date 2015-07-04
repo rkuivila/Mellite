@@ -16,70 +16,66 @@ package gui
 package impl
 package timeline
 
+import java.awt.geom.{GeneralPath, Path2D}
+import java.awt.image.BufferedImage
+import java.awt
+import java.awt.{BasicStroke, Font, Graphics2D, LinearGradientPaint, Rectangle, RenderingHints, TexturePaint}
+import java.util.Locale
+import javax.swing.UIManager
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.mellite.gui.edit.{EditAttrMap, EditFolderInsertObj, Edits, EditTimelineInsertObj}
-import de.sciss.swingplus.ScrollBar
-
-import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth
-import de.sciss.desktop
-import de.sciss.lucre.stm
-import de.sciss.sonogram
-import de.sciss.lucre.stm.{Disposable, Cursor}
-import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.{Curve, proc}
-import de.sciss.fingertree.RangedSeq
-import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.audiowidgets.TimelineModel
-import de.sciss.desktop.{UndoManager, KeyStrokes, Window}
-import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.expr.{Int => IntEx}
-import de.sciss.synth.proc.{BooleanElem, StringElem, DoubleElem, ObjKeys, IntElem, TimeRef, Timeline, Transport, Obj, ExprImplicits, FadeSpec, Grapheme, Proc, Scan}
 import de.sciss.audiowidgets.impl.TimelineModelImpl
-import de.sciss.synth.io.AudioFile
-import de.sciss.model.Change
-import de.sciss.lucre.bitemp.impl.BiGroupImpl
-import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
-import de.sciss.lucre.swing._
-import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.desktop.edit.CompoundEdit
+import de.sciss.desktop.{KeyStrokes, UndoManager, Window}
+import de.sciss.fingertree.RangedSeq
 import de.sciss.icons.raphael
-import TimelineView.TrackScale
+import de.sciss.lucre.bitemp.impl.BiGroupImpl
+import de.sciss.lucre.bitemp.{BiGroup, SpanLike => SpanLikeEx}
+import de.sciss.lucre.expr.{Expr, Int => IntEx}
+import de.sciss.lucre.stm
+import de.sciss.lucre.stm.{Cursor, Disposable}
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.edit.EditVar
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.TimelineView.TrackScale
+import de.sciss.mellite.gui.edit.{EditAttrMap, EditFolderInsertObj, EditTimelineInsertObj, Edits}
+import de.sciss.model.Change
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.swingplus.ScrollBar
+import de.sciss.{desktop, sonogram, synth}
+import de.sciss.synth.io.AudioFile
+import de.sciss.synth.proc.gui.TransportView
+import de.sciss.synth.proc.{BooleanElem, DoubleElem, ExprImplicits, FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan, StringElem, TimeRef, Timeline, Transport}
+import de.sciss.synth.{Curve, proc}
 import org.scalautils.TypeCheckedTripleEquals
 
-import scala.swing.{Slider, Action, BorderPanel, Orientation, BoxPanel, Component, SplitPane}
+import scala.concurrent.stm.{Ref, TSet}
 import scala.swing.Swing._
 import scala.swing.event.{Key, ValueChanged}
-import scala.concurrent.stm.{TSet, Ref}
+import scala.swing.{Action, BorderPanel, BoxPanel, Component, Orientation, Slider, SplitPane}
 import scala.util.Try
 
-import java.awt.{Rectangle, TexturePaint, Font, RenderingHints, BasicStroke, Color, Graphics2D, LinearGradientPaint}
-import javax.swing.{JComponent, UIManager}
-import java.util.Locale
-import java.awt.geom.Path2D
-import java.awt.image.BufferedImage
-import java.awt.geom.GeneralPath
-
 object TimelineViewImpl {
-  private val colrBg              = Color.darkGray
-  private val colrDropRegionBg    = new Color(0xFF, 0xFF, 0xFF, 0x7F)
+  private val colrBg              = awt.Color.darkGray
+  private val colrDropRegionBg    = new awt.Color(0xFF, 0xFF, 0xFF, 0x7F)
   private val strkDropRegion      = new BasicStroke(3f)
-  private val colrRegionOutline   = new Color(0x68, 0x68, 0x68)
-  private val colrRegionOutlineSel= Color.blue
+  private val colrRegionOutline   = new awt.Color(0x68, 0x68, 0x68)
+  private val colrRegionOutlineSel= awt.Color.blue
   private val pntRegionBg         = new LinearGradientPaint(0f, 1f, 0f, 62f,
-    Array[Float](0f, 0.23f, 0.77f, 1f), Array[Color](new Color(0x5E, 0x5E, 0x5E), colrRegionOutline,
-      colrRegionOutline, new Color(0x77, 0x77, 0x77)))
+    Array[Float](0f, 0.23f, 0.77f, 1f), Array[awt.Color](new awt.Color(0x5E, 0x5E, 0x5E), colrRegionOutline,
+      colrRegionOutline, new awt.Color(0x77, 0x77, 0x77)))
   private val pntRegionBgSel       = new LinearGradientPaint(0f, 1f, 0f, 62f,
-    Array[Float](0f, 0.23f, 0.77f, 1f), Array[Color](new Color(0x00, 0x00, 0xE6), colrRegionOutlineSel,
-      colrRegionOutlineSel, new Color(0x1A, 0x1A, 0xFF)))
-  private val colrRegionBgMuted   = new Color(0xFF, 0xFF, 0xFF, 0x60)
-  private val colrLink            = new Color(0x80, 0x80, 0x80)
+    Array[Float](0f, 0.23f, 0.77f, 1f), Array[awt.Color](new awt.Color(0x00, 0x00, 0xE6), colrRegionOutlineSel,
+      colrRegionOutlineSel, new awt.Color(0x1A, 0x1A, 0xFF)))
+  private val colrRegionBgMuted   = new awt.Color(0xFF, 0xFF, 0xFF, 0x60)
+  private val colrLink            = new awt.Color(0x80, 0x80, 0x80)
   private val strkLink            = new BasicStroke(2f)
-  private val colrNameShadow      = new Color(0, 0, 0, 0x80)
-  private val colrName            = Color.white
+  private val colrNameShadow      = new awt.Color(0, 0, 0, 0x80)
+  private val colrNameShadowL     = new awt.Color(0xFF, 0xFF, 0xFF, 0x80)
+  private val colrName            = awt.Color.white
+  private val colrNameL           = awt.Color.black
   private val path2d              = new GeneralPath
 
   private final val LinkArrowLen  = 0 // 10  ; currently no arrow tip painted
@@ -87,7 +83,7 @@ object TimelineViewImpl {
 
   private final val hndlExtent    = 15
   private final val hndlBaseline  = 12
-  private val colrFade = new Color(0x05, 0xAF, 0x3A)
+  private val colrFade = new awt.Color(0x05, 0xAF, 0x3A)
   private val pntFade = {
     val img = new BufferedImage(4, 2, BufferedImage.TYPE_INT_ARGB)
     img.setRGB(0, 0, 4, 2, Array(
@@ -167,6 +163,12 @@ object TimelineViewImpl {
       tlView.objNameChanged(timed, nameOpt)
     }
 
+    def colorChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
+      val attr      = timed.value.attr
+      val colorOpt  = attr[Color.Elem](ObjView.attrColor).map(_.value)
+      tlView.objColorChanged(timed, colorOpt)
+    }
+
     def gainChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr  = timed.value.attr
       val gain  = attr[DoubleElem](ObjKeys.attrGain).fold(1.0)(_.value)
@@ -195,11 +197,12 @@ object TimelineViewImpl {
 
     def attrChanged(timed: Timeline.Timed[S], name: String)(implicit tx: S#Tx): Unit =
       name match {
-        case ObjKeys.attrMute  => muteChanged(timed)
+        case ObjKeys.attrMute   => muteChanged (timed)
         case ObjKeys.attrFadeIn | ObjKeys.attrFadeOut => fadeChanged(timed)
-        case ObjKeys.attrName  => nameChanged(timed)
-        case ObjKeys.attrGain  => gainChanged(timed)
-        case ObjKeys.attrBus   => busChanged (timed)
+        case ObjKeys.attrName   => nameChanged (timed)
+        case ObjView.attrColor  => colorChanged(timed)
+        case ObjKeys.attrGain   => gainChanged (timed)
+        case ObjKeys.attrBus    => busChanged  (timed)
         case TimelineObjView.attrTrackIndex | TimelineObjView.attrTrackHeight => trackPositionChanged(timed)
         case _ =>
       }
@@ -783,6 +786,17 @@ object TimelineViewImpl {
       }
     }
 
+    def objColorChanged(timed: Timeline.Timed[S], newColor: Option[Color])(implicit tx: S#Tx): Unit = {
+      val pvo = viewMap.get(timed.id)
+      logT(s"objColorChanged(newColor = $newColor, view = $pvo")
+      pvo.foreach { pv =>
+        deferTx {
+          pv.colorOption = newColor
+          objUpdated(pv)
+        }
+      }
+    }
+
     def procBusChanged(timed: Timeline.Timed[S], newBus: Option[Int])(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"procBusChanged(newBus = $newBus, view = $pvo")
@@ -1246,7 +1260,7 @@ object TimelineViewImpl {
 
                 // --- fades ---
                 def paintFade(curve: Curve, fw: Float, y1: Float, y2: Float, x: Float, x0: Float): Unit = {
-                  import math.{max, log10}
+                  import math.{log10, max}
                   shpFill.reset()
                   shpDraw.reset()
                   val vScale  = innerH / -3f
@@ -1300,6 +1314,22 @@ object TimelineViewImpl {
     
                 // --- label ---
                 if (regionViewMode == RegionViewMode.TitledBox) {
+                  val isDark = if (view.colorOption.isEmpty) true else {
+                    g.translate(px, py)
+                    val colr0 = view.colorOption.get.rgba
+                    // XXX TODO -- a quick hack to mix with blue
+                    val colr  = if (selected) ((((colr0 & 0xFFFFFF) >> 1) & 0x7F7F7F) + 0x80) | (colr0 & 0xFF000000) else colr0
+                    val colr2 = new awt.Color(colr, true)
+                    // val colr2 = new awt.Color(colr.rgba & 0x00FFFFFF, true)
+                    // g.setPaint(new LinearGradientPaint(1f, 1f, 1f, hndlExtent, Array[Float](0f, 1f),
+                    //   Array(colr1, colr2)))
+                    g.setColor(colr2)
+                    g.fillRoundRect(1, 1, pw - 2, hndlExtent - 1, 4, 4)
+                    g.translate(-px, -py)
+                    // XXX TODO -- a quick hack to decide whether color is dark
+                    ((colr & 0xFF0000) >> 16) + ((colr & 0xFF00) >> 8) + (colr & 0xFF) < 480
+                  }
+
                   val name = view.name
                   // val name = view.name // .orElse(pv.audio.map(_.value.artifact.nameWithoutExtension))
                   g.clipRect(px + 2, py + 2, pw - 4, ph - 4)
@@ -1311,12 +1341,12 @@ object TimelineViewImpl {
                   }
                   val tx    = px + 4
                   val ty    = py + hndlBaseline
-                  g.setColor(colrNameShadow)
+                  g.setColor(if (isDark) colrNameShadow else colrNameShadowL)
                   g.drawString(text, tx, ty + 1)
-                  g.setColor(colrName)
+                  g.setColor(if (isDark) colrName else colrNameL)
                   g.drawString(text, tx, ty)
                   //              stakeInfo(ar).foreach { info =>
-                  //                g2.setColor(Color.yellow)
+                  //                g2.setColor(awt.Color.yellow)
                   //                g2.drawString(info, x + 4, y + hndlBaseline + hndlExtent)
                   //              }
                   g.setClip(clipOrig)

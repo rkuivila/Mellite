@@ -277,6 +277,7 @@ object AttrMapViewImpl {
         override def getTableCellRendererComponent(table: JTable, value: Any, isSelected: Boolean,
                                                    hasFocus: Boolean, row: Int, column: Int): java.awt.Component = {
           super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column)
+          if (getIcon != null) setIcon(null)
           value match {
             case view: ListObjView[_] => view.configureRenderer(wrap).peer
             case _ => outer

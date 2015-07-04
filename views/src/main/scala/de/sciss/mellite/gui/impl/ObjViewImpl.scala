@@ -922,8 +922,8 @@ object ObjViewImpl {
   trait Impl[S <: evt.Sys[S]] extends ObjView[S] {
     override def toString = s"ElementView.$prefix(name = $name)"
 
-    var nameOption : Option[String]         = None
-    var colorOption: Option[java.awt.Color] = None
+    var nameOption : Option[String] = None
+    var colorOption: Option[Color ] = None
 
     def dispose()(implicit tx: S#Tx): Unit = ()
 
@@ -931,7 +931,7 @@ object ObjViewImpl {
     def initAttrs(obj: Obj[S])(implicit tx: S#Tx): this.type = {
       val attr     = obj.attr
       nameOption   = attr[StringElem ](ObjKeys.attrName ).map(_.value)
-      colorOption  = attr[_Color.Elem](ObjView.attrColor).map(ex => Color.toAWT(ex.value))
+      colorOption  = attr[_Color.Elem](ObjView.attrColor).map(_.value)
       this
     }
   }

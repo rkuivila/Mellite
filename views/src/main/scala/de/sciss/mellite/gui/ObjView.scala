@@ -65,7 +65,7 @@ trait ObjView[S <: evt.Sys[S]] extends Disposable[S#Tx] {
     */
   var nameOption: Option[String]
 
-  var colorOption: Option[java.awt.Color]
+  var colorOption: Option[Color]
 
   /** Convenience method that returns an "unnamed" string if no name is set. */
   def name: String = nameOption.getOrElse(TimelineObjView.Unnamed)
