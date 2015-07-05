@@ -39,7 +39,7 @@ import de.sciss.synth.proc.{ArtifactElem, BooleanElem, Confluent, DoubleElem, Ex
 import de.sciss.{desktop, lucre}
 
 import scala.swing.Swing.EmptyIcon
-import scala.swing.{Action, Alignment, BorderPanel, Button, CheckBox, ColorChooser, Component, Dialog, FlowPanel, GridPanel, Label, TextField}
+import scala.swing.{Swing, Action, Alignment, BorderPanel, Button, CheckBox, ColorChooser, Component, Dialog, FlowPanel, GridPanel, Label, TextField}
 import scala.util.Try
 
 object ObjViewImpl {
@@ -411,7 +411,8 @@ object ObjViewImpl {
             val ggCancel = Button("Cancel") {
               closeMe() // self.handleClose()
             }
-            val ggOk = Button("Ok") {
+
+            def apply(): Unit = {
               val colr = Color.fromAWT(chooser.color)
               val editOpt = cursor.step { implicit tx =>
                 obj().elem.peer match {
@@ -428,11 +429,18 @@ object ObjViewImpl {
                   }
                 }
               }
+            }
+
+            val ggOk = Button("Ok") {
+              apply()
               closeMe() // self.handleClose()
+            }
+            val ggApply = Button("Apply") {
+              apply()
             }
             val pane = new BorderPanel {
               add(compColor, BorderPanel.Position.Center)
-              add(new FlowPanel(ggOk, ggCancel), BorderPanel.Position.South)
+              add(new FlowPanel(ggOk, ggApply, Swing.HStrut(8), ggCancel), BorderPanel.Position.South)
             }
             pane
           }

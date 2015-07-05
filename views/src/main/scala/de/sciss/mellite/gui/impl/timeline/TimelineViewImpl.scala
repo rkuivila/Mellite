@@ -1326,8 +1326,9 @@ object TimelineViewImpl {
                     g.setColor(colr2)
                     g.fillRoundRect(1, 1, pw - 2, hndlExtent - 1, 4, 4)
                     g.translate(-px, -py)
-                    // XXX TODO -- a quick hack to decide whether color is dark
-                    ((colr & 0xFF0000) >> 16) + ((colr & 0xFF00) >> 8) + (colr & 0xFF) < 480
+                    // cf. https://stackoverflow.com/questions/596216/
+                    val b = ((colr & 0xFF0000) >> 16) * 30 + ((colr & 0xFF00) >> 8) * 59 + (colr & 0xFF) * 11
+                    b < 15000
                   }
 
                   val name = view.name
