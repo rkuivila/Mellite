@@ -14,7 +14,7 @@
 package de.sciss
 package mellite
 
-import java.awt.Color
+import java.awt
 import javax.swing.UIManager
 
 import com.alee.laf.checkbox.WebCheckBoxStyle
@@ -189,11 +189,11 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     new javax.swing.JSpinner
     // some custom web-laf settings
     WebCheckBoxStyle   .animated            = false
-    WebProgressBarStyle.progressTopColor    = Color.lightGray
-    WebProgressBarStyle.progressBottomColor = Color.gray
+    WebProgressBarStyle.progressTopColor    = awt.Color.lightGray
+    WebProgressBarStyle.progressBottomColor = awt.Color.gray
     // XXX TODO: how to really turn of animation?
-    WebProgressBarStyle.highlightWhite      = new Color(255, 255, 255, 0)
-    WebProgressBarStyle.highlightDarkWhite  = new Color(255, 255, 255, 0)
+    WebProgressBarStyle.highlightWhite      = new awt.Color(255, 255, 255, 0)
+    WebProgressBarStyle.highlightDarkWhite  = new awt.Color(255, 255, 255, 0)
 
     if (Prefs.useLogFrame) LogFrame.instance    // init
     // DocumentHandler    .instance    // init
