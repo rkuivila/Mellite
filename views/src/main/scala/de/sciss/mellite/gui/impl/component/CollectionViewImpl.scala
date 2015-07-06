@@ -96,7 +96,7 @@ trait CollectionViewImpl[S <: Sys[S]]
     this
   }
 
-  private final class AddAction(f: ObjView.Factory) extends Action(f.prefix) {
+  private final class AddAction(f: ObjView.Factory) extends Action(f.humanName) {
     icon = f.icon
 
     def apply(): Unit = {
@@ -117,9 +117,22 @@ trait CollectionViewImpl[S <: Sys[S]]
 
   private lazy val addPopup: PopupMenu = {
     import de.sciss.desktop.Menu._
-    val pop = Popup()
-    ListObjView.factories.toList.sortBy(_.prefix).foreach { f =>
-      if (f.hasMakeDialog) pop.add(Item(f.prefix, new AddAction(f)))
+    val pop     = Popup()
+    val tlP     = Application.topLevelObjects
+    val flt     = Application.objectFilter
+    val f0      = ListObjView.factories.filter(f => f.hasMakeDialog && flt(f.prefix))
+    val (top0, sub) = f0.partition(f => tlP.contains(f.prefix))
+    val top     = tlP.flatMap(prefix => top0.find(_.prefix == prefix))
+    top.foreach { f =>
+      pop.add(Item(f.prefix, new AddAction(f)))
+    }
+    val subMap  = sub.groupBy(_.category)
+    subMap.keys.toList.sorted.foreach { categ =>
+      val group = Group(categ.toLowerCase, categ)
+      subMap.getOrElse(categ, Nil).foreach { f =>
+        group.add(Item(f.prefix, new AddAction(f)))
+      }
+      pop.add(group)
     }
 
     val window = Window.find(component).getOrElse(sys.error(s"No window for $impl"))

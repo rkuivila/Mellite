@@ -694,9 +694,9 @@ object ObjViewImpl {
     val prefix      = "FadeSpec"
     val humanName   = "Fade"
     def typeID      = ElemImpl.FadeSpec.typeID
-    def hasMakeDialog   = false
+    def category    = ObjView.categComposition
 
-    def category = ObjView.categSound
+    def hasMakeDialog   = false
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _FadeSpec.Elem])(implicit tx: S#Tx): ListObjView[S] = {
       val value   = obj.elem.peer.value

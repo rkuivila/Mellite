@@ -27,12 +27,12 @@ import scala.language.higherKinds
 
 object ObjView {
   /** Standard `AttrMap` key whose value is of type `Color.Obj`. */
-  final val attrColor = "color"
+  final val attrColor         = "color"
 
   final val categPrimitives   = "Primitives"
   final val categResources    = "Resources"
   final val categComposition  = "Composition"
-  final val categSound        = "Sound"
+  // final val categSound        = "Sound"
   final val categOrganisation = "Organisation"
   final val categMisc         = "Miscellaneous"
 

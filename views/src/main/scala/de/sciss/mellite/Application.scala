@@ -80,6 +80,9 @@ object Application extends SwingApplication { me =>
     requireInitialized()
     peer.removeComponent(key)
   }
+
+  def topLevelObjects : ISeq[String]      = peer.topLevelObjects
+  def objectFilter    : String => Boolean = peer.objectFilter
 }
 trait Application extends SwingApplication {
   type Document = Application.Document

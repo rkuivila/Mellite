@@ -44,7 +44,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   val prefix    = "Proc"
   val humanName = "Process"
   def typeID    = ElemImpl.Proc.typeID
-  def category  = ObjView.categSound
+  def category  = ObjView.categComposition
 
   def hasMakeDialog = true
 

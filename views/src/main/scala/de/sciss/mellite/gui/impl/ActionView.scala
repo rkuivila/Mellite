@@ -36,7 +36,7 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
   def humanName   = prefix
   def typeID      = Action.typeID
 
-  def category    = ObjView.categSound
+  def category    = ObjView.categComposition
 
   def mkListView[S <: Sys[S]](obj: Action.Obj[S])(implicit tx: S#Tx): ListObjView[S] =
     new ListImpl(tx.newHandle(obj)).initAttrs(obj)
