@@ -32,7 +32,10 @@ object IntObjView extends ListObjView.Factory {
   type E[S <: evt.Sys[S]] = IntElem[S]
   val icon      = ObjViewImpl.raphaelIcon(Shapes.IntegerNumbers)
   val prefix    = "Int"
+  def humanName = prefix
   def typeID    = ElemImpl.Int.typeID
+
+  def category = ObjView.categPrimitives
 
   def mkListView[S <: Sys[S]](obj: Obj.T[S, IntElem])(implicit tx: S#Tx): IntObjView[S] with ListObjView[S] = {
     val ex          = obj.elem.peer
@@ -77,9 +80,7 @@ object IntObjView extends ListObjView.Factory {
 
     type E[~ <: evt.Sys[~]] = IntElem[~]
 
-    def prefix  = IntObjView.prefix
-    def icon    = IntObjView.icon
-    def typeID  = IntObjView.typeID
+    def factory = IntObjView
 
     def exprType = IntEx
 

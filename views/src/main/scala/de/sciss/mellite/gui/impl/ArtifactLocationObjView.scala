@@ -36,9 +36,12 @@ import org.scalautils.TypeCheckedTripleEquals
 object ArtifactLocationObjView extends ListObjView.Factory {
   type E[S <: evt.Sys[S]] = ArtifactLocationElem[S]
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Location)
-  val prefix    = "ArtifactStore"
+  val prefix    = "ArtifactLocation"
+  def humanName = "File Location"
   def typeID    = ElemImpl.ArtifactLocation.typeID
   def hasMakeDialog = true
+
+  def category = ObjView.categResources
 
   def mkListView[S <: Sys[S]](obj: ArtifactLocationElem.Obj[S])(implicit tx: S#Tx): ArtifactLocationObjView[S] with ListObjView[S] = {
     val peer      = obj.elem.peer
@@ -73,9 +76,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
 
     type E[~ <: evt.Sys[~]] = ArtifactLocationElem[~]
 
-    def icon    = ArtifactLocationObjView.icon
-    def prefix  = ArtifactLocationObjView.prefix
-    def typeID  = ArtifactLocationObjView.typeID
+    def factory = ArtifactLocationObjView
 
     def value   = directory
 

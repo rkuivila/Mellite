@@ -32,6 +32,8 @@ object CodeObjView extends ListObjView.Factory {
   type E[S <: evt.Sys[S]] = Code.Elem[S]
   val icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Code)
   val prefix      = "Code"
+  def humanName   = "Source Code"
+  def category    = ObjView.categMisc
   def typeID      = Code.typeID
   def hasMakeDialog   = true
 
@@ -92,9 +94,7 @@ object CodeObjView extends ListObjView.Factory {
 
     type E[~ <: evt.Sys[~]] = Code.Elem[~]
 
-    def icon    = CodeObjView.icon
-    def prefix  = CodeObjView.prefix
-    def typeID  = CodeObjView.typeID
+    def factory = CodeObjView
 
     def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
 

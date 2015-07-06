@@ -109,7 +109,7 @@ object ListObjViewImpl {
                 // vr() = newValue
                 implicit val ser    = exprType.serializer   [S]
                 implicit val serVr  = exprType.varSerializer[S]
-                val ed = EditVar.Expr(s"Change $prefix Value", vr, exprType.newConst[S](newValue))
+                val ed = EditVar.Expr(s"Change ${humanName} Value", vr, exprType.newConst[S](newValue))
                 Some(ed)
             }
 

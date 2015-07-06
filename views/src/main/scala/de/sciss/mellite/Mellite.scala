@@ -21,7 +21,6 @@ import com.alee.laf.checkbox.WebCheckBoxStyle
 import com.alee.laf.progressbar.WebProgressBarStyle
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
-import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.requireEDT
 import de.sciss.lucre.synth.{Server, Txn}
@@ -30,13 +29,13 @@ import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
+import scala.collection.immutable.{Seq => ISeq}
 import scala.concurrent.stm.{TxnExecutor, atomic}
 import scala.language.existentials
 import scala.swing.Label
 import scala.util.control.NonFatal
 
-object Mellite extends SwingApplicationImpl("Mellite") {
-  type Document = mellite.Workspace[_ <: Sys[_]]
+object Mellite extends SwingApplicationImpl("Mellite") with Application {
 
   // import de.sciss.synth.proc
   //  //  lucre.event    .showLog = true
@@ -208,4 +207,12 @@ object Mellite extends SwingApplicationImpl("Mellite") {
     * `mellite.DocumentHandler.instance`.
     */
   override lazy val documentHandler: DocumentHandler = new DocumentHandlerImpl
+
+  // ---- Application trait ----
+
+  lazy val topLevelObjects: ISeq[String] =
+    List("Folder", "AudioGrapheme", "Proc", "Timeline")
+
+  /** All objects included */
+  lazy val objectFilter: String => Boolean = _ => true
 }

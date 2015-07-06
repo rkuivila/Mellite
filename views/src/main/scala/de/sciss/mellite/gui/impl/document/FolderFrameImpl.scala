@@ -148,7 +148,7 @@ object FolderFrameImpl {
             None
           } else {
             implicit val folderSer = Folder.serializer[S]
-            val edit = EditFolderRemoveObj[S](nodeView.renderData.prefix, parent, idx, child)
+            val edit = EditFolderRemoveObj[S](nodeView.renderData.humanName, parent, idx, child)
             Some(edit)
           }
         }

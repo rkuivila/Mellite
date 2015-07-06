@@ -29,10 +29,18 @@ object ObjView {
   /** Standard `AttrMap` key whose value is of type `Color.Obj`. */
   final val attrColor = "color"
 
+  final val categPrimitives   = "Primitives"
+  final val categResources    = "Resources"
+  final val categComposition  = "Composition"
+  final val categSound        = "Sound"
+  final val categOrganisation = "Organisation"
+  final val categMisc         = "Miscellaneous"
+
   trait Factory {
-    def prefix: String
-    def icon  : Icon
-    def typeID: Int
+    def prefix    : String
+    def humanName : String
+    def icon      : Icon
+    def typeID    : Int
 
     type Config[S <: evt.Sys[S]]
 
@@ -45,6 +53,8 @@ object ObjView {
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                    (implicit cursor: stm.Cursor[S]): Option[Config[S]]
 
+    def category: String
+
     /** Creates an object from a configuration.
       * The reason that the result type is not `Obj.T[S, E]` is
       * that we allow the returning of a number of auxiliary other objects as well.
@@ -53,7 +63,8 @@ object ObjView {
   }
 }
 trait ObjView[S <: evt.Sys[S]] extends Disposable[S#Tx] {
-  def typeID: Int
+  def factory: ObjView.Factory
+  def humanName: String
 
   // type E[~ <: evt.Sys[~]] <: Elem[~]
 
@@ -69,9 +80,6 @@ trait ObjView[S <: evt.Sys[S]] extends Disposable[S#Tx] {
 
   /** Convenience method that returns an "unnamed" string if no name is set. */
   def name: String = nameOption.getOrElse(TimelineObjView.Unnamed)
-
-  /** The prefix is the type of object represented. For example, `"Int"` for an `Obj.T[S, IntElem]`, etc. */
-  def prefix: String
 
   /** A view must provide an icon for the user interface. It should have a dimension of 32 x 32 and ideally
     * be drawn as vector graphics in order to look good when applying scaling.

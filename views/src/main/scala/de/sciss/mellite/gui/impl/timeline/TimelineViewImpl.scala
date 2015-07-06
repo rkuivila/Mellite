@@ -1011,7 +1011,7 @@ object TimelineViewImpl {
             val length  = defaultDropLength(view, inProgress = false)
             val span    = Span(drop.frame, drop.frame + length)
             val spanEx  = SpanLikeEx.newVar[S](SpanLikeEx.newConst(span))
-            EditTimelineInsertObj(view.prefix, group, spanEx, view.obj())
+            EditTimelineInsertObj(view.humanName, group, spanEx, view.obj())
           }
           // CompoundEdit(edits, "Insert Objects")
         }

@@ -60,7 +60,10 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = StringElem[S]
     val icon      = raphaelIcon(raphael.Shapes.Font)
     val prefix    = "String"
+    def humanName = prefix
     def typeID    = ElemImpl.String.typeID
+
+    def category = ObjView.categPrimitives
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, StringElem])(implicit tx: S#Tx): ListObjView[S] = {
       val ex          = obj.elem.peer
@@ -101,9 +104,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = StringElem[~]
 
-      def prefix  = String.prefix
-      def icon    = String.icon
-      def typeID  = String.typeID
+      def factory = String
 
       def exprType = lucre.expr.String
 
@@ -124,8 +125,11 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = LongElem[S]
     val icon      = raphaelIcon(Shapes.IntegerNumbers)  // XXX TODO
     val prefix    = "Long"
+    def humanName = prefix
     def typeID    = ElemImpl.Long.typeID
     def hasMakeDialog = true
+
+    def category = ObjView.categPrimitives
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, LongElem])(implicit tx: S#Tx): ListObjView[S] = {
       val ex          = obj.elem.peer
@@ -164,9 +168,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = LongElem[~]
 
-      def prefix  = Long.prefix
-      def icon    = Long.icon
-      def typeID  = Long.typeID
+      def factory = Long
 
       def exprType = LongEx
 
@@ -190,8 +192,11 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = DoubleElem[S]
     val icon      = raphaelIcon(Shapes.RealNumbers)
     val prefix    = "Double"
+    def humanName = prefix
     def typeID    = ElemImpl.Double.typeID
     def hasMakeDialog = true
+
+    def category = ObjView.categPrimitives
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, DoubleElem])(implicit tx: S#Tx): ListObjView[S] = {
       val ex          = obj.elem.peer
@@ -229,9 +234,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = DoubleElem[~]
 
-      def prefix  = Double.prefix
-      def icon    = Double.icon
-      def typeID  = Double.typeID
+      def factory = Double
 
       def exprType = DoubleEx
 
@@ -255,8 +258,11 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = BooleanElem[S]
     val icon      = raphaelIcon(Shapes.BooleanNumbers)
     val prefix    = "Boolean"
+    def humanName = prefix
     def typeID    = ElemImpl.Boolean.typeID
     def hasMakeDialog = true
+
+    def category = ObjView.categPrimitives
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, BooleanElem])(implicit tx: S#Tx): ListObjView[S] = {
       val ex          = obj.elem.peer
@@ -294,9 +300,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = BooleanElem[~]
 
-      def prefix  = Boolean.prefix
-      def icon    = Boolean.icon
-      def typeID  = Boolean.typeID
+      def factory = Boolean
 
       def expr(implicit tx: S#Tx): Expr[S, _Boolean] = obj().elem.peer
     }
@@ -308,7 +312,10 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Color.Elem[S]
     val icon      = raphaelIcon(raphael.Shapes.Paint)
     val prefix    = "Color"
+    def humanName = prefix
     def typeID    = _Color.typeID
+    def category  = ObjView.categOrganisation
+
     def hasMakeDialog = true
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _Color.Elem])(implicit tx: S#Tx): ListObjView[S] = {
@@ -374,9 +381,7 @@ object ObjViewImpl {
 
       def isEditable = false    // not until we have proper editing components
 
-      def prefix  = Color.prefix
-      def icon    = Color.icon
-      def typeID  = Color.typeID
+      def factory = Color
 
       def exprType = _Color.Expr
 
@@ -462,8 +467,11 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = ArtifactElem[S]
     val icon      = raphaelIcon(raphael.Shapes.PagePortrait)
     val prefix    = "Artifact"
+    def humanName = "File"
     def typeID    = ElemImpl.Artifact.typeID
     def hasMakeDialog = false
+
+    def category = ObjView.categResources
 
     def mkListView[S <: Sys[S]](obj: ArtifactElem.Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
       val peer      = obj.elem.peer
@@ -488,9 +496,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = ArtifactElem[~]
 
-      def icon    = Artifact.icon
-      def prefix  = Artifact.prefix
-      def typeID  = Artifact.typeID
+      def factory = Artifact
 
       def value   = file
 
@@ -511,7 +517,10 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Recursion.Elem[S]
     val icon      = raphaelIcon(raphael.Shapes.Quote)
     val prefix    = "Recursion"
+    def humanName = prefix
     def typeID    = _Recursion.typeID
+    def category  = ObjView.categComposition
+
     def hasMakeDialog = false
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _Recursion.Elem])(implicit tx: S#Tx): ListObjView[S] = {
@@ -533,9 +542,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = _Recursion.Elem[~]
 
-      def icon    = Recursion.icon
-      def prefix  = Recursion.prefix
-      def typeID  = Recursion.typeID
+      def factory = Recursion
 
       def value   = deployed
 
@@ -563,7 +570,10 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = FolderElem[S]
     def icon      = UIManager.getIcon("Tree.openIcon")  // Swing.EmptyIcon
     val prefix    = "Folder"
+    def humanName = prefix
     def typeID    = FolderElemImpl.typeID
+    def category  = ObjView.categOrganisation
+
     def hasMakeDialog = true
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, FolderElem])(implicit tx: S#Tx): ListObjView[S] =
@@ -597,9 +607,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = FolderElem[~]
 
-      def prefix  = Folder.prefix
-      def icon    = Folder.icon
-      def typeID  = Folder.typeID
+      def factory = Folder
 
       def isViewable = true
 
@@ -618,8 +626,11 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Timeline.Elem[S]
     val icon      = raphaelIcon(raphael.Shapes.Ruler)
     val prefix    = "Timeline"
+    def humanName = prefix
     def typeID    = _Timeline.typeID
     def hasMakeDialog = true
+
+    def category = ObjView.categComposition
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _Timeline.Elem])(implicit tx: S#Tx): ListObjView[S] =
       new Timeline.Impl(tx.newHandle(obj)).initAttrs(obj)
@@ -651,9 +662,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = _Timeline.Elem[~]
 
-      def icon    = Timeline.icon
-      def prefix  = Timeline.prefix
-      def typeID  = Timeline.typeID
+      def factory = Timeline
 
       def isViewable = true
 
@@ -683,8 +692,11 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _FadeSpec.Elem[S]
     val icon        = raphaelIcon(raphael.Shapes.Up)
     val prefix      = "FadeSpec"
+    val humanName   = "Fade"
     def typeID      = ElemImpl.FadeSpec.typeID
     def hasMakeDialog   = false
+
+    def category = ObjView.categSound
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _FadeSpec.Elem])(implicit tx: S#Tx): ListObjView[S] = {
       val value   = obj.elem.peer.value
@@ -719,9 +731,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = _FadeSpec.Elem[~]
 
-      def icon    = FadeSpec.icon
-      def prefix  = FadeSpec.prefix
-      def typeID  = FadeSpec.typeID
+      def factory = FadeSpec
 
       def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
         case Change(_, valueNew: _FadeSpec) =>
@@ -748,7 +758,10 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Ensemble.Elem[S]
     val icon        = raphaelIcon(raphael.Shapes.Cube2)
     val prefix      = "Ensemble"
+    def humanName   = prefix
     def typeID      = _Ensemble.typeID
+    def category    = ObjView.categComposition
+
     def hasMakeDialog   = true
 
     def mkListView[S <: Sys[S]](obj: _Ensemble.Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
@@ -819,9 +832,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = _Ensemble.Elem[~]
 
-      def icon    = Ensemble.icon
-      def prefix  = Ensemble.prefix
-      def typeID  = Ensemble.typeID
+      def factory = Ensemble
 
       def isViewable = true
 
@@ -854,8 +865,11 @@ object ObjViewImpl {
     type E[S <: evt.Sys[S]] = _Nuages.Elem[S]
     val icon        = raphaelIcon(raphael.Shapes.CloudWhite)
     val prefix      = "Nuages"
+    val humanName   = "Wolkenpumpe"
     def typeID      = _Nuages.typeID
     def hasMakeDialog   = true
+
+    def category = ObjView.categComposition
 
     def mkListView[S <: Sys[S]](obj: _Nuages.Obj[S])(implicit tx: S#Tx): ListObjView[S] =
       new Nuages.Impl(tx.newHandle(obj)).initAttrs(obj)
@@ -887,9 +901,7 @@ object ObjViewImpl {
 
       type E[~ <: evt.Sys[~]] = _Nuages.Elem[~]
 
-      def icon    = Nuages.icon
-      def prefix  = Nuages.prefix
-      def typeID  = Nuages.typeID
+      def factory = Nuages
 
       def isViewable = true
 
@@ -928,7 +940,13 @@ object ObjViewImpl {
   def raphaelIcon(shape: Path2D => Unit): Icon = raphael.Icon(16)(shape)
 
   trait Impl[S <: evt.Sys[S]] extends ObjView[S] {
-    override def toString = s"ElementView.$prefix(name = $name)"
+    override def toString = s"ElementView.${factory.prefix}(name = $name)"
+
+    /** Forwards to factory. */
+    def humanName: String = factory.humanName
+
+    /** Forwards to factory. */
+    def icon: Icon = factory.icon
 
     var nameOption : Option[String] = None
     var colorOption: Option[Color ] = None

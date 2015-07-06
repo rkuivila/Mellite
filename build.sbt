@@ -9,7 +9,7 @@ lazy val loggingEnabled             = true
 
 lazy val soundProcessesVersion      = "2.20.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.2"
-lazy val scalaColliderUGenVersion   = "1.13.3-SNAPSHOT"
+lazy val scalaColliderUGenVersion   = "1.13.3"
 lazy val confluentVersion           = "2.11.2"
 lazy val lucreSTMVersion            = "2.1.2"
 lazy val fscapeJobsVersion          = "1.5.0"

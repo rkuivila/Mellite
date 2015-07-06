@@ -2,8 +2,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import javax.swing.Icon
-
+import de.sciss.desktop
 import de.sciss.icons.raphael
 import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.expr.Expr
@@ -13,12 +12,27 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.span.SpanLike
+import de.sciss.synth.proc
 import de.sciss.synth.proc.Obj
 
 import scala.swing.{Component, Label}
 
-object GenericObjView {
-  val icon = ObjViewImpl.raphaelIcon(raphael.Shapes.No)
+object GenericObjView extends ObjView.Factory {
+  val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.No)
+  val prefix    = "Generic"
+  def humanName = prefix
+  val category  = "None"
+  val typeID    = 0
+
+  type E[~ <: evt.Sys[~]]       = proc.Elem[~]
+  type Config[S <: evt.Sys[S]]  = Unit
+
+  def hasMakeDialog: Boolean = false
+
+  def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                                 (implicit cursor: Cursor[S]): Option[Config[S]] = None
+
+  def makeObj[S <: Sys[S]](config: Unit)(implicit tx: S#Tx): List[Obj[S]] = Nil
 
   def mkTimelineView[S <: Sys[S]](span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): TimelineObjView[S] = {
     implicit val spanLikeSer = SpanLikeEx.serializer[S]
@@ -30,9 +44,7 @@ object GenericObjView {
     new ListImpl(tx.newHandle(obj)).initAttrs(obj)
 
   private trait Impl[S <: evt.Sys[S]] extends ObjViewImpl.Impl[S] {
-    final def prefix: String  = "Generic"
-    final def typeID: Int     = 0
-    final def icon  : Icon    = GenericObjView.icon
+    def factory = GenericObjView
 
     final def value: Any = ()
 

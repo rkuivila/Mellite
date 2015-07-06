@@ -42,7 +42,10 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Cogs)
   val prefix    = "Proc"
+  val humanName = "Process"
   def typeID    = ElemImpl.Proc.typeID
+  def category  = ObjView.categSound
+
   def hasMakeDialog = true
 
   def mkListView[S <: Sys[S]](obj: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): ProcObjView[S] with ListObjView[S] =
@@ -184,13 +187,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     with ListObjViewImpl.EmptyRenderer[S]
     with ListObjViewImpl.NonEditable[S] {
 
-    // type E[~ <: evt.Sys[~]] = _Proc.Elem[~]
-
-    // override def obj: stm.Source[S#Tx, _Proc.Obj[S]]
-
-    final def icon    = ProcObjView.icon
-    final def prefix  = ProcObjView.prefix
-    final def typeID  = ProcObjView.typeID
+    final def factory = ProcObjView
 
     final def isViewable = true
 

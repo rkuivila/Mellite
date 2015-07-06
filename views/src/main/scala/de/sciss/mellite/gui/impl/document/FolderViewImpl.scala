@@ -182,7 +182,7 @@ object FolderViewImpl {
                 }
                 // val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName, valueOpt)
                 import StringEx.serializer
-                val ed = EditAttrMap.expr(s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName,
+                val ed = EditAttrMap.expr(s"Rename ${objView.humanName} Element", objView.obj(), ObjKeys.attrName,
                   valueOpt)(StringElem[S](_))
                 Some(ed)
               } else {
@@ -325,7 +325,7 @@ object FolderViewImpl {
               println("WARNING: Parent of drag object not found")
               None
             } else {
-              val edit = EditFolderRemoveObj[S](nv.renderData.prefix, parent, idx, childH())
+              val edit = EditFolderRemoveObj[S](nv.renderData.humanName, parent, idx, childH())
               Some(edit)
             }
           }
@@ -334,11 +334,11 @@ object FolderViewImpl {
             val childH  = nv.modelData
             val child0  = childH()
             val child   = if (!isCopy) child0 else Obj.copy(child0)
-            EditFolderInsertObj[S](nv.renderData.prefix, newParent, idx1 + off, child)
+            EditFolderInsertObj[S](nv.renderData.humanName, newParent, idx1 + off, child)
           }
           val edits: List[UndoableEdit] = editRemove ++ editInsert
           val name = sel1 match {
-            case single :: Nil  => single.renderData.prefix
+            case single :: Nil  => single.renderData.humanName
             case _              => "Elements"
           }
 

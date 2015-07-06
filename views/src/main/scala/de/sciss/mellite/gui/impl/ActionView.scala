@@ -33,7 +33,10 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
   type E[S <: evt.Sys[S]] = Action.Elem[S]
   val icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Bolt)
   val prefix      = "Action"
+  def humanName   = prefix
   def typeID      = Action.typeID
+
+  def category    = ObjView.categSound
 
   def mkListView[S <: Sys[S]](obj: Action.Obj[S])(implicit tx: S#Tx): ListObjView[S] =
     new ListImpl(tx.newHandle(obj)).initAttrs(obj)
@@ -69,9 +72,7 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
 
     final type E[~ <: evt.Sys[~]] = Action.Elem[~]
 
-    final def icon    = ActionView.icon
-    final def prefix  = ActionView.prefix
-    final def typeID  = ActionView.typeID
+    final def factory = ActionView
 
     final def isViewable = true
 

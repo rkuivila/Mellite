@@ -35,8 +35,11 @@ object AudioGraphemeObjView extends ListObjView.Factory {
   type E[S <: evt.Sys[S]] = AudioGraphemeElem[S]
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Music)
   val prefix    = "AudioGrapheme"
+  def humanName = "Audio File"
   def typeID    = ElemImpl.AudioGrapheme.typeID
   def hasMakeDialog = true
+
+  def category = ObjView.categResources
 
   def mkListView[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])
                              (implicit tx: S#Tx): AudioGraphemeObjView[S] with ListObjView[S] = {
@@ -88,9 +91,7 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
     type E[~ <: evt.Sys[~]] = AudioGraphemeElem[~]
 
-    def prefix  = AudioGraphemeObjView.prefix
-    def icon    = AudioGraphemeObjView.icon
-    def typeID  = AudioGraphemeObjView.typeID
+    def factory = AudioGraphemeObjView
 
     def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = update match {
       case Change(_, now: Grapheme.Value.Audio) =>
