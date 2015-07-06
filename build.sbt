@@ -1,13 +1,13 @@
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val fullDescr                  = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "1.6.0-SNAPSHOT"
+lazy val projectVersion             = "1.6.0"
 
 lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.20.0-SNAPSHOT"
+lazy val soundProcessesVersion      = "2.20.0"
 lazy val interpreterPaneVersion     = "1.7.2"
 lazy val scalaColliderUGenVersion   = "1.13.3"
 lazy val confluentVersion           = "2.11.2"
@@ -20,12 +20,13 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "1.5.0-SNAPSHOT"
+lazy val nuagesVersion              = "1.5.0"
 lazy val scalaColliderSwingVersion  = "1.25.2"
 lazy val lucreSwingVersion          = "0.9.1"
+lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
 lazy val audioWidgetsVersion        = "1.9.1"
-lazy val desktopVersion             = "0.7.1-SNAPSHOT"
+lazy val desktopVersion             = "0.7.1"
 lazy val sonogramVersion            = "1.9.0"
 lazy val treetableVersion           = "1.3.7"
 lazy val raphaelIconsVersion        = "1.0.2"
@@ -146,6 +147,7 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       "de.sciss" %% "wolkenpumpe"                     % nuagesVersion,              // live improv
       "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL
       "de.sciss" %% "lucreswing"                      % lucreSwingVersion,          // reactive Swing components
+      "de.sciss" %% "swingplus"                       % swingPlusVersion,           // newest version: color-chooser
       "de.sciss" %% "span"                            % spanVersion,
       "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets
       "de.sciss" %% "desktop-mac"                     % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms

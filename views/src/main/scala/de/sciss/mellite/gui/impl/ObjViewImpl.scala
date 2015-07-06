@@ -32,14 +32,14 @@ import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.mellite.gui.impl.component.PaintIcon
 import de.sciss.mellite.gui.impl.document.NuagesFolderFrameImpl
 import de.sciss.model.Change
-import de.sciss.swingplus.{GroupPanel, Spinner}
+import de.sciss.swingplus.{ColorChooser, GroupPanel, Spinner}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.impl.{ElemImpl, FolderElemImpl}
 import de.sciss.synth.proc.{ArtifactElem, BooleanElem, Confluent, DoubleElem, ExprImplicits, FolderElem, LongElem, Obj, ObjKeys, StringElem}
 import de.sciss.{desktop, lucre}
 
 import scala.swing.Swing.EmptyIcon
-import scala.swing.{Swing, Action, Alignment, BorderPanel, Button, CheckBox, ColorChooser, Component, Dialog, FlowPanel, GridPanel, Label, TextField}
+import scala.swing.{Swing, Action, Alignment, BorderPanel, Button, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, TextField}
 import scala.util.Try
 
 object ObjViewImpl {
