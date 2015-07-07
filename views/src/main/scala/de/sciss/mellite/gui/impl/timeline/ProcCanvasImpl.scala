@@ -18,6 +18,7 @@ package timeline
 
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
 import de.sciss.lucre.synth.Sys
+import TrackTool.EmptyRubber
 
 trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCanvas[S] {
   final val trackTools = TrackTools[S](this)
@@ -28,19 +29,30 @@ trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCa
   //  final protected def toolState = _toolState
 
   protected var toolState: Option[Any]
+  protected var rubberState: TrackTool.DragRubber = EmptyRubber
 
   private val toolListener: TrackTool.Listener = {
     // case TrackTool.DragBegin =>
     case TrackTool.DragCancel =>
       log(s"Drag cancel $toolState")
       if (toolState.isDefined) {
-        toolState = None
+        toolState   = None
+        repaint()
+      } else if (rubberState.isValid) {
+        rubberState = EmptyRubber
         repaint()
       }
+
     case TrackTool.DragEnd =>
       log(s"Drag end $toolState")
-      toolState.foreach { state =>
-        toolState = None
+      toolState.fold[Unit] {
+        if (rubberState.isValid) {
+          rubberState = EmptyRubber
+          repaint()
+        }
+      } { state =>
+        toolState   = None
+        rubberState = EmptyRubber
         commitToolChanges(state)
         repaint()
       }
@@ -57,6 +69,11 @@ trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCa
       log(s"Tool commit $state")
       toolState = None
       commitToolChanges(state)
+      repaint()
+
+    case state: TrackTool.DragRubber =>
+      log(s"Tool rubber $state")
+      rubberState = state
       repaint()
   }
 

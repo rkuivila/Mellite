@@ -28,5 +28,8 @@ trait TimelineProcCanvas[S <: Sys[S]] extends TimelineCanvas {
   def intersect(span: Span): Iterator[TimelineObjView[S]]
 
   def findRegion(frame: Long, hitTrack: Int): Option[TimelineObjView[S]]
+
+  def findRegions(r: TrackTool.Rectangular): Iterator[TimelineObjView[S]]
+
   def screenToTrack(y: Int): Int
 }

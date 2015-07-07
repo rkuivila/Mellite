@@ -39,7 +39,7 @@ object MuteImpl {
   }
 }
 final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends RegionImpl[S, Mute] {
+  extends RegionImpl[S, Mute] with Rubberband[S, Mute] {
 
   def defaultCursor = MuteImpl.cursor
   val name          = "Mute"

@@ -38,7 +38,9 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
   protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineObjView[S]]): Unit = {
     handleMouseSelection(e, regionOpt)
     // now go on if region is selected
-    regionOpt.foreach { region =>
+    regionOpt.fold[Unit] {
+      handleOutside(e, hitTrack, pos)
+    } { region =>
       if (canvas.selectionModel.contains(region)) handleSelect(e, hitTrack, pos, region)
     }
   }
@@ -60,5 +62,7 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
   protected def commitObj(drag: A)(span: Expr[S, SpanLike], proc: Obj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit]
 
-  protected def handleSelect(e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit
+  protected def handleSelect (e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit
+
+  protected def handleOutside(e: MouseEvent, hitTrack: Int, pos: Long): Unit = ()
 }

@@ -17,6 +17,7 @@ package impl
 package tracktool
 
 import java.awt.Cursor
+import java.awt.event.MouseEvent
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.lucre.expr.Expr
@@ -27,7 +28,7 @@ import de.sciss.span.SpanLike
 import de.sciss.synth.proc.Obj
 
 final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends BasicRegion[S, TrackTool.Move] {
+  extends BasicRegion[S, TrackTool.Move] with Rubberband[S, TrackTool.Move] {
 
   import TrackTool.{Cursor => _, _}
 
@@ -52,6 +53,9 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
     Move(deltaTime = dTim, deltaTrack = dTrk, copy = d.currentEvent.isAltDown)
   }
+
+  override protected def handleOutside(e: MouseEvent, hitTrack: Int, pos: Long): Unit =
+    mkRubber(e, hitTrack = hitTrack, pos = pos)
 
   protected def commitObj(drag: Move)(span: Expr[S, SpanLike], obj: Obj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =

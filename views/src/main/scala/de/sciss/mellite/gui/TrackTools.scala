@@ -84,13 +84,30 @@ trait TrackTools[S <: Sys[S]] extends Model[TrackTools.Update[S]] {
 }
 
 object TrackTool {
+  trait Rectangular {
+    def trackIndex: Int
+    def trackHeight: Int
+    def span: Span
+
+    def isValid: Boolean = trackIndex >= 0
+  }
+
   sealed trait Update[+A]
   case object DragBegin  extends Update[Nothing]
   final case class DragAdjust[A](value: A) extends Update[A]
+
+  final case class DragRubber(trackIndex: Int, trackHeight: Int, span: Span)
+    extends Update[Nothing] with Rectangular
+
   case object DragEnd    extends Update[Nothing] // (commit: AbstractCompoundEdit)
   case object DragCancel extends Update[Nothing]
+
   /** Direct adjustment without drag period. */
   case class Adjust[A](value: A) extends Update[A]
+
+  val EmptyRubber = DragRubber(-1, -1, Span(0L, 0L))
+
+  // ----
 
   type Move   = ProcActions.Move
   val  Move   = ProcActions.Move
@@ -99,9 +116,10 @@ object TrackTool {
   final case class Gain    (factor: Float)
   final case class Mute    (engaged: Boolean)
   final case class Fade    (deltaFadeIn: Long, deltaFadeOut: Long, deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
-  final case class Function(trackIndex: Int, trackHeight: Int, span: Span) {
-    def isValid: Boolean = trackIndex >= 0
-  }
+
+  final case class Function(trackIndex: Int, trackHeight: Int, span: Span)
+    extends Update[Nothing] with Rectangular
+
   final case class Cursor  (name: Option[String])
 
   object Patch {

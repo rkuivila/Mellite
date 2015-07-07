@@ -61,6 +61,8 @@ object TimelineViewImpl {
   private val colrBg              = awt.Color.darkGray
   private val colrDropRegionBg    = new awt.Color(0xFF, 0xFF, 0xFF, 0x7F)
   private val strkDropRegion      = new BasicStroke(3f)
+  private val strkRubber          = new BasicStroke(3f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 10.0f,
+                                      Array[Float](3f, 5f), 0f)
   private val colrRegionOutline   = new awt.Color(0x68, 0x68, 0x68)
   private val colrRegionOutlineSel= awt.Color.blue
   private val pntRegionBg         = new LinearGradientPaint(0f, 1f, 0f, 62f,
@@ -1059,6 +1061,11 @@ object TimelineViewImpl {
         regions.find(pv => pv.trackIndex <= hitTrack && (pv.trackIndex + pv.trackHeight) > hitTrack)
       }
 
+      def findRegions(r: TrackTool.Rectangular): Iterator[TimelineObjView[S]] = {
+        val regions = intersect(r.span)
+        regions.filter(pv => pv.trackIndex < r.trackIndex + r.trackHeight && (pv.trackIndex + pv.trackHeight) > r.trackIndex)
+      }
+
       protected def commitToolChanges(value: Any): Unit = {
         logT(s"Commit tool changes $value")
         val editOpt = step { implicit tx =>
@@ -1448,20 +1455,23 @@ object TimelineViewImpl {
               case ad: DnD.AudioDragLike[S] =>
                 val track = screenToTrack(drop.y)
                 val span  = Span(drop.frame, drop.frame + ad.selection.length)
-                drawDropFrame(g, track, 4, span)
+                drawDropFrame(g, track, 4, span, rubber = false)
 
               case DnD.ObjectDrag(_, view) /* : ObjView.Proc[S] */ =>
                 val track   = screenToTrack(drop.y)
                 val length  = defaultDropLength(view, inProgress = true)
                 val span    = Span(drop.frame, drop.frame + length)
-                drawDropFrame(g, track, 4, span)
+                drawDropFrame(g, track, 4, span, rubber = false)
 
               case _ =>
             }
           }
 
           if (functionState.isValid)
-            drawDropFrame(g, functionState.trackIndex, functionState.trackHeight, functionState.span)
+            drawDropFrame(g, functionState.trackIndex, functionState.trackHeight, functionState.span, rubber = false)
+
+          if (rubberState.isValid)
+            drawDropFrame(g, rubberState.trackIndex, rubberState.trackHeight, rubberState.span, rubber = true)
 
           if (patchState.source != null)
             drawPatch(g, patchState)
@@ -1520,12 +1530,13 @@ object TimelineViewImpl {
           g.setStroke(strkOrig)
         }
 
-        private def drawDropFrame(g: Graphics2D, trackIndex: Int, trackHeight: Int, span: Span): Unit = {
+        private def drawDropFrame(g: Graphics2D, trackIndex: Int, trackHeight: Int, span: Span,
+                                  rubber: Boolean): Unit = {
           val x1 = frameToScreen(span.start).toInt
           val x2 = frameToScreen(span.stop ).toInt
           g.setColor(colrDropRegionBg)
           val strkOrig = g.getStroke
-          g.setStroke(strkDropRegion)
+          g.setStroke(if (rubber) strkRubber else strkDropRegion)
           val y   = trackToScreen(trackIndex)
           val x1b = math.min(x1 + 1, x2)
           val x2b = math.max(x1b, x2 - 1)

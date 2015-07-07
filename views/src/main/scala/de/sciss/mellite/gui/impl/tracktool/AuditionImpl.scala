@@ -47,7 +47,7 @@ object AuditionImpl {
   * that smartly filters the objects.
   */
 class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv: TimelineView[S])
-  extends RegionLike[S, Unit] {
+  extends RegionLike[S, Unit] with Rubberband[S, Unit] {
 
   import TrackTool.{Cursor => _}
 
@@ -66,6 +66,7 @@ class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv
     */
   protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineObjView[S]]): Unit = {
     handleMouseSelection(e, regionOpt = regionOpt)
+
     val selMod = canvas.selectionModel
     if (selMod.isEmpty) return
 

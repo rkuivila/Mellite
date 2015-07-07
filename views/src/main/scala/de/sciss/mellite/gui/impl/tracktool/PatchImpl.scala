@@ -28,7 +28,6 @@ import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
-import de.sciss.mellite.gui.impl.ProcObjView$
 import de.sciss.span.SpanLike
 import de.sciss.swingplus.PaddedIcon
 import de.sciss.synth.proc.{Obj, Proc}
