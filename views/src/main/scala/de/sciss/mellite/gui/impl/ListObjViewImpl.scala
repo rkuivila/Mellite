@@ -136,7 +136,7 @@ object ListObjViewImpl {
           // XXX TODO - all this casting is horrible
           implicit val ctx = tx.asInstanceOf[Confluent#Tx]
           implicit val ser = exprType.serializer[Confluent]
-          val name = AttrCellView.name[Confluent](obj().asInstanceOf[Obj[Confluent]])
+          val name = AttrCellView.name[Confluent](obj.asInstanceOf[Obj[Confluent]])
             .map(n => s"History for '$n'")
           val w = new WindowImpl[Confluent](name) {
             val view = ExprHistoryView(cf, expr.asInstanceOf[Expr[Confluent, A]])

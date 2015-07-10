@@ -182,7 +182,7 @@ object FolderViewImpl {
                 }
                 // val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName, valueOpt)
                 import StringEx.serializer
-                val ed = EditAttrMap.expr(s"Rename ${objView.humanName} Element", objView.obj(), ObjKeys.attrName,
+                val ed = EditAttrMap.expr(s"Rename ${objView.humanName} Element", objView.obj, ObjKeys.attrName,
                   valueOpt)(StringElem[S](_))
                 Some(ed)
               } else {
@@ -437,7 +437,7 @@ object FolderViewImpl {
       } .headOption
 
       locationsOk match {
-        case Some(loc)  => Some(Left(loc.obj))
+        case Some(loc)  => Some(Left(loc.objH))
         case _          =>
           //          val parent = selection.flatMap { nodeView =>
           //            nodeView.renderData match {

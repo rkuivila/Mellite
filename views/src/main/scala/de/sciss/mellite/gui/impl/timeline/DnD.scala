@@ -48,7 +48,7 @@ object DnD {
   //  final case class CodeDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Code.Elem]]) extends Drag[S]
   //  final case class ProcDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Proc.Elem]]) extends Drag[S]
 
-  final case class GlobalProcDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Obj.T[S, Proc.Elem]])
+  final case class GlobalProcDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Proc.Obj[S]])
     extends Drag[S]
 
   final case class ObjectDrag[S <: SSys[S]](workspace: Workspace[S], view: ObjView[S]) extends Drag[S]

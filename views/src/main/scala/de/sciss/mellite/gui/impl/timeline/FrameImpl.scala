@@ -62,7 +62,7 @@ object FrameImpl {
             it.foreach {
               case pv: ProcObjView.Timeline[S] =>
                 println(pv.debugString)
-                println(_cursor.step { implicit tx => pv.obj().elem.peer.toString() })
+                println(_cursor.step { implicit tx => pv.obj.elem.peer.toString() })
               case _ =>
             }
           else {

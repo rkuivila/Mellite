@@ -146,7 +146,22 @@ trait TimelineActions[S <: Sys[S]] {
     enabled = false
 
     def apply(): Unit = {
-      println("TODO")
+      val pos = timelineModel.position
+      val edits = withSelection { implicit tx => views =>
+        val list = views.flatMap { view =>
+          val span = view.span
+          span.value match {
+            case hs: Span.HasStart if hs.start != pos =>
+              val delta   = pos - hs.start
+              val amount  = ProcActions.Move(deltaTime = delta, deltaTrack = 0, copy = false)
+              Edits.move(span, view.obj, amount = amount, minStart = 0L)
+            case _ => None
+          }
+        }
+        if (list.isEmpty) None else Some(list.toList)
+      } .getOrElse(Nil)
+      val editOpt = CompoundEdit(edits, title)
+      editOpt.foreach(undoManager.add)
     }
   }
 
@@ -189,9 +204,9 @@ trait TimelineActions[S <: Sys[S]] {
   protected def splitObjects(time: Long)(views: TraversableOnce[TimelineObjView[S]])
                   (implicit tx: S#Tx): Option[UndoableEdit] = timelineMod.flatMap { groupMod =>
     val edits: List[UndoableEdit] = views.flatMap { pv =>
-      pv.span() match {
+      pv.span match {
         case Expr.Var(oldSpan) =>
-          val (edits, _, _) = splitObject(groupMod, time, oldSpan, pv.obj())
+          val (edits, _, _) = splitObject(groupMod, time, oldSpan, pv.obj)
           edits
         case _ => Nil
       }

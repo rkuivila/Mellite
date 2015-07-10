@@ -68,7 +68,7 @@ object IntObjView extends ListObjView.Factory {
     obj :: Nil
   }
 
-  final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, IntElem]],
+  final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, IntElem]],
                                 var value: Int,
                                 override val isEditable: Boolean, val isViewable: Boolean)
     extends IntObjView[S]
@@ -78,13 +78,15 @@ object IntObjView extends ListObjView.Factory {
     with ListObjViewImpl.StringRenderer
     /* with NonViewable[S] */ {
 
+    override def obj(implicit tx: S#Tx) = objH()
+
     type E[~ <: evt.Sys[~]] = IntElem[~]
 
     def factory = IntObjView
 
     def exprType = IntEx
 
-    def expr(implicit tx: S#Tx) = obj().elem.peer
+    def expr(implicit tx: S#Tx) = obj.elem.peer
 
     def convertEditValue(v: Any): Option[Int] = v match {
       case num: Int  => Some(num)
@@ -98,5 +100,5 @@ object IntObjView extends ListObjView.Factory {
   }
 }
 trait IntObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  override def obj: stm.Source[S#Tx, IntElem.Obj[S]]
+  override def obj(implicit tx: S#Tx): IntElem.Obj[S]
 }

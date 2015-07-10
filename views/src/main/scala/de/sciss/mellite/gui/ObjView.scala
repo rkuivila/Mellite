@@ -87,7 +87,9 @@ trait ObjView[S <: evt.Sys[S]] extends Disposable[S#Tx] {
   def icon  : Icon
 
   /** The view must store a handle to its underlying model. */
-  def obj: stm.Source[S#Tx, Obj[S]] // Obj.T[S, E]]
+  def obj(implicit tx: S#Tx): Obj[S]
+
+  // def obj: stm.Source[S#Tx, Obj[S]] // Obj.T[S, E]]
 
   /** Whether a dedicated view/editor window exists for this type of object. */
   def isViewable: Boolean

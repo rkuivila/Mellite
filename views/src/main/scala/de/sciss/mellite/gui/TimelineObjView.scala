@@ -50,6 +50,12 @@ object TimelineObjView {
   }
 
   trait Factory extends ObjView.Factory {
+    /** Creates a new timeline view
+      *
+      * @param id       the `TimedElem`'s identifier
+      * @param span     the span on the timeline
+      * @param obj      the object placed on the timeline
+      */
     def mkTimelineView[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Obj.T[S, E],
                                     context: TimelineObjView.Context[S])(implicit tx: S#Tx): TimelineObjView[S]
   }
@@ -80,7 +86,11 @@ object TimelineObjView {
   }
 }
 trait TimelineObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  def span: stm.Source[S#Tx, Expr[S, SpanLike]]
+  // def span: stm.Source[S#Tx, Expr[S, SpanLike]]
+
+  def span(implicit tx: S#Tx): Expr[S, SpanLike]
+
+  def id(implicit tx: S#Tx): S#ID // Timeline.Timed[S]
 
   var spanValue: SpanLike
 

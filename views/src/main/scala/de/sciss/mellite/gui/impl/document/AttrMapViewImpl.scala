@@ -209,7 +209,7 @@ object AttrMapViewImpl {
           val newKey  = editValue.toString
           if (oldKey != newKey) {
             val editOpt = cursor.step { implicit tx =>
-              val value = view.obj()
+              val value = view.obj
               val obj0  = obj
               val ed1   = EditAttrMap(name = "Remove", obj0, key = oldKey, value = None)
               val ed2   = EditAttrMap(name = "Insert", obj0, key = newKey, value = Some(value))
@@ -357,7 +357,7 @@ object AttrMapViewImpl {
             keyOpt.exists { key =>
               val edit = cursor.step { implicit tx =>
                 val editName = if (isInsert) s"Create Attribute '$key'" else s"Change Attribute '$key'"
-                EditAttrMap(name = editName, obj = obj, key = key, value = Some(view.obj()))
+                EditAttrMap(name = editName, obj = obj, key = key, value = Some(view.obj))
               }
               undoManager.add(edit)
               true

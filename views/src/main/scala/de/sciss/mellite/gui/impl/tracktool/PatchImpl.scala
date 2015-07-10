@@ -89,7 +89,7 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
     (drag.sink, outObj) match {
       case (Patch.Linked(view), Proc.Obj(out)) =>
-        val in = view.obj()
+        val in = view.obj
         Edits.linkOrUnlink(out, in)
 
       case _ => None

@@ -47,8 +47,8 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
 
   def commit(drag: A)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     val edits = canvas.selectionModel.iterator.flatMap { pv =>
-      val span = pv.span()
-      val proc = pv.obj()
+      val span = pv.span
+      val proc = pv.obj
       commitObj(drag)(span, proc)
     } .toList
     val name = edits.headOption.fold("Edit") { ed =>

@@ -16,7 +16,7 @@ package gui
 package impl.timeline
 
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt}
+import de.sciss.lucre.{event => evt, stm}
 import de.sciss.lucre.expr.Expr
 import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
 import de.sciss.mellite.gui.impl.{ObjViewImpl, ActionView, GenericObjView, ProcObjView}
@@ -40,7 +40,7 @@ object TimelineObjViewImpl {
     val obj   = timed.value
     val tid   = obj.elem.typeID
     // getOrElse(sys.error(s"No view for type $tid"))
-    map.get(tid).fold(GenericObjView.mkTimelineView(span, obj)) { f =>
+    map.get(tid).fold(GenericObjView.mkTimelineView(timed.id, span, obj)) { f =>
       f.mkTimelineView(timed.id, span, obj.asInstanceOf[Obj.T[S, f.E]], context)
     }
   }
@@ -76,6 +76,12 @@ object TimelineObjViewImpl {
     var trackHeight : Int = _
     // var nameOption  : Option[String] = _
     var spanValue   : SpanLike = _
+
+    protected def spanH: stm.Source[S#Tx, Expr[S, SpanLike]]
+    protected def idH  : stm.Source[S#Tx, S#ID]
+
+    def span(implicit tx: S#Tx) = spanH()
+    def id  (implicit tx: S#Tx) = idH()
 
     def initAttrs(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): this.type = {
       val attr          = obj.attr

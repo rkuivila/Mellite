@@ -64,7 +64,7 @@ trait CollectionViewImpl[S <: Sys[S]]
     val sel = selectedObjects
     val sz  = sel.size
     if (sz > 0) GUI.atomic[S, Unit](nameAttr, s"Opening ${if (sz == 1) "window" else "windows"}") { implicit tx =>
-      sel.foreach(n => AttrMapFrame(n.obj()))
+      sel.foreach(n => AttrMapFrame(n.obj))
     }
   }
 

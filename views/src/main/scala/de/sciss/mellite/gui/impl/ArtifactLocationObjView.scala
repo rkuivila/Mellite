@@ -66,13 +66,15 @@ object ArtifactLocationObjView extends ListObjView.Factory {
     obj :: Nil
   }
 
-  final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]],
+  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]],
                                 var directory: File, val isEditable: Boolean)
     extends ArtifactLocationObjView[S]
     with ListObjView /* .ArtifactLocation */[S]
     with ObjViewImpl.Impl[S]
     with ListObjViewImpl.StringRenderer
     with ObjViewImpl.NonViewable[S] {
+
+    override def obj(implicit tx: S#Tx) = objH()
 
     type E[~ <: evt.Sys[~]] = ArtifactLocationElem[~]
 
@@ -94,7 +96,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
         case _          => None
       }
       dirOpt.flatMap { newDir =>
-        val loc = obj().elem.peer
+        val loc = obj.elem.peer
         import TypeCheckedTripleEquals._
         if (loc.directory === newDir) None else loc.modifiableOption.map { mod =>
           EditArtifactLocation(mod, newDir)
@@ -104,6 +106,9 @@ object ArtifactLocationObjView extends ListObjView.Factory {
   }
 }
 trait ArtifactLocationObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  override def obj: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]
+  override def obj(implicit tx: S#Tx): ArtifactLocationElem.Obj[S]
+
+  def objH: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]
+
   def directory: File
 }

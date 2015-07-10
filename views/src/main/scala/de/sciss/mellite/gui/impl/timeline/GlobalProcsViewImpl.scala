@@ -111,24 +111,24 @@ object GlobalProcsViewImpl {
         (col, value) match {
           case (0, name: String) =>
             atomic { implicit tx =>
-              ProcActions.rename(pv.proc, if (name.isEmpty) None else Some(name))
+              ProcActions.rename(pv.obj, if (name.isEmpty) None else Some(name))
             }
           case (1, gainS: String) =>  // XXX TODO: should use spinner for editing
             Try(gainS.toDouble).foreach { gain =>
               atomic { implicit tx =>
-                ProcActions.setGain(pv.proc, gain)
+                ProcActions.setGain(pv.obj, gain)
               }
             }
 
           case (2, muted: Boolean) =>
             atomic { implicit tx =>
-              ProcActions.toggleMute(pv.proc)
+              ProcActions.toggleMute(pv.obj)
             }
 
           case (3, busS: String) =>   // XXX TODO: should use spinner for editing
             Try(busS.toInt).foreach { bus =>
               atomic { implicit tx =>
-                ProcActions.setBus(pv.proc :: Nil, IntEx.newConst(bus))
+                ProcActions.setBus(pv.obj :: Nil, IntEx.newConst(bus))
               }
             }
 
@@ -218,7 +218,7 @@ object GlobalProcsViewImpl {
 
           selRows.headOption.map { row =>
             val pv = procSeq(row)
-            DragAndDrop.Transferable(timeline.DnD.flavor)(timeline.DnD.GlobalProcDrag(workspace, pv.obj))
+            DragAndDrop.Transferable(timeline.DnD.flavor)(timeline.DnD.GlobalProcDrag(workspace, pv.objH))
           } .orNull
         }
 
@@ -237,17 +237,17 @@ object GlobalProcsViewImpl {
                 drag.view match {
                   case iv: IntObjView[S] =>
                     atomic { implicit tx =>
-                      val objT = iv.obj()
+                      val objT = iv.obj
                       val intExpr = objT.elem.peer
-                      ProcActions.setBus(pv.proc :: Nil, intExpr)
+                      ProcActions.setBus(pv.obj :: Nil, intExpr)
                       true
                     }
 
                   case iv: CodeObjView[S] =>
                     atomic { implicit tx =>
-                      val objT = iv.obj()
+                      val objT = iv.obj
                       import Mellite.compiler
-                      ProcActions.setSynthGraph(pv.proc :: Nil, objT)
+                      ProcActions.setSynthGraph(pv.obj :: Nil, objT)
                       true
                     }
 
@@ -276,7 +276,7 @@ object GlobalProcsViewImpl {
       val actionAttr: Action = Action(null) {
         if (selectionModel.nonEmpty) cursor.step { implicit tx =>
           selectionModel.iterator.foreach { view =>
-            AttrMapFrame(view.obj())
+            AttrMapFrame(view.obj)
           }
         }
       }

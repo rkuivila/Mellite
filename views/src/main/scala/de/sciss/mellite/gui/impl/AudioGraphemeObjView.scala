@@ -82,12 +82,14 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
   private val timeFmt = AxisFormat.Time(hours = false, millis = true)
 
-  final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
+  final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                 var value: Grapheme.Value.Audio)
     extends AudioGraphemeObjView[S]
     with ListObjView /* .AudioGrapheme */[S]
     with ObjViewImpl.Impl[S]
     with ListObjViewImpl.NonEditable[S] {
+
+    override def obj(implicit tx: S#Tx) = objH()
 
     type E[~ <: evt.Sys[~]] = AudioGraphemeElem[~]
 
@@ -104,7 +106,7 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
     def openView(parent: Option[Window[S]])
                 (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-      val frame = AudioFileFrame(obj())
+      val frame = AudioFileFrame(obj)
       Some(frame)
     }
 
@@ -132,5 +134,5 @@ object AudioGraphemeObjView extends ListObjView.Factory {
   }
 }
 trait AudioGraphemeObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  override def obj: stm.Source[S#Tx, AudioGraphemeElem.Obj[S]]
+  override def obj(implicit tx: S#Tx): AudioGraphemeElem.Obj[S]
 }

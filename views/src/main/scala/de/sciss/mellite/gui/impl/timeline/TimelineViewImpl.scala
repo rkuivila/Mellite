@@ -24,8 +24,8 @@ import java.util.Locale
 import javax.swing.UIManager
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineModelImpl
+import de.sciss.audiowidgets.{RotaryKnob, TimelineModel}
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{UndoManager, Window}
 import de.sciss.fingertree.RangedSeq
@@ -43,17 +43,17 @@ import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditTimelineInsertObj, Ed
 import de.sciss.model.Change
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.swingplus.ScrollBar
+import de.sciss.synth.Curve
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
 import de.sciss.synth.proc.{BooleanElem, DoubleElem, FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan, StringElem, TimeRef, Timeline, Transport}
-import de.sciss.synth.Curve
 import de.sciss.{desktop, sonogram, synth}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.concurrent.stm.{Ref, TSet}
 import scala.swing.Swing._
 import scala.swing.event.ValueChanged
-import scala.swing.{Action, BorderPanel, BoxPanel, Component, Orientation, Slider, SplitPane}
+import scala.swing.{Action, BorderPanel, BoxPanel, Component, Orientation, SplitPane}
 import scala.util.Try
 
 object TimelineViewImpl {
@@ -112,9 +112,8 @@ object TimelineViewImpl {
     val sampleRate  = Timeline.SampleRate
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
-    val group       = obj.elem.peer
-    import Timeline.serializer
-    val groupEH     = tx.newHandle(obj  )
+    val timeline    = obj.elem.peer
+    val timelineH   = tx.newHandle(obj)
 
     var disposables = List.empty[Disposable[S#Tx]]
 
@@ -137,13 +136,13 @@ object TimelineViewImpl {
 
     // val globalSelectionModel = SelectionModel[S, ProcView[S]]
     val selectionModel  = SelectionModel[S, TimelineObjView[S]]
-    val global          = GlobalProcsView(group, selectionModel)
+    val global          = GlobalProcsView(timeline, selectionModel)
     disposables       ::= global
 
     val transportView   = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
-    val tlView          = new Impl[S](groupEH, viewMap, scanMap, tlm, selectionModel, global, transportView)
+    val tlView          = new Impl[S](timelineH, viewMap, scanMap, tlm, selectionModel, global, transportView)
 
-    group.iterator.foreach { case (span, seq) =>
+    timeline.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>
         tlView.objAdded(span, timed, repaint = false)
       }
@@ -237,64 +236,66 @@ object TimelineViewImpl {
       }
     }
 
-    val obsGroup = group.changed.react { implicit tx => _.changes.foreach {
-      case BiGroup.Added  (span, timed) =>
-        // println(s"Added   $span, $timed")
-        tlView.objAdded(span, timed, repaint = true)
+    val obsTimeline = timeline.changed.react { implicit tx => upd =>
+      upd.changes.foreach {
+        case BiGroup.Added  (span, timed) =>
+          // println(s"Added   $span, $timed")
+          tlView.objAdded(span, timed, repaint = true)
 
-      case BiGroup.Removed(span, timed) =>
-        // println(s"Removed $span, $timed")
-        tlView.objRemoved(span, timed)
+        case BiGroup.Removed(span, timed) =>
+          // println(s"Removed $span, $timed")
+          tlView.objRemoved(span, timed)
 
-      case BiGroup.ElementMoved  (timed, spanChange) =>
-        // println(s"Moved   $timed, $spanCh")
-        tlView.objMoved(timed, spanCh = spanChange, trackCh = None)
+        case BiGroup.ElementMoved  (timed, spanChange) =>
+          // println(s"Moved   $timed, $spanCh")
+          tlView.objMoved(timed, spanCh = spanChange, trackCh = None)
 
-      case BiGroup.ElementMutated(timed0, procUpd) =>
-        if (DEBUG) println(s"Mutated $timed0, $procUpd")
-        procUpd.changes.foreach {
-          case Obj.ElemChange(updP0) =>
-            (timed0.value, updP0) match {
-              case (Proc.Obj(procObj), updP1: Proc.Update[_]) =>
-                val timed = timed0.asInstanceOf[TimedProc  [S]] // XXX not good
-                val updP  = updP1 .asInstanceOf[Proc.Update[S]]
-                updP.changes.foreach {
-                  case Proc.ScanAdded  (key, _) => scanAdded  (timed, key)
-                  case Proc.ScanRemoved(key, _) => scanRemoved(timed, key)
-                  case Proc.ScanChange (name, scan, scanUpdates) =>
-                    scanUpdates.foreach {
-                      case Scan.GraphemeChange(grapheme, segments) =>
-                        import TypeCheckedTripleEquals._
-                        if (name === Proc.Obj.graphAudio) {
-                          // XXX TODO: This doesn't work. Somehow we get a segment that _ends_ at 0L
-                          val segmOpt = segments.find(_.span.contains(0L)) match {
-                            case Some(segm: Grapheme.Segment.Audio) => Some(segm)
-                            case _ => None
+        case BiGroup.ElementMutated(timed0, procUpd) =>
+          if (DEBUG) println(s"Mutated $timed0, $procUpd")
+          procUpd.changes.foreach {
+            case Obj.ElemChange(updP0) =>
+              (timed0.value, updP0) match {
+                case (Proc.Obj(procObj), updP1: Proc.Update[_]) =>
+                  val timed = timed0.asInstanceOf[TimedProc  [S]] // XXX not good
+                  val updP  = updP1 .asInstanceOf[Proc.Update[S]]
+                  updP.changes.foreach {
+                    case Proc.ScanAdded  (key, _) => scanAdded  (timed, key)
+                    case Proc.ScanRemoved(key, _) => scanRemoved(timed, key)
+                    case Proc.ScanChange (name, scan, scanUpdates) =>
+                      scanUpdates.foreach {
+                        case Scan.GraphemeChange(grapheme, segments) =>
+                          import TypeCheckedTripleEquals._
+                          if (name === Proc.Obj.graphAudio) {
+                            // XXX TODO: This doesn't work. Somehow we get a segment that _ends_ at 0L
+                            val segmOpt = segments.find(_.span.contains(0L)) match {
+                              case Some(segm: Grapheme.Segment.Audio) => Some(segm)
+                              case _ => None
+                            }
+                            tlView.procAudioChanged(timed, segmOpt)
                           }
-                          tlView.procAudioChanged(timed, segmOpt)
-                        }
 
-                      case Scan.SinkAdded(Scan.Link.Scan(peer)) =>
-                        val test: Scan[S] = scan
-                        tlView.scanSinkAdded(timed, name, test, peer)
-                      case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => tlView.scanSinkRemoved  (timed, name, scan, peer)
-                      case Scan.SourceAdded  (Scan.Link.Scan(peer)) => tlView.scanSourceAdded  (timed, name, scan, peer)
-                      case Scan.SourceRemoved(Scan.Link.Scan(peer)) => tlView.scanSourceRemoved(timed, name, scan, peer)
+                        case Scan.SinkAdded(Scan.Link.Scan(peer)) =>
+                          val test: Scan[S] = scan
+                          tlView.scanSinkAdded(timed, name, test, peer)
+                        case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => tlView.scanSinkRemoved  (timed, name, scan, peer)
+                        case Scan.SourceAdded  (Scan.Link.Scan(peer)) => tlView.scanSourceAdded  (timed, name, scan, peer)
+                        case Scan.SourceRemoved(Scan.Link.Scan(peer)) => tlView.scanSourceRemoved(timed, name, scan, peer)
 
-                      case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
-                    }
-                  case Proc.GraphChange(_) =>
-                }
+                        case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
+                      }
+                    case Proc.GraphChange(_) =>
+                  }
 
-              case _ =>
-            }
+                case _ =>
+              }
 
-          case Obj.AttrAdded  (key, _)    => attrChanged(timed0, key)
-          case Obj.AttrRemoved(key, _)    => attrChanged(timed0, key)
-          case Obj.AttrChange (key, _, _) => attrChanged(timed0, key)
-        }
-    }}
-    disposables ::= obsGroup
+            case Obj.AttrAdded  (key, _)    => attrChanged(timed0, key)
+            case Obj.AttrRemoved(key, _)    => attrChanged(timed0, key)
+            case Obj.AttrChange (key, _, _) => attrChanged(timed0, key)
+          }
+      }
+    }
+    disposables ::= obsTimeline
 
     tlView.disposables.set(disposables)(tx.peer)
 
@@ -369,13 +370,13 @@ object TimelineViewImpl {
 
     def guiInit(): Unit = {
       canvasView = new View
-      val ggVisualBoost = new Slider {
+      val ggVisualBoost = new RotaryKnob {
         min       = 0
         max       = 64
         value     = 0
         focusable = false
         tooltip   = "Sonogram Brightness"
-        peer.putClientProperty("JComponent.sizeVariant", "small")
+        // peer.putClientProperty("JComponent.sizeVariant", "small")
         listenTo(this)
         reactions += {
           case ValueChanged(_) =>
@@ -389,7 +390,7 @@ object TimelineViewImpl {
         withSelection { implicit tx =>
           seq => {
             seq.foreach { view =>
-              AttrMapFrame(view.obj())
+              AttrMapFrame(view.obj)
             }
             None
           }
@@ -427,8 +428,9 @@ object TimelineViewImpl {
       selectionModel.addListener {
         case _ =>
           val hasSome = selectionModel.nonEmpty
-          actionAttr        .enabled = hasSome
-          actionSplitObjects.enabled = hasSome
+          actionAttr                .enabled = hasSome
+          actionSplitObjects        .enabled = hasSome
+          actionAlignObjectsToCursor.enabled = hasSome
       }
 
       timelineModel.addListener {
@@ -769,14 +771,14 @@ object TimelineViewImpl {
           }
 
         case DnD.ObjectDrag(_, view: IntObjView[S]) => withRegions { implicit tx => regions =>
-          val intExpr = view.obj().elem.peer
-          Edits.setBus[S](regions.map(_.obj()), intExpr)
+          val intExpr = view.obj.elem.peer
+          Edits.setBus[S](regions.map(_.obj), intExpr)
         }
 
         case DnD.ObjectDrag(_, view: CodeObjView[S]) => withProcRegions { implicit tx => regions =>
-          val codeElem = view.obj()
+          val codeElem = view.obj
           import Mellite.compiler
-          Edits.setSynthGraph[S](regions.map(_.obj()), codeElem)
+          Edits.setSynthGraph[S](regions.map(_.obj), codeElem)
         }
 
         case DnD.ObjectDrag(_, view /* : ObjView.Proc[S] */) => step { implicit tx =>
@@ -784,7 +786,7 @@ object TimelineViewImpl {
             val length  = defaultDropLength(view, inProgress = false)
             val span    = Span(drop.frame, drop.frame + length)
             val spanEx  = SpanLikeEx.newVar[S](SpanLikeEx.newConst(span))
-            EditTimelineInsertObj(view.humanName, group, spanEx, view.obj())
+            EditTimelineInsertObj(view.humanName, group, spanEx, view.obj)
           }
           // CompoundEdit(edits, "Insert Objects")
         }
@@ -792,7 +794,7 @@ object TimelineViewImpl {
         case pd: DnD.GlobalProcDrag[S] => withProcRegions { implicit tx => regions =>
           val in    = pd.source()
           val edits = regions.flatMap { pv =>
-            val out = pv.proc
+            val out = pv.obj
             Edits.linkOrUnlink[S](out, in)
           }
           CompoundEdit(edits, "Link Global Proc")

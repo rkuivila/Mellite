@@ -124,7 +124,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     val attr    = obj.attr
     val bus     = attr[IntElem](ObjKeys.attrBus    ).map(_.value)
-    val res = new TimelineImpl[S](span = tx.newHandle(span), obj = tx.newHandle(obj),
+    import de.sciss.lucre.synth.expr.IdentifierSerializer
+    val res = new TimelineImpl[S](idH = tx.newHandle(timedID), spanH = tx.newHandle(span), objH = tx.newHandle(obj),
       audio = audio, busOption = bus,
       context = context).initAttrs(span, obj)
 
@@ -178,14 +179,17 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   // -------- Proc --------
 
-  private final class ListImpl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]])
+  private final class ListImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Proc.Obj[S]])
     extends Impl[S]
 
   private trait Impl[S <: Sys[S]]
-    extends ProcObjView[S] with ListObjView[S]
+    extends ListObjView[S]
     with ObjViewImpl.Impl[S]
     with ListObjViewImpl.EmptyRenderer[S]
-    with ListObjViewImpl.NonEditable[S] {
+    with ListObjViewImpl.NonEditable[S]
+    with ProcObjView[S] {
+
+    override def obj(implicit tx: S#Tx): Proc.Obj[S] = objH()
 
     final def factory = ProcObjView
 
@@ -196,15 +200,14 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     final def openView(parent: Option[Window[S]])
                       (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
       import de.sciss.mellite.Mellite.compiler
-      val frame = CodeFrame.proc(obj())
+      val frame = CodeFrame.proc(obj)
       Some(frame)
     }
-
-    final def proc(implicit tx: S#Tx): Proc.Obj[S] = obj()
   }
 
-  private final class TimelineImpl[S <: Sys[S]](val span: stm.Source[S#Tx, Expr[S, SpanLike]],
-                                        val obj: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
+  private final class TimelineImpl[S <: Sys[S]](protected val idH: stm.Source[S#Tx, S#ID],
+                                                protected val spanH: stm.Source[S#Tx, Expr[S, SpanLike]],
+                                                val objH: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var busOption : Option[Int], context: TimelineObjView.Context[S])
     extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] with ProcObjView.Timeline[S] { self =>
@@ -257,7 +260,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     override def dispose()(implicit tx: S#Tx): Unit = {
       // procMap.remove(timed.id)
-      val proc  = obj().elem.peer
+      val proc = obj.elem.peer
       // val proc = timed.value.elem.peer
       proc.scans.iterator.foreach { case (_, scan) =>
         context.scanMap.remove(scan.id)
@@ -352,8 +355,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   }
 }
 trait ProcObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  override def obj: stm.Source[S#Tx, Proc.Obj[S]]
+  override def obj(implicit tx: S#Tx): Proc.Obj[S]
 
-  /** Convenience for `obj()` */
-  def proc(implicit tx: S#Tx): Proc.Obj[S]
+  def objH: stm.Source[S#Tx, Proc.Obj[S]]
 }

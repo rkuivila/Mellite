@@ -86,13 +86,15 @@ object CodeObjView extends ListObjView.Factory {
     obj :: Nil
   }
 
-  final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, Code.Elem]], var value: Code)
+  final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, Code.Elem]], var value: Code)
     extends CodeObjView[S]
     with ListObjView /* .Code */[S]
     with ObjViewImpl.Impl[S]
     with ListObjViewImpl.NonEditable[S] {
 
     type E[~ <: evt.Sys[~]] = Code.Elem[~]
+
+    override def obj(implicit tx: S#Tx) = objH()
 
     def factory = CodeObjView
 
@@ -103,7 +105,7 @@ object CodeObjView extends ListObjView.Factory {
     def openView(parent: Option[Window[S]])
                 (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
       import de.sciss.mellite.Mellite.compiler
-      val frame = CodeFrame(obj(), hasExecute = false)
+      val frame = CodeFrame(obj, hasExecute = false)
       Some(frame)
     }
 
@@ -114,5 +116,5 @@ object CodeObjView extends ListObjView.Factory {
   }
 }
 trait CodeObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  override def obj: stm.Source[S#Tx, Code.Obj[S]]
+  override def obj(implicit tx: S#Tx): Code.Obj[S]
 }

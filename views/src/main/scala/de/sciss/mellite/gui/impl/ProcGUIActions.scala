@@ -36,8 +36,8 @@ object ProcGUIActions {
                               (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     requireEDT()
     val edits = views.flatMap { pv0 =>
-      val span  = pv0.span()
-      val obj   = pv0.obj()
+      val span  = pv0.span
+      val obj   = pv0.obj
 
       val editsUnlink: Vec[UndoableEdit] = (pv0, obj) match {
         case (pv: ProcObjView.Timeline[S], Proc.Obj(proc)) =>
@@ -45,7 +45,7 @@ object ProcGUIActions {
             map.flatMap { case (thisKey, links) =>
               links.flatMap { case ProcObjView.Link(thatView, thatKey) =>
                 proc.elem.peer.scans.get(thisKey).flatMap { thisScan =>
-                  thatView.proc.elem.peer.scans.get(thatKey).map { thatScan =>
+                  thatView.obj.elem.peer.scans.get(thatKey).map { thatScan =>
                     fun(thisKey, thisScan, thatKey, thatScan)
                   }
                 }

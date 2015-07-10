@@ -94,7 +94,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, StringElem]],
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, StringElem]],
                                  var value: _String,
                                  override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ListObjView[S]
@@ -110,7 +110,7 @@ object ObjViewImpl {
 
       def convertEditValue(v: Any): Option[_String] = Some(v.toString)
 
-      def expr(implicit tx: S#Tx) = obj().elem.peer
+      def expr(implicit tx: S#Tx) = objH().elem.peer
 
       def testValue(v: Any): Option[_String] = v match {
         case s: _String => Some(s)
@@ -158,7 +158,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, LongElem]],
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, LongElem]],
                                   var value: _Long,
                                   override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ListObjView /* .Long */[S]
@@ -172,7 +172,7 @@ object ObjViewImpl {
 
       def exprType = LongEx
 
-      def expr(implicit tx: S#Tx): Expr[S, _Long] = obj().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Long] = objH().elem.peer
 
       def convertEditValue(v: Any): Option[_Long] = v match {
         case num: _Long => Some(num)
@@ -225,7 +225,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, DoubleElem]], var value: _Double,
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, DoubleElem]], var value: _Double,
                                   override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ListObjView /* .Double */[S]
       with ObjViewImpl.Impl[S]
@@ -238,7 +238,7 @@ object ObjViewImpl {
 
       def exprType = DoubleEx
 
-      def expr(implicit tx: S#Tx): Expr[S, _Double] = obj().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Double] = objH().elem.peer
 
       def convertEditValue(v: Any): Option[_Double] = v match {
         case num: _Double => Some(num)
@@ -290,7 +290,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, BooleanElem]],
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, BooleanElem]],
                                   var value: _Boolean,
                                   override val isEditable: _Boolean, val isViewable: Boolean)
       extends ListObjView /* .Boolean */[S]
@@ -302,7 +302,7 @@ object ObjViewImpl {
 
       def factory = Boolean
 
-      def expr(implicit tx: S#Tx): Expr[S, _Boolean] = obj().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Boolean] = objH().elem.peer
     }
   }
 
@@ -371,7 +371,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Color.Elem]],
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, _Color.Elem]],
                                   var value: _Color, isEditable0: _Boolean)
       extends ListObjView /* .Color */[S]
       with ObjViewImpl.Impl[S]
@@ -385,7 +385,7 @@ object ObjViewImpl {
 
       def exprType = _Color.Expr
 
-      def expr(implicit tx: S#Tx): Expr[S, _Color] = obj().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Color] = objH().elem.peer
 
       def configureRenderer(label: Label): Component = {
         // renderers are used for "stamping", so we can reuse a single object.
@@ -408,7 +408,7 @@ object ObjViewImpl {
 //        val opt = OptionPane.confirmation(message = component, optionType = OptionPane.Options.OkCancel,
 //          messageType = OptionPane.Message.Plain)
 //        opt.show(parent) === OptionPane.Result.Ok
-        val title = AttrCellView.name(obj())
+        val title = AttrCellView.name(obj)
         val w = new WindowImpl[S](title) { self =>
           val view: View[S] = View.wrap {
             val (compColor, chooser) = Color.mkColorEditor()
@@ -420,7 +420,7 @@ object ObjViewImpl {
             def apply(): Unit = {
               val colr = Color.fromAWT(chooser.color)
               val editOpt = cursor.step { implicit tx =>
-                obj().elem.peer match {
+                objH().elem.peer match {
                   case Expr.Var(vr) =>
                     import _Color.Expr.{serializer, varSerializer}
                     Some(EditVar.Expr("Change Color", vr, _Color.Expr.newConst[S](colr)))
@@ -487,7 +487,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, ArtifactElem.Obj[S]],
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, ArtifactElem.Obj[S]],
                                   var file: File, val isEditable: _Boolean)
       extends ListObjView /* .Artifact */[S]
       with ObjViewImpl.Impl[S]
@@ -535,7 +535,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = Nil
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Recursion.Elem]], var deployed: File)
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, _Recursion.Elem]], var deployed: File)
       extends ListObjView /* .Recursion */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S] {
@@ -553,7 +553,7 @@ object ObjViewImpl {
       def openView(parent: Option[Window[S]])
                   (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         import de.sciss.mellite.Mellite.compiler
-        val frame = RecursionFrame(obj())
+        val frame = RecursionFrame(objH())
         Some(frame)
       }
 
@@ -599,7 +599,7 @@ object ObjViewImpl {
     }
 
     // XXX TODO: could be viewed as a new folder view with this folder as root
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, FolderElem]])
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, FolderElem]])
       extends ListObjView /* .Folder */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.EmptyRenderer[S]
@@ -613,7 +613,7 @@ object ObjViewImpl {
 
       def openView(parent: Option[Window[S]])
                   (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        val folderObj = obj()
+        val folderObj = objH()
         val nameView  = AttrCellView.name(folderObj)
         Some(FolderFrame(nameView, folderObj.elem.peer))
       }
@@ -654,7 +654,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]])
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]])
       extends ListObjView /* .Timeline */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.EmptyRenderer[S]
@@ -675,7 +675,7 @@ object ObjViewImpl {
 //        opt.title = s"View $name"
 //        (opt.show(None).id: @switch) match {
 //          case 0 =>
-            val frame = TimelineFrame[S](obj())
+            val frame = TimelineFrame[S](objH())
             Some(frame)
 //          case 1 =>
 //            val frame = InstantGroupFrame[S](document, obj())
@@ -723,7 +723,7 @@ object ObjViewImpl {
 
     private val timeFmt = AxisFormat.Time(hours = false, millis = true)
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]], var value: _FadeSpec)
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]], var value: _FadeSpec)
       extends ListObjView /* .FadeSpec */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S]
@@ -824,7 +824,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Ensemble.Obj[S]],
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, _Ensemble.Obj[S]],
                                   var playing: _Boolean, val isEditable: Boolean)
       extends ListObjView /* .Ensemble */[S]
       with ObjViewImpl.Impl[S]
@@ -838,7 +838,7 @@ object ObjViewImpl {
 
       protected def exprValue: _Boolean = playing
       protected def exprValue_=(x: _Boolean): Unit = playing = x
-      protected def expr(implicit tx: S#Tx): Expr[S, _Boolean] = obj().elem.peer.playing
+      protected def expr(implicit tx: S#Tx): Expr[S, _Boolean] = objH().elem.peer.playing
 
       def value: Any = ()
 
@@ -852,7 +852,7 @@ object ObjViewImpl {
 
       override def openView(parent: Option[Window[S]])
                            (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        val ens   = obj()
+        val ens   = objH()
         val w     = EnsembleFrame(ens)
         Some(w)
       }
@@ -893,7 +893,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](val obj: stm.Source[S#Tx, _Nuages.Obj[S]])
+    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, _Nuages.Obj[S]])
       extends ListObjView /* .Nuages */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S]
@@ -907,7 +907,7 @@ object ObjViewImpl {
 
       def openView(parent: Option[Window[S]])
                   (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        val frame = NuagesFolderFrameImpl(obj())
+        val frame = NuagesFolderFrameImpl(objH())
         Some(frame)
       }
     }
@@ -941,6 +941,10 @@ object ObjViewImpl {
 
   trait Impl[S <: evt.Sys[S]] extends ObjView[S] {
     override def toString = s"ElementView.${factory.prefix}(name = $name)"
+
+    protected def objH: stm.Source[S#Tx, Obj[S]]
+
+    def obj(implicit tx: S#Tx): Obj[S] = objH()
 
     /** Forwards to factory. */
     def humanName: String = factory.humanName

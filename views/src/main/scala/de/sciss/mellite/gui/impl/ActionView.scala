@@ -25,6 +25,7 @@ import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
+import de.sciss.serial.Serializer
 import de.sciss.span.SpanLike
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{Action, Obj}
@@ -65,10 +66,14 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
 
   private trait Impl[S <: Sys[S]]
     extends ListObjView /* .Action */[S]
-    with ActionView[S]
     with ObjViewImpl.Impl[S]
     with ListObjViewImpl.NonEditable[S]
-    with ListObjViewImpl.EmptyRenderer[S] {
+    with ListObjViewImpl.EmptyRenderer[S]
+    with ActionView[S] {
+
+    override protected def objH: stm.Source[S#Tx, Action.Obj[S]]
+
+    override def obj(implicit tx: S#Tx): Action.Obj[S] = objH()
 
     final type E[~ <: evt.Sys[~]] = Action.Elem[~]
 
@@ -79,26 +84,26 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
     final def openView(parent: Option[Window[S]])
                       (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
       import de.sciss.mellite.Mellite.compiler
-      val frame = CodeFrame.action(obj())
+      val frame = CodeFrame.action(obj)
       Some(frame)
     }
-
-    final def action(implicit tx: S#Tx): Action.Obj[S] = obj()
   }
 
-  private final class ListImpl[S <: Sys[S]](val obj: stm.Source[S#Tx, Action.Obj[S]])
+  private final class ListImpl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Action.Obj[S]])
     extends Impl[S]
 
   def mkTimelineView[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Action.Obj[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): TimelineObjView[S] = {
     implicit val spanLikeSer = SpanLikeEx.serializer[S]
-    val res = new TimelineImpl(tx.newHandle(span), tx.newHandle(obj)).initAttrs(span, obj)
+    implicit val idSer: Serializer[S#Tx, S#Acc, S#ID] = ???
+    val res = new TimelineImpl(tx.newHandle(id), tx.newHandle(span), tx.newHandle(obj)).initAttrs(span, obj)
     TimelineObjViewImpl.initMuteAttrs(span, obj, res)
     res
   }
 
-  private final class TimelineImpl[S <: Sys[S]](val span: Source[S#Tx, Expr[S, SpanLike]],
-                                                val obj: stm.Source[S#Tx, Action.Obj[S]])
+  private final class TimelineImpl[S <: Sys[S]](protected val idH  : stm.Source[S#Tx, S#ID],
+                                                protected val spanH: stm.Source[S#Tx, Expr[S, SpanLike]],
+                                                protected val objH : stm.Source[S#Tx, Action.Obj[S]])
     extends Impl[S]
     with TimelineObjViewImpl.BasicImpl[S]
     with TimelineObjView.HasMute {
@@ -107,8 +112,5 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
   }
 }
 trait ActionView[S <: evt.Sys[S]] extends ObjView[S] {
-  override def obj: stm.Source[S#Tx, Action.Obj[S]]
-
-  /** Convenience for `obj()` */
-  def action(implicit tx: S#Tx): Action.Obj[S]
+  override def obj(implicit tx: S#Tx): Action.Obj[S]
 }
