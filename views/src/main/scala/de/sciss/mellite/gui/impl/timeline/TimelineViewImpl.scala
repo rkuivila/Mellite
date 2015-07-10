@@ -16,9 +16,9 @@ package gui
 package impl
 package timeline
 
+import java.awt
 import java.awt.geom.{GeneralPath, Path2D}
 import java.awt.image.BufferedImage
-import java.awt
 import java.awt.{BasicStroke, Font, Graphics2D, LinearGradientPaint, Rectangle, RenderingHints, TexturePaint}
 import java.util.Locale
 import javax.swing.UIManager
@@ -27,33 +27,32 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.desktop.{KeyStrokes, UndoManager, Window}
+import de.sciss.desktop.{UndoManager, Window}
 import de.sciss.fingertree.RangedSeq
 import de.sciss.icons.raphael
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.bitemp.{BiGroup, SpanLike => SpanLikeEx}
-import de.sciss.lucre.expr.{Expr, Int => IntEx}
+import de.sciss.lucre.expr.{Int => IntEx}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Cursor, Disposable}
-import de.sciss.lucre.swing._
-import de.sciss.lucre.swing.edit.EditVar
+import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.TimelineView.TrackScale
-import de.sciss.mellite.gui.edit.{EditAttrMap, EditFolderInsertObj, EditTimelineInsertObj, Edits}
+import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditTimelineInsertObj, Edits}
 import de.sciss.model.Change
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.swingplus.ScrollBar
-import de.sciss.{desktop, sonogram, synth}
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{BooleanElem, DoubleElem, ExprImplicits, FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan, StringElem, TimeRef, Timeline, Transport}
-import de.sciss.synth.{Curve, proc}
+import de.sciss.synth.proc.{BooleanElem, DoubleElem, FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan, StringElem, TimeRef, Timeline, Transport}
+import de.sciss.synth.Curve
+import de.sciss.{desktop, sonogram, synth}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.concurrent.stm.{Ref, TSet}
 import scala.swing.Swing._
-import scala.swing.event.{Key, ValueChanged}
+import scala.swing.event.ValueChanged
 import scala.swing.{Action, BorderPanel, BoxPanel, Component, Orientation, Slider, SplitPane}
 import scala.util.Try
 
@@ -101,8 +100,6 @@ object TimelineViewImpl {
   private val NoFade      = TrackTool.Fade(0L, 0L, 0f, 0f)
   private val NoFunction  = TrackTool.Function(-1, -1, Span(0L, 0L))
 
-  private val MinDur      = 32
-
   private val DEBUG       = false
 
   import de.sciss.mellite.{logTimeline => logT}
@@ -117,7 +114,6 @@ object TimelineViewImpl {
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
     val group       = obj.elem.peer
     import Timeline.serializer
-    val groupH      = tx.newHandle(group)
     val groupEH     = tx.newHandle(obj  )
 
     var disposables = List.empty[Disposable[S#Tx]]
@@ -145,7 +141,7 @@ object TimelineViewImpl {
     disposables       ::= global
 
     val transportView   = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
-    val tlView          = new Impl[S](groupH, groupEH, viewMap, scanMap, tlm, selectionModel, global, transportView)
+    val tlView          = new Impl[S](groupEH, viewMap, scanMap, tlm, selectionModel, global, transportView)
 
     group.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>
@@ -306,17 +302,20 @@ object TimelineViewImpl {
     tlView
   }
 
-  private final class Impl[S <: Sys[S]](groupH            : stm.Source[S#Tx, proc.Timeline[S]],
-                                        groupEH           : stm.Source[S#Tx, Timeline.Obj[S]],
+  private final class Impl[S <: Sys[S]](val timelineObjH           : stm.Source[S#Tx, Timeline.Obj[S]],
                                         val viewMap       : TimelineObjView.Map[S],
                                         val scanMap       : ProcObjView.ScanMap[S],
                                         val timelineModel : TimelineModel,
                                         val selectionModel: SelectionModel[S, TimelineObjView[S]],
                                         val globalView    : GlobalProcsView[S],
-                                        transportView     : TransportView[S])
+                                        val transportView : TransportView[S])
                                        (implicit val workspace: Workspace[S], val cursor: Cursor[S],
                                         val undoManager: UndoManager)
-    extends TimelineView[S] with ComponentHolder[Component] with TimelineObjView.Context[S] {
+    extends TimelineActions[S]
+    with TimelineView[S]
+    with ComponentHolder[Component]
+    with TimelineObjView.Context[S] {
+
     impl =>
 
     import cursor.step
@@ -337,8 +336,8 @@ object TimelineViewImpl {
     private lazy val toolPatch    = TrackTool.patch   [S](canvasView)
     private lazy val toolAudition = TrackTool.audition[S](canvasView, this)
 
-    def group     (implicit tx: S#Tx) = groupEH()
-    def plainGroup(implicit tx: S#Tx) = groupH()
+    def timelineObj     (implicit tx: S#Tx) = timelineObjH()
+    def plainGroup(implicit tx: S#Tx) = timelineObj.elem.peer
 
     def window: Window = component.peer.getClientProperty("de.sciss.mellite.Window").asInstanceOf[Window]
 
@@ -359,157 +358,6 @@ object TimelineViewImpl {
     private def clearSet[A](s: TSet[A])(implicit tx: S#Tx): Unit =
       s.retain(_ => false)(tx.peer) // no `clear` method
 
-    // ---- actions ----
-
-    object actionStopAllSound extends Action("StopAllSound") {
-      def apply(): Unit =
-        cursor.step { implicit tx =>
-          transportView.transport.stop()  // XXX TODO - what else could we do?
-          // auralView.stopAll
-        }
-    }
-
-    object actionBounce extends Action("Bounce") {
-      private var settings = ActionBounceTimeline.QuerySettings[S]()
-
-      def apply(): Unit = {
-        import ActionBounceTimeline._
-        val window  = Window.find(component)
-        val setUpd  = settings.copy(span = timelineModel.selection)
-        val (_settings, ok) = query(setUpd, workspace, timelineModel, window = window)
-        settings = _settings
-        _settings.file match {
-          case Some(file) if ok =>
-            import Mellite.compiler
-            performGUI(workspace, _settings, groupEH, file, window = window)
-          case _ =>
-        }
-      }
-    }
-
-    object actionDelete extends Action("Delete") {
-      def apply(): Unit = {
-        val editOpt = withSelection { implicit tx => views =>
-          plainGroup.modifiableOption.flatMap { groupMod =>
-            ProcGUIActions.removeProcs(groupMod, views) // XXX TODO - probably should be replaced by Edits.unlinkAndRemove
-          }
-        }
-        editOpt.foreach(undoManager.add)
-      }
-    }
-
-    object actionSplitObjects extends Action("Split Selected Objects") {
-      import KeyStrokes.menu2
-      accelerator = Some(menu2 + Key.Y)
-      enabled     = false
-
-      def apply(): Unit = {
-        val pos     = timelineModel.position
-        val pos1    = pos - MinDur
-        val pos2    = pos + MinDur
-        val editOpt = withFilteredSelection(pv => pv.spanValue.contains(pos1) && pv.spanValue.contains(pos2)) { implicit tx =>
-          splitObjects(pos)
-        }
-        editOpt.foreach(undoManager.add)
-      }
-    }
-
-    object actionClearSpan extends Action("Clear Selected Span") {
-      import KeyStrokes._
-      accelerator = Some(menu1 + Key.BackSlash)
-      enabled     = false
-
-      def apply(): Unit =
-        timelineModel.selection.nonEmptyOption.foreach { selSpan =>
-          val editOpt = step { implicit tx =>
-            plainGroup.modifiableOption.flatMap { groupMod =>
-              editClearSpan(groupMod, selSpan)
-            }
-          }
-          editOpt.foreach(undoManager.add)
-        }
-    }
-
-    object actionRemoveSpan extends Action("Remove Selected Span") {
-      import KeyStrokes._
-      accelerator = Some(menu1 + shift + Key.BackSlash)
-      enabled = false
-
-      def apply(): Unit = {
-        timelineModel.selection.nonEmptyOption.foreach { selSpan =>
-          val minStart = timelineModel.bounds.start
-          val editOpt = step { implicit tx =>
-            plainGroup.modifiableOption.flatMap { groupMod =>
-              // ---- remove ----
-              // - first call 'clear'
-              // - then move everything right of the selection span's stop to the left
-              //   by the selection span's length
-              val editClear = editClearSpan(groupMod, selSpan)
-              val affected  = groupMod.intersect(Span.From(selSpan.stop))
-              val amount    = ProcActions.Move(deltaTime = -selSpan.length, deltaTrack = 0, copy = false)
-              val editsMove = affected.flatMap {
-                case (_ /* elemSpan */, elems) =>
-                  elems.flatMap { timed =>
-                    Edits.move(timed.span, timed.value, amount, minStart = minStart)
-                  }
-              } .toList
-
-              CompoundEdit(editClear.toList ++ editsMove, title)
-            }
-          }
-          editOpt.foreach(undoManager.add)
-          timelineModel.modifiableOption.foreach { tlm =>
-            tlm.selection = Span.Void
-            tlm.position  = selSpan.start
-          }
-        }
-      }
-    }
-
-    // ---- clear ----
-    // - find the objects that overlap with the selection span
-    // - if the object is contained in the span, remove it
-    // - if the object overlaps the span, split it once or twice,
-    //   then remove the fragments that are contained in the span
-    private def editClearSpan(groupMod: proc.Timeline.Modifiable[S], selSpan: Span)
-                             (implicit tx: S#Tx): Option[UndoableEdit] = {
-      val allEdits = groupMod.intersect(selSpan).flatMap {
-        case (elemSpan, elems) =>
-          elems.flatMap { timed =>
-            if (selSpan contains elemSpan) {
-              Edits.unlinkAndRemove(groupMod, timed.span, timed.value) :: Nil
-            } else {
-              timed.span match {
-                case Expr.Var(oldSpan) =>
-                  val (edits1, span2, obj2) = splitObject(groupMod, selSpan.start, oldSpan, timed.value)
-                  val edits3 = if (selSpan contains span2.value) edits1 else {
-                    val (edits2, _, _) = splitObject(groupMod, selSpan.stop, span2, obj2)
-                    edits1 ++ edits2
-                  }
-                  val edit4 = Edits.unlinkAndRemove(groupMod, span2, obj2)
-                  edits3 ++ List(edit4)
-
-                case _ => Nil
-              }
-            }
-          }
-      } .toList
-      CompoundEdit(allEdits, "Clear Span")
-    }
-
-    private def withSelection[A](fun: S#Tx => TraversableOnce[TimelineObjView[S]] => Option[A]): Option[A] =
-      if (selectionModel.isEmpty) None else {
-       val sel = selectionModel.iterator
-        step { implicit tx => fun(tx)(sel) }
-      }
-
-    private def withFilteredSelection[A](p: TimelineObjView[S] => Boolean)
-                                     (fun: S#Tx => TraversableOnce[TimelineObjView[S]] => Option[A]): Option[A] = {
-      val sel = selectionModel.iterator
-      val flt = sel.filter(p)
-      if (flt.hasNext) step { implicit tx => fun(tx)(flt) } else None
-    }
-
     private def debugCheckConsistency(info: => String)(implicit tx: S#Tx): Unit = if (DEBUG) {
       val check = BiGroupImpl.verifyConsistency(plainGroup, reportOnly = true)
       check.foreach { msg =>
@@ -518,83 +366,6 @@ object TimelineViewImpl {
         sys.error("Rollback")
       }
     }
-
-    def splitObjects(time: Long)(views: TraversableOnce[TimelineObjView[S]])
-                    (implicit tx: S#Tx): Option[UndoableEdit] = plainGroup.modifiableOption.flatMap { groupMod =>
-      val edits: List[UndoableEdit] = views.flatMap { pv =>
-        pv.span() match {
-          case Expr.Var(oldSpan) =>
-            val (edits, _, _) = splitObject(groupMod, time, oldSpan, pv.obj())
-            edits
-          case _ => Nil
-        }
-      } .toList
-
-      CompoundEdit(edits, "Split Objects")
-    }
-
-    private def splitObject(groupMod: proc.Timeline.Modifiable[S], time: Long, oldSpan: Expr.Var[S, SpanLike],
-                            obj: Obj[S])(implicit tx: S#Tx): (List[UndoableEdit], Expr.Var[S, SpanLike], Obj[S]) = {
-      val imp = ExprImplicits[S]
-      import imp._
-      val leftObj   = obj // pv.obj()
-      val rightObj  = ProcActions.copy[S](leftObj /*, Some(oldSpan) */)
-      rightObj.attr.remove(ObjKeys.attrFadeIn)
-
-      val oldVal    = oldSpan.value
-      val rightSpan = oldVal match {
-        case Span.HasStart(leftStart) =>
-          val _rightSpan  = SpanLikeEx.newVar(oldSpan())
-          val resize      = ProcActions.Resize(time - leftStart, 0L)
-          val minStart    = timelineModel.bounds.start
-          // println("----BEFORE RIGHT----")
-          // debugPrintAudioGrapheme(rightObj)
-          ProcActions.resize(_rightSpan, rightObj, resize, minStart = minStart)
-          // println("----AFTER RIGHT ----")
-          // debugPrintAudioGrapheme(rightObj)
-          _rightSpan
-
-        case Span.HasStop(rightStop) =>
-          SpanLikeEx.newVar(Span(time, rightStop))
-      }
-
-      val editRemoveFadeOut = EditAttrMap("Remove Fade Out", leftObj, ObjKeys.attrFadeOut, None)
-
-      val editLeftSpan: Option[UndoableEdit] = oldVal match {
-        case Span.HasStop(rightStop) =>
-          val minStart  = timelineModel.bounds.start
-          val resize    = ProcActions.Resize(0L, time - rightStop)
-          Edits.resize(oldSpan, leftObj, resize, minStart = minStart)
-
-        case Span.HasStart(leftStart) =>
-          val leftSpan  = Span(leftStart, time)
-          // oldSpan()     = leftSpan
-          import SpanLikeEx.{serializer, varSerializer}
-          val edit = EditVar.Expr("Resize", oldSpan, leftSpan)
-          Some(edit)
-      }
-
-      // group.add(rightSpan, rightObj)
-      val editAdd = EditTimelineInsertObj("Region", groupMod, rightSpan, rightObj)
-
-      debugCheckConsistency(s"Split left = $leftObj, oldSpan = $oldVal; right = $rightObj, rightSpan = ${rightSpan.value}")
-      val list1 = editAdd :: Nil
-      val list2 = editLeftSpan.fold(list1)(_ :: list1)
-      val list3 = editRemoveFadeOut :: list2
-      (list3, rightSpan, rightObj)
-    }
-
-    //    private def debugPrintAudioGrapheme(obj: Obj[S])(implicit tx: S#Tx): Unit = {
-    //      for {
-    //        objT <- Proc.Obj.unapply(obj)
-    //        scan <- objT.elem.peer.scans.get(Proc.Obj.graphAudio)
-    //        Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
-    //      } {
-    //        println(s"GRAPHEME: $g")
-    //        val list = g.debugList()
-    //        println(list)
-    //      }
-    //    }
 
     def guiInit(): Unit = {
       canvasView = new View
@@ -1381,7 +1152,7 @@ object TimelineViewImpl {
               if (selected) {
                 val dt0 = moveState.deltaTime + resizeState.deltaStop
                 if (dt0 >= 0) dt0 else {
-                  math.max(-(stop - total.start + MinDur), dt0)
+                  math.max(-(stop - total.start + TimelineView.MinDur), dt0)
                 }
               } else 0L
 
@@ -1398,7 +1169,7 @@ object TimelineViewImpl {
                 val dStart    = adjustStart(start)
                 val dStop     = adjustStop (stop )
                 val newStart  = start + dStart
-                val newStop   = math.max(newStart + MinDur, stop + dStop)
+                val newStop   = math.max(newStart + TimelineView.MinDur, stop + dStop)
                 val x1        = frameToScreen(newStart).toInt
                 val x2        = frameToScreen(newStop ).toInt
                 drawProc(start, x1, x2, adjustMove(start))
