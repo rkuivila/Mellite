@@ -124,10 +124,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     val attr    = obj.attr
     val bus     = attr[IntElem](ObjKeys.attrBus    ).map(_.value)
-    import de.sciss.lucre.synth.expr.IdentifierSerializer
-    val res = new TimelineImpl[S](idH = tx.newHandle(timedID), spanH = tx.newHandle(span), objH = tx.newHandle(obj),
-      audio = audio, busOption = bus,
-      context = context).initAttrs(span, obj)
+    val res = new TimelineImpl[S](tx.newHandle(obj), audio = audio, busOption = bus, context = context)
+      .initAttrs(timedID, span, obj)
 
     TimelineObjViewImpl.initGainAttrs(span, obj, res)
     TimelineObjViewImpl.initMuteAttrs(span, obj, res)
@@ -205,9 +203,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  private final class TimelineImpl[S <: Sys[S]](protected val idH: stm.Source[S#Tx, S#ID],
-                                                protected val spanH: stm.Source[S#Tx, Expr[S, SpanLike]],
-                                                val objH: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
+  private final class TimelineImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var busOption : Option[Int], context: TimelineObjView.Context[S])
     extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] with ProcObjView.Timeline[S] { self =>

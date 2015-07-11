@@ -88,6 +88,8 @@ object TimelineObjView {
 trait TimelineObjView[S <: evt.Sys[S]] extends ObjView[S] {
   // def span: stm.Source[S#Tx, Expr[S, SpanLike]]
 
+  def spanH: stm.Source[S#Tx, Expr[S, SpanLike]]
+
   def span(implicit tx: S#Tx): Expr[S, SpanLike]
 
   def id(implicit tx: S#Tx): S#ID // Timeline.Timed[S]

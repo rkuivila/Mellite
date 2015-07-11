@@ -22,7 +22,7 @@ import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm.Source
 import de.sciss.lucre.swing.Window
-import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.{expr, Sys}
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.serial.Serializer
@@ -71,7 +71,7 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
     with ListObjViewImpl.EmptyRenderer[S]
     with ActionView[S] {
 
-    override protected def objH: stm.Source[S#Tx, Action.Obj[S]]
+    override def objH: stm.Source[S#Tx, Action.Obj[S]]
 
     override def obj(implicit tx: S#Tx): Action.Obj[S] = objH()
 
@@ -89,21 +89,17 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  private final class ListImpl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Action.Obj[S]])
+  private final class ListImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Action.Obj[S]])
     extends Impl[S]
 
   def mkTimelineView[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Action.Obj[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): TimelineObjView[S] = {
-    implicit val spanLikeSer = SpanLikeEx.serializer[S]
-    implicit val idSer: Serializer[S#Tx, S#Acc, S#ID] = ???
-    val res = new TimelineImpl(tx.newHandle(id), tx.newHandle(span), tx.newHandle(obj)).initAttrs(span, obj)
+    val res = new TimelineImpl(tx.newHandle(obj)).initAttrs(id, span, obj)
     TimelineObjViewImpl.initMuteAttrs(span, obj, res)
     res
   }
 
-  private final class TimelineImpl[S <: Sys[S]](protected val idH  : stm.Source[S#Tx, S#ID],
-                                                protected val spanH: stm.Source[S#Tx, Expr[S, SpanLike]],
-                                                protected val objH : stm.Source[S#Tx, Action.Obj[S]])
+  private final class TimelineImpl[S <: Sys[S]](val objH : stm.Source[S#Tx, Action.Obj[S]])
     extends Impl[S]
     with TimelineObjViewImpl.BasicImpl[S]
     with TimelineObjView.HasMute {

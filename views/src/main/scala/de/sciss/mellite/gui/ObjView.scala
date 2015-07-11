@@ -86,6 +86,8 @@ trait ObjView[S <: evt.Sys[S]] extends Disposable[S#Tx] {
     */
   def icon  : Icon
 
+  def objH: stm.Source[S#Tx, Obj[S]]
+
   /** The view must store a handle to its underlying model. */
   def obj(implicit tx: S#Tx): Obj[S]
 

@@ -94,7 +94,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, StringElem]],
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, StringElem]],
                                  var value: _String,
                                  override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ListObjView[S]
@@ -158,7 +158,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, LongElem]],
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, LongElem]],
                                   var value: _Long,
                                   override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ListObjView /* .Long */[S]
@@ -225,7 +225,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, DoubleElem]], var value: _Double,
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, DoubleElem]], var value: _Double,
                                   override val isEditable: _Boolean, val isViewable: _Boolean)
       extends ListObjView /* .Double */[S]
       with ObjViewImpl.Impl[S]
@@ -290,7 +290,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, BooleanElem]],
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, BooleanElem]],
                                   var value: _Boolean,
                                   override val isEditable: _Boolean, val isViewable: Boolean)
       extends ListObjView /* .Boolean */[S]
@@ -371,7 +371,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, _Color.Elem]],
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, _Color.Elem]],
                                   var value: _Color, isEditable0: _Boolean)
       extends ListObjView /* .Color */[S]
       with ObjViewImpl.Impl[S]
@@ -487,7 +487,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, ArtifactElem.Obj[S]],
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, ArtifactElem.Obj[S]],
                                   var file: File, val isEditable: _Boolean)
       extends ListObjView /* .Artifact */[S]
       with ObjViewImpl.Impl[S]
@@ -535,7 +535,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = Nil
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, _Recursion.Elem]], var deployed: File)
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, _Recursion.Elem]], var deployed: File)
       extends ListObjView /* .Recursion */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S] {
@@ -599,7 +599,7 @@ object ObjViewImpl {
     }
 
     // XXX TODO: could be viewed as a new folder view with this folder as root
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, FolderElem]])
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, FolderElem]])
       extends ListObjView /* .Folder */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.EmptyRenderer[S]
@@ -654,7 +654,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]])
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, _Timeline.Elem]])
       extends ListObjView /* .Timeline */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.EmptyRenderer[S]
@@ -723,7 +723,7 @@ object ObjViewImpl {
 
     private val timeFmt = AxisFormat.Time(hours = false, millis = true)
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]], var value: _FadeSpec)
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, _FadeSpec.Elem]], var value: _FadeSpec)
       extends ListObjView /* .FadeSpec */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S]
@@ -824,7 +824,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, _Ensemble.Obj[S]],
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, _Ensemble.Obj[S]],
                                   var playing: _Boolean, val isEditable: Boolean)
       extends ListObjView /* .Ensemble */[S]
       with ObjViewImpl.Impl[S]
@@ -893,7 +893,7 @@ object ObjViewImpl {
       obj :: Nil
     }
 
-    final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, _Nuages.Obj[S]])
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, _Nuages.Obj[S]])
       extends ListObjView /* .Nuages */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S]
@@ -942,7 +942,7 @@ object ObjViewImpl {
   trait Impl[S <: evt.Sys[S]] extends ObjView[S] {
     override def toString = s"ElementView.${factory.prefix}(name = $name)"
 
-    protected def objH: stm.Source[S#Tx, Obj[S]]
+    def objH: stm.Source[S#Tx, Obj[S]]
 
     def obj(implicit tx: S#Tx): Obj[S] = objH()
 

@@ -68,7 +68,7 @@ object IntObjView extends ListObjView.Factory {
     obj :: Nil
   }
 
-  final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, IntElem]],
+  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, IntElem]],
                                 var value: Int,
                                 override val isEditable: Boolean, val isViewable: Boolean)
     extends IntObjView[S]

@@ -82,7 +82,7 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
   private val timeFmt = AxisFormat.Time(hours = false, millis = true)
 
-  final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
+  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
                                 var value: Grapheme.Value.Audio)
     extends AudioGraphemeObjView[S]
     with ListObjView /* .AudioGrapheme */[S]

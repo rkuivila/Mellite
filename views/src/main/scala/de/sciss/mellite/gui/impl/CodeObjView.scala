@@ -86,7 +86,7 @@ object CodeObjView extends ListObjView.Factory {
     obj :: Nil
   }
 
-  final class Impl[S <: Sys[S]](protected val objH: stm.Source[S#Tx, Obj.T[S, Code.Elem]], var value: Code)
+  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, Code.Elem]], var value: Code)
     extends CodeObjView[S]
     with ListObjView /* .Code */[S]
     with ObjViewImpl.Impl[S]

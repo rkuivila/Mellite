@@ -22,7 +22,8 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
-import de.sciss.synth.proc.{AuralObj, AuralContext, Transport}
+import de.sciss.span.Span
+import de.sciss.synth.proc.{AuralContext, AuralObj, TimeRef}
 
 object AuditionImpl {
   private lazy val cursor: Cursor = {
@@ -45,6 +46,8 @@ object AuditionImpl {
   *
   * A perhaps better solution would be to have a `AuralTimeline` somehow
   * that smartly filters the objects.
+  *
+  * TODO: update -- this is partly fixed now.
   */
 class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv: TimelineView[S])
   extends RegionLike[S, Unit] with Rubberband[S, Unit] {
@@ -55,45 +58,41 @@ class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv
   val name          = "Audition"
   val icon          = ToolsImpl.getIcon("audition")
 
-  /** @param e          the event corresponding to the press
-    * @param hitTrack   the track index corresponding to the vertical
-    *                   mouse coordinate.
-    * @param pos        the frame position corresponding to the horizontal
-    *                   mouse coordinate
-    * @param regionOpt  `Some` timeline object that is beneath the mouse
-    *                   position or `None` if the mouse is pressed over
-    *                   an empty part of the timeline.
-    */
   protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineObjView[S]]): Unit = {
     handleMouseSelection(e, regionOpt = regionOpt)
 
     val selMod = canvas.selectionModel
     if (selMod.isEmpty) return
 
+    val playPos = if (!e.isAltDown) {
+      // tlv.timelineModel.modifiableOption.foreach(_.position = pos) // XXX TODO -- eventually non-significant undoable edit
+      pos
+    } else regionOpt.fold(pos)(_.spanValue match {
+      case hs: Span.HasStart => hs.start
+      case _ => pos
+    })
+
     import tlv.{cursor, workspace}
-    val transportOpt = cursor.step { implicit tx =>
+    val playOpt = cursor.step { implicit tx =>
       Mellite.auralSystem.serverOption.map { server =>
         implicit val aural = AuralContext(server)
         val auralTimeline = AuralObj.Timeline.empty(tlv.timelineObj)
-        ??? : Transport[S]
 
-//        val transport = Transport[S]
-//        // transport.position = ...
-//        transport.play()    // cf. https://github.com/Sciss/SoundProcesses/issues/18
-//        (tlv.globalView.iterator ++ selMod.iterator).foreach { view =>
-//          val obj = view.obj()
-//          auralTimeline.addObject(obj)
-//        }
-//        transport
+        (tlv.globalView.iterator ++ selMod.iterator).foreach { view =>
+          auralTimeline.addObject(view.id, view.span, view.obj)
+        }
+        auralTimeline.play(TimeRef(tlv.timelineModel.bounds, frame = playPos))
+        auralTimeline
       }
     }
 
-    transportOpt.foreach { transport =>
+    playOpt.foreach { auralTimeline =>
       val c  = e.getComponent
       val ma = new MouseAdapter {
         override def mouseReleased(e: MouseEvent): Unit = {
           cursor.step { implicit tx =>
-            transport.dispose()
+            auralTimeline.stop()
+            auralTimeline.dispose()
           }
           c.removeMouseListener(this)
         }

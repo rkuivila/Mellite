@@ -15,11 +15,13 @@ package de.sciss.mellite
 package gui
 package impl.timeline
 
-import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.{expr => synthEx}
+import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
-import de.sciss.mellite.gui.impl.{ObjViewImpl, ActionView, GenericObjView, ProcObjView}
+import de.sciss.mellite.gui.impl.{ActionView, GenericObjView, ObjViewImpl, ProcObjView}
 import de.sciss.span.SpanLike
 import de.sciss.synth.proc.{BooleanElem, DoubleElem, FadeSpec, IntElem, Obj, ObjKeys, Timeline}
 
@@ -76,18 +78,22 @@ object TimelineObjViewImpl {
     var trackHeight : Int = _
     // var nameOption  : Option[String] = _
     var spanValue   : SpanLike = _
+    var spanH       : stm.Source[S#Tx, Expr[S, SpanLike]] = _
 
-    protected def spanH: stm.Source[S#Tx, Expr[S, SpanLike]]
-    protected def idH  : stm.Source[S#Tx, S#ID]
+    protected var idH  : stm.Source[S#Tx, S#ID] = _
 
     def span(implicit tx: S#Tx) = spanH()
     def id  (implicit tx: S#Tx) = idH()
 
-    def initAttrs(span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): this.type = {
-      val attr          = obj.attr
-      trackIndex   = attr[IntElem   ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
-      trackHeight  = attr[IntElem   ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
-      spanValue    = span.value
+    def initAttrs(id: S#ID, span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): this.type = {
+      val attr      = obj.attr
+      trackIndex    = attr[IntElem   ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
+      trackHeight   = attr[IntElem   ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
+      import SpanLikeEx.serializer
+      spanH         = tx.newHandle(span)
+      spanValue     = span.value
+      import synthEx.IdentifierSerializer
+      idH           = tx.newHandle(id)
       initAttrs(obj)
     }
   }
