@@ -100,7 +100,7 @@ object TimelineViewImpl {
   private val NoFade      = TrackTool.Fade(0L, 0L, 0f, 0f)
   private val NoFunction  = TrackTool.Function(-1, -1, Span(0L, 0L))
 
-  private val DEBUG       = false
+  private val DEBUG       = false // true
 
   import de.sciss.mellite.{logTimeline => logT}
 
@@ -151,30 +151,35 @@ object TimelineViewImpl {
     def muteChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
       val muted   = attr[BooleanElem](ObjKeys.attrMute).exists(_.value)
+      if (DEBUG) println(s"muteChanged($timed) - $muted")
       tlView.objMuteChanged(timed, muted)
     }
 
     def nameChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
       val nameOpt = attr[StringElem](ObjKeys.attrName).map(_.value)
+      if (DEBUG) println(s"nameChanged($timed) - $nameOpt")
       tlView.objNameChanged(timed, nameOpt)
     }
 
     def colorChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr      = timed.value.attr
       val colorOpt  = attr[Color.Elem](ObjView.attrColor).map(_.value)
+      if (DEBUG) println(s"colorChanged($timed) - $colorOpt")
       tlView.objColorChanged(timed, colorOpt)
     }
 
     def gainChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr  = timed.value.attr
       val gain  = attr[DoubleElem](ObjKeys.attrGain).fold(1.0)(_.value)
+      if (DEBUG) println(s"gainChanged($timed) - $gain")
       tlView.objGainChanged(timed, gain)
     }
 
     def busChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
       val busOpt  = attr[IntElem](ObjKeys.attrBus).map(_.value)
+      if (DEBUG) println(s"busChanged($timed) - $busOpt")
       tlView.procBusChanged(timed, busOpt)
     }
 
@@ -182,12 +187,14 @@ object TimelineViewImpl {
       val attr    = timed.value.attr
       val fadeIn  = attr[FadeSpec.Elem](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
       val fadeOut = attr[FadeSpec.Elem](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
+      if (DEBUG) println(s"fadeChanged($timed) - $fadeIn - $fadeOut")
       tlView.objFadeChanged(timed, fadeIn, fadeOut)
     }
 
     def trackPositionChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val trackIdxNow = timed.value.attr[IntElem](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
       val trackHNow   = timed.value.attr[IntElem](TimelineObjView.attrTrackHeight).fold(4)(_.value)
+      if (DEBUG) println(s"trackPositionChanged($timed) - $trackIdxNow - $trackHNow")
       tlView.objMoved(timed, spanCh = Change(Span.Void, Span.Void),
         trackCh = Some(trackIdxNow -> trackHNow))
     }
@@ -239,15 +246,15 @@ object TimelineViewImpl {
     val obsTimeline = timeline.changed.react { implicit tx => upd =>
       upd.changes.foreach {
         case BiGroup.Added  (span, timed) =>
-          // println(s"Added   $span, $timed")
+          if (DEBUG) println(s"Added   $span, $timed")
           tlView.objAdded(span, timed, repaint = true)
 
         case BiGroup.Removed(span, timed) =>
-          // println(s"Removed $span, $timed")
+          if (DEBUG) println(s"Removed $span, $timed")
           tlView.objRemoved(span, timed)
 
         case BiGroup.ElementMoved  (timed, spanChange) =>
-          // println(s"Moved   $timed, $spanCh")
+          if (DEBUG) println(s"Moved   $timed, $spanChange")
           tlView.objMoved(timed, spanCh = spanChange, trackCh = None)
 
         case BiGroup.ElementMutated(timed0, procUpd) =>
@@ -483,11 +490,14 @@ object TimelineViewImpl {
         doAdd()
     }
 
+    private def warnViewNotFound(action: String, timed: BiGroup.TimedElem[S, Obj[S]]): Unit =
+      Console.err.println(s"Warning: Timeline - $action. View for object $timed not found.")
+
     def objRemoved(span: SpanLike, timed: BiGroup.TimedElem[S, Obj[S]])(implicit tx: S#Tx): Unit = {
       logT(s"objRemoved($span, $timed)")
       val id = timed.id
       viewMap.get(id).fold {
-        Console.err.println(s"Warning: Timeline - remove object. View for object $timed not found.")
+        warnViewNotFound("remove", timed)
       } { view =>
         viewMap.remove(id)
         viewSet.remove(view)(tx.peer)
@@ -506,8 +516,11 @@ object TimelineViewImpl {
     // insignificant changes are ignored, therefore one can just move the span without the track
     // by using trackCh = Change(0,0), and vice versa
     def objMoved(timed: BiGroup.TimedElem[S, Obj[S]], spanCh: Change[SpanLike], trackCh: Option[(Int, Int)])
-                 (implicit tx: S#Tx): Unit =
-      viewMap.get(timed.id).foreach { view =>
+                 (implicit tx: S#Tx): Unit = {
+      logT(s"objMoved(${spanCh.before} / ${TimeRef.spanToSecs(spanCh.before)} -> ${spanCh.now} / ${TimeRef.spanToSecs(spanCh.now)}, $timed)")
+      viewMap.get(timed.id).fold {
+        warnViewNotFound("move", timed)
+      } { view =>
         deferTx {
           view match {
             case pv: ProcObjView.Timeline[S] if pv.isGlobal => globalView.remove(pv)
@@ -528,6 +541,7 @@ object TimelineViewImpl {
           }
         }
       }
+    }
 
     private def objUpdated(view: TimelineObjView[S]): Unit = {
       //      if (view.isGlobal)
@@ -539,7 +553,9 @@ object TimelineViewImpl {
     def objMuteChanged(timed: Timeline.Timed[S], newMute: Boolean)(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"objMuteChanged(newMute = $newMute, view = $pvo")
-      pvo.foreach {
+      pvo.fold {
+        warnViewNotFound("mute", timed)
+      } {
         case pv: TimelineObjView.HasMute =>
           deferTx {
             pv.muted = newMute
@@ -553,7 +569,9 @@ object TimelineViewImpl {
     def objNameChanged(timed: Timeline.Timed[S], newName: Option[String])(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"objNameChanged(newName = $newName, view = $pvo")
-      pvo.foreach { pv =>
+      pvo.fold {
+        warnViewNotFound("rename", timed)
+      } { pv =>
         deferTx {
           pv.nameOption = newName
           objUpdated(pv)
@@ -564,7 +582,9 @@ object TimelineViewImpl {
     def objColorChanged(timed: Timeline.Timed[S], newColor: Option[Color])(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"objColorChanged(newColor = $newColor, view = $pvo")
-      pvo.foreach { pv =>
+      pvo.fold {
+        warnViewNotFound("change color", timed)
+      } { pv =>
         deferTx {
           pv.colorOption = newColor
           objUpdated(pv)
@@ -575,7 +595,9 @@ object TimelineViewImpl {
     def procBusChanged(timed: Timeline.Timed[S], newBus: Option[Int])(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"procBusChanged(newBus = $newBus, view = $pvo")
-      pvo.foreach {
+      pvo.fold {
+        warnViewNotFound("change bus", timed)
+      } {
         case pv: ProcObjView.Timeline[S] =>
           deferTx {
             pv.busOption = newBus
@@ -589,7 +611,9 @@ object TimelineViewImpl {
     def objGainChanged(timed: Timeline.Timed[S], newGain: Double)(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"objGainChanged(newGain = $newGain, view = $pvo")
-      pvo.foreach {
+      pvo.fold {
+        warnViewNotFound("change gain", timed)
+      } {
         case pv: TimelineObjView.HasGain =>
           deferTx {
             pv.gain = newGain
@@ -603,7 +627,9 @@ object TimelineViewImpl {
     def objFadeChanged(timed: Timeline.Timed[S], newFadeIn: FadeSpec, newFadeOut: FadeSpec)(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"objFadeChanged(newFadeIn = $newFadeIn, newFadeOut = $newFadeOut, view = $pvo")
-      pvo.foreach {
+      pvo.fold {
+        warnViewNotFound("change fade", timed)
+      } {
         case pv: TimelineObjView.HasFade => deferTx {
           pv.fadeIn   = newFadeIn
           pv.fadeOut  = newFadeOut
@@ -617,7 +643,9 @@ object TimelineViewImpl {
     def procAudioChanged(timed: TimedProc[S], newAudio: Option[Grapheme.Segment.Audio])(implicit tx: S#Tx): Unit = {
       val pvo = viewMap.get(timed.id)
       logT(s"procAudioChanged(newAudio = $newAudio, view = $pvo")
-      pvo.foreach {
+      pvo.fold {
+        warnViewNotFound("audio grapheme", timed)
+      } {
         case pv: ProcObjView.Timeline[S] => deferTx {
           val newSonogram = (pv.audio, newAudio) match {
             case (Some(_), None)  => true
