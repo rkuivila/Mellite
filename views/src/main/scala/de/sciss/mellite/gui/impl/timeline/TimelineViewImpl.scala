@@ -310,7 +310,7 @@ object TimelineViewImpl {
     tlView
   }
 
-  private final class Impl[S <: Sys[S]](val timelineObjH           : stm.Source[S#Tx, Timeline.Obj[S]],
+  private final class Impl[S <: Sys[S]](val timelineObjH  : stm.Source[S#Tx, Timeline.Obj[S]],
                                         val viewMap       : TimelineObjView.Map[S],
                                         val scanMap       : ProcObjView.ScanMap[S],
                                         val timelineModel : TimelineModel,

@@ -46,7 +46,8 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
   //  showLog                 = true
   //  showTimelineLog         = true
   //  de.sciss.lucre.bitemp.impl.BiGroupImpl.showLog = true
-  // gui.impl.timeline.TimelineViewImpl.DEBUG = true
+  //  // gui.impl.timeline.TimelineViewImpl.DEBUG = true
+  //  de.sciss.lucre.event.showLog = true
 
   def version : String = buildInfString("version")
   def license : String = buildInfString("license")

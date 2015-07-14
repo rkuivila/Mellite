@@ -101,9 +101,9 @@ lazy val root = Project(id = baseNameL, base = file(".")).
     //      extensions = Seq("mllt"),
     //      isPackage  = true
     //    ),
-    mainClass in assembly := Some(main),
-    target in assembly := baseDirectory.value,
-    assemblyJarName in assembly := s"$baseName.jar",
+    mainClass             in assembly := Some(main),
+    target                in assembly := baseDirectory.value,
+    assemblyJarName       in assembly := s"$baseName.jar",
     assemblyMergeStrategy in assembly := {
       case PathList("org", "xmlpull", xs @ _*) => MergeStrategy.first
       case x =>
@@ -123,13 +123,13 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
       "de.sciss"        %% "scalainterpreterpane"     % interpreterPaneVersion,   // REPL
       "de.sciss"        %% "scalacolliderugens-api"   % scalaColliderUGenVersion, // need latest version
       "de.sciss"        %  "scalacolliderugens-spec"  % scalaColliderUGenVersion, // meta data
-      "de.sciss"        %% "lucreconfluent"           % confluentVersion,
       "de.sciss"        %% "lucrestm-core"            % lucreSTMVersion,
       "de.sciss"        %% s"lucrestm-$bdb"           % lucreSTMVersion,          // database backend
       "de.sciss"        %% "fscapejobs"               % fscapeJobsVersion,        // remote FScape invocation
       "de.sciss"        %% "strugatzki"               % strugatzkiVersion,        // feature extraction
       "de.sciss"        %% "span"                     % spanVersion,              // makes sbt happy :-E
-      "org.scalautils"  %% "scalautils"               % scalaUtilsVersion         // type-safe equals
+      "org.scalautils"  %% "scalautils"               % scalaUtilsVersion,        // type-safe equals
+      "de.sciss"        %% "lucreconfluent"           % confluentVersion
     ),
     initialCommands in console := "import de.sciss.mellite._"
   )
