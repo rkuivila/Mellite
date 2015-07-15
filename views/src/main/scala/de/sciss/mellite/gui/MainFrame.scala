@@ -19,18 +19,19 @@ import java.awt.{Color, Font}
 import javax.swing.border.Border
 
 import de.sciss.audiowidgets.PeakMeter
-import de.sciss.desktop.{Preferences, Desktop, Menu, Window, WindowHandler}
+import de.sciss.desktop.{Desktop, Menu, Preferences, Window, WindowHandler}
 import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.deferTx
-import de.sciss.lucre.synth.{Server, Txn}
+import de.sciss.lucre.synth.{Bus, Group, Server, Synth, Txn}
 import de.sciss.numbers.Implicits._
+import de.sciss.synth.proc.gui.AudioBusMeter
 import de.sciss.synth.proc.{AuralSystem, SensorSystem}
-import de.sciss.synth.swing.{AudioBusMeter, ServerStatusPanel}
-import de.sciss.synth.{AudioBus, SynthDef, addToHead, addToTail, proc}
+import de.sciss.synth.swing.ServerStatusPanel
+import de.sciss.synth.{SynthGraph, addAfter, addToHead, addToTail, proc}
 
 import scala.collection.breakOut
 import scala.collection.immutable.{IndexedSeq => Vec}
-import scala.concurrent.stm.atomic
+import scala.concurrent.stm.{Ref, atomic}
 import scala.swing.Swing._
 import scala.swing.event.{ButtonClicked, ValueChanged}
 import scala.swing.{Action, Alignment, BoxPanel, Button, CheckBox, Component, FlowPanel, Label, Orientation, Slider, ToggleButton}
@@ -73,8 +74,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     reactions += {
       case ButtonClicked(_) =>
         val dumpMode = if (selected) osc.Dump.Text else osc.Dump.Off
-        atomic { implicit itx =>
-          implicit val tx = TxnLike.wrap(itx)
+        step { implicit tx =>
           sensorSystem.serverOption.foreach { s =>
             // println(s"dump($dumpMode)")
             s.dump(dumpMode)
@@ -86,8 +86,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
   private val actionStartStopSensors: Action = new Action("Start") {
     def apply(): Unit = {
-      val isRunning = atomic { implicit itx =>
-        implicit val tx = TxnLike.wrap(itx)
+      val isRunning = step { implicit tx =>
         sensorSystem.serverOption.isDefined
       }
       if (isRunning) stopSensorSystem() else Mellite.startSensorSystem()
@@ -155,145 +154,157 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
       }
   }
 
-  private var meter       = Option.empty[AudioBusMeter]
+  private val meter       = Ref(Option.empty[AudioBusMeter])
   private var onlinePane  = Option.empty[Component]
 
-    // val fnt0  = UIManager.getFont("Slider.font", Locale.US)
-  private val smallFont   = // if (fnt0 != null)
-      // fnt0.deriveFont(math.min(fnt0.getSize2D, 9.5f))
-    // else
-      new Font("SansSerif", Font.PLAIN, 9)
+  private val smallFont   = new Font("SansSerif", Font.PLAIN, 9)
 
-  // private val tinyFont = new Font("SansSerif", Font.PLAIN, 7)
+  private def step[A](fun: Txn => A): A = atomic { implicit itx =>
+    implicit val tx = Txn.wrap(itx)
+    fun(tx)
+  }
 
   private def auralSystemStarted(s: Server)(implicit tx: Txn): Unit = {
     log("MainFrame: AuralSystem started")
-    // XXX TODO: dirty dirty
-    for(_ <- 1 to 4) s.nextNodeID()
+
+    val numOuts = s.peer.config.outputBusChannels
+
+    val group   = Group(s.defaultGroup, addAfter)
+    val mGroup  = Group(group, addToHead)
+
+    val graph = SynthGraph {
+      import de.sciss.synth._
+      import de.sciss.synth.ugen._
+      val in        = In.ar(0, numOuts)
+      val mainAmp   = Lag.ar("amp".kr(0f))
+      val mainIn    = in * mainAmp
+      val ceil      = -0.2.dbamp
+      val mainLim   = Limiter.ar(mainIn, level = ceil)
+      val lim       = Lag.ar("limiter".kr(0f) * 2 - 1)
+      // we fade between plain signal and limited signal
+      // to allow for minimum latency when limiter is not used.
+      val mainOut   = LinXFade2.ar(mainIn, mainLim, pan = lim)
+      val hpBusL    = "hp-bus".kr(0f)
+      val hpBusR    = hpBusL + 1
+      val hpAmp     = Lag.ar("hp-amp".kr(0f))
+      val hpInL     = Mix.tabulate((numOuts + 1) / 2)(i => in \ (i * 2))
+      val hpInR     = Mix.tabulate( numOuts      / 2)(i => in \ (i * 2 + 1))
+      val hpLimL    = Limiter.ar(hpInL * hpAmp, level = ceil)
+      val hpLimR    = Limiter.ar(hpInR * hpAmp, level = ceil)
+
+      val hpActive  = Lag.ar("hp".kr(0f))
+      val out       = (0 until numOuts).map { i =>
+        val isL   = hpActive & (hpBusL sig_== i)
+        val isR   = hpActive & (hpBusR sig_== i)
+        val isHP  = isL | isR
+        (mainOut \ i) * (1 - isHP) + hpLimL * isL + hpLimR * isR
+      }
+
+      ReplaceOut.ar(0, out)
+    }
+
+    val hpBus = Prefs.headphonesBus.getOrElse(Prefs.defaultHeadphonesBus)
+
+    val syn = Synth.playOnce(graph = graph, nameHint = Some("master"))(target = group,
+      addAction = addToTail, args = List("hp-bus" -> hpBus), dependencies = Nil)
+
+    val meterOption = if (!Prefs.useAudioMeters) None else {
+      val outBus  = Bus.soundOut(s, numOuts)
+      val m       = AudioBusMeter(AudioBusMeter.Strip(outBus, mGroup, addToHead) :: Nil)
+      Some(m)
+    }
+    meter.set(meterOption)(tx.peer)
 
     deferTx {
-      import de.sciss.synth.Ops._
+      mkAuralGUI(s = s, syn = syn, meterOption = meterOption, group = group, mGroup = mGroup)
+    }
+  }
 
-      ActionShowTree.server = Some(s)
+  // group -- master group; mGroup -- metering group
+  private def mkAuralGUI(s: Server, syn: Synth, meterOption: Option[AudioBusMeter], group: Group, mGroup: Group): Unit = {
+    ActionShowTree.server = Some(s)
 
-      audioServerPane.server = Some(s.peer)
-      val numOuts = s.peer.config.outputBusChannels
-      val outBus  = AudioBus(s.peer, 0, numOuts)
-      // val hpBus   = RichBus.audio(s, 2)
-      val group   = synth.Group.after(s.peer.defaultGroup)
-      val mGroup  = synth.Group.head(group)
-      val df = SynthDef("$mellite-master") {
-        import de.sciss.synth._
-        import de.sciss.synth.ugen._
-        val in        = In.ar(0, numOuts)
-        val mainAmp   = Lag.ar("amp".kr(0f))
-        val mainIn    = in * mainAmp
-        val ceil      = -0.2.dbamp
-        val mainLim   = Limiter.ar(mainIn, level = ceil)
-        val lim       = Lag.ar("limiter".kr(0f) * 2 - 1)
-        val mainOut   = LinXFade2.ar(mainIn, mainLim, pan = lim)
-        val hpBusL    = "hp-bus".kr(0f)
-        val hpBusR    = hpBusL + 1
-        val hpAmp     = Lag.ar("hp-amp".kr(0f))
-        val hpInL     = Mix.tabulate((numOuts + 1) / 2)(i => in \ (i * 2))
-        val hpInR     = Mix.tabulate( numOuts      / 2)(i => in \ (i * 2 + 1))
-        val hpLimL    = Limiter.ar(hpInL * hpAmp, level = ceil)
-        val hpLimR    = Limiter.ar(hpInR * hpAmp, level = ceil)
+    audioServerPane.server = Some(s.peer)
 
-        val hpActive  = Lag.ar("hp".kr(0f))
-        val out       = (0 until numOuts).map { i =>
-          val isL   = hpActive & (hpBusL sig_== i)
-          val isR   = hpActive & (hpBusR sig_== i)
-          val isHP  = isL | isR
-          (mainOut \ i) * (1 - isHP) + hpLimL * isL + hpLimR * isR
-        }
+    val p = new FlowPanel() // new BoxPanel(Orientation.Horizontal)
 
-        ReplaceOut.ar(0, out)
+    meterOption.foreach { m =>
+      p.contents += m.component
+      p.contents += HStrut(8)
+    }
+
+    def mkAmpFader(ctl: String, prefs: Preferences.Entry[Int]): Slider = mkFader(prefs, 0) { db =>
+      import de.sciss.synth._
+      val amp = if (db == -72) 0f else db.dbamp
+      step { implicit tx => syn.set(ctl -> amp) }
+    }
+
+    val ggMainVolume    = mkAmpFader("amp"   , Prefs.audioMasterVolume)
+    val ggHPVolume      = mkAmpFader("hp-amp", Prefs.headphonesVolume )
+
+    def mkToggle(label: String, prefs: Preferences.Entry[Boolean], default: Boolean = false)
+                (fun: Boolean => Unit): ToggleButton = {
+      val res = new ToggleButton
+      res.action = Action(label) {
+        val v = res.selected
+        fun(v)
+        prefs.put(v)
       }
+      res.peer.putClientProperty("JComponent.sizeVariant", "mini")
+      res.peer.putClientProperty("JButton.buttonType", "square")
+      val v0 = prefs.getOrElse(default)
+      res.selected  = v0
+      res.focusable = false
+      fun(v0)
+      res
+    }
 
-      val hpBus = Prefs.headphonesBus.getOrElse(Prefs.defaultHeadphonesBus)
-      val syn = df.play(target = group, addAction = addToTail, args = Seq("hp-bus" -> hpBus))
-
-      val p = new FlowPanel() // new BoxPanel(Orientation.Horizontal)
-
-      if (Prefs.useAudioMeters) {
-        val m = AudioBusMeter(AudioBusMeter.Strip(outBus, mGroup, addToHead) :: Nil)
-        meter = Some(m)
-        p.contents += m.component
-        p.contents += HStrut(8)
-      }
-
-      def mkAmpFader(ctl: String, prefs: Preferences.Entry[Int]): Slider = mkFader(prefs, 0) { db =>
-        import de.sciss.synth._
-        val amp = if (db == -72) 0f else db.dbamp
-        syn.set(ctl -> amp)
-      }
-
-      val ggMainVolume    = mkAmpFader("amp"   , Prefs.audioMasterVolume)
-      val ggHPVolume      = mkAmpFader("hp-amp", Prefs.headphonesVolume )
-
-      def mkToggle(label: String, prefs: Preferences.Entry[Boolean], default: Boolean = false)
-                  (fun: Boolean => Unit): ToggleButton = {
-        val res = new ToggleButton
-        res.action = Action(label) {
-          val v = res.selected
-          fun(v)
-          prefs.put(v)
-        }
-        res.peer.putClientProperty("JComponent.sizeVariant", "mini")
-        res.peer.putClientProperty("JButton.buttonType", "square")
-        val v0 = prefs.getOrElse(default)
-        res.selected  = v0
-        res.focusable = false
-        fun(v0)
-        res
-      }
-
-      val ggPost = mkToggle("post", Prefs.audioMasterPostMeter) { post =>
+    val ggPost = mkToggle("post", Prefs.audioMasterPostMeter) { post =>
+      step { implicit tx =>
         if (post) mGroup.moveToTail(group) else mGroup.moveToHead(group)
       }
-
-      val ggLim = mkToggle("limiter", Prefs.audioMasterLimiter) { lim =>
-        val on = if (lim) 1f else 0f
-        syn.set("limiter" -> on)
-      }
-
-      val ggHPActive = mkToggle("active", Prefs.headphonesActive) { active =>
-        val on = if (active) 1f else 0f
-        syn.set("hp" -> on)
-      }
-
-      def mkBorder(label: String): Border = {
-        val res = TitledBorder(LineBorder(Color.gray), label)
-        res.setTitleFont(smallFont)
-        res.setTitleJustification(javax.swing.border.TitledBorder.CENTER)
-        res
-      }
-
-      val stripMain = new BoxPanel(Orientation.Vertical) {
-        contents += ggPost
-        contents += ggLim
-        contents += ggMainVolume
-        border    = mkBorder("Main")
-      }
-
-      val stripHP = new BoxPanel(Orientation.Vertical) {
-        contents += VStrut(ggPost.preferredSize.height)
-        contents += ggHPActive
-        contents += ggHPVolume
-        border    = mkBorder("Phones")
-      }
-
-      p.contents += stripMain
-      p.contents += stripHP
-
-      p.contents += HGlue
-      onlinePane = Some(p)
-
-      boxPane.contents += p
-      // resizable = true
-      pack()
     }
+
+    val ggLim = mkToggle("limiter", Prefs.audioMasterLimiter) { lim =>
+      val on = if (lim) 1f else 0f
+      step { implicit tx => syn.set("limiter" -> on) }
+    }
+
+    val ggHPActive = mkToggle("active", Prefs.headphonesActive) { active =>
+      val on = if (active) 1f else 0f
+      step { implicit tx => syn.set("hp" -> on) }
+    }
+
+    def mkBorder(label: String): Border = {
+      val res = TitledBorder(LineBorder(Color.gray), label)
+      res.setTitleFont(smallFont)
+      res.setTitleJustification(javax.swing.border.TitledBorder.CENTER)
+      res
+    }
+
+    val stripMain = new BoxPanel(Orientation.Vertical) {
+      contents += ggPost
+      contents += ggLim
+      contents += ggMainVolume
+      border    = mkBorder("Main")
+    }
+
+    val stripHP = new BoxPanel(Orientation.Vertical) {
+      contents += VStrut(ggPost.preferredSize.height)
+      contents += ggHPActive
+      contents += ggHPVolume
+      border    = mkBorder("Phones")
+    }
+
+    p.contents += stripMain
+    p.contents += stripHP
+
+    p.contents += HGlue
+    onlinePane = Some(p)
+
+    boxPane.contents += p
+    // resizable = true
+    pack()
   }
 
   private def mkFader(prefs: Preferences.Entry[Int], default: Int)(fun: Int => Unit): Slider = {
@@ -353,12 +364,9 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
   private def auralSystemStopped()(implicit tx: Txn): Unit = {
     log("MainFrame: AuralSystem stopped")
+    meter.swap(None)(tx.peer).foreach(_.dispose())
     deferTx {
       audioServerPane.server = None
-      meter.foreach { m =>
-        meter = None
-        // m.dispose()
-      }
       onlinePane.foreach { p =>
         onlinePane = None
         boxPane.contents.remove(boxPane.contents.indexOf(p))
@@ -369,7 +377,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   }
 
   def stopSensorSystem(): Unit =
-    atomic { implicit itx =>
+    step { implicit tx =>
       sensorSystem.stop()
     }
 
@@ -411,8 +419,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     ggSensors.update(b.result())
   }
 
-  atomic { implicit itx =>
-    implicit val tx = Txn.wrap(itx)
+  step { implicit tx =>
     auralSystem.addClient(new AuralSystem.Client {
       def auralStarted(s: Server)(implicit tx: Txn): Unit = me.auralSystemStarted(s)
       def auralStopped()         (implicit tx: Txn): Unit = me.auralSystemStopped()
