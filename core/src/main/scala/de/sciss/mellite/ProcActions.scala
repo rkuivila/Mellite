@@ -158,7 +158,7 @@ object ProcActions {
           val grw         = Grapheme[S](audio.spec.numChannels)
           val gStart      = LongEx  .newVar(time        .value)
           val audioOffset = LongEx  .newVar(audio.offset.value) // XXX TODO
-        val audioGain   = DoubleEx.newVar(audio.gain  .value)
+          val audioGain   = DoubleEx.newVar(audio.gain  .value)
           val gElem       = Grapheme.Expr.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
           val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
           grw.add(bi)

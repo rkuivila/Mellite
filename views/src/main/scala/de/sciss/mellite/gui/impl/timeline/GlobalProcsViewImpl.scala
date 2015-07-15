@@ -21,37 +21,43 @@ import javax.swing.TransferHandler.TransferSupport
 import javax.swing.table.{AbstractTableModel, TableColumnModel}
 import javax.swing.{DropMode, JComponent, TransferHandler}
 
-import de.sciss.desktop.OptionPane
+import de.sciss.desktop
+import de.sciss.desktop.edit.CompoundEdit
+import de.sciss.desktop.{Menu, OptionPane, UndoManager}
 import de.sciss.icons.raphael
 import de.sciss.lucre.expr.{Int => IntEx}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
-import de.sciss.synth.proc.Timeline
+import de.sciss.mellite.gui.edit.{EditRemoveScanLink, EditTimelineInsertObj, Edits}
+import de.sciss.synth.proc.{Proc, Scan, Timeline}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.annotation.switch
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.swing.Swing._
-import scala.swing.event.TableRowsSelected
+import scala.swing.event.{MouseButtonEvent, MouseEvent, TableRowsSelected}
 import scala.swing.{Action, BorderPanel, BoxPanel, Button, Component, FlowPanel, Orientation, ScrollPane, Table}
 import scala.util.Try
 
 object GlobalProcsViewImpl {
   def apply[S <: Sys[S]](group: Timeline[S], selectionModel: SelectionModel[S, TimelineObjView[S]])
-                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): GlobalProcsView[S] = {
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                         undo: UndoManager): GlobalProcsView[S] = {
 
     // import ProcGroup.Modifiable.serializer
     val groupHOpt = group.modifiableOption.map(tx.newHandle(_))
-    val view      = new Impl[S](groupHOpt, selectionModel)
+    val view      = new Impl[S](/* tx.newHandle(group), */ groupHOpt, selectionModel)
     deferTx(view.guiInit())
     view
   }
 
-  private final class Impl[S <: Sys[S]](groupHOpt: Option[stm.Source[S#Tx, Timeline.Modifiable[S]]],
+  private final class Impl[S <: Sys[S]](// groupH: stm.Source[S#Tx, Timeline[S]],
+                                        groupHOpt: Option[stm.Source[S#Tx, Timeline.Modifiable[S]]],
                                         tlSelModel: SelectionModel[S, TimelineObjView[S]])
-                                       (implicit workspace: Workspace[S], cursor: stm.Cursor[S])
+                                       (implicit val workspace: Workspace[S], val cursor: stm.Cursor[S],
+                                        val undoManager: UndoManager)
     extends GlobalProcsView[S] with ComponentHolder[Component] {
 
     private var procSeq = Vec.empty[ProcObjView.Timeline[S]]
@@ -295,7 +301,7 @@ object GlobalProcsViewImpl {
       val ggEdit = GUI.toolButton(actionEdit, raphael.Shapes.View, "Proc Editor")
       actionEdit.enabled = false
 
-      table.listenTo(table.selection)
+      table.listenTo(table.selection, table.mouse.clicks)
       table.reactions += {
         case TableRowsSelected(_, _, _) =>
           val range   = table.selection.rows
@@ -317,6 +323,8 @@ object GlobalProcsViewImpl {
               selectionModel += v
             }
           }
+
+        case e: MouseButtonEvent if e.triggersPopup => showPopup(e)
       }
 
       tlSelModel addListener tlSelListener
@@ -334,8 +342,128 @@ object GlobalProcsViewImpl {
       }
     }
 
+    private def showPopup(e: MouseEvent): Unit = desktop.Window.find(component).foreach { w =>
+      val hasGlobal = selectionModel.nonEmpty
+      val hasTL     = tlSelModel    .nonEmpty
+      if (hasGlobal) {
+        import Menu._
+        // val itSelect      = Item("select"        )("Select Connected Regions")(selectRegions())
+        val itDup         = Item("duplicate"     )("Duplicate")(duplicate(connect = false))
+        val itDupC        = Item("duplicate-con" )("Duplicate with Connections")(duplicate(connect = true))
+        val itConnect     = Item("connect"       )("Connect to Selected Regions")(connectToRegions())
+        val itDisconnect  = Item("disconnect"    )("Disconnect from Selected Regions")(disconnectFromSelectedRegions())
+        val itDisconnectA = Item("disconnect-all")("Disconnect from All Regions")(disconnectFromAllRegions())
+        if (groupHOpt.isEmpty) {
+          itDup .disable()
+          itDupC.disable()
+        }
+        if (!hasTL) {
+          itConnect   .disable()
+          itDisconnect.disable()
+        }
+
+        val pop = Popup().add(itDup).add(itDupC).add(Line).add(itConnect).add(itDisconnect).add(itDisconnectA)
+        pop.create(w).show(component, e.point.x, e.point.y)
+      }
+    }
+
+//    private def selectRegions(): Unit = {
+//      val itGlob = selectionModel.iterator
+//      cursor.step { implicit tx =>
+//        val scans = itGlob.flatMap { inView =>
+//          inView.obj.elem.peer.scans.get("in")
+//        }
+//        tlSelModel.
+//      }
+//    }
+
+    private def duplicate(connect: Boolean): Unit = groupHOpt.foreach { groupH =>
+      val itGlob = selectionModel.iterator
+      val edits = cursor.step { implicit tx =>
+        val tl = groupH()
+        val it = itGlob.map { inView =>
+          val inObj   = inView.obj
+          val span    = inView.span   // not necessary to copy
+          val outObj  = ProcActions.copy[S](inObj)
+          // `copy` has already connected all scans.
+          // So disconnect them if necessary.
+          if (!connect) Proc.Obj.unapply(outObj).foreach { procObj =>
+            val scans = procObj.elem.peer.scans
+            scans.iterator.foreach { case (_, scan) =>
+              scan.sources.foreach(scan.removeSource(_))
+              scan.sinks  .foreach(scan.removeSink  (_))
+            }
+          }
+          EditTimelineInsertObj("Global Proc", tl, span, outObj)
+        }
+        it.toList   // tricky, need to unwind transactional iterator
+      }
+      val editOpt = CompoundEdit(edits, "Duplicate Global Procs")
+      editOpt.foreach(undoManager.add)
+    }
+
+    private def connectToRegions(): Unit = {
+      val seqGlob = selectionModel.iterator.toSeq
+      val seqTL   = tlSelModel    .iterator.toSeq
+      val plGlob  = seqGlob.size > 1
+      val plTL    = seqTL  .size > 1
+      val edits   = cursor.step { implicit tx =>
+        val it = for {
+          outView <- seqTL
+          inView  <- seqGlob
+          in      = inView.obj
+          out     <- Proc.Obj.unapply(outView.obj)
+          source  <- out.elem.peer.scans.get("out")
+          sink    <- in .elem.peer.scans.get("in" )
+          if Edits.findLink(out = out, in = in).isEmpty
+        } yield Edits.addLink(sourceKey = "out", source = source, sinkKey = "in", sink = sink)
+        it.toList   // tricky, need to unwind transactional iterator
+      }
+      val editOpt = CompoundEdit(edits,
+        s"Connect Global ${if (plGlob) "Procs" else "Proc"} to Selected ${if (plTL) "Regions" else "Region"}")
+      editOpt.foreach(undoManager.add)
+    }
+
+    private def disconnectFromSelectedRegions(): Unit = {
+      val seqGlob = selectionModel.iterator.toSeq
+      val seqTL   = tlSelModel    .iterator.toSeq
+      val plGlob  = seqGlob.size > 1
+      val plTL    = seqTL  .size > 1
+      val edits   = cursor.step { implicit tx =>
+        val it = for {
+          outView <- seqTL
+          inView  <- seqGlob
+          in      = inView.obj
+          out     <- Proc.Obj.unapply(outView.obj)
+          (source, sink) <- Edits.findLink(out = out, in = in)
+        } yield Edits.removeLink(source = source, sink = sink)
+        it.toList   // tricky, need to unwind transactional iterator
+      }
+      val editOpt = CompoundEdit(edits,
+        s"Disconnect Global ${if (plGlob) "Procs" else "Proc"} from Selected ${if (plTL) "Regions" else "Region"}")
+      editOpt.foreach(undoManager.add)
+    }
+
+    private def disconnectFromAllRegions(): Unit = {
+      val seqGlob = selectionModel.iterator.toList
+      val plGlob  = seqGlob.size > 1
+      val edits   = cursor.step { implicit tx =>
+        seqGlob.flatMap { inView =>
+          val in = inView.obj
+          in.elem.peer.scans.get("in").toList.flatMap { sink =>
+            sink.sources.collect {
+              case Scan.Link.Scan(source) => EditRemoveScanLink(source = source, sink = sink)
+            } .toList
+          }
+        }
+      }
+      val editOpt = CompoundEdit(edits,
+        s"Disconnect Global ${if (plGlob) "Procs" else "Proc"} from All Regions")
+      editOpt.foreach(undoManager.add)
+    }
+
     def dispose()(implicit tx: S#Tx): Unit = deferTx {
-      tlSelModel removeListener  tlSelListener
+      tlSelModel removeListener tlSelListener
     }
 
     def add(proc: ProcObjView.Timeline[S]): Unit = {

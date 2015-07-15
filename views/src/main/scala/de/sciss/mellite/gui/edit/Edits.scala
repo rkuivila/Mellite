@@ -38,7 +38,7 @@ object Edits {
     val name  = "Set Bus"
     import IntEx.serializer
     val edits: List[UndoableEdit] = objects.map { obj =>
-      EditAttrMap.expr(name, obj, ObjKeys.attrBus, Some(intExpr)) { ex =>
+      EditAttrMap.expr[S, Int, IntElem](name, obj, ObjKeys.attrBus, Some(intExpr)) { ex =>
         IntElem(IntEx.newVar(ex))
       }
     } (breakOut)
@@ -110,7 +110,7 @@ object Edits {
   def setName[S <: Sys[S]](obj: Obj[S], nameOpt: Option[Expr[S, String]])
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     import StringEx.serializer
-    val edit = EditAttrMap.expr("Rename Object", obj, ObjKeys.attrName, nameOpt) { ex =>
+    val edit = EditAttrMap.expr[S, String, StringElem]("Rename Object", obj, ObjKeys.attrName, nameOpt) { ex =>
       StringElem(StringEx.newVar(ex))
     }
     edit
@@ -130,6 +130,28 @@ object Edits {
     EditRemoveScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
   }
 
+  def findLink[S <: Sys[S]](out: Proc.Obj[S], in: Proc.Obj[S])
+                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[(Scan[S], Scan[S])] = {
+    val outsIt  = out.elem.peer.scans.iterator // .toList
+    val insSeq0 = in .elem.peer.scans.iterator.toIndexedSeq
+
+    // if there is already a link between the two, take the drag gesture as a command to remove it
+    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
+      import TypeCheckedTripleEquals._
+      srcScan.sinks.toList.flatMap {
+        case Scan.Link.Scan(peer) => insSeq0.find(_._2 === peer).map {
+          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
+        }
+
+        case _ => None
+      }
+    }
+    if (existIt.isEmpty) None else {
+      val (_ /* sourceKey */, source, _ /* sinkKey */, sink) = existIt.next()
+      Some((source, sink))
+    }
+  }
+
   def linkOrUnlink[S <: Sys[S]](out: Proc.Obj[S], in: Proc.Obj[S])
                                (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     val outsIt  = out.elem.peer.scans.iterator // .toList
@@ -147,12 +169,7 @@ object Edits {
       }
     }
 
-    if (existIt.hasNext) {
-      val (_ /* sourceKey */, source, _ /* sinkKey */, sink) = existIt.next()
-      val edit = removeLink(/* sourceKey, */ source, /* sinkKey, */ sink)
-      Some(edit)
-
-    } else {
+    findLink(out = out, in = in).fold[Option[UndoableEdit]] {
       // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
       val outsSeq = out.elem.peer.scans.iterator.filter(_._1.startsWith("out")).toIndexedSeq
       val insSeq  = insSeq0                     .filter(_._1.startsWith("in"))
@@ -170,6 +187,9 @@ object Edits {
         println(s"Woop. Multiple choice... Dialog not yet implemented...")
         None
       }
+    } { case (source, sink) =>
+      val edit = removeLink(/* sourceKey, */ source, /* sinkKey, */ sink)
+      Some(edit)
     }
   }
 
@@ -253,9 +273,10 @@ object Edits {
       val newTrackOpt = if (newTrack === IntEx.newConst[S](0)) None else Some(newTrack)
 
       import IntEx.serializer
-      val edit = EditAttrMap.expr("Adjust Track Placement", obj, TimelineObjView.attrTrackIndex, newTrackOpt) { ex =>
-        IntElem(IntEx.newVar(ex))
-      }
+      val edit = EditAttrMap.expr[S, Int, IntElem]("Adjust Track Placement", obj,
+        TimelineObjView.attrTrackIndex, newTrackOpt) { ex =>
+          IntElem(IntEx.newVar(ex))
+        }
       edits ::= edit
     }
 

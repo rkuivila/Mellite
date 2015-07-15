@@ -53,7 +53,7 @@ import org.scalautils.TypeCheckedTripleEquals
 import scala.concurrent.stm.{Ref, TSet}
 import scala.swing.Swing._
 import scala.swing.event.ValueChanged
-import scala.swing.{Action, BorderPanel, BoxPanel, Component, Orientation, SplitPane}
+import scala.swing.{Dimension, Action, BorderPanel, BoxPanel, Component, Orientation, SplitPane}
 import scala.util.Try
 
 object TimelineViewImpl {
@@ -390,6 +390,10 @@ object TimelineViewImpl {
             import synth._
             canvasView.trackTools.visualBoost = value.linexp(0, 64, 1, 512) // .toFloat
         }
+        // trackColor = awt.Color.white
+        preferredSize = new Dimension(33, 28)
+        background = null
+        // paintTrack = false
       }
       desktop.Util.fixWidth(ggVisualBoost)
 
@@ -416,7 +420,7 @@ object TimelineViewImpl {
             toolMute, toolAudition, toolFunction, toolPatch)),
           HStrut(4),
           ggAttr,
-          HStrut(4),
+          HStrut(8),
           ggVisualBoost,
           HGlue,
           HStrut(4),
