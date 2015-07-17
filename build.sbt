@@ -1,7 +1,7 @@
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val fullDescr                  = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "1.7.0-SNAPSHOT"
+lazy val projectVersion             = "1.7.0"
 
 lazy val loggingEnabled             = true
 
