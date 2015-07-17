@@ -7,7 +7,7 @@ lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.21.1-SNAPSHOT"
+lazy val soundProcessesVersion      = "2.21.1"
 lazy val interpreterPaneVersion     = "1.7.2"
 lazy val scalaColliderUGenVersion   = "1.13.3"
 lazy val confluentVersion           = "2.11.3"
