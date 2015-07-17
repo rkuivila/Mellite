@@ -15,6 +15,7 @@ lazy val lucreSTMVersion            = "2.1.2"
 lazy val fscapeJobsVersion          = "1.5.0"
 lazy val strugatzkiVersion          = "2.9.0"
 lazy val scalaUtilsVersion          = "2.1.7"
+lazy val scalaOSCVersion            = "1.1.5"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
@@ -129,7 +130,8 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
       "de.sciss"        %% "strugatzki"               % strugatzkiVersion,        // feature extraction
       "de.sciss"        %% "span"                     % spanVersion,              // makes sbt happy :-E
       "org.scalautils"  %% "scalautils"               % scalaUtilsVersion,        // type-safe equals
-      "de.sciss"        %% "lucreconfluent"           % confluentVersion
+      "de.sciss"        %% "lucreconfluent"           % confluentVersion,
+      "de.sciss"        %% "scalaosc"                 % scalaOSCVersion           // important fixes
     ),
     initialCommands in console := "import de.sciss.mellite._"
   )
