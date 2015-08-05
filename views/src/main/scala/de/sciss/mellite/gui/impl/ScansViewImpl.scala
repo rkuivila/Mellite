@@ -178,21 +178,6 @@ object ScansViewImpl {
       }
     }
 
-//    private final class ScanView(val key: String, isInput: Boolean, linkMap: IdentifierMap[S#ID, S#Tx, LinkView]) {
-//      val sectionView = new ScanSectionView(this, isInput = isInput, map = linkMap)
-//      var component : Component = _
-//      var page      : Page      = _
-//
-//      def guiInit(): Unit = {
-//        sectionView.guiInit()
-//        sinks  .guiInit()
-//        component = new BoxPanel(Orientation.Vertical) {
-//          contents += sources.component
-//          contents += sinks  .component
-//        }
-//      }
-//    }
-
     protected def observer: stm.Disposable[S#Tx]
 
     private val scanInMap   = TMap.empty[String, ScanView]
@@ -201,11 +186,12 @@ object ScansViewImpl {
 
     private var tab: TabbedPane = _
 
-    private class ActionAdd(isInput: Boolean) extends Action(if (isInput) "Input" else "Output") {
+    private class ActionAdd(isInput: Boolean) extends Action(if (isInput) "In" else "Out") {
       def apply(): Unit = {
         val key0  = if (isInput) "in" else "out"
-        val opt   = OptionPane.textInput(message = s"$title Name", initial = key0)
-        opt.title = s"Add $title"
+        val tpe   = s"${title}put"
+        val opt   = OptionPane.textInput(message = s"$tpe Name", initial = key0)
+        opt.title = s"Add $tpe"
         opt.show(Window.find(component)).foreach { key =>
           val edit = cursor.step { implicit tx =>
             EditAddScan(objH(), key = key, isInput = isInput)
@@ -330,7 +316,7 @@ object ScansViewImpl {
 
       deferTx {
         tab.pages += scanView.page
-        tabMap += scanView.page -> scanView
+        tabMap    += scanView.page -> scanView
         tabsUpdated()
       }
     }
@@ -341,7 +327,7 @@ object ScansViewImpl {
       viewOpt.foreach { scanView =>
         deferTx {
           tab.pages -= scanView.page
-          tabMap -= scanView.page
+          tabMap    -= scanView.page
           tabsUpdated()
         }
       }
