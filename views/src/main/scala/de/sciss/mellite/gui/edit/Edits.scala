@@ -26,7 +26,7 @@ import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.mellite.ProcActions.{Move, Resize}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{Code, ExprImplicits, StringElem, Scan, SynthGraphs, Proc, ObjKeys, IntElem, Obj}
+import de.sciss.synth.proc.{Scans, Code, ExprImplicits, StringElem, Scan, SynthGraphs, Proc, ObjKeys, IntElem, Obj}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.breakOut
@@ -59,49 +59,57 @@ object Edits {
             return None
         }
 
-        val scanKeys: Set[String] = sg.sources.collect {
-          case proc.graph.ScanIn   (key)    => key
-          case proc.graph.ScanOut  (key, _) => key
-          // case proc.graph.ScanInFix(key, _) => key
-        } (breakOut)
+        var scanInKeys  = Set.empty[String]
+        var scanOutKeys = Set.empty[String]
+
+        sg.sources.foreach {
+          case proc.graph.ScanIn   (key)    => scanInKeys  += key
+          case proc.graph.ScanOut  (key, _) => scanOutKeys += key
+          case proc.graph.ScanInFix(key, _) => scanInKeys  += key
+          case _ =>
+        }
+
         // sg.sources.foreach(println)
-        if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
+        if (scanInKeys .nonEmpty) log(s"SynthDef has the following scan in  keys: ${scanInKeys .mkString(", ")}")
+        if (scanOutKeys.nonEmpty) log(s"SynthDef has the following scan out keys: ${scanOutKeys.mkString(", ")}")
 
-        val editName = "Set Synth Graph"
-
+        val editName    = "Set Synth Graph"
         val attrNameOpt = codeElem.attr.get(ObjKeys.attrName)
-        val edits: List[UndoableEdit] = procs.flatMap { p =>
+        val edits       = List.newBuilder[UndoableEdit]
+
+        procs.foreach { p =>
           val graphEx = SynthGraphs.newConst[S](sg)  // XXX TODO: ideally would link to code updates
           import SynthGraphs.{serializer, varSerializer}
           val edit1   = EditVar.Expr(editName, p.elem.peer.graph, graphEx)
-          // p.elem.peer.graph() = graphEx
-          var _edits = if (attrNameOpt.isEmpty) edit1 :: Nil else {
-            // p.attr.put(ObjKeys.attrName, attrName)
+          edits += edit1
+          if (attrNameOpt.nonEmpty) {
             val edit2 = EditAttrMap("Set Object Name", p, ObjKeys.attrName, attrNameOpt)
-            edit1 :: edit2 :: Nil
+            edits += edit2
           }
-          val scans = p.elem.peer.scans
-          val toRemove = scans.iterator.collect {
-            case (key, scan) if !scanKeys.contains(key) && scan.sinks.isEmpty && scan.sources.isEmpty => key
+
+          def check(scans: Scans[S], keys: Set[String], isInput: Boolean): Unit = {
+            val toRemove = scans.iterator.collect {
+              case (key, scan) if !keys.contains(key) && scan.isEmpty => key
+            }
+            if (toRemove.nonEmpty) toRemove.foreach { key =>
+              edits += EditRemoveScan(p, key = key, isInput = isInput)
+            }
+
+            val existing = scans.iterator.collect {
+              case (key, _) if keys contains key => key
+            }
+            val toAdd = keys -- existing.toSet
+            if (toAdd.nonEmpty) toAdd.foreach { key =>
+              edits += EditAddScan(p, key = key, isInput = isInput)
+            }
           }
-          if (toRemove.nonEmpty) _edits ++= toRemove.map { key =>
-            // scans.remove(key) // unconnected scans which are not referred to from synth def
-            EditRemoveScan(p, key)
-          } .toList
 
-          val existing = scans.iterator.collect {
-            case (key, _) if scanKeys contains key => key
-          }
-          val toAdd = scanKeys -- existing.toSet
-          if (toAdd.nonEmpty) _edits ++= toAdd.map { key =>
-            // scans.add(key)
-            EditAddScan(p, key)
-          } .toList
+          val proc = p.elem.peer
+          check(proc.inputs , scanInKeys , isInput = true )
+          check(proc.outputs, scanOutKeys, isInput = false)
+        }
 
-          _edits
-        } (breakOut)
-
-        CompoundEdit(edits, editName)
+        CompoundEdit(edits.result(), editName)
 
       case _ => None
     }
@@ -132,13 +140,13 @@ object Edits {
 
   def findLink[S <: Sys[S]](out: Proc.Obj[S], in: Proc.Obj[S])
                            (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[(Scan[S], Scan[S])] = {
-    val outsIt  = out.elem.peer.scans.iterator // .toList
-    val insSeq0 = in .elem.peer.scans.iterator.toIndexedSeq
+    val outsIt  = out.elem.peer.outputs.iterator // .toList
+    val insSeq0 = in .elem.peer.inputs .iterator.toIndexedSeq
 
     // if there is already a link between the two, take the drag gesture as a command to remove it
     val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
       import TypeCheckedTripleEquals._
-      srcScan.sinks.toList.flatMap {
+      srcScan.iterator.toList.flatMap {
         case Scan.Link.Scan(peer) => insSeq0.find(_._2 === peer).map {
           case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
         }
@@ -154,13 +162,13 @@ object Edits {
 
   def linkOrUnlink[S <: Sys[S]](out: Proc.Obj[S], in: Proc.Obj[S])
                                (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-    val outsIt  = out.elem.peer.scans.iterator // .toList
-    val insSeq0 = in .elem.peer.scans.iterator.toIndexedSeq
+    val outsIt  = out.elem.peer.outputs.iterator // .toList
+    val insSeq0 = in .elem.peer.inputs .iterator.toIndexedSeq
 
     // if there is already a link between the two, take the drag gesture as a command to remove it
     val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
       import TypeCheckedTripleEquals._
-      srcScan.sinks.toList.flatMap {
+      srcScan.iterator.toList.flatMap {
         case Scan.Link.Scan(peer) => insSeq0.find(_._2 === peer).map {
           case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
         }
@@ -171,8 +179,8 @@ object Edits {
 
     findLink(out = out, in = in).fold[Option[UndoableEdit]] {
       // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
-      val outsSeq = out.elem.peer.scans.iterator.filter(_._1.startsWith("out")).toIndexedSeq
-      val insSeq  = insSeq0                     .filter(_._1.startsWith("in"))
+      val outsSeq = out.elem.peer.outputs.iterator.filter(_._1.startsWith("out")).toIndexedSeq
+      val insSeq  = insSeq0                       .filter(_._1.startsWith("in"))
 
       if (outsSeq.isEmpty || insSeq.isEmpty) return None  // nothing to patch
 
@@ -309,18 +317,21 @@ object Edits {
                                   (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val scanEdits = obj match {
       case Proc.Obj(objT) =>
-        val scans = objT.elem.peer.scans
-        scans.iterator.toList.flatMap { case (key, scan) =>
-          val edits1 = scan.sources.collect {
+        val proc  = objT.elem.peer
+        // val scans = proc.scans
+        val edits1 = proc.inputs.iterator.toList.flatMap { case (key, scan) =>
+          scan.iterator.collect {
             case Scan.Link.Scan(source) =>
               removeLink(source, scan)
-          } .toList
-          val edits2 = scan.sinks.collect {
+          }.toList
+        }
+        val edits2 = proc.outputs.iterator.toList.flatMap { case (key, scan) =>
+          scan.iterator.collect {
             case Scan.Link.Scan(sink) =>
               removeLink(scan, sink)
           } .toList
-          edits1 ++ edits2
         }
+        edits1 ++ edits2
 
       case _ => Nil
     }

@@ -47,14 +47,20 @@ object ScansViewImpl {
     new Impl(tx.newHandle(obj)) {
       protected val observer = obj.elem.peer.changed.react { implicit tx => upd =>
         upd.changes.foreach {
-          case Proc.ScanAdded   (key, scan) => addScan   (key, scan)
-          case Proc.ScanRemoved (key, scan) => removeScan(key)
-          case Proc.ScanChange  (key, scan, changes) =>
+          case Proc.InputAdded   (key, scan) => addScan   (key, scan, isInput = true )
+          case Proc.OutputAdded  (key, scan) => addScan   (key, scan, isInput = false)
+          case Proc.InputRemoved (key, scan) => removeScan(key, isInput = true )
+          case Proc.OutputRemoved(key, scan) => removeScan(key, isInput = false)
+          case Proc.InputChange  (key, scan, changes) =>
             changes.foreach {
-              case Scan.SourceAdded   (link) => addLink   (key, link)(_.sources)
-              case Scan.SourceRemoved (link) => removeLink(key, link)(_.sources)
-              case Scan.SinkAdded     (link) => addLink   (key, link)(_.sinks  )
-              case Scan.SinkRemoved   (link) => removeLink(key, link)(_.sinks  )
+              case Scan.Added   (link) => addLink   (key, link, isInput = true )
+              case Scan.Removed (link) => removeLink(key, link, isInput = true )
+              case _ =>  // grapheme change
+            }
+          case Proc.OutputChange(key, scan, changes) =>
+            changes.foreach {
+              case Scan.Added     (link) => addLink   (key, link, isInput = false)
+              case Scan.Removed   (link) => removeLink(key, link, isInput = false)
               case _ =>  // grapheme change
             }
           case _ => // graph change
@@ -63,8 +69,12 @@ object ScansViewImpl {
 
       deferTx(guiInit())
 
-      obj.elem.peer.scans.iterator.foreach {
-        case (key, scan) => addScan(key, scan)
+      val proc = obj.elem.peer
+      proc.inputs.iterator.foreach {
+        case (key, scan) => addScan(key, scan, isInput = true )
+      }
+      proc.outputs.iterator.foreach {
+        case (key, scan) => addScan(key, scan, isInput = false)
       }
     }
   }
@@ -84,11 +94,11 @@ object ScansViewImpl {
     private final class GraphemeLinkView(val repr: String, val graphemeH: stm.Source[S#Tx, Grapheme[S]])
       extends LinkView
 
-    private final class ScanSectionView(parent: ScanView, isSources: Boolean,
-                                        val map: IdentifierMap[S#ID, S#Tx, LinkView]) {
+    private final class ScanView(val key: String, val isInput: Boolean, val map: IdentifierMap[S#ID, S#Tx, LinkView]) {
       val model     = ListView.Model.empty[LinkView]
       var list      : ListView[LinkView] = _
       var component : Component = _
+      var page      : Page      = _
 
       def guiInit(): Unit = {
         list      = new ListView(model)
@@ -102,13 +112,17 @@ object ScansViewImpl {
               import TypeCheckedTripleEquals._
               drag.workspace === workspace && {
                 val editOpt = cursor.step { implicit tx =>
-                  val thisScanOpt   = objH     ().elem.peer.scans.get(parent.key)
-                  val thatScanOpt   = drag.proc().elem.peer.scans.get(drag  .key)
+                  val thisProc      = objH     ().elem.peer
+                  val thatProc      = drag.proc().elem.peer
+                  val thisScans     = if (isInput) thisProc.inputs  else thisProc.outputs
+                  val thatScans     = if (isInput) thatProc.outputs else thatProc.inputs
+                  val thisScanOpt   = thisScans.get(key)
+                  val thatScanOpt   = thatScans.get(drag.key)
                   for {
                     thisScan <- thisScanOpt
                     thatScan <- thatScanOpt
                   } yield
-                    if (isSources) {
+                    if (isInput) {
                       EditAddScanLink(source = thatScan, sink = thisScan)
                     } else {
                       EditAddScanLink(source = thisScan, sink = thatScan)
@@ -128,11 +142,13 @@ object ScansViewImpl {
               case slv: ScanLinkView =>
                 implicit val cursor = impl.cursor
                 val editOpt = cursor.step { implicit tx =>
+                  val thisProc  = objH().elem.peer
+                  val scans     = if (isInput) thisProc.inputs else thisProc.outputs
                   for {
-                    thisScan <- objH().elem.peer.scans.get(parent.key)
+                    thisScan <- scans.get(key)
                   } yield {
                     val thatScan = slv.scanH()
-                    if (isSources)
+                    if (isInput)
                       EditRemoveScanLink(source = thatScan, sink = thisScan)
                     else
                       EditRemoveScanLink(source = thisScan, sink = thatScan)
@@ -155,63 +171,69 @@ object ScansViewImpl {
           case e: MouseReleased => handleMouse(e)
         }
         component = new ScrollPane(list) {
-          columnHeaderView = new Label(s"<html><body><i>${if (isSources) "Sources" else "Sinks"}</i></body></html>")
+          columnHeaderView = new Label(s"<html><body><i>${if (isInput) "Sources" else "Sinks"}</i></body></html>")
         }
-      }
-    }
 
-    private final class ScanView(val key: String, sourcesMap: IdentifierMap[S#ID, S#Tx, LinkView],
-                                                  sinksMap  : IdentifierMap[S#ID, S#Tx, LinkView]) {
-      val sources   = new ScanSectionView(this, isSources = true , map = sourcesMap)
-      val sinks     = new ScanSectionView(this, isSources = false, map = sinksMap  )
-      var component : Component = _
-      var page      : Page      = _
-
-      def guiInit(): Unit = {
-        sources.guiInit()
-        sinks  .guiInit()
-        component = new BoxPanel(Orientation.Vertical) {
-          contents += sources.component
-          contents += sinks  .component
-        }
         page = new Page(key, component)
       }
     }
 
+//    private final class ScanView(val key: String, isInput: Boolean, linkMap: IdentifierMap[S#ID, S#Tx, LinkView]) {
+//      val sectionView = new ScanSectionView(this, isInput = isInput, map = linkMap)
+//      var component : Component = _
+//      var page      : Page      = _
+//
+//      def guiInit(): Unit = {
+//        sectionView.guiInit()
+//        sinks  .guiInit()
+//        component = new BoxPanel(Orientation.Vertical) {
+//          contents += sources.component
+//          contents += sinks  .component
+//        }
+//      }
+//    }
+
     protected def observer: stm.Disposable[S#Tx]
 
-    private val scanMap = TMap.empty[String, ScanView]
+    private val scanInMap   = TMap.empty[String, ScanView]
+    private val scanOutMap  = TMap.empty[String, ScanView]
+    private var tabMap      = Map.empty[TabbedPane.Page, ScanView]
 
     private var tab: TabbedPane = _
 
-    private def guiAddScan(): Unit = {
-      val opt   = OptionPane.textInput(message = "Scan Name", initial = "scan")
-      opt.title = "Add Scan"
-      opt.show(Window.find(component)).foreach { key =>
-        val edit = cursor.step { implicit tx =>
-          EditAddScan(objH(), key)
+    private class ActionAdd(isInput: Boolean) extends Action(if (isInput) "Input" else "Output") {
+      def apply(): Unit = {
+        val key0  = if (isInput) "in" else "out"
+        val opt   = OptionPane.textInput(message = s"$title Name", initial = key0)
+        opt.title = s"Add $title"
+        opt.show(Window.find(component)).foreach { key =>
+          val edit = cursor.step { implicit tx =>
+            EditAddScan(objH(), key = key, isInput = isInput)
+          }
+          undoManager.add(edit)
         }
-        undoManager.add(edit)
       }
     }
 
     private lazy val actionRemove = Action(null) {
-      currentKeyOption.foreach { key =>
+      currentViewOption.foreach { case scanView =>
         val editOpt = cursor.step { implicit tx =>
-          val obj    = objH()
-          val edits3 = obj.elem.peer.scans.get(key).fold(List.empty[UndoableEdit]) { thisScan =>
-            val edits1 = thisScan.sources.toList.collect {
-              case Scan.Link.Scan(source) =>
-                EditRemoveScanLink(source = source, sink = thisScan)
+          val obj     = objH()
+          val proc    = obj.elem.peer
+          val isInput = scanView.isInput
+          val key     = scanView.key
+          val scans   = if (isInput) proc.inputs else proc.outputs
+          val edits3  = scans.get(key).fold(List.empty[UndoableEdit]) { thisScan =>
+            val edits1 = thisScan.iterator.toList.collect {
+              case Scan.Link.Scan(thatScan) =>
+                val source  = if (isInput) thatScan else thisScan
+                val sink    = if (isInput) thisScan else thatScan
+                EditRemoveScanLink(source = source, sink = sink)
             }
-            val edits2 = thisScan.sinks .toList.collect {
-              case Scan.Link.Scan(sink) =>
-                EditRemoveScanLink(source = thisScan, sink = sink)
-            }
-            edits1 ++ edits2
+            edits1
           }
           edits3.foreach(e => println(e.getPresentationName))
-          val editMain = EditRemoveScan(objH(), key)
+          val editMain = EditRemoveScan(objH(), key = key, isInput = isInput)
           CompoundEdit(edits3 :+ editMain, "Remove Scan")
         }
         editOpt.foreach(undoManager.add)
@@ -226,21 +248,26 @@ object ScansViewImpl {
       ggDrag      .enabled  = enabled
     }
 
-    private def currentKeyOption: Option[String] = {
+    private def currentViewOption: Option[ScanView] = {
       val idx = tab.selection.index
-      if (idx < 0) None else Some(tab.selection.page.title)
+      if (idx < 0) None else {
+        val page = tab.selection.page
+        tabMap.get(page)
+      }
     }
 
     final protected def guiInit(): Unit = {
       tab           = new TabbedPane
 
       // tab.preferredSize = (400, 100)
-      val ggAdd     = GUI.toolButton(Action(null)(guiAddScan   ()), raphael.Shapes.Plus , "Add Scan"   )
-      val ggDelete  = GUI.toolButton(actionRemove                 , raphael.Shapes.Minus, "Remove Scan")
+      val ggAddIn   = GUI.toolButton(new ActionAdd(isInput = true ), raphael.Shapes.Plus, "Add Input" )
+      val ggAddOut  = GUI.toolButton(new ActionAdd(isInput = false), raphael.Shapes.Plus, "Add Output")
+      val ggDelete  = GUI.toolButton(actionRemove, raphael.Shapes.Minus, "Remove Scan")
       ggDrag        = new DragSourceButton() {
         protected def createTransferable(): Option[Transferable] =
-          currentKeyOption.map { key =>
-            DragAndDrop.Transferable(ScansView.flavor)(ScansView.Drag[S](workspace, objH, key))
+          currentViewOption.map { case scanView =>
+            DragAndDrop.Transferable(ScansView.flavor)(ScansView.Drag[S](
+              workspace, objH, scanView.key, isInput = scanView.isInput))
           }
       }
 
@@ -248,7 +275,7 @@ object ScansViewImpl {
 
       val box = new BoxPanel(Orientation.Vertical) {
         contents += tab
-        contents += new FlowPanel(/* new Label("Scans:"), */ ggAdd, ggDelete, ggDrag, HGlue)
+        contents += new FlowPanel(ggAddIn, ggAddOut, ggDelete, ggDrag, HGlue)
       }
       box.preferredSize = box.minimumSize
       component = box
@@ -259,59 +286,62 @@ object ScansViewImpl {
       case Scan.Link.Grapheme(peer) => new GraphemeLinkView(peer.toString(), tx.newHandle(peer))
     }
 
-    final protected def addLink(key: String, link: Scan.Link[S])(section: ScanView => ScanSectionView)
+    final protected def addLink(key: String, link: Scan.Link[S], isInput: Boolean)
                                (implicit tx: S#Tx): Unit = {
       val linkView    = mkLinkView(link)
-      val sectionView = section(scanMap(key)(tx.peer))
-      sectionView.map.put(link.id, linkView)
+      val scanMap     = if (isInput) scanInMap else scanOutMap
+      val scanView    = scanMap(key)(tx.peer)
+      scanView.map.put(link.id, linkView)
       deferTx {
-        sectionView.model += linkView
+        scanView.model += linkView
       }
     }
 
-    final protected def removeLink(key: String, link: Scan.Link[S])(section: ScanView => ScanSectionView)
-                                  (implicit tx: S#Tx): Unit =
+    final protected def removeLink(key: String, link: Scan.Link[S], isInput: Boolean)
+                                  (implicit tx: S#Tx): Unit = {
+      val scanMap = if (isInput) scanInMap else scanOutMap
       scanMap.get(key)(tx.peer).fold(println(s"WARNING: Scan not found: $key")) { scanView =>
-        val sectionView = section(scanView)
         val id          = link.id
-        val listViewOpt = sectionView.map.get(id)
-        sectionView.map.remove(id)
+        val listViewOpt = scanView.map.get(id)
+        scanView.map.remove(id)
         listViewOpt.fold(println(s"WARNING: Link not found: $key, $link")) { listView =>
           deferTx {
-            sectionView.model -= listView
+            scanView.model -= listView
           }
         }
       }
+    }
 
-    final protected def addLinks(key: String, links: data.Iterator[S#Tx, Scan.Link[S]])
-                                (section: ScanView => ScanSectionView)
+    final protected def addLinks(key: String, links: data.Iterator[S#Tx, Scan.Link[S]], isInput: Boolean)
                                 (implicit tx: S#Tx): Unit =
       links.foreach { link =>
-        addLink(key, link)(section)
+        addLink(key, link, isInput = isInput)
       }
 
-    final protected def addScan(key: String, scan: Scan[S])(implicit tx: S#Tx): Unit = {
-      val sourcesMap  = tx.newInMemoryIDMap[LinkView]
-      val sinksMap    = tx.newInMemoryIDMap[LinkView]
-      val scanView    = new ScanView(key, sourcesMap, sinksMap)
+    final protected def addScan(key: String, scan: Scan[S], isInput: Boolean)(implicit tx: S#Tx): Unit = {
+      val map       = tx.newInMemoryIDMap[LinkView]
+      val scanView  = new ScanView(key = key, isInput = isInput, map = map)
+      val scanMap   = if (isInput) scanInMap else scanOutMap
       scanMap.put(key, scanView)(tx.peer)
 
       deferTx(scanView.guiInit())
 
-      addLinks(key, scan.sources)(_.sources)
-      addLinks(key, scan.sinks  )(_.sinks  )
+      addLinks(key, scan.iterator, isInput = isInput)
 
       deferTx {
         tab.pages += scanView.page
+        tabMap += scanView.page -> scanView
         tabsUpdated()
       }
     }
 
-    final protected def removeScan(key: String)(implicit tx: S#Tx): Unit = {
+    final protected def removeScan(key: String, isInput: Boolean)(implicit tx: S#Tx): Unit = {
+      val scanMap = if (isInput) scanInMap else scanOutMap
       val viewOpt = scanMap.remove(key)(tx.peer)
       viewOpt.foreach { scanView =>
         deferTx {
           tab.pages -= scanView.page
+          tabMap -= scanView.page
           tabsUpdated()
         }
       }
@@ -320,11 +350,14 @@ object ScansViewImpl {
     final def dispose()(implicit tx: S#Tx): Unit = {
       implicit val itx = tx.peer
       observer.dispose()
-      scanMap.foreach { case (_, scanView) =>
-          scanView.sources.map.dispose()
-          scanView.sinks  .map.dispose()
+      scanInMap.foreach { case (_, scanView) =>
+        scanView.map.dispose()
       }
-      scanMap.clear()
+      scanOutMap.foreach { case (_, scanView) =>
+        scanView.map.dispose()
+      }
+      scanInMap .clear()
+      scanOutMap.clear()
     }
   }
 }

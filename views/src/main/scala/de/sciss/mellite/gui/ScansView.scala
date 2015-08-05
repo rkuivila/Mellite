@@ -22,7 +22,8 @@ import de.sciss.synth.proc.Proc
 import impl.{ScansViewImpl => Impl}
 
 object ScansView {
-  final case class Drag[S <: Sys[S]](workspace: Workspace[S], proc: stm.Source[S#Tx, Proc.Obj[S]], key: String)
+  final case class Drag[S <: Sys[S]](workspace: Workspace[S],
+                                     proc: stm.Source[S#Tx, Proc.Obj[S]], key: String, isInput: Boolean)
 
   final val flavor = DragAndDrop.internalFlavor[Drag[_]]
 

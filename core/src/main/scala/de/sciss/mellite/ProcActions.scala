@@ -20,12 +20,11 @@ import de.sciss.lucre.bitemp.{BiExpr, Span => SpanEx}
 import de.sciss.lucre.event.Sys
 import de.sciss.lucre.expr.{Boolean => BooleanEx, Double => DoubleEx, Expr, Long => LongEx, String => StringEx}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc.{BooleanElem, Code, DoubleElem, Elem, ExprImplicits, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan, StringElem, SynthGraphs, Timeline}
+import de.sciss.synth.proc.{BooleanElem, Code, DoubleElem, Elem, ExprImplicits, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan, Scans, StringElem, SynthGraphs, Timeline}
 import de.sciss.synth.ugen.{BinaryOpUGen, Constant, UnaryOpUGen}
 import de.sciss.synth.{GE, Lazy, Rate, SynthGraph, UGenSpec, proc}
 import org.scalautils.TypeCheckedTripleEquals
 
-import scala.collection.breakOut
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.language.existentials
 import scala.util.control.NonFatal
@@ -44,8 +43,8 @@ object ProcActions {
   def getAudioRegion[S <: Sys[S]](/* span: Expr[S, SpanLike], */ proc: Proc.Obj[S])
                                  (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme.Expr.Audio[S])] = {
     for {
-      scan <- proc.elem.peer.scans.get(Proc.Obj.graphAudio)
-      Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
+      scan <- proc.elem.peer.inputs.get(Proc.Obj.graphAudio)
+      Scan.Link.Grapheme(g) <- scan.iterator.toList.headOption
       BiExpr(time, audio: Grapheme.Expr.Audio[S]) <- g.at(0L)
     } yield (time, audio)
   }
@@ -54,8 +53,8 @@ object ProcActions {
   def getAudioRegion2[S <: Sys[S]](/* span: Expr[S, SpanLike], */ proc: Proc.Obj[S])
                                  (implicit tx: S#Tx): Option[(Expr[S, Long], Grapheme[S], Grapheme.Expr.Audio[S])] = {
     for {
-      scan <- proc.elem.peer.scans.get(Proc.Obj.graphAudio)
-      Scan.Link.Grapheme(g) <- scan.sources.toList.headOption
+      scan <- proc.elem.peer.inputs.get(Proc.Obj.graphAudio)
+      Scan.Link.Grapheme(g) <- scan.iterator.toList.headOption
       BiExpr(time, audio: Grapheme.Expr.Audio[S]) <- g.at(0L)
     } yield (time, g, audio)
   }
@@ -153,8 +152,8 @@ object ProcActions {
           val imp = ExprImplicits[S]
           import imp._
           val pNew        = procObj.elem.peer
-          val scanW       = pNew.scans.add(Proc.Obj.graphAudio)
-          scanW.sources.toList.foreach(scanW.removeSource)
+          val scanW       = pNew.inputs.add(Proc.Obj.graphAudio)
+          scanW.iterator.toList.foreach(scanW.remove)
           val grw         = Grapheme[S](audio.spec.numChannels)
           val gStart      = LongEx  .newVar(time        .value)
           val audioOffset = LongEx  .newVar(audio.offset.value) // XXX TODO
@@ -162,7 +161,7 @@ object ProcActions {
           val gElem       = Grapheme.Expr.Audio(audio.artifact, audio.value.spec, audioOffset, audioGain)
           val bi: Grapheme.TimedElem[S] = BiExpr(gStart, gElem)
           grw.add(bi)
-          scanW addSource grw
+          scanW add grw
         }
 
       case _ =>
@@ -228,28 +227,40 @@ object ProcActions {
         try {
           val sg = csg.execute {}  // XXX TODO: compilation blocks, not good!
 
-          val scanKeys: Set[String] = sg.sources.collect {
-            case proc.graph.ScanIn   (key)    => key
-            case proc.graph.ScanOut  (key, _) => key
-            case proc.graph.ScanInFix(key, _) => key
-          } (breakOut)
+          var scanInKeys  = Set.empty[String]
+          var scanOutKeys = Set.empty[String]
+
+          sg.sources.foreach {
+            case proc.graph.ScanIn   (key)    => scanInKeys  += key
+            case proc.graph.ScanOut  (key, _) => scanOutKeys += key
+            case proc.graph.ScanInFix(key, _) => scanInKeys  += key
+            case _ =>
+          }
+
           // sg.sources.foreach(println)
-          if (scanKeys.nonEmpty) log(s"SynthDef has the following scan keys: ${scanKeys.mkString(", ")}")
+          if (scanInKeys .nonEmpty) log(s"SynthDef has the following scan in  keys: ${scanInKeys .mkString(", ")}")
+          if (scanOutKeys.nonEmpty) log(s"SynthDef has the following scan out keys: ${scanOutKeys.mkString(", ")}")
 
           val attrNameOpt = codeElem.attr.get(ObjKeys.attrName)
           procs.foreach { p =>
             p.elem.peer.graph() = SynthGraphs.newConst[S](sg)  // XXX TODO: ideally would link to code updates
             attrNameOpt.foreach(attrName => p.attr.put(ObjKeys.attrName, attrName))
-            val scans = p.elem.peer.scans
-            val toRemove = scans.iterator.collect {
-              case (key, scan) if !scanKeys.contains(key) && scan.sinks.isEmpty && scan.sources.isEmpty => key
+
+            def check(scans: Scans.Modifiable[S], keys: Set[String]): Unit = {
+              val toRemove = scans.iterator.collect {
+                case (key, scan) if !keys.contains(key) && scan.isEmpty => key
+              }
+              toRemove.foreach(scans.remove(_)) // unconnected scans which are not referred to from synth def
+              val existing = scans.iterator.collect {
+                  case (key, _) if keys contains key => key
+                }
+              val toAdd = keys -- existing.toSet
+              toAdd.foreach(scans.add)
             }
-            toRemove.foreach(scans.remove(_)) // unconnected scans which are not referred to from synth def
-            val existing = scans.iterator.collect {
-              case (key, _) if scanKeys contains key => key
-            }
-            val toAdd = scanKeys -- existing.toSet
-            toAdd.foreach(scans.add)
+
+            val proc = p.elem.peer
+            check(proc.inputs , scanInKeys )
+            check(proc.outputs, scanOutKeys)
           }
           true
 
@@ -286,8 +297,8 @@ object ProcActions {
     //      attr.put(ObjKeys.attrBus, Obj(bus))
     //    }
 
-    val scanIn  = proc.scans.add(Proc.Obj.graphAudio )
-    /*val sOut=*/ proc.scans.add(Proc.Obj.scanMainOut)
+    val scanIn  = proc.inputs .add(Proc.Obj.graphAudio )
+    /*val sOut=*/ proc.outputs.add(Proc.Obj.scanMainOut)
     val grIn    = Grapheme[S](grapheme.spec.numChannels)
 
     // we preserve data.source(), i.e. the original audio file offset
@@ -298,7 +309,7 @@ object ProcActions {
     val gStart = LongEx.newVar(-gOffset)
     val bi: Grapheme.TimedElem[S] = BiExpr(gStart, grapheme)
     grIn.add(bi)
-    scanIn addSource grIn
+    scanIn add grIn
     proc.graph() = SynthGraphs.tape
     (span, obj)
   }
@@ -345,23 +356,23 @@ object ProcActions {
   private def addLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
                                   (implicit tx: S#Tx): Unit = {
     log(s"Link $sourceKey / $source to $sinkKey / $sink")
-    source.addSink(Scan.Link.Scan(sink))
+    source.add(Scan.Link.Scan(sink))
   }
 
   def removeLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
                              (implicit tx: S#Tx): Unit = {
     log(s"Unlink $sourceKey / $source from $sinkKey / $sink")
-    source.removeSink(Scan.Link.Scan(sink))
+    source.remove(Scan.Link.Scan(sink))
   }
 
   def linkOrUnlink[S <: Sys[S]](out: Proc.Obj[S], in: Proc.Obj[S])(implicit tx: S#Tx): Boolean = {
-    val outsIt  = out.elem.peer.scans.iterator // .toList
-    val insSeq0 = in .elem.peer.scans.iterator.toIndexedSeq
+    val outsIt  = out.elem.peer.outputs.iterator // .toList
+    val insSeq0 = in .elem.peer.inputs .iterator.toIndexedSeq
 
     // if there is already a link between the two, take the drag gesture as a command to remove it
     val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
       import TypeCheckedTripleEquals._
-      srcScan.sinks.toList.flatMap {
+      srcScan.iterator.toList.flatMap {
         case Scan.Link.Scan(peer) => insSeq0.find(_._2 === peer).map {
           case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
         }
@@ -377,8 +388,8 @@ object ProcActions {
 
     } else {
       // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
-      val outsSeq = out.elem.peer.scans.iterator.filter(_._1.startsWith("out")).toIndexedSeq
-      val insSeq  = insSeq0                     .filter(_._1.startsWith("in"))
+      val outsSeq = out.elem.peer.outputs.iterator.filter(_._1.startsWith("out")).toIndexedSeq
+      val insSeq  = insSeq0                       .filter(_._1.startsWith("in"))
 
       if (outsSeq.isEmpty || insSeq.isEmpty) return false   // nothing to patch
 

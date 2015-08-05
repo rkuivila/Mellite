@@ -81,7 +81,7 @@ object Populate {
       LocalOut.kr(Impulse.kr(1.0 / duration.max(0.1)))
       ScanOut(Proc.Obj.scanMainOut, sig)
     }
-    procObj.elem.peer.scans.add(Proc.Obj.scanMainOut)
+    procObj.elem.peer.outputs.add(Proc.Obj.scanMainOut)
     val spec  = AudioFile.readSpec(f)
     if (DEBUG) println("mkloop ---1")
     val gr    = Grapheme.Expr.Audio(artObj.elem.peer, spec, 0L, 1.0)

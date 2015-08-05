@@ -73,8 +73,8 @@ object ViewImpl {
       Out.ar(0, in) // XXX TODO
     }
     val diffObj = Obj(Proc.Elem(diff))
-    procObj.elem.peer.scans.get(Proc.Obj.scanMainOut).foreach { scanOut =>
-      scanOut.addSink(diff.scans.add(Proc.Obj.scanMainIn))
+    procObj.elem.peer.outputs.get(Proc.Obj.scanMainOut).foreach { scanOut =>
+      scanOut.add(diff.inputs.add(Proc.Obj.scanMainIn))
     }
 
     import _workspace.inMemoryCursor

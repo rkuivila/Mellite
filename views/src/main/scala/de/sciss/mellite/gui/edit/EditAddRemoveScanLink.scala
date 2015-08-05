@@ -53,9 +53,9 @@ private[edit] final class EditAddRemoveScanLink[S <: Sys[S]](isAdd: Boolean,
     val sink    = sinkH  ()
     val link    = Scan.Link.Scan(sink)
     val success = if (isAdd ^ isUndo)
-      source.addSink   (link)
+      source.add(link)
     else
-      source.removeSink(link)
+      source.remove(link)
 
     if (!success) {
       if (isUndo) throw new CannotUndoException()

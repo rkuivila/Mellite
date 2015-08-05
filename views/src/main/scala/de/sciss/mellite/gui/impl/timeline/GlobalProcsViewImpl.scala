@@ -388,10 +388,12 @@ object GlobalProcsViewImpl {
           // `copy` has already connected all scans.
           // So disconnect them if necessary.
           if (!connect) Proc.Obj.unapply(outObj).foreach { procObj =>
-            val scans = procObj.elem.peer.scans
-            scans.iterator.foreach { case (_, scan) =>
-              scan.sources.foreach(scan.removeSource(_))
-              scan.sinks  .foreach(scan.removeSink  (_))
+            val proc    = procObj.elem.peer
+            proc.inputs.iterator.foreach { case (_, scan) =>
+              scan.iterator.foreach(scan.remove(_))
+            }
+            proc.outputs.iterator.foreach { case (_, scan) =>
+              scan.iterator.foreach(scan.remove(_))
             }
           }
           EditTimelineInsertObj("Global Proc", tl, span, outObj)
@@ -413,8 +415,8 @@ object GlobalProcsViewImpl {
           inView  <- seqGlob
           in      = inView.obj
           out     <- Proc.Obj.unapply(outView.obj)
-          source  <- out.elem.peer.scans.get("out")
-          sink    <- in .elem.peer.scans.get("in" )
+          source  <- out.elem.peer.outputs.get(Proc.Obj.scanMainOut)
+          sink    <- in .elem.peer.inputs .get(Proc.Obj.scanMainIn )
           if Edits.findLink(out = out, in = in).isEmpty
         } yield Edits.addLink(sourceKey = "out", source = source, sinkKey = "in", sink = sink)
         it.toList   // tricky, need to unwind transactional iterator
@@ -450,8 +452,8 @@ object GlobalProcsViewImpl {
       val edits   = cursor.step { implicit tx =>
         seqGlob.flatMap { inView =>
           val in = inView.obj
-          in.elem.peer.scans.get("in").toList.flatMap { sink =>
-            sink.sources.collect {
+          in.elem.peer.inputs.get(Proc.Obj.scanMainIn).toList.flatMap { sink =>
+            sink.iterator.collect {
               case Scan.Link.Scan(source) => EditRemoveScanLink(source = source, sink = sink)
             } .toList
           }

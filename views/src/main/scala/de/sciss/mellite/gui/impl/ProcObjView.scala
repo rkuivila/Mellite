@@ -99,10 +99,12 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     // proc.scans.keys.foreach(println)
 
     // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
-    val scans = obj.elem.peer.scans
-    val audio = scans.get(Proc.Obj.graphAudio).flatMap { scanW =>
+    val proc    = obj.elem.peer
+    val inputs  = proc.inputs
+    val outputs = proc.outputs
+    val audio   = inputs.get(Proc.Obj.graphAudio).flatMap { scanW =>
       // println("--- has scan")
-      scanW.sources.flatMap {
+      scanW.iterator.flatMap {
         case Scan.Link.Grapheme(g) =>
           // println("--- scan is linked")
           spanV match {
@@ -136,9 +138,12 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     import context.{scanMap, viewMap}
 
-    scans.iterator.foreach { case (key, scan) =>
-      def findLinks(inp: Boolean): Unit = {
-        val it = if (inp) scan.sources else scan.sinks
+    def buildLinks(isInput: Boolean): Unit = {
+      val scans = if (isInput) inputs else outputs
+      scans.iterator.foreach { case (key, scan) =>
+        if (DEBUG) println(s"PV $timedID add scan ${scan.id}, $key")
+        scanMap.put(scan.id, key -> idH)
+        val it = scan.iterator
         it.foreach {
           case Scan.Link.Scan(peer) if scanMap.contains(peer.id) =>
             val Some((thatKey, thatIdH)) = scanMap.get(peer.id)
@@ -146,7 +151,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
             viewMap.get(thatID).foreach {
               case thatView: ProcObjView.Timeline[S] =>
                 if (DEBUG) println(s"PV $timedID add link from $key to $thatID, $thatKey")
-                if (inp) {
+                if (isInput) {
                   res     .addInput (key    , thatView, thatKey)
                   thatView.addOutput(thatKey, res     , key    )
                 } else {
@@ -165,11 +170,9 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
             }
         }
       }
-      if (DEBUG) println(s"PV $timedID add scan ${scan.id}, $key")
-      scanMap.put(scan.id, key -> idH)
-      findLinks(inp = true )
-      findLinks(inp = false)
     }
+    buildLinks(isInput = true )
+    buildLinks(isInput = false)
 
     // procMap.put(timed.id, res)
     res
@@ -255,10 +258,11 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
 
     override def dispose()(implicit tx: S#Tx): Unit = {
-      // procMap.remove(timed.id)
       val proc = obj.elem.peer
-      // val proc = timed.value.elem.peer
-      proc.scans.iterator.foreach { case (_, scan) =>
+      proc.inputs.iterator.foreach { case (_, scan) =>
+        context.scanMap.remove(scan.id)
+      }
+      proc.outputs.iterator.foreach { case (_, scan) =>
         context.scanMap.remove(scan.id)
       }
       deferTx(disposeGUI())

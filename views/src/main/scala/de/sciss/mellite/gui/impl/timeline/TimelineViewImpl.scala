@@ -211,15 +211,21 @@ object TimelineViewImpl {
         case _ =>
       }
 
-    def scanAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+    def scanInAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value.elem.peer
-      proc.scans.get(name).foreach { scan =>
-        scan.sources.foreach {
+      proc.inputs.get(name).foreach { scan =>
+        scan.iterator.foreach {
           case Scan.Link.Scan(peer) =>
             tlView.scanSourceAdded(timed, name, scan, peer)
           case _ =>
         }
-        scan.sinks.foreach {
+      }
+    }
+
+    def scanOutAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+      val proc = timed.value.elem.peer
+      proc.outputs.get(name).foreach { scan =>
+        scan.iterator.foreach {
           case Scan.Link.Scan(peer) =>
             tlView.scanSinkAdded(timed, name, scan, peer)
           case _ =>
@@ -227,15 +233,21 @@ object TimelineViewImpl {
       }
     }
 
-    def scanRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+    def scanInRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value.elem.peer
-      proc.scans.get(name).foreach { scan =>
-        scan.sources.foreach {
+      proc.inputs.get(name).foreach { scan =>
+        scan.iterator.foreach {
           case Scan.Link.Scan(peer) =>
             tlView.scanSourceRemoved(timed, name, scan, peer)
           case _ =>
         }
-        scan.sinks.foreach {
+      }
+    }
+
+    def scanOutRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+      val proc = timed.value.elem.peer
+      proc.outputs.get(name).foreach { scan =>
+        scan.iterator.foreach {
           case Scan.Link.Scan(peer) =>
             tlView.scanSinkRemoved(timed, name, scan, peer)
           case _ =>
@@ -266,28 +278,34 @@ object TimelineViewImpl {
                   val timed = timed0.asInstanceOf[TimedProc  [S]] // XXX not good
                   val updP  = updP1 .asInstanceOf[Proc.Update[S]]
                   updP.changes.foreach {
-                    case Proc.ScanAdded  (key, _) => scanAdded  (timed, key)
-                    case Proc.ScanRemoved(key, _) => scanRemoved(timed, key)
-                    case Proc.ScanChange (name, scan, scanUpdates) =>
+                    case Proc.InputAdded   (key, _) => scanInAdded   (timed, key)
+                    case Proc.OutputAdded  (key, _) => scanOutAdded  (timed, key)
+                    case Proc.InputRemoved (key, _) => scanInRemoved (timed, key)
+                    case Proc.OutputRemoved(key, _) => scanOutRemoved(timed, key)
+                    case Proc.InputChange  (name, scan, scanUpdates) =>
                       scanUpdates.foreach {
-                        case Scan.GraphemeChange(grapheme, segments) =>
-                          import TypeCheckedTripleEquals._
-                          if (name === Proc.Obj.graphAudio) {
-                            // XXX TODO: This doesn't work. Somehow we get a segment that _ends_ at 0L
-                            val segmOpt = segments.find(_.span.contains(0L)) match {
-                              case Some(segm: Grapheme.Segment.Audio) => Some(segm)
-                              case _ => None
-                            }
-                            tlView.procAudioChanged(timed, segmOpt)
-                          }
+//                        case Scan.GraphemeChange(grapheme, segments) =>
+//                          import TypeCheckedTripleEquals._
+//                          if (name === Proc.Obj.graphAudio) {
+//                            // XXX TODO: This doesn't work. Somehow we get a segment that _ends_ at 0L
+//                            val segmOpt = segments.find(_.span.contains(0L)) match {
+//                              case Some(segm: Grapheme.Segment.Audio) => Some(segm)
+//                              case _ => None
+//                            }
+//                            tlView.procAudioChanged(timed, segmOpt)
+//                          }
 
-                        case Scan.SinkAdded(Scan.Link.Scan(peer)) =>
+                        case Scan.Added  (Scan.Link.Scan(peer)) => tlView.scanSourceAdded  (timed, name, scan, peer)
+                        case Scan.Removed(Scan.Link.Scan(peer)) => tlView.scanSourceRemoved(timed, name, scan, peer)
+
+                        case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
+                      }
+                    case Proc.OutputChange(name, scan, scanUpdates) =>
+                      scanUpdates.foreach {
+                        case Scan.Added(Scan.Link.Scan(peer)) =>
                           val test: Scan[S] = scan
                           tlView.scanSinkAdded(timed, name, test, peer)
-                        case Scan.SinkRemoved  (Scan.Link.Scan(peer)) => tlView.scanSinkRemoved  (timed, name, scan, peer)
-                        case Scan.SourceAdded  (Scan.Link.Scan(peer)) => tlView.scanSourceAdded  (timed, name, scan, peer)
-                        case Scan.SourceRemoved(Scan.Link.Scan(peer)) => tlView.scanSourceRemoved(timed, name, scan, peer)
-
+                        case Scan.Removed  (Scan.Link.Scan(peer)) => tlView.scanSinkRemoved  (timed, name, scan, peer)
                         case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
                       }
                     case Proc.GraphChange(_) =>
