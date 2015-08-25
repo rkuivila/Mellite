@@ -553,19 +553,11 @@ object ActionBounceTimeline {
           val tl = settings.group().elem.peer
           val start = settings.span match {
             case hs: Span.HasStart => hs.start
-            case _ =>
-              // XXX TODO -- should be exposed in BiGroup!
-              val MAX_SQUARE  = LongSquare(0, 0, 0x2000000000000000L)
-              val MIN_COORD   = MAX_SQUARE.left
-              tl.nearestEventAfter(MIN_COORD + 1).getOrElse(0L)
+            case _ => tl.firstEvent.getOrElse(0L)
           }
           val stop = settings.span match {
             case hs: Span.HasStop => hs.stop
-            case _ =>
-              // XXX TODO -- should be exposed in BiGroup!
-              val MAX_SQUARE  = LongSquare(0, 0, 0x2000000000000000L)
-              val MAX_COORD   = MAX_SQUARE.right
-              tl.nearestEventBefore(MAX_COORD - 1).getOrElse(start)
+            case _ => tl.lastEvent.getOrElse(start)
           }
           Span(start, stop)
         }
