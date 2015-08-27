@@ -18,14 +18,13 @@ import java.io.{FileInputStream, FileNotFoundException, FileOutputStream, IOExce
 import java.util.Properties
 
 import de.sciss.file._
-import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm.store.BerkeleyDB
-import de.sciss.lucre.stm.{DataStoreFactory, Disposable, TxnLike}
+import de.sciss.lucre.stm.{DataStore, Disposable, Obj, Sys, TxnLike}
 import de.sciss.lucre.synth.{InMemory => InMem}
 import de.sciss.lucre.{confluent, stm}
 import de.sciss.serial.{DataInput, DataOutput, Serializer}
-import de.sciss.synth.proc.{Durable => Dur, SoundProcesses, Confluent, ExprImplicits, Folder, FolderElem, Obj}
-import SoundProcesses.atomic
+import de.sciss.synth.proc.SoundProcesses.atomic
+import de.sciss.synth.proc.{Confluent, Durable => Dur, Folder}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.stm.{Ref, Txn}
@@ -114,7 +113,7 @@ object WorkspaceImpl {
     new InMemoryImpl(system, access)
   }
 
-  private def openDataStore(dir: File, config: BerkeleyDB.Config, confluent: Boolean): DataStoreFactory[BerkeleyDB] = {
+  private def openDataStore(dir: File, config: BerkeleyDB.Config, confluent: Boolean): DataStore.Factory = {
     val res             = BerkeleyDB.factory(dir, config)
     val fos             = new FileOutputStream(dir / "open")
     val prop            = new Properties()
@@ -137,8 +136,6 @@ object WorkspaceImpl {
 
     } { implicit tx =>
       val c   = Cursors[S, S#D](confluent.Access.root[S])
-      val imp = ExprImplicits[S#D]
-      import imp._
       c.name_=("master")
       c
     }
@@ -212,8 +209,8 @@ object WorkspaceImpl {
       def loop(f: Folder[S]): Unit =
         f.iterator.foreach { obj =>
           fun(obj).foreach(b += _)
-          obj.elem match {
-            case ef: FolderElem[S] => loop(ef.peer)
+          obj match {
+            case ef: Folder[S] => loop(ef)
             case _ =>
           }
         }
@@ -258,7 +255,8 @@ object WorkspaceImpl {
     val inMemoryBridge = (tx: S#Tx) => tx.inMemory  // Confluent.inMemory(tx)
     def inMemoryCursor: stm.Cursor[I] = system.inMemory
 
-    def cursor = cursors.cursor
+    // def cursor = cursors.cursor
+    val cursor = confluent.Cursor.wrap(cursors.cursor)(system)
   }
 
   private final class DurableImpl(_folder: File, val system: Dur,

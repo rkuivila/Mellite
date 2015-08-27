@@ -15,8 +15,7 @@ package de.sciss.mellite
 package impl
 
 import de.sciss.file._
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.stm.{Disposable, TxnLike}
+import de.sciss.lucre.stm.{Sys, Disposable, TxnLike}
 import de.sciss.model.impl.ModelImpl
 
 import scala.collection.immutable.{IndexedSeq => Vec}

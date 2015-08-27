@@ -13,14 +13,11 @@
 
 package de.sciss.mellite
 
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.expr.impl.ExprTypeImplA
+import de.sciss.lucre.event.Targets
+import de.sciss.lucre.expr.impl.ExprTypeImpl
 import de.sciss.lucre.expr.{Expr => _Expr}
-import de.sciss.mellite.impl.ColorImpl
-import de.sciss.model
-import de.sciss.serial.{DataInput, DataOutput, ImmutableSerializer, Serializer}
-import de.sciss.synth.proc
-import de.sciss.synth.proc.Obj
+import de.sciss.lucre.stm.Sys
+import de.sciss.serial.{DataInput, DataOutput, ImmutableSerializer}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 
@@ -28,6 +25,8 @@ object Color {
   final val typeID = 22
 
   private final val COOKIE = 0x436F // 'Co'
+
+  def init(): Unit = Obj.init()
 
   implicit object serializer extends ImmutableSerializer[Color] {
     def write(c: Color, out: DataOutput): Unit = {
@@ -45,36 +44,30 @@ object Color {
     }
   }
 
-  object Expr extends ExprTypeImplA[Color] {
+  object Obj extends ExprTypeImpl[Color, Obj] {
+    import Color.{Obj => Repr}
+
     def typeID = Color.typeID
 
-    def readValue (              in : DataInput ): Color  = Color.serializer.read (       in )
-    def writeValue(value: Color, out: DataOutput): Unit   = Color.serializer.write(value, out)
-  }
-  sealed trait Expr[S <: Sys[S]] extends _Expr[S, Color]
+    implicit def valueSerializer: ImmutableSerializer[Color] = Color.serializer
 
-  // ---- Elem ----
+    protected def mkConst[S <: Sys[S]](id: S#ID, value: A)(implicit tx: S#Tx): Const[S] =
+      new _Const[S](id, value)
 
-  implicit object Elem extends proc.Elem.Companion[Elem] {
-    def typeID = Color.Expr.typeID
-
-    def apply[S <: Sys[S]](peer: _Expr[S, Color])(implicit tx: S#Tx): Color.Elem[S] =
-      ColorImpl(peer)
-
-    object Obj {
-      def unapply[S <: Sys[S]](obj: Obj[S]): Option[proc.Obj.T[S, Color.Elem]] =
-        if (obj.elem.isInstanceOf[Color.Elem[S]]) Some(obj.asInstanceOf[proc.Obj.T[S, Color.Elem]])
-        else None
+    protected def mkVar[S <: Sys[S]](targets: Targets[S], vr: S#Var[Ex[S]], connect: Boolean)
+                                    (implicit tx: S#Tx): Var[S] = {
+      val res = new _Var[S](targets, vr)
+      if (connect) res.connect()
+      res
     }
 
-    implicit def serializer[S <: Sys[S]]: Serializer[S#Tx, S#Acc, Color.Elem[S]] =
-      ColorImpl.serializer[S]
+    private[this] final class _Const[S <: Sys[S]](val id: S#ID, val constValue: A)
+      extends ConstImpl[S] with Repr[S]
+
+    private[this] final class _Var[S <: Sys[S]](val targets: Targets[S], val ref: S#Var[Ex[S]])
+      extends VarImpl[S] with Repr[S]
   }
-  trait Elem[S <: Sys[S]] extends proc.Elem[S] {
-    type Peer       = _Expr[S, Color]
-    type PeerUpdate = model.Change[Color]
-    type This       = Elem[S]
-  }
+  sealed trait Obj[S <: Sys[S]] extends _Expr[S, Color]
 
   /** Palette of sixteen predefined colors. */
   val Palette: Vec[Color] = Vector(

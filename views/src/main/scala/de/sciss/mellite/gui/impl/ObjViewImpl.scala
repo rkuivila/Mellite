@@ -366,7 +366,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: (String, _Color))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
-      val obj = Obj(_Color.Elem(_Color.Expr.newVar(_Color.Expr.newConst[S](value))))
+      val obj = Obj(_Color.Elem(_Color.Obj.newVar(_Color.Obj.newConst[S](value))))
       obj.name = name
       obj :: Nil
     }
@@ -383,7 +383,7 @@ object ObjViewImpl {
 
       def factory = Color
 
-      def exprType = _Color.Expr
+      def exprType = _Color.Obj
 
       def expr(implicit tx: S#Tx): Expr[S, _Color] = objH().elem.peer
 
@@ -422,8 +422,8 @@ object ObjViewImpl {
               val editOpt = cursor.step { implicit tx =>
                 objH().elem.peer match {
                   case Expr.Var(vr) =>
-                    import _Color.Expr.{serializer, varSerializer}
-                    Some(EditVar.Expr("Change Color", vr, _Color.Expr.newConst[S](colr)))
+                    import _Color.Obj.{serializer, varSerializer}
+                    Some(EditVar.Expr("Change Color", vr, _Color.Obj.newConst[S](colr)))
                   case _ => None
                 }
               }

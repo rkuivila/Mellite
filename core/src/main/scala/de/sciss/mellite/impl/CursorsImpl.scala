@@ -15,28 +15,27 @@ package de.sciss
 package mellite
 package impl
 
-import lucre.{event => evt, stm, data, expr, confluent}
-import de.sciss.serial.{DataInput, DataOutput}
-import scala.annotation.switch
-import confluent.reactive.{ConfluentReactiveLike => KSys}
-import evt.{DurableLike => DSys}
-import de.sciss.lucre.expr.Expr
-import de.sciss.synth.proc.ExprImplicits
-import de.sciss.lucre.expr.{String => StringEx}
+import de.sciss.lucre.confluent.Cursor.Data
+import de.sciss.lucre.confluent.{Sys => KSys}
+import de.sciss.lucre.event.Targets
+import de.sciss.lucre.expr.{Expr, StringObj}
+import de.sciss.lucre.stm.Elem.Type
+import de.sciss.lucre.stm.{DurableLike => DSys, Obj, Sys, Elem}
+import de.sciss.lucre.{confluent, event => evt, expr, stm}
+import de.sciss.serial.{DataInput, DataOutput, Serializer}
+import de.sciss.synth.proc.Confluent
 
 object CursorsImpl {
   private final val COOKIE = 0x43737273 // "Csrs"
 
   def apply[S <: KSys[S], D1 <: DSys[D1]](seminal: S#Acc)
-                                         (implicit tx: D1#Tx, system: S { type D = D1 }): Cursors[S, D1] = {
-    val imp     = ExprImplicits[D1]
-    import imp._
+                                         (implicit tx: D1#Tx): Cursors[S, D1] = {
     val targets = evt.Targets[D1]
-    val cursor  = confluent.Cursor[S, D1](seminal)
-    val name    = StringEx.newVar("branch")
-    val list    = expr.List.Modifiable[D1, Cursors[S, D1], Cursors.Update[S, D1]]
+    val cursor  = confluent.Cursor.Data[S, D1](seminal)
+    val name    = StringObj.newVar("branch")
+    val list    = expr.List.Modifiable[D1, Cursors[S, D1] /* , Cursors.Update[S, D1] */]
     log(s"Cursors.apply targets = $targets, list = $list")
-    new Impl(targets, seminal, cursor, name, list)
+    new Impl(targets, seminal, cursor, name, list).connect()
   }
 
   // private final class CursorImpl
@@ -44,38 +43,59 @@ object CursorsImpl {
   //   serial.Serializer[D#Tx, D#Acc, Cursors[S, D]]
 
   implicit def serializer[S <: KSys[S], D1 <: DSys[D1]](implicit system: S { type D = D1 }):
-    serial.Serializer[D1#Tx, D1#Acc, Cursors[S, D1]] with evt.Reader[D1, Cursors[S, D1]] = new Ser[S, D1]
+    serial.Serializer[D1#Tx, D1#Acc, Cursors[S, D1]] /* with evt.Reader[D1, Cursors[S, D1]] */ = new Ser[S, D1]
 
   private final class Ser[S <: KSys[S], D1 <: DSys[D1]](implicit system: S { type D = D1 })
-    extends evt.NodeSerializer[D1, Cursors[S, D1]] {
+    extends Serializer[D1#Tx, D1#Acc, Cursors[S, D1]] {
 
-    def read(in: DataInput, access: D1#Acc, targets: evt.Targets[D1])(implicit tx: D1#Tx): Cursors[S, D1] with evt.Node[D1] = {
-      val cookie  = in.readInt()
-      require(cookie == COOKIE, s"Unexpected $cookie (should be $COOKIE)")
-      val seminal: S#Acc = system.readPath(in)
-      val cursor  = confluent.Cursor.read[S, D1](in)
-      val name    = StringEx.readVar[D1](in, access)
-      val list    = expr.List.Modifiable.read[D1, Cursors[S, D1], Cursors.Update[S, D1]](in, access)
-      log(s"Cursors.read targets = $targets, list = $list")
-      new Impl(targets, seminal, cursor, name, list)
+    def write(v: Cursors[S, D1], out: DataOutput): Unit = v.write(out)
+
+    def read(in: DataInput, access: Unit)(implicit tx: D1#Tx): Cursors[S, D1] = {
+      val tpe     = in.readInt()
+      if (tpe != Cursors.typeID) sys.error(s"Type mismatch, found $tpe, expected ${Cursors.typeID}")
+      readIdentified1[S, D1](in, access)
     }
+  }
+
+  def readIdentifiedObj[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Elem[S] = {
+    if (!tx.system.isInstanceOf[stm.DurableLike[_]]) throw new IllegalStateException()
+    // XXX TODO --- ugly casts
+    readIdentified1[Confluent, stm.Durable](in, ())(tx.asInstanceOf[stm.Durable#Tx]).asInstanceOf[Elem[S]]
+  }
+
+  private def readIdentified1[S <: KSys[S], D1 <: DSys[D1]](in: DataInput, access: Unit)
+                                                           (implicit tx: D1#Tx): Cursors[S, D1] = {
+    val targets = Targets.read[D1](in, access)
+    val cookie  = in.readInt()
+    if (cookie != COOKIE) sys.error(s"Unexpected $cookie (should be $COOKIE)")
+    val seminal: S#Acc = confluent.Access.read(in) // system.readPath(in)
+    val cursor  = confluent.Cursor.Data.read[S, D1](in)
+    val name    = StringObj.readVar[D1](in, access)
+    val list    = expr.List.Modifiable.read[D1, Cursors[S, D1] /* , Cursors.Update[S, D1] */](in, access)
+    log(s"Cursors.read targets = $targets, list = $list")
+    new Impl(targets, seminal, cursor, name, list)
   }
 
   private final class Impl[S <: KSys[S], D1 <: DSys[D1]](
       protected val targets: evt.Targets[D1], val seminal: S#Acc with serial.Writable,
-      val cursor: confluent.Cursor[S, D1] with stm.Disposable[D1#Tx] with serial.Writable,
-      nameVar: Expr.Var[D1, String],
-      list: expr.List.Modifiable[D1, Cursors[S, D1], Cursors.Update[S, D1]]
-    )(implicit tx: D1#Tx, system: S { type D = D1 })
-    extends Cursors[S, D1] with evt.Node[D1] {
+      val cursor: confluent.Cursor.Data[S, D1] with stm.Disposable[D1#Tx] with serial.Writable,
+      nameVar: StringObj.Var[D1],
+      list: expr.List.Modifiable[D1, Cursors[S, D1]]
+    ) // (implicit tx: D1#Tx)
+    extends Cursors[S, D1] with evt.impl.SingleNode[D1, Cursors.Update[S, D1]] {
     impl =>
-    
-    override def toString() = "Cursors" + id
 
-    def name(implicit tx: D1#Tx): Expr[D1, String] = nameVar()
-    def name_=(value: Expr[D1, String])(implicit tx: D1#Tx): Unit = nameVar() = value
+    def tpe: Elem.Type = Cursors
 
-    def descendants(implicit tx: D1#Tx): data.Iterator[D1#Tx, Cursors[S, D1]] = list.iterator
+    override def toString() = s"Cursors$id"
+
+    def copy()(implicit tx: D1#Tx, context: stm.Copy[D1]): Elem[D1] =
+      new Impl(Targets[D1], seminal, Data(cursor.path()), context(nameVar), context(list)).connect()
+
+    def name(implicit tx: D1#Tx): StringObj[D1] = nameVar()
+    def name_=(value: StringObj[D1])(implicit tx: D1#Tx): Unit = nameVar() = value
+
+    def descendants(implicit tx: D1#Tx): Iterator[Cursors[S, D1]] = list.iterator
 
     def addChild(seminal: S#Acc)(implicit tx: D1#Tx): Cursors[S, D1] = {
       val child = CursorsImpl[S, D1](seminal)
@@ -96,6 +116,7 @@ object CursorsImpl {
     }
 
     protected def disposeData()(implicit tx: D1#Tx): Unit = {
+      disconnect()
       cursor .dispose()
       nameVar.dispose()
       list   .dispose()
@@ -114,30 +135,23 @@ object CursorsImpl {
     //      def node = impl
     //    }
 
-    object changed
-      extends evt.impl.EventImpl[D1, Cursors.Update[S, D1], Cursors[S, D1]]
-      with evt.InvariantEvent   [D1, Cursors.Update[S, D1], Cursors[S, D1]] {
+    def connect()(implicit tx: D1#Tx): this.type = {
+      // log(s"$this.connect")
+      // GeneratorEvent ---> this
+      list.changed    ---> changed
+      nameVar.changed ---> changed
+      this
+    }
 
-      protected def reader: evt.Reader[D1, Cursors[S, D1]] = serializer
+    private[this] def disconnect()(implicit tx: D1#Tx): Unit = {
+      // log(s"$this.disconnect()")
+      // GeneratorEvent -/-> this
+      list.changed    -/-> changed
+      nameVar.changed -/-> changed
+    }
 
-      override def toString() = node.toString + ".changed"
-      final val slot = 0
-
-      def node = impl
-
-      def connect()(implicit tx: D1#Tx): Unit = {
-        // log(s"$this.connect")
-        // GeneratorEvent ---> this
-        list.changed    ---> this
-        nameVar.changed ---> this
-      }
-
-      def disconnect()(implicit tx: D1#Tx): Unit = {
-        // log(s"$this.disconnect()")
-        // GeneratorEvent -/-> this
-        list.changed    -/-> this
-        nameVar.changed -/-> this
-      }
+    object changed extends Changed {
+      override def toString = s"$node.changed"
 
       def pullUpdate(pull: evt.Pull[D1])(implicit tx: D1#Tx): Option[Cursors.Update[S, D1]] = {
         val listEvt = list   .changed
@@ -145,7 +159,7 @@ object CursorsImpl {
         // val genOpt  = if (pull.contains(GeneratorEvent)) pull(GeneratorEvent) else None
 
         val nameOpt = if (pull.contains(nameEvt)) pull(nameEvt) else None
-        Thread.sleep(50)
+        // XXX TODO -- what the heck was this? : `Thread.sleep(50)`
         val listOpt = if (pull.contains(listEvt)) pull(listEvt) else None
 
         // println(s"---- enter pull : list = $listOpt")
@@ -155,7 +169,8 @@ object CursorsImpl {
         val changes = listOpt match {
           case Some(listUpd) =>
             val childUpdates = listUpd.changes.collect {
-              case expr.List.Element(child, childUpd) => Cursors.ChildUpdate (childUpd)
+// ELEM
+//              case expr.List.Element(child, childUpd) => Cursors.ChildUpdate (childUpd)
               case expr.List.Added  (idx, child)      => Cursors.ChildAdded  (idx, child)
               case expr.List.Removed(idx, child)      => Cursors.ChildRemoved(idx, child)
             }
@@ -168,11 +183,6 @@ object CursorsImpl {
 
         if (changes.isEmpty) None else Some(Cursors.Update(impl, changes))
       }
-    }
-
-    def select(slot: Int /*, invariant: Boolean */): evt.Event[D1, Any, Any] = (slot /* : @switch */) match {
-      // case GeneratorEvent.slot  => GeneratorEvent
-      case changed.slot         => changed
     }
   }
 }

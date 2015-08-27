@@ -14,7 +14,7 @@
 package de.sciss.mellite
 
 import de.sciss.file.File
-import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm.Sys
 import de.sciss.mellite.impl.{DocumentHandlerImpl => Impl}
 import de.sciss.model.Model
 

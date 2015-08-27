@@ -1,17 +1,16 @@
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val fullDescr                  = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "1.8.0-SNAPSHOT"
+lazy val projectVersion             = "2.0.0-SNAPSHOT"
 
 lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "2.22.0-SNAPSHOT"
+lazy val soundProcessesVersion      = "3.0.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.2"
 lazy val scalaColliderUGenVersion   = "1.13.3"
-lazy val confluentVersion           = "2.11.3"
-lazy val lucreSTMVersion            = "2.1.2"
+lazy val lucreVersion               = "3.0.0-SNAPSHOT"
 lazy val fscapeJobsVersion          = "1.5.0"
 lazy val strugatzkiVersion          = "2.9.0"
 lazy val scalaUtilsVersion          = "2.1.7"
@@ -21,9 +20,9 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "1.7.0-SNAPSHOT"
+lazy val nuagesVersion              = "2.0.0-SNAPSHOT"
 lazy val scalaColliderSwingVersion  = "1.25.2"
-lazy val lucreSwingVersion          = "0.9.1"
+lazy val lucreSwingVersion          = "1.0.0-SNAPSHOT"
 lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
 lazy val audioWidgetsVersion        = "1.9.1"
@@ -124,13 +123,13 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
       "de.sciss"        %% "scalainterpreterpane"     % interpreterPaneVersion,   // REPL
       "de.sciss"        %% "scalacolliderugens-api"   % scalaColliderUGenVersion, // need latest version
       "de.sciss"        %  "scalacolliderugens-spec"  % scalaColliderUGenVersion, // meta data
-      "de.sciss"        %% "lucrestm-core"            % lucreSTMVersion,
-      "de.sciss"        %% s"lucrestm-$bdb"           % lucreSTMVersion,          // database backend
+      "de.sciss"        %% "lucre-core"               % lucreVersion,
+      "de.sciss"        %% "lucre-confluent"          % lucreVersion,
+      "de.sciss"        %% s"lucre-$bdb"              % lucreVersion,             // database backend
       "de.sciss"        %% "fscapejobs"               % fscapeJobsVersion,        // remote FScape invocation
       "de.sciss"        %% "strugatzki"               % strugatzkiVersion,        // feature extraction
       "de.sciss"        %% "span"                     % spanVersion,              // makes sbt happy :-E
       "org.scalautils"  %% "scalautils"               % scalaUtilsVersion,        // type-safe equals
-      "de.sciss"        %% "lucreconfluent"           % confluentVersion,
       "de.sciss"        %% "scalaosc"                 % scalaOSCVersion           // important fixes
     ),
     initialCommands in console := "import de.sciss.mellite._"
@@ -152,6 +151,7 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       "de.sciss" %% "swingplus"                       % swingPlusVersion,           // newest version: color-chooser
       "de.sciss" %% "span"                            % spanVersion,
       "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets
+      "de.sciss" %% "desktop"                         % desktopVersion,
       "de.sciss" %% "desktop-mac"                     % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component
       "de.sciss" %% "treetable-scala"                 % treetableVersion,           // tree-table component

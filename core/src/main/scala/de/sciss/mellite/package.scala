@@ -13,10 +13,11 @@
 
 package de.sciss
 
-import de.sciss.mellite.impl.{ColorImpl, RecursionImpl}
-import de.sciss.synth.proc.Confluent
 import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
+
+import de.sciss.synth.proc.{Confluent, SoundProcesses}
+
 import scala.annotation.elidable
 import scala.annotation.elidable.CONFIG
 import scala.concurrent.ExecutionContext
@@ -37,8 +38,9 @@ package object mellite {
   implicit val executionContext: ExecutionContext = ExecutionContext.Implicits.global
 
   def initTypes(): Unit = {
-    de.sciss.lucre.synth.expr.initTypes()
-    RecursionImpl.ElemImpl.init()
-    ColorImpl.init()
+    SoundProcesses.init()
+    // Wolkenpumpe   .init()
+    Color       .init()
+    // StringOption.init()
   }
 }

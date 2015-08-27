@@ -26,6 +26,7 @@ import de.sciss.lucre.swing.requireEDT
 import de.sciss.lucre.synth.{Server, Txn}
 import de.sciss.mellite.gui.impl.document.DocumentHandlerImpl
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
+import de.sciss.nuages.Wolkenpumpe
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
@@ -170,7 +171,7 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
     // ---- type extensions ----
 
     mellite.initTypes()
-    de.sciss.nuages.initTypes()
+    Wolkenpumpe.init()
 
     // ---- look and feel
 
