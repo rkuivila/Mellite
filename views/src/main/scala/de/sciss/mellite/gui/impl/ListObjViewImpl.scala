@@ -6,7 +6,7 @@ import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.{Boolean => BooleanEx, Expr, ExprType}
+import de.sciss.lucre.expr.{Boolean => BooleanObj, Expr, ExprType}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
@@ -60,13 +60,13 @@ object ListObjViewImpl {
   )
 
   /** A trait that when mixed in provides `isEditable` and `tryEdit` as non-op methods. */
-  trait NonEditable[S <: evt.Sys[S]] {
+  trait NonEditable[S <: stm.Sys[S]] {
     def isEditable: Boolean = false
 
     def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = None
   }
 
-  trait EmptyRenderer[S <: evt.Sys[S]] {
+  trait EmptyRenderer[S <: stm.Sys[S]] {
     def configureRenderer(label: Label): Component = label
     def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
     def value: Any = ()
@@ -81,7 +81,7 @@ object ListObjViewImpl {
     }
   }
 
-  trait ExprLike[S <: evt.Sys[S], A] {
+  trait ExprLike[S <: stm.Sys[S], A] {
     _: ListObjView[S] =>
 
     protected var exprValue: A
@@ -160,10 +160,10 @@ object ListObjViewImpl {
 
   private final val ggCheckBox = new CheckBox()
 
-  trait BooleanExprLike[S <: Sys[S]] extends ExprLike[S, Boolean] {
+  trait BooleanObjprLike[S <: Sys[S]] extends ExprLike[S, Boolean] {
     _: ListObjView[S] =>
 
-    def exprType = BooleanEx
+    def exprType = BooleanObj
 
     def convertEditValue(v: Any): Option[Boolean] = v match {
       case num: Boolean  => Some(num)

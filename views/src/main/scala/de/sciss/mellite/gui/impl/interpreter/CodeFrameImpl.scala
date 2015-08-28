@@ -20,26 +20,25 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{OptionPane, UndoManager}
-import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.IDPeek
+import de.sciss.lucre.stm.{Sys, IDPeek}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{CellView, View}
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.impl.ActionImpl
-import de.sciss.synth.proc.{Action, Code, Obj, Proc, SynthGraphs}
+import de.sciss.synth.proc.{Action, Code, Proc}
 
 import scala.swing.{Component, Orientation, SplitPane}
 
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
 
-  def proc[S <: Sys[S]](obj: Proc.Obj[S])
+  def proc[S <: Sys[S]](obj: Proc[S])
                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                         compiler: Code.Compiler): CodeFrame[S] = {
-    val codeObj = mkSource(obj = obj, codeID = Code.SynthGraph.id, key = Proc.Obj.attrSource,
+    val codeObj = mkSource(obj = obj, codeID = Code.SynthGraph.id, key = Proc.attrSource,
       init = {
-        val txt     = ProcActions.extractSource(obj.elem.peer.graph.value)
+        val txt     = ProcActions.extractSource(obj.graph.value)
         val comment = if (txt.isEmpty)
             "graph function source code"
           else
@@ -47,8 +46,8 @@ object CodeFrameImpl {
         s"// $comment\n\n$txt"
       })
     
-    val codeEx0 = codeObj.elem.peer
-    val objH    = tx.newHandle(obj.elem.peer)
+    val codeEx0 = codeObj
+    val objH    = tx.newHandle(obj)
     val code0   = codeEx0.value match {
       case cs: Code.SynthGraph => cs
       case other => sys.error(s"Proc source code does not produce SynthGraph: ${other.contextName}")
@@ -59,8 +58,7 @@ object CodeFrameImpl {
 
       def save(in: Unit, out: SynthGraph)(implicit tx: S#Tx): UndoableEdit = {
         val obj = objH()
-        import SynthGraphs.{serializer, varSerializer}
-        EditVar.Expr[S, SynthGraph]("Change SynthGraph", obj.graph, SynthGraphs.newConst[S](out))
+        EditVar.Expr[S, SynthGraph]("Change SynthGraph", obj.graph, SynthGraphObj.newConst[S](out))
       }
 
       def dispose()(implicit tx: S#Tx) = ()
@@ -75,19 +73,19 @@ object CodeFrameImpl {
 
   // ---- adapter for editing a Action's source ----
 
-  def action[S <: Sys[S]](obj: Action.Obj[S])
+  def action[S <: Sys[S]](obj: Action[S])
                          (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                           compiler: Code.Compiler): CodeFrame[S] = {
     val codeObj = mkSource(obj = obj, codeID = Code.Action.id, key = Action.attrSource,
       init = "// action source code\n\n")
 
-    val codeEx0 = codeObj.elem.peer
+    val codeEx0 = codeObj
     val code0   = codeEx0.value match {
       case cs: Code.Action => cs
       case other => sys.error(s"Action source code does not produce plain function: ${other.contextName}")
     }
 
-    val handlerOpt = obj.elem.peer match {
+    val handlerOpt = obj match {
       case Action.Var(vr) =>
         val varH  = tx.newHandle(vr)
         val objH  = tx.newHandle(obj)
@@ -107,7 +105,7 @@ object CodeFrameImpl {
           def execute()(implicit tx: S#Tx): Unit = {
             val obj       = objH()
             val universe  = Action.Universe(obj, workspace)
-            obj.elem.peer.execute(universe)
+            obj.execute(universe)
             // ActionImpl.execute[S](name = in, jar = out)
           }
 
@@ -127,7 +125,7 @@ object CodeFrameImpl {
   def apply[S <: Sys[S]](obj: Code.Obj[S], hasExecute: Boolean)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          compiler: Code.Compiler): CodeFrame[S] = {
-    val _codeEx = obj.elem.peer
+    val _codeEx = obj
     val _code   = _codeEx.value
     implicit val undo = new UndoManagerImpl
     make[S, _code.In, _code.Out](obj, obj, _code, None, hasExecute = hasExecute, bottomViewOpt = None)

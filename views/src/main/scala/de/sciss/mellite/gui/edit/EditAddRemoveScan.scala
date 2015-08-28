@@ -24,7 +24,7 @@ import de.sciss.lucre.event.Sys
 // direction: true = insert, false = remove
 // XXX TODO - should disconnect links and restore them in undo
 private[edit] final class EditAddRemoveScan[S <: Sys[S]](isAdd: Boolean,
-                                                         procH: stm.Source[S#Tx, Proc.Obj[S]],
+                                                         procH: stm.Source[S#Tx, Proc[S]],
                                                          key: String, isInput: Boolean)(implicit cursor: stm.Cursor[S])
   extends AbstractUndoableEdit {
 
@@ -49,7 +49,7 @@ private[edit] final class EditAddRemoveScan[S <: Sys[S]](isAdd: Boolean,
   def perform()(implicit tx: S#Tx): Unit = perform(isUndo = false)
 
   private def perform(isUndo: Boolean)(implicit tx: S#Tx): Unit = {
-    val proc    = procH().elem.peer
+    val proc    = procH()
     val scans   = if (isInput) proc.inputs else proc.outputs
     if (isAdd ^ isUndo)
       scans.add   (key)
@@ -60,7 +60,7 @@ private[edit] final class EditAddRemoveScan[S <: Sys[S]](isAdd: Boolean,
   override def getPresentationName = s"${if (isAdd) "Add" else "Remove"} Scan"
 }
 object EditAddScan {
-  def apply[S <: Sys[S]](proc: Proc.Obj[S], key: String, isInput: Boolean)
+  def apply[S <: Sys[S]](proc: Proc[S], key: String, isInput: Boolean)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val procH = tx.newHandle(proc)
     val res = new EditAddRemoveScan(isAdd = true, procH = procH, key = key, isInput = isInput)
@@ -70,7 +70,7 @@ object EditAddScan {
 }
 
 object EditRemoveScan {
-  def apply[S <: Sys[S]](proc: Proc.Obj[S], key: String, isInput: Boolean)
+  def apply[S <: Sys[S]](proc: Proc[S], key: String, isInput: Boolean)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val procH = tx.newHandle(proc)
     val res = new EditAddRemoveScan(isAdd = false, procH = procH, key = key, isInput = isInput)

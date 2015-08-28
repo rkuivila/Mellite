@@ -28,13 +28,13 @@ import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.synth.Sys
 
 object FrameImpl {
-  def apply[S <: Sys[S]](group: Timeline.Obj[S])
+  def apply[S <: Sys[S]](group: Timeline[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val tlv     = TimelineView[S](group)
     val name    = AttrCellView.name(group)
     import Timeline.serializer
-    val groupH  = tx.newHandle(group.elem.peer)
+    val groupH  = tx.newHandle(group)
     val res     = new Impl(tlv, name, groupH)
     res.init()
     res
@@ -62,7 +62,7 @@ object FrameImpl {
             it.foreach {
               case pv: ProcObjView.Timeline[S] =>
                 println(pv.debugString)
-                println(_cursor.step { implicit tx => pv.obj.elem.peer.toString() })
+                println(_cursor.step { implicit tx => pv.obj.toString() })
               case _ =>
             }
           else {

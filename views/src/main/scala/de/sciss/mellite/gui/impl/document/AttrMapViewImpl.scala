@@ -24,9 +24,9 @@ import javax.swing.table.{AbstractTableModel, DefaultTableCellRenderer, TableCel
 import javax.swing.{AbstractCellEditor, JComponent, JTable, TransferHandler}
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.desktop.{Window, OptionPane, UndoManager}
+import de.sciss.desktop.{OptionPane, UndoManager, Window}
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.stm.{Obj, Disposable}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
@@ -34,7 +34,7 @@ import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.model.Change
 import de.sciss.model.impl.ModelImpl
 import de.sciss.swingplus.DropMode
-import de.sciss.synth.proc.{Obj, ObjKeys, StringElem}
+import de.sciss.synth.proc.ObjKeys
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.annotation.switch

@@ -17,6 +17,7 @@ package impl
 
 import de.sciss.desktop
 import de.sciss.icons.raphael
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
@@ -29,7 +30,7 @@ import scala.swing.{Component, Label}
 // -------- Code --------
 
 object CodeObjView extends ListObjView.Factory {
-  type E[S <: evt.Sys[S]] = Code.Elem[S]
+  type E[S <: stm.Sys[S]] = Code.Elem[S]
   val icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Code)
   val prefix      = "Code"
   def humanName   = "Source Code"
@@ -37,12 +38,12 @@ object CodeObjView extends ListObjView.Factory {
   def typeID      = Code.typeID
   def hasMakeDialog   = true
 
-  def mkListView[S <: Sys[S]](obj: Obj.T[S, Code.Elem])(implicit tx: S#Tx): CodeObjView[S] with ListObjView[S] = {
-    val value   = obj.elem.peer.value
+  def mkListView[S <: Sys[S]](obj: Code.Obj[S])(implicit tx: S#Tx): CodeObjView[S] with ListObjView[S] = {
+    val value   = obj.value
     new Impl(tx.newHandle(obj), value).initAttrs(obj)
   }
 
-  type Config[S <: evt.Sys[S]] = ObjViewImpl.PrimitiveConfig[Code]
+  type Config[S <: stm.Sys[S]] = ObjViewImpl.PrimitiveConfig[Code]
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                  (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -80,19 +81,19 @@ object CodeObjView extends ListObjView.Factory {
   def makeObj[S <: Sys[S]](config: (String, Code))(implicit tx: S#Tx): List[Obj[S]] = {
     import proc.Implicits._
     val (name, value) = config
-    val peer  = Code.Expr.newVar[S](Code.Expr.newConst(value))
-    val obj   = Obj(Code.Elem(peer))
+    val peer  = Code.Obj.newVar[S](Code.Obj.newConst(value))
+    val obj   = peer // Obj(Code.Elem(peer))
     obj.name = name
     obj :: Nil
   }
 
-  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, Code.Elem]], var value: Code)
+  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Code.Obj[S]], var value: Code)
     extends CodeObjView[S]
     with ListObjView /* .Code */[S]
     with ObjViewImpl.Impl[S]
     with ListObjViewImpl.NonEditable[S] {
 
-    type E[~ <: evt.Sys[~]] = Code.Elem[~]
+    type E[~ <: stm.Sys[~]] = Code.Obj[~]
 
     override def obj(implicit tx: S#Tx) = objH()
 
@@ -115,6 +116,6 @@ object CodeObjView extends ListObjView.Factory {
     }
   }
 }
-trait CodeObjView[S <: evt.Sys[S]] extends ObjView[S] {
+trait CodeObjView[S <: stm.Sys[S]] extends ObjView[S] {
   override def obj(implicit tx: S#Tx): Code.Obj[S]
 }

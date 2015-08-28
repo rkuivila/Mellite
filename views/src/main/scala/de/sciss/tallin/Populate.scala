@@ -13,7 +13,7 @@ import de.sciss.synth.GE
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.graph.ScanOut
-import de.sciss.synth.proc.{Action, ArtifactElem, ArtifactLocationElem, AudioGraphemeElem, ExprImplicits, Folder, FolderElem, Grapheme, Obj, Proc, SoundProcesses}
+import de.sciss.synth.proc.{Action, Folder, Grapheme, Proc, SoundProcesses}
 import de.sciss.synth.ugen.Constant
 import de.sciss.{nuages, synth}
 
@@ -43,13 +43,12 @@ object Populate {
     pm + zm
   }
 
-  def mkLoop[S <: evt.Sys[S]](root: Folder[S], artObj: ArtifactElem.Obj[S])(implicit tx: S#Tx): Unit = {
+  def mkLoop[S <: stm.Sys[S]](root: Folder[S], artObj: Artifact[S])(implicit tx: S#Tx): Unit = {
     val dsl = new nuages.DSL[S]
     import dsl._
     val imp = ExprImplicits[S]
-    import imp._
 
-    val f = artObj.elem.peer.value
+    val f = artObj.value
 
     val procObj = mkProcObj(f.base) {
       import synth._
@@ -79,22 +78,22 @@ object Populate {
       val amp1        = 1.0 - (1.0 - amp0).squared
       val sig         = (play1 * amp1) + (play2 * amp2)
       LocalOut.kr(Impulse.kr(1.0 / duration.max(0.1)))
-      ScanOut(Proc.Obj.scanMainOut, sig)
+      ScanOut(Proc.scanMainOut, sig)
     }
-    procObj.elem.peer.outputs.add(Proc.Obj.scanMainOut)
+    procObj.outputs.add(Proc.scanMainOut)
     val spec  = AudioFile.readSpec(f)
     if (DEBUG) println("mkloop ---1")
-    val gr    = Grapheme.Expr.Audio(artObj.elem.peer, spec, 0L, 1.0)
-    procObj.attr.put("file", Obj(AudioGraphemeElem(gr)))
+    val gr    = Grapheme.Expr.Audio(artObj, spec, 0L, 1.0)
+    procObj.attr.put("file", Obj(Grapheme.Expr.Audio(gr)))
 
     if (DEBUG) println(s"mkloop ---2. root = $root")
 
     for {
       nuagesObj <- getNuages(root)
-      FolderElem.Obj(genF) <- nuagesObj.elem.peer.folder / Nuages.NameGenerators
+      FolderElem.Obj(genF) <- nuagesObj.folder / Nuages.NameGenerators
     } {
       if (DEBUG) println("mkloop ---3")
-      insertByName(genF.elem.peer, procObj)
+      insertByName(genF, procObj)
       if (DEBUG) println("mkloop ---4")
     }
   }
@@ -113,7 +112,7 @@ object Populate {
     // val recFormat = new SimpleDateFormat("'rec_'HHmmss'.aif'", Locale.US)
 
     val sinkRecPrepare = new Action.Body {
-      def apply[T <: evt.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
+      def apply[T <: stm.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
         if (DEBUG) println("prepare ---1")
         import universe._
         for {
@@ -122,7 +121,7 @@ object Populate {
         } {
           if (DEBUG) println("prepare ---2")
           val name    = recFormat.format(new Date)
-          val loc     = getRecLocation(nuagesObj.elem.peer.folder)
+          val loc     = getRecLocation(nuagesObj.folder)
           val artM    = loc.add(loc.directory / name) // XXX TODO - should check that it is different from previous value
           // println(name)
           procObj.attr.put(KeyRecArtifact, Obj(ArtifactElem(artM)))
@@ -133,7 +132,7 @@ object Populate {
     Action.registerPredef(ActionKeyRecPrepare, sinkRecPrepare)
 
     val sinkRecDispose = new Action.Body {
-      def apply[T <: evt.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
+      def apply[T <: stm.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
         if (DEBUG) println("dispose ---1")
         import universe._
         for {
@@ -162,12 +161,12 @@ object Populate {
 
   final val NuagesName = "Nuages"
 
-  def getNuages[S <: evt.Sys[S]](root: Folder[S])(implicit tx: S#Tx): Option[Nuages.Obj[S]] =
+  def getNuages[S <: stm.Sys[S]](root: Folder[S])(implicit tx: S#Tx): Option[Nuages.Obj[S]] =
     (root / NuagesName).flatMap(Nuages.Obj.unapply)
 
-  def getRecLocation[S <: evt.Sys[S]](root: Folder[S])(implicit tx: S#Tx): ArtifactLocation.Modifiable[S] = {
+  def getRecLocation[S <: stm.Sys[S]](root: Folder[S])(implicit tx: S#Tx): ArtifactLocation[S] = {
     val it = root.iterator.flatMap {
-      case ArtifactLocationElem.Obj(objT) if objT.name == RecName => objT.elem.peer.modifiableOption
+      case ArtifactLocationElem.Obj(objT) if objT.name == RecName => objT.modifiableOption
       case _ => None
     }
     if (it.hasNext) it.next() else {
@@ -186,7 +185,6 @@ object Populate {
     val dsl = new nuages.DSL[S]
     import dsl._
     val imp = ExprImplicits[S]
-    import imp._
     import synth._
     import ugen._
 
@@ -232,7 +230,7 @@ object Populate {
         val art   = loc.add(f)
         val spec  = AudioFile.readSpec(f)
         val gr    = Grapheme.Expr.Audio(art, spec, 0L, 1.0)
-        procObj.attr.put("file", Obj(AudioGraphemeElem(gr)))
+        procObj.attr.put("file", Obj(Grapheme.Expr.Audio(gr)))
       })
     }
 

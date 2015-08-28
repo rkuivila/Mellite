@@ -16,11 +16,11 @@ package gui
 
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.View
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.document.{AttrMapViewImpl => Impl}
 import de.sciss.model.Model
-import de.sciss.synth.proc.Obj
 
 object AttrMapView {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],

@@ -57,7 +57,7 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   override protected def handleOutside(e: MouseEvent, hitTrack: Int, pos: Long): Unit =
     mkRubber(e, hitTrack = hitTrack, pos = pos)
 
-  protected def commitObj(drag: Move)(span: Expr[S, SpanLike], obj: Obj[S])
+  protected def commitObj(drag: Move)(span: SpanLikeObj[S], obj: Obj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
     Edits.move(span, obj, drag, minStart = canvas.timelineModel.bounds.start)
 

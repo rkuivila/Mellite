@@ -42,10 +42,10 @@ import scala.swing.{MenuItem, Button, Swing, Action, FlowPanel, Label, ScrollPan
 import Swing._
 
 object ScansViewImpl {
-  def apply[S <: Sys[S]](obj: Proc.Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
+  def apply[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
                                            workspace: Workspace[S], undoManager: UndoManager): ScansView[S] = {
     new Impl(tx.newHandle(obj)) {
-      protected val observer = obj.elem.peer.changed.react { implicit tx => upd =>
+      protected val observer = obj.changed.react { implicit tx => upd =>
         upd.changes.foreach {
           case Proc.InputAdded   (key, scan) => addScan   (key, scan, isInput = true )
           case Proc.OutputAdded  (key, scan) => addScan   (key, scan, isInput = false)
@@ -69,7 +69,7 @@ object ScansViewImpl {
 
       deferTx(guiInit())
 
-      val proc = obj.elem.peer
+      val proc = obj
       proc.inputs.iterator.foreach {
         case (key, scan) => addScan(key, scan, isInput = true )
       }
@@ -79,7 +79,7 @@ object ScansViewImpl {
     }
   }
 
-  private abstract class Impl[S <: Sys[S]](objH: stm.Source[S#Tx, Proc.Obj[S]])
+  private abstract class Impl[S <: Sys[S]](objH: stm.Source[S#Tx, Proc[S]])
                                        (implicit val cursor: stm.Cursor[S], val workspace: Workspace[S],
                                         val undoManager: UndoManager)
     extends ScansView[S] with ComponentHolder[Component] { impl =>
@@ -112,8 +112,8 @@ object ScansViewImpl {
               import TypeCheckedTripleEquals._
               drag.workspace === workspace && {
                 val editOpt = cursor.step { implicit tx =>
-                  val thisProc      = objH     ().elem.peer
-                  val thatProc      = drag.proc().elem.peer
+                  val thisProc      = objH     ()
+                  val thatProc      = drag.proc()
                   val thisScans     = if (isInput) thisProc.inputs  else thisProc.outputs
                   val thatScans     = if (isInput) thatProc.outputs else thatProc.inputs
                   val thisScanOpt   = thisScans.get(key)
@@ -142,7 +142,7 @@ object ScansViewImpl {
               case slv: ScanLinkView =>
                 implicit val cursor = impl.cursor
                 val editOpt = cursor.step { implicit tx =>
-                  val thisProc  = objH().elem.peer
+                  val thisProc  = objH()
                   val scans     = if (isInput) thisProc.inputs else thisProc.outputs
                   for {
                     thisScan <- scans.get(key)
@@ -205,7 +205,7 @@ object ScansViewImpl {
       currentViewOption.foreach { case scanView =>
         val editOpt = cursor.step { implicit tx =>
           val obj     = objH()
-          val proc    = obj.elem.peer
+          val proc    = obj
           val isInput = scanView.isInput
           val key     = scanView.key
           val scans   = if (isInput) proc.inputs else proc.outputs

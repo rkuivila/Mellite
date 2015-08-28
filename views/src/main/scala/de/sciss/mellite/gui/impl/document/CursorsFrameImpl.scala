@@ -323,7 +323,7 @@ object CursorsFrameImpl {
           GUI.atomic[S, Unit]("View Elements", s"Opening root elements window for '${view.name}'") { implicit tx =>
             implicit val dtxView  = workspace.system.durableTx _ // (tx)
             implicit val dtx      = dtxView(tx)
-            // import StringEx.serializer
+            // import StringObj.serializer
             //            val nameD = ExprView.expr[D, String](elem.name)
             //            val name  = nameD.map()
             val name = CellView.const[S, String](s"${workspace.name} / ${elem.name.value}")

@@ -32,7 +32,7 @@ import Swing._
 object EnsembleViewImpl {
   def apply[S <: Sys[S]](ensObj: Ensemble.Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
                                                 cursor: stm.Cursor[S], undoManager: UndoManager): Impl[S] = {
-    val ens     = ensObj.elem.peer
+    val ens     = ensObj
     val folder  = FolderView(ens.folder)
     val folder1 = new FolderFrameImpl.ViewImpl[S](folder)
     folder1.init()
@@ -52,7 +52,7 @@ object EnsembleViewImpl {
                                         val cursor: stm.Cursor[S])
     extends ComponentHolder[Component] with EnsembleView[S] { impl =>
 
-    def ensemble(implicit tx: S#Tx): Ensemble[S] = ensembleH().elem.peer
+    def ensemble(implicit tx: S#Tx): Ensemble[S] = ensembleH()
 
     def folderView = view.peer
 

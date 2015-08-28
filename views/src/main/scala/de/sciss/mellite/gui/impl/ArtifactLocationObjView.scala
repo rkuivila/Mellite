@@ -34,7 +34,7 @@ import org.scalautils.TypeCheckedTripleEquals
 // -------- ArtifactLocation --------
 
 object ArtifactLocationObjView extends ListObjView.Factory {
-  type E[S <: evt.Sys[S]] = ArtifactLocationElem[S]
+  type E[S <: stm.Sys[S]] = ArtifactLocationElem[S]
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Location)
   val prefix    = "ArtifactLocation"
   def humanName = "File Location"
@@ -43,14 +43,14 @@ object ArtifactLocationObjView extends ListObjView.Factory {
 
   def category = ObjView.categResources
 
-  def mkListView[S <: Sys[S]](obj: ArtifactLocationElem.Obj[S])(implicit tx: S#Tx): ArtifactLocationObjView[S] with ListObjView[S] = {
-    val peer      = obj.elem.peer
+  def mkListView[S <: Sys[S]](obj: ArtifactLocation[S])(implicit tx: S#Tx): ArtifactLocationObjView[S] with ListObjView[S] = {
+    val peer      = obj
     val value     = peer.directory
     val editable  = peer.modifiableOption.isDefined
     new Impl(tx.newHandle(obj), value, isEditable = editable).initAttrs(obj)
   }
 
-  type Config[S <: evt.Sys[S]] = ObjViewImpl.PrimitiveConfig[File]
+  type Config[S <: stm.Sys[S]] = ObjViewImpl.PrimitiveConfig[File]
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                  (implicit cursor: stm.Cursor[S]): Option[Config[S]] =
@@ -66,7 +66,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
     obj :: Nil
   }
 
-  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]],
+  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, ArtifactLocation[S]],
                                 var directory: File, val isEditable: Boolean)
     extends ArtifactLocationObjView[S]
     with ListObjView /* .ArtifactLocation */[S]
@@ -76,7 +76,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
 
     override def obj(implicit tx: S#Tx) = objH()
 
-    type E[~ <: evt.Sys[~]] = ArtifactLocationElem[~]
+    type E[~ <: stm.Sys[~]] = ArtifactLocationElem[~]
 
     def factory = ArtifactLocationObjView
 
@@ -96,7 +96,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
         case _          => None
       }
       dirOpt.flatMap { newDir =>
-        val loc = obj.elem.peer
+        val loc = obj
         import TypeCheckedTripleEquals._
         if (loc.directory === newDir) None else loc.modifiableOption.map { mod =>
           EditArtifactLocation(mod, newDir)
@@ -105,10 +105,10 @@ object ArtifactLocationObjView extends ListObjView.Factory {
     }
   }
 }
-trait ArtifactLocationObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  override def obj(implicit tx: S#Tx): ArtifactLocationElem.Obj[S]
+trait ArtifactLocationObjView[S <: stm.Sys[S]] extends ObjView[S] {
+  override def obj(implicit tx: S#Tx): ArtifactLocation[S]
 
-  def objH: stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]
+  def objH: stm.Source[S#Tx, ArtifactLocation[S]]
 
   def directory: File
 }

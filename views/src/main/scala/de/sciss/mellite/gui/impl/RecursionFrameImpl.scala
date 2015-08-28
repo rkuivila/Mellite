@@ -49,14 +49,14 @@ object RecursionFrameImpl {
                          cursor: stm.Cursor[S], compiler: Code.Compiler): RecursionFrame[S] = {
     val view = new ViewImpl[S] {
       val recH      = tx.newHandle(obj)
-      val _spec     = obj.elem.peer.productSpec
+      val _spec     = obj.productSpec
       val _aural    = Mellite.auralSystem
 
       private def mkView()(implicit tx: S#Tx): ViewData = {
         val name      = obj.name
         val rec       = recH()
-        val deployed  = rec.elem.peer.deployed.elem.peer.artifact.value
-        val product   = rec.elem.peer.product.value
+        val deployed  = rec.deployed.artifact.value
+        val product   = rec.product.value
         val _depFile  = deployed
         val _prodFile = product
         ViewData(name, deployed = _depFile, product = _prodFile)
@@ -216,7 +216,7 @@ object RecursionFrameImpl {
         }
 
         val ftOpt = cursor.step { implicit tx =>
-          recH().elem.peer.transform.map(_.elem.peer.value) match {
+          recH().transform.map(_.value) match {
             case Some(ft: Code.FileTransform) => Some(ft)
             case _ => None
           }
@@ -227,7 +227,7 @@ object RecursionFrameImpl {
         def embed(): Unit = {
           processStopped()
           cursor.step { implicit tx =>
-            val product = recH().elem.peer.product
+            val product = recH().product
             product.modifiableOption match {
               case (/* Some(locM), */ Some(artM)) =>
                 val newChild  = Artifact.relativize(artM.location.directory, newFile)
@@ -255,11 +255,11 @@ object RecursionFrameImpl {
       def performBounce(file: File)(success: => Unit): Unit = {
         val (groupH, gain, span, channels, audio) = cursor.step { implicit tx =>
           // import proc.ProcGroup.serializer
-          val e         = recH().elem.peer
+          val e         = recH()
           val _groupH   = tx.newHandle(e.group)
           val _gain     = e.gain
           val _span     = e.span
-          val _audio    = e.deployed.elem.peer.value
+          val _audio    = e.deployed.value
           val _channels = e.channels
           (_groupH, _gain, _span, _channels, _audio)
         }
@@ -323,7 +323,7 @@ object RecursionFrameImpl {
 
       lazy val viewDeployed: Button = Button("View") {
         cursor.step { implicit tx =>
-          AudioFileFrame(recH().elem.peer.deployed)
+          AudioFileFrame(recH().deployed)
         }
       }
       lazy val matchDeployed: Button = Button("Match") {
@@ -331,7 +331,7 @@ object RecursionFrameImpl {
       }
       updateDeployed = Button("Update \u2713") {
         cursor.step { implicit tx =>
-          recH().elem.peer.iterate()
+          recH().iterate()
         }
       }
       lazy val viewProduct: Button = Button("View") {

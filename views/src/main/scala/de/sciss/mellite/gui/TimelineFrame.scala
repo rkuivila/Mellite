@@ -21,7 +21,7 @@ import de.sciss.mellite.gui.impl.timeline.{FrameImpl => Impl}
 import de.sciss.synth.proc.Timeline
 
 object TimelineFrame {
-  def apply[S <: Sys[S]](group: Timeline.Obj[S])
+  def apply[S <: Sys[S]](group: Timeline[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineFrame[S] =
     Impl(group)
 }

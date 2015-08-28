@@ -17,7 +17,7 @@ package gui
 import de.sciss.desktop
 import de.sciss.desktop.KeyStrokes._
 import de.sciss.desktop.Window
-import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.requireEDT
 import org.scalautils.TypeCheckedTripleEquals
 

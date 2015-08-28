@@ -40,7 +40,7 @@ object ProcGUIActions {
 
       val editsUnlink: Vec[UndoableEdit] = (pv0, obj) match {
         case (pv: ProcObjView.Timeline[S], Proc.Obj(procObj)) =>
-          val thisProc  = procObj.elem.peer
+          val thisProc  = procObj
           val edits     = Vector.newBuilder[UndoableEdit]
 
           def deleteLinks[A](isInput: Boolean): Unit = {
@@ -48,7 +48,7 @@ object ProcGUIActions {
             map.foreach { case (thisKey, links) =>
               links.foreach{ case ProcObjView.Link(thatView, thatKey) =>
                 val thisScans = if (isInput) thisProc.inputs else thisProc.outputs
-                val thatProc  = thatView.obj.elem.peer
+                val thatProc  = thatView.obj
                 val thatScans = if (isInput) thatProc.outputs else thatProc.inputs
                 thisScans.get(thisKey).foreach { thisScan =>
                   thatScans.get(thatKey).foreach { thatScan =>

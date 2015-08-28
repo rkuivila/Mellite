@@ -20,19 +20,20 @@ import de.sciss.desktop
 import de.sciss.desktop.FileDialog
 import de.sciss.file._
 import de.sciss.icons.raphael
-import de.sciss.lucre.swing.{deferTx, Window}
+import de.sciss.lucre.artifact.ArtifactLocation
+import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.model.Change
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat}
-import de.sciss.synth.proc.impl.ElemImpl
-import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, Grapheme, Obj}
+import de.sciss.synth.proc.Grapheme
 
 import scala.swing.{Component, Label}
 import scala.util.Try
 
 object AudioGraphemeObjView extends ListObjView.Factory {
-  type E[S <: evt.Sys[S]] = AudioGraphemeElem[S]
+  type E[S <: stm.Sys[S]] = Grapheme.Expr.Audio[S]
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Music)
   val prefix    = "AudioGrapheme"
   def humanName = "Audio File"
@@ -41,15 +42,15 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
   def category = ObjView.categResources
 
-  def mkListView[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])
+  def mkListView[S <: Sys[S]](obj: Grapheme.Expr.Audio[S])
                              (implicit tx: S#Tx): AudioGraphemeObjView[S] with ListObjView[S] = {
-    val value = obj.elem.peer.value
+    val value = obj.value
     new Impl(tx.newHandle(obj), value).initAttrs(obj)
   }
 
-  final case class Config1[S <: evt.Sys[S]](file: File, spec: AudioFileSpec,
-                                            location: Either[stm.Source[S#Tx, ArtifactLocationElem.Obj[S]], (String, File)])
-  type Config[S <: evt.Sys[S]] = List[Config1[S]]
+  final case class Config1[S <: stm.Sys[S]](file: File, spec: AudioFileSpec,
+                                            location: Either[stm.Source[S#Tx, ArtifactLocation[S]], (String, File)])
+  type Config[S <: stm.Sys[S]] = List[Config1[S]]
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                  (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -68,21 +69,21 @@ object AudioGraphemeObjView extends ListObjView.Factory {
   }
 
   def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = config.flatMap { cfg =>
-    val (list0: List[Obj[S]], loc /* : ArtifactLocationElem.Obj[S] */) = cfg.location match {
+    val (list0: List[Obj[S]], loc /* : ArtifactLocation[S] */) = cfg.location match {
       case Left(source) => (Nil, source())
       case Right((name, directory)) =>
         val objLoc  = ActionArtifactLocation.create(name = name, directory = directory)
         (objLoc :: Nil, objLoc)
     }
-    loc.elem.peer.modifiableOption.fold[List[Obj[S]]](list0) { locM =>
-      val audioObj = ObjectActions.mkAudioFile(locM, cfg.file, cfg.spec)
+    // loc.modifiableOption.fold[List[Obj[S]]](list0) { locM =>
+      val audioObj = ObjectActions.mkAudioFile(loc /* locM */, cfg.file, cfg.spec)
       audioObj :: list0
-    }
+    // }
   }
 
   private val timeFmt = AxisFormat.Time(hours = false, millis = true)
 
-  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
+  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Grapheme.Expr.Audio[S]],
                                 var value: Grapheme.Value.Audio)
     extends AudioGraphemeObjView[S]
     with ListObjView /* .AudioGrapheme */[S]
@@ -91,7 +92,7 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
     override def obj(implicit tx: S#Tx) = objH()
 
-    type E[~ <: evt.Sys[~]] = AudioGraphemeElem[~]
+    type E[~ <: stm.Sys[~]] = Grapheme.Expr.Audio[~]
 
     def factory = AudioGraphemeObjView
 
@@ -133,6 +134,6 @@ object AudioGraphemeObjView extends ListObjView.Factory {
     }
   }
 }
-trait AudioGraphemeObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  override def obj(implicit tx: S#Tx): AudioGraphemeElem.Obj[S]
+trait AudioGraphemeObjView[S <: stm.Sys[S]] extends ObjView[S] {
+  override def obj(implicit tx: S#Tx): Grapheme.Expr.Audio[S]
 }

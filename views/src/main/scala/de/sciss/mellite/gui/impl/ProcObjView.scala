@@ -19,7 +19,7 @@ import de.sciss.desktop
 import de.sciss.desktop.OptionPane
 import de.sciss.file._
 import de.sciss.icons.raphael
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.lucre.bitemp.{SpanLike => SpanLikeObj}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm.IdentifierMap
 import de.sciss.lucre.swing.{Window, deferTx}
@@ -38,7 +38,7 @@ import scala.language.implicitConversions
 import scala.util.control.NonFatal
 
 object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
-  type E[S <: evt.Sys[S]] = Proc.Elem[S]
+  type E[S <: stm.Sys[S]] = Proc.Elem[S]
 
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Cogs)
   val prefix    = "Proc"
@@ -51,7 +51,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   def mkListView[S <: Sys[S]](obj: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): ProcObjView[S] with ListObjView[S] =
     new ListImpl(tx.newHandle(obj)).initAttrs(obj)
 
-  type Config[S <: evt.Sys[S]] = String
+  type Config[S <: stm.Sys[S]] = String
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                  (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -71,9 +71,9 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     obj :: Nil
   }
 
-  type LinkMap[S <: evt.Sys[S]] = Map[String, Vec[ProcObjView.Link[S]]]
-  type ProcMap[S <: evt.Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcObjView[S]]
-  type ScanMap[S <: evt.Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
+  type LinkMap[S <: stm.Sys[S]] = Map[String, Vec[ProcObjView.Link[S]]]
+  type ProcMap[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcObjView[S]]
+  type ScanMap[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
 
   type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, ProcObjView[S]]
 
@@ -91,18 +91,18 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
     */
-  def mkTimelineView[S <: Sys[S]](timedID: S#ID, span: Expr[S, SpanLike], obj: Proc.Obj[S],
+  def mkTimelineView[S <: Sys[S]](timedID: S#ID, span: SpanLikeObj[S], obj: Proc[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): ProcObjView.Timeline[S] = {
     val spanV = span.value
-    import SpanLikeEx._
+    import SpanLikeObj._
     // println("--- scan keys:")
     // proc.scans.keys.foreach(println)
 
     // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
-    val proc    = obj.elem.peer
+    val proc    = obj
     val inputs  = proc.inputs
     val outputs = proc.outputs
-    val audio   = inputs.get(Proc.Obj.graphAudio).flatMap { scanW =>
+    val audio   = inputs.get(Proc.graphAudio).flatMap { scanW =>
       // println("--- has scan")
       scanW.iterator.flatMap {
         case Scan.Link.Grapheme(g) =>
@@ -180,7 +180,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   // -------- Proc --------
 
-  private final class ListImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Proc.Obj[S]])
+  private final class ListImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Proc[S]])
     extends Impl[S]
 
   private trait Impl[S <: Sys[S]]
@@ -190,7 +190,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     with ListObjViewImpl.NonEditable[S]
     with ProcObjView[S] {
 
-    override def obj(implicit tx: S#Tx): Proc.Obj[S] = objH()
+    override def obj(implicit tx: S#Tx): Proc[S] = objH()
 
     final def factory = ProcObjView
 
@@ -258,7 +258,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
 
     override def dispose()(implicit tx: S#Tx): Unit = {
-      val proc = obj.elem.peer
+      val proc = obj
       proc.inputs.iterator.foreach { case (_, scan) =>
         context.scanMap.remove(scan.id)
       }
@@ -308,20 +308,20 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  case class Link[S <: evt.Sys[S]](target: ProcObjView.Timeline[S], targetKey: String)
+  case class Link[S <: stm.Sys[S]](target: ProcObjView.Timeline[S], targetKey: String)
 
   /** A data set for graphical display of a proc. Accessors and mutators should
     * only be called on the event dispatch thread. Mutators are plain variables
     * and do not affect the underlying model. They should typically only be called
     * in response to observing a change in the model.
     */
-  trait Timeline[S <: evt.Sys[S]]
+  trait Timeline[S <: stm.Sys[S]]
     extends ProcObjView[S] with TimelineObjView[S]
     with TimelineObjView.HasMute
     with TimelineObjView.HasGain
     with TimelineObjView.HasFade {
 
-    // override type E[~ <: evt.Sys[~]] = Proc.Elem[~]
+    // override type E[~ <: stm.Sys[~]] = Proc.Elem[~]
 
     /** Convenience check for `span == Span.All` */
     def isGlobal: Boolean
@@ -354,8 +354,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     def debugString: String
   }
 }
-trait ProcObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  override def obj(implicit tx: S#Tx): Proc.Obj[S]
+trait ProcObjView[S <: stm.Sys[S]] extends ObjView[S] {
+  override def obj(implicit tx: S#Tx): Proc[S]
 
-  def objH: stm.Source[S#Tx, Proc.Obj[S]]
+  def objH: stm.Source[S#Tx, Proc[S]]
 }

@@ -23,8 +23,8 @@ object GenericObjView extends ObjView.Factory {
   val category  = "None"
   val typeID    = 0
 
-  type E[~ <: evt.Sys[~]]       = proc.Elem[~]
-  type Config[S <: evt.Sys[S]]  = Unit
+  type E[~ <: stm.Sys[~]]       = proc.Elem[~]
+  type Config[S <: stm.Sys[S]]  = Unit
 
   def hasMakeDialog: Boolean = false
 
@@ -33,7 +33,7 @@ object GenericObjView extends ObjView.Factory {
 
   def makeObj[S <: Sys[S]](config: Unit)(implicit tx: S#Tx): List[Obj[S]] = Nil
 
-  def mkTimelineView[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Obj[S])(implicit tx: S#Tx): TimelineObjView[S] = {
+  def mkTimelineView[S <: Sys[S]](id: S#ID, span: SpanLikeObj[S], obj: Obj[S])(implicit tx: S#Tx): TimelineObjView[S] = {
     val res = new TimelineImpl(tx.newHandle(obj)).initAttrs(id, span, obj)
     res
   }
@@ -41,7 +41,7 @@ object GenericObjView extends ObjView.Factory {
   def mkListView[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ListObjView[S] =
     new ListImpl(tx.newHandle(obj)).initAttrs(obj)
 
-  private trait Impl[S <: evt.Sys[S]] extends ObjViewImpl.Impl[S] {
+  private trait Impl[S <: stm.Sys[S]] extends ObjViewImpl.Impl[S] {
     def factory = GenericObjView
 
     final def value: Any = ()

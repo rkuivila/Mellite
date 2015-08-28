@@ -13,10 +13,11 @@
 
 package de.sciss.mellite.gui.edit
 
+import javax.swing.undo.{AbstractUndoableEdit, CannotRedoException, CannotUndoException, UndoableEdit}
+
 import de.sciss.lucre.stm
-import de.sciss.lucre.event.Sys
-import javax.swing.undo.{UndoableEdit, CannotRedoException, CannotUndoException, AbstractUndoableEdit}
-import de.sciss.synth.proc.{Obj, Folder}
+import de.sciss.lucre.stm.{Sys, Obj}
+import de.sciss.synth.proc.Folder
 
 // direction: true = insert, false = remove
 private[edit] class EditFolderInsertRemoveObj[S <: Sys[S]](isInsert: Boolean, nodeType: String,
@@ -74,7 +75,6 @@ private[edit] class EditFolderInsertRemoveObj[S <: Sys[S]](isInsert: Boolean, no
 object EditFolderInsertObj {
   def apply[S <: Sys[S]](nodeType: String, parent: Folder[S], index: Int, child: Obj[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    import Folder.serializer
     val parentH = tx.newHandle(parent)
     val childH  = tx.newHandle(child)
     val res     = new EditFolderInsertRemoveObj(true, nodeType, parentH, index, childH)
@@ -86,7 +86,6 @@ object EditFolderInsertObj {
 object EditFolderRemoveObj {
   def apply[S <: Sys[S]](nodeType: String, parent: Folder[S], index: Int, child: Obj[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    import Folder.serializer
     val parentH = tx.newHandle(parent)
     val childH  = tx.newHandle(child)
     val res     = new EditFolderInsertRemoveObj(false, nodeType, parentH, index, childH)

@@ -33,7 +33,7 @@ object NuagesFolderViewImpl {
   def apply[S <: Sys[S]](nuagesObj: Nuages.Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
                                                    cursor: stm.Cursor[S], undoManager: UndoManager): Impl[S] = {
     de.sciss.tallin.Populate.registerActions[S]()
-    val nuages  = nuagesObj.elem.peer
+    val nuages  = nuagesObj
     val folder  = FolderView(nuages.folder)
     val folder1 = new FolderFrameImpl.ViewImpl[S](folder)
     folder1.init()
@@ -67,7 +67,7 @@ object NuagesFolderViewImpl {
 
       val ggClear = Button("Clear Timeline") {
         cursor.step { implicit tx =>
-          val tl = nuagesH().elem.peer.timeline.elem.peer
+          val tl = nuagesH().timeline
           tl.modifiableOption.foreach { tlMod =>
             tlMod.clear() // XXX TODO -- use undo manager?
           }
@@ -76,7 +76,7 @@ object NuagesFolderViewImpl {
 
       val ggPopulate = Button("Populate") {
         cursor.step { implicit tx =>
-          de.sciss.tallin.Populate(nuagesH().elem.peer, nConfig, sConfig)
+          de.sciss.tallin.Populate(nuagesH(), nConfig, sConfig)
         }
       }
 
@@ -97,7 +97,7 @@ object NuagesFolderViewImpl {
 
     private def openLive()(implicit tx: S#Tx): Option[Window[S]] = {
       import de.sciss.mellite.Mellite.auralSystem
-      val n     = nuagesH().elem.peer
+      val n     = nuagesH()
       val frame = new WindowImpl[S] {
         val view = NuagesView(n, nConfig, sConfig)
         override val undecorated = true

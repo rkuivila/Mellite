@@ -27,7 +27,7 @@ import de.sciss.desktop.UndoManager
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre
 import de.sciss.lucre.artifact.Artifact
-import de.sciss.lucre.expr.{Expr, String => StringEx}
+import de.sciss.lucre.expr.{Expr, String => StringObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.lucre.swing.impl.ComponentHolder
@@ -103,7 +103,7 @@ object FolderViewImpl {
                 objView.isUpdateVisible(u1)
               }
             case Obj.AttrAdded  (ObjKeys.attrName, StringElem.Obj(e)) =>
-              updateObjectName(obj, Some(e.elem.peer.value))
+              updateObjectName(obj, Some(e.value))
             case Obj.AttrRemoved(ObjKeys.attrName, _) =>
               updateObjectName(obj, None)
             case Obj.AttrChange (ObjKeys.attrName, _, changes) =>
@@ -131,7 +131,7 @@ object FolderViewImpl {
             val v1: Vec[MUpdate] = obj match {
               case FolderElem.Obj(objT) =>
                 upd.changes.flatMap {
-                  case Obj.ElemChange(f) => updateBranch(objT.elem.peer, f.asInstanceOf[Folder.Update[S]].changes)
+                  case Obj.ElemChange(f) => updateBranch(objT, f.asInstanceOf[Folder.Update[S]].changes)
                   case _ => Vec.empty
                 }
               case _ => Vec.empty
@@ -176,12 +176,12 @@ object FolderViewImpl {
               val text = defaultEditorJ.getText
               if (editColumn == 0) {
                 val valueOpt: Option[Expr[S, String]] /* Obj[S] */ = if (text.isEmpty || text.toLowerCase == "<unnamed>") None else {
-                  val expr = StringEx.newConst[S](text)
+                  val expr = StringObj.newConst[S](text)
                   // Some(Obj(StringElem(elem)))
                   Some(expr)
                 }
                 // val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName, valueOpt)
-                import StringEx.serializer
+                import StringObj.serializer
                 val ed = EditAttrMap.expr(s"Rename ${objView.humanName} Element", objView.obj, ObjKeys.attrName,
                   valueOpt)(StringElem[S](_))
                 Some(ed)
@@ -293,7 +293,7 @@ object FolderViewImpl {
           def isNested(c: Obj[S]): Boolean = c match {
             case FolderElem.Obj(objT) =>
               import TypeCheckedTripleEquals._
-              objT.elem.peer === newParent || objT.elem.peer.iterator.toList.exists(isNested)
+              objT === newParent || objT.iterator.toList.exists(isNested)
             case _ => false
           }
 
@@ -394,7 +394,7 @@ object FolderViewImpl {
             val editOpt = cursor.step { implicit tx =>
               val parentOpt = tdl.path.lastOption.fold(Option(treeView.root())) { nodeView =>
                 nodeView.modelData() match {
-                  case FolderElem.Obj(objT) => Some(objT.elem.peer)
+                  case FolderElem.Obj(objT) => Some(objT)
                   case _ => None
                 }
               }

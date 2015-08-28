@@ -22,11 +22,11 @@ import javax.swing.{JFormattedTextField, SpinnerNumberModel, SwingUtilities}
 import de.sciss.audiowidgets.{AxisFormat, TimelineModel}
 import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, UndoManager, Window}
 import de.sciss.file._
-import de.sciss.lucre.artifact.Artifact
-import de.sciss.lucre.expr.{Double => DoubleEx, Long => LongEx}
-import de.sciss.lucre.geom.LongSquare
+import de.sciss.lucre.artifact.{ArtifactLocation, Artifact}
+import de.sciss.lucre.expr.{DoubleObj, LongObj}
 import de.sciss.lucre.stm
-import de.sciss.lucre.swing._
+import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.swing.{defer, deferTx, requireEDT}
 import de.sciss.lucre.synth.{Buffer, Server, Synth, Sys}
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.processor.impl.ProcessorImpl
@@ -35,9 +35,8 @@ import de.sciss.span.Span.SpanOrVoid
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
-import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{ArtifactLocationElem, AudioGraphemeElem, Bounce, Code, ExprImplicits, FolderElem, Grapheme, Obj, Timeline}
-import de.sciss.synth.{SynthGraph, addToTail}
+import de.sciss.synth.proc.{Folder, Bounce, Code, Grapheme, Timeline}
+import de.sciss.synth.{proc, SynthGraph, addToTail}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.immutable.{IndexedSeq => Vec}
@@ -47,6 +46,8 @@ import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.swing.{Alignment, BoxPanel, Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Orientation, ProgressBar, RadioButton, Swing, TextField}
 import scala.util.Try
 import scala.util.control.NonFatal
+
+import proc.Implicits._
 
 object ActionBounceTimeline {
   private val DEBUG = false
@@ -60,10 +61,10 @@ object ActionBounceTimeline {
     realtime    : Boolean               = false,
     fineControl : Boolean               = false,
     importFile  : Boolean               = false,
-    location    : Option[stm.Source[S#Tx, ArtifactLocationElem.Obj[S]]] = None,
+    location    : Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None,
     transform   : Option[stm.Source[S#Tx, Code.Obj[S]]] = None
   ) {
-    def prepare(group: stm.Source[S#Tx, Timeline.Obj[S]], f: File): PerformSettings[S] = {
+    def prepare(group: stm.Source[S#Tx, Timeline[S]], f: File): PerformSettings[S] = {
       val server        = Server.Config()
       Mellite.applyAudioPrefs(server, useDevice = realtime, pickPort = realtime)
       if (fineControl) server.blockSize = 1
@@ -76,7 +77,7 @@ object ActionBounceTimeline {
 
   final case class PerformSettings[S <: Sys[S]](
     realtime: Boolean,
-    group: stm.Source[S#Tx, Timeline.Obj[S]],
+    group: stm.Source[S#Tx, Timeline[S]],
     server: Server.Config,
     gain: Gain = Gain.normalized(-0.2f),
     span: SpanLike, channels: Vec[Range.Inclusive]
@@ -98,14 +99,14 @@ object ActionBounceTimeline {
     type Res = Vec[Labeled[CodeSource[S]]]
     def loop(xs: List[Obj[S]], res: Res): Res =
       xs match {
-        case Code.Obj(objT) :: tail =>
-          val res1 = objT.elem.peer.value match {
+        case (objT: Code.Obj[S]) :: tail =>
+          val res1 = objT.value match {
             case ft: Code.FileTransform => res :+ Labeled(tx.newHandle(objT))(objT.name)
             case _ => res
           }
           loop(tail, res1)
-        case FolderElem.Obj(objT) :: tail =>
-          val res1 = loop(objT.elem.peer.iterator.toList, res)
+        case (objT: Folder[S]) :: tail =>
+          val res1 = loop(objT.iterator.toList, res)
           loop(tail, res1)
         case _ :: tail  => loop(tail, res)
         case Nil        => res
@@ -230,7 +231,7 @@ object ActionBounceTimeline {
         case ButtonClicked(_) => updateTransformEnabled()
       }
     }
-    lazy val ggTransform = new ComboBox[Labeled[stm.Source[S#Tx, Obj.T[S, Code.Elem]]]](Nil) // lazy filling
+    lazy val ggTransform = new ComboBox[Labeled[stm.Source[S#Tx, Code.Obj[S]]]](Nil) // lazy filling
     val pTransform  = new BoxPanel(Orientation.Horizontal) {
       contents ++= Seq(checkTransform, HStrut(4), ggTransform)
     }
@@ -354,7 +355,7 @@ object ActionBounceTimeline {
       case Some(f) if importFile =>
         init.location match {
           case Some(source) if cursor.step { implicit tx =>
-              val parent = source().elem.peer.directory
+              val parent = source().directory
               Try(Artifact.relativize(parent, f)).isSuccess
             } =>  // ok, keep previous location
 
@@ -410,7 +411,7 @@ object ActionBounceTimeline {
 
   def performGUI[S <: Sys[S]](document: Workspace[S],
                               settings: QuerySettings[S],
-                              group: stm.Source[S#Tx, Timeline.Obj[S]], file: File,
+                              group: stm.Source[S#Tx, Timeline[S]], file: File,
                               window: Option[Window] = None)
                              (implicit cursor: stm.Cursor[S], compiler: Code.Compiler): Unit = {
 
@@ -461,7 +462,7 @@ object ActionBounceTimeline {
       if (DEBUG) println(s"bounceDone(). hasTransform? $hasTransform")
       if (hasTransform) {
         val ftOpt = cursor.step { implicit tx =>
-          settings.transform.flatMap(_.apply().elem.peer.value match {
+          settings.transform.flatMap(_.apply().value match {
             case ft: Code.FileTransform => Some(ft)
             case _ => None
           })
@@ -498,27 +499,25 @@ object ActionBounceTimeline {
           val spec      = AudioFile.readSpec(file)
           cursor.step { implicit tx =>
             val loc       = locSource()
-            loc.elem.peer.modifiableOption.foreach { locM =>
-              val imp = ExprImplicits[S]
-              import imp._
+            // loc.modifiableOption.foreach { locM =>
               // val fileR     = Artifact.relativize(locM.directory, file)
               // val artifact  = locM.add(file)
               // val depArtif  = Artifact.Modifiable(artifact)
-              val depArtif  = locM.add(file)
-              val depOffset = LongEx  .newVar(0L)
-              val depGain   = DoubleEx.newVar(1.0)
-              val deployed  = Grapheme.Expr.Audio(depArtif, spec, depOffset, depGain)
-              val depElem   = AudioGraphemeElem(deployed)
-              val depObj    = Obj(depElem)
+              val depArtif  = Artifact(loc, file) // locM.add(file)
+              val depOffset = LongObj  .newVar[S](0L)
+              val depGain   = DoubleObj.newVar[S](1.0)
+              val deployed  = Grapheme.Expr.Audio[S](depArtif, spec, depOffset, depGain)
+              val depElem   = deployed // Grapheme.Expr.Audio(deployed)
+              val depObj    = depElem // Obj(depElem)
               depObj.name = file.base
-              val transformOpt = settings.transform.map(_.apply())
-              val recursion = Recursion(group(), settings.span, depObj, settings.gain, settings.channels, transformOpt)
-              val recElem   = Recursion.Elem(recursion)
-              val recObj    = Obj(recElem)
-              recObj.name = elemName
+              // val transformOpt = settings.transform.map(_.apply())
+//              val recursion = Recursion(group(), settings.span, depObj, settings.gain, settings.channels, transformOpt)
+//              val recElem   = Recursion.Elem(recursion)
+//              val recObj    = Obj(recElem)
+//              recObj.name = elemName
               document.rootH().addLast(depObj)
-              document.rootH().addLast(recObj)
-            }
+//              document.rootH().addLast(recObj)
+            // }
           }
 
         case _ =>
@@ -550,7 +549,7 @@ object ActionBounceTimeline {
       case sp: Span => sp
       case _ =>
         cursor.step { implicit tx =>
-          val tl = settings.group().elem.peer
+          val tl = settings.group()
           val start = settings.span match {
             case hs: Span.HasStart => hs.start
             case _ => tl.firstEvent.getOrElse(0L)

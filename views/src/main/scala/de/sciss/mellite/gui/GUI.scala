@@ -17,12 +17,12 @@ package gui
 
 import java.awt.event.{ActionEvent, ActionListener}
 import java.awt.geom.Path2D
-import javax.swing.{SwingUtilities, Icon, JComponent, KeyStroke}
+import javax.swing.{Icon, JComponent, KeyStroke, SwingUtilities}
 
-import de.sciss.desktop.{OptionPane, KeyStrokes}
+import de.sciss.desktop.{KeyStrokes, OptionPane}
 import de.sciss.icons.raphael
-import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.{defer, requireEDT}
 import de.sciss.swingplus.{DoClickAction, GroupPanel}
 import de.sciss.synth.proc.SoundProcesses

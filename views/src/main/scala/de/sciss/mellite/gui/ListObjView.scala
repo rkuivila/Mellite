@@ -16,10 +16,10 @@ package gui
 
 import javax.swing.undo.UndoableEdit
 
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.impl.ListObjViewImpl
-import de.sciss.synth.proc.Obj
 
 import scala.language.higherKinds
 import scala.swing.{Component, Label}
@@ -41,18 +41,18 @@ object ListObjView {
 
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ListObjView[S] = ListObjViewImpl(obj)
 
-//  val String    : Factory { type E[S <: evt.Sys[S]] = StringElem      [S] } = ObjViewImpl.String
-//  val Long      : Factory { type E[S <: evt.Sys[S]] = LongElem        [S] } = ObjViewImpl.Long
-//  val Double    : Factory { type E[S <: evt.Sys[S]] = DoubleElem      [S] } = ObjViewImpl.Double
-//  val Boolean   : Factory { type E[S <: evt.Sys[S]] = BooleanElem     [S] } = ObjViewImpl.Boolean
-//  val Recursion : Factory { type E[S <: evt.Sys[S]] = _Recursion.Elem [S] } = ObjViewImpl.Recursion
-//  val Folder    : Factory { type E[S <: evt.Sys[S]] = FolderElem      [S] } = ObjViewImpl.Folder
-//  val Timeline  : Factory { type E[S <: evt.Sys[S]] = _Timeline.Elem  [S] } = ObjViewImpl.Timeline
-//  val FadeSpec  : Factory { type E[S <: evt.Sys[S]] = _FadeSpec.Elem  [S] } = ObjViewImpl.FadeSpec
-//  val Ensemble  : Factory { type E[S <: evt.Sys[S]] = _Ensemble.Elem  [S] } = ObjViewImpl.Ensemble
-//  val Nuages    : Factory { type E[S <: evt.Sys[S]] = _Nuages.Elem    [S] } = ObjViewImpl.Nuages
+//  val String    : Factory { type E[S <: stm.Sys[S]] = StringElem      [S] } = ObjViewImpl.String
+//  val Long      : Factory { type E[S <: stm.Sys[S]] = LongElem        [S] } = ObjViewImpl.Long
+//  val Double    : Factory { type E[S <: stm.Sys[S]] = DoubleElem      [S] } = ObjViewImpl.Double
+//  val Boolean   : Factory { type E[S <: stm.Sys[S]] = BooleanElem     [S] } = ObjViewImpl.Boolean
+//  val Recursion : Factory { type E[S <: stm.Sys[S]] = _Recursion.Elem [S] } = ObjViewImpl.Recursion
+//  val Folder    : Factory { type E[S <: stm.Sys[S]] = FolderElem      [S] } = ObjViewImpl.Folder
+//  val Timeline  : Factory { type E[S <: stm.Sys[S]] = _Timeline.Elem  [S] } = ObjViewImpl.Timeline
+//  val FadeSpec  : Factory { type E[S <: stm.Sys[S]] = _FadeSpec.Elem  [S] } = ObjViewImpl.FadeSpec
+//  val Ensemble  : Factory { type E[S <: stm.Sys[S]] = _Ensemble.Elem  [S] } = ObjViewImpl.Ensemble
+//  val Nuages    : Factory { type E[S <: stm.Sys[S]] = _Nuages.Elem    [S] } = ObjViewImpl.Nuages
 }
-trait ListObjView[S <: evt.Sys[S]] extends ObjView[S] {
+trait ListObjView[S <: stm.Sys[S]] extends ObjView[S] {
   /** Passes in a received opaque update to ask whether the view should be repainted due to this update.
     * This is a transactional method. If the view wants to update its internal state, it should
     * do that using `deferTx` to perform mutable state changes on the EDT, and then return `true` to

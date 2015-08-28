@@ -26,7 +26,7 @@ import de.sciss.synth.proc.gui.TransportView
 import scala.swing.{Action, Component}
 
 object TimelineView {
-  def apply[S <: Sys[S]](group: Timeline.Obj[S])
+  def apply[S <: Sys[S]](group: Timeline[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undoManager: UndoManager): TimelineView[S] =
     Impl[S](group)
@@ -40,8 +40,8 @@ trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S
   def timelineModel   : TimelineModel
   def selectionModel  : TimelineObjView.SelectionModel[S]
 
-  def timelineObjH: stm.Source[S#Tx, Timeline.Obj[S]]
-  def timelineObj(implicit tx: S#Tx): Timeline.Obj[S]
+  def timelineObjH: stm.Source[S#Tx, Timeline[S]]
+  def timelineObj(implicit tx: S#Tx): Timeline[S]
 
   def canvasComponent: Component
 

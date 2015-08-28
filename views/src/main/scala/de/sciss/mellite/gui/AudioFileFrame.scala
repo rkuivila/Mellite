@@ -15,15 +15,13 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.synth.proc.{Obj, AudioGraphemeElem, AuralSystem}
-import lucre.stm
-import stm.Disposable
-import impl.audiofile.{FrameImpl => Impl}
+import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing.View
+import de.sciss.mellite.gui.impl.audiofile.{FrameImpl => Impl}
+import de.sciss.synth.proc.Grapheme
 
 object AudioFileFrame {
-  def apply[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])
+  def apply[S <: Sys[S]](obj: Grapheme.Expr.Audio[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): AudioFileFrame[S] =
     Impl(obj)
 }

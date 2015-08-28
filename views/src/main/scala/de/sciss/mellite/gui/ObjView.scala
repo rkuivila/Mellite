@@ -42,9 +42,9 @@ object ObjView {
     def icon      : Icon
     def typeID    : Int
 
-    type Config[S <: evt.Sys[S]]
+    type Config[S <: stm.Sys[S]]
 
-    type E[~ <: evt.Sys[~]] <: Elem[~]
+    type E[~ <: stm.Sys[~]] <: Elem[~]
 
     /** Whether it is possible to create an instance of the object via a GUI dialog. */
     def hasMakeDialog: Boolean
@@ -62,11 +62,11 @@ object ObjView {
     def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]]
   }
 }
-trait ObjView[S <: evt.Sys[S]] extends Disposable[S#Tx] {
+trait ObjView[S <: stm.Sys[S]] extends Disposable[S#Tx] {
   def factory: ObjView.Factory
   def humanName: String
 
-  // type E[~ <: evt.Sys[~]] <: Elem[~]
+  // type E[~ <: stm.Sys[~]] <: Elem[~]
 
   // def factory: ObjView.Factory
 

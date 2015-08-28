@@ -16,21 +16,21 @@ package gui
 package impl
 package audiofile
 
+import de.sciss.file._
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.CellView
-import de.sciss.synth.proc
-import org.scalautils.TypeCheckedTripleEquals
-import proc.{AudioGraphemeElem, Obj}
-import de.sciss.file._
 import de.sciss.lucre.synth.Sys
+import de.sciss.synth.proc
+import de.sciss.synth.proc.Grapheme
+import org.scalautils.TypeCheckedTripleEquals
 
 object FrameImpl {
-  def apply[S <: Sys[S]](obj: Obj.T[S, AudioGraphemeElem])
+  def apply[S <: Sys[S]](obj: Grapheme.Expr.Audio[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): AudioFileFrame[S] = {
     implicit val aural = Mellite.auralSystem
     val afv       = AudioFileView(obj)
     val name0     = AttrCellView.name(obj)
-    val file      = obj.elem.peer.value.artifact
+    val file      = obj.value.artifact
     val fileName  = file.base
     import TypeCheckedTripleEquals._
     val name      = name0.map { n =>

@@ -15,10 +15,10 @@ package de.sciss.mellite
 package gui
 
 import de.sciss.lucre.stm
-import de.sciss.synth.proc.Obj
-import impl.document.{AttrMapFrameImpl => Impl}
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.impl.document.{AttrMapFrameImpl => Impl}
 
 object AttrMapFrame {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],

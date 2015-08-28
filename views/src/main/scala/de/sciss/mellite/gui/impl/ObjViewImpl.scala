@@ -23,7 +23,9 @@ import de.sciss.audiowidgets.AxisFormat
 import de.sciss.desktop.OptionPane
 import de.sciss.file._
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.{Boolean => BooleanEx, Double => DoubleEx, Expr, Long => LongEx, String => StringEx}
+import de.sciss.lucre.artifact.Artifact
+import de.sciss.lucre.expr.{Boolean => BooleanObj, Double => DoubleObj, Expr, Long => LongObj, String => StringObj}
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{View, Window, deferTx}
 import de.sciss.lucre.synth.Sys
@@ -51,13 +53,13 @@ object ObjViewImpl {
 
   import scala.{Boolean => _Boolean, Double => _Double, Long => _Long}
 
-  def nameOption[S <: evt.Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Option[_String] =
-    obj.attr[StringElem](ObjKeys.attrName).map(_.value)
+  def nameOption[S <: stm.Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Option[_String] =
+    obj.attr.$[StringElem](ObjKeys.attrName).map(_.value)
 
   // -------- String --------
 
   object String extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = StringElem[S]
+    type E[S <: stm.Sys[S]] = StringElem[S]
     val icon      = raphaelIcon(raphael.Shapes.Font)
     val prefix    = "String"
     def humanName = prefix
@@ -66,7 +68,7 @@ object ObjViewImpl {
     def category = ObjView.categPrimitives
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, StringElem])(implicit tx: S#Tx): ListObjView[S] = {
-      val ex          = obj.elem.peer
+      val ex          = obj
       val value       = ex.value
       val isEditable  = ex match {
         case Expr.Var(_)  => true
@@ -76,7 +78,7 @@ object ObjViewImpl {
       new String.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
     }
 
-    type Config[S <: evt.Sys[S]] = PrimitiveConfig[_String]
+    type Config[S <: stm.Sys[S]] = PrimitiveConfig[_String]
 
     def hasMakeDialog = true
 
@@ -89,7 +91,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: (_String, _String))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
-      val obj = Obj(StringElem(StringEx.newVar(StringEx.newConst[S](value))))
+      val obj = Obj(StringElem(StringObj.newVar(StringObj.newConst[S](value))))
       obj.name = name
       obj :: Nil
     }
@@ -102,7 +104,7 @@ object ObjViewImpl {
       with ListObjViewImpl.SimpleExpr[S, _String]
       with ListObjViewImpl.StringRenderer {
 
-      type E[~ <: evt.Sys[~]] = StringElem[~]
+      type E[~ <: stm.Sys[~]] = StringElem[~]
 
       def factory = String
 
@@ -110,7 +112,7 @@ object ObjViewImpl {
 
       def convertEditValue(v: Any): Option[_String] = Some(v.toString)
 
-      def expr(implicit tx: S#Tx) = objH().elem.peer
+      def expr(implicit tx: S#Tx) = objH()
 
       def testValue(v: Any): Option[_String] = v match {
         case s: _String => Some(s)
@@ -122,7 +124,7 @@ object ObjViewImpl {
   // -------- Long --------
 
   object Long extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = LongElem[S]
+    type E[S <: stm.Sys[S]] = LongElem[S]
     val icon      = raphaelIcon(Shapes.IntegerNumbers)  // XXX TODO
     val prefix    = "Long"
     def humanName = prefix
@@ -132,7 +134,7 @@ object ObjViewImpl {
     def category = ObjView.categPrimitives
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, LongElem])(implicit tx: S#Tx): ListObjView[S] = {
-      val ex          = obj.elem.peer
+      val ex          = obj
       val value       = ex.value
       val isEditable  = ex match {
         case Expr.Var(_)  => true
@@ -142,7 +144,7 @@ object ObjViewImpl {
       new Long.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
     }
 
-    type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Long]
+    type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Long]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -153,7 +155,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: (String, _Long))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
-      val obj = Obj(LongElem(LongEx.newVar(LongEx.newConst[S](value))))
+      val obj = Obj(LongElem(LongObj.newVar(LongObj.newConst[S](value))))
       obj.name = name
       obj :: Nil
     }
@@ -166,13 +168,13 @@ object ObjViewImpl {
       with ListObjViewImpl.SimpleExpr[S, _Long]
       with ListObjViewImpl.StringRenderer {
 
-      type E[~ <: evt.Sys[~]] = LongElem[~]
+      type E[~ <: stm.Sys[~]] = LongElem[~]
 
       def factory = Long
 
-      def exprType = LongEx
+      def exprType = LongObj
 
-      def expr(implicit tx: S#Tx): Expr[S, _Long] = objH().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Long] = objH()
 
       def convertEditValue(v: Any): Option[_Long] = v match {
         case num: _Long => Some(num)
@@ -189,7 +191,7 @@ object ObjViewImpl {
   // -------- Double --------
 
   object Double extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = DoubleElem[S]
+    type E[S <: stm.Sys[S]] = DoubleElem[S]
     val icon      = raphaelIcon(Shapes.RealNumbers)
     val prefix    = "Double"
     def humanName = prefix
@@ -199,7 +201,7 @@ object ObjViewImpl {
     def category = ObjView.categPrimitives
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, DoubleElem])(implicit tx: S#Tx): ListObjView[S] = {
-      val ex          = obj.elem.peer
+      val ex          = obj
       val value       = ex.value
       val isEditable  = ex match {
         case Expr.Var(_)  => true
@@ -209,7 +211,7 @@ object ObjViewImpl {
       new Double.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
     }
 
-    type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Double]
+    type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Double]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -220,7 +222,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: (String, _Double))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
-      val obj = Obj(DoubleElem(DoubleEx.newVar(DoubleEx.newConst[S](value))))
+      val obj = Obj(DoubleElem(DoubleObj.newVar(DoubleObj.newConst[S](value))))
       obj.name = name
       obj :: Nil
     }
@@ -232,13 +234,13 @@ object ObjViewImpl {
       with ListObjViewImpl.SimpleExpr[S, _Double]
       with ListObjViewImpl.StringRenderer {
 
-      type E[~ <: evt.Sys[~]] = DoubleElem[~]
+      type E[~ <: stm.Sys[~]] = DoubleElem[~]
 
       def factory = Double
 
-      def exprType = DoubleEx
+      def exprType = DoubleObj
 
-      def expr(implicit tx: S#Tx): Expr[S, _Double] = objH().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Double] = objH()
 
       def convertEditValue(v: Any): Option[_Double] = v match {
         case num: _Double => Some(num)
@@ -255,7 +257,7 @@ object ObjViewImpl {
   // -------- Boolean --------
 
   object Boolean extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = BooleanElem[S]
+    type E[S <: stm.Sys[S]] = BooleanElem[S]
     val icon      = raphaelIcon(Shapes.BooleanNumbers)
     val prefix    = "Boolean"
     def humanName = prefix
@@ -265,7 +267,7 @@ object ObjViewImpl {
     def category = ObjView.categPrimitives
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, BooleanElem])(implicit tx: S#Tx): ListObjView[S] = {
-      val ex          = obj.elem.peer
+      val ex          = obj
       val value       = ex.value
       val isEditable  = ex match {
         case Expr.Var(_)  => true
@@ -275,7 +277,7 @@ object ObjViewImpl {
       new Boolean.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
     }
 
-    type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Boolean]
+    type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Boolean]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -285,7 +287,7 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: (String, _Boolean))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
-      val obj = Obj(BooleanElem(BooleanEx.newVar(BooleanEx.newConst[S](value))))
+      val obj = Obj(BooleanElem(BooleanObj.newVar(BooleanObj.newConst[S](value))))
       obj.name = name
       obj :: Nil
     }
@@ -295,21 +297,21 @@ object ObjViewImpl {
                                   override val isEditable: _Boolean, val isViewable: Boolean)
       extends ListObjView /* .Boolean */[S]
       with ObjViewImpl.Impl[S]
-      with ListObjViewImpl.BooleanExprLike[S]
+      with ListObjViewImpl.BooleanObjprLike[S]
       with ListObjViewImpl.SimpleExpr[S, _Boolean] {
 
-      type E[~ <: evt.Sys[~]] = BooleanElem[~]
+      type E[~ <: stm.Sys[~]] = BooleanElem[~]
 
       def factory = Boolean
 
-      def expr(implicit tx: S#Tx): Expr[S, _Boolean] = objH().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Boolean] = objH()
     }
   }
 
   // -------- Color --------
 
   object Color extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = _Color.Elem[S]
+    type E[S <: stm.Sys[S]] = _Color.Elem[S]
     val icon      = raphaelIcon(raphael.Shapes.Paint)
     val prefix    = "Color"
     def humanName = prefix
@@ -319,7 +321,7 @@ object ObjViewImpl {
     def hasMakeDialog = true
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _Color.Elem])(implicit tx: S#Tx): ListObjView[S] = {
-      val ex          = obj.elem.peer
+      val ex          = obj
       val value       = ex.value
       val isEditable  = ex match {
         case Expr.Var(_)  => true
@@ -328,7 +330,7 @@ object ObjViewImpl {
       new Color.Impl(tx.newHandle(obj), value, isEditable0 = isEditable).initAttrs(obj)
     }
 
-    type Config[S <: evt.Sys[S]] = PrimitiveConfig[_Color]
+    type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Color]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                    (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -377,7 +379,7 @@ object ObjViewImpl {
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.SimpleExpr[S, _Color] {
 
-      type E[~ <: evt.Sys[~]] = _Color.Elem[~]
+      type E[~ <: stm.Sys[~]] = _Color.Elem[~]
 
       def isEditable = false    // not until we have proper editing components
 
@@ -385,7 +387,7 @@ object ObjViewImpl {
 
       def exprType = _Color.Obj
 
-      def expr(implicit tx: S#Tx): Expr[S, _Color] = objH().elem.peer
+      def expr(implicit tx: S#Tx): Expr[S, _Color] = objH()
 
       def configureRenderer(label: Label): Component = {
         // renderers are used for "stamping", so we can reuse a single object.
@@ -420,7 +422,7 @@ object ObjViewImpl {
             def apply(): Unit = {
               val colr = Color.fromAWT(chooser.color)
               val editOpt = cursor.step { implicit tx =>
-                objH().elem.peer match {
+                objH() match {
                   case Expr.Var(vr) =>
                     import _Color.Obj.{serializer, varSerializer}
                     Some(EditVar.Expr("Change Color", vr, _Color.Obj.newConst[S](colr)))
@@ -464,7 +466,7 @@ object ObjViewImpl {
   // -------- Artifact --------
 
   object Artifact extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = ArtifactElem[S]
+    type E[S <: stm.Sys[S]] = Artifact[S]
     val icon      = raphaelIcon(raphael.Shapes.PagePortrait)
     val prefix    = "Artifact"
     def humanName = "File"
@@ -473,28 +475,28 @@ object ObjViewImpl {
 
     def category = ObjView.categResources
 
-    def mkListView[S <: Sys[S]](obj: ArtifactElem.Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
-      val peer      = obj.elem.peer
+    def mkListView[S <: Sys[S]](obj: Artifact[S])(implicit tx: S#Tx): ListObjView[S] = {
+      val peer      = obj
       val value     = peer.value  // peer.child.path
       val editable  = false // XXX TODO -- peer.modifiableOption.isDefined
       new Artifact.Impl(tx.newHandle(obj), value, isEditable = editable).initAttrs(obj)
     }
 
-    type Config[S <: evt.Sys[S]] = PrimitiveConfig[File]
+    type Config[S <: stm.Sys[S]] = PrimitiveConfig[File]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = None // XXX TODO
 
     def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???
 
-    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, ArtifactElem.Obj[S]],
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Artifact[S]],
                                   var file: File, val isEditable: _Boolean)
       extends ListObjView /* .Artifact */[S]
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.StringRenderer
       with NonViewable[S] {
 
-      type E[~ <: evt.Sys[~]] = ArtifactElem[~]
+      type E[~ <: stm.Sys[~]] = Artifact[~]
 
       def factory = Artifact
 
@@ -514,7 +516,7 @@ object ObjViewImpl {
   // -------- Recursion --------
 
   object Recursion extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = _Recursion.Elem[S]
+    type E[S <: stm.Sys[S]] = _Recursion.Elem[S]
     val icon      = raphaelIcon(raphael.Shapes.Quote)
     val prefix    = "Recursion"
     def humanName = prefix
@@ -524,11 +526,11 @@ object ObjViewImpl {
     def hasMakeDialog = false
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _Recursion.Elem])(implicit tx: S#Tx): ListObjView[S] = {
-      val value     = obj.elem.peer.deployed.elem.peer.artifact.value
+      val value     = obj.deployed.artifact.value
       new Recursion.Impl(tx.newHandle(obj), value).initAttrs(obj)
     }
 
-    type Config[S <: evt.Sys[S]] = Unit
+    type Config[S <: stm.Sys[S]] = Unit
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = None
@@ -540,7 +542,7 @@ object ObjViewImpl {
       with ObjViewImpl.Impl[S]
       with ListObjViewImpl.NonEditable[S] {
 
-      type E[~ <: evt.Sys[~]] = _Recursion.Elem[~]
+      type E[~ <: stm.Sys[~]] = _Recursion.Elem[~]
 
       def factory = Recursion
 
@@ -567,7 +569,7 @@ object ObjViewImpl {
   // -------- Folder --------
 
   object Folder extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = FolderElem[S]
+    type E[S <: stm.Sys[S]] = FolderElem[S]
     def icon      = UIManager.getIcon("Tree.openIcon")  // Swing.EmptyIcon
     val prefix    = "Folder"
     def humanName = prefix
@@ -579,7 +581,7 @@ object ObjViewImpl {
     def mkListView[S <: Sys[S]](obj: Obj.T[S, FolderElem])(implicit tx: S#Tx): ListObjView[S] =
       new Folder.Impl(tx.newHandle(obj)).initAttrs(obj)
 
-    type Config[S <: evt.Sys[S]] = _String
+    type Config[S <: stm.Sys[S]] = _String
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S],window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -605,7 +607,7 @@ object ObjViewImpl {
       with ListObjViewImpl.EmptyRenderer[S]
       with ListObjViewImpl.NonEditable[S] {
 
-      type E[~ <: evt.Sys[~]] = FolderElem[~]
+      type E[~ <: stm.Sys[~]] = FolderElem[~]
 
       def factory = Folder
 
@@ -615,7 +617,7 @@ object ObjViewImpl {
                   (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
         val folderObj = objH()
         val nameView  = AttrCellView.name(folderObj)
-        Some(FolderFrame(nameView, folderObj.elem.peer))
+        Some(FolderFrame(nameView, folderObj))
       }
     }
   }
@@ -623,7 +625,7 @@ object ObjViewImpl {
   // -------- Timeline --------
 
   object Timeline extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = _Timeline.Elem[S]
+    type E[S <: stm.Sys[S]] = _Timeline.Elem[S]
     val icon      = raphaelIcon(raphael.Shapes.Ruler)
     val prefix    = "Timeline"
     def humanName = prefix
@@ -635,7 +637,7 @@ object ObjViewImpl {
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _Timeline.Elem])(implicit tx: S#Tx): ListObjView[S] =
       new Timeline.Impl(tx.newHandle(obj)).initAttrs(obj)
 
-    type Config[S <: evt.Sys[S]] = _String
+    type Config[S <: stm.Sys[S]] = _String
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -660,7 +662,7 @@ object ObjViewImpl {
       with ListObjViewImpl.EmptyRenderer[S]
       with ListObjViewImpl.NonEditable[S] {
 
-      type E[~ <: evt.Sys[~]] = _Timeline.Elem[~]
+      type E[~ <: stm.Sys[~]] = _Timeline.Elem[~]
 
       def factory = Timeline
 
@@ -689,7 +691,7 @@ object ObjViewImpl {
   // -------- FadeSpec --------
 
   object FadeSpec extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = _FadeSpec.Elem[S]
+    type E[S <: stm.Sys[S]] = _FadeSpec.Elem[S]
     val icon        = raphaelIcon(raphael.Shapes.Up)
     val prefix      = "FadeSpec"
     val humanName   = "Fade"
@@ -699,11 +701,11 @@ object ObjViewImpl {
     def hasMakeDialog   = false
 
     def mkListView[S <: Sys[S]](obj: Obj.T[S, _FadeSpec.Elem])(implicit tx: S#Tx): ListObjView[S] = {
-      val value   = obj.elem.peer.value
+      val value   = obj.value
       new FadeSpec.Impl(tx.newHandle(obj), value).initAttrs(obj)
     }
 
-    type Config[S <: evt.Sys[S]] = Unit
+    type Config[S <: stm.Sys[S]] = Unit
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -729,7 +731,7 @@ object ObjViewImpl {
       with ListObjViewImpl.NonEditable[S]
       with NonViewable[S] {
 
-      type E[~ <: evt.Sys[~]] = _FadeSpec.Elem[~]
+      type E[~ <: stm.Sys[~]] = _FadeSpec.Elem[~]
 
       def factory = FadeSpec
 
@@ -755,7 +757,7 @@ object ObjViewImpl {
   // -------- Ensemble --------
 
   object Ensemble extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = _Ensemble.Elem[S]
+    type E[S <: stm.Sys[S]] = _Ensemble.Elem[S]
     val icon        = raphaelIcon(raphael.Shapes.Cube2)
     val prefix      = "Ensemble"
     def humanName   = prefix
@@ -765,7 +767,7 @@ object ObjViewImpl {
     def hasMakeDialog   = true
 
     def mkListView[S <: Sys[S]](obj: _Ensemble.Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
-      val ens     = obj.elem.peer
+      val ens     = obj
       val playingEx = ens.playing
       val playing = playingEx.value
       val isEditable  = playingEx match {
@@ -775,7 +777,7 @@ object ObjViewImpl {
       new Ensemble.Impl(tx.newHandle(obj), playing = playing, isEditable = isEditable).initAttrs(obj)
     }
 
-    final case class Config[S <: evt.Sys[S]](name: String, offset: Long, playing: Boolean)
+    final case class Config[S <: stm.Sys[S]](name: String, offset: Long, playing: Boolean)
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -816,8 +818,8 @@ object ObjViewImpl {
 
     def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = {
       val folder    = _Folder[S] // XXX TODO - can we ask the user to pick one?
-      val offset    = LongEx   .newVar(LongEx   .newConst[S](config.offset ))
-      val playing   = BooleanEx.newVar(BooleanEx.newConst[S](config.playing))
+      val offset    = LongObj   .newVar(LongObj   .newConst[S](config.offset ))
+      val playing   = BooleanObj.newVar(BooleanObj.newConst[S](config.playing))
       val elem      = _Ensemble.Elem(_Ensemble[S](folder, offset, playing))
       val obj       = Obj(elem)
       obj.name = config.name
@@ -828,9 +830,9 @@ object ObjViewImpl {
                                   var playing: _Boolean, val isEditable: Boolean)
       extends ListObjView /* .Ensemble */[S]
       with ObjViewImpl.Impl[S]
-      with ListObjViewImpl.BooleanExprLike[S] {
+      with ListObjViewImpl.BooleanObjprLike[S] {
 
-      type E[~ <: evt.Sys[~]] = _Ensemble.Elem[~]
+      type E[~ <: stm.Sys[~]] = _Ensemble.Elem[~]
 
       def factory = Ensemble
 
@@ -838,7 +840,7 @@ object ObjViewImpl {
 
       protected def exprValue: _Boolean = playing
       protected def exprValue_=(x: _Boolean): Unit = playing = x
-      protected def expr(implicit tx: S#Tx): Expr[S, _Boolean] = objH().elem.peer.playing
+      protected def expr(implicit tx: S#Tx): Expr[S, _Boolean] = objH().playing
 
       def value: Any = ()
 
@@ -862,7 +864,7 @@ object ObjViewImpl {
   // -------- Nuages --------
 
   object Nuages extends ListObjView.Factory {
-    type E[S <: evt.Sys[S]] = _Nuages.Elem[S]
+    type E[S <: stm.Sys[S]] = _Nuages.Elem[S]
     val icon        = raphaelIcon(raphael.Shapes.CloudWhite)
     val prefix      = "Nuages"
     val humanName   = "Wolkenpumpe"
@@ -874,7 +876,7 @@ object ObjViewImpl {
     def mkListView[S <: Sys[S]](obj: _Nuages.Obj[S])(implicit tx: S#Tx): ListObjView[S] =
       new Nuages.Impl(tx.newHandle(obj)).initAttrs(obj)
 
-    type Config[S <: evt.Sys[S]] = _String
+    type Config[S <: stm.Sys[S]] = _String
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
@@ -899,7 +901,7 @@ object ObjViewImpl {
       with ListObjViewImpl.NonEditable[S]
       with ListObjViewImpl.EmptyRenderer[S] {
 
-      type E[~ <: evt.Sys[~]] = _Nuages.Elem[~]
+      type E[~ <: stm.Sys[~]] = _Nuages.Elem[~]
 
       def factory = Nuages
 
@@ -939,7 +941,7 @@ object ObjViewImpl {
 
   def raphaelIcon(shape: Path2D => Unit): Icon = raphael.Icon(16)(shape)
 
-  trait Impl[S <: evt.Sys[S]] extends ObjView[S] {
+  trait Impl[S <: stm.Sys[S]] extends ObjView[S] {
     override def toString = s"ElementView.${factory.prefix}(name = $name)"
 
     def objH: stm.Source[S#Tx, Obj[S]]
@@ -967,7 +969,7 @@ object ObjViewImpl {
   }
 
   /** A trait that when mixed in provides `isViewable` and `openView` as non-op methods. */
-  trait NonViewable[S <: evt.Sys[S]] {
+  trait NonViewable[S <: stm.Sys[S]] {
     def isViewable: _Boolean = false
 
     def openView(parent: Option[Window[S]])

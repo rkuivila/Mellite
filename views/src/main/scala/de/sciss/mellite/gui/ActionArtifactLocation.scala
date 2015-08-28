@@ -15,19 +15,21 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.lucre.artifact.{ArtifactLocation, Artifact}
-import de.sciss.synth.proc.{ArtifactLocationElem, Obj, Folder, FolderElem}
-import de.sciss.lucre.stm
-import org.scalautils.TypeCheckedTripleEquals
-import collection.immutable.{IndexedSeq => Vec}
-import scala.util.Try
-import de.sciss.desktop.{OptionPane, Window, FileDialog}
-import scala.swing.Dialog
+import de.sciss.desktop.{FileDialog, OptionPane, Window}
 import de.sciss.file._
+import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
+import de.sciss.lucre.stm
+import de.sciss.lucre.stm.{Obj, Sys}
 import de.sciss.swingplus.Labeled
 import de.sciss.synth.proc
+import de.sciss.synth.proc.Folder
+import org.scalautils.TypeCheckedTripleEquals
+
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.swing.Dialog
+import scala.util.Try
+
 import proc.Implicits._
-import de.sciss.lucre.event.Sys
 
 object ActionArtifactLocation {
   //  sealed trait QueryResult
@@ -40,23 +42,23 @@ object ActionArtifactLocation {
   //                          root: stm.Source[S#Tx, Folder[S]], file: File,
   //                          folder: Option[stm.Source[S#Tx, Obj.T[S, FolderElem]]] = None,
   //                          window: Option[desktop.Window] = None)
-  //                        (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]] = {
+  //                        (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, ArtifactLocation[S]]] = {
   //    query(root = root, file = file, window = window).map { either =>
   //      either.fold(identity) { case (name, directory) => create(name = name, directory = directory) }
   //    }
 
-  type LocationSource [S <: Sys[S]] = stm.Source[S#Tx, Obj.T[S, ArtifactLocationElem]]
+  type LocationSource [S <: Sys[S]] = stm.Source[S#Tx, ArtifactLocation[S]]
   type QueryResult    [S <: Sys[S]] = Either[LocationSource[S], (String, File)]
 
   def merge[S <: Sys[S]](result: QueryResult[S])
-                        (implicit tx: S#Tx): Option[(Option[Obj[S]], ArtifactLocation.Modifiable[S])] = {
+                        (implicit tx: S#Tx): Option[(Option[Obj[S]], ArtifactLocation[S])] = {
     val (list0, loc) = result match {
       case Left(source) => (None, source())
       case Right((name, directory)) =>
         val locM = create(name, directory)
         (Some(locM), locM)
     }
-    loc.elem.peer.modifiableOption.map(list0 -> _)
+    Some(list0 -> loc) // loc.modifiableOption.map(list0 -> _)
   }
 
   def query[S <: Sys[S]](
@@ -102,14 +104,14 @@ object ActionArtifactLocation {
         xs match {
           case head :: tail =>
             val res1 = head match {
-              case ArtifactLocationElem.Obj(objT) =>
-                val parent = objT.elem.peer.directory
+              case objT: ArtifactLocation[S] =>
+                val parent = objT.directory
                 if (Try(Artifact.relativize(parent, file)).isSuccess) {
                   res :+ Labeled(tx.newHandle(objT))(objT.name)
                 } else res
 
-              case FolderElem.Obj(objT) =>
-                loop(objT.elem.peer.iterator.toList, res)
+              case objT: Folder[S] =>
+                loop(objT.iterator.toList, res)
 
               case _ => res
             }
@@ -141,11 +143,9 @@ object ActionArtifactLocation {
     }
   }
 
-  def create[S <: Sys[S]](name: String, directory: File)(implicit tx: S#Tx): Obj.T[S, ArtifactLocationElem] = {
-    val peer  = ArtifactLocation[S](directory)
-    val elem  = ArtifactLocationElem(peer)
-    val obj   = Obj(elem)
-    obj.name = name
-    obj
+  def create[S <: Sys[S]](name: String, directory: File)(implicit tx: S#Tx): ArtifactLocation[S] = {
+    val peer  = ArtifactLocation.newVar[S](directory)
+    peer.name = name
+    peer
   }
 }

@@ -31,8 +31,8 @@ import de.sciss.desktop.{UndoManager, Window}
 import de.sciss.fingertree.RangedSeq
 import de.sciss.icons.raphael
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
-import de.sciss.lucre.bitemp.{BiGroup, SpanLike => SpanLikeEx}
-import de.sciss.lucre.expr.{Int => IntEx}
+import de.sciss.lucre.bitemp.{BiGroup, SpanLike => SpanLikeObj}
+import de.sciss.lucre.expr.{Int => IntObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Cursor, Disposable}
 import de.sciss.lucre.swing.deferTx
@@ -104,15 +104,15 @@ object TimelineViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  private type TimedProc[S <: Sys[S]] = BiGroup.TimedElem[S, Proc.Obj[S]]
+  private type TimedProc[S <: Sys[S]] = BiGroup.TimedElem[S, Proc[S]]
 
-  def apply[S <: Sys[S]](obj: Timeline.Obj[S])
+  def apply[S <: Sys[S]](obj: Timeline[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undo: UndoManager): TimelineView[S] = {
     val sampleRate  = Timeline.SampleRate
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
-    val timeline    = obj.elem.peer
+    val timeline    = obj
     val timelineH   = tx.newHandle(obj)
 
     var disposables = List.empty[Disposable[S#Tx]]
@@ -192,8 +192,8 @@ object TimelineViewImpl {
     }
 
     def trackPositionChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val trackIdxNow = timed.value.attr[IntElem](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
-      val trackHNow   = timed.value.attr[IntElem](TimelineObjView.attrTrackHeight).fold(4)(_.value)
+      val trackIdxNow = timed.value.attr.$[IntElem](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
+      val trackHNow   = timed.value.attr.$[IntElem](TimelineObjView.attrTrackHeight).fold(4)(_.value)
       if (DEBUG) println(s"trackPositionChanged($timed) - $trackIdxNow - $trackHNow")
       tlView.objMoved(timed, spanCh = Change(Span.Void, Span.Void),
         trackCh = Some(trackIdxNow -> trackHNow))
@@ -212,7 +212,7 @@ object TimelineViewImpl {
       }
 
     def scanInAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      val proc = timed.value.elem.peer
+      val proc = timed.value
       proc.inputs.get(name).foreach { scan =>
         scan.iterator.foreach {
           case Scan.Link.Scan(peer) =>
@@ -223,7 +223,7 @@ object TimelineViewImpl {
     }
 
     def scanOutAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      val proc = timed.value.elem.peer
+      val proc = timed.value
       proc.outputs.get(name).foreach { scan =>
         scan.iterator.foreach {
           case Scan.Link.Scan(peer) =>
@@ -234,7 +234,7 @@ object TimelineViewImpl {
     }
 
     def scanInRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      val proc = timed.value.elem.peer
+      val proc = timed.value
       proc.inputs.get(name).foreach { scan =>
         scan.iterator.foreach {
           case Scan.Link.Scan(peer) =>
@@ -245,7 +245,7 @@ object TimelineViewImpl {
     }
 
     def scanOutRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      val proc = timed.value.elem.peer
+      val proc = timed.value
       proc.outputs.get(name).foreach { scan =>
         scan.iterator.foreach {
           case Scan.Link.Scan(peer) =>
@@ -286,7 +286,7 @@ object TimelineViewImpl {
                       scanUpdates.foreach {
 //                        case Scan.GraphemeChange(grapheme, segments) =>
 //                          import TypeCheckedTripleEquals._
-//                          if (name === Proc.Obj.graphAudio) {
+//                          if (name === Proc.graphAudio) {
 //                            // XXX TODO: This doesn't work. Somehow we get a segment that _ends_ at 0L
 //                            val segmOpt = segments.find(_.span.contains(0L)) match {
 //                              case Some(segm: Grapheme.Segment.Audio) => Some(segm)
@@ -328,7 +328,7 @@ object TimelineViewImpl {
     tlView
   }
 
-  private final class Impl[S <: Sys[S]](val timelineObjH  : stm.Source[S#Tx, Timeline.Obj[S]],
+  private final class Impl[S <: Sys[S]](val timelineObjH  : stm.Source[S#Tx, Timeline[S]],
                                         val viewMap       : TimelineObjView.Map[S],
                                         val scanMap       : ProcObjView.ScanMap[S],
                                         val timelineModel : TimelineModel,
@@ -363,7 +363,7 @@ object TimelineViewImpl {
     private lazy val toolAudition = TrackTool.audition[S](canvasView, this)
 
     def timelineObj     (implicit tx: S#Tx) = timelineObjH()
-    def plainGroup(implicit tx: S#Tx) = timelineObj.elem.peer
+    def plainGroup(implicit tx: S#Tx) = timelineObj
 
     def window: Window = component.peer.getClientProperty("de.sciss.mellite.Window").asInstanceOf[Window]
 
@@ -755,7 +755,7 @@ object TimelineViewImpl {
         val (span, obj) = ProcActions.mkAudioRegion(time = tlSpan,
           grapheme = grapheme, gOffset = drag.selection.start /*, bus = None */) // , bus = ad.bus.map(_.apply().entity))
         val track = canvasView.screenToTrack(drop.y)
-        obj.attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(IntEx.newConst(track)))))
+        obj.attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntObj.newVar(IntObj.newConst(track)))))
         val edit = EditTimelineInsertObj("Audio Region", groupM, span, obj)
         edit
       }
@@ -789,7 +789,7 @@ object TimelineViewImpl {
       val editOpt: Option[UndoableEdit] = drop.drag match {
         case ad: DnD.AudioDrag[S] =>
           step { implicit tx =>
-            insertAudioRegion(drop, ad, ad.source().elem.peer)
+            insertAudioRegion(drop, ad, ad.source())
           }
 
         case ed: DnD.ExtAudioRegionDrag[S] =>
@@ -797,7 +797,7 @@ object TimelineViewImpl {
           val resOpt = step { implicit tx =>
             val ex = ObjectActions.findAudioFile(workspace.rootH(), file)
             ex.flatMap { grapheme =>
-              insertAudioRegion(drop, ed, grapheme.elem.peer)
+              insertAudioRegion(drop, ed, grapheme)
             }
           }
 
@@ -812,7 +812,7 @@ object TimelineViewImpl {
                     val obj     = ObjectActions.mkAudioFile(locM, file, spec)
                     val edits0  = list0.map(obj => EditFolderInsertObj("Location"  , folder, folder.size, obj)).toList
                     val edits1  = edits0 :+        EditFolderInsertObj("Audio File", folder, folder.size, obj)
-                    val edits2  = insertAudioRegion(drop, ed, obj.elem.peer).fold(edits1)(edits1 :+ _)
+                    val edits2  = insertAudioRegion(drop, ed, obj).fold(edits1)(edits1 :+ _)
                     CompoundEdit(edits2, "Insert Audio Region")
                   }
                 }
@@ -821,7 +821,7 @@ object TimelineViewImpl {
           }
 
         case DnD.ObjectDrag(_, view: IntObjView[S]) => withRegions { implicit tx => regions =>
-          val intExpr = view.obj.elem.peer
+          val intExpr = view.obj
           Edits.setBus[S](regions.map(_.obj), intExpr)
         }
 
@@ -835,7 +835,7 @@ object TimelineViewImpl {
           plainGroup.modifiableOption.map { group =>
             val length  = defaultDropLength(view, inProgress = false)
             val span    = Span(drop.frame, drop.frame + length)
-            val spanEx  = SpanLikeEx.newVar[S](SpanLikeEx.newConst(span))
+            val spanEx  = SpanLikeObj.newVar[S](SpanLikeObj.newConst(span))
             EditTimelineInsertObj(view.humanName, group, spanEx, view.obj)
           }
           // CompoundEdit(edits, "Insert Objects")

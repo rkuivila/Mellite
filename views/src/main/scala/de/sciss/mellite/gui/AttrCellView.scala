@@ -14,11 +14,11 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.expr.{ExprType, Expr}
+import de.sciss.lucre.expr.{StringObj, Expr}
+import de.sciss.lucre.stm.{Obj, Sys}
 import de.sciss.lucre.swing.CellView
-import de.sciss.synth.proc.{ObjKeys, StringElem, Elem, Obj}
-import impl.{AttrCellViewImpl => Impl}
+import de.sciss.mellite.gui.impl.{AttrCellViewImpl => Impl}
+import de.sciss.synth.proc.ObjKeys
 
 import scala.language.higherKinds
 
@@ -30,7 +30,7 @@ object AttrCellView {
   }
 
   def name[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): CellView[S#Tx, String] = {
-    implicit val stringEx = de.sciss.lucre.expr.String
-    apply[S, String, StringElem](obj, ObjKeys.attrName).map(_.getOrElse("<unnamed>"))
+    implicit val stringEx = StringObj
+    apply[S, String, StringObj](obj, ObjKeys.attrName).map(_.getOrElse("<unnamed>"))
   }
 }

@@ -18,11 +18,11 @@ package edit
 import de.sciss.file.File
 import de.sciss.lucre.artifact.ArtifactLocation
 import de.sciss.lucre.{stm, event => evt}
-import evt.Sys
+import stm.Sys
 import javax.swing.undo.{UndoableEdit, AbstractUndoableEdit}
 
 object EditArtifactLocation {
-  def apply[S <: Sys[S]](obj: ArtifactLocation.Modifiable[S], directory: File)
+  def apply[S <: Sys[S]](obj: ArtifactLocation[S], directory: File)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val before    = obj.directory
     val objH      = tx.newHandle(obj)
@@ -31,7 +31,7 @@ object EditArtifactLocation {
     res
   }
 
-  private[edit] final class Impl[S <: Sys[S]](objH  : stm.Source[S#Tx, ArtifactLocation.Modifiable[S]],
+  private[edit] final class Impl[S <: Sys[S]](objH  : stm.Source[S#Tx, ArtifactLocation[S]],
                                               before: File, now: File)(implicit cursor: stm.Cursor[S])
     extends AbstractUndoableEdit {
 

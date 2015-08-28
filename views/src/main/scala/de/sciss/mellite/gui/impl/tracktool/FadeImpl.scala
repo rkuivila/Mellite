@@ -66,7 +66,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     result
   }
 
-  protected def commitObj(drag: Fade)(span: Expr[S, SpanLike], obj: Obj[S])
+  protected def commitObj(drag: Fade)(span: SpanLikeObj[S], obj: Obj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     import FadeSpec.Expr.serializer
     import drag._

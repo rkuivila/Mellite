@@ -23,11 +23,11 @@ import javax.swing.TransferHandler._
 
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.file._
-import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.span.Span
-import de.sciss.synth.proc.{AudioGraphemeElem, Obj, Proc}
+import de.sciss.synth.proc.{Grapheme, Proc}
 
 import scala.swing.Component
 import scala.util.Try
@@ -40,15 +40,15 @@ object DnD {
   sealed trait AudioDragLike[S <: Sys[S]] extends Drag[S] {
     def selection: Span
   }
-  final case class AudioDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]],
+  final case class AudioDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Grapheme.Expr.Audio[S]],
                                           selection: Span)
     extends AudioDragLike[S]
 
   //  final case class IntDrag [S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]
-  //  final case class CodeDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Code.Elem]]) extends Drag[S]
+  //  final case class CodeDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Code.Obj[S]]) extends Drag[S]
   //  final case class ProcDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Proc.Elem]]) extends Drag[S]
 
-  final case class GlobalProcDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Proc.Obj[S]])
+  final case class GlobalProcDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Proc[S]])
     extends Drag[S]
 
   final case class ObjectDrag[S <: SSys[S]](workspace: Workspace[S], view: ObjView[S]) extends Drag[S]

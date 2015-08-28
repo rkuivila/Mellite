@@ -16,35 +16,34 @@ package gui
 package impl
 package interpreter
 
-import de.sciss.desktop.{KeyStrokes, UndoManager}
-import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.scalainterpreter.{InterpreterPane, Interpreter, CodePane}
-import de.sciss.swingplus.SpinningProgressBar
-import scala.collection.mutable
-import scala.concurrent.Future
-import scala.swing.event.Key
-import scala.swing.{FlowPanel, Component, Action, BorderPanel, Button, Swing}
-import Swing._
-import de.sciss.lucre.stm
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.synth.expr.ExprImplicits
-import scala.util.Failure
-import scala.util.Success
-import de.sciss.syntaxpane.SyntaxDocument
-import de.sciss.icons.raphael
-import de.sciss.swingplus.Implicits._
 import java.awt.Color
+import java.beans.{PropertyChangeEvent, PropertyChangeListener}
 import javax.swing.Icon
 import javax.swing.event.{UndoableEditEvent, UndoableEditListener}
-import de.sciss.lucre.expr.{Expr, String => StringEx}
-import java.beans.{PropertyChangeEvent, PropertyChangeListener}
-import de.sciss.model.impl.ModelImpl
+import javax.swing.undo.UndoableEdit
+
+import de.sciss.desktop.edit.CompoundEdit
+import de.sciss.desktop.{KeyStrokes, UndoManager}
+import de.sciss.icons.raphael
+import de.sciss.lucre.expr.{Expr, StringObj}
+import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Sys
+import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{defer, deferTx, requireEDT}
-import javax.swing.undo.UndoableEdit
-import de.sciss.synth.proc.{Code, Obj}
+import de.sciss.model.impl.ModelImpl
+import de.sciss.scalainterpreter.{CodePane, Interpreter, InterpreterPane}
+import de.sciss.swingplus.Implicits._
+import de.sciss.swingplus.SpinningProgressBar
+import de.sciss.syntaxpane.SyntaxDocument
+import de.sciss.synth.proc.Code
 
+import scala.collection.mutable
+import scala.concurrent.Future
+import scala.swing.Swing._
+import scala.swing.event.Key
+import scala.swing.{Action, BorderPanel, Button, Component, FlowPanel, Swing}
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 object CodeViewImpl {
@@ -62,23 +61,22 @@ object CodeViewImpl {
     })
   }
 
-  def apply[S <: Sys[S]](obj: Obj.T[S, Code.Elem], code0: Code, hasExecute: Boolean)
+  def apply[S <: Sys[S]](obj: Code.Obj[S], code0: Code, hasExecute: Boolean)
                         (handlerOpt: Option[CodeView.Handler[S, code0.In, code0.Out]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          compiler: Code.Compiler,
                          undoManager: UndoManager): CodeView[S] = {
     // val source0 = sourceCode.value
     // val objH        = tx.newHandle(obj)
-    val codeEx      = obj.elem.peer
+    val codeEx      = obj
     val codeVarHOpt = codeEx match {
       case Expr.Var(vr) =>
-        import Code.Expr.varSerializer
         Some(tx.newHandle(vr))
       case _            => None
     }
     // val code0   = codeEx.value
     // val source0 = code0.source
-    // val sourceH = tx.newHandle(sourceCode)(StringEx.varSerializer[S])
+    // val sourceH = tx.newHandle(sourceCode)(StringObj.varSerializer[S])
     val res     = new Impl[S, code0.In, code0.Out](codeVarHOpt, code0, handlerOpt, hasExecute = hasExecute)
     res.init()
     res
@@ -144,12 +142,9 @@ object CodeViewImpl {
 
     private def saveSource(newSource: String)(implicit tx: S#Tx): Option[UndoableEdit] = {
       val expr  = ExprImplicits[S]
-      import expr._
-      // import StringEx.{varSerializer, serializer}
+      // import StringObj.{varSerializer, serializer}
       val imp = ExprImplicits[S]
-      import imp._
       codeVarHOpt.map { source =>
-        import Code.Expr.{serializer, varSerializer}
         val newCode = Code.Expr.newConst[S](code.updateSource(newSource))
         EditVar.Expr[S, Code]("Change Source Code", source(), newCode)
       }

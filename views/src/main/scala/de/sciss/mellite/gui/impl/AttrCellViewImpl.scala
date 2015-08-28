@@ -15,15 +15,13 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.expr.{ExprType, Expr}
+import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.stm.{Sys, Obj, Disposable}
 import de.sciss.lucre.swing.CellView
 import de.sciss.lucre.swing.impl.CellViewImpl
 import de.sciss.model.Change
 import de.sciss.serial.Serializer
-import de.sciss.synth.proc.{Elem, Obj}
 
 import scala.language.higherKinds
 
@@ -65,7 +63,7 @@ object AttrCellViewImpl {
       }
 
     def repr(implicit tx: S#Tx): Repr = {
-      val opt = h().attr[E](key)
+      val opt = h().attr.$[E](key)
       opt.map {
         case Expr.Var(vr) => vr()
         case other => other

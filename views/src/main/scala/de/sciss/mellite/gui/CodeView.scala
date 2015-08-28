@@ -16,15 +16,15 @@ package gui
 
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.lucre.event.Sys
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Disposable
-import de.sciss.synth.proc.{Code, Obj}
-import impl.interpreter.{CodeViewImpl => Impl}
+import de.sciss.lucre.stm.{Sys, Disposable}
+import de.sciss.mellite.gui.impl.interpreter.{CodeViewImpl => Impl}
 import de.sciss.model.Model
-import scala.swing.Action
+import de.sciss.synth.proc.Code
+
 import scala.concurrent.Future
+import scala.swing.Action
 
 object CodeView {
   trait Handler[S <: Sys[S], In, -Out] extends Disposable[S#Tx] {

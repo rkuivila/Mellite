@@ -17,7 +17,7 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{KeyStrokes, Window}
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
+import de.sciss.lucre.bitemp.{SpanLike => SpanLikeObj}
 import de.sciss.lucre.expr.Expr
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.synth.Sys
@@ -168,7 +168,7 @@ trait TimelineActions[S <: Sys[S]] {
   // -----------
 
   protected def timelineMod(implicit tx: S#Tx): Option[Timeline.Modifiable[S]] =
-    timelineObj.elem.peer.modifiableOption
+    timelineObj.modifiableOption
 
   // ---- clear ----
   // - find the objects that overlap with the selection span
@@ -226,7 +226,7 @@ trait TimelineActions[S <: Sys[S]] {
     val oldVal    = oldSpan.value
     val rightSpan = oldVal match {
       case Span.HasStart(leftStart) =>
-        val _rightSpan  = SpanLikeEx.newVar(oldSpan())
+        val _rightSpan  = SpanLikeObj.newVar(oldSpan())
         val resize      = ProcActions.Resize(time - leftStart, 0L)
         val minStart    = timelineModel.bounds.start
         // println("----BEFORE RIGHT----")
@@ -237,7 +237,7 @@ trait TimelineActions[S <: Sys[S]] {
         _rightSpan
 
       case Span.HasStop(rightStop) =>
-        SpanLikeEx.newVar(Span(time, rightStop))
+        SpanLikeObj.newVar(Span(time, rightStop))
     }
 
     val editRemoveFadeOut = EditAttrMap("Remove Fade Out", leftObj, ObjKeys.attrFadeOut, None)
@@ -251,7 +251,7 @@ trait TimelineActions[S <: Sys[S]] {
       case Span.HasStart(leftStart) =>
         val leftSpan  = Span(leftStart, time)
         // oldSpan()     = leftSpan
-        import SpanLikeEx.{serializer, varSerializer}
+        import SpanLikeObj.{serializer, varSerializer}
         val edit = EditVar.Expr("Resize", oldSpan, leftSpan)
         Some(edit)
     }

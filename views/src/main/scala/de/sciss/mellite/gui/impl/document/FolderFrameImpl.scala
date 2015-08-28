@@ -26,7 +26,7 @@ import de.sciss.desktop.{Window, Desktop, KeyStrokes, Menu, UndoManager}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.{CellView, deferTx}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.{String => StringEx}
+import de.sciss.lucre.expr.{String => StringObj}
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
 import de.sciss.mellite.gui.impl.component.CollectionViewImpl
 import de.sciss.swingplus.{Spinner, GroupPanel}
@@ -239,11 +239,11 @@ object FolderFrameImpl {
                 val cpy = Obj.copy(orig)
                 if (append) {
                   val suffix = incLast(appendText, n)
-                  orig.attr[StringElem](ObjKeys.attrName).foreach { oldName =>
+                  orig.attr.$[StringElem](ObjKeys.attrName).foreach { oldName =>
                     val imp = ExprImplicits[S]
                     import imp._
                     val newName = oldName ++ suffix
-                    cpy.attr.put(ObjKeys.attrName, Obj(StringElem(StringEx.newVar(newName))))
+                    cpy.attr.put(ObjKeys.attrName, Obj(StringElem(StringObj.newVar(newName))))
                   }
                   // cpy.attr.name = s"${cpy.attr.name}$suffix"
                 }

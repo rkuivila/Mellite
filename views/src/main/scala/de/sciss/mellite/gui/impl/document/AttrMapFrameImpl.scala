@@ -21,12 +21,12 @@ import de.sciss.desktop.UndoManager
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.CellView
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.Workspace
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.mellite.gui.impl.component.CollectionViewImpl
-import de.sciss.mellite.Workspace
-import de.sciss.synth.proc.Obj
 
 import scala.swing.Action
 

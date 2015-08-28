@@ -18,29 +18,31 @@ package audiofile
 
 import java.awt.datatransfer.Transferable
 
+import de.sciss.audiowidgets.TimelineModel
+import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.lucre.artifact.ArtifactLocation
+import de.sciss.file.File
+import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
+import de.sciss.lucre.stm
+import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.component.DragSourceButton
+import de.sciss.span.Span
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.graph.ScanIn
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{WorkspaceHandle, Proc, Timeline, Transport, Obj, AudioGraphemeElem, AuralSystem, Grapheme, ExprImplicits}
-import de.sciss.lucre.stm
-import scala.swing.{Label, BoxPanel, Orientation, Swing, BorderPanel, Component}
-import Swing._
-import de.sciss.span.Span
-import de.sciss.{synth, sonogram}
-import de.sciss.audiowidgets.impl.TimelineModelImpl
-import de.sciss.audiowidgets.TimelineModel
-import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing._
-import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.synth.proc.{AuralSystem, Grapheme, Proc, Timeline, Transport, WorkspaceHandle}
+import de.sciss.{sonogram, synth}
+
+import scala.swing.Swing._
+import scala.swing.{BorderPanel, BoxPanel, Component, Label, Orientation, Swing}
 
 object ViewImpl {
-  def apply[S <: Sys[S]](obj0: Obj.T[S, AudioGraphemeElem])
+  def apply[S <: Sys[S]](obj0: Grapheme.Expr.Audio[S])
                         (implicit tx: S#Tx, _workspace: Workspace[S], _cursor: stm.Cursor[S],
                          aural: AuralSystem): AudioFileView[S] = {
-    val grapheme      = obj0.elem.peer
+    val grapheme      = obj0
     val graphemeV     = grapheme.value // .artifact // store.resolve(element.entity.value.artifact)
     // val sampleRate    = f.spec.sampleRate
     type I            = _workspace.I
@@ -53,12 +55,10 @@ object ViewImpl {
     val fullSpanTL    = Span(0L, numFramesTL)
 
     // ---- we go through a bit of a mess here to convert S -> I ----
-    val imp = ExprImplicits[I]
-    import imp._
-    val artifact      = obj0.elem.peer.artifact
-    val artifDir      = artifact.location.directory
-    val iLoc          = ArtifactLocation[I](artifDir)
-    val iArtifact     = iLoc.add(artifact.value)
+    val artifact      = obj0.value.artifact
+    val artifDir      = ??? : File // RRR artifact.location.directory
+    val iLoc          = ArtifactLocation.newVar[I](artifDir)
+    val iArtifact     = Artifact(iLoc, artifact) // iLoc.add(artifact.value)
     val iGrapheme     = Grapheme.Expr.Audio[I](iArtifact, graphemeV.spec, graphemeV.offset, graphemeV.gain)
     val (_, procObj)  = ProcActions.insertAudioRegion[I](timeline, time = Span(0L, numFramesTL),
       /* track = 0, */ grapheme = iGrapheme, gOffset = 0L /* , bus = None */)
@@ -67,14 +67,14 @@ object ViewImpl {
     diff.graph() = SynthGraph {
       import synth._
       import ugen._
-      val in0 = ScanIn(Proc.Obj.scanMainIn)
+      val in0 = ScanIn(Proc.scanMainIn)
       // in.poll(1, "audio-file-view")
       val in = if (graphemeV.numChannels == 1) Pan2.ar(in0) else in0  // XXX TODO
       Out.ar(0, in) // XXX TODO
     }
     val diffObj = Obj(Proc.Elem(diff))
-    procObj.elem.peer.outputs.get(Proc.Obj.scanMainOut).foreach { scanOut =>
-      scanOut.add(diff.inputs.add(Proc.Obj.scanMainIn))
+    procObj.outputs.get(Proc.scanMainOut).foreach { scanOut =>
+      scanOut.add(diff.inputs.add(Proc.scanMainIn))
     }
 
     import _workspace.inMemoryCursor
@@ -106,7 +106,7 @@ object ViewImpl {
   private abstract class Impl[S <: Sys[S], I <: Sys[I]](gainView: View[S])(implicit inMemoryBridge: S#Tx => I#Tx)
     extends AudioFileView[S] with ComponentHolder[Component] { impl =>
 
-    protected def holder       : stm.Source[S#Tx, Obj.T[S, AudioGraphemeElem]]
+    protected def holder       : stm.Source[S#Tx, Grapheme.Expr.Audio[S]]
     protected def transportView: TransportView[I]
     protected def timelineModel: TimelineModel
 
@@ -170,7 +170,7 @@ object ViewImpl {
       // sonogramView.component.requestFocus()
     }
 
-    def obj(implicit tx: S#Tx): Obj.T[S, AudioGraphemeElem] = holder()
+    def obj(implicit tx: S#Tx): Grapheme.Expr.Audio[S] = holder()
   }
 
   //  private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: Button)

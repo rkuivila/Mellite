@@ -58,7 +58,7 @@ final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   // ProcActions.resize(span, obj, drag, minStart = minStart)
 
-  protected def commitObj(drag: Resize)(span: Expr[S, SpanLike], obj: Obj[S])
+  protected def commitObj(drag: Resize)(span: SpanLikeObj[S], obj: Obj[S])
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
     Edits.resize(span, obj, drag, minStart = canvas.timelineModel.bounds.start)
 }

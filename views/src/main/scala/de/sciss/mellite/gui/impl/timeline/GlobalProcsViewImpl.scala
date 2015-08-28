@@ -25,7 +25,7 @@ import de.sciss.desktop
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{Menu, OptionPane, UndoManager}
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.{Int => IntEx}
+import de.sciss.lucre.expr.{Int => IntObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
@@ -134,7 +134,7 @@ object GlobalProcsViewImpl {
           case (3, busS: String) =>   // XXX TODO: should use spinner for editing
             Try(busS.toInt).foreach { bus =>
               atomic { implicit tx =>
-                ProcActions.setBus(pv.obj :: Nil, IntEx.newConst(bus))
+                ProcActions.setBus(pv.obj :: Nil, IntObj.newConst(bus))
               }
             }
 
@@ -244,7 +244,7 @@ object GlobalProcsViewImpl {
                   case iv: IntObjView[S] =>
                     atomic { implicit tx =>
                       val objT = iv.obj
-                      val intExpr = objT.elem.peer
+                      val intExpr = objT
                       ProcActions.setBus(pv.obj :: Nil, intExpr)
                       true
                     }
@@ -371,7 +371,7 @@ object GlobalProcsViewImpl {
 //      val itGlob = selectionModel.iterator
 //      cursor.step { implicit tx =>
 //        val scans = itGlob.flatMap { inView =>
-//          inView.obj.elem.peer.scans.get("in")
+//          inView.obj.scans.get("in")
 //        }
 //        tlSelModel.
 //      }
@@ -387,8 +387,8 @@ object GlobalProcsViewImpl {
           val outObj  = ProcActions.copy[S](inObj)
           // `copy` has already connected all scans.
           // So disconnect them if necessary.
-          if (!connect) Proc.Obj.unapply(outObj).foreach { procObj =>
-            val proc    = procObj.elem.peer
+          if (!connect) Proc.unapply(outObj).foreach { procObj =>
+            val proc    = procObj
             proc.inputs.iterator.foreach { case (_, scan) =>
               scan.iterator.foreach(scan.remove(_))
             }
@@ -414,9 +414,9 @@ object GlobalProcsViewImpl {
           outView <- seqTL
           inView  <- seqGlob
           in      = inView.obj
-          out     <- Proc.Obj.unapply(outView.obj)
-          source  <- out.elem.peer.outputs.get(Proc.Obj.scanMainOut)
-          sink    <- in .elem.peer.inputs .get(Proc.Obj.scanMainIn )
+          out     <- Proc.unapply(outView.obj)
+          source  <- out.outputs.get(Proc.scanMainOut)
+          sink    <- in .inputs .get(Proc.scanMainIn )
           if Edits.findLink(out = out, in = in).isEmpty
         } yield Edits.addLink(sourceKey = "out", source = source, sinkKey = "in", sink = sink)
         it.toList   // tricky, need to unwind transactional iterator
@@ -436,7 +436,7 @@ object GlobalProcsViewImpl {
           outView <- seqTL
           inView  <- seqGlob
           in      = inView.obj
-          out     <- Proc.Obj.unapply(outView.obj)
+          out     <- Proc.unapply(outView.obj)
           (source, sink) <- Edits.findLink(out = out, in = in)
         } yield Edits.removeLink(source = source, sink = sink)
         it.toList   // tricky, need to unwind transactional iterator
@@ -452,7 +452,7 @@ object GlobalProcsViewImpl {
       val edits   = cursor.step { implicit tx =>
         seqGlob.flatMap { inView =>
           val in = inView.obj
-          in.elem.peer.inputs.get(Proc.Obj.scanMainIn).toList.flatMap { sink =>
+          in.inputs.get(Proc.scanMainIn).toList.flatMap { sink =>
             sink.iterator.collect {
               case Scan.Link.Scan(source) => EditRemoveScanLink(source = source, sink = sink)
             } .toList

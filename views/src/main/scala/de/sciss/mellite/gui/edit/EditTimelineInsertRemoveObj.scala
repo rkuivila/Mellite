@@ -15,18 +15,18 @@ package de.sciss.mellite
 package gui
 package edit
 
+import javax.swing.undo.{AbstractUndoableEdit, UndoableEdit}
+
 import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeEx}
 import de.sciss.lucre.stm
-import de.sciss.lucre.event.Sys
-import javax.swing.undo.{UndoableEdit, AbstractUndoableEdit}
+import de.sciss.lucre.stm.{Obj, Sys}
 import de.sciss.span.SpanLike
-import de.sciss.synth.proc.{Obj, Timeline}
+import de.sciss.synth.proc.Timeline
 
 // direction: true = insert, false = remove
 private[edit] class EditTimelineInsertRemoveObj[S <: Sys[S]](direction: Boolean,
                                                            timelineH: stm.Source[S#Tx, Timeline.Modifiable[S]],
-                                                           spanH: stm.Source[S#Tx, Expr[S, SpanLike]],
+                                                           spanH: stm.Source[S#Tx, SpanLikeObj[S]],
                                                            elemH: stm.Source[S#Tx, Obj[S]])(implicit cursor: stm.Cursor[S])
   extends AbstractUndoableEdit {
 
@@ -57,9 +57,8 @@ private[edit] class EditTimelineInsertRemoveObj[S <: Sys[S]](direction: Boolean,
 }
 
 object EditTimelineInsertObj {
-  def apply[S <: Sys[S]](objType: String, timeline: Timeline.Modifiable[S], span: Expr[S, SpanLike], elem: Obj[S])
+  def apply[S <: Sys[S]](objType: String, timeline: Timeline.Modifiable[S], span: SpanLikeObj[S], elem: Obj[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    import SpanLikeEx.serializer
     val spanH     = tx.newHandle(span)
     val timelineH = tx.newHandle(timeline)
     val elemH     = tx.newHandle(elem)
@@ -70,7 +69,7 @@ object EditTimelineInsertObj {
 
   private class Impl[S <: Sys[S]](objType: String,
                                   timelineH: stm.Source[S#Tx, Timeline.Modifiable[S]],
-                                  spanH: stm.Source[S#Tx, Expr[S, SpanLike]],
+                                  spanH: stm.Source[S#Tx, SpanLikeObj[S]],
                                   elemH: stm.Source[S#Tx, Obj[S]])(implicit cursor: stm.Cursor[S])
     extends EditTimelineInsertRemoveObj[S](true, timelineH, spanH, elemH) {
 
@@ -79,9 +78,8 @@ object EditTimelineInsertObj {
 }
 
 object EditTimelineRemoveObj {
-  def apply[S <: Sys[S]](objType: String, timeline: Timeline.Modifiable[S], span: Expr[S, SpanLike], elem: Obj[S])
+  def apply[S <: Sys[S]](objType: String, timeline: Timeline.Modifiable[S], span: SpanLikeObj[S], elem: Obj[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    import SpanLikeEx.serializer
     val spanH     = tx.newHandle(span)
     val timelineH = tx.newHandle(timeline)
     val elemH     = tx.newHandle(elem)
@@ -91,7 +89,7 @@ object EditTimelineRemoveObj {
   }
 
   private class Impl[S <: Sys[S]](objType: String, timelineH: stm.Source[S#Tx, Timeline.Modifiable[S]],
-                                  spanH: stm.Source[S#Tx, Expr[S, SpanLike]],
+                                  spanH: stm.Source[S#Tx, SpanLikeObj[S]],
                                   elemH: stm.Source[S#Tx, Obj[S]])(implicit cursor: stm.Cursor[S])
     extends EditTimelineInsertRemoveObj[S](false, timelineH, spanH, elemH) {
 

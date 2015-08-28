@@ -23,11 +23,11 @@ import impl.{ScansViewImpl => Impl}
 
 object ScansView {
   final case class Drag[S <: Sys[S]](workspace: Workspace[S],
-                                     proc: stm.Source[S#Tx, Proc.Obj[S]], key: String, isInput: Boolean)
+                                     proc: stm.Source[S#Tx, Proc[S]], key: String, isInput: Boolean)
 
   final val flavor = DragAndDrop.internalFlavor[Drag[_]]
 
-  def apply[S <: Sys[S]](obj: Proc.Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
+  def apply[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
                                            workspace: Workspace[S], undoManager: UndoManager): ScansView[S] =
     Impl(obj)
 }

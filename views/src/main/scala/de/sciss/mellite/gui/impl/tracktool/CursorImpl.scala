@@ -21,7 +21,7 @@ import java.awt.event.MouseEvent
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.OptionPane
-import de.sciss.lucre.expr.{Expr, String => StringEx}
+import de.sciss.lucre.expr.{Expr, String => StringObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
@@ -64,7 +64,7 @@ final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends R
       }
     }
 
-  protected def commitObj(drag: TrackTool.Cursor)(span: Expr[S, SpanLike], obj: Obj[S])
+  protected def commitObj(drag: TrackTool.Cursor)(span: SpanLikeObj[S], obj: Obj[S])
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
-    Some(Edits.setName(obj, drag.name.map(n => StringEx.newConst(n): Expr[S, String])))
+    Some(Edits.setName(obj, drag.name.map(n => StringObj.newConst(n): Expr[S, String])))
 }

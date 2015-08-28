@@ -59,7 +59,7 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
     CompoundEdit(edits, name)
   }
 
-  protected def commitObj(drag: A)(span: Expr[S, SpanLike], proc: Obj[S])
+  protected def commitObj(drag: A)(span: SpanLikeObj[S], proc: Obj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit]
 
   protected def handleSelect (e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit

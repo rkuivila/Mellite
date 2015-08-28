@@ -15,12 +15,12 @@ package de.sciss.mellite
 package gui
 package edit
 
+import javax.swing.undo.{AbstractUndoableEdit, UndoableEdit}
+
 import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.{stm, event => evt}
+import de.sciss.lucre.stm.{Obj, Sys}
+import de.sciss.lucre.{event => evt, stm}
 import de.sciss.serial.Serializer
-import evt.Sys
-import javax.swing.undo.{UndoableEdit, AbstractUndoableEdit}
-import de.sciss.synth.proc.{Elem, AttrMap, Obj}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.language.higherKinds
@@ -46,7 +46,7 @@ object EditAttrMap {
     // that is, if there is an existing value which is a variable,
     // we do not overwrite that value, but preserve that
     // variable's current child and overwrite that variable's child.
-    val befOpt: Option[Expr[S, A]] = obj.attr[E](key)
+    val befOpt: Option[Expr[S, A]] = obj.attr.$[E](key)
     val before    = befOpt match {
       case Some(Expr.Var(vr)) => Some(vr())
       case other => other

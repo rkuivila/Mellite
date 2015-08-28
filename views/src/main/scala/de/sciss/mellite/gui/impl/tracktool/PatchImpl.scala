@@ -85,7 +85,7 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       case _ =>
     }
 
-  protected def commitObj(drag: Patch[S])(span: Expr[S, SpanLike], outObj: Obj[S])
+  protected def commitObj(drag: Patch[S])(span: SpanLikeObj[S], outObj: Obj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
     (drag.sink, outObj) match {
       case (Patch.Linked(view), Proc.Obj(out)) =>

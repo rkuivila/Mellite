@@ -14,7 +14,7 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.{SpanLikeObj, Expr}
 import de.sciss.lucre.stm.IdentifierMap
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{event => evt, stm}
@@ -26,11 +26,11 @@ import de.sciss.synth.proc.{FadeSpec, Obj, Timeline}
 import scala.language.{higherKinds, implicitConversions}
 
 object TimelineObjView {
-  type SelectionModel[S <: evt.Sys[S]] = gui.SelectionModel[S, TimelineObjView[S]]
+  type SelectionModel[S <: stm.Sys[S]] = gui.SelectionModel[S, TimelineObjView[S]]
 
   final val Unnamed = "<unnamed>"
 
-  implicit def span[S <: evt.Sys[S]](view: TimelineObjView[S]): (Long, Long) = {
+  implicit def span[S <: stm.Sys[S]](view: TimelineObjView[S]): (Long, Long) = {
     view.spanValue match {
       case Span(start, stop)  => (start, stop)
       case Span.From(start)   => (start, Long.MaxValue)
@@ -40,9 +40,9 @@ object TimelineObjView {
     }
   }
 
-  type Map[S <: evt.Sys[S]] = IdentifierMap[S#ID, S#Tx, TimelineObjView[S]]
+  type Map[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, TimelineObjView[S]]
 
-  trait Context[S <: evt.Sys[S]] {
+  trait Context[S <: stm.Sys[S]] {
     /** A map from `TimedProc` ids to their views. This is used to establish scan links. */
     def viewMap: Map[S]
     /** A map from `Scan` ids to their keys and a handle on the timed-proc's id. */
@@ -56,7 +56,7 @@ object TimelineObjView {
       * @param span     the span on the timeline
       * @param obj      the object placed on the timeline
       */
-    def mkTimelineView[S <: Sys[S]](id: S#ID, span: Expr[S, SpanLike], obj: Obj.T[S, E],
+    def mkTimelineView[S <: Sys[S]](id: S#ID, span: SpanLikeObj[S], obj: Obj.T[S, E],
                                     context: TimelineObjView.Context[S])(implicit tx: S#Tx): TimelineObjView[S]
   }
 
@@ -85,12 +85,12 @@ object TimelineObjView {
     var fadeOut: FadeSpec
   }
 }
-trait TimelineObjView[S <: evt.Sys[S]] extends ObjView[S] {
-  // def span: stm.Source[S#Tx, Expr[S, SpanLike]]
+trait TimelineObjView[S <: stm.Sys[S]] extends ObjView[S] {
+  // def span: stm.Source[S#Tx, SpanLikeObj[S]]
 
-  def spanH: stm.Source[S#Tx, Expr[S, SpanLike]]
+  def spanH: stm.Source[S#Tx, SpanLikeObj[S]]
 
-  def span(implicit tx: S#Tx): Expr[S, SpanLike]
+  def span(implicit tx: S#Tx): SpanLikeObj[S]
 
   def id(implicit tx: S#Tx): S#ID // Timeline.Timed[S]
 
