@@ -17,7 +17,7 @@ package edit
 
 import javax.swing.undo.{AbstractUndoableEdit, UndoableEdit}
 
-import de.sciss.lucre.expr.Type
+import de.sciss.lucre.expr.{Expr, Type}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Obj, Sys}
 import org.scalautils.TypeCheckedTripleEquals
@@ -37,7 +37,7 @@ object EditAttrMap {
     res
   }
 
-  def expr[S <: Sys[S], A, E[~ <: Sys[~]] <: Obj[~]](name: String, obj: Obj[S],
+  def expr[S <: Sys[S], A, E[~ <: Sys[~]] <: Expr[~, A]](name: String, obj: Obj[S],
                                                       key: String, value: Option[E[S]])
                           (implicit tx: S#Tx, cursor: stm.Cursor[S], tpe: Type.Expr[A, E], ct: ClassTag[E[S]]): UndoableEdit = {
     // what we do in `expr` is preserve an existing variable.
@@ -69,7 +69,7 @@ object EditAttrMap {
       map.put(key, elem)
   }
 
-  private final class ExprImpl[S <: Sys[S], B, E[~ <: Sys[~]] <: Obj[~]](
+  private final class ExprImpl[S <: Sys[S], B, E[~ <: Sys[~]] <: Expr[~, B]](
                                                val name: String, val key: String,
                                                val objH   : stm.Source[S#Tx, Obj[S]],
                                                val beforeH: stm.Source[S#Tx, Option[E[S]]],

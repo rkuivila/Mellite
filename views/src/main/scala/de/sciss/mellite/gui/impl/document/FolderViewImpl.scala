@@ -183,7 +183,7 @@ object FolderViewImpl {
                 }
                 // val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName, valueOpt)
                 implicit val stringTpe = StringObj
-                val ed = EditAttrMap.expr(s"Rename ${objView.humanName} Element", objView.obj, ObjKeys.attrName,
+                val ed = EditAttrMap.expr[S, String, StringObj](s"Rename ${objView.humanName} Element", objView.obj, ObjKeys.attrName,
                   valueOpt) // (StringObj[S](_))
                 Some(ed)
               } else {

@@ -85,7 +85,7 @@ object IntObjView extends ListObjView.Factory {
 
     def factory = IntObjView
 
-    def exprType = IntObj
+    val exprType = IntObj
 
     def expr(implicit tx: S#Tx) = obj
 

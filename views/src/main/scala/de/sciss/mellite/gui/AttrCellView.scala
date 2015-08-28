@@ -14,18 +14,19 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.lucre.expr.{Type, StringObj, Expr}
-import de.sciss.lucre.stm.{Elem, Obj, Sys}
+import de.sciss.lucre.expr.{Expr, StringObj, Type}
+import de.sciss.lucre.stm.{Obj, Sys}
 import de.sciss.lucre.swing.CellView
 import de.sciss.mellite.gui.impl.{AttrCellViewImpl => Impl}
 import de.sciss.synth.proc.ObjKeys
 
 import scala.language.higherKinds
+import scala.reflect.ClassTag
 
 object AttrCellView {
-  def apply[S <: Sys[S], A, E[~ <: Sys[~]] <: Elem[~]](obj: Obj[S], key: String)
-                                     (implicit tx: S#Tx, tpe: Type.Expr[A, E] /*,
-                                      companion: Elem.Companion[E] */): CellView.Var[S, Option[A]] { type Repr = Option[E[S]] } = {
+  def apply[S <: Sys[S], A, E[~ <: Sys[~]] <: Expr[~, A]](obj: Obj[S], key: String)
+                                     (implicit tx: S#Tx, tpe: Type.Expr[A, E],
+                                      ct: ClassTag[E[S]]): CellView.Var[S, Option[A]] { type Repr = Option[E[S]] } = {
     new Impl.ModImpl[S, A, E](tx.newHandle(obj), key)
   }
 

@@ -107,7 +107,7 @@ object ObjViewImpl {
 
       def factory = String
 
-      def exprType = StringObj
+      val exprType = StringObj
 
       def convertEditValue(v: Any): Option[_String] = Some(v.toString)
 
@@ -171,7 +171,7 @@ object ObjViewImpl {
 
       def factory = Long
 
-      def exprType = LongObj
+      val exprType = LongObj
 
       def expr(implicit tx: S#Tx): Expr[S, _Long] = objH()
 
@@ -237,7 +237,7 @@ object ObjViewImpl {
 
       def factory = Double
 
-      def exprType = DoubleObj
+      val exprType = DoubleObj
 
       def expr(implicit tx: S#Tx): Expr[S, _Double] = objH()
 
@@ -384,7 +384,7 @@ object ObjViewImpl {
 
       def factory = Color
 
-      def exprType = _Color.Obj
+      val exprType = _Color.Obj
 
       def expr(implicit tx: S#Tx): Expr[S, _Color] = objH()
 

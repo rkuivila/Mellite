@@ -148,7 +148,7 @@ object ListObjViewImpl {
     }
   }
 
-  trait SimpleExpr[S <: Sys[S], A, Ex[~ <: Sys[~]] <: Expr[~, A]] extends ExprLike[S, A, Ex]
+  trait SimpleExpr[S <: Sys[S], A, Ex[~ <: stm.Sys[~]] <: Expr[~, A]] extends ExprLike[S, A, Ex]
     with ListObjView[S] {
     // _: ObjView[S] =>
 
@@ -165,7 +165,7 @@ object ListObjViewImpl {
   trait BooleanExprLike[S <: Sys[S]] extends ExprLike[S, Boolean, BooleanObj] {
     _: ListObjView[S] =>
 
-    def exprType = BooleanObj
+    val exprType = BooleanObj
 
     def convertEditValue(v: Any): Option[Boolean] = v match {
       case num: Boolean  => Some(num)

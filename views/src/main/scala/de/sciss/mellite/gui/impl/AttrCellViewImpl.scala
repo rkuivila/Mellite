@@ -86,7 +86,7 @@ object AttrCellViewImpl {
 
   private[gui] final class ModImpl[S <: Sys[S], A, E[~ <: Sys[~]] <: Expr[~, A]](
          protected val h: stm.Source[S#Tx, Obj[S]],
-         protected val key: String)(implicit val tpe: Type.Expr[A, E] /*, protected val companion: Elem.Companion[E] */)
+         protected val key: String)(implicit val tpe: Type.Expr[A, E], protected val classTag: ClassTag[E[S]])
     extends Basic[S, A, E] with CellView.Var[S, Option[A]] {
 
     def serializer: Serializer[S#Tx, S#Acc, Repr] = {
