@@ -20,16 +20,17 @@ import java.util.{Date, Locale}
 
 import de.sciss.lucre.confluent.Cursor
 import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.stm.Identifiable
+import de.sciss.lucre.stm
+import de.sciss.lucre.stm.{Identifiable, Sys}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{defer, deferTx}
-import de.sciss.lucre.{confluent, stm}
 import de.sciss.processor.Processor
 import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.serial.Serializer
 import de.sciss.swingplus.{ListView, SpinningProgressBar}
 import de.sciss.synth.proc.Confluent
 
+import scala.language.higherKinds
 import scala.swing.{BoxPanel, Component, Orientation, ScrollPane}
 
 object ExprHistoryView {
@@ -38,8 +39,8 @@ object ExprHistoryView {
 
   var DEBUG = false
 
-  def apply[A](workspace: Workspace.Confluent, expr: Expr[S, A])
-              (implicit tx: S#Tx, serializer: Serializer[S#Tx, S#Acc, Expr[S, A]]): ViewHasWorkspace[S] = {
+  def apply[A, Ex[~ <: Sys[~]] <: Expr[~, A]](workspace: Workspace.Confluent, expr: Ex[S])
+              (implicit tx: S#Tx, serializer: Serializer[S#Tx, S#Acc, Ex[S]]): ViewHasWorkspace[S] = {
     val sys       = workspace.system
     val cursor    = Cursor[S, D](tx.inputAccess)(tx.durable, sys)
     val exprH     = tx.newHandle(expr)
@@ -49,7 +50,7 @@ object ExprHistoryView {
 
     val stop = expr match {
       case hid: Identifiable[_] =>
-        val id    = hid.id.asInstanceOf[confluent.Identifier[S]]
+        val id    = hid.id // .asInstanceOf[confluent.Identifier[S]]
         val head  = id.path.head.toInt
         if (DEBUG) println(s"ID = $id, head = $head")
         head

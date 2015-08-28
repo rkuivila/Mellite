@@ -80,7 +80,7 @@ object ListObjViewImpl {
     }
   }
 
-  trait ExprLike[S <: stm.Sys[S], A, Ex[~ <: Sys[~]] <: Expr[~, A]] {
+  trait ExprLike[S <: stm.Sys[S], A, Ex[~ <: stm.Sys[~]] <: Expr[~, A]] {
     _: ListObjView[S] =>
 
     protected var exprValue: A
@@ -106,8 +106,9 @@ object ListObjViewImpl {
                 // val imp = ExprImplicits[S]
                 // import imp._
                 // vr() = newValue
-                implicit val ser    = exprType.serializer   [S]
-                implicit val serVr  = exprType.varSerializer[S]
+//                implicit val ser    = exprType.serializer   [S]
+//                implicit val serVr  = exprType.varSerializer[S]
+                implicit val _exprType = exprType
                 val ed = EditVar.Expr[S, A, Ex](s"Change $humanName Value", vr, exprType.newConst[S](newValue))
                 Some(ed)
             }
@@ -138,7 +139,7 @@ object ListObjViewImpl {
           val name = AttrCellView.name[Confluent](obj.asInstanceOf[Obj[Confluent]])
             .map(n => s"History for '$n'")
           val w = new WindowImpl[Confluent](name) {
-            val view = ExprHistoryView(cf, expr.asInstanceOf[Expr[Confluent, A]])
+            val view = ExprHistoryView[A, Ex](cf, expr.asInstanceOf[Ex[Confluent]])
             init()
           }
           Some(w.asInstanceOf[Window[S]])

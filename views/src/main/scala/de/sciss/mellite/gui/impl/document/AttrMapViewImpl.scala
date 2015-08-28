@@ -25,13 +25,13 @@ import javax.swing.{AbstractCellEditor, JComponent, JTable, TransferHandler}
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{OptionPane, UndoManager, Window}
-import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Obj, Disposable}
+import de.sciss.lucre.expr.StringObj
+import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.{event, stm}
 import de.sciss.mellite.gui.edit.EditAttrMap
-import de.sciss.model.Change
 import de.sciss.model.impl.ModelImpl
 import de.sciss.swingplus.DropMode
 import de.sciss.synth.proc.ObjKeys
@@ -58,15 +58,16 @@ object AttrMapViewImpl {
     } .toIndexedSeq
 
     val res = new Impl(objH, list0) {
-      val observer = obj.changed.react { implicit tx => upd =>
+      val observer = obj.attr.changed.react { implicit tx => upd =>
         upd.changes.foreach {
           case Obj.AttrAdded  (key, value) =>
             val view = ListObjView(value)
             attrAdded(key, view)
           case Obj.AttrRemoved(key, value) =>
             attrRemoved(key)
-          case Obj.AttrChange (key, value, changes) =>
-            attrChange(key, value, changes)
+// ELEM
+//          case Obj.AttrChange (key, value, changes) =>
+//            attrChange(key, value, changes)
           case _ =>
         }
       }
@@ -128,48 +129,51 @@ object AttrMapViewImpl {
     private def updateObjectName(objView: ObjView[S], nameOption: Option[String])(implicit tx: S#Tx): Unit =
       deferTx { objView.nameOption = nameOption }
 
-    private def updateObject(objView: ListObjView[S], changes: Vec[Obj.Change[S, Any]])
+    private def updateObject(objView: ListObjView[S], changes: Vec[event.Map.Change[S, String, Any]] /* Obj.AttrUpdate */ /* Change */)
                             (implicit tx: S#Tx): Boolean =
       (false /: changes) { (p, ch) =>
         val p1 = ch match {
-          case Obj.ElemChange(u1) =>
-            objView.isUpdateVisible(u1)
+// ELEM
+//          case Obj.ElemChange(u1) =>
+//            objView.isUpdateVisible(u1)
           case Obj.AttrAdded  (ObjKeys.attrName, e: StringObj[S]) =>
-            updateObjectName(objView, Some(e.peer.value))
+            updateObjectName(objView, Some(e.value))
             true
           case Obj.AttrRemoved(ObjKeys.attrName, _) =>
             updateObjectName(objView, None)
             true
-          case Obj.AttrChange (ObjKeys.attrName, _, nameChanges) =>
-            (false /: nameChanges) {
-              case (_, Obj.ElemChange(Change(_, name: String))) =>
-                updateObjectName(objView, Some(name))
-                true
-              case (res, _) => res
-            }
+// ELEM
+//          case Obj.AttrChange (ObjKeys.attrName, _, nameChanges) =>
+//            (false /: nameChanges) {
+//              case (_, Obj.ElemChange(Change(_, name: String))) =>
+//                updateObjectName(objView, Some(name))
+//                true
+//              case (res, _) => res
+//            }
           case _ => false
         }
         p | p1
       }
 
-    final protected def attrChange(key: String, value: Obj[S], changes: Vec[Obj.Change[S, Any]])
-                                  (implicit tx: S#Tx): Unit = {
-      val viewOpt = viewMap.get(key)(tx.peer)
-      viewOpt.fold {
-        warnNoView(key)
-      } { view =>
-        val isDirty = updateObject(view, changes)
-        if (isDirty) deferTx {
-          import TypeCheckedTripleEquals._
-          val row = model.indexWhere(_._1 === key)
-          if (row < 0) {
-            warnNoView(key)
-          } else {
-            tableModel.fireTableRowsUpdated(row, row)
-          }
-        }
-      }
-    }
+// ELEM
+//    final protected def attrChange(key: String, value: Obj[S], changes: Vec[Obj.AttrUpdate /* Change */[S /* , Any */]])
+//                                  (implicit tx: S#Tx): Unit = {
+//      val viewOpt = viewMap.get(key)(tx.peer)
+//      viewOpt.fold {
+//        warnNoView(key)
+//      } { view =>
+//        val isDirty = updateObject(view, changes)
+//        if (isDirty) deferTx {
+//          import TypeCheckedTripleEquals._
+//          val row = model.indexWhere(_._1 === key)
+//          if (row < 0) {
+//            warnNoView(key)
+//          } else {
+//            tableModel.fireTableRowsUpdated(row, row)
+//          }
+//        }
+//      }
+//    }
 
     private object tableModel extends AbstractTableModel {
       def getRowCount   : Int = model.size
