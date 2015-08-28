@@ -173,7 +173,7 @@ object ObjViewImpl {
 
       val exprType = LongObj
 
-      def expr(implicit tx: S#Tx): Expr[S, _Long] = objH()
+      def expr(implicit tx: S#Tx): LongObj[S] = objH()
 
       def convertEditValue(v: Any): Option[_Long] = v match {
         case num: _Long => Some(num)
@@ -239,7 +239,7 @@ object ObjViewImpl {
 
       val exprType = DoubleObj
 
-      def expr(implicit tx: S#Tx): Expr[S, _Double] = objH()
+      def expr(implicit tx: S#Tx): DoubleObj[S] = objH()
 
       def convertEditValue(v: Any): Option[_Double] = v match {
         case num: _Double => Some(num)
@@ -303,7 +303,7 @@ object ObjViewImpl {
 
       def factory = Boolean
 
-      def expr(implicit tx: S#Tx): Expr[S, _Boolean] = objH()
+      def expr(implicit tx: S#Tx): BooleanObj[S] = objH()
     }
   }
 
@@ -386,7 +386,7 @@ object ObjViewImpl {
 
       val exprType = _Color.Obj
 
-      def expr(implicit tx: S#Tx): Expr[S, _Color] = objH()
+      def expr(implicit tx: S#Tx): _Color.Obj[S] = objH()
 
       def configureRenderer(label: Label): Component = {
         // renderers are used for "stamping", so we can reuse a single object.
@@ -781,7 +781,7 @@ object ObjViewImpl {
 
       protected def exprValue: _Boolean = playing
       protected def exprValue_=(x: _Boolean): Unit = playing = x
-      protected def expr(implicit tx: S#Tx): Expr[S, _Boolean] = objH().playing
+      protected def expr(implicit tx: S#Tx): BooleanObj[S] = objH().playing
 
       def value: Any = ()
 
