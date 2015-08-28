@@ -287,11 +287,11 @@ object ProcActions {
       grapheme  : Grapheme.Expr.Audio[S],
       gOffset   : Long
       /* bus       : Option[IntObj[S]] */) // stm.Source[S#Tx, Element.Int[S]]])
-     (implicit tx: S#Tx): (SpanObj[S], Proc[S]) = {
+     (implicit tx: S#Tx): (SpanLikeObj /* SpanObj */[S], Proc[S]) = {
 
     // val srRatio = grapheme.spec.sampleRate / Timeline.SampleRate
     val spanV   = time // Span(time, time + (selection.length / srRatio).toLong)
-    val span    = SpanObj.newVar[S](spanV)
+    val span    = SpanLikeObj /* SpanObj */.newVar[S](spanV)
     val proc    = Proc[S]
     val obj     = proc // Obj(Proc.Elem(proc))
     // val attr    = obj.attr
@@ -333,10 +333,9 @@ object ProcActions {
                                      time      : Span,
                                      grapheme  : Grapheme.Expr.Audio[S],
                                      gOffset   : Long)
-                                    (implicit tx: S#Tx): (SpanObj[S], Proc[S]) = {
+                                    (implicit tx: S#Tx): (SpanLikeObj /* SpanObj */[S], Proc[S]) = {
     val res @ (span, obj) = mkAudioRegion(time, grapheme, gOffset)
-    val span1 = SpanLikeObj.newVar[S](time) // XXX TODO --- can we use the `span` returned by `mkAudioRegion` ?
-    group.add(span1, obj)
+    group.add(span, obj)
     res
   }
 

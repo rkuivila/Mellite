@@ -20,11 +20,10 @@ import java.awt.event.MouseEvent
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.SpanLikeObj
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
-import de.sciss.span.SpanLike
-import de.sciss.synth.proc.Obj
 
 /** A more complete implementation for track tools that process selected regions.
   * It implements `handlePress` to update the region selection and then

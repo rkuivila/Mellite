@@ -22,7 +22,7 @@ import de.sciss.lucre.synth.Sys
 
 object EnsembleFrame {
   /** Creates a new frame for an ensemble view. */
-  def apply[S <: Sys[S]](ensemble: Ensemble.Obj[S])
+  def apply[S <: Sys[S]](ensemble: Ensemble[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): EnsembleFrame[S] =
     Impl(ensemble)
 }

@@ -25,7 +25,7 @@ import de.sciss.desktop
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{Menu, OptionPane, UndoManager}
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.{Int => IntObj}
+import de.sciss.lucre.expr.IntObj
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
@@ -387,14 +387,16 @@ object GlobalProcsViewImpl {
           val outObj  = ProcActions.copy[S](inObj)
           // `copy` has already connected all scans.
           // So disconnect them if necessary.
-          if (!connect) Proc.unapply(outObj).foreach { procObj =>
-            val proc    = procObj
-            proc.inputs.iterator.foreach { case (_, scan) =>
-              scan.iterator.foreach(scan.remove(_))
-            }
-            proc.outputs.iterator.foreach { case (_, scan) =>
-              scan.iterator.foreach(scan.remove(_))
-            }
+          if (!connect) outObj match {
+            case procObj: Proc[S] =>
+              val proc    = procObj
+              proc.inputs.iterator.foreach { case (_, scan) =>
+                scan.iterator.foreach(scan.remove(_))
+              }
+              proc.outputs.iterator.foreach { case (_, scan) =>
+                scan.iterator.foreach(scan.remove(_))
+              }
+            case _ =>
           }
           EditTimelineInsertObj("Global Proc", tl, span, outObj)
         }
@@ -414,7 +416,7 @@ object GlobalProcsViewImpl {
           outView <- seqTL
           inView  <- seqGlob
           in      = inView.obj
-          out     <- Proc.unapply(outView.obj)
+          out     <- (outView.obj match { case p: Proc[S] => Some(p); case _ => None }) // Proc.unapply(outView.obj)
           source  <- out.outputs.get(Proc.scanMainOut)
           sink    <- in .inputs .get(Proc.scanMainIn )
           if Edits.findLink(out = out, in = in).isEmpty
@@ -436,7 +438,7 @@ object GlobalProcsViewImpl {
           outView <- seqTL
           inView  <- seqGlob
           in      = inView.obj
-          out     <- Proc.unapply(outView.obj)
+          out     <- (outView.obj match { case p: Proc[S] => Some(p); case _ => None }) // Proc.unapply(outView.obj)
           (source, sink) <- Edits.findLink(out = out, in = in)
         } yield Edits.removeLink(source = source, sink = sink)
         it.toList   // tricky, need to unwind transactional iterator

@@ -40,7 +40,7 @@ object ActionArtifactLocation {
 
   //  def queryOrCreate[S <: Sys[S]](
   //                          root: stm.Source[S#Tx, Folder[S]], file: File,
-  //                          folder: Option[stm.Source[S#Tx, Obj.T[S, FolderElem]]] = None,
+  //                          folder: Option[stm.Source[S#Tx, Folder[S]]] = None,
   //                          window: Option[desktop.Window] = None)
   //                        (implicit cursor: stm.Cursor[S]): Option[stm.Source[S#Tx, ArtifactLocation[S]]] = {
   //    query(root = root, file = file, window = window).map { either =>

@@ -24,13 +24,13 @@ import javax.swing.ImageIcon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.Desktop
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.SpanLikeObj
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
-import de.sciss.span.SpanLike
 import de.sciss.swingplus.PaddedIcon
-import de.sciss.synth.proc.{Obj, Proc}
+import de.sciss.synth.proc.Proc
 
 import scala.swing.Insets
 
@@ -88,7 +88,7 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   protected def commitObj(drag: Patch[S])(span: SpanLikeObj[S], outObj: Obj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
     (drag.sink, outObj) match {
-      case (Patch.Linked(view), Proc.Obj(out)) =>
+      case (Patch.Linked(view), out: Proc[S]) =>
         val in = view.obj
         Edits.linkOrUnlink(out, in)
 

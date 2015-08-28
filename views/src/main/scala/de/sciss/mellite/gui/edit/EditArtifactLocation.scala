@@ -15,14 +15,15 @@ package de.sciss.mellite
 package gui
 package edit
 
+import javax.swing.undo.{AbstractUndoableEdit, UndoableEdit}
+
 import de.sciss.file.File
 import de.sciss.lucre.artifact.ArtifactLocation
-import de.sciss.lucre.{stm, event => evt}
-import stm.Sys
-import javax.swing.undo.{UndoableEdit, AbstractUndoableEdit}
+import de.sciss.lucre.stm.Sys
+import de.sciss.lucre.stm
 
 object EditArtifactLocation {
-  def apply[S <: Sys[S]](obj: ArtifactLocation[S], directory: File)
+  def apply[S <: Sys[S]](obj: ArtifactLocation.Var[S], directory: File)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val before    = obj.directory
     val objH      = tx.newHandle(obj)
@@ -31,7 +32,7 @@ object EditArtifactLocation {
     res
   }
 
-  private[edit] final class Impl[S <: Sys[S]](objH  : stm.Source[S#Tx, ArtifactLocation[S]],
+  private[edit] final class Impl[S <: Sys[S]](objH  : stm.Source[S#Tx, ArtifactLocation.Var[S]],
                                               before: File, now: File)(implicit cursor: stm.Cursor[S])
     extends AbstractUndoableEdit {
 
@@ -46,7 +47,7 @@ object EditArtifactLocation {
     }
 
     private def perform(directory: File)(implicit tx: S#Tx): Unit =
-      objH().directory = directory
+      objH().update(ArtifactLocation.newConst(directory)) // .directory = directory
 
     def perform()(implicit tx: S#Tx): Unit = perform(now)
 

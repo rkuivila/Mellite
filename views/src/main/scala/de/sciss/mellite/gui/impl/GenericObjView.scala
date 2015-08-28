@@ -4,15 +4,12 @@ package impl
 
 import de.sciss.desktop
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.stm.Cursor
+import de.sciss.lucre.expr.SpanLikeObj
+import de.sciss.lucre.stm.{Cursor, Obj}
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
-import de.sciss.span.SpanLike
-import de.sciss.synth.proc
-import de.sciss.synth.proc.Obj
 
 import scala.swing.{Component, Label}
 
@@ -21,9 +18,10 @@ object GenericObjView extends ObjView.Factory {
   val prefix    = "Generic"
   def humanName = prefix
   val category  = "None"
-  val typeID    = 0
+  // val typeID    = 0
+  def tpe: Obj.Type = ??? // RRR
 
-  type E[~ <: stm.Sys[~]]       = proc.Elem[~]
+  type E[~ <: stm.Sys[~]]       = Obj[~]
   type Config[S <: stm.Sys[S]]  = Unit
 
   def hasMakeDialog: Boolean = false

@@ -16,30 +16,28 @@ package gui
 package impl
 
 import java.awt.datatransfer.Transferable
-import javax.swing.TransferHandler.TransferSupport
 import javax.swing.TransferHandler
+import javax.swing.TransferHandler.TransferSupport
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.desktop.{Window, OptionPane, UndoManager}
+import de.sciss.desktop.{OptionPane, UndoManager, Window}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
-import de.sciss.lucre.data
-import de.sciss.lucre.stm.IdentifierMap
-import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.lucre.event.Sys
-import de.sciss.mellite.gui.edit.{EditRemoveScanLink, EditRemoveScan, EditAddScanLink, EditAddScan}
-import de.sciss.mellite.gui.impl.component.DragSourceButton
-import de.sciss.swingplus.{PopupMenu, ListView}
-import de.sciss.synth.proc.{Grapheme, Scan, Proc}
+import de.sciss.lucre.stm.{IdentifierMap, Sys}
 import de.sciss.lucre.swing.deferTx
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.mellite.gui.edit.{EditAddScan, EditAddScanLink, EditRemoveScan, EditRemoveScanLink}
+import de.sciss.mellite.gui.impl.component.DragSourceButton
+import de.sciss.swingplus.{ListView, PopupMenu}
+import de.sciss.synth.proc.{Grapheme, Proc, Scan}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.concurrent.stm.TMap
+import scala.swing.Swing._
 import scala.swing.TabbedPane.Page
-import scala.swing.event.{MouseButtonEvent, MouseReleased, MousePressed}
-import scala.swing.{MenuItem, Button, Swing, Action, FlowPanel, Label, ScrollPane, BoxPanel, Orientation, TabbedPane, Component}
-import Swing._
+import scala.swing.event.{MouseButtonEvent, MousePressed, MouseReleased}
+import scala.swing.{Action, BoxPanel, Button, Component, FlowPanel, Label, MenuItem, Orientation, ScrollPane, TabbedPane}
 
 object ScansViewImpl {
   def apply[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
@@ -51,18 +49,19 @@ object ScansViewImpl {
           case Proc.OutputAdded  (key, scan) => addScan   (key, scan, isInput = false)
           case Proc.InputRemoved (key, scan) => removeScan(key, isInput = true )
           case Proc.OutputRemoved(key, scan) => removeScan(key, isInput = false)
-          case Proc.InputChange  (key, scan, changes) =>
-            changes.foreach {
-              case Scan.Added   (link) => addLink   (key, link, isInput = true )
-              case Scan.Removed (link) => removeLink(key, link, isInput = true )
-              case _ =>  // grapheme change
-            }
-          case Proc.OutputChange(key, scan, changes) =>
-            changes.foreach {
-              case Scan.Added     (link) => addLink   (key, link, isInput = false)
-              case Scan.Removed   (link) => removeLink(key, link, isInput = false)
-              case _ =>  // grapheme change
-            }
+// ELEM
+//          case Proc.InputChange  (key, scan, changes) =>
+//            changes.foreach {
+//              case Scan.Added   (link) => addLink   (key, link, isInput = true )
+//              case Scan.Removed (link) => removeLink(key, link, isInput = true )
+//              case _ =>  // grapheme change
+//            }
+//          case Proc.OutputChange(key, scan, changes) =>
+//            changes.foreach {
+//              case Scan.Added     (link) => addLink   (key, link, isInput = false)
+//              case Scan.Removed   (link) => removeLink(key, link, isInput = false)
+//              case _ =>  // grapheme change
+//            }
           case _ => // graph change
         }
       }
@@ -298,7 +297,7 @@ object ScansViewImpl {
       }
     }
 
-    final protected def addLinks(key: String, links: data.Iterator[S#Tx, Scan.Link[S]], isInput: Boolean)
+    final protected def addLinks(key: String, links: Iterator[Scan.Link[S]], isInput: Boolean)
                                 (implicit tx: S#Tx): Unit =
       links.foreach { link =>
         addLink(key, link, isInput = isInput)

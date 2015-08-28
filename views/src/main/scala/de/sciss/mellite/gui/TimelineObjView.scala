@@ -14,14 +14,14 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.lucre.expr.{SpanLikeObj, Expr}
+import de.sciss.lucre.expr.SpanLikeObj
 import de.sciss.lucre.stm.IdentifierMap
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm
 import de.sciss.mellite.gui.impl.ProcObjView
 import de.sciss.mellite.gui.impl.timeline.{TimelineObjViewImpl => Impl}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc.{FadeSpec, Obj, Timeline}
+import de.sciss.synth.proc.{FadeSpec, Timeline}
 
 import scala.language.{higherKinds, implicitConversions}
 
@@ -56,7 +56,7 @@ object TimelineObjView {
       * @param span     the span on the timeline
       * @param obj      the object placed on the timeline
       */
-    def mkTimelineView[S <: Sys[S]](id: S#ID, span: SpanLikeObj[S], obj: Obj.T[S, E],
+    def mkTimelineView[S <: Sys[S]](id: S#ID, span: SpanLikeObj[S], obj: E[S],
                                     context: TimelineObjView.Context[S])(implicit tx: S#Tx): TimelineObjView[S]
   }
 

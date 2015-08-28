@@ -14,12 +14,9 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.lucre.event.Sys
-// import de.sciss.lucre.synth.Sys
-import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.desktop.Desktop
+import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing._
-import impl.document.{ViewHandlerImpl => Impl}
+import de.sciss.mellite.gui.impl.document.{ViewHandlerImpl => Impl}
 import de.sciss.model.Model
 
 //object DocumentViewHandler {

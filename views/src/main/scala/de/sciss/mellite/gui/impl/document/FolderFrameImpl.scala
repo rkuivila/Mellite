@@ -22,21 +22,22 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.desktop.{Window, Desktop, KeyStrokes, Menu, UndoManager}
-import de.sciss.lucre.stm
+import de.sciss.desktop.{Desktop, KeyStrokes, Menu, UndoManager, Window}
+import de.sciss.lucre.expr.StringObj
+import de.sciss.lucre.{expr, stm}
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.{CellView, deferTx}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.expr.{String => StringObj}
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
 import de.sciss.mellite.gui.impl.component.CollectionViewImpl
-import de.sciss.swingplus.{Spinner, GroupPanel}
-import de.sciss.synth.proc.{ExprImplicits, ObjKeys, StringElem, Obj, Folder}
+import de.sciss.swingplus.{GroupPanel, Spinner}
+import de.sciss.synth.proc.{Folder, ObjKeys}
 import org.scalautils.TypeCheckedTripleEquals
 
-import scala.swing.Swing.EmptyIcon
-import scala.swing.{CheckBox, Swing, Alignment, Label, TextField, Dialog, Action}
 import scala.collection.breakOut
+import scala.swing.Swing.EmptyIcon
 import scala.swing.event.Key
+import scala.swing.{Action, Alignment, CheckBox, Dialog, Label, Swing, TextField}
 
 object FolderFrameImpl {
   def apply[S <: Sys[S]](name: CellView[S#Tx, String],
@@ -239,11 +240,11 @@ object FolderFrameImpl {
                 val cpy = Obj.copy(orig)
                 if (append) {
                   val suffix = incLast(appendText, n)
-                  orig.attr.$[StringElem](ObjKeys.attrName).foreach { oldName =>
-                    val imp = ExprImplicits[S]
-                    import imp._
+                  orig.attr.$[StringObj](ObjKeys.attrName).foreach { oldName =>
+                    // val imp = ExprImplicits[S]
+                    import expr.Ops._
                     val newName = oldName ++ suffix
-                    cpy.attr.put(ObjKeys.attrName, Obj(StringElem(StringObj.newVar(newName))))
+                    cpy.attr.put(ObjKeys.attrName, StringObj.newVar(newName))
                   }
                   // cpy.attr.name = s"${cpy.attr.name}$suffix"
                 }

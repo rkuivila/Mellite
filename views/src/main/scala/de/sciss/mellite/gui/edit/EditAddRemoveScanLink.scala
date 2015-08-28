@@ -15,11 +15,11 @@ package de.sciss.mellite
 package gui
 package edit
 
-import javax.swing.undo.{UndoableEdit, CannotRedoException, CannotUndoException, AbstractUndoableEdit}
+import javax.swing.undo.{AbstractUndoableEdit, CannotRedoException, CannotUndoException, UndoableEdit}
 
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Sys
 import de.sciss.synth.proc.Scan
-import de.sciss.lucre.event.Sys
 
 // direction: true = insert, false = remove
 private[edit] final class EditAddRemoveScanLink[S <: Sys[S]](isAdd: Boolean,

@@ -22,7 +22,7 @@ import de.sciss.synth.proc.Ensemble
 import impl.document.{EnsembleViewImpl => Impl}
 
 object EnsembleView {
-  def apply[S <: Sys[S]](ensemble: Ensemble.Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
+  def apply[S <: Sys[S]](ensemble: Ensemble[S])(implicit tx: S#Tx, workspace: Workspace[S],
                                                 cursor: stm.Cursor[S], undoManager: UndoManager): EnsembleView[S] =
     Impl(ensemble)
 }

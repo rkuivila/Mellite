@@ -30,7 +30,7 @@ import scala.swing.event.ButtonClicked
 import scala.swing.{BoxPanel, Button, Component, Orientation}
 
 object NuagesFolderViewImpl {
-  def apply[S <: Sys[S]](nuagesObj: Nuages.Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
+  def apply[S <: Sys[S]](nuagesObj: Nuages[S])(implicit tx: S#Tx, workspace: Workspace[S],
                                                    cursor: stm.Cursor[S], undoManager: UndoManager): Impl[S] = {
     de.sciss.tallin.Populate.registerActions[S]()
     val nuages  = nuagesObj
@@ -47,7 +47,7 @@ object NuagesFolderViewImpl {
     res
   }
 
-  final class Impl[S <: Sys[S]](nuagesH: stm.Source[S#Tx, Nuages.Obj[S]],
+  final class Impl[S <: Sys[S]](nuagesH: stm.Source[S#Tx, Nuages[S]],
                                 val view: FolderFrameImpl.ViewImpl[S],
                                 nConfig: Nuages.Config, sConfig: ScissProcs.Config)
                                (implicit val undoManager: UndoManager, val workspace: Workspace[S],

@@ -31,10 +31,10 @@ import de.sciss.desktop.{UndoManager, Window}
 import de.sciss.fingertree.RangedSeq
 import de.sciss.icons.raphael
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
-import de.sciss.lucre.bitemp.{BiGroup, SpanLike => SpanLikeObj}
-import de.sciss.lucre.expr.{Int => IntObj}
+import de.sciss.lucre.bitemp.BiGroup
+import de.sciss.lucre.expr.{BooleanObj, DoubleObj, StringObj, IntObj, SpanLikeObj}
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Cursor, Disposable}
+import de.sciss.lucre.stm.{Obj, Cursor, Disposable}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
@@ -46,14 +46,13 @@ import de.sciss.swingplus.ScrollBar
 import de.sciss.synth.Curve
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{BooleanElem, DoubleElem, FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan, StringElem, TimeRef, Timeline, Transport}
+import de.sciss.synth.proc.{FadeSpec, Grapheme, ObjKeys, Proc, Scan, TimeRef, Timeline, Transport}
 import de.sciss.{desktop, sonogram, synth}
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.concurrent.stm.{Ref, TSet}
 import scala.swing.Swing._
 import scala.swing.event.ValueChanged
-import scala.swing.{Dimension, Action, BorderPanel, BoxPanel, Component, Orientation, SplitPane}
+import scala.swing.{Action, BorderPanel, BoxPanel, Component, Dimension, Orientation, SplitPane}
 import scala.util.Try
 
 object TimelineViewImpl {
@@ -104,7 +103,7 @@ object TimelineViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  private type TimedProc[S <: Sys[S]] = BiGroup.TimedElem[S, Proc[S]]
+  private type TimedProc[S <: Sys[S]] = BiGroup.Entry[S, Proc[S]]
 
   def apply[S <: Sys[S]](obj: Timeline[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
@@ -150,50 +149,50 @@ object TimelineViewImpl {
 
     def muteChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val muted   = attr[BooleanElem](ObjKeys.attrMute).exists(_.value)
+      val muted   = attr.$[BooleanObj](ObjKeys.attrMute).exists(_.value)
       if (DEBUG) println(s"muteChanged($timed) - $muted")
       tlView.objMuteChanged(timed, muted)
     }
 
     def nameChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val nameOpt = attr[StringElem](ObjKeys.attrName).map(_.value)
+      val nameOpt = attr.$[StringObj](ObjKeys.attrName).map(_.value)
       if (DEBUG) println(s"nameChanged($timed) - $nameOpt")
       tlView.objNameChanged(timed, nameOpt)
     }
 
     def colorChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr      = timed.value.attr
-      val colorOpt  = attr[Color.Elem](ObjView.attrColor).map(_.value)
+      val colorOpt  = attr.$[Color.Obj](ObjView.attrColor).map(_.value)
       if (DEBUG) println(s"colorChanged($timed) - $colorOpt")
       tlView.objColorChanged(timed, colorOpt)
     }
 
     def gainChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr  = timed.value.attr
-      val gain  = attr[DoubleElem](ObjKeys.attrGain).fold(1.0)(_.value)
+      val gain  = attr.$[DoubleObj](ObjKeys.attrGain).fold(1.0)(_.value)
       if (DEBUG) println(s"gainChanged($timed) - $gain")
       tlView.objGainChanged(timed, gain)
     }
 
     def busChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val busOpt  = attr[IntElem](ObjKeys.attrBus).map(_.value)
+      val busOpt  = attr.$[IntObj](ObjKeys.attrBus).map(_.value)
       if (DEBUG) println(s"busChanged($timed) - $busOpt")
       tlView.procBusChanged(timed, busOpt)
     }
 
     def fadeChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
       val attr    = timed.value.attr
-      val fadeIn  = attr[FadeSpec.Elem](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-      val fadeOut = attr[FadeSpec.Elem](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
+      val fadeIn  = attr.$[FadeSpec.Obj](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
+      val fadeOut = attr.$[FadeSpec.Obj](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
       if (DEBUG) println(s"fadeChanged($timed) - $fadeIn - $fadeOut")
       tlView.objFadeChanged(timed, fadeIn, fadeOut)
     }
 
     def trackPositionChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val trackIdxNow = timed.value.attr.$[IntElem](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
-      val trackHNow   = timed.value.attr.$[IntElem](TimelineObjView.attrTrackHeight).fold(4)(_.value)
+      val trackIdxNow = timed.value.attr.$[IntObj](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
+      val trackHNow   = timed.value.attr.$[IntObj](TimelineObjView.attrTrackHeight).fold(4)(_.value)
       if (DEBUG) println(s"trackPositionChanged($timed) - $trackIdxNow - $trackHNow")
       tlView.objMoved(timed, spanCh = Change(Span.Void, Span.Void),
         trackCh = Some(trackIdxNow -> trackHNow))
@@ -265,59 +264,61 @@ object TimelineViewImpl {
           if (DEBUG) println(s"Removed $span, $timed")
           tlView.objRemoved(span, timed)
 
-        case BiGroup.ElementMoved  (timed, spanChange) =>
+        case BiGroup.Moved  (spanChange, timed) =>
           if (DEBUG) println(s"Moved   $timed, $spanChange")
           tlView.objMoved(timed, spanCh = spanChange, trackCh = None)
 
-        case BiGroup.ElementMutated(timed0, procUpd) =>
-          if (DEBUG) println(s"Mutated $timed0, $procUpd")
-          procUpd.changes.foreach {
-            case Obj.ElemChange(updP0) =>
-              (timed0.value, updP0) match {
-                case (Proc.Obj(procObj), updP1: Proc.Update[_]) =>
-                  val timed = timed0.asInstanceOf[TimedProc  [S]] // XXX not good
-                  val updP  = updP1 .asInstanceOf[Proc.Update[S]]
-                  updP.changes.foreach {
-                    case Proc.InputAdded   (key, _) => scanInAdded   (timed, key)
-                    case Proc.OutputAdded  (key, _) => scanOutAdded  (timed, key)
-                    case Proc.InputRemoved (key, _) => scanInRemoved (timed, key)
-                    case Proc.OutputRemoved(key, _) => scanOutRemoved(timed, key)
-                    case Proc.InputChange  (name, scan, scanUpdates) =>
-                      scanUpdates.foreach {
-//                        case Scan.GraphemeChange(grapheme, segments) =>
-//                          import TypeCheckedTripleEquals._
-//                          if (name === Proc.graphAudio) {
-//                            // XXX TODO: This doesn't work. Somehow we get a segment that _ends_ at 0L
-//                            val segmOpt = segments.find(_.span.contains(0L)) match {
-//                              case Some(segm: Grapheme.Segment.Audio) => Some(segm)
-//                              case _ => None
-//                            }
-//                            tlView.procAudioChanged(timed, segmOpt)
-//                          }
+// ELEM
+//        case BiGroup.ElementMutated(timed0, procUpd) =>
+//          if (DEBUG) println(s"Mutated $timed0, $procUpd")
+//          procUpd.changes.foreach {
+//            case Obj.ElemChange(updP0) =>
+//              (timed0.value, updP0) match {
+//                case (Proc.Obj(procObj), updP1: Proc.Update[_]) =>
+//                  val timed = timed0.asInstanceOf[TimedProc  [S]] // XXX not good
+//                  val updP  = updP1 .asInstanceOf[Proc.Update[S]]
+//                  updP.changes.foreach {
+//                    case Proc.InputAdded   (key, _) => scanInAdded   (timed, key)
+//                    case Proc.OutputAdded  (key, _) => scanOutAdded  (timed, key)
+//                    case Proc.InputRemoved (key, _) => scanInRemoved (timed, key)
+//                    case Proc.OutputRemoved(key, _) => scanOutRemoved(timed, key)
+//                    case Proc.InputChange  (name, scan, scanUpdates) =>
+//                      scanUpdates.foreach {
+////                        case Scan.GraphemeChange(grapheme, segments) =>
+////                          import TypeCheckedTripleEquals._
+////                          if (name === Proc.graphAudio) {
+////                            // XXX TODO: This doesn't work. Somehow we get a segment that _ends_ at 0L
+////                            val segmOpt = segments.find(_.span.contains(0L)) match {
+////                              case Some(segm: Grapheme.Segment.Audio) => Some(segm)
+////                              case _ => None
+////                            }
+////                            tlView.procAudioChanged(timed, segmOpt)
+////                          }
+//
+//                        case Scan.Added  (Scan.Link.Scan(peer)) => tlView.scanSourceAdded  (timed, name, scan, peer)
+//                        case Scan.Removed(Scan.Link.Scan(peer)) => tlView.scanSourceRemoved(timed, name, scan, peer)
+//
+//                        case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
+//                      }
+//                    case Proc.OutputChange(name, scan, scanUpdates) =>
+//                      scanUpdates.foreach {
+//                        case Scan.Added(Scan.Link.Scan(peer)) =>
+//                          val test: Scan[S] = scan
+//                          tlView.scanSinkAdded(timed, name, test, peer)
+//                        case Scan.Removed  (Scan.Link.Scan(peer)) => tlView.scanSinkRemoved  (timed, name, scan, peer)
+//                        case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
+//                      }
+//                    case Proc.GraphChange(_) =>
+//                  }
+//
+//                case _ =>
+//              }
 
-                        case Scan.Added  (Scan.Link.Scan(peer)) => tlView.scanSourceAdded  (timed, name, scan, peer)
-                        case Scan.Removed(Scan.Link.Scan(peer)) => tlView.scanSourceRemoved(timed, name, scan, peer)
-
-                        case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
-                      }
-                    case Proc.OutputChange(name, scan, scanUpdates) =>
-                      scanUpdates.foreach {
-                        case Scan.Added(Scan.Link.Scan(peer)) =>
-                          val test: Scan[S] = scan
-                          tlView.scanSinkAdded(timed, name, test, peer)
-                        case Scan.Removed  (Scan.Link.Scan(peer)) => tlView.scanSinkRemoved  (timed, name, scan, peer)
-                        case _ => // Scan.SinkAdded(_) | Scan.SinkRemoved(_) | Scan.SourceAdded(_) | Scan.SourceRemoved(_)
-                      }
-                    case Proc.GraphChange(_) =>
-                  }
-
-                case _ =>
-              }
-
-            case Obj.AttrAdded  (key, _)    => attrChanged(timed0, key)
-            case Obj.AttrRemoved(key, _)    => attrChanged(timed0, key)
-            case Obj.AttrChange (key, _, _) => attrChanged(timed0, key)
-          }
+// ELEM
+//            case Obj.AttrAdded  (key, _)    => attrChanged(timed0, key)
+//            case Obj.AttrRemoved(key, _)    => attrChanged(timed0, key)
+//            case Obj.AttrChange (key, _, _) => attrChanged(timed0, key)
+//          }
       }
     }
     disposables ::= obsTimeline
@@ -488,7 +489,7 @@ object TimelineViewImpl {
 
     private def repaintAll(): Unit = canvasView.canvasComponent.repaint()
 
-    def objAdded(span: SpanLike, timed: BiGroup.TimedElem[S, Obj[S]], repaint: Boolean)(implicit tx: S#Tx): Unit = {
+    def objAdded(span: SpanLike, timed: BiGroup.Entry[S, Obj[S]], repaint: Boolean)(implicit tx: S#Tx): Unit = {
       logT(s"objAdded($span / ${TimeRef.spanToSecs(span)}, $timed)")
       // timed.span
       // val proc = timed.value
@@ -512,10 +513,10 @@ object TimelineViewImpl {
         doAdd()
     }
 
-    private def warnViewNotFound(action: String, timed: BiGroup.TimedElem[S, Obj[S]]): Unit =
+    private def warnViewNotFound(action: String, timed: BiGroup.Entry[S, Obj[S]]): Unit =
       Console.err.println(s"Warning: Timeline - $action. View for object $timed not found.")
 
-    def objRemoved(span: SpanLike, timed: BiGroup.TimedElem[S, Obj[S]])(implicit tx: S#Tx): Unit = {
+    def objRemoved(span: SpanLike, timed: BiGroup.Entry[S, Obj[S]])(implicit tx: S#Tx): Unit = {
       logT(s"objRemoved($span, $timed)")
       val id = timed.id
       viewMap.get(id).fold {
@@ -537,7 +538,7 @@ object TimelineViewImpl {
 
     // insignificant changes are ignored, therefore one can just move the span without the track
     // by using trackCh = Change(0,0), and vice versa
-    def objMoved(timed: BiGroup.TimedElem[S, Obj[S]], spanCh: Change[SpanLike], trackCh: Option[(Int, Int)])
+    def objMoved(timed: BiGroup.Entry[S, Obj[S]], spanCh: Change[SpanLike], trackCh: Option[(Int, Int)])
                  (implicit tx: S#Tx): Unit = {
       logT(s"objMoved(${spanCh.before} / ${TimeRef.spanToSecs(spanCh.before)} -> ${spanCh.now} / ${TimeRef.spanToSecs(spanCh.now)}, $timed)")
       viewMap.get(timed.id).fold {
@@ -755,7 +756,7 @@ object TimelineViewImpl {
         val (span, obj) = ProcActions.mkAudioRegion(time = tlSpan,
           grapheme = grapheme, gOffset = drag.selection.start /*, bus = None */) // , bus = ad.bus.map(_.apply().entity))
         val track = canvasView.screenToTrack(drop.y)
-        obj.attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntObj.newVar(IntObj.newConst(track)))))
+        obj.attr.put(TimelineObjView.attrTrackIndex, IntObj.newVar(IntObj.newConst(track)))
         val edit = EditTimelineInsertObj("Audio Region", groupM, span, obj)
         edit
       }

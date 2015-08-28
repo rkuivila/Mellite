@@ -13,7 +13,7 @@
 
 package de.sciss.mellite.gui
 
-import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.{View => SView}
 import de.sciss.mellite.Workspace
 

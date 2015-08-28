@@ -19,18 +19,16 @@ import de.sciss.desktop
 import de.sciss.desktop.OptionPane
 import de.sciss.file._
 import de.sciss.icons.raphael
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeObj}
-import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.stm.IdentifierMap
+import de.sciss.lucre.expr.{IntObj, SpanLikeObj}
+import de.sciss.lucre.stm
+import de.sciss.lucre.stm.{IdentifierMap, Obj}
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt, stm}
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.sonogram.{Overview => SonoOverview}
-import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc
-import de.sciss.synth.proc.impl.ElemImpl
-import de.sciss.synth.proc.{FadeSpec, Grapheme, IntElem, Obj, ObjKeys, Proc, Scan}
+import de.sciss.span.Span
+import de.sciss.synth.proc.Implicits._
+import de.sciss.synth.proc.{FadeSpec, Grapheme, ObjKeys, Proc, Scan}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.immutable.{IndexedSeq => Vec}
@@ -38,17 +36,17 @@ import scala.language.implicitConversions
 import scala.util.control.NonFatal
 
 object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
-  type E[S <: stm.Sys[S]] = Proc.Elem[S]
+  type E[~ <: stm.Sys[~]] = Proc[~]
 
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Cogs)
   val prefix    = "Proc"
   val humanName = "Process"
-  def typeID    = ElemImpl.Proc.typeID
+  def tpe = Proc
   def category  = ObjView.categComposition
 
   def hasMakeDialog = true
 
-  def mkListView[S <: Sys[S]](obj: Obj.T[S, Proc.Elem])(implicit tx: S#Tx): ProcObjView[S] with ListObjView[S] =
+  def mkListView[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx): ProcObjView[S] with ListObjView[S] =
     new ListImpl(tx.newHandle(obj)).initAttrs(obj)
 
   type Config[S <: stm.Sys[S]] = String
@@ -63,10 +61,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   }
 
   def makeObj[S <: Sys[S]](name: String)(implicit tx: S#Tx): List[Obj[S]] = {
-    import proc.Implicits._
-    val peer  = Proc[S]
-    val elem  = Proc.Elem(peer)
-    val obj   = Obj(elem)
+    val obj  = Proc[S]
     obj.name = name
     obj :: Nil
   }
@@ -94,7 +89,6 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   def mkTimelineView[S <: Sys[S]](timedID: S#ID, span: SpanLikeObj[S], obj: Proc[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): ProcObjView.Timeline[S] = {
     val spanV = span.value
-    import SpanLikeObj._
     // println("--- scan keys:")
     // proc.scans.keys.foreach(println)
 
@@ -125,15 +119,13 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
 
     val attr    = obj.attr
-    val bus     = attr[IntElem](ObjKeys.attrBus    ).map(_.value)
+    val bus     = attr.$[IntObj](ObjKeys.attrBus    ).map(_.value)
     val res = new TimelineImpl[S](tx.newHandle(obj), audio = audio, busOption = bus, context = context)
       .initAttrs(timedID, span, obj)
 
     TimelineObjViewImpl.initGainAttrs(span, obj, res)
     TimelineObjViewImpl.initMuteAttrs(span, obj, res)
     TimelineObjViewImpl.initFadeAttrs(span, obj, res)
-
-    import de.sciss.lucre.synth.expr.IdentifierSerializer
     lazy val idH = tx.newHandle(timedID)
 
     import context.{scanMap, viewMap}
@@ -206,7 +198,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  private final class TimelineImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, Proc.Elem]],
+  private final class TimelineImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Proc[S]],
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var busOption : Option[Int], context: TimelineObjView.Context[S])
     extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] with ProcObjView.Timeline[S] { self =>

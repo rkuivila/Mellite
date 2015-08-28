@@ -30,7 +30,7 @@ import scala.swing.{Swing, Label, ToggleButton, Orientation, BoxPanel, Component
 import Swing._
 
 object EnsembleViewImpl {
-  def apply[S <: Sys[S]](ensObj: Ensemble.Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
+  def apply[S <: Sys[S]](ensObj: Ensemble[S])(implicit tx: S#Tx, workspace: Workspace[S],
                                                 cursor: stm.Cursor[S], undoManager: UndoManager): Impl[S] = {
     val ens     = ensObj
     val folder  = FolderView(ens.folder)
@@ -46,7 +46,7 @@ object EnsembleViewImpl {
     res
   }
 
-  final class Impl[S <: Sys[S]](ensembleH: stm.Source[S#Tx, Ensemble.Obj[S]], transport: Transport[S],
+  final class Impl[S <: Sys[S]](ensembleH: stm.Source[S#Tx, Ensemble[S]], transport: Transport[S],
                                         val view: FolderFrameImpl.ViewImpl[S], playing: View[S])
                                        (implicit val undoManager: UndoManager, val workspace: Workspace[S],
                                         val cursor: stm.Cursor[S])

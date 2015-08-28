@@ -70,7 +70,7 @@ object CodeViewImpl {
     // val objH        = tx.newHandle(obj)
     val codeEx      = obj
     val codeVarHOpt = codeEx match {
-      case Expr.Var(vr) =>
+      case Code.Obj.Var(vr) =>
         Some(tx.newHandle(vr))
       case _            => None
     }
@@ -82,7 +82,7 @@ object CodeViewImpl {
     res
   }
 
-  private final class Impl[S <: Sys[S], In0, Out0](codeVarHOpt: Option[stm.Source[S#Tx, Expr.Var[S, Code]]],
+  private final class Impl[S <: Sys[S], In0, Out0](codeVarHOpt: Option[stm.Source[S#Tx, Code.Obj.Var[S]]],
                                         private var code: Code { type In = In0; type Out = Out0 },
                                         handlerOpt: Option[CodeView.Handler[S, In0, Out0]],
                                         hasExecute: Boolean)
@@ -141,12 +141,13 @@ object CodeViewImpl {
     def redoAction: Action = Action.wrap(codePane.editor.peer.getActionMap.get("redo"))
 
     private def saveSource(newSource: String)(implicit tx: S#Tx): Option[UndoableEdit] = {
-      val expr  = ExprImplicits[S]
+      // val expr  = ExprImplicits[S]
       // import StringObj.{varSerializer, serializer}
-      val imp = ExprImplicits[S]
+      // val imp = ExprImplicits[S]
       codeVarHOpt.map { source =>
-        val newCode = Code.Expr.newConst[S](code.updateSource(newSource))
-        EditVar.Expr[S, Code]("Change Source Code", source(), newCode)
+        val newCode = Code.Obj.newConst[S](code.updateSource(newSource))
+        implicit val codeTpe = Code.Obj
+        EditVar.Expr[S, Code, Code.Obj]("Change Source Code", source(), newCode)
       }
     }
 

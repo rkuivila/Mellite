@@ -16,19 +16,15 @@ package gui
 package impl
 package document
 
-import de.sciss.model.impl.ModelImpl
-import de.sciss.lucre.event.Sys
-import de.sciss.lucre.stm.Disposable
-import scala.concurrent.stm.TMap
 import de.sciss.desktop.Desktop
+import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing._
-import de.sciss.mellite.gui.ActionOpenWorkspace
-import de.sciss.mellite.Workspace
-import de.sciss.file._
+import de.sciss.model.impl.ModelImpl
+
+import scala.concurrent.stm.TMap
 
 object ViewHandlerImpl {
   import DocumentHandler.Document
-
   import DocumentViewHandler.WorkspaceWindow  // MMM
 
   def instance: DocumentViewHandler = impl

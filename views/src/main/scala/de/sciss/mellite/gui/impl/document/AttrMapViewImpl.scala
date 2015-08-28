@@ -134,7 +134,7 @@ object AttrMapViewImpl {
         val p1 = ch match {
           case Obj.ElemChange(u1) =>
             objView.isUpdateVisible(u1)
-          case Obj.AttrAdded  (ObjKeys.attrName, e: StringElem[S]) =>
+          case Obj.AttrAdded  (ObjKeys.attrName, e: StringObj[S]) =>
             updateObjectName(objView, Some(e.peer.value))
             true
           case Obj.AttrRemoved(ObjKeys.attrName, _) =>

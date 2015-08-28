@@ -17,17 +17,17 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{KeyStrokes, Window}
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeObj}
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.SpanLikeObj
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.edit.{EditTimelineInsertObj, EditAttrMap, Edits}
+import de.sciss.mellite.gui.edit.{EditAttrMap, EditTimelineInsertObj, Edits}
 import de.sciss.mellite.gui.impl.ProcGUIActions
-import de.sciss.mellite.gui.{TimelineObjView, ActionBounceTimeline, TimelineView}
+import de.sciss.mellite.gui.{ActionBounceTimeline, TimelineObjView, TimelineView}
 import de.sciss.mellite.{Mellite, ProcActions}
-import de.sciss.span.{SpanLike, Span}
+import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{Timeline, ObjKeys, ExprImplicits, Obj}
+import de.sciss.synth.proc.{ObjKeys, Timeline}
 
 import scala.swing.Action
 import scala.swing.event.Key
@@ -184,7 +184,7 @@ trait TimelineActions[S <: Sys[S]] {
             Edits.unlinkAndRemove(groupMod, timed.span, timed.value) :: Nil
           } else {
             timed.span match {
-              case Expr.Var(oldSpan) =>
+              case SpanLikeObj.Var(oldSpan) =>
                 val (edits1, span2, obj2) = splitObject(groupMod, selSpan.start, oldSpan, timed.value)
                 val edits3 = if (selSpan contains span2.value) edits1 else {
                   val (edits2, _, _) = splitObject(groupMod, selSpan.stop, span2, obj2)
@@ -205,7 +205,7 @@ trait TimelineActions[S <: Sys[S]] {
                   (implicit tx: S#Tx): Option[UndoableEdit] = timelineMod.flatMap { groupMod =>
     val edits: List[UndoableEdit] = views.flatMap { pv =>
       pv.span match {
-        case Expr.Var(oldSpan) =>
+        case SpanLikeObj.Var(oldSpan) =>
           val (edits, _, _) = splitObject(groupMod, time, oldSpan, pv.obj)
           edits
         case _ => Nil
@@ -215,10 +215,9 @@ trait TimelineActions[S <: Sys[S]] {
     CompoundEdit(edits, "Split Objects")
   }
 
-  private def splitObject(groupMod: proc.Timeline.Modifiable[S], time: Long, oldSpan: Expr.Var[S, SpanLike],
-                          obj: Obj[S])(implicit tx: S#Tx): (List[UndoableEdit], Expr.Var[S, SpanLike], Obj[S]) = {
-    val imp = ExprImplicits[S]
-    import imp._
+  private def splitObject(groupMod: proc.Timeline.Modifiable[S], time: Long, oldSpan: SpanLikeObj.Var[S],
+                          obj: Obj[S])(implicit tx: S#Tx): (List[UndoableEdit], SpanLikeObj.Var[S], Obj[S]) = {
+    // val imp = ExprImplicits[S]
     val leftObj   = obj // pv.obj()
     val rightObj  = ProcActions.copy[S](leftObj /*, Some(oldSpan) */)
     rightObj.attr.remove(ObjKeys.attrFadeIn)
@@ -251,8 +250,8 @@ trait TimelineActions[S <: Sys[S]] {
       case Span.HasStart(leftStart) =>
         val leftSpan  = Span(leftStart, time)
         // oldSpan()     = leftSpan
-        import SpanLikeObj.{serializer, varSerializer}
-        val edit = EditVar.Expr("Resize", oldSpan, leftSpan)
+        implicit val spanLikeTpe = SpanLikeObj
+        val edit = EditVar.Expr[S, SpanLike, SpanLikeObj]("Resize", oldSpan, leftSpan)
         Some(edit)
     }
 

@@ -23,7 +23,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc.Ensemble
 
 object EnsembleFrameImpl {
-  def apply[S <: Sys[S]](obj: Ensemble.Obj[S])
+  def apply[S <: Sys[S]](obj: Ensemble[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): EnsembleFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val ensembleView      = EnsembleViewImpl(obj)

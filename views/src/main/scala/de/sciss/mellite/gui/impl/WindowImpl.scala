@@ -17,8 +17,8 @@ package impl
 
 import de.sciss.desktop
 import de.sciss.file._
-import de.sciss.lucre.event.Sys
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.{CellView, View, Window, deferTx, requireEDT}
 import de.sciss.synth.proc.SoundProcesses
 

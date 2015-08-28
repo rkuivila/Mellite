@@ -20,14 +20,13 @@ import java.awt.event.MouseEvent
 import java.awt.{Cursor, Point, Toolkit}
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.lucre.expr.{Boolean => BooleanObj, Expr}
+import de.sciss.lucre.expr.{BooleanObj, SpanLikeObj}
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.expr.ExprImplicits
 import de.sciss.mellite.gui.TrackTool.Mute
 import de.sciss.mellite.gui.edit.EditAttrMap
-import de.sciss.span.SpanLike
-import de.sciss.synth.proc.{BooleanElem, Obj, ObjKeys}
+import de.sciss.synth.proc.ObjKeys
 import org.scalautils.TypeCheckedTripleEquals
 
 object MuteImpl {
@@ -49,19 +48,19 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   protected def commitObj(mute: Mute)(span: SpanLikeObj[S], obj: Obj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-    val imp = ExprImplicits[S]
-    import imp._
-    val newMute: Expr[S, Boolean] = obj.attr.$[BooleanElem](ObjKeys.attrMute) match {
+    // val imp = ExprImplicits[S]
+    val newMute: BooleanObj[S] = obj.attr.$[BooleanObj](ObjKeys.attrMute) match {
       // XXX TODO: BooleanObj should have `not` operator
-      case Some(Expr.Var(vr)) => val vOld = vr().value; !vOld
+      case Some(BooleanObj.Var(vr)) => val vOld = vr().value; !vOld
       case other => !other.exists(_.value)
     }
     import TypeCheckedTripleEquals._
     val newMuteOpt = if (newMute === BooleanObj.newConst[S](false)) None else Some(newMute)
-    import BooleanObj.serializer
-    val edit = EditAttrMap.expr[S, Boolean, BooleanElem](s"Adjust $name", obj, ObjKeys.attrMute, newMuteOpt) { ex =>
-      BooleanElem(BooleanObj.newVar(ex))
-    }
+    implicit val booleanTpe = BooleanObj
+    val edit = EditAttrMap.expr[S, Boolean, BooleanObj](s"Adjust $name", obj, ObjKeys.attrMute, newMuteOpt)
+//    { ex =>
+//      BooleanObj.newVar(ex)
+//    }
     Some(edit)
   }
 

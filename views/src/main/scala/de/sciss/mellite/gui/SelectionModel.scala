@@ -15,9 +15,9 @@ package de.sciss
 package mellite
 package gui
 
-import de.sciss.lucre.event.Sys
+import de.sciss.lucre.stm.Sys
+import de.sciss.mellite.gui.impl.component.{SelectionModelImpl => Impl}
 import de.sciss.model.Model
-import impl.component.{SelectionModelImpl => Impl}
 
 object SelectionModel {
   def apply[S <: Sys[S], Repr]: SelectionModel[S, Repr] = new Impl[S, Repr]

@@ -16,18 +16,18 @@ package gui
 
 import java.io.File
 
+import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.swing.{TreeTableView, View}
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.ArtifactLocationObjView
 import de.sciss.mellite.gui.impl.document.{FolderViewImpl => Impl}
 import de.sciss.model.Model
-import de.sciss.synth.proc.{Folder, Obj}
-
-import scala.collection.immutable.{IndexedSeq => Vec}
-import de.sciss.desktop.UndoManager
-import de.sciss.lucre.swing.{TreeTableView, View}
+import de.sciss.synth.proc.Folder
 
 import scala.collection.breakOut
+import scala.collection.immutable.{IndexedSeq => Vec}
 
 object FolderView {
   def apply[S <: Sys[S]](root: Folder[S])
@@ -42,7 +42,7 @@ object FolderView {
   // type Selection[S <: Sys[S]] = Vec[stm.Source[S#Tx, Obj[S]]]
 
   final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], selection: Selection[S]) {
-    lazy val types: Set[Int] = selection.map(_.renderData.factory.typeID)(breakOut)
+    lazy val types: Set[Int] = selection.map(_.renderData.factory.tpe.typeID)(breakOut)
   }
 
   // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344

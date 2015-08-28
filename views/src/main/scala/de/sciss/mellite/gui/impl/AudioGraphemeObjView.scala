@@ -24,7 +24,7 @@ import de.sciss.lucre.artifact.ArtifactLocation
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm
 import de.sciss.model.Change
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat}
 import de.sciss.synth.proc.Grapheme
@@ -33,11 +33,11 @@ import scala.swing.{Component, Label}
 import scala.util.Try
 
 object AudioGraphemeObjView extends ListObjView.Factory {
-  type E[S <: stm.Sys[S]] = Grapheme.Expr.Audio[S]
+  type E[~ <: stm.Sys[~]] = Grapheme.Expr.Audio[~] // Grapheme.Expr.Audio[S]
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Music)
   val prefix    = "AudioGrapheme"
   def humanName = "Audio File"
-  def typeID    = ElemImpl.AudioGrapheme.typeID
+  def tpe = Grapheme.Expr.Audio // ElemImpl.AudioGrapheme.typeID
   def hasMakeDialog = true
 
   def category = ObjView.categResources

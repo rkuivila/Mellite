@@ -17,10 +17,9 @@ package edit
 
 import javax.swing.undo.{AbstractUndoableEdit, UndoableEdit}
 
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.SpanLikeObj
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Obj, Sys}
-import de.sciss.span.SpanLike
 import de.sciss.synth.proc.Timeline
 
 // direction: true = insert, false = remove

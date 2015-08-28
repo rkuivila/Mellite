@@ -17,11 +17,10 @@ package gui
 
 import javax.swing.Icon
 
-import de.sciss.lucre.{event => evt, stm}
-import de.sciss.lucre.stm.Disposable
+import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
-import de.sciss.synth.proc.{Elem, Obj}
+import de.sciss.lucre.stm
 
 import scala.language.higherKinds
 
@@ -40,11 +39,11 @@ object ObjView {
     def prefix    : String
     def humanName : String
     def icon      : Icon
-    def typeID    : Int
+    def tpe       : Obj.Type
 
     type Config[S <: stm.Sys[S]]
 
-    type E[~ <: stm.Sys[~]] <: Elem[~]
+    type E[~ <: stm.Sys[~]] <: Obj[~]
 
     /** Whether it is possible to create an instance of the object via a GUI dialog. */
     def hasMakeDialog: Boolean

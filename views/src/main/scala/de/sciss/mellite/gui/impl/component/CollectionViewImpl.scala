@@ -19,14 +19,13 @@ package component
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.Window
+import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing.{View, deferTx}
+import de.sciss.lucre.synth.Sys
 import de.sciss.swingplus.PopupMenu
 
-import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.swing.{View, deferTx}
-import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.synth.proc.Obj
-
-import scala.swing.{Swing, Component, FlowPanel, Action, Button, BorderPanel}
+import scala.swing.{Action, BorderPanel, Button, Component, FlowPanel, Swing}
 
 trait CollectionViewImpl[S <: Sys[S]]
   extends ViewHasWorkspace[S]

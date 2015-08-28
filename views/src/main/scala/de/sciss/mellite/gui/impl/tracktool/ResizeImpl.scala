@@ -19,12 +19,12 @@ package tracktool
 import java.awt.Cursor
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.SpanLikeObj
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
-import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc.Obj
+import de.sciss.span.Span
 
 final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Resize] {

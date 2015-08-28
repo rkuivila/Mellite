@@ -44,9 +44,9 @@ object DnD {
                                           selection: Span)
     extends AudioDragLike[S]
 
-  //  final case class IntDrag [S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, IntElem  ]]) extends Drag[S]
+  //  final case class IntDrag [S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, IntObj  ]]) extends Drag[S]
   //  final case class CodeDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Code.Obj[S]]) extends Drag[S]
-  //  final case class ProcDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Obj.T[S, Proc.Elem]]) extends Drag[S]
+  //  final case class ProcDrag[S <: Sys[S]](document: File, source: stm.Source[S#Tx, Proc[S]]) extends Drag[S]
 
   final case class GlobalProcDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Proc[S]])
     extends Drag[S]

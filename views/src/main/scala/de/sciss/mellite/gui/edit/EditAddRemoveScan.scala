@@ -15,11 +15,11 @@ package de.sciss.mellite
 package gui
 package edit
 
-import javax.swing.undo.{UndoableEdit, AbstractUndoableEdit}
+import javax.swing.undo.{AbstractUndoableEdit, UndoableEdit}
 
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Sys
 import de.sciss.synth.proc.Proc
-import de.sciss.lucre.event.Sys
 
 // direction: true = insert, false = remove
 // XXX TODO - should disconnect links and restore them in undo

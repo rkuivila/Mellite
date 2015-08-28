@@ -18,26 +18,28 @@ package impl
 import javax.swing.SpinnerNumberModel
 
 import de.sciss.desktop
-import de.sciss.lucre.expr.{Expr, Int => IntObj}
+import de.sciss.lucre.expr.{IntObj, Expr}
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm
 import de.sciss.swingplus.Spinner
 import de.sciss.synth.proc
-import de.sciss.synth.proc.impl.ElemImpl
-import de.sciss.synth.proc.{Confluent, IntElem, Obj}
+import de.sciss.synth.proc.Confluent
 
 import scala.util.Try
 
+import proc.Implicits._
+
 object IntObjView extends ListObjView.Factory {
-  type E[S <: stm.Sys[S]] = IntElem[S]
+  type E[~ <: stm.Sys[~]] = IntObj[~]
   val icon      = ObjViewImpl.raphaelIcon(Shapes.IntegerNumbers)
   val prefix    = "Int"
   def humanName = prefix
-  def typeID    = ElemImpl.Int.typeID
+  def tpe = IntObj
 
   def category = ObjView.categPrimitives
 
-  def mkListView[S <: Sys[S]](obj: Obj.T[S, IntElem])(implicit tx: S#Tx): IntObjView[S] with ListObjView[S] = {
+  def mkListView[S <: Sys[S]](obj: IntObj[S])(implicit tx: S#Tx): IntObjView[S] with ListObjView[S] = {
     val ex          = obj
     val value       = ex.value
     val isEditable  = ex match {
@@ -61,26 +63,25 @@ object IntObjView extends ListObjView.Factory {
   }
 
   def makeObj[S <: Sys[S]](config: (String, Int))(implicit tx: S#Tx): List[Obj[S]] = {
-    import proc.Implicits._
     val (name, value) = config
-    val obj = Obj(IntElem(IntObj.newVar(IntObj.newConst[S](value))))
+    val obj = IntObj.newVar(IntObj.newConst[S](value))
     obj.name = name
     obj :: Nil
   }
 
-  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj.T[S, IntElem]],
+  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, IntObj[S]],
                                 var value: Int,
                                 override val isEditable: Boolean, val isViewable: Boolean)
     extends IntObjView[S]
     with ListObjView /* .Int */[S]
     with ObjViewImpl.Impl[S]
-    with ListObjViewImpl.SimpleIntObj[S]
+    with ListObjViewImpl.SimpleExpr[S, Int, IntObj]
     with ListObjViewImpl.StringRenderer
     /* with NonViewable[S] */ {
 
     override def obj(implicit tx: S#Tx) = objH()
 
-    type E[~ <: stm.Sys[~]] = IntElem[~]
+    type E[~ <: stm.Sys[~]] = IntObj[~]
 
     def factory = IntObjView
 
@@ -100,5 +101,5 @@ object IntObjView extends ListObjView.Factory {
   }
 }
 trait IntObjView[S <: stm.Sys[S]] extends ObjView[S] {
-  override def obj(implicit tx: S#Tx): IntElem.Obj[S]
+  override def obj(implicit tx: S#Tx): IntObj[S]
 }

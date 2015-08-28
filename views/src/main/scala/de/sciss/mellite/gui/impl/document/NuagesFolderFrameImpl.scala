@@ -23,7 +23,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.nuages.Nuages
 
 object NuagesFolderFrameImpl {
-  def apply[S <: Sys[S]](obj: Nuages.Obj[S])
+  def apply[S <: Sys[S]](obj: Nuages[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Window[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val ensembleView      = NuagesFolderViewImpl(obj)

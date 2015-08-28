@@ -20,22 +20,22 @@ import de.sciss.icons.raphael
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm
 import de.sciss.swingplus.ComboBox
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{Code, Obj}
+import de.sciss.synth.proc.Code
 
 import scala.swing.{Component, Label}
 
 // -------- Code --------
 
 object CodeObjView extends ListObjView.Factory {
-  type E[S <: stm.Sys[S]] = Code.Elem[S]
+  type E[~ <: stm.Sys[~]] = Code.Obj[~]
   val icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Code)
   val prefix      = "Code"
   def humanName   = "Source Code"
   def category    = ObjView.categMisc
-  def typeID      = Code.typeID
+  def tpe = Code.Obj
   def hasMakeDialog   = true
 
   def mkListView[S <: Sys[S]](obj: Code.Obj[S])(implicit tx: S#Tx): CodeObjView[S] with ListObjView[S] = {

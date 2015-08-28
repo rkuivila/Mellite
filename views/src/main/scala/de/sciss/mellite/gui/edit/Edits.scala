@@ -18,13 +18,13 @@ package edit
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.lucre.expr.{IntObj, LongObj, SpanLikeObj}
-import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.expr.{StringObj, IntObj, LongObj, SpanLikeObj}
+import de.sciss.lucre.{expr, stm}
+import de.sciss.lucre.stm.{Sys, Obj}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.mellite.ProcActions.{Move, Resize}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc
+import de.sciss.synth.{SynthGraph, proc}
 import de.sciss.synth.proc.{SynthGraphObj, Code, ObjKeys, Proc, Scan, Scans}
 import org.scalautils.TypeCheckedTripleEquals
 
@@ -35,10 +35,12 @@ object Edits {
   def setBus[S <: Sys[S]](objects: Iterable[Obj[S]], intExpr: IntObj[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     val name  = "Set Bus"
+    implicit val intTpe = IntObj
     val edits: List[UndoableEdit] = objects.map { obj =>
-      EditAttrMap.expr[S, Int, IntElem](name, obj, ObjKeys.attrBus, Some(intExpr)) { ex =>
-        IntElem(IntObj.newVar(ex))
-      }
+      EditAttrMap.expr[S, Int, IntObj](name, obj, ObjKeys.attrBus, Some(intExpr))
+//      { ex =>
+//        IntObj(IntObj.newVar(ex))
+//      }
     } (breakOut)
     CompoundEdit(edits, name)
   }
@@ -77,7 +79,8 @@ object Edits {
 
         procs.foreach { p =>
           val graphEx = SynthGraphObj.newConst[S](sg)  // XXX TODO: ideally would link to code updates
-          val edit1   = EditVar.Expr(editName, p.graph, graphEx)
+          implicit val sgTpe = SynthGraphObj
+          val edit1   = EditVar.Expr[S, SynthGraph, SynthGraphObj](editName, p.graph, graphEx)
           edits += edit1
           if (attrNameOpt.nonEmpty) {
             val edit2 = EditAttrMap("Set Object Name", p, ObjKeys.attrName, attrNameOpt)
@@ -112,11 +115,13 @@ object Edits {
     }
   }
 
-  def setName[S <: Sys[S]](obj: Obj[S], nameOpt: Option[Expr[S, String]])
+  def setName[S <: Sys[S]](obj: Obj[S], nameOpt: Option[StringObj[S]])
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    val edit = EditAttrMap.expr[S, String, StringElem]("Rename Object", obj, ObjKeys.attrName, nameOpt) { ex =>
-      StringElem(StringObj.newVar(ex))
-    }
+    implicit val stringTpe = StringObj
+    val edit = EditAttrMap.expr[S, String, StringObj]("Rename Object", obj, ObjKeys.attrName, nameOpt)
+//    { ex =>
+//      StringObj(StringObj.newVar(ex))
+//    }
     edit
   }
 
@@ -142,7 +147,7 @@ object Edits {
     // if there is already a link between the two, take the drag gesture as a command to remove it
     val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
       srcScan.iterator.toList.flatMap {
-        case Scan.Link.Scan(peer) => insSeq0.find(_._2 === peer).map {
+        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
           case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
         }
 
@@ -163,7 +168,7 @@ object Edits {
     // if there is already a link between the two, take the drag gesture as a command to remove it
     val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
       srcScan.iterator.toList.flatMap {
-        case Scan.Link.Scan(peer) => insSeq0.find(_._2 === peer).map {
+        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
           case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
         }
 
@@ -197,7 +202,7 @@ object Edits {
 
   def resize[S <: Sys[S]](span: SpanLikeObj[S], obj: Obj[S], amount: Resize, minStart: Long)
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
-    Expr.Var.unapply(span).flatMap { vr =>
+    SpanLikeObj.Var.unapply(span).flatMap { vr =>
       import amount.{deltaStart, deltaStop}
       val oldSpan   = span.value
       // val minStart  = timelineModel.bounds.start
@@ -211,7 +216,7 @@ object Edits {
       }
 
       if (dStartC != 0L || dStopC != 0L) {
-        val imp = ExprImplicits[S]
+        // val imp = ExprImplicits[S]
 
         val (dStartCC, dStopCC) = (dStartC, dStopC)
 
@@ -232,20 +237,26 @@ object Edits {
         val newSpanEx = SpanLikeObj.newConst[S](newSpan)
         if (newSpanEx === oldSpan) None else {
           val name  = "Resize"
-          val edit0 = EditVar.Expr(name, vr, newSpanEx)
-          val edit1Opt = if (dStartCC == 0L) None else
-            for {
-              objT <- Proc.unapply(obj)
-              (LongObj.Var(time), g, audio) <- ProcActions.getAudioRegion2(objT)
-            } yield {
-              // XXX TODO --- crazy work-around. BiPin / Grapheme
-              // must be observed, otherwise underlying SkipList is not updated !!!
-              val temp = g.changed.react(_ => _ => ())
-              val newAudioSpan = time() - dStartCC
-              val res = EditVar.Expr(name, time, newAudioSpan)
-              temp.dispose()
-              res
-            }
+          implicit val spanLikeTpe = SpanLikeObj
+          val edit0 = EditVar.Expr[S, SpanLike, SpanLikeObj](name, vr, newSpanEx)
+          val edit1Opt = if (dStartCC == 0L) None else obj match {
+            case objT: Proc[S] =>
+              for {
+                // objT <- Proc.unapply(obj)
+                (LongObj.Var(time), g, audio) <- ProcActions.getAudioRegion2(objT)
+              } yield {
+                // XXX TODO --- crazy work-around. BiPin / Grapheme
+                // must be observed, otherwise underlying SkipList is not updated !!!
+                val temp = g.changed.react(_ => _ => ())
+                import expr.Ops._
+                val newAudioSpan = time() - dStartCC
+                implicit val longTpe = LongObj
+                val res = EditVar.Expr[S, Long, LongObj](name, time, newAudioSpan)
+                temp.dispose()
+                res
+              }
+            case _ => None
+          }
           CompoundEdit(edit0 :: edit1Opt.toList, name)
         }
       } else None
@@ -261,18 +272,21 @@ object Edits {
       // var, check the value stored in the var, and update the var
       // instead (recursion). otherwise, it will be some combinatorial
       // expression, and we could decide to construct a binary op instead!
-      val expr = ExprImplicits[S]
+      // val expr = ExprImplicits[S]
 
-      val newTrack: IntObj[S] = obj.attr.$[IntElem](TimelineObjView.attrTrackIndex) match {
-        case Some(Expr.Var(vr)) => vr() + deltaTrack
+      import expr.Ops._
+      val newTrack: IntObj[S] = obj.attr.$[IntObj](TimelineObjView.attrTrackIndex) match {
+        case Some(IntObj.Var(vr)) => vr() + deltaTrack
         case other => other.fold(0)(_.value) + deltaTrack
       }
       import TypeCheckedTripleEquals._
       val newTrackOpt = if (newTrack === IntObj.newConst[S](0)) None else Some(newTrack)
-      val edit = EditAttrMap.expr[S, Int, IntElem]("Adjust Track Placement", obj,
-        TimelineObjView.attrTrackIndex, newTrackOpt) { ex =>
-          IntElem(IntObj.newVar(ex))
-        }
+      implicit val intTpe = IntObj
+      val edit = EditAttrMap.expr[S, Int, IntObj]("Adjust Track Placement", obj,
+        TimelineObjView.attrTrackIndex, newTrackOpt)
+//      { ex =>
+//          IntObj(IntObj.newVar(ex))
+//        }
       edits ::= edit
     }
 
@@ -285,12 +299,14 @@ object Edits {
     }
     val name  = "Move"
     if (deltaC != 0L) {
-      val imp = ExprImplicits[S]
+      // val imp = ExprImplicits[S]
       span match {
-        case Expr.Var(vr) =>
+        case SpanLikeObj.Var(vr) =>
           // s.transform(_ shift deltaC)
+          import expr.Ops._
           val newSpan = vr() shift deltaC
-          val edit    = EditVar.Expr(name, vr, newSpan)
+          implicit val spanLikeTpe = SpanLikeObj
+          val edit    = EditVar.Expr[S, SpanLike, SpanLikeObj](name, vr, newSpan)
           edits ::= edit
         case _ =>
       }
@@ -302,7 +318,7 @@ object Edits {
   def unlinkAndRemove[S <: Sys[S]](timeline: proc.Timeline.Modifiable[S], span: SpanLikeObj[S], obj: Obj[S])
                                   (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val scanEdits = obj match {
-      case Proc.Obj(objT) =>
+      case objT: Proc[S] =>
         val proc  = objT
         // val scans = proc.scans
         val edits1 = proc.inputs.iterator.toList.flatMap { case (key, scan) =>

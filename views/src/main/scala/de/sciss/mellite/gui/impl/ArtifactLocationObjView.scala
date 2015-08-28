@@ -21,24 +21,23 @@ import de.sciss.desktop
 import de.sciss.file._
 import de.sciss.icons.raphael
 import de.sciss.lucre.artifact.ArtifactLocation
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing._
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm
 import de.sciss.mellite.gui.edit.EditArtifactLocation
 import de.sciss.model.Change
 import de.sciss.synth.proc
-import de.sciss.synth.proc.impl.ElemImpl
-import de.sciss.synth.proc.{ArtifactLocationElem, Obj}
 import org.scalautils.TypeCheckedTripleEquals
 
-// -------- ArtifactLocation --------
+import proc.Implicits._
 
 object ArtifactLocationObjView extends ListObjView.Factory {
-  type E[S <: stm.Sys[S]] = ArtifactLocationElem[S]
+  type E[~ <: stm.Sys[~]] = ArtifactLocation[~] // Elem[S]
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Location)
   val prefix    = "ArtifactLocation"
   def humanName = "File Location"
-  def typeID    = ElemImpl.ArtifactLocation.typeID
+  def tpe    = ArtifactLocation
   def hasMakeDialog = true
 
   def category = ObjView.categResources
@@ -46,7 +45,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
   def mkListView[S <: Sys[S]](obj: ArtifactLocation[S])(implicit tx: S#Tx): ArtifactLocationObjView[S] with ListObjView[S] = {
     val peer      = obj
     val value     = peer.directory
-    val editable  = peer.modifiableOption.isDefined
+    val editable  = ArtifactLocation.Var.unapply(peer).isDefined // .modifiableOption.isDefined
     new Impl(tx.newHandle(obj), value, isEditable = editable).initAttrs(obj)
   }
 
@@ -57,11 +56,8 @@ object ArtifactLocationObjView extends ListObjView.Factory {
     ActionArtifactLocation.queryNew(window = window)
 
   def makeObj[S <: Sys[S]](config: (String, File))(implicit tx: S#Tx): List[Obj[S]] = {
-    import proc.Implicits._
     val (name, directory) = config
-    val peer  = ArtifactLocation[S](directory)
-    val elem  = ArtifactLocationElem(peer)
-    val obj   = Obj(elem)
+    val obj  = ArtifactLocation.newVar[S](directory)
     obj.name = name
     obj :: Nil
   }
@@ -76,14 +72,14 @@ object ArtifactLocationObjView extends ListObjView.Factory {
 
     override def obj(implicit tx: S#Tx) = objH()
 
-    type E[~ <: stm.Sys[~]] = ArtifactLocationElem[~]
+    type E[~ <: stm.Sys[~]] = ArtifactLocation[~]
 
     def factory = ArtifactLocationObjView
 
     def value   = directory
 
     def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = update match {
-      case ArtifactLocation.Moved(_, Change(_, now)) =>
+      case Change(_, now: File) =>
         deferTx { directory = now }
         true
       case _ => false
@@ -98,7 +94,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
       dirOpt.flatMap { newDir =>
         val loc = obj
         import TypeCheckedTripleEquals._
-        if (loc.directory === newDir) None else loc.modifiableOption.map { mod =>
+        if (loc.directory === newDir) None else ArtifactLocation.Var.unapply(loc).map { mod =>
           EditArtifactLocation(mod, newDir)
         }
       }

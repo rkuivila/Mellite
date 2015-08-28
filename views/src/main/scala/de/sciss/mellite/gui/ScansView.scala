@@ -16,10 +16,10 @@ package gui
 
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.View
-import de.sciss.lucre.event.Sys
+import de.sciss.mellite.gui.impl.{ScansViewImpl => Impl}
 import de.sciss.synth.proc.Proc
-import impl.{ScansViewImpl => Impl}
 
 object ScansView {
   final case class Drag[S <: Sys[S]](workspace: Workspace[S],

@@ -25,26 +25,25 @@ import javax.swing.{CellEditor, DropMode, JComponent, TransferHandler}
 
 import de.sciss.desktop.UndoManager
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.lucre
 import de.sciss.lucre.artifact.Artifact
-import de.sciss.lucre.expr.{Expr, String => StringObj}
+import de.sciss.lucre.expr.StringObj
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{TreeTableView, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.{EditAttrMap, EditFolderInsertObj, EditFolderRemoveObj}
-import de.sciss.model.Change
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.io.{AudioFile, AudioFileSpec}
 import de.sciss.synth.proc.Folder.Update
-import de.sciss.synth.proc.{Folder, FolderElem, Obj, ObjKeys, StringElem}
-import de.sciss.treetable.{TreeTableCellRenderer, TreeTableSelectionChanged}
+import de.sciss.synth.proc.{Folder, ObjKeys}
 import de.sciss.treetable.j.{DefaultTreeTableCellEditor, TreeTableCellEditor}
+import de.sciss.treetable.{TreeTableCellRenderer, TreeTableSelectionChanged}
 import org.scalautils.TypeCheckedTripleEquals
 
-import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.collection.breakOut
+import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.swing.Component
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -76,12 +75,12 @@ object FolderViewImpl {
     protected object TTHandler
       extends TreeTableView.Handler[S, Obj[S], Folder[S], Folder.Update[S], ListObjView[S]] {
 
-      def branchOption(node: Obj[S]): Option[Folder[S]] = node.elem match {
-        case fe: FolderElem[S] => Some(fe.peer)
+      def branchOption(node: Obj[S]): Option[Folder[S]] = node match {
+        case fe: Folder[S] => Some(fe)
         case _ => None
       }
 
-      def children(branch: Folder[S])(implicit tx: S#Tx): lucre.data.Iterator[S#Tx, Obj[S]] =
+      def children(branch: Folder[S])(implicit tx: S#Tx): Iterator[Obj[S]] =
         branch.iterator
 
       private def updateObjectName(obj: Obj[S], nameOption: Option[String])(implicit tx: S#Tx): Boolean = {
@@ -94,28 +93,29 @@ object FolderViewImpl {
         }
       }
 
-      private def updateObject(obj: Obj[S], upd: Obj.Update[S])(implicit tx: S#Tx): Boolean =
-        (false /: upd.changes) { (p, ch) =>
-          val p1 = ch match {
-            case Obj.ElemChange(u1) =>
-              treeView.nodeView(obj).exists { nv =>
-                val objView = nv.renderData
-                objView.isUpdateVisible(u1)
-              }
-            case Obj.AttrAdded  (ObjKeys.attrName, StringElem.Obj(e)) =>
-              updateObjectName(obj, Some(e.value))
-            case Obj.AttrRemoved(ObjKeys.attrName, _) =>
-              updateObjectName(obj, None)
-            case Obj.AttrChange (ObjKeys.attrName, _, changes) =>
-              (false /: changes) {
-                case (res, Obj.ElemChange(Change(_, name: String))) =>
-                  res | updateObjectName(obj, Some(name))
-                case (res, _) => res
-              }
-            case _ => false
-          }
-          p | p1
-        }
+// ELEM
+//      private def updateObject(obj: Obj[S], upd: Obj.Update[S])(implicit tx: S#Tx): Boolean =
+//        (false /: upd.changes) { (p, ch) =>
+//          val p1 = ch match {
+//            case Obj.ElemChange(u1) =>
+//              treeView.nodeView(obj).exists { nv =>
+//                val objView = nv.renderData
+//                objView.isUpdateVisible(u1)
+//              }
+//            case Obj.AttrAdded  (ObjKeys.attrName, StringObj.Obj(e)) =>
+//              updateObjectName(obj, Some(e.value))
+//            case Obj.AttrRemoved(ObjKeys.attrName, _) =>
+//              updateObjectName(obj, None)
+//            case Obj.AttrChange (ObjKeys.attrName, _, changes) =>
+//              (false /: changes) {
+//                case (res, Obj.ElemChange(Change(_, name: String))) =>
+//                  res | updateObjectName(obj, Some(name))
+//                case (res, _) => res
+//              }
+//            case _ => false
+//          }
+//          p | p1
+//        }
 
       private type MUpdate = ModelUpdate[Obj[S], Folder[S]]
 
@@ -126,17 +126,18 @@ object FolderViewImpl {
         changes.flatMap {
           case Folder.Added  (idx, obj) => Vec(TreeTableView.NodeAdded  (parent, idx, obj): MUpdate)
           case Folder.Removed(idx, obj) => Vec(TreeTableView.NodeRemoved(parent, idx, obj): MUpdate)
-          case Folder.Element(obj, upd) =>
-            val isDirty = updateObject(obj, upd)
-            val v1: Vec[MUpdate] = obj match {
-              case FolderElem.Obj(objT) =>
-                upd.changes.flatMap {
-                  case Obj.ElemChange(f) => updateBranch(objT, f.asInstanceOf[Folder.Update[S]].changes)
-                  case _ => Vec.empty
-                }
-              case _ => Vec.empty
-            }
-            if (isDirty) (TreeTableView.NodeChanged(obj): MUpdate) +: v1 else v1
+// ELEM
+//          case Folder.Element(obj, upd) =>
+//            val isDirty = updateObject(obj, upd)
+//            val v1: Vec[MUpdate] = obj match {
+//              case objT: Folder[S] =>
+//                upd.changes.flatMap {
+//                  case Obj.ElemChange(f) => updateBranch(objT, f.asInstanceOf[Folder.Update[S]].changes)
+//                  case _ => Vec.empty
+//                }
+//              case _ => Vec.empty
+//            }
+//            if (isDirty) (TreeTableView.NodeChanged(obj): MUpdate) +: v1 else v1
         }
 
       private lazy val component = TreeTableCellRenderer.Default
@@ -175,15 +176,15 @@ object FolderViewImpl {
             val editOpt: Option[UndoableEdit] = cursor.step { implicit tx =>
               val text = defaultEditorJ.getText
               if (editColumn == 0) {
-                val valueOpt: Option[Expr[S, String]] /* Obj[S] */ = if (text.isEmpty || text.toLowerCase == "<unnamed>") None else {
+                val valueOpt: Option[StringObj[S]] /* Obj[S] */ = if (text.isEmpty || text.toLowerCase == "<unnamed>") None else {
                   val expr = StringObj.newConst[S](text)
-                  // Some(Obj(StringElem(elem)))
+                  // Some(Obj(StringObj(elem)))
                   Some(expr)
                 }
                 // val ed = EditAttrMap[S](s"Rename ${objView.prefix} Element", objView.obj(), ObjKeys.attrName, valueOpt)
-                import StringObj.serializer
+                implicit val stringTpe = StringObj
                 val ed = EditAttrMap.expr(s"Rename ${objView.humanName} Element", objView.obj, ObjKeys.attrName,
-                  valueOpt)(StringElem[S](_))
+                  valueOpt) // (StringObj[S](_))
                 Some(ed)
               } else {
                 objView.tryEdit(text)
@@ -291,7 +292,7 @@ object FolderViewImpl {
           // println(s"insert into $parent at index $idx")
 
           def isNested(c: Obj[S]): Boolean = c match {
-            case FolderElem.Obj(objT) =>
+            case objT: Folder[S] =>
               import TypeCheckedTripleEquals._
               objT === newParent || objT.iterator.toList.exists(isNested)
             case _ => false
@@ -394,7 +395,7 @@ object FolderViewImpl {
             val editOpt = cursor.step { implicit tx =>
               val parentOpt = tdl.path.lastOption.fold(Option(treeView.root())) { nodeView =>
                 nodeView.modelData() match {
-                  case FolderElem.Obj(objT) => Some(objT)
+                  case objT: Folder[S] => Some(objT)
                   case _ => None
                 }
               }

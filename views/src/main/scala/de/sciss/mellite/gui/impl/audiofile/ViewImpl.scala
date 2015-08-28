@@ -72,7 +72,7 @@ object ViewImpl {
       val in = if (graphemeV.numChannels == 1) Pan2.ar(in0) else in0  // XXX TODO
       Out.ar(0, in) // XXX TODO
     }
-    val diffObj = Obj(Proc.Elem(diff))
+    val diffObj = diff // Obj(Proc.Elem(diff))
     procObj.outputs.get(Proc.scanMainOut).foreach { scanOut =>
       scanOut.add(diff.inputs.add(Proc.scanMainIn))
     }
@@ -81,12 +81,12 @@ object ViewImpl {
     // val transport     = Transport[I, I](group, sampleRate = sampleRate)
     import WorkspaceHandle.Implicits._
     val transport = Transport[I](aural)
-    transport.addObject(Obj(Timeline.Elem(timeline)))
+    transport.addObject(timeline) // Obj(Timeline(timeline)))
     transport.addObject(diffObj)
 
     implicit val undoManager = new UndoManagerImpl
     // val offsetView  = LongSpinnerView  (grapheme.offset, "Offset")
-    val gainView    = DoubleSpinnerView(grapheme.gain  , "Gain", width = 90)
+    val gainView    = DoubleSpinnerView[S](grapheme.value.gain /* RRR */, "Gain", width = 90)
 
     import _workspace.inMemoryBridge
     val res: Impl[S, I] = new Impl[S, I](gainView = gainView) {

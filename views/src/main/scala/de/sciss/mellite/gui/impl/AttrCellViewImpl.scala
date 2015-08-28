@@ -15,9 +15,9 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.{Type, Expr}
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Sys, Obj, Disposable}
+import de.sciss.lucre.stm.{Elem, Sys, Obj, Disposable}
 import de.sciss.lucre.swing.CellView
 import de.sciss.lucre.swing.impl.CellViewImpl
 import de.sciss.model.Change
@@ -32,12 +32,13 @@ object AttrCellViewImpl {
     protected def h: stm.Source[S#Tx, Obj[S]]
     protected val key: String
 
-    implicit protected def companion: Elem.Companion[E]
+    // implicit protected def companion: Elem.Companion[E]
+    implicit protected def tpe: Type.Expr[A, E]
 
-    type Repr = Option[Expr[S, A]]
+    type Repr = Option[E[S]] // Expr[S, A]]
 
-    private def map[B](aObj: Obj[S])(fun: Expr[S, A] => B): Option[B] =
-      if (aObj.elem.typeID == companion.typeID) Some(fun(aObj.elem.asInstanceOf[E[S]].peer)) else None
+    private def map[B](aObj: Obj[S])(fun: E[S] => B): Option[B] =
+      if (aObj.tpe == tpe) Some(fun(aObj.asInstanceOf[E[S]])) else None
 
     def react(fun: S#Tx => Option[A] => Unit)(implicit tx: S#Tx): Disposable[S#Tx] =
       h().changed.react { implicit tx => u =>
@@ -65,7 +66,7 @@ object AttrCellViewImpl {
     def repr(implicit tx: S#Tx): Repr = {
       val opt = h().attr.$[E](key)
       opt.map {
-        case Expr.Var(vr) => vr()
+        case tpe.Var(vr) => vr()
         case other => other
       }
     }
@@ -81,7 +82,7 @@ object AttrCellViewImpl {
 
   private[gui] final class ModImpl[S <: Sys[S], A, E[~ <: Sys[~]] <: Elem[~] { type Peer = Expr[~, A] }](
          protected val h: stm.Source[S#Tx, Obj[S]],
-         protected val key: String)(implicit tpe: ExprType[A], protected val companion: Elem.Companion[E])
+         protected val key: String)(implicit tpe: Type.Expr[A, E] /*, protected val companion: Elem.Companion[E] */)
     extends Basic[S, A, E] with CellView.Var[S, Option[A]] {
 
     def serializer: Serializer[S#Tx, S#Acc, Repr] = {
@@ -95,8 +96,8 @@ object AttrCellViewImpl {
       h().attr.remove(key)
     } { ex =>
       val map = h().attr
-      map.apply[E](key) match {
-        case Some(Expr.Var(vr)) => vr() = ex
+      map.$[E](key) match {
+        case Some(tpe.Var(vr)) => vr() = ex
         case _ =>
           val exV   = Expr.Var.unapply[S, A](ex).getOrElse(tpe.newVar(ex)): E[S]#Peer
           // XXX .asInstanceOf -- WTF?

@@ -15,21 +15,20 @@ package de.sciss.mellite
 package gui
 package impl.timeline
 
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeObj}
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.{IntObj, BooleanObj, DoubleObj, SpanLikeObj}
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.synth.{expr => synthEx}
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.stm
 import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
 import de.sciss.mellite.gui.impl.{ActionView, GenericObjView, ObjViewImpl, ProcObjView}
 import de.sciss.span.SpanLike
-import de.sciss.synth.proc.{BooleanElem, DoubleElem, FadeSpec, IntElem, Obj, ObjKeys, Timeline}
+import de.sciss.synth.proc.{FadeSpec, ObjKeys, Timeline}
 
 object TimelineObjViewImpl {
   private val sync = new AnyRef
 
   def addFactory(f: Factory): Unit = sync.synchronized {
-    val tid = f.typeID
+    val tid = f.tpe.typeID
     if (map.contains(tid)) throw new IllegalArgumentException(s"View factory for type $tid already installed")
     map += tid -> f
   }
@@ -40,16 +39,16 @@ object TimelineObjViewImpl {
                         (implicit tx: S#Tx): TimelineObjView[S] = {
     val span  = timed.span
     val obj   = timed.value
-    val tid   = obj.elem.typeID
+    val tid   = obj.tpe.typeID
     // getOrElse(sys.error(s"No view for type $tid"))
     map.get(tid).fold(GenericObjView.mkTimelineView(timed.id, span, obj)) { f =>
-      f.mkTimelineView(timed.id, span, obj.asInstanceOf[Obj.T[S, f.E]], context)
+      f.mkTimelineView(timed.id, span, obj.asInstanceOf[f.E[S]], context)
     }
   }
 
   private var map = Map[Int, Factory](
-    ProcObjView .typeID -> ProcObjView,
-    ActionView  .typeID -> ActionView
+    ProcObjView .tpe.typeID -> ProcObjView,
+    ActionView  .tpe.typeID -> ActionView
   )
 
   // -------- Generic --------
@@ -57,20 +56,20 @@ object TimelineObjViewImpl {
   def initGainAttrs[S <: stm.Sys[S]](span: SpanLikeObj[S], obj: Obj[S], view: TimelineObjView.HasGain)
                                 (implicit tx: S#Tx): Unit = {
     val attr    = obj.attr
-    view.gain   = attr[DoubleElem](ObjKeys.attrGain).fold(1.0)(_.value)
+    view.gain   = attr.$[DoubleObj](ObjKeys.attrGain).fold(1.0)(_.value)
   }
 
   def initMuteAttrs[S <: stm.Sys[S]](span: SpanLikeObj[S], obj: Obj[S], view: TimelineObjView.HasMute)
                                 (implicit tx: S#Tx): Unit = {
     val attr    = obj.attr
-    view.muted  = attr[BooleanElem](ObjKeys.attrMute).exists(_.value)
+    view.muted  = attr.$[BooleanObj](ObjKeys.attrMute).exists(_.value)
   }
 
   def initFadeAttrs[S <: stm.Sys[S]](span: SpanLikeObj[S], obj: Obj[S], view: TimelineObjView.HasFade)
                                 (implicit tx: S#Tx): Unit = {
     val attr          = obj.attr
-    view.fadeIn  = attr[FadeSpec.Elem](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-    view.fadeOut = attr[FadeSpec.Elem](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
+    view.fadeIn  = attr.$[FadeSpec.Obj](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
+    view.fadeOut = attr.$[FadeSpec.Obj](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
   }
 
   trait BasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with ObjViewImpl.Impl[S] {
@@ -87,12 +86,10 @@ object TimelineObjViewImpl {
 
     def initAttrs(id: S#ID, span: SpanLikeObj[S], obj: Obj[S])(implicit tx: S#Tx): this.type = {
       val attr      = obj.attr
-      trackIndex    = attr[IntElem   ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
-      trackHeight   = attr[IntElem   ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
-      import SpanLikeObj.serializer
+      trackIndex    = attr.$[IntObj   ](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
+      trackHeight   = attr.$[IntObj   ](TimelineObjView.attrTrackHeight).fold(4)(_.value)
       spanH         = tx.newHandle(span)
       spanValue     = span.value
-      import synthEx.IdentifierSerializer
       idH           = tx.newHandle(id)
       initAttrs(obj)
     }

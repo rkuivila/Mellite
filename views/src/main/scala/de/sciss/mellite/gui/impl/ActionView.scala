@@ -18,24 +18,24 @@ package impl
 import de.sciss.desktop
 import de.sciss.desktop.OptionPane
 import de.sciss.icons.raphael
-import de.sciss.lucre.bitemp.{SpanLike => SpanLikeObj}
-import de.sciss.lucre.expr.Expr
-import de.sciss.lucre.stm.Source
+import de.sciss.lucre.expr.SpanLikeObj
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.Window
-import de.sciss.lucre.synth.{expr, Sys}
-import de.sciss.lucre.{event => evt, stm}
+import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.stm
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
-import de.sciss.serial.Serializer
-import de.sciss.span.SpanLike
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{Action, Obj}
+import de.sciss.synth.proc.Action
+
+import proc.Implicits._
 
 object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
-  type E[S <: stm.Sys[S]] = Action.Elem[S]
+  type E[~ <: stm.Sys[~]] = Action[~] // .Elem[S]
   val icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Bolt)
   val prefix      = "Action"
   def humanName   = prefix
-  def typeID      = Action.typeID
+  // def typeID      = Action.typeID
+  def tpe = Action
 
   def category    = ObjView.categComposition
 
@@ -56,10 +56,7 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
   }
 
   def makeObj[S <: Sys[S]](name: String)(implicit tx: S#Tx): List[Obj[S]] = {
-    import proc.Implicits._
-    val peer = Action.Var(Action.empty[S])
-    val elem = Action.Elem(peer)
-    val obj = Obj(elem)
+    val obj = Action.Var(Action.empty[S])
     obj.name = name
     obj :: Nil
   }
@@ -75,7 +72,7 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
 
     override def obj(implicit tx: S#Tx): Action[S] = objH()
 
-    final type E[~ <: stm.Sys[~]] = Action.Elem[~]
+    final type E[~ <: stm.Sys[~]] = Action[~] // .Elem[~]
 
     final def factory = ActionView
 

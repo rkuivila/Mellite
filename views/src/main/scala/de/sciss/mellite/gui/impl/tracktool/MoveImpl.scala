@@ -20,12 +20,11 @@ import java.awt.Cursor
 import java.awt.event.MouseEvent
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.lucre.expr.Expr
+import de.sciss.lucre.expr.SpanLikeObj
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
-import de.sciss.span.SpanLike
-import de.sciss.synth.proc.Obj
 
 final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Move] with Rubberband[S, TrackTool.Move] {

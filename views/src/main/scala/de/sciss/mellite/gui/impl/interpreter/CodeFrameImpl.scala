@@ -21,12 +21,12 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{OptionPane, UndoManager}
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Sys, IDPeek}
+import de.sciss.lucre.stm.{Obj, Sys, IDPeek}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{CellView, View}
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.impl.ActionImpl
-import de.sciss.synth.proc.{Action, Code, Proc}
+import de.sciss.synth.proc.{SynthGraphObj, Action, Code, Proc}
 
 import scala.swing.{Component, Orientation, SplitPane}
 
@@ -58,7 +58,8 @@ object CodeFrameImpl {
 
       def save(in: Unit, out: SynthGraph)(implicit tx: S#Tx): UndoableEdit = {
         val obj = objH()
-        EditVar.Expr[S, SynthGraph]("Change SynthGraph", obj.graph, SynthGraphObj.newConst[S](out))
+        implicit val sgTpe = SynthGraphObj
+        EditVar.Expr[S, SynthGraph, SynthGraphObj]("Change SynthGraph", obj.graph, SynthGraphObj.newConst[S](out))
       }
 
       def dispose()(implicit tx: S#Tx) = ()
@@ -166,11 +167,11 @@ object CodeFrameImpl {
     // create a new code object and add it to the attribute map.
     // let's just do that without undo manager
     val codeObj = obj.attr.get(key) match {
-      case Some(Code.Obj(c)) => c
+      case Some(c: Code.Obj[S]) => c
       case _ =>
         val source  = init
         val code    = Code(codeID, source)
-        val c       = Obj(Code.Elem(Code.Expr.newVar(Code.Expr.newConst[S](code))))
+        val c       = Code.Obj.newVar(Code.Obj.newConst[S](code))
         obj.attr.put(key, c)
         c
     }

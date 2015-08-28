@@ -23,12 +23,11 @@ import de.sciss.desktop
 import de.sciss.desktop.Window
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm.Disposable
-import de.sciss.lucre.swing.{CellView, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
+import de.sciss.lucre.swing.{CellView, deferTx}
 import de.sciss.lucre.{confluent, stm}
 import de.sciss.model.Change
 import de.sciss.synth.proc
-import de.sciss.synth.proc.ExprImplicits
 import de.sciss.treetable.{AbstractTreeModel, TreeColumnModel, TreeTable, TreeTableCellRenderer, TreeTableSelectionChanged}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
@@ -63,7 +62,7 @@ object CursorsFrameImpl {
     import document._
     val name    = elem.name.value
     val created = confluent.Access.info(elem.seminal        ).timeStamp
-    val updated = confluent.Access.info(elem.cursor.position).timeStamp
+    val updated = confluent.Access.info(elem.cursor.path() /* position */).timeStamp
     new CursorView(elem = elem, parent = parent, children = Vector.empty,
       name = name, created = created, updated = updated)
   }
@@ -123,7 +122,7 @@ object CursorsFrameImpl {
     final def view   = this
     // def window = component
 
-    final def cursor: stm.Cursor[S] = workspace.cursors.cursor
+    final def cursor: stm.Cursor[S] = confluent.Cursor.wrap(workspace.cursors.cursor)(workspace.system)
 
     def dispose()(implicit tx: D#Tx): Unit = {
       // implicit val dtx = workspace.system.durableTx(tx)
@@ -182,7 +181,7 @@ object CursorsFrameImpl {
       (nameOpt, ggValue.peer.getValue) match {
         case (Some(name), seminalDate: Date) =>
           val parentElem = parent.elem
-          parentElem.cursor.step { implicit tx =>
+          confluent.Cursor.wrap(parentElem.cursor)(workspace.system).step { implicit tx =>
             implicit val dtx = tx.durable: D#Tx // proc.Confluent.durable(tx)
             val seminal = tx.inputAccess.takeUntil(seminalDate.getTime)
             // lucre.event.showLog = true
@@ -253,8 +252,7 @@ object CursorsFrameImpl {
         def update(node: Node, value: String): Unit =
           if (value != node.name) {
             cursorD.step { implicit tx =>
-              val expr = ExprImplicits[D]
-              import expr._
+              // val expr = ExprImplicits[D]
               node.elem.name_=(value)
             }
           }
@@ -319,7 +317,7 @@ object CursorsFrameImpl {
         t.selection.paths.foreach { path =>
           val view  = path.last
           val elem  = view.elem
-          implicit val cursor = elem.cursor
+          implicit val cursor = confluent.Cursor.wrap(elem.cursor)(workspace.system)
           GUI.atomic[S, Unit]("View Elements", s"Opening root elements window for '${view.name}'") { implicit tx =>
             implicit val dtxView  = workspace.system.durableTx _ // (tx)
             implicit val dtx      = dtxView(tx)
