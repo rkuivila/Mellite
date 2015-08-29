@@ -17,7 +17,7 @@ package mellite
 import de.sciss.lucre.confluent.{Sys => KSys}
 import de.sciss.lucre.expr.StringObj
 import de.sciss.lucre.stm.{DurableLike => DSys, Elem, Sys}
-import de.sciss.lucre.{confluent, event => evt}
+import de.sciss.lucre.{event => evt, stm, confluent}
 import de.sciss.mellite.impl.{CursorsImpl => Impl}
 import de.sciss.serial.DataInput
 import de.sciss.{model => m}
@@ -39,19 +39,19 @@ object Cursors extends Elem.Type {
       serial.Serializer[D1#Tx, D1#Acc, Cursors[S, D1]] /* with evt.Reader[D1, Cursors[S, D1]] */ =
     Impl.serializer[S, D1]
 
-  final case class Update[S <: KSys[S], D <: DSys[D]](source: Cursors[S, D], changes: Vec[Change[S, D]])
+  final case class Update[S <: KSys[S], D <: stm.Sys[D]](source: Cursors[S, D], changes: Vec[Change[S, D]])
 
   // final case class Advanced[S <: Sys[S], D <: Sys[D]](source: Cursors[S, D], change: m.Change[S#Acc])
   //   extends Update[S, D]
 
-  sealed trait Change[S <: KSys[S], D <: DSys[D]]
+  sealed trait Change[S <: KSys[S], D <: stm.Sys[D]]
 
-  final case class Renamed     [S <: KSys[S], D <: DSys[D]](change: m.Change[String])       extends Change[S, D]
-  final case class ChildAdded  [S <: KSys[S], D <: DSys[D]](idx: Int, child: Cursors[S, D]) extends Change[S, D]
-  final case class ChildRemoved[S <: KSys[S], D <: DSys[D]](idx: Int, child: Cursors[S, D]) extends Change[S, D]
-  final case class ChildUpdate [S <: KSys[S], D <: DSys[D]](change: Update[S, D])           extends Change[S, D]
+  final case class Renamed     [S <: KSys[S], D <: stm.Sys[D]](change: m.Change[String])       extends Change[S, D]
+  final case class ChildAdded  [S <: KSys[S], D <: stm.Sys[D]](idx: Int, child: Cursors[S, D]) extends Change[S, D]
+  final case class ChildRemoved[S <: KSys[S], D <: stm.Sys[D]](idx: Int, child: Cursors[S, D]) extends Change[S, D]
+  final case class ChildUpdate [S <: KSys[S], D <: stm.Sys[D]](change: Update[S, D])           extends Change[S, D]
 }
-trait Cursors[S <: KSys[S], D <: DSys[D]]
+trait Cursors[S <: KSys[S], D <: stm.Sys[D]]
   extends Elem[D] with evt.Publisher[D, Cursors.Update[S, D]] with serial.Writable {
 
   def seminal: S#Acc

@@ -88,13 +88,14 @@ object Populate {
 
     if (DEBUG) println(s"mkloop ---2. root = $root")
 
-    for {
-      nuagesObj <- getNuages(root)
-      genF <- (nuagesObj.folder / Nuages.NameGenerators) match { case x: Folder[S] => Some(x); case _ => None }
-    } {
-      if (DEBUG) println("mkloop ---3")
-      insertByName(genF, procObj)
-      if (DEBUG) println("mkloop ---4")
+    getNuages(root).foreach { nuagesObj =>
+      (nuagesObj.folder / Nuages.NameGenerators) match {
+        case genF: Folder[S] =>
+          if (DEBUG) println("mkloop ---3")
+          insertByName(genF, procObj)
+          if (DEBUG) println("mkloop ---4")
+        case _ =>
+      }
     }
   }
 
@@ -115,17 +116,19 @@ object Populate {
       def apply[T <: stm.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
         if (DEBUG) println("prepare ---1")
         import universe._
-        for {
-          procObj <- invoker match { case x: Proc[T] => Some(x); case _ => None }
-          nuagesObj <- getNuages(root)
-        } {
-          if (DEBUG) println("prepare ---2")
-          val name    = recFormat.format(new Date)
-          val loc     = getRecLocation(nuagesObj.folder)
-          val artM    = Artifact[T](loc, Artifact.Child(name)) // loc.add(loc.directory / name) // XXX TODO - should check that it is different from previous value
-          // println(name)
-          procObj.attr.put(KeyRecArtifact, artM) // Obj(ArtifactElem(artM)))
-          if (DEBUG) println(s"prepare ---3: $name")
+        invoker.foreach {
+          case procObj: Proc[T] =>
+            getNuages(root).foreach { nuagesObj =>
+              if (DEBUG) println("prepare ---2")
+              val name    = recFormat.format(new Date)
+              val loc     = getRecLocation(nuagesObj.folder)
+              val artM    = Artifact[T](loc, Artifact.Child(name)) // loc.add(loc.directory / name) // XXX TODO - should check that it is different from previous value
+              // println(name)
+              procObj.attr.put(KeyRecArtifact, artM) // Obj(ArtifactElem(artM)))
+              if (DEBUG) println(s"prepare ---3: $name")
+            }
+
+          case _ =>
         }
       }
     }
@@ -135,18 +138,20 @@ object Populate {
       def apply[T <: stm.Sys[T]](universe: Action.Universe[T])(implicit tx: T#Tx): Unit = {
         if (DEBUG) println("dispose ---1")
         import universe._
-        for {
-          procObj <- invoker match { case p: Proc[T] => Some(p); case _ => None }
-          artObj  <- procObj.attr.$[Artifact](KeyRecArtifact)
-        } {
-          if (DEBUG) println("dispose ---2")
-          SoundProcesses.scheduledExecutorService.schedule(new Runnable {
-            def run(): Unit = SoundProcesses.atomic[T, Unit] { implicit tx =>
-              // println(f)
-              if (DEBUG) println("dispose ---3")
-              mkLoop[T](root, artObj)
+        invoker.foreach {
+          case procObj: Proc[T] =>
+            procObj.attr.$[Artifact](KeyRecArtifact).foreach { artObj =>
+              if (DEBUG) println("dispose ---2")
+              SoundProcesses.scheduledExecutorService.schedule(new Runnable {
+                def run(): Unit = SoundProcesses.atomic[T, Unit] { implicit tx =>
+                  // println(f)
+                  if (DEBUG) println("dispose ---3")
+                  mkLoop[T](root, artObj)
+                }
+              }, 1000, TimeUnit.MILLISECONDS)
             }
-          }, 1000, TimeUnit.MILLISECONDS)
+
+          case _ =>
         }
       }
     }

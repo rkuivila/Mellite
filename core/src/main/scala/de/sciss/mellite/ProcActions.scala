@@ -170,8 +170,8 @@ object ProcActions {
           val audioOffset = LongObj  .newVar(audioVal.offset) // XXX TODO
           val audioGain   = DoubleObj.newVar(audioVal.gain  )
           val gElem       = Grapheme.Expr.Audio(??? /* RRR audioVal.artifact */, audioVal.spec, audioOffset, audioGain)
-          val bi: Grapheme.TimedElem[S] = (gStart, gElem) // BiExpr(gStart, gElem)
-          grw.add(bi)
+          // val bi: Grapheme.TimedElem[S] = (gStart, gElem) // BiExpr(gStart, gElem)
+          grw.add(gStart, gElem)
           scanW add grw
         }
 
@@ -312,8 +312,8 @@ object ProcActions {
 
     // val gStart  = LongObj.newVar(time - selection.start)
     val gStart = LongObj.newVar(-gOffset)
-    val bi: Grapheme.TimedElem[S] = (gStart, grapheme) // BiExpr(gStart, grapheme)
-    grIn.add(bi)
+    // val bi: Grapheme.TimedElem[S] = (gStart, grapheme) // BiExpr(gStart, grapheme)
+    grIn.add(gStart, grapheme)
     scanIn add grIn
     proc.graph() = SynthGraphObj.tape
     (span, obj)

@@ -20,7 +20,7 @@ import de.sciss.lucre.confluent.{Sys => KSys}
 import de.sciss.lucre.event.Targets
 import de.sciss.lucre.expr.{Expr, StringObj}
 import de.sciss.lucre.stm.Elem.Type
-import de.sciss.lucre.stm.{DurableLike => DSys, Obj, Sys, Elem}
+import de.sciss.lucre.stm.{DurableLike => DSys, Copy, Obj, Sys, Elem}
 import de.sciss.lucre.{confluent, event => evt, expr, stm}
 import de.sciss.serial.{DataInput, DataOutput, Serializer}
 import de.sciss.synth.proc.Confluent
@@ -33,7 +33,8 @@ object CursorsImpl {
     val targets = evt.Targets[D1]
     val cursor  = confluent.Cursor.Data[S, D1](seminal)
     val name    = StringObj.newVar("branch")
-    val list    = expr.List.Modifiable[D1, Cursors[S, D1] /* , Cursors.Update[S, D1] */]
+    type CursorAux[~ <: stm.Sys[~]] = Cursors[S, ~]
+    val list    = expr.List.Modifiable[D1, CursorAux]
     log(s"Cursors.apply targets = $targets, list = $list")
     new Impl(targets, seminal, cursor, name, list).connect()
   }
@@ -89,8 +90,11 @@ object CursorsImpl {
 
     override def toString() = s"Cursors$id"
 
-    def copy()(implicit tx: D1#Tx, context: stm.Copy[D1]): Elem[D1] =
-      new Impl(Targets[D1], seminal, Data(cursor.path()), context(nameVar), context(list)).connect()
+    def copy[Out <: Sys[Out]]()(implicit tx: D1#Tx, txOut: Out#Tx, context: Copy[D1, Out]): Elem[Out] = {
+      type ListAux[~ <: Sys[~]] = expr.List.Modifiable[~, Cursors[S, ~]]
+      if (tx != txOut) throw new UnsupportedOperationException(s"Cannot copy cursors across systems")
+      ??? // new Impl[S, Out](Targets[Out], seminal, Data(cursor.path()), context(nameVar), context[ListAux](list)).connect()
+    }
 
     def name(implicit tx: D1#Tx): StringObj[D1] = nameVar()
     def name_=(value: StringObj[D1])(implicit tx: D1#Tx): Unit = nameVar() = value
