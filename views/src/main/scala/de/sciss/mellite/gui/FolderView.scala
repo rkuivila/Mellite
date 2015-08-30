@@ -18,9 +18,9 @@ import java.io.File
 
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.stm.{Sys, Obj}
 import de.sciss.lucre.swing.{TreeTableView, View}
-import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.mellite.gui.impl.ArtifactLocationObjView
 import de.sciss.mellite.gui.impl.document.{FolderViewImpl => Impl}
 import de.sciss.model.Model
@@ -30,7 +30,7 @@ import scala.collection.breakOut
 import scala.collection.immutable.{IndexedSeq => Vec}
 
 object FolderView {
-  def apply[S <: Sys[S]](root: Folder[S])
+  def apply[S <: SSys[S]](root: Folder[S])
                          (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                           undoManager: UndoManager): FolderView[S] = Impl(root)
 
@@ -41,7 +41,7 @@ object FolderView {
   type Selection[S <: Sys[S]] = List[TreeTableView.NodeView[S, Obj[S], Folder[S], ListObjView[S]]]
   // type Selection[S <: Sys[S]] = Vec[stm.Source[S#Tx, Obj[S]]]
 
-  final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], selection: Selection[S]) {
+  final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], cursor: stm.Cursor[S], selection: Selection[S]) {
     lazy val types: Set[Int] = selection.map(_.renderData.factory.tpe.typeID)(breakOut)
   }
 

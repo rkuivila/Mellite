@@ -87,6 +87,8 @@ sealed trait WorkspaceLike {
 sealed trait Workspace[S <: Sys[S]] extends WorkspaceLike with WorkspaceHandle[S] with Disposable[S#Tx] {
   import de.sciss.mellite.Workspace.{Group => _}
 
+  // type System = S
+
   implicit def system: S
 
   def cursor: stm.Cursor[S]
