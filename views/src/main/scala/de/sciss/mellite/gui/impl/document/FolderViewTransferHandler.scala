@@ -1,3 +1,16 @@
+/*
+ *  FolderViewTransferHandler.scala
+ *  (Mellite)
+ *
+ *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
+ *
+ *  This software is published under the GNU General Public License v3+
+ *
+ *
+ *  For further information, please contact Hanns Holger Rutz at
+ *  contact@sciss.de
+ */
+
 package de.sciss.mellite
 package gui
 package impl.document
@@ -11,7 +24,7 @@ import javax.swing.{JComponent, TransferHandler}
 import de.sciss.desktop.UndoManager
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Txn, Obj, Sys}
+import de.sciss.lucre.stm.{Copy, Txn, Obj, Sys}
 import de.sciss.lucre.swing.TreeTableView
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec}
@@ -92,8 +105,8 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
       }
 
       import TypeCheckedTripleEquals._
-      val isMove  = dropAction === TransferHandler.MOVE
-      val isCopy  = dropAction === TransferHandler.COPY
+      val isMove = dropAction === TransferHandler.MOVE
+      val isCopy = dropAction === TransferHandler.COPY
 
       // make sure we are not moving a folder within itself (it will magically disappear :)
       val sel1 = if (!isMove) sel else sel.filterNot(nv => isNested(nv.modelData()))
@@ -101,20 +114,19 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
       // if we move children within the same folder, adjust the insertion index by
       // decrementing it for any child which is above the insertion index, because
       // we will first remove all children, then re-insert them.
-      val idx0 = if (idx >= 0) idx else newParent /* .children */.size
-      val idx1 = if (!isMove) idx0 else idx0 - sel1.count { nv =>
+      val idx0 = if (idx >= 0) idx else newParent /* .children */ .size
+      val idx1 = if (!isMove) idx0
+      else idx0 - sel1.count { nv =>
         val isInNewParent = nv.parent === newParent
         val child = nv.modelData()
         isInNewParent && newParent.indexOf(child) <= idx0
       }
-      // println(s"idx0 $idx0 idx1 $idx1")
 
-      implicit val folderSer = Folder.serializer[S]
-
-      val editRemove: List[UndoableEdit] = if (!isMove) Nil else sel1.flatMap { nv =>
+      val editRemove: List[UndoableEdit] = if (!isMove) Nil
+      else sel1.flatMap { nv =>
         val parent: Folder[S] = nv.parent
-        val childH  = nv.modelData
-        val idx     = parent.indexOf(childH())
+        val childH = nv.modelData
+        val idx = parent.indexOf(childH())
         if (idx < 0) {
           println("WARNING: Parent of drag object not found")
           None
@@ -124,12 +136,22 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
         }
       }
 
-      val editInsert = sel1.zipWithIndex.map { case (nv, off) =>
-        val childH  = nv.modelData
-        val child0  = childH()
-        val child   = if (!isCopy) child0 else Obj.copy(child0)
-        EditFolderInsertObj[S](nv.renderData.humanName, newParent, idx1 + off, child)
+      val selZip = sel1.zipWithIndex
+      val editInsert = if (isCopy) {
+        val context = Copy[S, S]
+        val res = selZip.map { case (nv, off) =>
+          val in  = nv.modelData()
+          val out = context(in)
+          EditFolderInsertObj[S](nv.renderData.humanName, newParent, idx1 + off, child = out)
+        }
+        context.finish()
+        res
+      } else {
+        selZip.map { case (nv, off) =>
+          EditFolderInsertObj[S](nv.renderData.humanName, newParent, idx1 + off, child = nv.modelData())
+        }
       }
+
       val edits: List[UndoableEdit] = editRemove ++ editInsert
       val name = sel1 match {
         case single :: Nil  => single.renderData.humanName
@@ -172,26 +194,18 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
                                        (implicit txIn: In#Tx, tx: S#Tx): Option[UndoableEdit] = {
       val idx1 = if (idx >= 0) idx else newParent.size
 
-      implicit val folderSer = Folder.serializer[S]
-
-//      sel.map { nv =>
-//        val childH = nv.modelData
-//      }
-
-      val editInsert = sel.zipWithIndex.map { case (nv, off) =>
-        val childH  = nv.modelData
-        val child0  = childH()
-        val child   = Obj.copy[In, S, Obj](child0)
-        EditFolderInsertObj[S](nv.renderData.humanName, newParent, idx1 + off, child)
+      val context = Copy[In, S]
+      val edits = sel.zipWithIndex.map { case (nv, off) =>
+        val in  = nv.modelData()
+        val out = context(in)
+        EditFolderInsertObj[S](nv.renderData.humanName, newParent, idx1 + off, child = out)
       }
-      val edits: List[UndoableEdit] = editInsert
+      context.finish()
       val name = sel match {
         case single :: Nil  => single.renderData.humanName
         case _              => "Elements"
       }
-
-      val prefix = "Copy"
-      CompoundEdit(edits, s"$prefix $name")
+      CompoundEdit(edits, s"Import $name From Other Workspace")
     }
 
     private def importFiles(support: TransferSupport, parent: Folder[S], index: Int)
@@ -207,7 +221,6 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
           findLocation(f).map { loc => (f, spec, loc) }
         }
 
-      implicit val folderSer = Folder.serializer[S]
       // damn, this is annoying threading of state
       val (_, edits: List[UndoableEdit]) = ((index, List.empty[UndoableEdit]) /: trip) {
         case ((idx0, list0), (f, spec, either)) =>
