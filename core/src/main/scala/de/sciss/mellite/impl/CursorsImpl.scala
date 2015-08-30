@@ -11,18 +11,16 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package impl
 
 import de.sciss.lucre.confluent.Cursor.Data
 import de.sciss.lucre.confluent.{Sys => KSys}
 import de.sciss.lucre.event.Targets
-import de.sciss.lucre.expr.{Expr, StringObj}
-import de.sciss.lucre.stm.Elem.Type
-import de.sciss.lucre.stm.{DurableLike => DSys, Copy, Obj, Sys, Elem}
+import de.sciss.lucre.expr.StringObj
+import de.sciss.lucre.stm.{Copy, DurableLike => DSys, Elem, Sys}
 import de.sciss.lucre.{confluent, event => evt, expr, stm}
-import de.sciss.serial.{DataInput, DataOutput, Serializer}
+import de.sciss.serial.{DataInput, DataOutput, Serializer, Writable}
 import de.sciss.synth.proc.Confluent
 
 object CursorsImpl {
@@ -44,7 +42,7 @@ object CursorsImpl {
   //   serial.Serializer[D#Tx, D#Acc, Cursors[S, D]]
 
   implicit def serializer[S <: KSys[S], D1 <: DSys[D1]](implicit system: S { type D = D1 }):
-    serial.Serializer[D1#Tx, D1#Acc, Cursors[S, D1]] /* with evt.Reader[D1, Cursors[S, D1]] */ = new Ser[S, D1]
+    Serializer[D1#Tx, D1#Acc, Cursors[S, D1]] /* with evt.Reader[D1, Cursors[S, D1]] */ = new Ser[S, D1]
 
   private final class Ser[S <: KSys[S], D1 <: DSys[D1]](implicit system: S { type D = D1 })
     extends Serializer[D1#Tx, D1#Acc, Cursors[S, D1]] {
@@ -78,8 +76,8 @@ object CursorsImpl {
   }
 
   private final class Impl[S <: KSys[S], D1 <: DSys[D1]](
-      protected val targets: evt.Targets[D1], val seminal: S#Acc with serial.Writable,
-      val cursor: confluent.Cursor.Data[S, D1] with stm.Disposable[D1#Tx] with serial.Writable,
+      protected val targets: evt.Targets[D1], val seminal: S#Acc with Writable,
+      val cursor: confluent.Cursor.Data[S, D1] with stm.Disposable[D1#Tx] with Writable,
       nameVar: StringObj.Var[D1],
       list: expr.List.Modifiable[D1, Cursors[S, D1]]
     ) // (implicit tx: D1#Tx)
@@ -93,7 +91,12 @@ object CursorsImpl {
     def copy[Out <: Sys[Out]]()(implicit tx: D1#Tx, txOut: Out#Tx, context: Copy[D1, Out]): Elem[Out] = {
       type ListAux[~ <: Sys[~]] = expr.List.Modifiable[~, Cursors[S, ~]]
       if (tx != txOut) throw new UnsupportedOperationException(s"Cannot copy cursors across systems")
-      ??? // new Impl[S, Out](Targets[Out], seminal, Data(cursor.path()), context(nameVar), context[ListAux](list)).connect()
+      // thus, we can now assume that D1 == Out, specifically that Out <: DurableLike[Out]
+      val out = new Impl[S, D1](Targets[D1], seminal, Data(cursor.path()),
+        context(nameVar).asInstanceOf[StringObj.Var[D1]],
+        context[ListAux](list).asInstanceOf[ListAux[D1]]
+      ).connect()
+      out.asInstanceOf[Elem[Out] /* Impl[S, Out] */]
     }
 
     def name(implicit tx: D1#Tx): StringObj[D1] = nameVar()

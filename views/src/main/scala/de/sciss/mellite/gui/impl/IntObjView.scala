@@ -43,7 +43,7 @@ object IntObjView extends ListObjView.Factory {
     val ex          = obj
     val value       = ex.value
     val isEditable  = ex match {
-      case Expr.Var(_)  => true
+      case IntObj.Var(_)  => true
       case _            => false
     }
     val isViewable  = tx.isInstanceOf[Confluent.Txn]

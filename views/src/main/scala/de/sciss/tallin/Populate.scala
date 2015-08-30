@@ -89,7 +89,7 @@ object Populate {
     if (DEBUG) println(s"mkloop ---2. root = $root")
 
     getNuages(root).foreach { nuagesObj =>
-      (nuagesObj.folder / Nuages.NameGenerators) match {
+      nuagesObj.folder / Nuages.NameGenerators match {
         case genF: Folder[S] =>
           if (DEBUG) println("mkloop ---3")
           insertByName(genF, procObj)
@@ -1276,7 +1276,7 @@ object Populate {
       val ny       = 20000 // 20000 // 22050
       val zero     = 22.05
       val freq1    = fd.linexp(0, numSteps, ny, zero)
-      val freq2    = fd.linexp(0, numSteps, zero, ny) - zero
+      // val freq2    = fd.linexp(0, numSteps, zero, ny) - zero
 
       val fltSucc   = HPF.ar(in, freq1)
       val z0        = FreqShift.ar(fltSucc, -freq1)

@@ -28,7 +28,6 @@ lazy val spanVersion                = "1.3.1"
 lazy val audioWidgetsVersion        = "1.9.1"
 lazy val desktopVersion             = "0.7.1"
 lazy val sonogramVersion            = "1.9.0"
-lazy val treetableVersion           = "1.3.7"
 lazy val raphaelIconsVersion        = "1.0.2"
 lazy val pdflitzVersion             = "1.2.1"
 lazy val webLaFVersion              = "1.28"
@@ -154,7 +153,6 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       "de.sciss" %% "desktop"                         % desktopVersion,
       "de.sciss" %% "desktop-mac"                     % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component
-      "de.sciss" %% "treetable-scala"                 % treetableVersion,           // tree-table component
       "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
       "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
       "de.sciss" %  "weblaf"                          % webLaFVersion               // Swing look-and-feel

@@ -28,7 +28,7 @@ import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.artifact.Artifact
 import de.sciss.lucre.expr.StringObj
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{TreeTableView, deferTx}
@@ -44,6 +44,7 @@ import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.breakOut
 import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.concurrent.stm.Ref
 import scala.swing.Component
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -56,7 +57,7 @@ object FolderViewImpl {
 
     new Impl[S] {
       val mapViews  = tx.newInMemoryIDMap[ObjView[S]]  // folder IDs to renderers
-      val treeView  = TreeTableView[S, Obj[S], Folder[S], Folder.Update[S], ListObjView[S]](root0, TTHandler)
+      val treeView  = TreeTableView[S, Obj[S], Folder[S], ListObjView[S]](root0, TTHandler)
 
       deferTx {
         guiInit()
@@ -73,7 +74,7 @@ object FolderViewImpl {
     private type NodeView = TreeTableView.NodeView[S, Obj[S], Folder[S], Data]
 
     protected object TTHandler
-      extends TreeTableView.Handler[S, Obj[S], Folder[S], Folder.Update[S], ListObjView[S]] {
+      extends TreeTableView.Handler[S, Obj[S], Folder[S], ListObjView[S]] {
 
       def branchOption(node: Obj[S]): Option[Folder[S]] = node match {
         case fe: Folder[S] => Some(fe)
@@ -93,51 +94,81 @@ object FolderViewImpl {
         }
       }
 
-// ELEM
-//      private def updateObject(obj: Obj[S], upd: Obj.Update[S])(implicit tx: S#Tx): Boolean =
-//        (false /: upd.changes) { (p, ch) =>
-//          val p1 = ch match {
-//            case Obj.ElemChange(u1) =>
-//              treeView.nodeView(obj).exists { nv =>
-//                val objView = nv.renderData
-//                objView.isUpdateVisible(u1)
-//              }
-//            case Obj.AttrAdded  (ObjKeys.attrName, StringObj.Obj(e)) =>
-//              updateObjectName(obj, Some(e.value))
-//            case Obj.AttrRemoved(ObjKeys.attrName, _) =>
-//              updateObjectName(obj, None)
-//            case Obj.AttrChange (ObjKeys.attrName, _, changes) =>
-//              (false /: changes) {
-//                case (res, Obj.ElemChange(Change(_, name: String))) =>
-//                  res | updateObjectName(obj, Some(name))
-//                case (res, _) => res
-//              }
-//            case _ => false
-//          }
-//          p | p1
-//        }
-
       private type MUpdate = ModelUpdate[Obj[S], Folder[S]]
 
-      def mapUpdate(update: Update[S])(implicit tx: S#Tx): Vec[MUpdate] =
-        updateBranch(treeView.root(), update.changes)
+      // XXX TODO - d'oh this because ugly
+      def observe(obj: Obj[S], dispatch: S#Tx => MUpdate => Unit)
+                 (implicit tx: S#Tx): Disposable[S#Tx] = {
+        val objH      = tx.newHandle(obj)
+        val objReact  = obj.changed.react { implicit tx => u1 =>
+          // theoretically, we don't need to refresh the object,
+          // because `treeView` uses an id-map for lookup.
+          // however, there might be a problem with objects
+          // created in the same transaction as the call to `observe`.
+          //
+          val obj = objH()
+          val isDirty = treeView.nodeView(obj).exists { nv =>
+            val objView = nv.renderData
+            objView.isUpdateVisible(u1)
+          }
+          if (isDirty) dispatch(tx)(TreeTableView.NodeChanged(obj): MUpdate)
+        }
+        val nameReact = Ref(Option.empty[Disposable[S#Tx]])
+        val attr      = obj.attr
+
+        def nameAdded(e: StringObj[S])(implicit tx: S#Tx): Unit = {
+          val r = e.changed.react { implicit tx => u2 =>
+            val obj = objH()
+            val isDirty = updateObjectName(obj, Some(u2.now))
+            if (isDirty) dispatch(tx)(TreeTableView.NodeChanged(obj): MUpdate)
+          }
+          nameReact.swap(Some(r))(tx.peer).foreach(_.dispose())
+        }
+
+        def nameRemoved()(implicit tx: S#Tx): Unit =
+          nameReact.swap(None)(tx.peer).foreach(_.dispose())
+
+        attr.$[StringObj](ObjKeys.attrName).foreach(nameAdded)
+
+        val attrReact = attr.changed.react { implicit tx => u1 =>
+          val obj = objH()
+          val isDirty = u1.changes.exists {
+            case Obj.AttrAdded  (ObjKeys.attrName, e: StringObj[S]) =>
+              nameAdded(e)
+              updateObjectName(obj, Some(e.value))
+            case Obj.AttrRemoved(ObjKeys.attrName, _) =>
+              nameRemoved()
+              updateObjectName(obj, None)
+          }
+          if (isDirty) dispatch(tx)(TreeTableView.NodeChanged(obj): MUpdate)
+        }
+
+        val folderReact = obj match {
+          case f: Folder[S] =>
+            val res = f.changed.react { implicit tx => u2 =>
+              u2.list.modifiableOption.foreach { folder =>
+                val m = updateBranch(folder, u2.changes)
+                m.foreach(dispatch(tx)(_))
+              }
+            }
+            Some(res)
+          case _            => None
+        }
+
+        new Disposable[S#Tx] {
+          def dispose()(implicit tx: S#Tx): Unit = {
+            objReact .dispose()
+            attrReact.dispose()
+            nameRemoved()
+            folderReact.foreach(_.dispose())
+          }
+        }
+      }
 
       private def updateBranch(parent: Folder[S], changes: Vec[Folder.Change[S]])(implicit tx: S#Tx): Vec[MUpdate] =
         changes.flatMap {
           case Folder.Added  (idx, obj) => Vec(TreeTableView.NodeAdded  (parent, idx, obj): MUpdate)
           case Folder.Removed(idx, obj) => Vec(TreeTableView.NodeRemoved(parent, idx, obj): MUpdate)
-// ELEM
-//          case Folder.Element(obj, upd) =>
-//            val isDirty = updateObject(obj, upd)
-//            val v1: Vec[MUpdate] = obj match {
-//              case objT: Folder[S] =>
-//                upd.changes.flatMap {
-//                  case Obj.ElemChange(f) => updateBranch(objT, f.asInstanceOf[Folder.Update[S]].changes)
-//                  case _ => Vec.empty
-//                }
-//              case _ => Vec.empty
-//            }
-//            if (isDirty) (TreeTableView.NodeChanged(obj): MUpdate) +: v1 else v1
         }
 
       private lazy val component = TreeTableCellRenderer.Default

@@ -136,7 +136,7 @@ object ObjViewImpl {
       val ex          = obj
       val value       = ex.value
       val isEditable  = ex match {
-        case Expr.Var(_)  => true
+        case LongObj.Var(_)  => true
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
@@ -203,7 +203,7 @@ object ObjViewImpl {
       val ex          = obj
       val value       = ex.value
       val isEditable  = ex match {
-        case Expr.Var(_)  => true
+        case DoubleObj.Var(_)  => true
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
@@ -269,7 +269,7 @@ object ObjViewImpl {
       val ex          = obj
       val value       = ex.value
       val isEditable  = ex match {
-        case Expr.Var(_)  => true
+        case BooleanObj.Var(_)  => true
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
@@ -323,7 +323,7 @@ object ObjViewImpl {
       val ex          = obj
       val value       = ex.value
       val isEditable  = ex match {
-        case Expr.Var(_)  => true
+        case _Color.Obj.Var(_)  => true
         case _            => false
       }
       new Color.Impl(tx.newHandle(obj), value, isEditable0 = isEditable).initAttrs(obj)
@@ -713,7 +713,7 @@ object ObjViewImpl {
       val playingEx = ens.playing
       val playing = playingEx.value
       val isEditable  = playingEx match {
-        case Expr.Var(_)  => true
+        case BooleanObj.Var(_)  => true
         case _            => false
       }
       new Ensemble.Impl(tx.newHandle(obj), playing = playing, isEditable = isEditable).initAttrs(obj)
