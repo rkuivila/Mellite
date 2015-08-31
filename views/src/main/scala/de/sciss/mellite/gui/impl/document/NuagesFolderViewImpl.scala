@@ -27,7 +27,7 @@ import de.sciss.swingplus.Separator
 
 import scala.swing.Swing._
 import scala.swing.event.ButtonClicked
-import scala.swing.{BoxPanel, Button, Component, Orientation}
+import scala.swing.{Label, BoxPanel, Button, Component, Orientation}
 
 object NuagesFolderViewImpl {
   def apply[S <: Sys[S]](nuagesObj: Nuages[S])(implicit tx: S#Tx, workspace: Workspace[S],
@@ -65,12 +65,19 @@ object NuagesFolderViewImpl {
       ggPower.icon          = GUI.iconNormal  (shpPower)
       ggPower.disabledIcon  = GUI.iconDisabled(shpPower)
 
-      val ggClear = Button("Clear Timeline") {
+      val ggClearTL = Button("Clear") {
         cursor.step { implicit tx =>
           val tl = nuagesH().timeline
           tl.modifiableOption.foreach { tlMod =>
             tlMod.clear() // XXX TODO -- use undo manager?
           }
+        }
+      }
+
+      val ggViewTL = Button("View") {
+        cursor.step { implicit tx =>
+          val tl = nuagesH().timeline
+          TimelineFrame(tl)
         }
       }
 
@@ -87,7 +94,10 @@ object NuagesFolderViewImpl {
         contents += new BoxPanel(Orientation.Horizontal) {
           contents += ggPower
           contents += HStrut(32)
-          contents += ggClear
+          contents += new Label("Timeline:")
+          contents += ggClearTL
+          contents += ggViewTL
+          contents += HStrut(32)
           contents += ggPopulate
         }
       }
