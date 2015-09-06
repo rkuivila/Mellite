@@ -143,6 +143,7 @@ object FolderViewImpl {
             case Obj.AttrRemoved(ObjKeys.attrName, _) =>
               nameRemoved()
               updateObjectName(obj, None)
+            case _ => false
           }
           if (isDirty) dispatch(tx)(TreeTableView.NodeChanged(obj): MUpdate)
         }
