@@ -88,8 +88,10 @@ object Populate {
 
     if (DEBUG) println(s"mkloop ---2. root = $root")
 
-    getNuages(root).foreach { nuagesObj =>
-      nuagesObj.folder / Nuages.NameGenerators match {
+    val nuagesOpt = getNuages(root)
+    nuagesOpt.foreach { nuagesObj =>
+      val genOpt = nuagesObj.folder / Nuages.NameGenerators
+      genOpt.foreach {
         case genF: Folder[S] =>
           if (DEBUG) println("mkloop ---3")
           insertByName(genF, procObj)
@@ -196,6 +198,7 @@ object Populate {
     import ugen._
 
     Mutagens(dsl, sConfig, nConfig)
+    Anemone (dsl, sConfig, nConfig)
 
     val masterChansOption = nConfig.masterChannels
 
