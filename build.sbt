@@ -7,22 +7,23 @@ lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "3.0.0-SNAPSHOT"
+lazy val soundProcessesVersion      = "3.1.0"
 lazy val interpreterPaneVersion     = "1.7.2"
-lazy val scalaColliderUGenVersion   = "1.13.3"
-lazy val lucreVersion               = "3.0.0-SNAPSHOT"
+lazy val scalaColliderUGenVersion   = "1.13.4"
+lazy val lucreVersion               = "3.1.0"
 lazy val fscapeJobsVersion          = "1.5.0"
 lazy val strugatzkiVersion          = "2.9.0"
 lazy val scalaUtilsVersion          = "2.1.7"
 lazy val scalaOSCVersion            = "1.1.5"
+lazy val playJSONVersion            = "0.2.0"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "2.0.0-SNAPSHOT"
-lazy val scalaColliderSwingVersion  = "1.25.2"
-lazy val lucreSwingVersion          = "1.0.0-SNAPSHOT"
+lazy val nuagesVersion              = "2.0.0"
+lazy val scalaColliderSwingVersion  = "1.25.3"
+lazy val lucreSwingVersion          = "1.1.0"
 lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
 lazy val audioWidgetsVersion        = "1.9.1"
@@ -129,7 +130,8 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
       "de.sciss"        %% "strugatzki"               % strugatzkiVersion,        // feature extraction
       "de.sciss"        %% "span"                     % spanVersion,              // makes sbt happy :-E
       "org.scalautils"  %% "scalautils"               % scalaUtilsVersion,        // type-safe equals
-      "de.sciss"        %% "scalaosc"                 % scalaOSCVersion           // important fixes
+      "de.sciss"        %% "scalaosc"                 % scalaOSCVersion,          // important fixes
+      "de.sciss"        %% "play-json-sealed"         % playJSONVersion
     ),
     initialCommands in console := "import de.sciss.mellite._"
   )

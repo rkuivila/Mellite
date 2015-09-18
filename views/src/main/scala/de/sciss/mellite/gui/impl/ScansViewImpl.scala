@@ -276,7 +276,7 @@ object ScansViewImpl {
       val linkView    = mkLinkView(link)
       val scanMap     = if (isInput) scanInMap else scanOutMap
       val scanView    = scanMap(key)(tx.peer)
-      scanView.map.put(link.id, linkView)
+      scanView.map.put(link.peerID, linkView)
       deferTx {
         scanView.model += linkView
       }
@@ -286,7 +286,7 @@ object ScansViewImpl {
                                   (implicit tx: S#Tx): Unit = {
       val scanMap = if (isInput) scanInMap else scanOutMap
       scanMap.get(key)(tx.peer).fold(println(s"WARNING: Scan not found: $key")) { scanView =>
-        val id          = link.id
+        val id          = link.peerID
         val listViewOpt = scanView.map.get(id)
         scanView.map.remove(id)
         listViewOpt.fold(println(s"WARNING: Link not found: $key, $link")) { listView =>

@@ -21,7 +21,7 @@ import java.awt.datatransfer.Transferable
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.file.File
+import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing._
@@ -36,7 +36,7 @@ import de.sciss.synth.proc.{AuralSystem, Grapheme, Proc, Timeline, Transport, Wo
 import de.sciss.{sonogram, synth}
 
 import scala.swing.Swing._
-import scala.swing.{BorderPanel, BoxPanel, Component, Label, Orientation, Swing}
+import scala.swing.{BorderPanel, BoxPanel, Component, Label, Orientation}
 
 object ViewImpl {
   def apply[S <: Sys[S]](obj0: Grapheme.Expr.Audio[S])
@@ -55,11 +55,13 @@ object ViewImpl {
     val fullSpanTL    = Span(0L, numFramesTL)
 
     // ---- we go through a bit of a mess here to convert S -> I ----
-    val artifact      = obj0.value.artifact
-    val artifDir      = ??? : File // RRR artifact.location.directory
-    val iLoc          = ArtifactLocation.newVar[I](artifDir)
-    val iArtifact     = Artifact(iLoc, artifact) // iLoc.add(artifact.value)
+     val artifact      = obj0.value.artifact
+     val artifDir      = artifact.parent //  artifact.location.directory
+     val iLoc          = ArtifactLocation.newVar[I](artifDir)
+     val iArtifact     = Artifact(iLoc, artifact) // iLoc.add(artifact.value)
+
     val iGrapheme     = Grapheme.Expr.Audio[I](iArtifact, graphemeV.spec, graphemeV.offset, graphemeV.gain)
+
     val (_, procObj)  = ProcActions.insertAudioRegion[I](timeline, time = Span(0L, numFramesTL),
       /* track = 0, */ grapheme = iGrapheme, gOffset = 0L /* , bus = None */)
 

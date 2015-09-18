@@ -16,15 +16,12 @@ package gui
 package impl
 package document
 
-import java.awt.datatransfer.{DataFlavor, Transferable}
 import java.io.File
-import javax.swing.TransferHandler.TransferSupport
 import javax.swing.event.{CellEditorListener, ChangeEvent}
 import javax.swing.undo.UndoableEdit
-import javax.swing.{CellEditor, DropMode, JComponent, TransferHandler}
+import javax.swing.{CellEditor, DropMode}
 
 import de.sciss.desktop.UndoManager
-import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.artifact.Artifact
 import de.sciss.lucre.expr.StringObj
 import de.sciss.lucre.stm
@@ -33,20 +30,16 @@ import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{TreeTableView, deferTx}
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.edit.{EditAttrMap, EditFolderInsertObj, EditFolderRemoveObj}
+import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.model.impl.ModelImpl
-import de.sciss.synth.io.{AudioFile, AudioFileSpec}
-import de.sciss.synth.proc.Folder.Update
 import de.sciss.synth.proc.{Folder, ObjKeys}
 import de.sciss.treetable.j.{DefaultTreeTableCellEditor, TreeTableCellEditor}
 import de.sciss.treetable.{TreeTableCellRenderer, TreeTableSelectionChanged}
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.breakOut
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.stm.Ref
 import scala.swing.Component
-import scala.util.Try
 import scala.util.control.NonFatal
 
 object FolderViewImpl {
@@ -152,7 +145,7 @@ object FolderViewImpl {
           case f: Folder[S] =>
             val res = f.changed.react { implicit tx => u2 =>
               u2.list.modifiableOption.foreach { folder =>
-                val m = updateBranch(folder, u2.changes)
+                val m = updateBranch(folder.asInstanceOf[Folder[S]] /* XXX TODO -- d'oh forgot this one */, u2.changes)
                 m.foreach(dispatch(tx)(_))
               }
             }

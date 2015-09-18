@@ -16,13 +16,14 @@ package gui
 package impl
 package document
 
+import java.io.FileInputStream
 import javax.swing.SpinnerNumberModel
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.desktop.{Desktop, KeyStrokes, Menu, UndoManager, Window}
+import de.sciss.desktop.{FileDialog, Desktop, KeyStrokes, Menu, UndoManager, Window}
 import de.sciss.lucre.expr.StringObj
 import de.sciss.lucre.{expr, stm}
 import de.sciss.lucre.stm.Obj
@@ -33,6 +34,7 @@ import de.sciss.mellite.gui.impl.component.CollectionViewImpl
 import de.sciss.swingplus.{GroupPanel, Spinner}
 import de.sciss.synth.proc.{Folder, ObjKeys}
 import org.scalautils.TypeCheckedTripleEquals
+import play.api.libs.json.Json
 
 import scala.collection.breakOut
 import scala.swing.Swing.EmptyIcon
@@ -63,6 +65,14 @@ object FolderFrameImpl {
       case _ =>
     }
 
+  private def addImportJSONAction[S <: Sys[S]](w: WindowImpl[S], action: Action): Unit =
+    Application.windowHandler.menuFactory.get("actions") match {
+      case Some(mEdit: Menu.Group) =>
+        val itDup = Menu.Item("import-json", action)
+        mEdit.add(Some(w.window), itDup)
+      case _ =>
+    }
+
   private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: CellView[S#Tx, String],
                                              isWorkspaceRoot: Boolean, interceptQuit: Boolean)
     extends WindowImpl[S](name) with FolderFrame[S] {
@@ -74,7 +84,8 @@ object FolderFrameImpl {
     private var quitAcceptor = Option.empty[() => Boolean]
 
     override protected def initGUI(): Unit = {
-      addDuplicateAction(this, view.actionDuplicate)
+      addDuplicateAction (this, view.actionDuplicate )
+      addImportJSONAction(this, view.actionImportJSON)
       if (interceptQuit) quitAcceptor = Some(Desktop.addQuitAcceptor(checkClose()))
     }
 
@@ -163,6 +174,22 @@ object FolderFrameImpl {
         case FolderView.SelectionChanged(_, sel) =>
           selectionChanged(sel.map(_.renderData))
           actionDuplicate.enabled = sel.nonEmpty
+      }
+    }
+
+    lazy val actionImportJSON: Action = new Action("Import Mellite v0.3.x JSON...") {
+      def apply(): Unit = {
+        FileDialog.open(title = title.substring(0, title.length - 3)).show(None).foreach { f =>
+//          val fi = new FileInputStream(f)
+//          try {
+//            val bytes = new Array[Byte](fi.available())
+//            fi.read(bytes)
+//            val json  = Json.parse(bytes)
+            cursor.step { implicit tx => ImportJSON[S](impl.peer.root(), f /* json */) }
+//          } finally {
+//            fi.close()
+//          }
+        }
       }
     }
 
