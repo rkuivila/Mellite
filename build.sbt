@@ -7,10 +7,10 @@ lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "3.1.0"
+lazy val soundProcessesVersion      = "3.2.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.2"
 lazy val scalaColliderUGenVersion   = "1.13.4"
-lazy val lucreVersion               = "3.1.0"
+lazy val lucreVersion               = "3.2.0-SNAPSHOT"
 lazy val fscapeJobsVersion          = "1.5.0"
 lazy val strugatzkiVersion          = "2.9.0"
 lazy val scalaUtilsVersion          = "2.1.7"
@@ -21,9 +21,9 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "2.0.0"
+lazy val nuagesVersion              = "2.1.0-SNAPSHOT"
 lazy val scalaColliderSwingVersion  = "1.25.3"
-lazy val lucreSwingVersion          = "1.1.0"
+lazy val lucreSwingVersion          = "1.2.0-SNAPSHOT"
 lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
 lazy val audioWidgetsVersion        = "1.9.1"

@@ -41,6 +41,7 @@ package object mellite {
     SoundProcesses.init()
     // Wolkenpumpe   .init()
     Color       .init()
+    Cursors     .init()
     // StringOption.init()
   }
 }

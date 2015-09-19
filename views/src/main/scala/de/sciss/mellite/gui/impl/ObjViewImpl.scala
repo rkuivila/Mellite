@@ -25,16 +25,16 @@ import de.sciss.desktop.OptionPane
 import de.sciss.file._
 import de.sciss.icons.raphael
 import de.sciss.lucre.artifact.{Artifact => _Artifact}
-import de.sciss.lucre.expr.{BooleanObj, DoubleObj, Expr, LongObj, StringObj}
-import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.expr.{BooleanObj, DoubleObj, LongObj, StringObj}
+import de.sciss.lucre.stm
+import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{View, Window, deferTx}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{expr, stm}
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.mellite.gui.impl.component.PaintIcon
 import de.sciss.mellite.gui.impl.document.NuagesFolderFrameImpl
-import de.sciss.model.Change
+import de.sciss.model.impl.ModelImpl
 import de.sciss.swingplus.{ColorChooser, GroupPanel, Spinner}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{Confluent, ObjKeys}
@@ -74,7 +74,7 @@ object ObjViewImpl {
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
-      new String.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
+      new String.Impl[S](tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).init(obj)
     }
 
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_String]
@@ -140,7 +140,7 @@ object ObjViewImpl {
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
-      new Long.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
+      new Long.Impl[S](tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).init(obj)
     }
 
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Long]
@@ -207,7 +207,7 @@ object ObjViewImpl {
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
-      new Double.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
+      new Double.Impl[S](tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).init(obj)
     }
 
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Double]
@@ -273,7 +273,7 @@ object ObjViewImpl {
         case _            => false
       }
       val isViewable  = tx.isInstanceOf[Confluent.Txn]
-      new Boolean.Impl(tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).initAttrs(obj)
+      new Boolean.Impl[S](tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).init(obj)
     }
 
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Boolean]
@@ -326,7 +326,7 @@ object ObjViewImpl {
         case _Color.Obj.Var(_)  => true
         case _            => false
       }
-      new Color.Impl(tx.newHandle(obj), value, isEditable0 = isEditable).initAttrs(obj)
+      new Color.Impl[S](tx.newHandle(obj), value, isEditable0 = isEditable).init(obj)
     }
 
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Color]
@@ -478,7 +478,7 @@ object ObjViewImpl {
       val peer      = obj
       val value     = peer.value  // peer.child.path
       val editable  = false // XXX TODO -- peer.modifiableOption.isDefined
-      new Artifact.Impl(tx.newHandle(obj), value, isEditable = editable).initAttrs(obj)
+      new Artifact.Impl[S](tx.newHandle(obj), value, isEditable = editable).init(obj)
     }
 
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[File]
@@ -501,11 +501,13 @@ object ObjViewImpl {
 
       def value   = file
 
-      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
-        case Change(_, now: File) =>
-          deferTx { file = now }
-          true
-        case _ => false
+      def init(obj: _Artifact[S])(implicit tx: S#Tx): this.type = {
+        initAttrs(obj)
+        disposables ::= obj.changed.react { implicit tx => upd => deferTx {
+          file = upd.now
+          dispatch(ObjView.Repaint(this))
+        }}
+        this
       }
 
       def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = None // XXX TODO
@@ -519,13 +521,13 @@ object ObjViewImpl {
     def icon      = UIManager.getIcon("Tree.openIcon")  // Swing.EmptyIcon
     val prefix    = "Folder"
     def humanName = prefix
-    def tpe = expr.List // RRR .Modifiable // [~, Obj[S]]
+    def tpe       = _Folder
     def category  = ObjView.categOrganisation
 
     def hasMakeDialog = true
 
     def mkListView[S <: Sys[S]](obj: _Folder[S])(implicit tx: S#Tx): ListObjView[S] =
-      new Folder.Impl(tx.newHandle(obj)).initAttrs(obj)
+      new Folder.Impl[S](tx.newHandle(obj)).initAttrs(obj)
 
     type Config[S <: stm.Sys[S]] = _String
 
@@ -644,7 +646,7 @@ object ObjViewImpl {
 
     def mkListView[S <: Sys[S]](obj: _FadeSpec.Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
       val value   = obj.value
-      new FadeSpec.Impl(tx.newHandle(obj), value).initAttrs(obj)
+      new FadeSpec.Impl[S](tx.newHandle(obj), value).init(obj)
     }
 
     type Config[S <: stm.Sys[S]] = Unit
@@ -677,15 +679,14 @@ object ObjViewImpl {
 
       def factory = FadeSpec
 
-      def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
-        case Change(_, valueNew: _FadeSpec) =>
-          deferTx {
-            value = valueNew
-          }
-          true
-        case _ => false
+      def init(obj: _FadeSpec.Obj[S])(implicit tx: S#Tx): this.type = {
+        initAttrs(obj)
+        disposables ::= obj.changed.react { implicit tx => upd => deferTx {
+          value = upd.now
+          dispatch(ObjView.Repaint(this))
+        }}
+        this
       }
-
 
       def configureRenderer(label: Label): Component = {
         val sr = _Timeline.SampleRate // 44100.0
@@ -716,7 +717,7 @@ object ObjViewImpl {
         case BooleanObj.Var(_)  => true
         case _            => false
       }
-      new Ensemble.Impl(tx.newHandle(obj), playing = playing, isEditable = isEditable).initAttrs(obj)
+      new Ensemble.Impl[S](tx.newHandle(obj), playing = playing, isEditable = isEditable).init(obj)
     }
 
     final case class Config[S <: stm.Sys[S]](name: String, offset: Long, playing: Boolean)
@@ -785,12 +786,18 @@ object ObjViewImpl {
 
       def value: Any = ()
 
-      override def isUpdateVisible(update: Any)(implicit tx: S#Tx): _Boolean = update match {
-        case _Ensemble.Update(_, changes) =>
-          (false /: changes) {
-            case (_, _Ensemble.Playing(Change(_, v))) => playing = v; true
-            case (res, _) => res
+      def init(obj: _Ensemble[S])(implicit tx: S#Tx): this.type = {
+        initAttrs(obj)
+        disposables ::= obj.changed.react { implicit tx => upd =>
+          upd.changes.foreach {
+            case _Ensemble.Playing(ch) => deferTx {
+              playing = ch.now
+              dispatch(ObjView.Repaint(this))
+            }
+            case _ =>
           }
+        }
+        this
       }
 
       override def openView(parent: Option[Window[S]])
@@ -815,7 +822,7 @@ object ObjViewImpl {
     def category = ObjView.categComposition
 
     def mkListView[S <: Sys[S]](obj: _Nuages[S])(implicit tx: S#Tx): ListObjView[S] =
-      new Nuages.Impl(tx.newHandle(obj)).initAttrs(obj)
+      new Nuages.Impl[S](tx.newHandle(obj)).initAttrs(obj)
 
     type Config[S <: stm.Sys[S]] = _String
 
@@ -880,7 +887,7 @@ object ObjViewImpl {
 
   def raphaelIcon(shape: Path2D => Unit): Icon = raphael.Icon(16)(shape)
 
-  trait Impl[S <: stm.Sys[S]] extends ObjView[S] {
+  trait Impl[S <: stm.Sys[S]] extends ObjView[S] with ModelImpl[ObjView.Update[S]] {
     override def toString = s"ElementView.${factory.prefix}(name = $name)"
 
     def objH: stm.Source[S#Tx, Obj[S]]
@@ -896,13 +903,27 @@ object ObjViewImpl {
     var nameOption : Option[String] = None
     var colorOption: Option[Color ] = None
 
-    def dispose()(implicit tx: S#Tx): Unit = ()
+    protected var disposables = List.empty[Disposable[S#Tx]]
+
+    def dispose()(implicit tx: S#Tx): Unit = disposables.foreach(_.dispose())
 
     /** Sets name and color. */
     def initAttrs(obj: Obj[S])(implicit tx: S#Tx): this.type = {
-      val attr     = obj.attr
-      nameOption   = attr.$[StringObj ](ObjKeys.attrName ).map(_.value)
-      colorOption  = attr.$[_Color.Obj](ObjView.attrColor).map(_.value)
+      val attr      = obj.attr
+
+      implicit val stringTpe = StringObj
+      val nameView  = AttrCellView[S, String, StringObj](attr, ObjKeys.attrName)
+      disposables ::= nameView.react { implicit tx => opt => deferTx {
+        nameOption = opt
+      }}
+      nameOption   = nameView()
+
+      implicit val colorTpe = _Color.Obj
+      val colorView = AttrCellView[S, _Color, _Color.Obj](attr, ObjView.attrColor)
+      disposables ::= colorView.react { implicit tx => opt => deferTx {
+        colorOption = opt
+      }}
+      colorOption  = colorView()
       this
     }
   }

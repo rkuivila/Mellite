@@ -23,6 +23,7 @@ import de.sciss.lucre.swing.impl.CellViewImpl
 import de.sciss.model.Change
 import de.sciss.serial.Serializer
 
+import scala.concurrent.stm.Ref
 import scala.language.higherKinds
 import scala.reflect.ClassTag
 
@@ -30,7 +31,7 @@ object AttrCellViewImpl {
   private[gui] trait Basic[S <: Sys[S], A, E[~ <: Sys[~]] <: Expr[~, A]]
     extends CellViewImpl.Basic[S#Tx, Option[A]] {
 
-    protected def h: stm.Source[S#Tx, Obj[S]]
+    protected def h: stm.Source[S#Tx, Obj.AttrMap[S]]
     protected val key: String
 
     // implicit protected def companion: Elem.Companion[E]
@@ -40,35 +41,11 @@ object AttrCellViewImpl {
 
     type Repr = Option[E[S]] // Expr[S, A]]
 
-    private def map[B](aObj: Obj[S])(fun: E[S] => B): Option[B] =
-      if (aObj.tpe == tpe) Some(fun(aObj.asInstanceOf[E[S]])) else None
-
     def react(fun: S#Tx => Option[A] => Unit)(implicit tx: S#Tx): Disposable[S#Tx] =
-      h().attr.changed.react { implicit tx => u =>
-        u.changes.foreach {
-          case Obj.AttrAdded  (`key`, aObj) =>
-            map(aObj) { ex =>
-              fun(tx)(Some(ex.value))
-            }
-          case Obj.AttrRemoved(`key`, aObj) =>
-            map(aObj) { ex =>
-              fun(tx)(None)
-            }
-// ELEM
-//          case Obj.AttrChange(`key`, aObj, attrChanges) =>
-//            map(aObj) { ex =>
-//              val hasValue = attrChanges.exists {
-//                case Obj.ElemChange(Change(_, _)) => true
-//                case _ => false
-//              }
-//              if (hasValue) fun(tx)(Some(ex.value))
-//            }
-          case _ =>
-        }
-      }
+      new ExprMapLikeObs(map = h(), key = key, fun = fun, tx0 = tx)
 
     def repr(implicit tx: S#Tx): Repr = {
-      val opt = h().attr.$[E](key)
+      val opt = h().$[E](key)
       opt.map {
         case tpe.Var(vr) => vr()
         case other => other
@@ -78,6 +55,57 @@ object AttrCellViewImpl {
     def apply()(implicit tx: S#Tx): Option[A] = repr.map(_.value)
   }
 
+  // XXX TODO --- lot's of overlap with CellViewImpl
+  private[this] final class ExprMapLikeObs[S <: Sys[S], A, E[~ <: Sys[~]] <: Expr[~, A]](
+      map: Obj.AttrMap[S], key: String, fun: S#Tx => Option[A] => Unit, tx0: S#Tx)(implicit tpe: Type.Expr[A, E])
+    extends Disposable[S#Tx] {
+
+    private[this] val valObs = Ref(null: Disposable[S#Tx])
+
+    private[this] val mapObs = map.changed.react { implicit tx => u =>
+      u.changes.foreach {
+        case Obj.AttrAdded(`key`, value) if value.tpe == tpe =>
+          val valueT = value.asInstanceOf[E[S]]
+          valueAdded(valueT)
+          // XXX TODO -- if we moved this into `valueAdded`, the contract
+          // could be that initially the view is updated
+          val now0 = valueT.value
+          fun(tx)(Some(now0))
+        case Obj.AttrRemoved(`key`, value) if value.tpe == tpe =>
+          if (valueRemoved()) fun(tx)(None)
+        case _ =>
+      }
+    } (tx0)
+
+    map.get(key)(tx0).foreach { value =>
+      if (value.tpe == tpe) valueAdded(value.asInstanceOf[E[S]])(tx0)
+    }
+
+    private[this] def valueAdded(value: E[S])(implicit tx: S#Tx): Unit = {
+      val res = value.changed.react { implicit tx => {
+        case Change(_, now) =>
+          fun(tx)(Some(now))
+        //            val opt = mapUpdate(ch)
+        //            if (opt.isDefined) fun(tx)(opt)
+        case _ =>  // XXX TODO -- should we ask for expr.value ?
+      }}
+      val v = valObs.swap(res)(tx.peer)
+      if (v != null) v.dispose()
+    }
+
+    private[this] def valueRemoved()(implicit tx: S#Tx): Boolean = {
+      val v   = valObs.swap(null)(tx.peer)
+      val res = v != null
+      if (res) v.dispose()
+      res
+    }
+
+    def dispose()(implicit tx: S#Tx): Unit = {
+      valueRemoved()
+      mapObs.dispose()
+    }
+  }
+
   //  // actually unused, because obj.attr is always modifiable
   //  private[gui] final class Impl[S <: Sys[S], A, E[~ <: Sys[~]] <: Elem[~] { type Peer = Expr[~, A] }](
   //         protected val h: stm.Source[S#Tx, Obj[S]],
@@ -85,7 +113,7 @@ object AttrCellViewImpl {
   //    extends Basic[S, A, E]
 
   private[gui] final class ModImpl[S <: Sys[S], A, E[~ <: Sys[~]] <: Expr[~, A]](
-         protected val h: stm.Source[S#Tx, Obj[S]],
+         protected val h: stm.Source[S#Tx, Obj.AttrMap[S]],
          protected val key: String)(implicit val tpe: Type.Expr[A, E], protected val classTag: ClassTag[E[S]])
     extends Basic[S, A, E] with CellView.Var[S, Option[A]] {
 
@@ -97,18 +125,13 @@ object AttrCellViewImpl {
     protected def mapUpdate(ch: Change[A]): Option[A] = if (ch.isSignificant) Some(ch.now) else None
 
     def repr_=(value: Repr)(implicit tx: S#Tx): Unit = value.fold[Unit] {
-      h().attr.remove(key)
+      h().remove(key)
     } { ex =>
-      val map = h().attr
+      val map = h()
       map.$[E](key) match {
         case Some(tpe.Var(vr)) => vr() = ex
         case _ =>
-          val exV   = tpe.Var.unapply[S](ex).getOrElse(tpe.newVar(ex)) // : E[S]#Peer
-          // XXX .asInstanceOf -- WTF?
-          // cf. https://stackoverflow.com/questions/28945416/type-mismatch-with-type-projection?stw=2
-          // val elem  = companion.asInstanceOf[Elem.Companion[Elem]].apply[S](exV)
-          // val aObj  = Obj(elem)
-          val aObj = exV
+          val aObj = tpe.Var.unapply[S](ex).getOrElse(tpe.newVar(ex))
           map.put(key, aObj)
       }
     }

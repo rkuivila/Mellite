@@ -42,12 +42,12 @@ object ListObjView {
   def apply[S <: SSys[S]](obj: Obj[S])(implicit tx: S#Tx): ListObjView[S] = ListObjViewImpl(obj)
 }
 trait ListObjView[S <: stm.Sys[S]] extends ObjView[S] {
-  /** Passes in a received opaque update to ask whether the view should be repainted due to this update.
-    * This is a transactional method. If the view wants to update its internal state, it should
-    * do that using `deferTx` to perform mutable state changes on the EDT, and then return `true` to
-    * trigger a refresh of the table row.
-    */
-  def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean
+//  /** Passes in a received opaque update to ask whether the view should be repainted due to this update.
+//    * This is a transactional method. If the view wants to update its internal state, it should
+//    * do that using `deferTx` to perform mutable state changes on the EDT, and then return `true` to
+//    * trigger a refresh of the table row.
+//    */
+//  final def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = ...
 
   /** The opaque view value passed into the renderer. */
   def value: Any

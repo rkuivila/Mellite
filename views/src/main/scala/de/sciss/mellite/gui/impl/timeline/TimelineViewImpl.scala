@@ -499,13 +499,18 @@ object TimelineViewImpl {
       viewMap.put(timed.id, view)
       viewSet.add(view)(tx.peer)
 
-      def doAdd(): Unit = view match {
-        case pv: ProcObjView.Timeline[S] if pv.isGlobal =>
-          globalView.add(pv)
-        case _ =>
-          viewRange += view
-          if (repaint) repaintAll()    // XXX TODO: optimize dirty rectangle
+      def doAdd(): Unit = {
+        view match {
+          case pv: ProcObjView.Timeline[S] if pv.isGlobal =>
+            globalView.add(pv)
+          case _ =>
+            viewRange += view
+            if (repaint) repaintAll()    // XXX TODO: optimize dirty rectangle
         }
+        view.addListener {
+          case ObjView.Repaint(_) => objUpdated(view)
+        }
+      }
 
       if (repaint)
         deferTx(doAdd())

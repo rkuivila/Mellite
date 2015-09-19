@@ -21,7 +21,7 @@ import de.sciss.lucre.expr.StringObj
 import de.sciss.lucre.stm.{Copy, DurableLike => DSys, Elem, Sys}
 import de.sciss.lucre.{confluent, event => evt, expr, stm}
 import de.sciss.serial.{DataInput, DataOutput, Serializer, Writable}
-import de.sciss.synth.proc.Confluent
+import de.sciss.synth.proc.{Durable, Confluent}
 
 object CursorsImpl {
   private final val COOKIE = 0x43737273 // "Csrs"
@@ -59,7 +59,7 @@ object CursorsImpl {
   def readIdentifiedObj[S <: Sys[S]](in: DataInput, access: S#Acc)(implicit tx: S#Tx): Elem[S] = {
     if (!tx.system.isInstanceOf[stm.DurableLike[_]]) throw new IllegalStateException()
     // XXX TODO --- ugly casts
-    readIdentified1[Confluent, stm.Durable](in, ())(tx.asInstanceOf[stm.Durable#Tx]).asInstanceOf[Elem[S]]
+    readIdentified1[Confluent, Durable](in, ())(tx.asInstanceOf[Durable#Tx]).asInstanceOf[Elem[S]]
   }
 
   private def readIdentified1[S <: KSys[S], D1 <: DSys[D1]](in: DataInput, access: Unit)
@@ -68,7 +68,7 @@ object CursorsImpl {
     val cookie  = in.readInt()
     if (cookie != COOKIE) sys.error(s"Unexpected $cookie (should be $COOKIE)")
     val seminal: S#Acc = confluent.Access.read(in) // system.readPath(in)
-    val cursor  = confluent.Cursor.Data.read[S, D1](in)
+    val cursor  = confluent.Cursor.Data.read[S, D1](in, access)
     val name    = StringObj.readVar[D1](in, access)
     val list    = expr.List.Modifiable.read[D1, Cursors[S, D1] /* , Cursors.Update[S, D1] */](in, access)
     log(s"Cursors.read targets = $targets, list = $list")

@@ -24,14 +24,14 @@ import scala.language.higherKinds
 import scala.reflect.ClassTag
 
 object AttrCellView {
-  def apply[S <: Sys[S], A, E[~ <: Sys[~]] <: Expr[~, A]](obj: Obj[S], key: String)
+  def apply[S <: Sys[S], A, E[~ <: Sys[~]] <: Expr[~, A]](map: Obj.AttrMap[S], key: String)
                                      (implicit tx: S#Tx, tpe: Type.Expr[A, E],
                                       ct: ClassTag[E[S]]): CellView.Var[S, Option[A]] { type Repr = Option[E[S]] } = {
-    new Impl.ModImpl[S, A, E](tx.newHandle(obj), key)
+    new Impl.ModImpl[S, A, E](tx.newHandle(map), key)
   }
 
   def name[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): CellView[S#Tx, String] = {
     implicit val stringEx = StringObj
-    apply[S, String, StringObj](obj, ObjKeys.attrName).map(_.getOrElse("<unnamed>"))
+    apply[S, String, StringObj](obj.attr, ObjKeys.attrName).map(_.getOrElse("<unnamed>"))
   }
 }

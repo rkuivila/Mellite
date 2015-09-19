@@ -158,25 +158,25 @@ object ProcActions {
       resAttr.put(key, valueCopy)
     }
 
-    res match {
-      case procObj: Proc[S] =>
-        ProcActions.getAudioRegion(procObj).foreach { case (time, audio) =>
-          val pNew        = procObj
-          val scanW       = pNew.inputs.add(Proc.graphAudio)
-          scanW.iterator.toList.foreach(scanW.remove)
-          val audioVal    = audio.value
-          val grw         = Grapheme[S](audioVal.spec.numChannels)
-          val gStart      = LongObj  .newVar(time     .value)
-          val audioOffset = LongObj  .newVar(audioVal.offset) // XXX TODO
-          val audioGain   = DoubleObj.newVar(audioVal.gain  )
-          val gElem       = Grapheme.Expr.Audio(??? /* RRR audioVal.artifact */, audioVal.spec, audioOffset, audioGain)
-          // val bi: Grapheme.TimedElem[S] = (gStart, gElem) // BiExpr(gStart, gElem)
-          grw.add(gStart, gElem)
-          scanW add grw
-        }
-
-      case _ =>
-    }
+//    res match {
+//      case procObj: Proc[S] =>
+//        ProcActions.getAudioRegion(procObj).foreach { case (time, audio) =>
+//          val pNew        = procObj
+//          val scanW       = pNew.inputs.add(Proc.graphAudio)
+//          scanW.iterator.toList.foreach(scanW.remove)
+//          val audioVal    = audio.value
+//          val grw         = Grapheme[S](audioVal.spec.numChannels)
+//          val gStart      = LongObj  .newVar(time     .value)
+//          val audioOffset = LongObj  .newVar(audioVal.offset) // XXX TODO
+//          val audioGain   = DoubleObj.newVar(audioVal.gain  )
+//          val gElem       = Grapheme.Expr.Audio[S](audioVal.artifact, audioVal.spec, audioOffset, audioGain)
+//          // val bi: Grapheme.TimedElem[S] = (gStart, gElem) // BiExpr(gStart, gElem)
+//          grw.add(gStart, gElem)
+//          scanW add grw
+//        }
+//
+//      case _ =>
+//    }
 
     res
   }

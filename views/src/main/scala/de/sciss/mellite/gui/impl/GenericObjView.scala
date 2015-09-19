@@ -46,7 +46,7 @@ object GenericObjView extends ObjView.Factory {
 
     final def configureRenderer(label: Label): Component = label
 
-    final def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
+    // final def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
   }
 
   private final class ListImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj[S]])

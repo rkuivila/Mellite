@@ -99,7 +99,7 @@ object CodeObjView extends ListObjView.Factory {
 
     def factory = CodeObjView
 
-    def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
+    // def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
 
     def isViewable = true
 

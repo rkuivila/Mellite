@@ -123,9 +123,6 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     val res = new TimelineImpl[S](tx.newHandle(obj), audio = audio, busOption = bus, context = context)
       .initAttrs(timedID, span, obj)
 
-    TimelineObjViewImpl.initGainAttrs(span, obj, res)
-    TimelineObjViewImpl.initMuteAttrs(span, obj, res)
-    TimelineObjViewImpl.initFadeAttrs(span, obj, res)
     lazy val idH = tx.newHandle(timedID)
 
     import context.{scanMap, viewMap}
@@ -201,14 +198,13 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   private final class TimelineImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Proc[S]],
                                         var audio     : Option[Grapheme.Segment.Audio],
                                         var busOption : Option[Int], context: TimelineObjView.Context[S])
-    extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] with ProcObjView.Timeline[S] { self =>
+    extends Impl[S]
+    with TimelineObjViewImpl.HasGainImpl[S]
+    with TimelineObjViewImpl.HasMuteImpl[S]
+    with TimelineObjViewImpl.HasFadeImpl[S]
+    with ProcObjView.Timeline[S] { self =>
 
     override def toString = s"ProcView($name, $spanValue, $audio)"
-
-    var gain        : Double          = _
-    var muted       : Boolean         = _
-    var fadeIn      : FadeSpec        = _
-    var fadeOut     : FadeSpec        = _
 
     def debugString =
       s"ProcView(span = $spanValue, trackIndex = $trackIndex, nameOption = $nameOption, muted = $muted, audio = $audio, " +

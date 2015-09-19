@@ -21,16 +21,14 @@ import de.sciss.desktop
 import de.sciss.file._
 import de.sciss.icons.raphael
 import de.sciss.lucre.artifact.ArtifactLocation
+import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing._
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.stm
 import de.sciss.mellite.gui.edit.EditArtifactLocation
-import de.sciss.model.Change
 import de.sciss.synth.proc
+import de.sciss.synth.proc.Implicits._
 import org.scalautils.TypeCheckedTripleEquals
-
-import proc.Implicits._
 
 object ArtifactLocationObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = ArtifactLocation[~] // Elem[S]
@@ -46,7 +44,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
     val peer      = obj
     val value     = peer.directory
     val editable  = ArtifactLocation.Var.unapply(peer).isDefined // .modifiableOption.isDefined
-    new Impl(tx.newHandle(obj), value, isEditable = editable).initAttrs(obj)
+    new Impl(tx.newHandle(obj), value, isEditable = editable).init(obj)
   }
 
   type Config[S <: stm.Sys[S]] = ObjViewImpl.PrimitiveConfig[File]
@@ -78,11 +76,13 @@ object ArtifactLocationObjView extends ListObjView.Factory {
 
     def value   = directory
 
-    def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = update match {
-      case Change(_, now: File) =>
-        deferTx { directory = now }
-        true
-      case _ => false
+    def init(obj: ArtifactLocation[S])(implicit tx: S#Tx): this.type = {
+      initAttrs(obj)
+      disposables ::= obj.changed.react { implicit tx => upd => deferTx {
+        directory = upd.now
+        dispatch(ObjView.Repaint(this))
+      }}
+      this
     }
 
     def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {

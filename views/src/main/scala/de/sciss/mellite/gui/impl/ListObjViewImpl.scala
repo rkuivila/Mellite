@@ -67,7 +67,7 @@ object ListObjViewImpl {
 
   trait EmptyRenderer[S <: stm.Sys[S]] {
     def configureRenderer(label: Label): Component = label
-    def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
+    // def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
     def value: Any = ()
   }
 
@@ -87,8 +87,8 @@ object ListObjViewImpl {
 
     // def obj: stm.Source[S#Tx, Obj.T[S, Elem { type Peer = Expr[S, A] }]]
 
-    /** Tests a value from a `Change` update. */
-    protected def testValue       (v: Any): Option[A]
+    // /** Tests a value from a `Change` update. */
+    // protected def testValue       (v: Any): Option[A]
     protected def convertEditValue(v: Any): Option[A]
 
     protected val exprType: Type.Expr[A, Ex]
@@ -117,16 +117,16 @@ object ListObjViewImpl {
         }
       }
 
-    def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = update match {
-      case Change(_, now) =>
-        testValue(now).exists { valueNew =>
-          deferTx {
-            exprValue = valueNew
-          }
-          true
-        }
-      case _ => false
-    }
+//    def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = update match {
+//      case Change(_, now) =>
+//        testValue(now).exists { valueNew =>
+//          deferTx {
+//            exprValue = valueNew
+//          }
+//          true
+//        }
+//      case _ => false
+//    }
 
     // XXX TODO - this is a quick hack for demo
     def openView(parent: Option[Window[S]])
@@ -149,7 +149,7 @@ object ListObjViewImpl {
   }
 
   trait SimpleExpr[S <: Sys[S], A, Ex[~ <: stm.Sys[~]] <: Expr[~, A]] extends ExprLike[S, A, Ex]
-    with ListObjView[S] {
+    with ListObjView[S] with ObjViewImpl.Impl[S] {
     // _: ObjView[S] =>
 
     override def value: A
@@ -157,6 +157,15 @@ object ListObjViewImpl {
 
     protected def exprValue: A = value
     protected def exprValue_=(x: A): Unit = value = x
+
+    def init(ex: Ex[S])(implicit tx: S#Tx): this.type = {
+      initAttrs(ex)
+      disposables ::= ex.changed.react { implicit tx => upd => deferTx {
+        exprValue = upd.now
+        dispatch(ObjView.Repaint(this))
+      }}
+      this
+    }
   }
 
   private final val ggCheckBox = new CheckBox()

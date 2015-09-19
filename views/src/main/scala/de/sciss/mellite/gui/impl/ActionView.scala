@@ -91,18 +91,12 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
 
   def mkTimelineView[S <: Sys[S]](id: S#ID, span: SpanLikeObj[S], obj: Action[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): TimelineObjView[S] = {
-    val res = new TimelineImpl(tx.newHandle(obj)).initAttrs(id, span, obj)
-    TimelineObjViewImpl.initMuteAttrs(span, obj, res)
+    val res = new TimelineImpl[S](tx.newHandle(obj)).initAttrs(id, span, obj)
     res
   }
 
   private final class TimelineImpl[S <: Sys[S]](val objH : stm.Source[S#Tx, Action[S]])
-    extends Impl[S]
-    with TimelineObjViewImpl.BasicImpl[S]
-    with TimelineObjView.HasMute {
-
-    var muted: Boolean = _
-  }
+    extends Impl[S] with TimelineObjViewImpl.HasMuteImpl[S]
 }
 trait ActionView[S <: stm.Sys[S]] extends ObjView[S] {
   override def obj(implicit tx: S#Tx): Action[S]

@@ -21,6 +21,7 @@ import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.stm
+import de.sciss.model.Model
 
 import scala.language.higherKinds
 
@@ -60,8 +61,13 @@ object ObjView {
       */
     def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]]
   }
+
+  trait Update[S <: stm.Sys[S]] {
+    def view: ObjView[S]
+  }
+  final case class Repaint[S <: stm.Sys[S]](view: ObjView[S]) extends Update[S]
 }
-trait ObjView[S <: stm.Sys[S]] extends Disposable[S#Tx] {
+trait ObjView[S <: stm.Sys[S]] extends Disposable[S#Tx] with Model[ObjView.Update[S]] {
   def factory: ObjView.Factory
   def humanName: String
 

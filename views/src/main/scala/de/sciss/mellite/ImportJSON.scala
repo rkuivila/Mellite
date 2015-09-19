@@ -4,7 +4,7 @@ import java.io.FileInputStream
 
 import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
-import de.sciss.lucre.expr.{DoubleObj, IntObj, LongObj}
+import de.sciss.lucre.expr.{SpanLikeObj, DoubleObj, IntObj, LongObj}
 import de.sciss.lucre.stm.Sys
 import de.sciss.span.Span
 import de.sciss.synth.Curve
@@ -184,7 +184,7 @@ object ImportJSON {
           }
       }
 
-      tl.add(span, proc)
+      tl.add(SpanLikeObj.newVar(span), proc)
 
       (id, proc)
 

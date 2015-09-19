@@ -45,7 +45,7 @@ object AudioGraphemeObjView extends ListObjView.Factory {
   def mkListView[S <: Sys[S]](obj: Grapheme.Expr.Audio[S])
                              (implicit tx: S#Tx): AudioGraphemeObjView[S] with ListObjView[S] = {
     val value = obj.value
-    new Impl(tx.newHandle(obj), value).initAttrs(obj)
+    new Impl(tx.newHandle(obj), value).init(obj)
   }
 
   final case class Config1[S <: stm.Sys[S]](file: File, spec: AudioFileSpec,
@@ -96,11 +96,13 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
     def factory = AudioGraphemeObjView
 
-    def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = update match {
-      case Change(_, now: Grapheme.Value.Audio) =>
-        deferTx { value = now }
-        true
-      case _ => false
+    def init(obj: Grapheme.Expr.Audio[S])(implicit tx: S#Tx): this.type = {
+      initAttrs(obj)
+      disposables ::= obj.changed.react { implicit tx => upd => deferTx {
+        value = upd.now
+        dispatch(ObjView.Repaint(this))
+      }}
+      this
     }
 
     def isViewable = true
