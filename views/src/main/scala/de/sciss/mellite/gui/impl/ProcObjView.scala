@@ -28,7 +28,7 @@ import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.sonogram.{Overview => SonoOverview}
 import de.sciss.span.Span
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{FadeSpec, Grapheme, ObjKeys, Proc, Scan}
+import de.sciss.synth.proc.{Grapheme, ObjKeys, Proc, Scan}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.immutable.{IndexedSeq => Vec}
@@ -88,40 +88,14 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     */
   def mkTimelineView[S <: Sys[S]](timedID: S#ID, span: SpanLikeObj[S], obj: Proc[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): ProcObjView.Timeline[S] = {
-    val spanV = span.value
-    // println("--- scan keys:")
-    // proc.scans.keys.foreach(println)
-
-    // XXX TODO: DRY - use getAudioRegion, and nextEventAfter to construct the segment value
     val proc    = obj
     val inputs  = proc.inputs
     val outputs = proc.outputs
-    val audio   = inputs.get(Proc.graphAudio).flatMap { scanW =>
-      // println("--- has scan")
-      scanW.iterator.flatMap {
-        case Scan.Link.Grapheme(g) =>
-          // println("--- scan is linked")
-          spanV match {
-            case Span.HasStart(frame) =>
-              // println("--- has start")
-              g.segment(frame) match {
-                case Some(segm @ Grapheme.Segment.Audio(gSpan, _)) /* if (gspan.start == frame) */ => Some(segm)
-                // case Some(Grapheme.Segment.Audio(gspan, _audio)) =>
-                //   // println(s"--- has audio segment $gspan offset ${_audio.offset}}; proc $spanV")
-                //   // if (gspan == spanV) ... -> no, because segment will give as a Span.From(_) !
-                //   if (gspan.start == frame) Some(_audio) else None
-                case _ => None
-              }
-            case _ => None
-          }
-        case _ => None
-      } .toList.headOption
-    }
 
     val attr    = obj.attr
     val bus     = attr.$[IntObj](ObjKeys.attrBus    ).map(_.value)
-    val res = new TimelineImpl[S](tx.newHandle(obj), audio = audio, busOption = bus, context = context)
-      .initAttrs(timedID, span, obj)
+    val res = new TimelineImpl[S](tx.newHandle(obj), busOption = bus, context = context)
+      .init(timedID, span, obj)
 
     lazy val idH = tx.newHandle(timedID)
 
@@ -196,8 +170,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   }
 
   private final class TimelineImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Proc[S]],
-                                        var audio     : Option[Grapheme.Segment.Audio],
-                                        var busOption : Option[Int], context: TimelineObjView.Context[S])
+                                                var busOption : Option[Int], context: TimelineObjView.Context[S])
     extends Impl[S]
     with TimelineObjViewImpl.HasGainImpl[S]
     with TimelineObjViewImpl.HasMuteImpl[S]
@@ -205,6 +178,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     with ProcObjView.Timeline[S] { self =>
 
     override def toString = s"ProcView($name, $spanValue, $audio)"
+
+    var audio = Option.empty[Grapheme.Segment.Audio]
 
     def debugString =
       s"ProcView(span = $spanValue, trackIndex = $trackIndex, nameOption = $nameOption, muted = $muted, audio = $audio, " +
@@ -217,6 +192,40 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     var inputs    = Map.empty[String, Vec[ProcObjView.Link[S]]]
     var outputs   = Map.empty[String, Vec[ProcObjView.Link[S]]]
+
+    def init(id: S#ID, span: SpanLikeObj[S], obj: Proc[S])(implicit tx: S#Tx): this.type = {
+      initAttrs(id, span, obj)
+
+      obj.inputs.get(Proc.graphAudio).foreach { scanW =>
+        // XXX TODO --- ideally we would track changes to the scan itself
+        scanW.iterator.collectFirst {
+          case Scan.Link.Grapheme(g) =>
+            def calcAudio(g1: Grapheme[S])(implicit tx: S#Tx): Option[Grapheme.Segment.Audio] =
+              g1.segment(0L).collect {
+                case a: Grapheme.Segment.Audio => a
+              }
+
+            disposables ::= g.changed.react { implicit tx => upd => {
+              val newAudio = calcAudio(upd.grapheme)
+              deferTx {
+                val newSonogram = (audio, newAudio) match {
+                  case (Some(_), None)  => true
+                  case (None, Some(_))  => true
+                  case (Some(oldG), Some(newG)) if oldG.value.artifact != newG.value.artifact => true
+                  case _                => false
+                }
+
+                audio = newAudio
+                if (newSonogram) releaseSonogram()
+                dispatch(ObjView.Repaint(self))
+              }
+            }}
+            audio = calcAudio(g)
+        }
+      }
+
+      this
+    }
 
     def releaseSonogram(): Unit =
       sonogram.foreach { ovr =>

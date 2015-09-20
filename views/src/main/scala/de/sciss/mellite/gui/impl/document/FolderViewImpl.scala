@@ -105,7 +105,7 @@ object FolderViewImpl {
           //
           val obj = objH()
           val isDirty = treeView.nodeView(obj).exists { nv =>
-            val objView = nv.renderData
+            // val objView = nv.renderData
             false // XXX TODO RRR ELEM objView.isUpdateVisible(u1)
           }
           if (isDirty) dispatch(tx)(TreeTableView.NodeChanged(obj): MUpdate)

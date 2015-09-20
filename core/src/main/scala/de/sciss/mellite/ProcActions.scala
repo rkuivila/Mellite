@@ -16,12 +16,11 @@ package mellite
 
 import java.{util => ju}
 
-import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.lucre.expr
-import de.sciss.lucre.expr.{SpanObj, BooleanObj, IntObj, DoubleObj, StringObj, SpanLikeObj, LongObj}
-import de.sciss.lucre.stm.{Obj, Sys}
-import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc.{SynthGraphObj, Code, Grapheme, ObjKeys, Proc, Scan, Scans, Timeline}
+import de.sciss.lucre.expr.{BooleanObj, DoubleObj, IntObj, LongObj, SpanLikeObj, StringObj}
+import de.sciss.lucre.stm.{Copy, Obj, Sys}
+import de.sciss.span.Span
+import de.sciss.synth.proc.{Code, Grapheme, ObjKeys, Proc, Scan, Scans, SynthGraphObj, Timeline}
 import de.sciss.synth.ugen.{BinaryOpUGen, Constant, UnaryOpUGen}
 import de.sciss.synth.{GE, Lazy, Rate, SynthGraph, UGenSpec, proc}
 
@@ -115,11 +114,16 @@ object ProcActions {
           for {
             (LongObj.Var(time), g, audio) <- getAudioRegion2(objT)
           } {
-            // XXX TODO --- crazy work-around. BiPin / Grapheme
+            // --- crazy work-around. BiPin / Grapheme
             // must be observed, otherwise underlying SkipList is not updated !!!
             val temp = g.changed.react(_ => _ => ())
             import expr.Ops._
-            time() = time() - dStartCC
+            // println(s"BEFORE RESIZE BY $dStartCC:")
+            // println(g.debugList())
+            val newTime = time() - dStartCC
+            time() = newTime
+            // println(s"AFTER  RESIZE BY $dStartCC:")
+            // println(g.debugList())
             temp.dispose()
           }
         case _ =>
@@ -146,37 +150,48 @@ object ProcActions {
   }
 
   /** Makes a copy of a proc. Copies the graph and all attributes, creates scans with the same keys
-    * and connects _outgoing_ scans.
+    * and connects scans.
     *
     * @param obj the process to copy
     */
   def copy[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Obj[S] = {
-    val res: Obj[S] = Obj.copy(obj) // (copyElem(obj.elem))
-    val resAttr = res.attr
-    obj.attr.iterator.foreach { case (key, value) =>
-      val valueCopy = copy(value)
-      resAttr.put(key, valueCopy)
-    }
+    val context = Copy[S, S]
+    context.putHint(obj, Proc.hintFilterLinks, (_: Proc[S]) => false) // do not duplicate linked objects
+    val res = context(obj)
+    context.finish()
 
-//    res match {
-//      case procObj: Proc[S] =>
-//        ProcActions.getAudioRegion(procObj).foreach { case (time, audio) =>
-//          val pNew        = procObj
-//          val scanW       = pNew.inputs.add(Proc.graphAudio)
-//          scanW.iterator.toList.foreach(scanW.remove)
-//          val audioVal    = audio.value
-//          val grw         = Grapheme[S](audioVal.spec.numChannels)
-//          val gStart      = LongObj  .newVar(time     .value)
-//          val audioOffset = LongObj  .newVar(audioVal.offset) // XXX TODO
-//          val audioGain   = DoubleObj.newVar(audioVal.gain  )
-//          val gElem       = Grapheme.Expr.Audio[S](audioVal.artifact, audioVal.spec, audioOffset, audioGain)
-//          // val bi: Grapheme.TimedElem[S] = (gStart, gElem) // BiExpr(gStart, gElem)
-//          grw.add(gStart, gElem)
-//          scanW add grw
+    (obj, res) match {
+      case (inProc: Proc[S], outProc: Proc[S]) =>   // now re-link scans
+        def copyMap(in: Scans[S], out: Scans[S]): Unit =
+          in.iterator.foreach { case (key, scanIn) =>
+            val Some(scanOut) = out.get(key)
+            scanIn.iterator.foreach {
+              case link @ Scan.Link.Scan(_) => scanOut.add(link)
+              case _ =>
+            }
+          }
+
+        copyMap(inProc.inputs , outProc.inputs )
+        copyMap(inProc.outputs, outProc.outputs)
+
+//        getAudioRegion2(inProc).foreach { case (time, g, gAudio) =>
+//          val timeVal = time.value
+//          println("IN")
+//          println(timeVal)
+//          val audioVal = gAudio.value
+//          println(audioVal)
 //        }
 //
-//      case _ =>
-//    }
+//        getAudioRegion2(outProc).foreach { case (time, g, gAudio) =>
+//          println("OUT")
+//          val timeVal = time.value
+//          println(timeVal)
+//          val audioVal = gAudio.value
+//          println(audioVal)
+//        }
+
+      case _ =>
+    }
 
     res
   }

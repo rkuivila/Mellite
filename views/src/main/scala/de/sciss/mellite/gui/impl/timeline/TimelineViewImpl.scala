@@ -30,11 +30,11 @@ import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{UndoManager, Window}
 import de.sciss.fingertree.RangedSeq
 import de.sciss.icons.raphael
-import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.bitemp.BiGroup
-import de.sciss.lucre.expr.{BooleanObj, DoubleObj, StringObj, IntObj, SpanLikeObj}
+import de.sciss.lucre.bitemp.impl.BiGroupImpl
+import de.sciss.lucre.expr.{IntObj, SpanLikeObj}
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Obj, Cursor, Disposable}
+import de.sciss.lucre.stm.{Cursor, Disposable, Obj}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
@@ -46,7 +46,7 @@ import de.sciss.swingplus.ScrollBar
 import de.sciss.synth.Curve
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{FadeSpec, Grapheme, ObjKeys, Proc, Scan, TimeRef, Timeline, Transport}
+import de.sciss.synth.proc.{FadeSpec, Grapheme, Proc, Scan, TimeRef, Timeline, Transport}
 import de.sciss.{desktop, sonogram, synth}
 
 import scala.concurrent.stm.{Ref, TSet}
@@ -146,69 +146,6 @@ object TimelineViewImpl {
         tlView.objAdded(span, timed, repaint = false)
       }
     }
-
-    def muteChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val attr    = timed.value.attr
-      val muted   = attr.$[BooleanObj](ObjKeys.attrMute).exists(_.value)
-      if (DEBUG) println(s"muteChanged($timed) - $muted")
-      tlView.objMuteChanged(timed, muted)
-    }
-
-    def nameChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val attr    = timed.value.attr
-      val nameOpt = attr.$[StringObj](ObjKeys.attrName).map(_.value)
-      if (DEBUG) println(s"nameChanged($timed) - $nameOpt")
-      tlView.objNameChanged(timed, nameOpt)
-    }
-
-    def colorChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val attr      = timed.value.attr
-      val colorOpt  = attr.$[Color.Obj](ObjView.attrColor).map(_.value)
-      if (DEBUG) println(s"colorChanged($timed) - $colorOpt")
-      tlView.objColorChanged(timed, colorOpt)
-    }
-
-    def gainChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val attr  = timed.value.attr
-      val gain  = attr.$[DoubleObj](ObjKeys.attrGain).fold(1.0)(_.value)
-      if (DEBUG) println(s"gainChanged($timed) - $gain")
-      tlView.objGainChanged(timed, gain)
-    }
-
-    def busChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val attr    = timed.value.attr
-      val busOpt  = attr.$[IntObj](ObjKeys.attrBus).map(_.value)
-      if (DEBUG) println(s"busChanged($timed) - $busOpt")
-      tlView.procBusChanged(timed, busOpt)
-    }
-
-    def fadeChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val attr    = timed.value.attr
-      val fadeIn  = attr.$[FadeSpec.Obj](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-      val fadeOut = attr.$[FadeSpec.Obj](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
-      if (DEBUG) println(s"fadeChanged($timed) - $fadeIn - $fadeOut")
-      tlView.objFadeChanged(timed, fadeIn, fadeOut)
-    }
-
-    def trackPositionChanged(timed: Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
-      val trackIdxNow = timed.value.attr.$[IntObj](TimelineObjView.attrTrackIndex ).fold(0)(_.value)
-      val trackHNow   = timed.value.attr.$[IntObj](TimelineObjView.attrTrackHeight).fold(4)(_.value)
-      if (DEBUG) println(s"trackPositionChanged($timed) - $trackIdxNow - $trackHNow")
-      tlView.objMoved(timed, spanCh = Change(Span.Void, Span.Void),
-        trackCh = Some(trackIdxNow -> trackHNow))
-    }
-
-    def attrChanged(timed: Timeline.Timed[S], name: String)(implicit tx: S#Tx): Unit =
-      name match {
-        case ObjKeys.attrMute   => muteChanged (timed)
-        case ObjKeys.attrFadeIn | ObjKeys.attrFadeOut => fadeChanged(timed)
-        case ObjKeys.attrName   => nameChanged (timed)
-        case ObjView.attrColor  => colorChanged(timed)
-        case ObjKeys.attrGain   => gainChanged (timed)
-        case ObjKeys.attrBus    => busChanged  (timed)
-        case TimelineObjView.attrTrackIndex | TimelineObjView.attrTrackHeight => trackPositionChanged(timed)
-        case _ =>
-      }
 
     def scanInAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value
@@ -661,29 +598,6 @@ object TimelineViewImpl {
         case pv: TimelineObjView.HasFade => deferTx {
           pv.fadeIn   = newFadeIn
           pv.fadeOut  = newFadeOut
-          repaintAll()  // XXX TODO: optimize dirty rectangle
-        }
-
-        case _ =>
-      }
-    }
-
-    def procAudioChanged(timed: TimedProc[S], newAudio: Option[Grapheme.Segment.Audio])(implicit tx: S#Tx): Unit = {
-      val pvo = viewMap.get(timed.id)
-      logT(s"procAudioChanged(newAudio = $newAudio, view = $pvo")
-      pvo.fold {
-        warnViewNotFound("audio grapheme", timed)
-      } {
-        case pv: ProcObjView.Timeline[S] => deferTx {
-          val newSonogram = (pv.audio, newAudio) match {
-            case (Some(_), None)  => true
-            case (None, Some(_))  => true
-            case (Some(oldG), Some(newG)) if oldG.value.artifact != newG.value.artifact => true
-            case _                => false
-          }
-
-          pv.audio = newAudio
-          if (newSonogram) pv.releaseSonogram()
           repaintAll()  // XXX TODO: optimize dirty rectangle
         }
 
