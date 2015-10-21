@@ -49,6 +49,7 @@ lazy val commonSettings = Seq(
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
   },
   javacOptions ++= Seq("-source", "1.6", "-target", "1.6"),
+  resolvers += "Typesafe Simple Repository" at "http://repo.typesafe.com/typesafe/simple/maven-releases/", // https://stackoverflow.com/questions/20497271
   aggregate in assembly := false,
   // ---- publishing ----
   publishMavenStyle := true,
