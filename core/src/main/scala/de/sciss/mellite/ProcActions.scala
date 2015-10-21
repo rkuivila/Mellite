@@ -326,7 +326,7 @@ object ProcActions {
     // before the insertion position `drop.frame`
 
     // val gStart  = LongObj.newVar(time - selection.start)
-    val gStart = LongObj.newVar(-gOffset)
+    val gStart = LongObj.newVar[S](-gOffset)
     // val bi: Grapheme.TimedElem[S] = (gStart, grapheme) // BiExpr(gStart, grapheme)
     grIn.add(gStart, grapheme)
     scanIn add grIn

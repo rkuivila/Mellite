@@ -154,9 +154,9 @@ object ImportJSON {
           val scanIn  = proc.inputs .add(Proc.graphAudio )
           /*val sOut=*/ proc.outputs.add(Proc.scanMainOut)
           val grIn    = Grapheme[S](grapheme.value.spec.numChannels)
-          val gStart = LongObj.newVar(-gOffset)
+          val gStart = LongObj.newVar[S](-gOffset)
           grIn.add(gStart, grapheme)
-          scanIn add grIn
+          scanIn add Scan.Link.Grapheme(grIn)
           proc.graph() = SynthGraphObj.tape
 
         case JsUndefined() =>

@@ -30,7 +30,7 @@ object CursorsImpl {
                                          (implicit tx: D1#Tx): Cursors[S, D1] = {
     val targets = evt.Targets[D1]
     val cursor  = confluent.Cursor.Data[S, D1](seminal)
-    val name    = StringObj.newVar("branch")
+    val name    = StringObj.newVar[D1]("branch")
     type CursorAux[~ <: stm.Sys[~]] = Cursors[S, ~]
     val list    = expr.List.Modifiable[D1, CursorAux]
     log(s"Cursors.apply targets = $targets, list = $list")

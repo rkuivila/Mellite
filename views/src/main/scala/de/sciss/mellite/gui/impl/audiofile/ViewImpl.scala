@@ -32,7 +32,7 @@ import de.sciss.span.Span
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.graph.ScanIn
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{AuralSystem, Grapheme, Proc, Timeline, Transport, WorkspaceHandle}
+import de.sciss.synth.proc.{Scan, AuralSystem, Grapheme, Proc, Timeline, Transport, WorkspaceHandle}
 import de.sciss.{sonogram, synth}
 
 import scala.swing.Swing._
@@ -76,7 +76,7 @@ object ViewImpl {
     }
     val diffObj = diff // Obj(Proc.Elem(diff))
     procObj.outputs.get(Proc.scanMainOut).foreach { scanOut =>
-      scanOut.add(diff.inputs.add(Proc.scanMainIn))
+      scanOut.add(Scan.Link.Scan(diff.inputs.add(Proc.scanMainIn)))
     }
 
     import _workspace.inMemoryCursor

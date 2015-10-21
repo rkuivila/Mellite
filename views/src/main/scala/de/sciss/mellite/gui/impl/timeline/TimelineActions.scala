@@ -236,7 +236,7 @@ trait TimelineActions[S <: Sys[S]] {
         _rightSpan
 
       case Span.HasStop(rightStop) =>
-        SpanLikeObj.newVar(Span(time, rightStop))
+        SpanLikeObj.newVar[S](Span(time, rightStop))
     }
 
     val editRemoveFadeOut = EditAttrMap("Remove Fade Out", leftObj, ObjKeys.attrFadeOut, None)

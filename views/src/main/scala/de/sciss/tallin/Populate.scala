@@ -83,7 +83,7 @@ object Populate {
     procObj.outputs.add(Proc.scanMainOut)
     val spec  = AudioFile.readSpec(f)
     if (DEBUG) println("mkloop ---1")
-    val gr    = Grapheme.Expr.Audio(artObj, spec, 0L, 1.0)
+    val gr    = Grapheme.Expr.Audio[S](artObj, spec, 0L, 1.0)
     procObj.attr.put("file", gr) // Obj(Grapheme.Expr.Audio(gr)))
 
     if (DEBUG) println(s"mkloop ---2. root = $root")
@@ -239,7 +239,7 @@ object Populate {
 
         val art   = Artifact(loc, f) // loc.add(f)
         val spec  = AudioFile.readSpec(f)
-        val gr    = Grapheme.Expr.Audio(art, spec, 0L, 1.0)
+        val gr    = Grapheme.Expr.Audio[S](art, spec, 0L, 1.0)
         procObj.attr.put("file", gr) // Obj(Grapheme.Expr.Audio(gr)))
       })
     }
