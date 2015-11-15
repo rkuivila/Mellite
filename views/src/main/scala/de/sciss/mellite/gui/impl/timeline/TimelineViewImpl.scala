@@ -46,7 +46,7 @@ import de.sciss.swingplus.ScrollBar
 import de.sciss.synth.Curve
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{FadeSpec, Grapheme, Proc, Scan, TimeRef, Timeline, Transport}
+import de.sciss.synth.proc.{FadeSpec, Grapheme, Proc, TimeRef, Timeline, Transport}
 import de.sciss.{desktop, sonogram, synth}
 
 import scala.concurrent.stm.{Ref, TSet}
@@ -108,7 +108,7 @@ object TimelineViewImpl {
   def apply[S <: Sys[S]](obj: Timeline[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undo: UndoManager): TimelineView[S] = {
-    val sampleRate  = Timeline.SampleRate
+    val sampleRate  = TimeRef.SampleRate
     val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
     tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
     val timeline    = obj
@@ -149,46 +149,50 @@ object TimelineViewImpl {
 
     def scanInAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value
-      proc.inputs.get(name).foreach { scan =>
-        scan.iterator.foreach {
-          case Scan.Link.Scan(peer) =>
-            tlView.scanSourceAdded(timed, name, scan, peer)
-          case _ =>
-        }
-      }
+      ??? // SCAN
+//      proc.inputs.get(name).foreach { scan =>
+//        scan.iterator.foreach {
+//          case Scan.Link.Scan(peer) =>
+//            tlView.scanSourceAdded(timed, name, scan, peer)
+//          case _ =>
+//        }
+//      }
     }
 
     def scanOutAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value
-      proc.outputs.get(name).foreach { scan =>
-        scan.iterator.foreach {
-          case Scan.Link.Scan(peer) =>
-            tlView.scanSinkAdded(timed, name, scan, peer)
-          case _ =>
-        }
-      }
+      ??? // SCAN
+//      proc.outputs.get(name).foreach { scan =>
+//        scan.iterator.foreach {
+//          case Scan.Link.Scan(peer) =>
+//            tlView.scanSinkAdded(timed, name, scan, peer)
+//          case _ =>
+//        }
+//      }
     }
 
     def scanInRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value
-      proc.inputs.get(name).foreach { scan =>
-        scan.iterator.foreach {
-          case Scan.Link.Scan(peer) =>
-            tlView.scanSourceRemoved(timed, name, scan, peer)
-          case _ =>
-        }
-      }
+      ??? // SCAN
+//      proc.inputs.get(name).foreach { scan =>
+//        scan.iterator.foreach {
+//          case Scan.Link.Scan(peer) =>
+//            tlView.scanSourceRemoved(timed, name, scan, peer)
+//          case _ =>
+//        }
+//      }
     }
 
     def scanOutRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value
-      proc.outputs.get(name).foreach { scan =>
-        scan.iterator.foreach {
-          case Scan.Link.Scan(peer) =>
-            tlView.scanSinkRemoved(timed, name, scan, peer)
-          case _ =>
-        }
-      }
+      ??? // SCAN
+//      proc.outputs.get(name).foreach { scan =>
+//        scan.iterator.foreach {
+//          case Scan.Link.Scan(peer) =>
+//            tlView.scanSinkRemoved(timed, name, scan, peer)
+//          case _ =>
+//        }
+//      }
     }
 
     val obsTimeline = timeline.changed.react { implicit tx => upd =>
@@ -605,50 +609,52 @@ object TimelineViewImpl {
       }
     }
 
-    private def withLink(timed: TimedProc[S], that: Scan[S])(fun: (ProcObjView.Timeline[S], ProcObjView.Timeline[S], String) => Unit)
-                        (implicit tx: S#Tx): Unit =
-      viewMap.get(timed.id).foreach {
-        case thisView: ProcObjView.Timeline[S] =>
-          scanMap.get(that .id).foreach {
-            case (thatKey, thatIdH) =>
-              viewMap.get(thatIdH()).foreach {
-                case thatView: ProcObjView.Timeline[S] =>
-                  deferTx {
-                    fun(thisView, thatView, thatKey)
-                    repaintAll()
-                  }
-                case _ =>
-              }
-          }
-      }
+    // SCAN
+//    private def withLink(timed: TimedProc[S], that: Scan[S])(fun: (ProcObjView.Timeline[S], ProcObjView.Timeline[S], String) => Unit)
+//                        (implicit tx: S#Tx): Unit =
+//      viewMap.get(timed.id).foreach {
+//        case thisView: ProcObjView.Timeline[S] =>
+//          scanMap.get(that .id).foreach {
+//            case (thatKey, thatIdH) =>
+//              viewMap.get(thatIdH()).foreach {
+//                case thatView: ProcObjView.Timeline[S] =>
+//                  deferTx {
+//                    fun(thisView, thatView, thatKey)
+//                    repaintAll()
+//                  }
+//                case _ =>
+//              }
+//          }
+//      }
 
-    def scanSinkAdded(timed: TimedProc[S], srcKey: String, src: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit =
-      withLink(timed, sink) { (srcView, sinkView, sinkKey) =>
-        logT(s"scanSinkAdded(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
-        srcView .addOutput(srcKey , sinkView, sinkKey)
-        sinkView.addInput (sinkKey, srcView , srcKey )
-      }
-
-    def scanSinkRemoved(timed: TimedProc[S], srcKey: String, src: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit =
-      withLink(timed, sink) { (srcView, sinkView, sinkKey) =>
-        logT(s"scanSinkRemoved(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
-        srcView .removeOutput(srcKey , sinkView, sinkKey)
-        sinkView.removeInput (sinkKey, srcView , srcKey )
-      }
-
-    def scanSourceAdded(timed: TimedProc[S], sinkKey: String, sink: Scan[S], src: Scan[S])(implicit tx: S#Tx): Unit =
-      withLink(timed, src) { (sinkView, srcView, srcKey) =>
-        logT(s"scanSourceAdded(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
-        srcView .addOutput(srcKey , sinkView, sinkKey)
-        sinkView.addInput (sinkKey, srcView , srcKey )
-      }
-
-    def scanSourceRemoved(timed: TimedProc[S], sinkKey: String, sink: Scan[S], src: Scan[S])(implicit tx: S#Tx): Unit =
-      withLink(timed, sink) { (sinkView, srcView, srcKey) =>
-        logT(s"scanSourceRemoved(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
-        srcView .removeOutput(srcKey , sinkView, sinkKey)
-        sinkView.removeInput (sinkKey, srcView , srcKey )
-      }
+    // SCAN
+//    def scanSinkAdded(timed: TimedProc[S], srcKey: String, src: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit =
+//      withLink(timed, sink) { (srcView, sinkView, sinkKey) =>
+//        logT(s"scanSinkAdded(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
+//        srcView .addOutput(srcKey , sinkView, sinkKey)
+//        sinkView.addInput (sinkKey, srcView , srcKey )
+//      }
+//
+//    def scanSinkRemoved(timed: TimedProc[S], srcKey: String, src: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit =
+//      withLink(timed, sink) { (srcView, sinkView, sinkKey) =>
+//        logT(s"scanSinkRemoved(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
+//        srcView .removeOutput(srcKey , sinkView, sinkKey)
+//        sinkView.removeInput (sinkKey, srcView , srcKey )
+//      }
+//
+//    def scanSourceAdded(timed: TimedProc[S], sinkKey: String, sink: Scan[S], src: Scan[S])(implicit tx: S#Tx): Unit =
+//      withLink(timed, src) { (sinkView, srcView, srcKey) =>
+//        logT(s"scanSourceAdded(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
+//        srcView .addOutput(srcKey , sinkView, sinkKey)
+//        sinkView.addInput (sinkKey, srcView , srcKey )
+//      }
+//
+//    def scanSourceRemoved(timed: TimedProc[S], sinkKey: String, sink: Scan[S], src: Scan[S])(implicit tx: S#Tx): Unit =
+//      withLink(timed, sink) { (sinkView, srcView, srcKey) =>
+//        logT(s"scanSourceRemoved(src-key = $srcKey, source = $src, sink = $sink, src-view = $srcView, sink-view $sinkView")
+//        srcView .removeOutput(srcKey , sinkView, sinkKey)
+//        sinkView.removeInput (sinkKey, srcView , srcKey )
+//      }
 
     // TODO - this could be defined by the view?
     // call on EDT!
@@ -987,7 +993,7 @@ object TimelineViewImpl {
 
                   sonogramOpt.foreach { sonogram =>
                     val audio   = segm.value
-                    val srRatio = sonogram.inputSpec.sampleRate / Timeline.SampleRate
+                    val srRatio = sonogram.inputSpec.sampleRate / TimeRef.SampleRate
                     // dStart is the frame inside the audio-file corresponding
                     // to the region's left margin. That is, if the grapheme segment
                     // starts early than the region (its start is less than zero),

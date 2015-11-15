@@ -20,7 +20,7 @@ import de.sciss.lucre.expr
 import de.sciss.lucre.expr.{BooleanObj, DoubleObj, IntObj, LongObj, SpanLikeObj, StringObj}
 import de.sciss.lucre.stm.{Copy, Obj, Sys}
 import de.sciss.span.Span
-import de.sciss.synth.proc.{Code, Grapheme, ObjKeys, Proc, Scan, Scans, SynthGraphObj, Timeline}
+import de.sciss.synth.proc.{Code, Grapheme, ObjKeys, Proc, SynthGraphObj, Timeline}
 import de.sciss.synth.ugen.{BinaryOpUGen, Constant, UnaryOpUGen}
 import de.sciss.synth.{GE, Lazy, Rate, SynthGraph, UGenSpec, proc}
 
@@ -41,35 +41,37 @@ object ProcActions {
   /** Queries the audio region's grapheme segment start and audio element. */
   def getAudioRegion[S <: Sys[S]](/* span: SpanLikeObj[S], */ proc: Proc[S])
                                  (implicit tx: S#Tx): Option[(LongObj[S], Grapheme.Expr.Audio[S])] =
-    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
-      scan.iterator.toList.headOption match {
-        case Some(Scan.Link.Grapheme(g)) =>
-          g.at(0L).flatMap { entry =>
-            entry.value match {
-              case audio: Grapheme.Expr.Audio[S] => Some((entry.key, audio))
-              case _ => None
-            }
-          }
-        case _ => None
-      }
-    }
+  ??? // SCAN
+//    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
+//      scan.iterator.toList.headOption match {
+//        case Some(Scan.Link.Grapheme(g)) =>
+//          g.at(0L).flatMap { entry =>
+//            entry.value match {
+//              case audio: Grapheme.Expr.Audio[S] => Some((entry.key, audio))
+//              case _ => None
+//            }
+//          }
+//        case _ => None
+//      }
+//    }
 
   /** FOR DEBUGGING PURPOSES, ALSO RETURNS THE GRAPHEME **/
   def getAudioRegion2[S <: Sys[S]](/* span: SpanLikeObj[S], */ proc: Proc[S])
                                  (implicit tx: S#Tx): Option[(LongObj[S], Grapheme[S], Grapheme.Expr.Audio[S])] =
-    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
-      scan.iterator.toList.headOption match {
-        case Some(Scan.Link.Grapheme(g)) =>
-          g.at(0L).flatMap { entry =>
-            entry.value match {
-              case audio: Grapheme.Expr.Audio[S] =>
-                Some((entry.key, g, audio))
-              case _ => None
-            }
-          }
-        case _ => None
-      }
-    }
+  ??? // SCAN
+//    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
+//      scan.iterator.toList.headOption match {
+//        case Some(Scan.Link.Grapheme(g)) =>
+//          g.at(0L).flatMap { entry =>
+//            entry.value match {
+//              case audio: Grapheme.Expr.Audio[S] =>
+//                Some((entry.key, g, audio))
+//              case _ => None
+//            }
+//          }
+//        case _ => None
+//      }
+//    }
 
   def resize[S <: Sys[S]](span: SpanLikeObj[S], obj: Obj[S],
                           amount: Resize, minStart: Long /* timelineModel: TimelineModel */)
@@ -160,38 +162,23 @@ object ProcActions {
     val res = context(obj)
     context.finish()
 
-    (obj, res) match {
-      case (inProc: Proc[S], outProc: Proc[S]) =>   // now re-link scans
-        def copyMap(in: Scans[S], out: Scans[S]): Unit =
-          in.iterator.foreach { case (key, scanIn) =>
-            val Some(scanOut) = out.get(key)
-            scanIn.iterator.foreach {
-              case link @ Scan.Link.Scan(_) => scanOut.add(link)
-              case _ =>
-            }
-          }
-
-        copyMap(inProc.inputs , outProc.inputs )
-        copyMap(inProc.outputs, outProc.outputs)
-
-//        getAudioRegion2(inProc).foreach { case (time, g, gAudio) =>
-//          val timeVal = time.value
-//          println("IN")
-//          println(timeVal)
-//          val audioVal = gAudio.value
-//          println(audioVal)
-//        }
+    ??? // SCAN
+//    (obj, res) match {
+//      case (inProc: Proc[S], outProc: Proc[S]) =>   // now re-link scans
+//        def copyMap(in: Scans[S], out: Scans[S]): Unit =
+//          in.iterator.foreach { case (key, scanIn) =>
+//            val Some(scanOut) = out.get(key)
+//            scanIn.iterator.foreach {
+//              case link @ Scan.Link.Scan(_) => scanOut.add(link)
+//              case _ =>
+//            }
+//          }
 //
-//        getAudioRegion2(outProc).foreach { case (time, g, gAudio) =>
-//          println("OUT")
-//          val timeVal = time.value
-//          println(timeVal)
-//          val audioVal = gAudio.value
-//          println(audioVal)
-//        }
-
-      case _ =>
-    }
+//        copyMap(inProc.inputs , outProc.inputs )
+//        copyMap(inProc.outputs, outProc.outputs)
+//
+//      case _ =>
+//    }
 
     res
   }
@@ -264,27 +251,28 @@ object ProcActions {
           if (scanInKeys .nonEmpty) log(s"SynthDef has the following scan in  keys: ${scanInKeys .mkString(", ")}")
           if (scanOutKeys.nonEmpty) log(s"SynthDef has the following scan out keys: ${scanOutKeys.mkString(", ")}")
 
-          val attrNameOpt = codeElem.attr.get(ObjKeys.attrName)
-          procs.foreach { p =>
-            p.graph() = SynthGraphObj.newConst[S](sg)  // XXX TODO: ideally would link to code updates
-            attrNameOpt.foreach(attrName => p.attr.put(ObjKeys.attrName, attrName))
-
-            def check(scans: Scans.Modifiable[S], keys: Set[String]): Unit = {
-              val toRemove = scans.iterator.collect {
-                case (key, scan) if !keys.contains(key) && scan.isEmpty => key
-              }
-              toRemove.foreach(scans.remove) // unconnected scans which are not referred to from synth def
-              val existing = scans.iterator.collect {
-                  case (key, _) if keys contains key => key
-                }
-              val toAdd = keys -- existing.toSet
-              toAdd.foreach(scans.add)
-            }
-
-            val proc = p
-            check(proc.inputs , scanInKeys )
-            check(proc.outputs, scanOutKeys)
-          }
+          ??? // SCAN
+//          val attrNameOpt = codeElem.attr.get(ObjKeys.attrName)
+//          procs.foreach { p =>
+//            p.graph() = SynthGraphObj.newConst[S](sg)  // XXX TODO: ideally would link to code updates
+//            attrNameOpt.foreach(attrName => p.attr.put(ObjKeys.attrName, attrName))
+//
+//            def check(scans: Scans.Modifiable[S], keys: Set[String]): Unit = {
+//              val toRemove = scans.iterator.collect {
+//                case (key, scan) if !keys.contains(key) && scan.isEmpty => key
+//              }
+//              toRemove.foreach(scans.remove) // unconnected scans which are not referred to from synth def
+//              val existing = scans.iterator.collect {
+//                  case (key, _) if keys contains key => key
+//                }
+//              val toAdd = keys -- existing.toSet
+//              toAdd.foreach(scans.add)
+//            }
+//
+//            val proc = p
+//            check(proc.inputs , scanInKeys )
+//            check(proc.outputs, scanOutKeys)
+//          }
           true
 
         } catch {
@@ -309,29 +297,23 @@ object ProcActions {
     val span    = SpanLikeObj /* SpanObj */.newVar[S](spanV)
     val proc    = Proc[S]
     val obj     = proc // Obj(Proc.Elem(proc))
-    // val attr    = obj.attr
-//    if (track >= 0) attr.put(TimelineObjView.attrTrackIndex, Obj(IntElem(IntEx.newVar(track))))
 
-    //    bus.foreach { busEx =>
-    //      val bus = IntElem(busEx)
-    //      attr.put(ObjKeys.attrBus, Obj(bus))
-    //    }
-
-    val scanIn  = proc.inputs .add(Proc.graphAudio )
-    /*val sOut=*/ proc.outputs.add(Proc.scanMainOut)
-    val grIn    = Grapheme[S](grapheme.value.spec.numChannels)
-
-    // we preserve data.source(), i.e. the original audio file offset
-    // ; therefore the grapheme element must start `selection.start` frames
-    // before the insertion position `drop.frame`
-
-    // val gStart  = LongObj.newVar(time - selection.start)
-    val gStart = LongObj.newVar[S](-gOffset)
-    // val bi: Grapheme.TimedElem[S] = (gStart, grapheme) // BiExpr(gStart, grapheme)
-    grIn.add(gStart, grapheme)
-    scanIn add grIn
-    proc.graph() = SynthGraphObj.tape
-    (span, obj)
+    ??? // SCAN
+//    val scanIn  = proc.inputs .add(Proc.graphAudio )
+//    /*val sOut=*/ proc.outputs.add(Proc.scanMainOut)
+//    val grIn    = Grapheme[S](grapheme.value.spec.numChannels)
+//
+//    // we preserve data.source(), i.e. the original audio file offset
+//    // ; therefore the grapheme element must start `selection.start` frames
+//    // before the insertion position `drop.frame`
+//
+//    // val gStart  = LongObj.newVar(time - selection.start)
+//    val gStart = LongObj.newVar[S](-gOffset)
+//    // val bi: Grapheme.TimedElem[S] = (gStart, grapheme) // BiExpr(gStart, grapheme)
+//    grIn.add(gStart, grapheme)
+//    scanIn add grIn
+//    proc.graph() = SynthGraphObj.tape
+//    (span, obj)
   }
 
   /** Inserts a new audio region proc into a given group.
@@ -370,57 +352,59 @@ object ProcActions {
     obj
   }
 
-  private def addLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
-                                  (implicit tx: S#Tx): Unit = {
-    log(s"Link $sourceKey / $source to $sinkKey / $sink")
-    source.add(Scan.Link.Scan(sink))
-  }
-
-  def removeLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
-                             (implicit tx: S#Tx): Unit = {
-    log(s"Unlink $sourceKey / $source from $sinkKey / $sink")
-    source.remove(Scan.Link.Scan(sink))
-  }
+  // SCAN
+//  private def addLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
+//                                  (implicit tx: S#Tx): Unit = {
+//    log(s"Link $sourceKey / $source to $sinkKey / $sink")
+//    source.add(Scan.Link.Scan(sink))
+//  }
+//
+//  def removeLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
+//                             (implicit tx: S#Tx): Unit = {
+//    log(s"Unlink $sourceKey / $source from $sinkKey / $sink")
+//    source.remove(Scan.Link.Scan(sink))
+//  }
 
   def linkOrUnlink[S <: Sys[S]](out: Proc[S], in: Proc[S])(implicit tx: S#Tx): Boolean = {
-    val outsIt  = out.outputs.iterator // .toList
-    val insSeq0 = in .inputs .iterator.toIndexedSeq
-
-    // if there is already a link between the two, take the drag gesture as a command to remove it
-    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
-      srcScan.iterator.toList.flatMap {
-        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
-          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
-        }
-
-        case _ => None
-      }
-    }
-
-    if (existIt.hasNext) {
-      val (srcKey, srcScan, sinkKey, sinkScan) = existIt.next()
-      removeLink(srcKey, srcScan, sinkKey, sinkScan)
-      true
-
-    } else {
-      // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
-      val outsSeq = out.outputs.iterator.filter(_._1.startsWith("out")).toIndexedSeq
-      val insSeq  = insSeq0                       .filter(_._1.startsWith("in"))
-
-      if (outsSeq.isEmpty || insSeq.isEmpty) return false   // nothing to patch
-
-      if (outsSeq.size == 1 && insSeq.size == 1) {    // exactly one possible connection, go ahead
-        val (srcKey , src ) = outsSeq.head
-        val (sinkKey, sink) = insSeq .head
-        addLink(srcKey, src, sinkKey, sink)
-        true
-
-      } else {  // present dialog to user
-        log(s"Possible outs: ${outsSeq.map(_._1).mkString(", ")}; possible ins: ${insSeq.map(_._1).mkString(", ")}")
-        println(s"Woop. Multiple choice... Dialog not yet implemented...")
-        false
-      }
-    }
+    ??? // SCAN
+//    val outsIt  = out.outputs.iterator // .toList
+//    val insSeq0 = in .inputs .iterator.toIndexedSeq
+//
+//    // if there is already a link between the two, take the drag gesture as a command to remove it
+//    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
+//      srcScan.iterator.toList.flatMap {
+//        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
+//          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
+//        }
+//
+//        case _ => None
+//      }
+//    }
+//
+//    if (existIt.hasNext) {
+//      val (srcKey, srcScan, sinkKey, sinkScan) = existIt.next()
+//      removeLink(srcKey, srcScan, sinkKey, sinkScan)
+//      true
+//
+//    } else {
+//      // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
+//      val outsSeq = out.outputs.iterator.filter(_._1.startsWith("out")).toIndexedSeq
+//      val insSeq  = insSeq0                       .filter(_._1.startsWith("in"))
+//
+//      if (outsSeq.isEmpty || insSeq.isEmpty) return false   // nothing to patch
+//
+//      if (outsSeq.size == 1 && insSeq.size == 1) {    // exactly one possible connection, go ahead
+//        val (srcKey , src ) = outsSeq.head
+//        val (sinkKey, sink) = insSeq .head
+//        addLink(srcKey, src, sinkKey, sink)
+//        true
+//
+//      } else {  // present dialog to user
+//        log(s"Possible outs: ${outsSeq.map(_._1).mkString(", ")}; possible ins: ${insSeq.map(_._1).mkString(", ")}")
+//        println(s"Woop. Multiple choice... Dialog not yet implemented...")
+//        false
+//      }
+//    }
   }
 
   private final case class ArgAssign(name: Option[String], shape: UGenSpec.SignalShape, value: Any)

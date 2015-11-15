@@ -18,7 +18,6 @@ import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.View
-import de.sciss.mellite.gui.impl.{ScansViewImpl => Impl}
 import de.sciss.synth.proc.Proc
 
 object ScansView {
@@ -29,6 +28,6 @@ object ScansView {
 
   def apply[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
                                            workspace: Workspace[S], undoManager: UndoManager): ScansView[S] =
-    Impl(obj)
+    ??? // SCAN  Impl(obj)
 }
 trait ScansView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S]

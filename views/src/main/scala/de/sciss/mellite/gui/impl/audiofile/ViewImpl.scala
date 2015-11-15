@@ -32,7 +32,7 @@ import de.sciss.span.Span
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.graph.ScanIn
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{Scan, AuralSystem, Grapheme, Proc, Timeline, Transport, WorkspaceHandle}
+import de.sciss.synth.proc.{TimeRef, AuralSystem, Grapheme, Proc, Timeline, Transport, WorkspaceHandle}
 import de.sciss.{sonogram, synth}
 
 import scala.swing.Swing._
@@ -49,7 +49,7 @@ object ViewImpl {
     implicit val itx  = _workspace.inMemoryBridge(tx)
     val timeline      = Timeline[I] // proc.ProcGroup.Modifiable[I]
     // val groupObj      = Obj(ProcGroupElem(group))
-    val srRatio       = graphemeV.spec.sampleRate / Timeline.SampleRate
+    val srRatio       = graphemeV.spec.sampleRate / TimeRef.SampleRate
     // val fullSpanFile  = Span(0L, f.spec.numFrames)
     val numFramesTL   = (graphemeV.spec.numFrames / srRatio).toLong
     val fullSpanTL    = Span(0L, numFramesTL)
@@ -75,9 +75,10 @@ object ViewImpl {
       Out.ar(0, in) // XXX TODO
     }
     val diffObj = diff // Obj(Proc.Elem(diff))
-    procObj.outputs.get(Proc.scanMainOut).foreach { scanOut =>
-      scanOut.add(Scan.Link.Scan(diff.inputs.add(Proc.scanMainIn)))
-    }
+    ??? // SCAN
+//    procObj.outputs.get(Proc.scanMainOut).foreach { scanOut =>
+//      scanOut.add(Scan.Link.Scan(diff.inputs.add(Proc.scanMainIn)))
+//    }
 
     import _workspace.inMemoryCursor
     // val transport     = Transport[I, I](group, sampleRate = sampleRate)
@@ -92,7 +93,7 @@ object ViewImpl {
 
     import _workspace.inMemoryBridge
     val res: Impl[S, I] = new Impl[S, I](gainView = gainView) {
-      val timelineModel = new TimelineModelImpl(fullSpanTL, Timeline.SampleRate)
+      val timelineModel = new TimelineModelImpl(fullSpanTL, TimeRef.SampleRate)
       val workspace     = _workspace
       val cursor        = _cursor
       val holder        = tx.newHandle(obj0)

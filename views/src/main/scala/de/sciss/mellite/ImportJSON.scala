@@ -10,7 +10,7 @@ import de.sciss.span.Span
 import de.sciss.synth.Curve
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{Code, CurveObj, FadeSpec, Folder, Grapheme, ObjKeys, Proc, Scan, Scans, SynthGraphObj, Timeline}
+import de.sciss.synth.proc.{TimeRef, Code, CurveObj, FadeSpec, Folder, Grapheme, ObjKeys, Proc, SynthGraphObj, Timeline}
 import play.api.libs.json.{JsArray, JsBoolean, JsNumber, JsObject, JsString, JsUndefined, Json}
 
 import scala.collection.breakOut
@@ -33,7 +33,7 @@ object ImportJSON {
     val JsArray(regionsJSON ) = json \ "regions"
 
     val sampleRateIn  = 44100.0  // XXX TODO --- hardcoded in Mellite v0.3.x
-    val srFactor      = Timeline.SampleRate / sampleRateIn
+    val srFactor      = TimeRef.SampleRate / sampleRateIn
 
     val locsIDs: Map[Int, ArtifactLocation[S]] = locsJSON.map { locJSON =>
       val JsNumber(idB  ) = locJSON \ "id"
@@ -151,13 +151,14 @@ object ImportJSON {
           val JsNumber(idRefB) = a \ "idRef"
           val grapheme = audioIDs(idRefB.toInt)
 
-          val scanIn  = proc.inputs .add(Proc.graphAudio )
-          /*val sOut=*/ proc.outputs.add(Proc.scanMainOut)
-          val grIn    = Grapheme[S](grapheme.value.spec.numChannels)
-          val gStart = LongObj.newVar[S](-gOffset)
-          grIn.add(gStart, grapheme)
-          scanIn add Scan.Link.Grapheme(grIn)
-          proc.graph() = SynthGraphObj.tape
+          ??? // SCAN
+//          val scanIn  = proc.inputs .add(Proc.graphAudio )
+//          /*val sOut=*/ proc.outputs.add(Proc.scanMainOut)
+//          val grIn    = Grapheme[S](grapheme.value.spec.numChannels)
+//          val gStart = LongObj.newVar[S](-gOffset)
+//          grIn.add(gStart, grapheme)
+//          scanIn add Scan.Link.Grapheme(grIn)
+//          proc.graph() = SynthGraphObj.tape
 
         case JsUndefined() =>
           // XXX TODO --- try to read source code
@@ -195,25 +196,26 @@ object ImportJSON {
       val id    = idB.toInt
       val proc  = regionIDs(id)
 
-      def mkLinks(field: String)(thisScans: Proc[S] => Scans.Modifiable[S])
-                                (thatScans: Proc[S] => Scans.Modifiable[S]): Unit =
-        r \ field match {
-          case JsObject(pairs) =>
-            pairs.foreach { tup =>
-              val (thisKey, JsArray(targets)) = tup
-              targets.foreach { targetJSON =>
-                val JsNumber(thatIDB) = targetJSON \ "idRef"
-                val that    = regionIDs(thatIDB.toInt)
-                val JsString(thatKey) = targetJSON \ "key"
-                val thisScan  = thisScans(proc).add(thisKey)
-                val thatScan  = thatScans(that).add(thatKey)
-                thisScan.add(Scan.Link.Scan(thatScan))
-              }
-            }
-          case JsUndefined() =>
-        }
-
-      mkLinks("inputs" )(_.inputs )(_.outputs)
+      ??? // SCAN
+//      def mkLinks(field: String)(thisScans: Proc[S] => Scans.Modifiable[S])
+//                                (thatScans: Proc[S] => Scans.Modifiable[S]): Unit =
+//        r \ field match {
+//          case JsObject(pairs) =>
+//            pairs.foreach { tup =>
+//              val (thisKey, JsArray(targets)) = tup
+//              targets.foreach { targetJSON =>
+//                val JsNumber(thatIDB) = targetJSON \ "idRef"
+//                val that    = regionIDs(thatIDB.toInt)
+//                val JsString(thatKey) = targetJSON \ "key"
+//                val thisScan  = thisScans(proc).add(thisKey)
+//                val thatScan  = thatScans(that).add(thatKey)
+//                thisScan.add(Scan.Link.Scan(thatScan))
+//              }
+//            }
+//          case JsUndefined() =>
+//        }
+//
+//      mkLinks("inputs" )(_.inputs )(_.outputs)
 
       // N.B. --- actually NOT! link addition is bi-directional,
       // so if we have established all the inputs, then all

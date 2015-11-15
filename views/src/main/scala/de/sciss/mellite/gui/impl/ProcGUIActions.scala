@@ -44,21 +44,22 @@ object ProcGUIActions {
           val edits     = Vector.newBuilder[UndoableEdit]
 
           def deleteLinks[A](isInput: Boolean): Unit = {
-            val map = if (isInput) pv.inputs else pv.outputs
-            map.foreach { case (thisKey, links) =>
-              links.foreach{ case ProcObjView.Link(thatView, thatKey) =>
-                val thisScans = if (isInput) thisProc.inputs else thisProc.outputs
-                val thatProc  = thatView.obj
-                val thatScans = if (isInput) thatProc.outputs else thatProc.inputs
-                thisScans.get(thisKey).foreach { thisScan =>
-                  thatScans.get(thatKey).foreach { thatScan =>
-                    val source = if (isInput) thatScan else thisScan
-                    val sink   = if (isInput) thisScan else thatScan
-                    edits += Edits.removeLink(source = source, sink = sink)
-                  }
-                }
-              }
-            }
+            ??? // SCAN
+//            val map = if (isInput) pv.inputs else pv.outputs
+//            map.foreach { case (thisKey, links) =>
+//              links.foreach{ case ProcObjView.Link(thatView, thatKey) =>
+//                val thisScans = if (isInput) thisProc.inputs else thisProc.outputs
+//                val thatProc  = thatView.obj
+//                val thatScans = if (isInput) thatProc.outputs else thatProc.inputs
+//                thisScans.get(thisKey).foreach { thisScan =>
+//                  thatScans.get(thatKey).foreach { thatScan =>
+//                    val source = if (isInput) thatScan else thisScan
+//                    val sink   = if (isInput) thisScan else thatScan
+//                    edits += Edits.removeLink(source = source, sink = sink)
+//                  }
+//                }
+//              }
+//            }
           }
 
           deleteLinks(isInput = true )

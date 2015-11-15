@@ -18,7 +18,7 @@ package audiofile
 
 import de.sciss.{desktop, sonogram}
 import java.awt.{Color, Graphics2D}
-import de.sciss.synth.proc.Timeline
+import de.sciss.synth.proc.{TimeRef, Timeline}
 
 import scala.swing.event.MousePressed
 import scala.util.Failure
@@ -46,7 +46,7 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
 
   object canvasComponent extends Component with sonogram.PaintController {
     private var paintFun: Graphics2D => Unit = paintChecker("Calculating...")
-    private val srRatio = sono.inputSpec.sampleRate / Timeline.SampleRate
+    private val srRatio = sono.inputSpec.sampleRate / TimeRef.SampleRate
 
     override def paintComponent(g: Graphics2D): Unit = {
       paintFun(g)

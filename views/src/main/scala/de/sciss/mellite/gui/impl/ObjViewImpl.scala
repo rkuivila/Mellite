@@ -37,7 +37,7 @@ import de.sciss.mellite.gui.impl.document.NuagesFolderFrameImpl
 import de.sciss.model.impl.ModelImpl
 import de.sciss.swingplus.{ColorChooser, GroupPanel, Spinner}
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{Confluent, ObjKeys}
+import de.sciss.synth.proc.{TimeRef, Confluent, ObjKeys}
 
 import scala.swing.Swing.EmptyIcon
 import scala.swing.{Action, Alignment, BorderPanel, Button, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Swing, TextField}
@@ -689,7 +689,7 @@ object ObjViewImpl {
       }
 
       def configureRenderer(label: Label): Component = {
-        val sr = _Timeline.SampleRate // 44100.0
+        val sr = TimeRef.SampleRate // 44100.0
         val dur = timeFmt.format(value.numFrames.toDouble / sr)
         label.text = s"$dur, ${value.curve}"
         label
@@ -753,7 +753,7 @@ object ObjViewImpl {
       if (res != Dialog.Result.Ok) None else {
         val name      = ggName.text
         val seconds   = offModel.getNumber.doubleValue()
-        val offset    = (seconds * _Timeline.SampleRate + 0.5).toLong
+        val offset    = (seconds * TimeRef.SampleRate + 0.5).toLong
         val playing   = ggPlay.selected
         Some(Config(name = name, offset = offset, playing = playing))
       }

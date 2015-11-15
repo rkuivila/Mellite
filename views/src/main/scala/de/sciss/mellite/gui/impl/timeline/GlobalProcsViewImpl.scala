@@ -30,8 +30,8 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.edit.{EditRemoveScanLink, EditTimelineInsertObj, Edits}
-import de.sciss.synth.proc.{Proc, Scan, Timeline}
+import de.sciss.mellite.gui.edit.{EditTimelineInsertObj, Edits}
+import de.sciss.synth.proc.{Proc, Timeline}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.annotation.switch
@@ -390,12 +390,13 @@ object GlobalProcsViewImpl {
           if (!connect) outObj match {
             case procObj: Proc[S] =>
               val proc    = procObj
-              proc.inputs.iterator.foreach { case (_, scan) =>
-                scan.iterator.foreach(scan.remove(_))
-              }
-              proc.outputs.iterator.foreach { case (_, scan) =>
-                scan.iterator.foreach(scan.remove(_))
-              }
+              ??? // SCAN
+//              proc.inputs.iterator.foreach { case (_, scan) =>
+//                scan.iterator.foreach(scan.remove(_))
+//              }
+//              proc.outputs.iterator.foreach { case (_, scan) =>
+//                scan.iterator.foreach(scan.remove(_))
+//              }
             case _ =>
           }
           EditTimelineInsertObj("Global Proc", tl, span, outObj)
@@ -411,21 +412,22 @@ object GlobalProcsViewImpl {
       val seqTL   = tlSelModel    .iterator.toSeq
       val plGlob  = seqGlob.size > 1
       val plTL    = seqTL  .size > 1
-      val edits   = cursor.step { implicit tx =>
-        val it = for {
-          outView <- seqTL
-          inView  <- seqGlob
-          in      = inView.obj
-          out     <- (outView.obj match { case p: Proc[S] => Some(p); case _ => None }) // Proc.unapply(outView.obj)
-          source  <- out.outputs.get(Proc.scanMainOut)
-          sink    <- in .inputs .get(Proc.scanMainIn )
-          if Edits.findLink(out = out, in = in).isEmpty
-        } yield Edits.addLink(sourceKey = "out", source = source, sinkKey = "in", sink = sink)
-        it.toList   // tricky, need to unwind transactional iterator
-      }
-      val editOpt = CompoundEdit(edits,
-        s"Connect Global ${if (plGlob) "Procs" else "Proc"} to Selected ${if (plTL) "Regions" else "Region"}")
-      editOpt.foreach(undoManager.add)
+      ??? // SCAN
+//      val edits   = cursor.step { implicit tx =>
+//        val it = for {
+//          outView <- seqTL
+//          inView  <- seqGlob
+//          in      = inView.obj
+//          out     <- (outView.obj match { case p: Proc[S] => Some(p); case _ => None }) // Proc.unapply(outView.obj)
+//          source  <- out.outputs.get(Proc.scanMainOut)
+//          sink    <- in .inputs .get(Proc.scanMainIn )
+//          if Edits.findLink(out = out, in = in).isEmpty
+//        } yield Edits.addLink(sourceKey = "out", source = source, sinkKey = "in", sink = sink)
+//        it.toList   // tricky, need to unwind transactional iterator
+//      }
+//      val editOpt = CompoundEdit(edits,
+//        s"Connect Global ${if (plGlob) "Procs" else "Proc"} to Selected ${if (plTL) "Regions" else "Region"}")
+//      editOpt.foreach(undoManager.add)
     }
 
     private def disconnectFromSelectedRegions(): Unit = {
@@ -433,19 +435,20 @@ object GlobalProcsViewImpl {
       val seqTL   = tlSelModel    .iterator.toSeq
       val plGlob  = seqGlob.size > 1
       val plTL    = seqTL  .size > 1
-      val edits   = cursor.step { implicit tx =>
-        val it = for {
-          outView <- seqTL
-          inView  <- seqGlob
-          in      = inView.obj
-          out     <- (outView.obj match { case p: Proc[S] => Some(p); case _ => None }) // Proc.unapply(outView.obj)
-          (source, sink) <- Edits.findLink(out = out, in = in)
-        } yield Edits.removeLink(source = source, sink = sink)
-        it.toList   // tricky, need to unwind transactional iterator
-      }
-      val editOpt = CompoundEdit(edits,
-        s"Disconnect Global ${if (plGlob) "Procs" else "Proc"} from Selected ${if (plTL) "Regions" else "Region"}")
-      editOpt.foreach(undoManager.add)
+      ??? // SCAN
+//      val edits   = cursor.step { implicit tx =>
+//        val it = for {
+//          outView <- seqTL
+//          inView  <- seqGlob
+//          in      = inView.obj
+//          out     <- (outView.obj match { case p: Proc[S] => Some(p); case _ => None }) // Proc.unapply(outView.obj)
+//          (source, sink) <- Edits.findLink(out = out, in = in)
+//        } yield Edits.removeLink(source = source, sink = sink)
+//        it.toList   // tricky, need to unwind transactional iterator
+//      }
+//      val editOpt = CompoundEdit(edits,
+//        s"Disconnect Global ${if (plGlob) "Procs" else "Proc"} from Selected ${if (plTL) "Regions" else "Region"}")
+//      editOpt.foreach(undoManager.add)
     }
 
     private def disconnectFromAllRegions(): Unit = {
@@ -454,11 +457,12 @@ object GlobalProcsViewImpl {
       val edits   = cursor.step { implicit tx =>
         seqGlob.flatMap { inView =>
           val in = inView.obj
-          in.inputs.get(Proc.scanMainIn).toList.flatMap { sink =>
-            sink.iterator.collect {
-              case Scan.Link.Scan(source) => EditRemoveScanLink(source = source, sink = sink)
-            } .toList
-          }
+          ??? // SCAN
+//          in.inputs.get(Proc.scanMainIn).toList.flatMap { sink =>
+//            sink.iterator.collect {
+//              case Scan.Link.Scan(source) => EditRemoveScanLink(source = source, sink = sink)
+//            } .toList
+//          }
         }
       }
       val editOpt = CompoundEdit(edits,

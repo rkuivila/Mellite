@@ -81,7 +81,7 @@ class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv
         (tlv.globalView.iterator ++ selMod.iterator).foreach { view =>
           auralTimeline.addObject(view.id, view.span, view.obj)
         }
-        auralTimeline.play(TimeRef(tlv.timelineModel.bounds, frame = playPos))
+        auralTimeline.play(TimeRef(tlv.timelineModel.bounds, frame = playPos), ())
         auralTimeline
       }
     }

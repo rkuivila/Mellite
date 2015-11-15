@@ -25,7 +25,7 @@ import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.mellite.ProcActions.{Move, Resize}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.{SynthGraph, proc}
-import de.sciss.synth.proc.{SynthGraphObj, Code, ObjKeys, Proc, Scan, Scans}
+import de.sciss.synth.proc.{SynthGraphObj, Code, ObjKeys, Proc}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.breakOut
@@ -87,26 +87,27 @@ object Edits {
             edits += edit2
           }
 
-          def check(scans: Scans[S], keys: Set[String], isInput: Boolean): Unit = {
-            val toRemove = scans.iterator.collect {
-              case (key, scan) if !keys.contains(key) && scan.isEmpty => key
-            }
-            if (toRemove.nonEmpty) toRemove.foreach { key =>
-              edits += EditRemoveScan(p, key = key, isInput = isInput)
-            }
-
-            val existing = scans.iterator.collect {
-              case (key, _) if keys contains key => key
-            }
-            val toAdd = keys -- existing.toSet
-            if (toAdd.nonEmpty) toAdd.foreach { key =>
-              edits += EditAddScan(p, key = key, isInput = isInput)
-            }
-          }
-
-          val proc = p
-          check(proc.inputs , scanInKeys , isInput = true )
-          check(proc.outputs, scanOutKeys, isInput = false)
+          ??? // SCAN
+//          def check(scans: Scans[S], keys: Set[String], isInput: Boolean): Unit = {
+//            val toRemove = scans.iterator.collect {
+//              case (key, scan) if !keys.contains(key) && scan.isEmpty => key
+//            }
+//            if (toRemove.nonEmpty) toRemove.foreach { key =>
+//              edits += EditRemoveScan(p, key = key, isInput = isInput)
+//            }
+//
+//            val existing = scans.iterator.collect {
+//              case (key, _) if keys contains key => key
+//            }
+//            val toAdd = keys -- existing.toSet
+//            if (toAdd.nonEmpty) toAdd.foreach { key =>
+//              edits += EditAddScan(p, key = key, isInput = isInput)
+//            }
+//          }
+//
+//          val proc = p
+//          check(proc.inputs , scanInKeys , isInput = true )
+//          check(proc.outputs, scanOutKeys, isInput = false)
         }
 
         CompoundEdit(edits.result(), editName)
@@ -125,79 +126,81 @@ object Edits {
     edit
   }
 
-  def addLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
-                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    log(s"Link $sourceKey / $source to $sinkKey / $sink")
-    // source.addSink(Scan.Link.Scan(sink))
-    EditAddScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
-  }
-
-  def removeLink[S <: Sys[S]](source: Scan[S], sink: Scan[S])
-                             (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    log(s"Unlink $source from $sink")
-    // source.removeSink(Scan.Link.Scan(sink))
-    EditRemoveScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
-  }
-
-  def findLink[S <: Sys[S]](out: Proc[S], in: Proc[S])
-                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[(Scan[S], Scan[S])] = {
-    val outsIt  = out.outputs.iterator // .toList
-    val insSeq0 = in .inputs .iterator.toIndexedSeq
-
-    // if there is already a link between the two, take the drag gesture as a command to remove it
-    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
-      srcScan.iterator.toList.flatMap {
-        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
-          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
-        }
-
-        case _ => None
-      }
-    }
-    if (existIt.isEmpty) None else {
-      val (_ /* sourceKey */, source, _ /* sinkKey */, sink) = existIt.next()
-      Some((source, sink))
-    }
-  }
+  // SCAN
+//  def addLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
+//                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
+//    log(s"Link $sourceKey / $source to $sinkKey / $sink")
+//    // source.addSink(Scan.Link.Scan(sink))
+//    EditAddScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
+//  }
+//
+//  def removeLink[S <: Sys[S]](source: Scan[S], sink: Scan[S])
+//                             (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
+//    log(s"Unlink $source from $sink")
+//    // source.removeSink(Scan.Link.Scan(sink))
+//    EditRemoveScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
+//  }
+//
+//  def findLink[S <: Sys[S]](out: Proc[S], in: Proc[S])
+//                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[(Scan[S], Scan[S])] = {
+//    val outsIt  = out.outputs.iterator // .toList
+//    val insSeq0 = in .inputs .iterator.toIndexedSeq
+//
+//    // if there is already a link between the two, take the drag gesture as a command to remove it
+//    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
+//      srcScan.iterator.toList.flatMap {
+//        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
+//          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
+//        }
+//
+//        case _ => None
+//      }
+//    }
+//    if (existIt.isEmpty) None else {
+//      val (_ /* sourceKey */, source, _ /* sinkKey */, sink) = existIt.next()
+//      Some((source, sink))
+//    }
+//  }
 
   def linkOrUnlink[S <: Sys[S]](out: Proc[S], in: Proc[S])
                                (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-    val outsIt  = out.outputs.iterator // .toList
-    val insSeq0 = in .inputs .iterator.toIndexedSeq
-
-    // if there is already a link between the two, take the drag gesture as a command to remove it
-    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
-      srcScan.iterator.toList.flatMap {
-        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
-          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
-        }
-
-        case _ => None
-      }
-    }
-
-    findLink(out = out, in = in).fold[Option[UndoableEdit]] {
-      // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
-      val outsSeq = out.outputs.iterator.filter(_._1.startsWith("out")).toIndexedSeq
-      val insSeq  = insSeq0                       .filter(_._1.startsWith("in"))
-
-      if (outsSeq.isEmpty || insSeq.isEmpty) return None  // nothing to patch
-
-      if (outsSeq.size == 1 && insSeq.size == 1) {    // exactly one possible connection, go ahead
-        val (sourceKey, source) = outsSeq.head
-        val (sinkKey  , sink  ) = insSeq .head
-        val edit = addLink(sourceKey, source, sinkKey, sink)
-        Some(edit)
-
-      } else {  // present dialog to user
-        log(s"Possible outs: ${outsSeq.map(_._1).mkString(", ")}; possible ins: ${insSeq.map(_._1).mkString(", ")}")
-        println(s"Woop. Multiple choice... Dialog not yet implemented...")
-        None
-      }
-    } { case (source, sink) =>
-      val edit = removeLink(/* sourceKey, */ source, /* sinkKey, */ sink)
-      Some(edit)
-    }
+    ??? // SCAN
+//    val outsIt  = out.outputs.iterator // .toList
+//    val insSeq0 = in .inputs .iterator.toIndexedSeq
+//
+//    // if there is already a link between the two, take the drag gesture as a command to remove it
+//    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
+//      srcScan.iterator.toList.flatMap {
+//        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
+//          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
+//        }
+//
+//        case _ => None
+//      }
+//    }
+//
+//    findLink(out = out, in = in).fold[Option[UndoableEdit]] {
+//      // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
+//      val outsSeq = out.outputs.iterator.filter(_._1.startsWith("out")).toIndexedSeq
+//      val insSeq  = insSeq0                       .filter(_._1.startsWith("in"))
+//
+//      if (outsSeq.isEmpty || insSeq.isEmpty) return None  // nothing to patch
+//
+//      if (outsSeq.size == 1 && insSeq.size == 1) {    // exactly one possible connection, go ahead
+//        val (sourceKey, source) = outsSeq.head
+//        val (sinkKey  , sink  ) = insSeq .head
+//        val edit = addLink(sourceKey, source, sinkKey, sink)
+//        Some(edit)
+//
+//      } else {  // present dialog to user
+//        log(s"Possible outs: ${outsSeq.map(_._1).mkString(", ")}; possible ins: ${insSeq.map(_._1).mkString(", ")}")
+//        println(s"Woop. Multiple choice... Dialog not yet implemented...")
+//        None
+//      }
+//    } { case (source, sink) =>
+//      val edit = removeLink(/* sourceKey, */ source, /* sinkKey, */ sink)
+//      Some(edit)
+//    }
   }
 
   def resize[S <: Sys[S]](span: SpanLikeObj[S], obj: Obj[S], amount: Resize, minStart: Long)
@@ -319,21 +322,22 @@ object Edits {
                                   (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val scanEdits = obj match {
       case objT: Proc[S] =>
-        val proc  = objT
-        // val scans = proc.scans
-        val edits1 = proc.inputs.iterator.toList.flatMap { case (key, scan) =>
-          scan.iterator.collect {
-            case Scan.Link.Scan(source) =>
-              removeLink(source, scan)
-          }.toList
-        }
-        val edits2 = proc.outputs.iterator.toList.flatMap { case (key, scan) =>
-          scan.iterator.collect {
-            case Scan.Link.Scan(sink) =>
-              removeLink(scan, sink)
-          } .toList
-        }
-        edits1 ++ edits2
+//        val proc  = objT
+//        // val scans = proc.scans
+//        val edits1 = proc.inputs.iterator.toList.flatMap { case (key, scan) =>
+//          scan.iterator.collect {
+//            case Scan.Link.Scan(source) =>
+//              removeLink(source, scan)
+//          }.toList
+//        }
+//        val edits2 = proc.outputs.iterator.toList.flatMap { case (key, scan) =>
+//          scan.iterator.collect {
+//            case Scan.Link.Scan(sink) =>
+//              removeLink(scan, sink)
+//          } .toList
+//        }
+//        edits1 ++ edits2
+        ??? // SCAN
 
       case _ => Nil
     }

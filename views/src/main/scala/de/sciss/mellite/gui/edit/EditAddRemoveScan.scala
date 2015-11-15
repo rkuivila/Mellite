@@ -50,11 +50,12 @@ private[edit] final class EditAddRemoveScan[S <: Sys[S]](isAdd: Boolean,
 
   private def perform(isUndo: Boolean)(implicit tx: S#Tx): Unit = {
     val proc    = procH()
-    val scans   = if (isInput) proc.inputs else proc.outputs
-    if (isAdd ^ isUndo)
-      scans.add   (key)
-    else
-      scans.remove(key)
+    ??? // SCAN
+//    val scans   = if (isInput) proc.inputs else proc.outputs
+//    if (isAdd ^ isUndo)
+//      scans.add   (key)
+//    else
+//      scans.remove(key)
   }
 
   override def getPresentationName = s"${if (isAdd) "Add" else "Remove"} Scan"

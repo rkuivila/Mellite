@@ -35,7 +35,7 @@ import de.sciss.span.Span.SpanOrVoid
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
-import de.sciss.synth.proc.{Folder, Bounce, Code, Grapheme, Timeline}
+import de.sciss.synth.proc.{TimeRef, Folder, Bounce, Code, Grapheme, Timeline}
 import de.sciss.synth.{proc, SynthGraph, addToTail}
 import org.scalautils.TypeCheckedTripleEquals
 
@@ -136,7 +136,7 @@ object ActionBounceTimeline {
     desktop.Util.fixWidth(ggSampleFormat)
     // ggSampleFormat.items = fuck you scala no method here
     ggSampleFormat.selection.item = init.spec.sampleFormat
-    val ggSampleRate    = new SpinnerComboBox(value0 = 44100.0, minimum = 1.0, maximum = Timeline.SampleRate,
+    val ggSampleRate    = new SpinnerComboBox(value0 = 44100.0, minimum = 1.0, maximum = TimeRef.SampleRate,
       step = 100.0, items = Seq(44100.0, 48000.0, 88200.0, 96000.0))
 
     val ggPathText = new TextField(32)
@@ -191,7 +191,7 @@ object ActionBounceTimeline {
     lazy val ggSpanUser  = new RadioButton(s"Current Selection $selectionText")
     lazy val ggSpanGroup = new ButtonGroup(ggSpanAll, ggSpanUser)
 
-    lazy val mDuration   = new SpinnerNumberModel(tlSel.length / Timeline.SampleRate, 0.0, 10000.0, 0.1)
+    lazy val mDuration   = new SpinnerNumberModel(tlSel.length / TimeRef.SampleRate, 0.0, 10000.0, 0.1)
 
     var transformItemsCollected = false
 
@@ -333,7 +333,7 @@ object ActionBounceTimeline {
 
     val spanOut = showSelection match {
       case SpanSelection      => if (ggSpanUser.selected) tlSel else Span.Void
-      case DurationSelection  => Span(0L, (mDuration.getNumber.doubleValue() * Timeline.SampleRate + 0.5).toLong)
+      case DurationSelection  => Span(0L, (mDuration.getNumber.doubleValue() * TimeRef.SampleRate + 0.5).toLong)
       case NoSelection        => init.span
     }
 
@@ -566,7 +566,7 @@ object ActionBounceTimeline {
     val fileType      = settings.server.nrtHeaderFormat
     val sampleFormat  = settings.server.nrtSampleFormat
     val sampleRate    = settings.server.sampleRate
-    val fileFrames0   = (span.length * sampleRate / Timeline.SampleRate + 0.5).toLong
+    val fileFrames0   = (span.length * sampleRate / TimeRef.SampleRate + 0.5).toLong
     val fileFrames    = fileFrames0 // - (fileFrames0 % settings.server.blockSize)
 
     val settings1: PerformSettings[S] = if (!needsTemp) settings else {
@@ -594,7 +594,7 @@ object ActionBounceTimeline {
     val span1 = if (!realtime) span else {
       val bufDur    = Buffer.defaultRecBufferSize.toDouble / bnc.server.sampleRate
       // apart from DiskOut buffer, add a bit of head-room (100ms) to account for jitter
-      val bufFrames = ((bufDur + 0.1) * Timeline.SampleRate + 0.5).toLong
+      val bufFrames = ((bufDur + 0.1) * TimeRef.SampleRate + 0.5).toLong
       val numFrames = span.length + bufFrames // (span.length + bufFrames - 1) / bufFrames * bufFrames
       Span(span.start, span.start + numFrames)
     }
