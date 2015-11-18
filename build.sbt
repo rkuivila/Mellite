@@ -1,18 +1,18 @@
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val fullDescr                  = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.0.1-SNAPSHOT"
+lazy val projectVersion             = "2.1.0-SNAPSHOT"
 
 lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "3.2.1"
+lazy val soundProcessesVersion      = "3.3.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.2"
-lazy val scalaColliderUGenVersion   = "1.13.4"
-lazy val lucreVersion               = "3.2.1"
+lazy val scalaColliderUGenVersion   = "1.14.0"
+lazy val lucreVersion               = "3.2.2"
 lazy val fscapeJobsVersion          = "1.5.0"
-lazy val strugatzkiVersion          = "2.9.0"
+lazy val strugatzkiVersion          = "2.10.0"
 lazy val scalaUtilsVersion          = "2.1.7"
 lazy val scalaOSCVersion            = "1.1.5"
 lazy val playJSONVersion            = "0.2.0"
@@ -21,9 +21,9 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "2.2.0"
-lazy val scalaColliderSwingVersion  = "1.25.3"
-lazy val lucreSwingVersion          = "1.2.0"
+lazy val nuagesVersion              = "2.3.0-SNAPSHOT"
+lazy val scalaColliderSwingVersion  = "1.27.0"
+lazy val lucreSwingVersion          = "1.2.2"
 lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
 lazy val audioWidgetsVersion        = "1.9.1"
@@ -43,7 +43,7 @@ lazy val commonSettings = Seq(
   homepage           := Some(url(s"https://github.com/Sciss/$baseName")),
   licenses           := Seq("GNU General Public License v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
   scalaVersion       := "2.11.7",
-  crossScalaVersions := Seq("2.11.7", "2.10.5"),
+  crossScalaVersions := Seq("2.11.7", "2.10.6"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
