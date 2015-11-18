@@ -1,13 +1,13 @@
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val fullDescr                  = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.1.0-SNAPSHOT"
+lazy val projectVersion             = "2.1.0"
 
 lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "3.3.0-SNAPSHOT"
+lazy val soundProcessesVersion      = "3.3.0"
 lazy val interpreterPaneVersion     = "1.7.2"
 lazy val scalaColliderUGenVersion   = "1.14.0"
 lazy val lucreVersion               = "3.2.2"
@@ -21,7 +21,7 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "2.3.0-SNAPSHOT"
+lazy val nuagesVersion              = "2.3.0"
 lazy val scalaColliderSwingVersion  = "1.27.0"
 lazy val lucreSwingVersion          = "1.2.2"
 lazy val swingPlusVersion           = "0.2.1"
