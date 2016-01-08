@@ -28,7 +28,7 @@ import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.sonogram.{Overview => SonoOverview}
 import de.sciss.span.Span
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{Grapheme, ObjKeys, Proc}
+import de.sciss.synth.proc.{AudioCue, Grapheme, ObjKeys, Proc}
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.immutable.{IndexedSeq => Vec}
@@ -180,7 +180,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     override def toString = s"ProcView($name, $spanValue, $audio)"
 
-    var audio = Option.empty[Grapheme.Segment.Audio]
+    // var audio = Option.empty[Grapheme.Segment.Audio]
+    var audio = Option.empty[AudioCue]
 
     def debugString =
       s"ProcView(span = $spanValue, trackIndex = $trackIndex, nameOption = $nameOption, muted = $muted, audio = $audio, " +
@@ -236,7 +237,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       }
 
     override def name = nameOption.getOrElse {
-      audio.fold(TimelineObjView.Unnamed)(_.value.artifact.base)
+      audio.fold(TimelineObjView.Unnamed)(_./* value. */artifact.base)
     }
 
     def acquireSonogram(): Option[SonoOverview] = {
@@ -244,7 +245,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       releaseSonogram()
       sonogram = audio.flatMap { segm =>
         try {
-          val ovr = SonogramManager.acquire(segm.value.artifact)  // XXX TODO: remove `Try` once manager is fixed
+          val ovr = SonogramManager.acquire(segm./* value. */artifact)  // XXX TODO: remove `Try` once manager is fixed
           failedAcquire = false
           Some(ovr)
         } catch {
@@ -339,7 +340,9 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     /** If this proc is bound to an audio grapheme for the default scan key, returns
       * this grapheme segment (underlying audio file of a tape object). */
-    var audio: Option[Grapheme.Segment.Audio]
+    var audio: Option[AudioCue]
+
+    // var audio: Option[Grapheme.Segment.Audio]
 
     var sonogram: Option[SonoOverview]
 

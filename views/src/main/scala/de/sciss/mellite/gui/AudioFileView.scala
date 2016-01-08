@@ -17,10 +17,10 @@ package gui
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.audiofile.{ViewImpl => Impl}
-import de.sciss.synth.proc.{AuralSystem, Grapheme}
+import de.sciss.synth.proc.{AudioCue, AuralSystem}
 
 object AudioFileView {
-  def apply[S <: Sys[S]](obj: Grapheme.Expr.Audio[S])
+  def apply[S <: Sys[S]](obj: AudioCue.Obj[S])
                         (implicit tx: S#Tx, document: Workspace[S], cursor: stm.Cursor[S],
                          aural: AuralSystem): AudioFileView[S] =
     Impl(obj)
@@ -28,5 +28,5 @@ object AudioFileView {
 trait AudioFileView[S <: Sys[S]] extends ViewHasWorkspace[S] /* Disposable[S#Tx] */ {
   // def document: File // Document[S]
   // def component: Component
-  def obj(implicit tx: S#Tx): Grapheme.Expr.Audio[S]
+  def obj(implicit tx: S#Tx): AudioCue.Obj[S]
 }

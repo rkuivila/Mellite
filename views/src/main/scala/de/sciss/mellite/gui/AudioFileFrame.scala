@@ -18,10 +18,10 @@ package gui
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.audiofile.{FrameImpl => Impl}
-import de.sciss.synth.proc.Grapheme
+import de.sciss.synth.proc.AudioCue
 
 object AudioFileFrame {
-  def apply[S <: Sys[S]](obj: Grapheme.Expr.Audio[S])
+  def apply[S <: Sys[S]](obj: AudioCue.Obj[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): AudioFileFrame[S] =
     Impl(obj)
 }

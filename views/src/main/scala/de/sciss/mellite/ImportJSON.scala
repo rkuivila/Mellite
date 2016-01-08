@@ -4,13 +4,13 @@ import java.io.FileInputStream
 
 import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
-import de.sciss.lucre.expr.{SpanLikeObj, DoubleObj, IntObj, LongObj}
+import de.sciss.lucre.expr.{DoubleObj, IntObj, LongObj, SpanLikeObj}
 import de.sciss.lucre.stm.Sys
 import de.sciss.span.Span
 import de.sciss.synth.Curve
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{TimeRef, Code, CurveObj, FadeSpec, Folder, Grapheme, ObjKeys, Proc, SynthGraphObj, Timeline}
+import de.sciss.synth.proc.{AudioCue, Code, CurveObj, FadeSpec, Folder, ObjKeys, Proc, TimeRef, Timeline}
 import play.api.libs.json.{JsArray, JsBoolean, JsNumber, JsObject, JsString, JsUndefined, Json}
 
 import scala.collection.breakOut
@@ -48,7 +48,7 @@ object ImportJSON {
       (id, loc)
     } (breakOut)
 
-    val audioIDs: Map[Int, Grapheme.Expr.Audio[S]] = audioJSON.map { a =>
+    val audioIDs: Map[Int, AudioCue.Obj[S]] = audioJSON.map { a =>
       val JsNumber(idB    ) = a \ "id"
       val id = idB.toInt
       val JsNumber(locRef ) = a \ "locRef"
@@ -65,7 +65,7 @@ object ImportJSON {
       val artifact  = Artifact(loc, Artifact.Child(child))
       val f         = artifact.value
       val spec      = AudioFile.readSpec(f)
-      val audio     = Grapheme.Expr.Audio[S](artifact, spec,
+      val audio     = AudioCue.Obj[S](artifact, spec,
         offset = LongObj.newVar(offset), gain = DoubleObj.newVar(gain))
       audio.name    = f.base
 

@@ -20,7 +20,7 @@ import de.sciss.lucre.expr
 import de.sciss.lucre.expr.{BooleanObj, DoubleObj, IntObj, LongObj, SpanLikeObj, StringObj}
 import de.sciss.lucre.stm.{Copy, Obj, Sys}
 import de.sciss.span.Span
-import de.sciss.synth.proc.{Code, Grapheme, ObjKeys, Proc, SynthGraphObj, Timeline}
+import de.sciss.synth.proc.{AudioCue, Code, Grapheme, ObjKeys, Proc, Timeline}
 import de.sciss.synth.ugen.{BinaryOpUGen, Constant, UnaryOpUGen}
 import de.sciss.synth.{GE, Lazy, Rate, SynthGraph, UGenSpec, proc}
 
@@ -40,7 +40,7 @@ object ProcActions {
 
   /** Queries the audio region's grapheme segment start and audio element. */
   def getAudioRegion[S <: Sys[S]](/* span: SpanLikeObj[S], */ proc: Proc[S])
-                                 (implicit tx: S#Tx): Option[(LongObj[S], Grapheme.Expr.Audio[S])] =
+                                 (implicit tx: S#Tx): Option[(LongObj[S], AudioCue.Obj[S])] =
   ??? // SCAN
 //    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
 //      scan.iterator.toList.headOption match {
@@ -57,7 +57,7 @@ object ProcActions {
 
   /** FOR DEBUGGING PURPOSES, ALSO RETURNS THE GRAPHEME **/
   def getAudioRegion2[S <: Sys[S]](/* span: SpanLikeObj[S], */ proc: Proc[S])
-                                 (implicit tx: S#Tx): Option[(LongObj[S], Grapheme[S], Grapheme.Expr.Audio[S])] =
+                                 (implicit tx: S#Tx): Option[(LongObj[S], Grapheme[S], AudioCue.Obj[S])] =
   ??? // SCAN
 //    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
 //      scan.iterator.toList.headOption match {
@@ -285,11 +285,9 @@ object ProcActions {
     }
   }
 
-  def mkAudioRegion[S <: Sys[S]](
-      time      : Span,
-      grapheme  : Grapheme.Expr.Audio[S],
-      gOffset   : Long
-      /* bus       : Option[IntObj[S]] */) // stm.Source[S#Tx, Element.Int[S]]])
+  def mkAudioRegion[S <: Sys[S]](time      : Span,
+                                 audioCue  : AudioCue.Obj[S],
+                                 gOffset   : Long)
      (implicit tx: S#Tx): (SpanLikeObj /* SpanObj */[S], Proc[S]) = {
 
     // val srRatio = grapheme.spec.sampleRate / Timeline.SampleRate
@@ -320,7 +318,7 @@ object ProcActions {
     *
     * @param group      the group to insert the proc into
     * @param time       the time span on the outer timeline
-    * @param grapheme   the grapheme carrying the underlying audio file
+    * @param audioCue   the grapheme carrying the underlying audio file
     * @param gOffset    the selection start with respect to the grapheme.
     *                   This is inside the underlying audio file (but using timeline sample-rate),
     *                   whereas the proc will be placed in the group aligned with `time`.
@@ -328,10 +326,10 @@ object ProcActions {
     */
   def insertAudioRegion[S <: Sys[S]](group     : TimelineMod[S],
                                      time      : Span,
-                                     grapheme  : Grapheme.Expr.Audio[S],
+                                     audioCue  : AudioCue.Obj[S],
                                      gOffset   : Long)
                                     (implicit tx: S#Tx): (SpanLikeObj /* SpanObj */[S], Proc[S]) = {
-    val res @ (span, obj) = mkAudioRegion(time, grapheme, gOffset)
+    val res @ (span, obj) = mkAudioRegion(time, audioCue, gOffset)
     group.add(span, obj)
     res
   }

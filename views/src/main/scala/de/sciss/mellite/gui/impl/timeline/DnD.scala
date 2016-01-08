@@ -27,7 +27,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.span.Span
-import de.sciss.synth.proc.{Grapheme, Proc}
+import de.sciss.synth.proc.{AudioCue, Proc}
 
 import scala.swing.Component
 import scala.util.Try
@@ -40,7 +40,7 @@ object DnD {
   sealed trait AudioDragLike[S <: Sys[S]] extends Drag[S] {
     def selection: Span
   }
-  final case class AudioDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, Grapheme.Expr.Audio[S]],
+  final case class AudioDrag[S <: Sys[S]](workspace: Workspace[S], source: stm.Source[S#Tx, AudioCue.Obj[S]],
                                           selection: Span)
     extends AudioDragLike[S]
 

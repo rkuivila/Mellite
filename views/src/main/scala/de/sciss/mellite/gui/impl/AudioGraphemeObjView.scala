@@ -21,28 +21,27 @@ import de.sciss.desktop.FileDialog
 import de.sciss.file._
 import de.sciss.icons.raphael
 import de.sciss.lucre.artifact.ArtifactLocation
+import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.stm
-import de.sciss.model.Change
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, SampleFormat}
-import de.sciss.synth.proc.Grapheme
+import de.sciss.synth.proc.AudioCue
 
 import scala.swing.{Component, Label}
 import scala.util.Try
 
 object AudioGraphemeObjView extends ListObjView.Factory {
-  type E[~ <: stm.Sys[~]] = Grapheme.Expr.Audio[~] // Grapheme.Expr.Audio[S]
-  val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Music)
-  val prefix    = "AudioGrapheme"
-  def humanName = "Audio File"
-  def tpe = Grapheme.Expr.Audio // ElemImpl.AudioGrapheme.typeID
+  type E[~ <: stm.Sys[~]] = AudioCue.Obj[~] // Grapheme.Expr.Audio[S]
+  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Music)
+  val prefix        = "AudioGrapheme"
+  def humanName     = "Audio File"
+  def tpe           = AudioCue.Obj // ElemImpl.AudioGrapheme.typeID
   def hasMakeDialog = true
 
   def category = ObjView.categResources
 
-  def mkListView[S <: Sys[S]](obj: Grapheme.Expr.Audio[S])
+  def mkListView[S <: Sys[S]](obj: AudioCue.Obj[S])
                              (implicit tx: S#Tx): AudioGraphemeObjView[S] with ListObjView[S] = {
     val value = obj.value
     new Impl(tx.newHandle(obj), value).init(obj)
@@ -83,8 +82,8 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
   private val timeFmt = AxisFormat.Time(hours = false, millis = true)
 
-  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Grapheme.Expr.Audio[S]],
-                                var value: Grapheme.Value.Audio)
+  final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, AudioCue.Obj[S]],
+                                var value: AudioCue)
     extends AudioGraphemeObjView[S]
     with ListObjView /* .AudioGrapheme */[S]
     with ObjViewImpl.Impl[S]
@@ -92,11 +91,11 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
     override def obj(implicit tx: S#Tx) = objH()
 
-    type E[~ <: stm.Sys[~]] = Grapheme.Expr.Audio[~]
+    type E[~ <: stm.Sys[~]] = AudioCue.Obj[~]
 
     def factory = AudioGraphemeObjView
 
-    def init(obj: Grapheme.Expr.Audio[S])(implicit tx: S#Tx): this.type = {
+    def init(obj: AudioCue.Obj[S])(implicit tx: S#Tx): this.type = {
       initAttrs(obj)
       disposables ::= obj.changed.react { implicit tx => upd => deferTx {
         value = upd.now
@@ -137,5 +136,5 @@ object AudioGraphemeObjView extends ListObjView.Factory {
   }
 }
 trait AudioGraphemeObjView[S <: stm.Sys[S]] extends ObjView[S] {
-  override def obj(implicit tx: S#Tx): Grapheme.Expr.Audio[S]
+  override def obj(implicit tx: S#Tx): AudioCue.Obj[S]
 }

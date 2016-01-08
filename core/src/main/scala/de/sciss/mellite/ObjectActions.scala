@@ -19,15 +19,15 @@ import de.sciss.lucre.expr.{DoubleObj, LongObj}
 import de.sciss.lucre.stm.Sys
 import de.sciss.synth.io.AudioFileSpec
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{Folder, Grapheme}
+import de.sciss.synth.proc.{AudioCue, Folder}
 
 object ObjectActions {
   def mkAudioFile[S <: Sys[S]](loc: ArtifactLocation[S], f: File, spec: AudioFileSpec)
-                              (implicit tx: S#Tx): Grapheme.Expr.Audio[S] = {
+                              (implicit tx: S#Tx): AudioCue.Obj[S] = {
     val offset    = LongObj  .newVar[S](0L )
     val gain      = DoubleObj.newVar[S](1.0)
     val artifact  = Artifact(loc, f) // loc.add(f)
-    val audio     = Grapheme.Expr.Audio(artifact, spec, offset, gain)
+    val audio     = AudioCue.Obj(artifact, spec, offset, gain)
     val name      = f.base
     audio.name    = name
     // if (index == -1) folder.addLast(obj) else folder.insert(index, obj)
@@ -35,10 +35,10 @@ object ObjectActions {
   }
 
   def findAudioFile[S <: Sys[S]](root: Folder[S], file: File)
-                                (implicit tx: S#Tx): Option[Grapheme.Expr.Audio[S]] = {
-    def loop(folder: Folder[S]): Option[Grapheme.Expr.Audio[S]] = {
+                                (implicit tx: S#Tx): Option[AudioCue.Obj[S]] = {
+    def loop(folder: Folder[S]): Option[AudioCue.Obj[S]] = {
       folder.iterator.flatMap {
-        case objT: Grapheme.Expr.Audio[S] if objT.value.artifact == file => Some(objT)
+        case objT: AudioCue.Obj[S] if objT.value.artifact == file => Some(objT)
         case objT: Folder[S] => loop(objT)
         case _ => None
       } .toList.headOption

@@ -67,17 +67,27 @@ object NuagesFolderViewImpl {
 
       val ggClearTL = Button("Clear") {
         cursor.step { implicit tx =>
-          val tl = nuagesH().timeline
-          tl.modifiableOption.foreach { tlMod =>
-            tlMod.clear() // XXX TODO -- use undo manager?
+          nuagesH().surface match {
+            case Nuages.Surface.Timeline(tl) =>
+              tl.modifiableOption.foreach { tlMod =>
+                tlMod.clear() // XXX TODO -- use undo manager?
+              }
+            case Nuages.Surface.Folder(f) =>
+              f.clear() // XXX TODO -- use undo manager?
           }
         }
       }
 
       val ggViewTL = Button("View") {
         cursor.step { implicit tx =>
-          val tl = nuagesH().timeline
-          TimelineFrame(tl)
+          val nuages = nuagesH()
+          nuages.surface match {
+            case Nuages.Surface.Timeline(tl) =>
+              TimelineFrame(tl)
+            case Nuages.Surface.Folder(f) =>
+              val nameView = AttrCellView.name(nuages)
+              FolderFrame(nameView, f)
+          }
         }
       }
 

@@ -35,7 +35,7 @@ import de.sciss.span.Span.SpanOrVoid
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
-import de.sciss.synth.proc.{TimeRef, Folder, Bounce, Code, Grapheme, Timeline}
+import de.sciss.synth.proc.{AudioCue, TimeRef, Folder, Bounce, Code, Grapheme, Timeline}
 import de.sciss.synth.{proc, SynthGraph, addToTail}
 import org.scalautils.TypeCheckedTripleEquals
 
@@ -506,7 +506,7 @@ object ActionBounceTimeline {
               val depArtif  = Artifact(loc, file) // locM.add(file)
               val depOffset = LongObj  .newVar[S](0L)
               val depGain   = DoubleObj.newVar[S](1.0)
-              val deployed  = Grapheme.Expr.Audio[S](depArtif, spec, depOffset, depGain)
+              val deployed  = AudioCue.Obj[S](depArtif, spec, depOffset, depGain)
               val depElem   = deployed // Grapheme.Expr.Audio(deployed)
               val depObj    = depElem // Obj(depElem)
               depObj.name = file.base

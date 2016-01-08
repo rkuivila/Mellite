@@ -836,7 +836,8 @@ object ObjViewImpl {
     }
 
     def makeObj[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
-      val obj = _Nuages[S]
+      val tl  = _Timeline[S]
+      val obj = _Nuages[S](_Nuages.Surface.Timeline(tl))
       obj.name = name
       obj :: Nil
     }

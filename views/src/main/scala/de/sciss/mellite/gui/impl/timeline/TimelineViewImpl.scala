@@ -46,7 +46,7 @@ import de.sciss.swingplus.ScrollBar
 import de.sciss.synth.Curve
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{FadeSpec, Grapheme, Proc, TimeRef, Timeline, Transport}
+import de.sciss.synth.proc.{AudioCue, FadeSpec, Grapheme, Proc, TimeRef, Timeline, Transport}
 import de.sciss.{desktop, sonogram, synth}
 
 import scala.concurrent.stm.{Ref, TSet}
@@ -674,12 +674,12 @@ object TimelineViewImpl {
     }
 
     private def insertAudioRegion(drop: DnD.Drop[S], drag: DnD.AudioDragLike[S],
-                                  grapheme: Grapheme.Expr.Audio[S])(implicit tx: S#Tx): Option[UndoableEdit] =
+                                  audioCue: AudioCue.Obj[S])(implicit tx: S#Tx): Option[UndoableEdit] =
       plainGroup.modifiableOption.map { groupM =>
-        logT(s"insertAudioRegion($drop, ${drag.selection}, $grapheme)")
+        logT(s"insertAudioRegion($drop, ${drag.selection}, $audioCue)")
         val tlSpan = Span(drop.frame, drop.frame + drag.selection.length)
         val (span, obj) = ProcActions.mkAudioRegion(time = tlSpan,
-          grapheme = grapheme, gOffset = drag.selection.start /*, bus = None */) // , bus = ad.bus.map(_.apply().entity))
+          audioCue = audioCue, gOffset = drag.selection.start /*, bus = None */) // , bus = ad.bus.map(_.apply().entity))
         val track = canvasView.screenToTrack(drop.y)
         obj.attr.put(TimelineObjView.attrTrackIndex, IntObj.newVar(IntObj.newConst(track)))
         val edit = EditTimelineInsertObj("Audio Region", groupM, span, obj)
@@ -992,13 +992,13 @@ object TimelineViewImpl {
                   val sonogramOpt = pv.sonogram.orElse(pv.acquireSonogram())
 
                   sonogramOpt.foreach { sonogram =>
-                    val audio   = segm.value
+                    val audio   = segm // .value
                     val srRatio = sonogram.inputSpec.sampleRate / TimeRef.SampleRate
                     // dStart is the frame inside the audio-file corresponding
                     // to the region's left margin. That is, if the grapheme segment
                     // starts early than the region (its start is less than zero),
                     // the frame accordingly increases.
-                    val dStart  = (audio.offset - segm.span.start +
+                    val dStart  = (audio.offset /* - segm.span.start */ +
                                    (if (selected) resizeState.deltaStart else 0L)) * srRatio
                     // a factor to convert from pixel space to audio-file frames
                     val s2f     = timelineModel.visible.length.toDouble / canvasComponent.peer.getWidth * srRatio
