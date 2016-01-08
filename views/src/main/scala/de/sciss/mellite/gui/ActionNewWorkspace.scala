@@ -81,11 +81,15 @@ object ActionNewWorkspace extends Action("Workspace...") {
   private def selectFile(): Option[File] = {
     val fileDlg = FileDialog.save(title = "Location for New Workspace")
     fileDlg.show(None).flatMap { folder0 =>
-      val name    = folder0.getName
-      val folder  = if (name.endsWith(s".${Workspace.ext}")) folder0 else folder0.parent / s"$name.${Workspace.ext}"
-      if (!folder.exists()) Some(folder0) else {
+      val name    = folder0.name
+      val folder  = if (folder0.ext.toLowerCase == Workspace.ext)
+        folder0
+      else
+        folder0.parent / s"$name.${Workspace.ext}"
+
+      if (!folder.exists()) Some(folder) else {
         val isOk = Dialog.showConfirmation(
-          message     = s"Document ${folder.getPath} already exists.\nAre you sure you want to overwrite it?",
+          message     = s"Document ${folder.path} already exists.\nAre you sure you want to overwrite it?",
           title       = fullTitle,
           optionType  = Dialog.Options.OkCancel,
           messageType = Dialog.Message.Warning
@@ -93,7 +97,7 @@ object ActionNewWorkspace extends Action("Workspace...") {
 
         if (!isOk) None else if (deleteRecursive(folder)) Some(folder) else {
           Dialog.showMessage(
-            message     = s"Unable to delete existing document ${folder.getPath}",
+            message     = s"Unable to delete existing document ${folder.path}",
             title       = fullTitle,
             messageType = Dialog.Message.Error
           )
