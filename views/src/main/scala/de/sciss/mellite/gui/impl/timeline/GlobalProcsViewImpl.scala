@@ -390,7 +390,7 @@ object GlobalProcsViewImpl {
           if (!connect) outObj match {
             case procObj: Proc[S] =>
               val proc    = procObj
-              ??? // SCAN
+              ???! // SCAN
 //              proc.inputs.iterator.foreach { case (_, scan) =>
 //                scan.iterator.foreach(scan.remove(_))
 //              }
@@ -412,7 +412,7 @@ object GlobalProcsViewImpl {
       val seqTL   = tlSelModel    .iterator.toSeq
       val plGlob  = seqGlob.size > 1
       val plTL    = seqTL  .size > 1
-      ??? // SCAN
+      ???! // SCAN
 //      val edits   = cursor.step { implicit tx =>
 //        val it = for {
 //          outView <- seqTL
@@ -435,7 +435,7 @@ object GlobalProcsViewImpl {
       val seqTL   = tlSelModel    .iterator.toSeq
       val plGlob  = seqGlob.size > 1
       val plTL    = seqTL  .size > 1
-      ??? // SCAN
+      ???! // SCAN
 //      val edits   = cursor.step { implicit tx =>
 //        val it = for {
 //          outView <- seqTL
@@ -457,7 +457,7 @@ object GlobalProcsViewImpl {
       val edits   = cursor.step { implicit tx =>
         seqGlob.flatMap { inView =>
           val in = inView.obj
-          ??? // SCAN
+          ???! // SCAN
 //          in.inputs.get(Proc.scanMainIn).toList.flatMap { sink =>
 //            sink.iterator.collect {
 //              case Scan.Link.Scan(source) => EditRemoveScanLink(source = source, sink = sink)

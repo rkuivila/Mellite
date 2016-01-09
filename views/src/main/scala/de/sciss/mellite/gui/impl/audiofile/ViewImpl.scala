@@ -63,30 +63,29 @@ object ViewImpl {
 
     val iGrapheme     = AudioCue.Obj[I](iArtifact, audioCueV.spec, audioCueV.offset, audioCueV.gain)
 
-    val (_, procObj)  = ProcActions.insertAudioRegion[I](timeline, time = Span(0L, numFramesTL),
+    val (_, proc)     = ProcActions.insertAudioRegion[I](timeline, time = Span(0L, numFramesTL),
       /* track = 0, */ audioCue = iGrapheme, gOffset = 0L /* , bus = None */)
 
     val diff = Proc[I]
-    diff.graph() = SynthGraph {
+    val diffGr = SynthGraph {
       import synth._
       import ugen._
       val in0 = ScanIn(Proc.scanMainIn)
-      // in.poll(1, "audio-file-view")
+      // in0.poll(1, "audio-file-view")
       val in = if (audioCueV.numChannels == 1) Pan2.ar(in0) else in0  // XXX TODO
       Out.ar(0, in) // XXX TODO
     }
-    val diffObj = diff // Obj(Proc.Elem(diff))
-    ??? // SCAN
-//    procObj.outputs.get(Proc.scanMainOut).foreach { scanOut =>
-//      scanOut.add(Scan.Link.Scan(diff.inputs.add(Proc.scanMainIn)))
-//    }
+    diff.graph() = diffGr
+
+    val output = proc.outputs.add(Proc.scanMainOut)
+    diff.attr.put(Proc.scanMainIn, output)
 
     import _workspace.inMemoryCursor
     // val transport     = Transport[I, I](group, sampleRate = sampleRate)
     import WorkspaceHandle.Implicits._
     val transport = Transport[I](aural)
     transport.addObject(timeline) // Obj(Timeline(timeline)))
-    transport.addObject(diffObj)
+    transport.addObject(diff)
 
     implicit val undoManager = new UndoManagerImpl
     // val offsetView  = LongSpinnerView  (grapheme.offset, "Offset")

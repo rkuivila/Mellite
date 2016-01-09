@@ -43,8 +43,7 @@ object ProcGUIActions {
           val thisProc  = procObj
           val edits     = Vector.newBuilder[UndoableEdit]
 
-          def deleteLinks[A](isInput: Boolean): Unit = {
-            ??? // SCAN
+//          def deleteLinks[A](isInput: Boolean): Unit = {
 //            val map = if (isInput) pv.inputs else pv.outputs
 //            map.foreach { case (thisKey, links) =>
 //              links.foreach{ case ProcObjView.Link(thatView, thatKey) =>
@@ -60,10 +59,11 @@ object ProcGUIActions {
 //                }
 //              }
 //            }
-          }
+//          }
 
-          deleteLinks(isInput = true )
-          deleteLinks(isInput = false)
+//          deleteLinks(isInput = true )
+//          deleteLinks(isInput = false)
+          println("WARNING: ProcGUIActions.removeProcs - deleteLinks not yet implemented")  // SCAN
 
           edits.result()
 

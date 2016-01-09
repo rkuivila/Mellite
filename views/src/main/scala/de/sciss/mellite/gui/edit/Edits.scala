@@ -87,7 +87,7 @@ object Edits {
             edits += edit2
           }
 
-          ??? // SCAN
+          ???! // SCAN
 //          def check(scans: Scans[S], keys: Set[String], isInput: Boolean): Unit = {
 //            val toRemove = scans.iterator.collect {
 //              case (key, scan) if !keys.contains(key) && scan.isEmpty => key
@@ -164,7 +164,7 @@ object Edits {
 
   def linkOrUnlink[S <: Sys[S]](out: Proc[S], in: Proc[S])
                                (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-    ??? // SCAN
+    ???! // SCAN
 //    val outsIt  = out.outputs.iterator // .toList
 //    val insSeq0 = in .inputs .iterator.toIndexedSeq
 //
@@ -337,7 +337,7 @@ object Edits {
 //          } .toList
 //        }
 //        edits1 ++ edits2
-        ??? // SCAN
+        ???! // SCAN
 
       case _ => Nil
     }

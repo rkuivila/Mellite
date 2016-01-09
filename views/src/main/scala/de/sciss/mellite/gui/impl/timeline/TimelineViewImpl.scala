@@ -149,7 +149,7 @@ object TimelineViewImpl {
 
     def scanInAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value
-      ??? // SCAN
+      ???! // SCAN
 //      proc.inputs.get(name).foreach { scan =>
 //        scan.iterator.foreach {
 //          case Scan.Link.Scan(peer) =>
@@ -161,7 +161,7 @@ object TimelineViewImpl {
 
     def scanOutAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value
-      ??? // SCAN
+      ???! // SCAN
 //      proc.outputs.get(name).foreach { scan =>
 //        scan.iterator.foreach {
 //          case Scan.Link.Scan(peer) =>
@@ -173,7 +173,7 @@ object TimelineViewImpl {
 
     def scanInRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value
-      ??? // SCAN
+      ???! // SCAN
 //      proc.inputs.get(name).foreach { scan =>
 //        scan.iterator.foreach {
 //          case Scan.Link.Scan(peer) =>
@@ -185,7 +185,7 @@ object TimelineViewImpl {
 
     def scanOutRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
       val proc = timed.value
-      ??? // SCAN
+      ???! // SCAN
 //      proc.outputs.get(name).foreach { scan =>
 //        scan.iterator.foreach {
 //          case Scan.Link.Scan(peer) =>

@@ -88,20 +88,19 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     */
   def mkTimelineView[S <: Sys[S]](timedID: S#ID, span: SpanLikeObj[S], obj: Proc[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): ProcObjView.Timeline[S] = {
-    ???   // SCAN
-//    val proc    = obj
-//    val inputs  = proc.inputs
-//    val outputs = proc.outputs
-//
-//    val attr    = obj.attr
-//    val bus     = attr.$[IntObj](ObjKeys.attrBus    ).map(_.value)
-//    val res = new TimelineImpl[S](tx.newHandle(obj), busOption = bus, context = context)
-//      .init(timedID, span, obj)
-//
-//    lazy val idH = tx.newHandle(timedID)
-//
-//    import context.{scanMap, viewMap}
-//
+    val proc    = obj
+    // val inputs  = proc.inputs
+    val outputs = proc.outputs
+
+    val attr    = obj.attr
+    val bus     = attr.$[IntObj](ObjKeys.attrBus    ).map(_.value)
+    val res = new TimelineImpl[S](tx.newHandle(obj), busOption = bus, context = context)
+      .init(timedID, span, obj)
+
+    lazy val idH = tx.newHandle(timedID)
+
+    import context.{scanMap, viewMap}
+
 //    def buildLinks(isInput: Boolean): Unit = {
 //      val scans = if (isInput) inputs else outputs
 //      scans.iterator.foreach { case (key, scan) =>
@@ -137,9 +136,10 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 //    }
 //    buildLinks(isInput = true )
 //    buildLinks(isInput = false)
-//
-//    // procMap.put(timed.id, res)
-//    res
+    println("WARNING: ProcObjView.mkTimelineView - buildLinks not yet implemented")  // SCAN
+
+    // procMap.put(timed.id, res)
+    res
   }
 
   // -------- Proc --------
@@ -198,34 +198,18 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     def init(id: S#ID, span: SpanLikeObj[S], obj: Proc[S])(implicit tx: S#Tx): this.type = {
       initAttrs(id, span, obj)
 
-      ??? // SCAN
-//      obj.inputs.get(Proc.graphAudio).foreach { scanW =>
-//        // XXX TODO --- ideally we would track changes to the scan itself
-//        scanW.iterator.collectFirst {
-//          case Scan.Link.Grapheme(g) =>
-//            def calcAudio(g1: Grapheme[S])(implicit tx: S#Tx): Option[Grapheme.Segment.Audio] =
-//              g1.segment(0L).collect {
-//                case a: Grapheme.Segment.Audio => a
-//              }
-//
-//            disposables ::= g.changed.react { implicit tx => upd => {
-//              val newAudio = calcAudio(upd.grapheme)
-//              deferTx {
-//                val newSonogram = (audio, newAudio) match {
-//                  case (Some(_), None)  => true
-//                  case (None, Some(_))  => true
-//                  case (Some(oldG), Some(newG)) if oldG.value.artifact != newG.value.artifact => true
-//                  case _                => false
-//                }
-//
-//                audio = newAudio
-//                if (newSonogram) releaseSonogram()
-//                dispatch(ObjView.Repaint(self))
-//              }
-//            }}
-//            audio = calcAudio(g)
-//        }
-//      }
+      obj.attr.$[AudioCue.Obj](Proc.graphAudio).foreach { audio0 =>
+        disposables ::= audio0.changed.react { implicit tx => upd => {
+          val newAudio = upd.now // calcAudio(upd.grapheme)
+          deferTx {
+            val newSonogram = upd.before.artifact != upd.now.artifact
+            audio = Some(newAudio)
+            if (newSonogram) releaseSonogram()
+            dispatch(ObjView.Repaint(self))
+          }
+        }}
+        audio = Some(audio0.value) // calcAudio(g)
+      }
 
       this
     }
@@ -259,7 +243,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     override def dispose()(implicit tx: S#Tx): Unit = {
       val proc = obj
-      ??? // SCAN
+      // SCAN
 //      proc.inputs.iterator.foreach { case (_, scan) =>
 //        context.scanMap.remove(scan.id)
 //      }

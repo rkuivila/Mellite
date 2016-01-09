@@ -28,6 +28,6 @@ object ScansView {
 
   def apply[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
                                            workspace: Workspace[S], undoManager: UndoManager): ScansView[S] =
-    ??? // SCAN  Impl(obj)
+    ???! // SCAN  Impl(obj)
 }
 trait ScansView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S]

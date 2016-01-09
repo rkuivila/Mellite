@@ -67,9 +67,9 @@ object CodeFrameImpl {
     }
 
     implicit val undo = new UndoManagerImpl
-    val bottomView = ScansView[S](obj)
+    // val bottomView = ScansView[S](obj) // SCANS
 
-    make(obj, codeObj, code0, Some(handler), hasExecute = false, bottomViewOpt = Some(bottomView))
+    make(obj, codeObj, code0, Some(handler), hasExecute = false, bottomViewOpt = None /* Some(bottomView) */)
   }
 
   // ---- adapter for editing a Action's source ----

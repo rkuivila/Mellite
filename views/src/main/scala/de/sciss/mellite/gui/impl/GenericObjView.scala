@@ -19,7 +19,7 @@ object GenericObjView extends ObjView.Factory {
   def humanName = prefix
   val category  = "None"
   // val typeID    = 0
-  def tpe: Obj.Type = ??? // RRR
+  def tpe: Obj.Type = ???! // RRR
 
   type E[~ <: stm.Sys[~]]       = Obj[~]
   type Config[S <: stm.Sys[S]]  = Unit

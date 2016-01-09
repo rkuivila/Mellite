@@ -486,7 +486,7 @@ object ObjViewImpl {
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                (implicit cursor: stm.Cursor[S]): Option[Config[S]] = None // XXX TODO
 
-    def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???
+    def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???!
 
     final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, _Artifact[S]],
                                   var file: File, val isEditable: _Boolean)

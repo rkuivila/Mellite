@@ -47,10 +47,10 @@
 //        upd.changes.foreach {
 //// SCAN
 ////          case Proc.InputAdded   (key, scan) => addScan   (key, scan, isInput = true )
-//          case Proc.OutputAdded  (key, scan) => ??? // SCAN addScan   (key, scan, isInput = false)
+//          case Proc.OutputAdded  (key, scan) => ... // SCAN addScan   (key, scan, isInput = false)
 //// SCAN
 ////          case Proc.InputRemoved (key, scan) => removeScan(key, isInput = true )
-//          case Proc.OutputRemoved(key, scan) => ??? // SCAN removeScan(key, isInput = false)
+//          case Proc.OutputRemoved(key, scan) => ... // SCAN removeScan(key, isInput = false)
 //// ELEM
 ////          case Proc.InputChange  (key, scan, changes) =>
 ////            changes.foreach {

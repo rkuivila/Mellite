@@ -50,7 +50,7 @@ private[edit] final class EditAddRemoveScan[S <: Sys[S]](isAdd: Boolean,
 
   private def perform(isUndo: Boolean)(implicit tx: S#Tx): Unit = {
     val proc    = procH()
-    ??? // SCAN
+    ???! // SCAN
 //    val scans   = if (isInput) proc.inputs else proc.outputs
 //    if (isAdd ^ isUndo)
 //      scans.add   (key)

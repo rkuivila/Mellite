@@ -20,7 +20,7 @@ import de.sciss.lucre.expr
 import de.sciss.lucre.expr.{BooleanObj, DoubleObj, IntObj, LongObj, SpanLikeObj, StringObj}
 import de.sciss.lucre.stm.{Copy, Obj, Sys}
 import de.sciss.span.Span
-import de.sciss.synth.proc.{AudioCue, Code, Grapheme, ObjKeys, Proc, Timeline}
+import de.sciss.synth.proc.{SynthGraphObj, AudioCue, Code, Grapheme, ObjKeys, Proc, Timeline}
 import de.sciss.synth.ugen.{BinaryOpUGen, Constant, UnaryOpUGen}
 import de.sciss.synth.{GE, Lazy, Rate, SynthGraph, UGenSpec, proc}
 
@@ -41,7 +41,7 @@ object ProcActions {
   /** Queries the audio region's grapheme segment start and audio element. */
   def getAudioRegion[S <: Sys[S]](/* span: SpanLikeObj[S], */ proc: Proc[S])
                                  (implicit tx: S#Tx): Option[(LongObj[S], AudioCue.Obj[S])] =
-  ??? // SCAN
+  ???! // SCAN
 //    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
 //      scan.iterator.toList.headOption match {
 //        case Some(Scan.Link.Grapheme(g)) =>
@@ -58,7 +58,7 @@ object ProcActions {
   /** FOR DEBUGGING PURPOSES, ALSO RETURNS THE GRAPHEME **/
   def getAudioRegion2[S <: Sys[S]](/* span: SpanLikeObj[S], */ proc: Proc[S])
                                  (implicit tx: S#Tx): Option[(LongObj[S], Grapheme[S], AudioCue.Obj[S])] =
-  ??? // SCAN
+  ???! // SCAN
 //    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
 //      scan.iterator.toList.headOption match {
 //        case Some(Scan.Link.Grapheme(g)) =>
@@ -162,7 +162,7 @@ object ProcActions {
     val res = context(obj)
     context.finish()
 
-    ??? // SCAN
+    ???! // SCAN
 //    (obj, res) match {
 //      case (inProc: Proc[S], outProc: Proc[S]) =>   // now re-link scans
 //        def copyMap(in: Scans[S], out: Scans[S]): Unit =
@@ -251,7 +251,7 @@ object ProcActions {
           if (scanInKeys .nonEmpty) log(s"SynthDef has the following scan in  keys: ${scanInKeys .mkString(", ")}")
           if (scanOutKeys.nonEmpty) log(s"SynthDef has the following scan out keys: ${scanOutKeys.mkString(", ")}")
 
-          ??? // SCAN
+          ???! // SCAN
 //          val attrNameOpt = codeElem.attr.get(ObjKeys.attrName)
 //          procs.foreach { p =>
 //            p.graph() = SynthGraphObj.newConst[S](sg)  // XXX TODO: ideally would link to code updates
@@ -293,25 +293,38 @@ object ProcActions {
     // val srRatio = grapheme.spec.sampleRate / Timeline.SampleRate
     val spanV   = time // Span(time, time + (selection.length / srRatio).toLong)
     val span    = SpanLikeObj /* SpanObj */.newVar[S](spanV)
-    val proc    = Proc[S]
-    val obj     = proc // Obj(Proc.Elem(proc))
+    val p       = Proc[S]
 
-    ??? // SCAN
-//    val scanIn  = proc.inputs .add(Proc.graphAudio )
-//    /*val sOut=*/ proc.outputs.add(Proc.scanMainOut)
-//    val grIn    = Grapheme[S](grapheme.value.spec.numChannels)
-//
-//    // we preserve data.source(), i.e. the original audio file offset
-//    // ; therefore the grapheme element must start `selection.start` frames
-//    // before the insertion position `drop.frame`
-//
-//    // val gStart  = LongObj.newVar(time - selection.start)
-//    val gStart = LongObj.newVar[S](-gOffset)
-//    // val bi: Grapheme.TimedElem[S] = (gStart, grapheme) // BiExpr(gStart, grapheme)
-//    grIn.add(gStart, grapheme)
-//    scanIn add grIn
-//    proc.graph() = SynthGraphObj.tape
-//    (span, obj)
+    // val scanIn  = proc.inputs .add(Proc.graphAudio )
+    /*val sOut=*/ p.outputs.add(Proc.scanMainOut)
+    // val grIn    = Grapheme[S] //(audioCue.value.spec.numChannels)
+
+    // we preserve data.source(), i.e. the original audio file offset
+    // ; therefore the grapheme element must start `selection.start` frames
+    // before the insertion position `drop.frame`
+
+    // require(gOffset == 0L, s"mkAudioRegion - don't know yet how to handle cue offset time")
+    import proc.Ops._
+    // This is tricky. Ideally we would keep `audioCue.offset`,
+    // but then editing heuristics become a nightmare. Therefore,
+    // now just flatten the thing...
+
+//    val gOffset1    = (gOffset: LongObj[S]) + audioCue.offset
+//    val audioCueOff = audioCue.replaceOffset(LongObj.newVar(gOffset1))
+//    val gOffset1    = gOffset + audioCue.value.offset
+//    val audioCueOff = audioCue.replaceOffset(LongObj.newVar(gOffset1))
+
+    val audioCueOff = audioCue.shift(LongObj.newVar(gOffset))
+
+    // val gStart  = LongObj.newVar(time - selection.start)
+    // require(time.start == 0, s"mkAudioRegion - don't know yet how to handle relative grapheme time")
+    // val gStart = LongObj.newVar[S](-gOffset)
+    // val bi: Grapheme.TimedElem[S] = (gStart, grapheme) // BiExpr(gStart, grapheme)
+    // grIn.add(gStart, audioCue)
+    // scanIn add grIn
+    p.attr.put(Proc.graphAudio, audioCueOff /* grIn */)
+    p.graph() = SynthGraphObj.tape
+    (span, p)
   }
 
   /** Inserts a new audio region proc into a given group.
@@ -364,7 +377,7 @@ object ProcActions {
 //  }
 
   def linkOrUnlink[S <: Sys[S]](out: Proc[S], in: Proc[S])(implicit tx: S#Tx): Boolean = {
-    ??? // SCAN
+    ???! // SCAN
 //    val outsIt  = out.outputs.iterator // .toList
 //    val insSeq0 = in .inputs .iterator.toIndexedSeq
 //

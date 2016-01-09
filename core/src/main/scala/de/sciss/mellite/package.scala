@@ -44,4 +44,10 @@ package object mellite {
     Cursors     .init()
     // StringOption.init()
   }
+
+  /** Exception are sometimes swallowed without printing in a transaction. This ensures a print. */
+  def ???! : Nothing = {
+    new Exception("???").printStackTrace()
+    ???
+  }
 }
