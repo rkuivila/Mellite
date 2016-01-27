@@ -3,6 +3,7 @@
 # Mellite
 
 [![Flattr this](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=sciss&url=https%3A%2F%2Fgithub.com%2FSciss%2FMellite&title=Mellite%20Computer%20Music%20Environment&language=Scala&tags=github&category=software)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Sciss/Mellite?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/Sciss/Mellite.svg?branch=master)](https://travis-ci.org/Sciss/Mellite)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sciss/mellite_2.11/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sciss/mellite_2.11)
 
@@ -35,6 +36,10 @@ Dependencies not found are all available from their respective [GitHub repositor
 To build a standalone application, run `sbt assembly`. This creates a fat `.jar` file in the root directory that can be executed via double-click. There is also a tiny shell script `Mellite.command` that will launch this jar file.
 
 On Linux, you can copy `Mellite.desktop` into `~/.local/share/applications` and edit this file to use the correct installation paths. You can then add Mellite to your desktop manager (GNOME, KDE, etc.)
+
+## contributing
+
+Please see the file [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## documentation
 
