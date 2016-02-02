@@ -71,10 +71,6 @@ trait ObjView[S <: stm.Sys[S]] extends Disposable[S#Tx] with Model[ObjView.Updat
   def factory: ObjView.Factory
   def humanName: String
 
-  // type E[~ <: stm.Sys[~]] <: Elem[~]
-
-  // def factory: ObjView.Factory
-
   /** The contents of the `"name"` attribute of the object. This is directly
     * set by the table tree view. The object view itself must only make sure that
     * an initial value is provided.
@@ -95,8 +91,6 @@ trait ObjView[S <: stm.Sys[S]] extends Disposable[S#Tx] with Model[ObjView.Updat
 
   /** The view must store a handle to its underlying model. */
   def obj(implicit tx: S#Tx): Obj[S]
-
-  // def obj: stm.Source[S#Tx, Obj[S]] // Obj.T[S, E]]
 
   /** Whether a dedicated view/editor window exists for this type of object. */
   def isViewable: Boolean
