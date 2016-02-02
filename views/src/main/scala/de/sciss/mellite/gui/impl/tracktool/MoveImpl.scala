@@ -2,7 +2,7 @@
  *  MoveImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -27,7 +27,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
 
 final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends BasicRegion[S, TrackTool.Move] with Rubberband[S, TrackTool.Move] {
+  extends BasicRegion[S, TrackTool.Move] with RubberBand[S, TrackTool.Move] {
 
   import TrackTool.{Cursor => _, _}
 

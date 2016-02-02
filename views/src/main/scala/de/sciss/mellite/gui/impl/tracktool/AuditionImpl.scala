@@ -2,7 +2,7 @@
  *  AuditionImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -50,7 +50,7 @@ object AuditionImpl {
   * TODO: update -- this is partly fixed now.
   */
 class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv: TimelineView[S])
-  extends RegionLike[S, Unit] with Rubberband[S, Unit] {
+  extends RegionLike[S, Unit] with RubberBand[S, Unit] {
 
   import TrackTool.{Cursor => _}
 
@@ -81,7 +81,7 @@ class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv
         (tlv.globalView.iterator ++ selMod.iterator).foreach { view =>
           auralTimeline.addObject(view.id, view.span, view.obj)
         }
-        auralTimeline.play(TimeRef(tlv.timelineModel.bounds, frame = playPos), ())
+        auralTimeline.play(TimeRef(tlv.timelineModel.bounds, offset = playPos), ())
         auralTimeline
       }
     }

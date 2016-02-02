@@ -1,10 +1,24 @@
-package de.sciss.mellite.gui.impl.document
+/*
+ *  DocumentHandlerImpl.scala
+ *  (Mellite)
+ *
+ *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *
+ *  This software is published under the GNU General Public License v3+
+ *
+ *
+ *  For further information, please contact Hanns Holger Rutz at
+ *  contact@sciss.de
+ */
+
+package de.sciss.mellite
+package gui
+package impl.document
 
 import de.sciss.desktop
 import de.sciss.desktop.{DocumentHandler => DH}
 import de.sciss.lucre.swing.defer
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.{DocumentHandler, Mellite, Workspace}
 import de.sciss.model.impl.ModelImpl
 import org.scalautils.TypeCheckedTripleEquals
 

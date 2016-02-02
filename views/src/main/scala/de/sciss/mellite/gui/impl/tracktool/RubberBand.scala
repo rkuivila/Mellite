@@ -1,3 +1,16 @@
+/*
+ *  RubberBand.scala
+ *  (Mellite)
+ *
+ *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *
+ *  This software is published under the GNU General Public License v3+
+ *
+ *
+ *  For further information, please contact Hanns Holger Rutz at
+ *  contact@sciss.de
+ */
+
 package de.sciss.mellite
 package gui
 package impl
@@ -11,7 +24,7 @@ import de.sciss.mellite.gui.TrackTool.{DragEnd, DragCancel, DragRubber}
 import de.sciss.span.Span
 
 // XXX TODO --- DRY with Dragging
-trait Rubberband[S <: Sys[S], A] {
+trait RubberBand[S <: Sys[S], A] {
   _: RegionLike[S, A] =>
 
   final protected def mkRubber(e: MouseEvent, hitTrack: Int, pos: Long): Unit =

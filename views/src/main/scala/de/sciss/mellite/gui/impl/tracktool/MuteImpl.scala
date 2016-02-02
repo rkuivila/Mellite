@@ -2,7 +2,7 @@
  *  MuteImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2015 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -38,7 +38,7 @@ object MuteImpl {
   }
 }
 final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
-  extends RegionImpl[S, Mute] with Rubberband[S, Mute] {
+  extends RegionImpl[S, Mute] with RubberBand[S, Mute] {
 
   def defaultCursor = MuteImpl.cursor
   val name          = "Mute"
