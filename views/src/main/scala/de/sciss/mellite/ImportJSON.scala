@@ -166,7 +166,7 @@ object ImportJSON {
 
           ???! // SCAN
 //          val scanIn  = proc.inputs .add(Proc.graphAudio )
-//          /*val sOut=*/ proc.outputs.add(Proc.scanMainOut)
+//          /*val sOut=*/ proc.outputs.add(Proc.mainOut)
 //          val grIn    = Grapheme[S](grapheme.value.spec.numChannels)
 //          val gStart = LongObj.newVar[S](-gOffset)
 //          grIn.add(gStart, grapheme)

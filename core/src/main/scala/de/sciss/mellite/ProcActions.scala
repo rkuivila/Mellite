@@ -296,7 +296,7 @@ object ProcActions {
     val p       = Proc[S]
 
     // val scanIn  = proc.inputs .add(Proc.graphAudio )
-    /*val sOut=*/ p.outputs.add(Proc.scanMainOut)
+    /*val sOut=*/ p.outputs.add(Proc.mainOut)
     // val grIn    = Grapheme[S] //(audioCue.value.spec.numChannels)
 
     // we preserve data.source(), i.e. the original audio file offset

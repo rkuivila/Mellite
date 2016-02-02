@@ -419,7 +419,7 @@ object GlobalProcsViewImpl {
 //          inView  <- seqGlob
 //          in      = inView.obj
 //          out     <- (outView.obj match { case p: Proc[S] => Some(p); case _ => None }) // Proc.unapply(outView.obj)
-//          source  <- out.outputs.get(Proc.scanMainOut)
+//          source  <- out.outputs.get(Proc.mainOut)
 //          sink    <- in .inputs .get(Proc.scanMainIn )
 //          if Edits.findLink(out = out, in = in).isEmpty
 //        } yield Edits.addLink(sourceKey = "out", source = source, sinkKey = "in", sink = sink)

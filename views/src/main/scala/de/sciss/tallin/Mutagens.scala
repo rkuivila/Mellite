@@ -16,12 +16,13 @@ package de.sciss.tallin
 import de.sciss.lucre.stm.Sys
 import de.sciss.nuages.{ExpWarp, IntWarp, LinWarp, Nuages, ParamSpec, ScissProcs}
 import de.sciss.synth.GE
+import de.sciss.synth.proc.Proc
 import de.sciss.{nuages, synth}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 
 object Mutagens {
-  def apply[S <: Sys[S]](dsl: nuages.DSL[S], sCfg: ScissProcs.Config, nCfg: Nuages.Config)
+  def apply[S <: Sys[S]](dsl: nuages.DSL[S], sConfig: ScissProcs.Config, nCfg: Nuages.Config)
                         (implicit tx: S#Tx, n: Nuages[S]): Unit = {
     import dsl._
 
@@ -34,14 +35,15 @@ object Mutagens {
       val v14a  = 6286.0566 // pAudio("p2"     , ParamSpec(10, 10000, ExpWarp), default = 6286.0566)
       val v24   = pAudio("p3"    , ParamSpec(-0.0005, -5.0, ExpWarp), default = -1.699198)
       val amp   = pAudio("amp"    , ParamSpec(0.01,     1, ExpWarp), default =  0.1)
-      val det   = pAudio("detune" , ParamSpec(1, 2), default = 1)
+      val det   = pAudio("detune" , ParamSpec(1, 2), default = 1.0)
 
-      val numOut  = if (sCfg.generatorChannels <= 0) masterChansOption.fold(2)(_.size) else sCfg.generatorChannels
+      val numOut  = if (sConfig.generatorChannels <= 0) masterChansOption.fold(2)(_.size) else sConfig.generatorChannels
 
-      val v14: GE = Vec.tabulate(numOut) { ch =>
+      val v14v = Vec.tabulate(numOut) { ch =>
         val m = (ch: GE).linlin(0, (numOut - 1).max(1), 1, det)
         v14a * m
       }
+      val v14: GE = v14v
       val v25   = Ringz.ar(v11, v24, v24)
       val v26   = 1.0
       val v27   = v26 trunc v25
@@ -50,15 +52,16 @@ object Mutagens {
       Limiter.ar(LeakDC.ar(sig), dur = 0.01) * amp
     }
 
-    val numOut = if (sCfg.generatorChannels <= 0) masterChansOption.fold(2)(_.size) else sCfg.generatorChannels
+    val numOut = if (sConfig.generatorChannels <= 0) masterChansOption.fold(2)(_.size) else sConfig.generatorChannels
 
     def mkDetune(in: GE, max: Double = 2): GE = {
       import synth._
-      val det   = pAudio("detune" , ParamSpec( 1      ,    2              ), default =    1          )
-      Vec.tabulate(numOut) { ch =>
+      val det   = pAudio("detune", ParamSpec(1, 2), default = 1.0)
+      val v = Vec.tabulate(numOut) { ch =>
         val m = (ch: GE).linlin(0, (numOut - 1).max(1), 1, det)
         in * m
       }
+      v
     }
 
     generator("muta-boing") {  // c5f81c53
@@ -117,7 +120,7 @@ object Mutagens {
       val v8  = pAudio("p5"  , ParamSpec( 10, 11025, ExpWarp), default = 10078.403)
       val v13 = pAudio("p6"  , ParamSpec( -800, 800, LinWarp), default = -415.97122)
       val v26 = pAudio("p7"  , ParamSpec( 0.002, 2.0, ExpWarp), default = 0.02286103)
-      val v32a= pAudio("tr"  ,  ParamSpec( -1, 1, IntWarp), default = 1)
+      val v32a= pAudio("tr"  ,  ParamSpec( -1, 1, IntWarp), default = 1.0)
       val amp   = pAudio("amp"  , ParamSpec( 0.01,    1  , ExpWarp), default =   0.1       )
       val v5  = Ringz.ar(v4, v1, v2)
       val v6  = HPF.ar(v5, v1)

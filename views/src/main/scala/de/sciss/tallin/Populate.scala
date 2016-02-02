@@ -44,7 +44,7 @@ object Populate {
   }
 
   def mkLoop[S <: stm.Sys[S]](root: Folder[S], artObj: Artifact[S])(implicit tx: S#Tx): Unit = {
-    val dsl = new nuages.DSL[S]
+    val dsl = nuages.DSL[S]
     import dsl._
     // val imp = ExprImplicits[S]
 
@@ -78,9 +78,9 @@ object Populate {
       val amp1        = 1.0 - (1.0 - amp0).squared
       val sig         = (play1 * amp1) + (play2 * amp2)
       LocalOut.kr(Impulse.kr(1.0 / duration.max(0.1)))
-      ScanOut(Proc.scanMainOut, sig)
+      ScanOut(Proc.mainOut, sig)
     }
-    procObj.outputs.add(Proc.scanMainOut)
+    procObj.outputs.add(Proc.mainOut)
     val spec  = AudioFile.readSpec(f)
     if (DEBUG) println("mkloop ---1")
     val gr    = AudioCue.Obj[S](artObj, spec, 0L, 1.0)
@@ -192,7 +192,7 @@ object Populate {
   def apply[S <: Sys[S]](n: Nuages[S], nConfig: Nuages.Config, sConfig: ScissProcs.Config)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): Unit = {
     implicit val _n = n
-    val dsl = new nuages.DSL[S]
+    val dsl = nuages.DSL[S]
     import dsl._
     import synth._
     import ugen._
@@ -205,6 +205,15 @@ object Populate {
     def ForceChan(in: GE): GE = if (sConfig.generatorChannels <= 0) in else {
       WrapExtendChannels(sConfig.generatorChannels, in)
     }
+
+    def filterF(name: String)(fun: GE => GE) /* (implicit tx: S#Tx, n: Nuages[S]) */: Proc[S] =
+      filter(name, sConfig.generatorChannels)(fun)
+
+    def sinkF(name: String)(fun: GE => Unit) /* (implicit tx: S#Tx, n: Nuages[S]) */: Proc[S] =
+      sink(name, sConfig.generatorChannels)(fun)
+
+    def collectorF(name: String)(fun: GE => Unit) /* (implicit tx: S#Tx, n: Nuages[S]) */: Proc[S] =
+      collector(name, sConfig.generatorChannels)(fun)
 
     def mix(in: GE, flt: GE, mix: GE): GE = LinXFade2.ar(in, flt, mix * 2 - 1)
     def mkMix(): GE = pAudio("mix", ParamSpec(0, 1), default = 0.0)
@@ -430,7 +439,7 @@ object Populate {
 
     // -------------- FILTERS --------------
 
-    filter("staub") { in =>
+    filterF("staub") { in =>
       val pAmt      = pAudio("amt" , ParamSpec(0.0, 1.0), default = 1.0)
       val pFact     = pAudio("fact", ParamSpec(0.5, 2.0, ExpWarp), default = 1.0)
       val pMix      = mkMix()
@@ -452,7 +461,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("delay") { in =>
+    filterF("delay") { in =>
       val pTime       = pAudio("time", ParamSpec(0.03, 30.0, ExpWarp), default = 10.0)
       val pFeed       = pAudio("feed", ParamSpec(0.001, 1.0, ExpWarp), default = 0.001)
       val pMix        = mkMix()
@@ -471,7 +480,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("mantissa") { in =>
+    filterF("mantissa") { in =>
       val pBits = pAudio("bits", ParamSpec(2, 14, IntWarp), default = 14.0)
       val pMix  = mkMix()
 
@@ -479,7 +488,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("achil") { in =>
+    filterF("achil") { in =>
       shortcut = "A"
       val pSpeed  = pAudio("speed", ParamSpec(0.125, 2.3511, ExpWarp), default = 0.5)
       val pMix    = mkMix()
@@ -509,7 +518,7 @@ object Populate {
       mix(in, read, pMix)
     }
 
-    filter("a-gate") { in =>
+    filterF("a-gate") { in =>
       val pAmt = pAudio("amt", ParamSpec(0, 1), default = 1.0)
       val pMix = mkMix()
 
@@ -518,7 +527,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("a-hilb") { in =>
+    filterF("a-hilb") { in =>
       val pMix = mkMix()
       val hlb   = Hilbert.ar(DelayN.ar(in, 0.01, 0.01))
       val hlb2  = Hilbert.ar(Normalizer.ar(in, dur = 0.02))
@@ -526,7 +535,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("hilbert") { in =>
+    filterF("hilbert") { in =>
       shortcut = "H"
       val pFreq = pAudio("freq", ParamSpec(-1, 1), 0.0)
       val pMix  = mkMix()
@@ -537,7 +546,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("reso") { in =>
+    filterF("reso") { in =>
       shortcut = "R"
       val pFreq   = pAudio("freq"     , ParamSpec(30  , 13000, ExpWarp), default = 400.0) // beware of the upper frequency
       val pFreq2  = pAudio("freq-fact", ParamSpec( 0.5,     2, ExpWarp), default =   1.0)
@@ -552,7 +561,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("notch") { in =>
+    filterF("notch") { in =>
       shortcut = "N"
       val pFreq   = pAudio("freq", ParamSpec(30, 16000, ExpWarp), default = 400.0)
       val pFreq2  = pAudio("freq-fact", ParamSpec(0.5, 2, ExpWarp), default = 1.0)
@@ -566,7 +575,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("filt") { in =>
+    filterF("filt") { in =>
       shortcut = "F"
       val pFreq = pAudio("freq", ParamSpec(-1, 1), default = 0.54)
       val pMix  = mkMix()
@@ -586,7 +595,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("frgmnt") { in =>
+    filterF("frgmnt") { in =>
       val pSpeed      = pAudio  ("speed", ParamSpec(0.125, 2.3511, ExpWarp), default = 1.0)
       val pGrain      = pControl("grain", ParamSpec(0, 1), default = 0.5)
       val pFeed       = pAudio  ("fb"   , ParamSpec(0, 1), default = 0.0)
@@ -649,7 +658,7 @@ object Populate {
       mix(in, play, pMix)
     }
 
-    filter("*") { in =>
+    filterF("*") { in =>
       shortcut = "ASTERISK"
       val pMix  = mkMix()
       val in2   = pAudio("in2", ParamSpec(0 /* -1 */, 1), default = 0.0)
@@ -658,7 +667,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("gain") { in =>
+    filterF("gain") { in =>
       shortcut = "G"
       val pGain = pAudio("gain", ParamSpec(-30, 30), default = 0.0)
       val pMix  = mkMix()
@@ -668,7 +677,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("gendy") { in =>
+    filterF("gendy") { in =>
       val pAmt    = pAudio("amt", ParamSpec(0, 1), default = 1.0)
       val pMix    = mkMix()
 
@@ -686,7 +695,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("~skew") { in =>
+    filterF("~skew") { in =>
       val pLo     = pAudio("lo" , ParamSpec(0, 1), default = 0.0)
       val pHi     = pAudio("hi" , ParamSpec(0, 1), default = 1.0)
       val pPow    = pAudio("pow", ParamSpec(0.125, 8, ExpWarp), default = 1.0)
@@ -698,7 +707,7 @@ object Populate {
       mix(in, sig, pMix)
     }
 
-    filter("~onsets") { in =>
+    filterF("~onsets") { in =>
       val pThresh     = pControl("thresh", ParamSpec(0, 1), default = 0.5)
       val pDecay      = pAudio  ("decay" , ParamSpec(0, 1), default = 0.0)
 
@@ -713,7 +722,7 @@ object Populate {
       mix(in, sig, pMix)
     }
 
-    filter("m-above") { in =>
+    filterF("m-above") { in =>
       val pThresh = pAudio("thresh", ParamSpec(1.0e-3, 1.0e-0, ExpWarp), 1.0e-2)
       val pMix    = mkMix()
 
@@ -734,7 +743,7 @@ object Populate {
       mix(in, sig, pMix)
     }
 
-    filter("m-below") { in =>
+    filterF("m-below") { in =>
       val pThresh     = pAudio("thresh", ParamSpec(1.0e-1, 10.0, ExpWarp), default = 1.0)
       val pMix        = mkMix()
 
@@ -755,7 +764,7 @@ object Populate {
       mix(in, sig, pMix)
     }
 
-    filter("pitch") { in =>
+    filterF("pitch") { in =>
       val pTrans  = pAudio("shift", ParamSpec(0.125, 4, ExpWarp), 1.0)
       val pTime   = pAudio("time" , ParamSpec(0.01 , 1, ExpWarp), 0.1)
       val pPitch  = pAudio("pitch", ParamSpec(0.01 , 1, ExpWarp), 0.1)
@@ -769,7 +778,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("pow") { in =>
+    filterF("pow") { in =>
       val pAmt = pAudio("amt", ParamSpec(0, 1), default = 0.5)
       val pMix = mkMix()
 
@@ -783,7 +792,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("renoise") { in =>
+    filterF("renoise") { in =>
       val pColor      = pAudio("color", ParamSpec(0, 1), default = 0.0)
       val pMix        = mkMix()
       val step        = 0.5
@@ -805,7 +814,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("verb") { in =>
+    filterF("verb") { in =>
       val pExtent = pControl("size" , ParamSpec(0, 1), default = 0.5)
       val pColor  = pControl("color", ParamSpec(0, 1), default = 0.5)
       val pMix    = mkMix()
@@ -826,7 +835,7 @@ object Populate {
       mix(in, flt, pMix)
     }
 
-    filter("zero") { in =>
+    filterF("zero") { in =>
       val pWidth  = pAudio("width", ParamSpec(0, 1), default = 0.5)
       val pDiv    = pAudio("div"  , ParamSpec(1, 10, IntWarp), default = 1.0)
       val pLag    = pAudio("lag"  , ParamSpec(0.001, 0.1, ExpWarp), default = 0.01)
@@ -845,7 +854,7 @@ object Populate {
 
     // -------------- TALLIN --------------
 
-    filter("pulse-div") { in0 =>
+    filterF("pulse-div") { in0 =>
       val pThresh = pAudio("thresh", ParamSpec(0.01, 1, ExpWarp), default = 0.1)
       val in      = (in0 - pThresh).max(0.0)
       val pDiv    = pAudio("div", ParamSpec(1, 16, IntWarp), default = 1.0)
@@ -862,14 +871,14 @@ object Populate {
       sig
     }
 
-    filter(">mono") { in =>
+    filterF(">mono") { in =>
       shortcut = "GREATER"
       Mix.mono(in) / NumChannels(in)
     }
 
     // -------------- SINKS --------------
 
-    val sinkRec = sink("rec") { in =>
+    val sinkRec = sinkF("rec") { in =>
       proc.graph.DiskOut.ar(KeyRecArtifact, in)
     }
     val sinkPrepObj = Action.predef[S](ActionKeyRecPrepare)
@@ -968,9 +977,9 @@ object Populate {
         }
 
         if (nConfig.collector) {
-          filter(s"O-all${cfg.name}")(mkOutAll)
-          filter(s"O-pan${cfg.name}")(mkOutPan)
-          filter(s"O-rnd${cfg.name}")(mkOutRnd)
+          filterF(s"O-all${cfg.name}")(mkOutAll)
+          filterF(s"O-pan${cfg.name}")(mkOutPan)
+          filterF(s"O-rnd${cfg.name}")(mkOutRnd)
         } else {
           def mkDirectOut(sig0: GE): Unit = {
             val bad = CheckBadValues.ar(sig0)
@@ -983,17 +992,17 @@ object Populate {
             }
           }
 
-          collector(s"O-all${cfg.name}") { in =>
+          collectorF(s"O-all${cfg.name}") { in =>
             val sig = mkOutAll(in)
             mkDirectOut(sig)
           }
 
-          collector(s"O-pan${cfg.name}") { in =>
+          collectorF(s"O-pan${cfg.name}") { in =>
             val sig = mkOutPan(in)
             mkDirectOut(sig)
           }
 
-          collector(s"O-rnd${cfg.name}") { in =>
+          collectorF(s"O-rnd${cfg.name}") { in =>
             val sig = mkOutRnd(in)
             mkDirectOut(sig)
           }
@@ -1059,13 +1068,13 @@ object Populate {
       sig
     }
 
-    filter("a~delay") { in =>
+    filterF("a~delay") { in =>
       val pTime   = pAudio("time", ParamSpec(0.0 , 1.0), default = 0.0)
       val sig     = DelayN.ar(in, pTime, 1.0)
       sig
     }
     /*
-        filter("a~reso") { in =>
+        filterF("a~reso") { in =>
           
           val pFreq   = pAudio("freq"     , ParamSpec(30  , 13000, ExpWarp), default = 400) // beware of the upper frequency
           val pQ      = pAudio("q"        , ParamSpec( 0.5,    50, ExpWarp), default =   1)
@@ -1129,7 +1138,7 @@ object Populate {
       sig
     }
 
-    filter("a~dup") { in =>
+    filterF("a~dup") { in =>
       val pThresh = pAudio("thresh", ParamSpec(0.01, 1, ExpWarp), default = 0.1)
       val pDiv    = pAudio("div", ParamSpec(1, 16, IntWarp), default = 1.0)
       val tr      = in - pThresh
@@ -1139,7 +1148,7 @@ object Populate {
       sig
     }
 
-    filter("a~skew") { in =>
+    filterF("a~skew") { in =>
       val pLo     = pAudio("lo" , ParamSpec(0, 1), default = 0.0)
       val pHi     = pAudio("hi" , ParamSpec(0, 1), default = 1.0)
       val pPow    = pAudio("pow", ParamSpec(0.125, 8, ExpWarp), default = 1.0)
@@ -1151,7 +1160,7 @@ object Populate {
       mix(in, sig, pMix)
     }
 
-    filter("a~gate") { in =>
+    filterF("a~gate") { in =>
       val pThresh = pAudio("thresh", ParamSpec(0.01, 1, ExpWarp), default = 0.1)
       val pGate   = pAudio("gate", ParamSpec(0.0, 1.0), default = 0.0) > pThresh
       val pLeak   = pAudio("leak", ParamSpec(0, 1, IntWarp), default = 0.0) > pThresh
@@ -1204,21 +1213,21 @@ object Populate {
       sig
     }
 
-    filter("mul") { in => // ; import ugen._
+    filterF("mul") { in => // ; import ugen._
     val inB   = pAudio("mod", ParamSpec(0.0, 1.0), default = 0.0)
       val flt   = in * inB
       val pMix  = mkMix()
       mix(in, flt, pMix)
     }
 
-    filter("L-lpf") { in =>
+    filterF("L-lpf") { in =>
       val fade  = mkMix4()
       val freq  = fade.linexp(1, 0, 22.05 * 2, 20000) // 22050
       val wet   = LPF.ar(in, freq)
       mkBlend(in, wet, fade)
     }
 
-    filter("L-hpf") { in =>
+    filterF("L-hpf") { in =>
       val fade  = mkMix4()
       val freq  = fade.linexp(1, 0, 20000, 22.05 * 2)
       val wet   = HPF.ar(HPF.ar(in, freq), freq)
@@ -1227,7 +1236,7 @@ object Populate {
 
     val FFTSize = 512
 
-    filter("L-below") { in =>
+    filterF("L-below") { in =>
       val fade    = mkMix4()
       val thresh  = fade.linexp(1, 0, 1.0e-3, 1.0e1)
       val buf     = LocalBuf(FFTSize)
@@ -1235,7 +1244,7 @@ object Populate {
       mkBlend(in, wet, fade, FFTSize / SampleRate.ir)
     }
 
-    filter("L-above") { in =>
+    filterF("L-above") { in =>
       val fade    = mkMix4()
       val thresh  = fade.linexp(0, 1, 1.0e-3, 2.0e1)
       val buf     = LocalBuf(FFTSize)
@@ -1243,7 +1252,7 @@ object Populate {
       mkBlend(in, wet, fade, FFTSize / SampleRate.ir)
     }
 
-    filter("L-up") { in =>
+    filterF("L-up") { in =>
       val fade    = mkMix4()
       val numSteps = 16 // 10
       val x        = (1 - fade) * numSteps
@@ -1267,7 +1276,7 @@ object Populate {
       mkBlend(in, wet, fade)
     }
 
-    filter("L-down") { in =>
+    filterF("L-down") { in =>
       val fade    = mkMix4()
       val numSteps = 16
       val x        = (1 - fade) * numSteps
