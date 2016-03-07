@@ -247,7 +247,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 //      proc.inputs.iterator.foreach { case (_, scan) =>
 //        context.scanMap.remove(scan.id)
 //      }
-      proc.outputs.iterator.foreach { case (_, scan) =>
+      proc.outputs.iterator.foreach { case scan /* (_, scan) */ =>
         context.scanMap.remove(scan.id)
       }
       deferTx(disposeGUI())

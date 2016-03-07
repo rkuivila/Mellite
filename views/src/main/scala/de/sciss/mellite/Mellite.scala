@@ -17,8 +17,6 @@ package mellite
 import java.awt
 import javax.swing.UIManager
 
-import com.alee.laf.checkbox.WebCheckBoxStyle
-import com.alee.laf.progressbar.WebProgressBarStyle
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
 import de.sciss.lucre.stm.TxnLike
@@ -30,6 +28,7 @@ import de.sciss.nuages.Wolkenpumpe
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
+import scala.collection.JavaConverters
 import scala.collection.immutable.{Seq => ISeq}
 import scala.concurrent.stm.{TxnExecutor, atomic}
 import scala.language.existentials
@@ -174,12 +173,12 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
     Wolkenpumpe.init()
 
     // ---- look and feel
-
+/*
     try {
       val web = "com.alee.laf.WebLookAndFeel"
       UIManager.installLookAndFeel("Web Look And Feel", web)
       UIManager.setLookAndFeel(Prefs.lookAndFeel.getOrElse(Prefs.defaultLookAndFeel).getClassName)
-      /* val former = */ UIManager.getDefaults.remove("SplitPane.ancestorInputMap")
+      UIManager.getDefaults.remove("SplitPane.ancestorInputMap")
 //      if (former != null) {
 //        // actually this is wrong - it's not an InputMap, so throws an exception that is silently caught below
 //        former.asInstanceOf[javax.swing.InputMap].allKeys().foreach(println)
@@ -188,15 +187,25 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
     } catch {
       case NonFatal(_) =>
     }
-    // work-around for web-laf bug #118
-    new javax.swing.JSpinner
-    // some custom web-laf settings
-    WebCheckBoxStyle   .animated            = false
-    WebProgressBarStyle.progressTopColor    = awt.Color.lightGray
-    WebProgressBarStyle.progressBottomColor = awt.Color.gray
-    // XXX TODO: how to really turn of animation?
-    WebProgressBarStyle.highlightWhite      = new awt.Color(255, 255, 255, 0)
-    WebProgressBarStyle.highlightDarkWhite  = new awt.Color(255, 255, 255, 0)
+*/
+    import de.sciss.weblaf.submin.SubminSkin
+    SubminSkin.install()
+    UIManager.getDefaults.remove("SplitPane.ancestorInputMap")
+
+//    import JavaConverters._
+//    mapAsScalaMapConverter(UIManager.getDefaults).asScala.foreach { case (key, value) =>
+//      println(s"$key = $value")
+//    }
+
+//    // work-around for web-laf bug #118
+//    new javax.swing.JSpinner
+//    // some custom web-laf settings
+//    WebCheckBoxStyle   .animated            = false
+//    WebProgressBarStyle.progressTopColor    = awt.Color.lightGray
+//    WebProgressBarStyle.progressBottomColor = awt.Color.gray
+//    // XXX TODO: how to really turn of animation?
+//    WebProgressBarStyle.highlightWhite      = new awt.Color(255, 255, 255, 0)
+//    WebProgressBarStyle.highlightDarkWhite  = new awt.Color(255, 255, 255, 0)
 
     if (Prefs.useLogFrame) LogFrame.instance    // init
     // DocumentHandler    .instance    // init

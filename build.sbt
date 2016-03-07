@@ -22,7 +22,7 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 // ---- views dependencies ----
 
 lazy val nuagesVersion              = "2.4.0-SNAPSHOT"
-lazy val scalaColliderSwingVersion  = "1.27.0"
+lazy val scalaColliderSwingVersion  = "1.27.1-SNAPSHOT"
 lazy val lucreSwingVersion          = "1.3.0"
 lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
@@ -31,7 +31,7 @@ lazy val desktopVersion             = "0.7.1"
 lazy val sonogramVersion            = "1.9.0"
 lazy val raphaelIconsVersion        = "1.0.2"
 lazy val pdflitzVersion             = "1.2.1"
-lazy val webLaFVersion              = "1.28"
+lazy val webLaFVersion              = "1.29-SNAPSHOT"
 
 // ----
 
@@ -159,7 +159,8 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component
       "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
       "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
-      "de.sciss" %  "weblaf"                          % webLaFVersion               // Swing look-and-feel
+      "de.sciss" %  "weblaf"                          % webLaFVersion,              // Swing look-and-feel
+      "de.sciss" %  "weblaf-submin"                   % webLaFVersion               // dark skin
     ),
     mainClass in (Compile,run) := Some(main),
     initialCommands in console :=
