@@ -17,6 +17,7 @@ package gui
 
 import java.awt.event.{ActionEvent, ActionListener}
 import java.awt.geom.Path2D
+import java.awt.{LinearGradientPaint, Paint}
 import javax.swing.{Icon, JComponent, KeyStroke, SwingUtilities}
 
 import de.sciss.desktop.{KeyStrokes, OptionPane}
@@ -85,17 +86,31 @@ object GUI {
     }
   }
 
-  def iconNormal(fun: Path2D => Unit): Icon =
-    raphael.Icon(extent = 20, fill = raphael.TexturePaint(24), shadow = raphael.WhiteShadow)(fun)
+  private[this] def darkSkinTexturePaint(extent: Int = 32): Paint =
+    new LinearGradientPaint(0f, 0f, 0f, extent, Array(0f, 1f), Array(new Color(140, 140, 140), new Color(240, 240, 240)))
 
-  def iconDisabled(fun: Path2D => Unit): Icon =
-    raphael.Icon(extent = 20, fill = new Color(0, 0, 0, 0x7F), shadow = raphael.WhiteShadow)(fun)
+  private[this] def darkSkinDisabledTexturePaint(extent: Int = 32): Paint =
+    new LinearGradientPaint(0f, 0f, 0f, extent, Array(0f, 1f), Array(new Color(120, 120, 120, 0x7F), new Color(220, 220, 220, 0x7F)))
+
+  private[this] val blackShadow = new Color(0, 0, 0, 0x7F): Paint
+
+  def iconNormal(fun: Path2D => Unit): Icon = {
+    val fill    = if (Mellite.isDarkSkin) darkSkinTexturePaint(24) else raphael.TexturePaint(24)
+    val shadow  = if (Mellite.isDarkSkin) blackShadow else raphael.WhiteShadow
+    raphael.Icon(extent = 20, fill = fill, shadow = shadow)(fun)
+  }
+
+  def iconDisabled(fun: Path2D => Unit): Icon = {
+    val fill    = if (Mellite.isDarkSkin) darkSkinDisabledTexturePaint(24) /* raphael.WhiteShadow */ else blackShadow
+    val shadow  = if (Mellite.isDarkSkin) raphael.NoPaint /* blackShadow */   else raphael.WhiteShadow
+    raphael.Icon(extent = 20, fill = fill, shadow = shadow)(fun)
+  }
 
   def toolButton(action: Action, iconFun: Path2D => Unit, tooltip: String = ""): Button = {
     val res           = new Button(action)
     res.icon          = iconNormal  (iconFun)
     res.disabledIcon  = iconDisabled(iconFun)
-    res.peer.putClientProperty("JButton.buttonType", "textured")
+    // res.peer.putClientProperty("JButton.buttonType", "textured")
     if (!tooltip.isEmpty) res.tooltip = tooltip
     res
   }

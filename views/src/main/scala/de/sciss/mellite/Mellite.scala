@@ -61,6 +61,8 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
     case NonFatal(e) => "?"
   }
 
+  def isDarkSkin: Boolean = true
+
   override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
     override lazy val usesInternalFrames = {
       false // XXX TODO: eventually a preferences entry
