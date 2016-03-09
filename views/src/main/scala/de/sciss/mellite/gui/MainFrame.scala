@@ -16,7 +16,6 @@ package mellite
 package gui
 
 import java.awt.{Color, Font}
-import javax.swing.border.Border
 
 import de.sciss.audiowidgets.PeakMeter
 import de.sciss.desktop.{Desktop, Menu, Preferences, Window, WindowHandler}
@@ -275,25 +274,26 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
       step { implicit tx => syn.set("hp" -> on) }
     }
 
-    def mkBorder(label: String): Border = {
+    def mkBorder(comp: Component, label: String): Unit = {
       val res = TitledBorder(LineBorder(Color.gray), label)
       res.setTitleFont(smallFont)
+      res.setTitleColor(comp.foreground)
       res.setTitleJustification(javax.swing.border.TitledBorder.CENTER)
-      res
+      comp.border = res
     }
 
     val stripMain = new BoxPanel(Orientation.Vertical) {
       contents += ggPost
       contents += ggLim
       contents += ggMainVolume
-      border    = mkBorder("Main")
+      mkBorder(this, "Main")
     }
 
     val stripHP = new BoxPanel(Orientation.Vertical) {
       contents += VStrut(ggPost.preferredSize.height)
       contents += ggHPActive
       contents += ggHPVolume
-      border    = mkBorder("Phones")
+      mkBorder(this, "Phones")
     }
 
     p.contents += stripMain
