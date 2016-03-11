@@ -372,6 +372,7 @@ object AttrMapViewImpl {
       })
 
       val scroll    = new ScrollPane(tab)
+      scroll.peer.putClientProperty("styleId", "undecorated")
       scroll.border = null
       component     = scroll
       tab.listenTo(tab.selection)

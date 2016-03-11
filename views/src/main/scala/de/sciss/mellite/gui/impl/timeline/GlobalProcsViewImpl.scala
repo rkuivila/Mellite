@@ -265,6 +265,7 @@ object GlobalProcsViewImpl {
       })
 
       val scroll    = new ScrollPane(table)
+      scroll.peer.putClientProperty("styleId", "undecorated")
       scroll.border = null
 
       val actionAdd = Action(null)(addItemWithDialog())

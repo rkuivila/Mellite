@@ -344,6 +344,7 @@ object CursorsFrameImpl {
       lazy val folderButPanel = new FlowPanel(ggAdd, ggDelete, ggView)
 
       val scroll    = new ScrollPane(t)
+      scroll.peer.putClientProperty("styleId", "undecorated")
       scroll.border = null
 
       val panel = new BorderPanel {

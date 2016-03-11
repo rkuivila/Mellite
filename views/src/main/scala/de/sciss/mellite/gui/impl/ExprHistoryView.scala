@@ -127,6 +127,7 @@ object ExprHistoryView {
       val lv      = new ListView(mod)
       lv.prototypeCellValue = s"${mkString(System.currentTimeMillis(), value0)}XXXXX"
       val scroll  = new ScrollPane(lv)
+      scroll.peer.putClientProperty("styleId", "undecorated")
       scroll.border = null
       busy        = new SpinningProgressBar
       proc.onComplete(_ => defer(busy.spinning = false))
