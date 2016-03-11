@@ -271,7 +271,11 @@ object FolderViewImpl {
       t.dragEnabled       = true
       t.dropMode          = DropMode.ON_OR_INSERT_ROWS
       t.peer.setTransferHandler(FolderTransferHandler)
-      component     = treeView.component
+      val tc        = treeView.component
+//      tc.peer.putClientProperty("styleId", "nofocus")
+      tc.peer.putClientProperty("styleId", "undecorated")
+      component     = tc
+
     }
 
     def selection: FolderView.Selection[S] = treeView.selection
