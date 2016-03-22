@@ -26,7 +26,7 @@ lazy val scalaColliderSwingVersion  = "1.27.1-SNAPSHOT"
 lazy val lucreSwingVersion          = "1.3.0"
 lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
-lazy val audioWidgetsVersion        = "1.9.1"
+lazy val audioWidgetsVersion        = "1.9.2-SNAPSHOT"
 lazy val desktopVersion             = "0.7.1"
 lazy val sonogramVersion            = "1.9.0"
 lazy val raphaelIconsVersion        = "1.0.2"
@@ -153,6 +153,7 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       "de.sciss" %% "lucreswing"                      % lucreSwingVersion,          // reactive Swing components
       "de.sciss" %% "swingplus"                       % swingPlusVersion,           // newest version: color-chooser
       "de.sciss" %% "span"                            % spanVersion,
+      "de.sciss" %% "audiowidgets-swing"              % audioWidgetsVersion,        // audio application widgets
       "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets
       "de.sciss" %% "desktop"                         % desktopVersion,
       "de.sciss" %% "desktop-mac"                     % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
