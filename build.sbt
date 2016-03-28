@@ -27,11 +27,11 @@ lazy val lucreSwingVersion          = "1.3.0"
 lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
 lazy val audioWidgetsVersion        = "1.9.2-SNAPSHOT"
-lazy val desktopVersion             = "0.7.1"
+lazy val desktopVersion             = "0.7.2-SNAPSHOT"
 lazy val sonogramVersion            = "1.9.0"
 lazy val raphaelIconsVersion        = "1.0.2"
 lazy val pdflitzVersion             = "1.2.1"
-lazy val webLaFVersion              = "1.29-SNAPSHOT"
+lazy val subminVersion              = "0.1.0-SNAPSHOT"
 
 // ----
 
@@ -160,8 +160,7 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component
       "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
       "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
-      "de.sciss" %  "weblaf"                          % webLaFVersion,              // Swing look-and-feel
-      "de.sciss" %  "weblaf-submin"                   % webLaFVersion               // dark skin
+      "de.sciss" %  "submin"                          % subminVersion               // dark skin
     ),
     mainClass in (Compile,run) := Some(main),
     initialCommands in console :=

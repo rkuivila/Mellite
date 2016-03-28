@@ -15,6 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
+import java.awt.{Color => AWTColor}
 import java.awt.geom.Path2D
 import javax.swing.undo.UndoableEdit
 import javax.swing.{Icon, SpinnerNumberModel, UIManager}
@@ -886,7 +887,12 @@ object ObjViewImpl {
     }
   }
 
-  def raphaelIcon(shape: Path2D => Unit): Icon = raphael.Icon(16)(shape)
+  private[this] val colrIconDark = new AWTColor(200, 200, 200)
+
+  def raphaelIcon(shape: Path2D => Unit): Icon = {
+    val fill = if (Mellite.isDarkSkin) colrIconDark else AWTColor.black
+    raphael.Icon(extent = 16, fill = fill)(shape)
+  }
 
   trait Impl[S <: stm.Sys[S]] extends ObjView[S] with ModelImpl[ObjView.Update[S]] {
     override def toString = s"ElementView.${factory.prefix}(name = $name)"

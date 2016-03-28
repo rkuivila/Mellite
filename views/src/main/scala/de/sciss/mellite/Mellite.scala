@@ -14,7 +14,6 @@
 package de.sciss
 package mellite
 
-import java.awt
 import javax.swing.UIManager
 
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
@@ -25,10 +24,10 @@ import de.sciss.lucre.synth.{Server, Txn}
 import de.sciss.mellite.gui.impl.document.DocumentHandlerImpl
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.nuages.Wolkenpumpe
+import de.sciss.submin.Submin
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
-import scala.collection.JavaConverters
 import scala.collection.immutable.{Seq => ISeq}
 import scala.concurrent.stm.{TxnExecutor, atomic}
 import scala.language.existentials
@@ -61,7 +60,7 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
     case NonFatal(e) => "?"
   }
 
-  def isDarkSkin: Boolean = true
+  lazy val isDarkSkin: Boolean = UIManager.getBoolean("dark-skin")
 
   override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
     override lazy val usesInternalFrames = {
@@ -190,8 +189,7 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
       case NonFatal(_) =>
     }
 */
-    import de.sciss.weblaf.submin.SubminSkin
-    SubminSkin.install()
+    Submin.install(true)
     UIManager.getDefaults.remove("SplitPane.ancestorInputMap")
 
 //    import JavaConverters._
