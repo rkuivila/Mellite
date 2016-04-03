@@ -33,7 +33,7 @@ import scala.swing.{FlowPanel, Label, TextField}
 final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends RegionImpl[S, TrackTool.Cursor] {
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
   def name          = "Cursor"
-  val icon          = ToolsImpl.getIcon("text")
+  val icon          = GUI.iconNormal(Shapes.Pointer) // ToolsImpl.getIcon("text")
 
   private def renameName = "Rename Region"
 
@@ -58,6 +58,7 @@ final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends R
         val all   = (empty /: it) { (res, pv) =>
           pv.spanValue match {
             case sp @ Span(_, _) => res.nonEmptyOption.fold(sp)(_ union sp)
+            case _ => res
           }
         }
         mod.selection = all

@@ -42,7 +42,7 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   def defaultCursor = MuteImpl.cursor
   val name          = "Mute"
-  val icon          = ToolsImpl.getIcon("mute")
+  val icon          = GUI.iconNormal(Shapes.Mute) // ToolsImpl.getIcon("mute")
 
   // ProcActions.toggleMute(obj)
 

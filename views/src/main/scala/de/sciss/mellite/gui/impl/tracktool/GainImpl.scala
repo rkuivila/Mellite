@@ -35,7 +35,7 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
   val name          = "Gain"
-  val icon          = ToolsImpl.getIcon("vresize")
+  val icon          = GUI.iconNormal(Shapes.Gain) // ToolsImpl.getIcon("vresize")
 
   protected def dialog(): Option[Gain] = None // not yet supported
 

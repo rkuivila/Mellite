@@ -64,7 +64,8 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   def defaultCursor = PatchImpl.cursor
   val name          = "Patch"
-  val icon          = new PaddedIcon(new ImageIcon(PatchImpl.image), new Insets(1, 1, 2, 2)) // make it 20x20
+  // val icon          = new PaddedIcon(new ImageIcon(PatchImpl.image), new Insets(1, 1, 2, 2)) // make it 20x20
+  val icon          = GUI.iconNormal(Shapes.Patch)
 
   protected type Initial = ProcObjView.Timeline[S] // TimelineObjView[S]
 

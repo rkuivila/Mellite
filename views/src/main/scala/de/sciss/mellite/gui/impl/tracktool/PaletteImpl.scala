@@ -42,6 +42,7 @@ final class PaletteImpl[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackToo
 
   tools.zipWithIndex.foreach { case (tool, idx) =>
     val b     = new ToggleButton()
+    b.peer.putClientProperty("styleId", "icon-space")
     val name  = tool.name
     b.action  = new Action(null) {
       icon    = tool.icon

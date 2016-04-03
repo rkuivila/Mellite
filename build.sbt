@@ -7,31 +7,31 @@ lazy val loggingEnabled             = true
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "3.4.0-SNAPSHOT"
-lazy val interpreterPaneVersion     = "1.7.2"
-lazy val scalaColliderUGenVersion   = "1.14.0"
-lazy val lucreVersion               = "3.3.0"
+lazy val soundProcessesVersion      = "3.4.0"
+lazy val interpreterPaneVersion     = "1.7.3"
+lazy val scalaColliderUGenVersion   = "1.14.1"
+lazy val lucreVersion               = "3.3.1"
 lazy val fscapeJobsVersion          = "1.5.0"
-lazy val strugatzkiVersion          = "2.10.0"
+lazy val strugatzkiVersion          = "2.11.0"
 lazy val scalaUtilsVersion          = "2.1.7"
 lazy val scalaOSCVersion            = "1.1.5"
-lazy val playJSONVersion            = "0.2.0"
+lazy val playJSONVersion            = "0.4.0"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "2.4.0-SNAPSHOT"
-lazy val scalaColliderSwingVersion  = "1.27.1-SNAPSHOT"
+lazy val nuagesVersion              = "2.4.0"
+lazy val scalaColliderSwingVersion  = "1.27.1"
 lazy val lucreSwingVersion          = "1.3.0"
 lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
-lazy val audioWidgetsVersion        = "1.9.2-SNAPSHOT"
-lazy val desktopVersion             = "0.7.2-SNAPSHOT"
+lazy val audioWidgetsVersion        = "1.9.4"
+lazy val desktopVersion             = "0.7.2"
 lazy val sonogramVersion            = "1.9.0"
-lazy val raphaelIconsVersion        = "1.0.2"
+lazy val raphaelIconsVersion        = "1.0.3"
 lazy val pdflitzVersion             = "1.2.1"
-lazy val subminVersion              = "0.1.0-SNAPSHOT"
+lazy val subminVersion              = "0.2.0"
 
 // ----
 

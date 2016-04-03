@@ -20,7 +20,8 @@ import java.awt.Cursor
 import java.awt.event.MouseEvent
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.lucre.expr.{SpanLikeObj, IntObj}
+import de.sciss.icons.raphael
+import de.sciss.lucre.expr.{IntObj, SpanLikeObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditTimelineInsertObj
@@ -34,7 +35,8 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
   val name          = "Function"
-  val icon          = ToolsImpl.getIcon("function")
+  // val icon          = GUI.iconNormal(de.sciss.synth.swing.Shapes.SynthDef) // ToolsImpl.getIcon("function")
+  val icon          = GUI.iconNormal(raphael.Shapes.Cogs)
 
   protected type Initial = Unit
 

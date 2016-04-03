@@ -259,6 +259,7 @@ object CodeViewImpl {
 
     private def guiInit(): Unit = {
       codePane        = CodePane(codeCfg)
+      codePane.component.peer.putClientProperty("styleId", "undecorated")
       val iPane       = InterpreterPane.wrapAsync(interpreter(code.id), codePane)
 
       actionApply = Action("Apply")(save())

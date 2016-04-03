@@ -16,10 +16,11 @@ package mellite
 package gui
 
 import java.awt.event.{ActionEvent, ActionListener}
-import java.awt.geom.Path2D
-import java.awt.{LinearGradientPaint, Paint}
+import java.awt.geom.{AffineTransform, Area, Path2D}
+import java.awt.{BasicStroke, Graphics, Graphics2D, RenderingHints, Shape}
 import javax.swing.{Icon, JComponent, KeyStroke, SwingUtilities}
 
+import de.sciss.audiowidgets.Transport
 import de.sciss.desktop.{KeyStrokes, OptionPane}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
@@ -32,7 +33,7 @@ import org.scalautils.TypeCheckedTripleEquals
 import scala.concurrent.Future
 import scala.swing.Swing._
 import scala.swing.event.Key
-import scala.swing.{AbstractButton, Action, Alignment, Button, Color, Component, Dialog, Label, TextField}
+import scala.swing.{AbstractButton, Action, Alignment, Button, Component, Dialog, Label, TextField}
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
@@ -86,28 +87,49 @@ object GUI {
     }
   }
 
-  private[this] def darkSkinTexturePaint(extent: Int = 32): Paint =
-    new LinearGradientPaint(0f, 0f, 0f, extent, Array(0f, 1f), Array(new Color(140, 140, 140), new Color(240, 240, 240)))
+  def iconNormal  (fun: Path2D => Unit): Icon = raphael.TexturedIcon        (20)(fun)
+  def iconDisabled(fun: Path2D => Unit): Icon = raphael.TexturedDisabledIcon(20)(fun)
 
-  private[this] def darkSkinDisabledTexturePaint(extent: Int = 32): Paint =
-    new LinearGradientPaint(0f, 0f, 0f, extent, Array(0f, 1f), Array(new Color(120, 120, 120, 0x7F), new Color(220, 220, 220, 0x7F)))
+  private val sharpStrk       = new BasicStroke(1f)
+  private val sharpShadowYOff = 1f
 
-  private[this] val blackShadow = new Color(0, 0, 0, 0x7F): Paint
+  private final class SharpIcon(extent: Int, scheme: Transport.ColorScheme, outShape: Shape,
+                                inShape: Shape) extends Icon {
+    def getIconWidth : Int = extent
+    def getIconHeight: Int = extent
 
-  def iconNormal(fun: Path2D => Unit): Icon = {
-    val fill    = if (Mellite.isDarkSkin) darkSkinTexturePaint(24) else raphael.TexturePaint(24)
-    val shadow  = if (Mellite.isDarkSkin) blackShadow else raphael.WhiteShadow
-    raphael.Icon(extent = 20, fill = fill, shadow = shadow)(fun)
+    def paintIcon(c: java.awt.Component, g: Graphics, x: Int, y: Int): Unit = {
+      val g2 = g.asInstanceOf[Graphics2D]
+      g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING  , RenderingHints.VALUE_ANTIALIAS_ON)
+      g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE )
+      val atOrig = g2.getTransform
+      g2.translate(x + 1, y + 1 + sharpShadowYOff)
+      g2.setPaint(scheme.shadowPaint)
+      g2.fill(outShape)
+      g2.translate(0, -sharpShadowYOff)
+      g2.setPaint(scheme.outlinePaint)
+      g2.fill(outShape)
+      g2.setPaint(scheme.fillPaint(extent.toFloat / 20))
+      g2.fill(inShape)
+      g2.setTransform(atOrig)
+    }
   }
 
-  def iconDisabled(fun: Path2D => Unit): Icon = {
-    val fill    = if (Mellite.isDarkSkin) darkSkinDisabledTexturePaint(24) /* raphael.WhiteShadow */ else blackShadow
-    val shadow  = if (Mellite.isDarkSkin) raphael.NoPaint /* blackShadow */   else raphael.WhiteShadow
-    raphael.Icon(extent = 20, fill = fill, shadow = shadow)(fun)
+  /** No texture, for more finely drawn icons. */
+  def sharpIcon(fun: Path2D => Unit): Icon = {
+    val in0 = new Path2D.Float()
+    fun(in0)
+    val scale = 19.0 / 32
+    val in  = AffineTransform.getScaleInstance(scale, scale).createTransformedShape(in0)
+    val out = new Area(sharpStrk.createStrokedShape(in))
+    out.add(new Area(in))
+    val scheme = if (Mellite.isDarkSkin) Transport.LightScheme else Transport.DarkScheme
+    new SharpIcon(extent = 20, scheme = scheme, out, in)
   }
 
   def toolButton(action: Action, iconFun: Path2D => Unit, tooltip: String = ""): Button = {
     val res           = new Button(action)
+    res.peer.putClientProperty("styleId", "icon-space")
     res.icon          = iconNormal  (iconFun)
     res.disabledIcon  = iconDisabled(iconFun)
     // res.peer.putClientProperty("JButton.buttonType", "textured")

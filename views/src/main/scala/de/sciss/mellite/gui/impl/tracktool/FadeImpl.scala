@@ -36,7 +36,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR)
   val name          = "Fade"
-  val icon          = ToolsImpl.getIcon("fade")
+  val icon          = GUI.iconNormal(Shapes.Aperture) // ToolsImpl.getIcon("fade")
 
   private var dragCurve = false
 

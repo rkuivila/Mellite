@@ -20,6 +20,7 @@ import java.awt.Cursor
 import java.awt.event.MouseEvent
 import javax.swing.undo.UndoableEdit
 
+import de.sciss.icons.raphael
 import de.sciss.lucre.expr.SpanLikeObj
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
@@ -33,7 +34,7 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
   val name          = "Move"
-  val icon          = ToolsImpl.getIcon("openhand")
+  val icon          = GUI.iconNormal(raphael.Shapes.Hand) // ToolsImpl.getIcon("openhand")
 
   protected def dragToParam(d: Drag): Move = {
     val eNow  = d.currentEvent

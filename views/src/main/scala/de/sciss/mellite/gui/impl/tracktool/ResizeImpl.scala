@@ -33,7 +33,7 @@ final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   def defaultCursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
   val name          = "Resize"
-  val icon          = ToolsImpl.getIcon("hresize")
+  val icon          = GUI.iconNormal(Shapes.Crop) // ToolsImpl.getIcon("hresize")
 
   protected def dialog(): Option[Resize] = None // not yet supported
 

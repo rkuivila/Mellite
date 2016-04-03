@@ -637,10 +637,11 @@ object ObjViewImpl {
 
   object FadeSpec extends ListObjView.Factory {
     type E[~ <: stm.Sys[~]] = _FadeSpec.Obj[~]
-    val icon        = raphaelIcon(raphael.Shapes.Up)
+    // val icon        = raphaelIcon(raphael.Shapes.Up)
+    val icon        = raphaelIcon(Shapes.Aperture)
     val prefix      = "FadeSpec"
     val humanName   = "Fade"
-    def tpe = _FadeSpec.Obj
+    def tpe         = _FadeSpec.Obj
     def category    = ObjView.categComposition
 
     def hasMakeDialog   = false

@@ -14,8 +14,6 @@
 package de.sciss
 package mellite.gui
 
-import javax.swing.UIManager
-
 import de.sciss.desktop.{Desktop, KeyStrokes, OptionPane, PrefsGUI}
 import de.sciss.file._
 import de.sciss.mellite.Prefs
@@ -36,8 +34,8 @@ object ActionPreferences extends Action("Preferences...") {
     // ---- appearance ----
 
     val lbLookAndFeel   = label("Look-and-Feel")
-    val ggLookAndFeel   = combo(Prefs.lookAndFeel, Prefs.defaultLookAndFeel,
-      UIManager.getInstalledLookAndFeels)(_.getName)
+    val ggLookAndFeel   = combo(Prefs.lookAndFeel, Prefs.LookAndFeel.default,
+      Prefs.LookAndFeel.all)(_.description)
 
     val lbNativeDecoration = label("Native Window Decoration")
     val ggNativeDecoration = checkBox(Prefs.nativeWindowDecoration, default = true)

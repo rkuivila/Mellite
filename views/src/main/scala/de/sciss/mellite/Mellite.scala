@@ -15,6 +15,7 @@ package de.sciss
 package mellite
 
 import javax.swing.UIManager
+import javax.swing.plaf.ColorUIResource
 
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
@@ -24,7 +25,6 @@ import de.sciss.lucre.synth.{Server, Txn}
 import de.sciss.mellite.gui.impl.document.DocumentHandlerImpl
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.nuages.Wolkenpumpe
-import de.sciss.submin.Submin
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
@@ -174,41 +174,25 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
     Wolkenpumpe.init()
 
     // ---- look and feel
-/*
+
     try {
-      val web = "com.alee.laf.WebLookAndFeel"
-      UIManager.installLookAndFeel("Web Look And Feel", web)
-      UIManager.setLookAndFeel(Prefs.lookAndFeel.getOrElse(Prefs.defaultLookAndFeel).getClassName)
-      UIManager.getDefaults.remove("SplitPane.ancestorInputMap")
-//      if (former != null) {
-//        // actually this is wrong - it's not an InputMap, so throws an exception that is silently caught below
-//        former.asInstanceOf[javax.swing.InputMap].allKeys().foreach(println)
-//      }
-
+      val lafInfo = Prefs.lookAndFeel.getOrElse {
+        val res = Prefs.LookAndFeel.default
+        Prefs.lookAndFeel.put(res)
+        res
+      }
+      lafInfo.install()
     } catch {
-      case NonFatal(_) =>
+      case NonFatal(e) => e.printStackTrace()
     }
-*/
-    Submin.install(true)
-    UIManager.getDefaults.remove("SplitPane.ancestorInputMap")
 
-//    import JavaConverters._
-//    mapAsScalaMapConverter(UIManager.getDefaults).asScala.foreach { case (key, value) =>
-//      println(s"$key = $value")
-//    }
-
-//    // work-around for web-laf bug #118
-//    new javax.swing.JSpinner
-//    // some custom web-laf settings
-//    WebCheckBoxStyle   .animated            = false
-//    WebProgressBarStyle.progressTopColor    = awt.Color.lightGray
-//    WebProgressBarStyle.progressBottomColor = awt.Color.gray
-//    // XXX TODO: how to really turn of animation?
-//    WebProgressBarStyle.highlightWhite      = new awt.Color(255, 255, 255, 0)
-//    WebProgressBarStyle.highlightDarkWhite  = new awt.Color(255, 255, 255, 0)
+    UIManager.getDefaults.remove("SplitPane.ancestorInputMap")  // I don't remember -- what was this about?
+    //    if (isDarkSkin) {
+    //      UIManager.put("Table.background", new ColorUIResource( 29,  32,  36))
+    //      UIManager.put("Table.foreground", new ColorUIResource(220, 220, 220))
+    //    }
 
     if (Prefs.useLogFrame) LogFrame.instance    // init
-    // DocumentHandler    .instance    // init
     DocumentViewHandler.instance    // init
 
     new MainFrame

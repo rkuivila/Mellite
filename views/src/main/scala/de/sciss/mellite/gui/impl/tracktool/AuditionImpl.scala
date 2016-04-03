@@ -56,7 +56,7 @@ class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv
 
   def defaultCursor = AuditionImpl.cursor
   val name          = "Audition"
-  val icon          = ToolsImpl.getIcon("audition")
+  val icon          = GUI.iconNormal(Shapes.Audition)
 
   protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineObjView[S]]): Unit = {
     handleMouseSelection(e, regionOpt = regionOpt)
