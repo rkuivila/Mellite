@@ -67,17 +67,13 @@ object ActionOpenWorkspace extends Action("Open...") {
     }
   }
 
-  // private def openEphGUI[S <: Sys[S]](doc: Workspace)
-
   def recentFiles: RecentFiles  = _recent
   def recentMenu : Menu.Group   = _recent.menu
 
-  // private def isWebLaF = javax.swing.UIManager.getLookAndFeel.getName == "WebLookAndFeel"
-
   def apply(): Unit = {
-    val dlg = FileDialog.open(title = fullTitle)
-    import TypeCheckedTripleEquals._
-    dlg.setFilter { f => f.isDirectory && f.ext.toLowerCase === Workspace.ext}
+    val dlg = FileDialog.folder(title = fullTitle)
+    // import TypeCheckedTripleEquals._
+    // dlg.setFilter { f => f.isDirectory && f.ext.toLowerCase === Workspace.ext}
     dlg.show(None).foreach(perform)
   }
 

@@ -46,7 +46,7 @@ import de.sciss.swingplus.ScrollBar
 import de.sciss.synth.Curve
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
-import de.sciss.synth.proc.{AudioCue, FadeSpec, Grapheme, Proc, TimeRef, Timeline, Transport}
+import de.sciss.synth.proc.{AudioCue, FadeSpec, Proc, TimeRef, Timeline, Transport}
 import de.sciss.{desktop, sonogram, synth}
 
 import scala.concurrent.stm.{Ref, TSet}
@@ -412,8 +412,9 @@ object TimelineViewImpl {
       }
 
       val pane2 = new SplitPane(Orientation.Vertical, globalView.component, canvasView.component)
-      pane2.dividerSize = 4
-      pane2.border      = null
+      pane2.dividerSize         = 4
+      pane2.border              = null
+      pane2.oneTouchExpandable  = true
 
       val pane = new BorderPanel {
         import BorderPanel.Position._
