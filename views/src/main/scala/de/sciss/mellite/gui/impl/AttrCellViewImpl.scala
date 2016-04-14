@@ -62,17 +62,26 @@ object AttrCellViewImpl {
 
     private[this] val valObs = Ref(null: Disposable[S#Tx])
 
+    private[this] def obsAdded(value: Obj[S])(implicit tx: S#Tx): Unit = {
+      val valueT = value.asInstanceOf[E[S]]
+      valueAdded(valueT)
+      // XXX TODO -- if we moved this into `valueAdded`, the contract
+      // could be that initially the view is updated
+      val now0 = valueT.value
+      fun(tx)(Some(now0))
+    }
+
+    @inline
+    private[this] def obsRemoved()(implicit tx: S#Tx): Unit =
+      if (valueRemoved()) fun(tx)(None)
+
     private[this] val mapObs = map.changed.react { implicit tx => u =>
       u.changes.foreach {
-        case Obj.AttrAdded(`key`, value) if value.tpe == tpe =>
-          val valueT = value.asInstanceOf[E[S]]
-          valueAdded(valueT)
-          // XXX TODO -- if we moved this into `valueAdded`, the contract
-          // could be that initially the view is updated
-          val now0 = valueT.value
-          fun(tx)(Some(now0))
-        case Obj.AttrRemoved(`key`, value) if value.tpe == tpe =>
-          if (valueRemoved()) fun(tx)(None)
+        case Obj.AttrAdded   (`key`, value) if value.tpe == tpe => obsAdded  (value)
+        case Obj.AttrRemoved (`key`, value) if value.tpe == tpe => obsRemoved()
+        case Obj.AttrReplaced(`key`, before, now) =>
+          if      (now   .tpe == tpe) obsAdded(now)
+          else if (before.tpe == tpe) obsRemoved()
         case _ =>
       }
     } (tx0)

@@ -90,17 +90,21 @@ object TimelineObjViewImpl {
 
       implicit val intTpe = IntObj
       val trackIdxView = AttrCellView[S, Int, IntObj](attr, TimelineObjView.attrTrackIndex)
-      disposables ::= trackIdxView.react { implicit tx => opt => deferTx {
-        trackIndex = opt.getOrElse(0)
-        dispatch(ObjView.Repaint(this))
-      }}
+      disposables ::= trackIdxView.react { implicit tx => opt =>
+        deferTx {
+          trackIndex = opt.getOrElse(0)
+        }
+        fire(ObjView.Repaint(this))
+      }
       trackIndex   = trackIdxView().getOrElse(0)
 
       val trackHView = AttrCellView[S, Int, IntObj](attr, TimelineObjView.attrTrackHeight)
-      disposables ::= trackHView.react { implicit tx => opt => deferTx {
-        trackHeight = opt.getOrElse(4)
-        dispatch(ObjView.Repaint(this))
-      }}
+      disposables ::= trackHView.react { implicit tx => opt =>
+        deferTx {
+          trackHeight = opt.getOrElse(4)
+        }
+        fire(ObjView.Repaint(this))
+      }
       trackHeight   = trackHView().getOrElse(4)
 
       spanH         = tx.newHandle(span)
@@ -118,10 +122,12 @@ object TimelineObjViewImpl {
 
       implicit val doubleTpe = DoubleObj
       val gainView = AttrCellView[S, Double, DoubleObj](obj.attr, ObjKeys.attrGain)
-      disposables ::= gainView.react { implicit tx => opt => deferTx {
-        gain = opt.getOrElse(1.0)
-        dispatch(ObjView.Repaint(this))
-      }}
+      disposables ::= gainView.react { implicit tx => opt =>
+        deferTx {
+          gain = opt.getOrElse(1.0)
+        }
+        fire(ObjView.Repaint(this))
+      }
       gain = gainView().getOrElse(1.0)
       this
     }
@@ -135,10 +141,12 @@ object TimelineObjViewImpl {
 
       implicit val booleanTpe = BooleanObj
       val muteView = AttrCellView[S, Boolean, BooleanObj](obj.attr, ObjKeys.attrMute)
-      disposables ::= muteView.react { implicit tx => opt => deferTx {
-        muted = opt.getOrElse(false)
-        dispatch(ObjView.Repaint(this))
-      }}
+      disposables ::= muteView.react { implicit tx => opt =>
+        deferTx {
+          muted = opt.getOrElse(false)
+        }
+        fire(ObjView.Repaint(this))
+      }
       muted = muteView().getOrElse(false)
       this
     }
@@ -153,15 +161,19 @@ object TimelineObjViewImpl {
 
       implicit val fadeTpe = FadeSpec.Obj
       val fadeInView = AttrCellView[S, FadeSpec, FadeSpec.Obj](obj.attr, ObjKeys.attrFadeIn)
-      disposables ::= fadeInView.react { implicit tx => opt => deferTx {
-        fadeIn = opt.getOrElse(TrackTool.EmptyFade)
-        dispatch(ObjView.Repaint(this))
-      }}
+      disposables ::= fadeInView.react { implicit tx => opt =>
+        deferTx {
+          fadeIn = opt.getOrElse(TrackTool.EmptyFade)
+        }
+        fire(ObjView.Repaint(this))
+      }
       val fadeOutView = AttrCellView[S, FadeSpec, FadeSpec.Obj](obj.attr, ObjKeys.attrFadeOut)
-      disposables ::= fadeOutView.react { implicit tx => opt => deferTx {
-        fadeOut = opt.getOrElse(TrackTool.EmptyFade)
-        dispatch(ObjView.Repaint(this))
-      }}
+      disposables ::= fadeOutView.react { implicit tx => opt =>
+        deferTx {
+          fadeOut = opt.getOrElse(TrackTool.EmptyFade)
+        }
+        fire(ObjView.Repaint(this))
+      }
       fadeIn  = fadeInView ().getOrElse(TrackTool.EmptyFade)
       fadeOut = fadeOutView().getOrElse(TrackTool.EmptyFade)
       this

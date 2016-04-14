@@ -78,10 +78,12 @@ object ArtifactLocationObjView extends ListObjView.Factory {
 
     def init(obj: ArtifactLocation[S])(implicit tx: S#Tx): this.type = {
       initAttrs(obj)
-      disposables ::= obj.changed.react { implicit tx => upd => deferTx {
-        directory = upd.now
-        dispatch(ObjView.Repaint(this))
-      }}
+      disposables ::= obj.changed.react { implicit tx => upd =>
+        deferTx {
+          directory = upd.now
+        }
+        fire(ObjView.Repaint(this))
+      }
       this
     }
 

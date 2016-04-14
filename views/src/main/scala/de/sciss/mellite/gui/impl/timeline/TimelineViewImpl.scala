@@ -147,9 +147,9 @@ object TimelineViewImpl {
       }
     }
 
-    def scanInAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      val proc = timed.value
-      ???! // SCAN
+//    def scanInAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+//      val proc = timed.value
+//      SCAN
 //      proc.inputs.get(name).foreach { scan =>
 //        scan.iterator.foreach {
 //          case Scan.Link.Scan(peer) =>
@@ -157,11 +157,11 @@ object TimelineViewImpl {
 //          case _ =>
 //        }
 //      }
-    }
+//    }
 
-    def scanOutAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      val proc = timed.value
-      ???! // SCAN
+//    def scanOutAdded(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+//      val proc = timed.value
+//      SCAN
 //      proc.outputs.get(name).foreach { scan =>
 //        scan.iterator.foreach {
 //          case Scan.Link.Scan(peer) =>
@@ -169,11 +169,10 @@ object TimelineViewImpl {
 //          case _ =>
 //        }
 //      }
-    }
+//    }
 
-    def scanInRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      val proc = timed.value
-      ???! // SCAN
+//    def scanInRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+//      val proc = timed.value
 //      proc.inputs.get(name).foreach { scan =>
 //        scan.iterator.foreach {
 //          case Scan.Link.Scan(peer) =>
@@ -181,11 +180,11 @@ object TimelineViewImpl {
 //          case _ =>
 //        }
 //      }
-    }
+//    }
 
-    def scanOutRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
-      val proc = timed.value
-      ???! // SCAN
+//    def scanOutRemoved(timed: TimedProc[S], name: String)(implicit tx: S#Tx): Unit = {
+//      val proc = timed.value
+//      // SCAN
 //      proc.outputs.get(name).foreach { scan =>
 //        scan.iterator.foreach {
 //          case Scan.Link.Scan(peer) =>
@@ -193,7 +192,7 @@ object TimelineViewImpl {
 //          case _ =>
 //        }
 //      }
-    }
+//    }
 
     val obsTimeline = timeline.changed.react { implicit tx => upd =>
       upd.changes.foreach {
@@ -449,15 +448,18 @@ object TimelineViewImpl {
             viewRange += view
             if (repaint) repaintAll()    // XXX TODO: optimize dirty rectangle
         }
-        view.addListener {
-          case ObjView.Repaint(_) => objUpdated(view)
-        }
       }
 
       if (repaint)
         deferTx(doAdd())
       else
         doAdd()
+
+      // XXX TODO -- do we need to remember the disposable?
+      view.react { implicit tx => {
+        case ObjView.Repaint(_) => objUpdated(view)
+        case _ =>
+      }}
     }
 
     private def warnViewNotFound(action: String, timed: BiGroup.Entry[S, Obj[S]]): Unit =
@@ -661,7 +663,7 @@ object TimelineViewImpl {
     // call on EDT!
     private def defaultDropLength(view: ObjView[S], inProgress: Boolean): Long = {
       val d = view match {
-        case _: AudioGraphemeObjView[S] | _: ProcObjView[S] =>
+        case _: AudioCueObjView[S] | _: ProcObjView[S] =>
           timelineModel.sampleRate * 2  // two seconds
         case _ =>
           if (inProgress)

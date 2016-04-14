@@ -23,7 +23,6 @@ import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.stm
-import de.sciss.model.Change
 import de.sciss.synth.proc.Confluent
 import org.scalautils.TypeCheckedTripleEquals
 
@@ -57,13 +56,14 @@ object ListObjViewImpl {
     ObjViewImpl.Double          .tpe.typeID -> ObjViewImpl.Double,
     ObjViewImpl.Boolean         .tpe.typeID -> ObjViewImpl.Boolean,
     ObjViewImpl.Color           .tpe.typeID -> ObjViewImpl.Color,
-    AudioGraphemeObjView        .tpe.typeID -> AudioGraphemeObjView,
+    AudioCueObjView             .tpe.typeID -> AudioCueObjView,
     ArtifactLocationObjView     .tpe.typeID -> ArtifactLocationObjView,
     ObjViewImpl.Artifact        .tpe.typeID -> ObjViewImpl.Artifact,
     // ObjViewImpl.Recursion       .typeID -> ObjViewImpl.Recursion,
     ObjViewImpl.Folder          .tpe.typeID -> ObjViewImpl.Folder,
     ProcObjView                 .tpe.typeID -> ProcObjView,
     ObjViewImpl.Timeline        .tpe.typeID -> ObjViewImpl.Timeline,
+    ObjViewImpl.Grapheme        .tpe.typeID -> ObjViewImpl.Grapheme,
     CodeObjView                 .tpe.typeID -> CodeObjView,
     ObjViewImpl.FadeSpec        .tpe.typeID -> ObjViewImpl.FadeSpec,
     ActionView                  .tpe.typeID -> ActionView,
@@ -173,10 +173,12 @@ object ListObjViewImpl {
 
     def init(ex: Ex[S])(implicit tx: S#Tx): this.type = {
       initAttrs(ex)
-      disposables ::= ex.changed.react { implicit tx => upd => deferTx {
-        exprValue = upd.now
-        dispatch(ObjView.Repaint(this))
-      }}
+      disposables ::= ex.changed.react { implicit tx => upd =>
+        deferTx {
+          exprValue = upd.now
+        }
+        fire(ObjView.Repaint(this))
+      }
       this
     }
   }

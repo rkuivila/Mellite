@@ -26,6 +26,7 @@ import de.sciss.desktop.OptionPane
 import de.sciss.file._
 import de.sciss.icons.raphael
 import de.sciss.lucre.artifact.{Artifact => _Artifact}
+import de.sciss.lucre.event.impl.ObservableImpl
 import de.sciss.lucre.expr.{BooleanObj, DoubleObj, LongObj, StringObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Disposable, Obj}
@@ -38,7 +39,7 @@ import de.sciss.mellite.gui.impl.document.NuagesFolderFrameImpl
 import de.sciss.model.impl.ModelImpl
 import de.sciss.swingplus.{ColorChooser, GroupPanel, Spinner}
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{TimeRef, Confluent, ObjKeys}
+import de.sciss.synth.proc.{Confluent, ObjKeys, TimeRef}
 
 import scala.swing.Swing.EmptyIcon
 import scala.swing.{Action, Alignment, BorderPanel, Button, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Swing, TextField}
@@ -49,7 +50,7 @@ object ObjViewImpl {
 
   import de.sciss.mellite.{Color => _Color}
   import de.sciss.nuages.{Nuages => _Nuages}
-  import de.sciss.synth.proc.{Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Timeline => _Timeline}
+  import de.sciss.synth.proc.{Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Timeline => _Timeline, Grapheme => _Grapheme}
 
   import scala.{Boolean => _Boolean, Double => _Double, Long => _Long}
 
@@ -504,10 +505,12 @@ object ObjViewImpl {
 
       def init(obj: _Artifact[S])(implicit tx: S#Tx): this.type = {
         initAttrs(obj)
-        disposables ::= obj.changed.react { implicit tx => upd => deferTx {
-          file = upd.now
-          dispatch(ObjView.Repaint(this))
-        }}
+        disposables ::= obj.changed.react { implicit tx => upd =>
+          deferTx {
+            file = upd.now
+          }
+          fire(ObjView.Repaint(this))
+        }
         this
       }
 
@@ -633,6 +636,58 @@ object ObjViewImpl {
     }
   }
 
+  // -------- Grapheme --------
+
+  object Grapheme extends ListObjView.Factory {
+    type E[S <: stm.Sys[S]] = _Grapheme[S]
+    val icon          = raphaelIcon(raphael.Shapes.LineChart)
+    val prefix        = "Grapheme"
+    def humanName     = prefix
+    def tpe           = _Grapheme
+    def hasMakeDialog = true
+    def category      = ObjView.categComposition
+
+    def mkListView[S <: Sys[S]](obj: _Grapheme[S])(implicit tx: S#Tx): ListObjView[S] =
+      new Grapheme.Impl(tx.newHandle(obj)).initAttrs(obj)
+
+    type Config[S <: stm.Sys[S]] = _String
+
+    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                                   (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+      val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
+        messageType = OptionPane.Message.Question, initial = prefix)
+      opt.title = s"New $prefix"
+      val res = opt.show(window)
+      res
+    }
+
+    def makeObj[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
+      val obj = _Grapheme[S] // .Modifiable[S]
+      obj.name = name
+      obj :: Nil
+    }
+
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, _Grapheme[S]])
+      extends ListObjView /* .Grapheme */[S]
+        with ObjViewImpl.Impl[S]
+        with ListObjViewImpl.EmptyRenderer[S]
+        with ListObjViewImpl.NonEditable[S] {
+
+      type E[~ <: stm.Sys[~]] = _Grapheme[~]
+
+      def factory = Grapheme
+
+      def isViewable = true
+
+      def openView(parent: Option[Window[S]])
+                  (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
+        None
+//        val frame = GraphemeFrame[S](objH())
+//        Some(frame)
+      }
+    }
+  }
+
   // -------- FadeSpec --------
 
   object FadeSpec extends ListObjView.Factory {
@@ -683,10 +738,12 @@ object ObjViewImpl {
 
       def init(obj: _FadeSpec.Obj[S])(implicit tx: S#Tx): this.type = {
         initAttrs(obj)
-        disposables ::= obj.changed.react { implicit tx => upd => deferTx {
-          value = upd.now
-          dispatch(ObjView.Repaint(this))
-        }}
+        disposables ::= obj.changed.react { implicit tx => upd =>
+          deferTx {
+            value = upd.now
+          }
+          fire(ObjView.Repaint(this))
+        }
         this
       }
 
@@ -792,10 +849,12 @@ object ObjViewImpl {
         initAttrs(obj)
         disposables ::= obj.changed.react { implicit tx => upd =>
           upd.changes.foreach {
-            case _Ensemble.Playing(ch) => deferTx {
-              playing = ch.now
-              dispatch(ObjView.Repaint(this))
-            }
+            case _Ensemble.Playing(ch) =>
+              deferTx {
+                playing = ch.now
+              }
+              fire(ObjView.Repaint(this))
+
             case _ =>
           }
         }
@@ -895,7 +954,9 @@ object ObjViewImpl {
     raphael.Icon(extent = 16, fill = fill)(shape)
   }
 
-  trait Impl[S <: stm.Sys[S]] extends ObjView[S] with ModelImpl[ObjView.Update[S]] {
+  trait Impl[S <: stm.Sys[S]] extends ObjView[S] /* with ModelImpl[ObjView.Update[S]] */
+    with ObservableImpl[S, ObjView.Update[S]] {
+
     override def toString = s"ElementView.${factory.prefix}(name = $name)"
 
     def objH: stm.Source[S#Tx, Obj[S]]

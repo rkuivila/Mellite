@@ -17,11 +17,14 @@ package gui
 
 import javax.swing.Icon
 
+import de.sciss.lucre.event.Observable
 import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.stm
+import de.sciss.mellite.gui.ObjView.Update
 import de.sciss.model.Model
+import de.sciss.model.Model.Listener
 
 import scala.language.higherKinds
 
@@ -67,7 +70,10 @@ object ObjView {
   }
   final case class Repaint[S <: stm.Sys[S]](view: ObjView[S]) extends Update[S]
 }
-trait ObjView[S <: stm.Sys[S]] extends Disposable[S#Tx] with Model[ObjView.Update[S]] {
+trait ObjView[S <: stm.Sys[S]]
+  extends Disposable[S#Tx]
+  with Observable[S#Tx, ObjView.Update[S]] /* Model[ObjView.Update[S]] */ {
+
   def factory: ObjView.Factory
   def humanName: String
 

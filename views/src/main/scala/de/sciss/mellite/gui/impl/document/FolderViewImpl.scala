@@ -38,7 +38,6 @@ import de.sciss.treetable.{TreeTableCellRenderer, TreeTableSelectionChanged}
 
 import scala.collection.breakOut
 import scala.collection.immutable.{IndexedSeq => Vec}
-import scala.concurrent.stm.Ref
 import scala.swing.Component
 import scala.util.control.NonFatal
 
@@ -110,34 +109,11 @@ object FolderViewImpl {
           }
           if (isDirty) dispatch(tx)(TreeTableView.NodeChanged(obj): MUpdate)
         }
-        val nameReact = Ref(Option.empty[Disposable[S#Tx]])
         val attr      = obj.attr
-
-        def nameAdded(e: StringObj[S])(implicit tx: S#Tx): Unit = {
-          val r = e.changed.react { implicit tx => u2 =>
-            val obj = objH()
-            val isDirty = updateObjectName(obj, Some(u2.now))
-            if (isDirty) dispatch(tx)(TreeTableView.NodeChanged(obj): MUpdate)
-          }
-          nameReact.swap(Some(r))(tx.peer).foreach(_.dispose())
-        }
-
-        def nameRemoved()(implicit tx: S#Tx): Unit =
-          nameReact.swap(None)(tx.peer).foreach(_.dispose())
-
-        attr.$[StringObj](ObjKeys.attrName).foreach(nameAdded)
-
-        val attrReact = attr.changed.react { implicit tx => u1 =>
-          val obj = objH()
-          val isDirty = u1.changes.exists {
-            case Obj.AttrAdded  (ObjKeys.attrName, e: StringObj[S]) =>
-              nameAdded(e)
-              updateObjectName(obj, Some(e.value))
-            case Obj.AttrRemoved(ObjKeys.attrName, _) =>
-              nameRemoved()
-              updateObjectName(obj, None)
-            case _ => false
-          }
+        implicit val stringTpe = StringObj
+        val nameView  = AttrCellView[S, String, StringObj](attr, ObjKeys.attrName)
+        val attrReact = nameView.react { implicit tx => nameOpt =>
+          val isDirty = updateObjectName(obj, nameOpt)
           if (isDirty) dispatch(tx)(TreeTableView.NodeChanged(obj): MUpdate)
         }
 
@@ -150,14 +126,14 @@ object FolderViewImpl {
               }
             }
             Some(res)
-          case _            => None
+
+          case _ => None
         }
 
         new Disposable[S#Tx] {
           def dispose()(implicit tx: S#Tx): Unit = {
             objReact .dispose()
             attrReact.dispose()
-            nameRemoved()
             folderReact.foreach(_.dispose())
           }
         }

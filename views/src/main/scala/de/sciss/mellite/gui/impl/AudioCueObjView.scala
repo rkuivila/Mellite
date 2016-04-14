@@ -1,5 +1,5 @@
 /*
- *  AudioGraphemeObjView.scala
+ *  AudioCueObjView.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
@@ -31,10 +31,10 @@ import de.sciss.synth.proc.AudioCue
 import scala.swing.{Component, Label}
 import scala.util.Try
 
-object AudioGraphemeObjView extends ListObjView.Factory {
+object AudioCueObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = AudioCue.Obj[~] // Grapheme.Expr.Audio[S]
   val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Music)
-  val prefix        = "AudioGrapheme"
+  val prefix        = "AudioCue"
   def humanName     = "Audio File"
   def tpe           = AudioCue.Obj // ElemImpl.AudioGrapheme.typeID
   def hasMakeDialog = true
@@ -42,7 +42,7 @@ object AudioGraphemeObjView extends ListObjView.Factory {
   def category = ObjView.categResources
 
   def mkListView[S <: Sys[S]](obj: AudioCue.Obj[S])
-                             (implicit tx: S#Tx): AudioGraphemeObjView[S] with ListObjView[S] = {
+                             (implicit tx: S#Tx): AudioCueObjView[S] with ListObjView[S] = {
     val value = obj.value
     new Impl(tx.newHandle(obj), value).init(obj)
   }
@@ -84,7 +84,7 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
   final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, AudioCue.Obj[S]],
                                 var value: AudioCue)
-    extends AudioGraphemeObjView[S]
+    extends AudioCueObjView[S]
     with ListObjView /* .AudioGrapheme */[S]
     with ObjViewImpl.Impl[S]
     with ListObjViewImpl.NonEditable[S] {
@@ -93,14 +93,16 @@ object AudioGraphemeObjView extends ListObjView.Factory {
 
     type E[~ <: stm.Sys[~]] = AudioCue.Obj[~]
 
-    def factory = AudioGraphemeObjView
+    def factory = AudioCueObjView
 
     def init(obj: AudioCue.Obj[S])(implicit tx: S#Tx): this.type = {
       initAttrs(obj)
-      disposables ::= obj.changed.react { implicit tx => upd => deferTx {
-        value = upd.now
-        dispatch(ObjView.Repaint(this))
-      }}
+      disposables ::= obj.changed.react { implicit tx => upd =>
+        deferTx {
+          value = upd.now
+        }
+        fire(ObjView.Repaint(this))
+      }
       this
     }
 
@@ -135,6 +137,6 @@ object AudioGraphemeObjView extends ListObjView.Factory {
     }
   }
 }
-trait AudioGraphemeObjView[S <: stm.Sys[S]] extends ObjView[S] {
+trait AudioCueObjView[S <: stm.Sys[S]] extends ObjView[S] {
   override def obj(implicit tx: S#Tx): AudioCue.Obj[S]
 }

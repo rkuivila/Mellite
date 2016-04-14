@@ -199,15 +199,15 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       initAttrs(id, span, obj)
 
       obj.attr.$[AudioCue.Obj](Proc.graphAudio).foreach { audio0 =>
-        disposables ::= audio0.changed.react { implicit tx => upd => {
+        disposables ::= audio0.changed.react { implicit tx => upd =>
           val newAudio = upd.now // calcAudio(upd.grapheme)
           deferTx {
             val newSonogram = upd.before.artifact != upd.now.artifact
             audio = Some(newAudio)
             if (newSonogram) releaseSonogram()
-            dispatch(ObjView.Repaint(self))
           }
-        }}
+          fire(ObjView.Repaint(self))
+        }
         audio = Some(audio0.value) // calcAudio(g)
       }
 

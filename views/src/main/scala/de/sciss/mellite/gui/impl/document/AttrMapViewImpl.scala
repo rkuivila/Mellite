@@ -25,16 +25,14 @@ import javax.swing.{AbstractCellEditor, JComponent, JTable, TransferHandler}
 
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{OptionPane, UndoManager, Window}
-import de.sciss.lucre.expr.StringObj
-import de.sciss.lucre.stm.{Disposable, Obj}
+import de.sciss.lucre.stm
+import de.sciss.lucre.stm.{Disposable, Obj, TxnLike}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.{event, stm}
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.model.impl.ModelImpl
 import de.sciss.swingplus.DropMode
-import de.sciss.synth.proc.ObjKeys
 import org.scalautils.TypeCheckedTripleEquals
 
 import scala.annotation.switch
@@ -61,13 +59,11 @@ object AttrMapViewImpl {
       val observer = obj.attr.changed.react { implicit tx => upd =>
         upd.changes.foreach {
           case Obj.AttrAdded  (key, value) =>
-            val view = ListObjView(value)
-            attrAdded(key, view)
+            attrAdded(key, value)
           case Obj.AttrRemoved(key, value) =>
             attrRemoved(key)
-// ELEM
-//          case Obj.AttrChange (key, value, changes) =>
-//            attrChange(key, value, changes)
+          case Obj.AttrReplaced(key, before, now) =>
+            attrReplaced(key, before = before, now = now)
           case _ =>
         }
       }
@@ -87,8 +83,10 @@ object AttrMapViewImpl {
     impl =>
 
     def dispose()(implicit tx: S#Tx): Unit = {
+      import TxnLike.peer
       observer.dispose()
-      // viewMap.clear()
+      viewMap.foreach(_._2.dispose())
+      viewMap.clear()
     }
 
     protected def observer: Disposable[S#Tx]
@@ -101,8 +99,26 @@ object AttrMapViewImpl {
 
     final def obj(implicit tx: S#Tx): Obj[S] = mapH()
 
-    final protected def attrAdded(key: String, view: ListObjView[S])(implicit tx: S#Tx): Unit = {
-      viewMap.+=(key -> view)(tx.peer)
+    private[this] def mkValueView(key: String, value: Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
+      val view = ListObjView(value)
+      viewMap.put(key, view)(tx.peer).foreach(_.dispose())
+      // XXX TODO -- we need a way to track view updates
+      view.react { implicit tx => {
+        case ObjView.Repaint(_) => deferTx {
+          import TypeCheckedTripleEquals._
+          val row = model.indexWhere(_._1 === key)
+          if (row < 0) {
+            warnNoView(key)
+          } else {
+            tableModel.fireTableRowsUpdated(row, row)
+          }
+        }
+      }}
+      view
+    }
+
+    final protected def attrAdded(key: String, value: Obj[S])(implicit tx: S#Tx): Unit = {
+      val view = mkValueView(key, value)
       deferTx {
         val row = model.size
         model :+= key -> view
@@ -111,7 +127,7 @@ object AttrMapViewImpl {
     }
 
     final protected def attrRemoved(key: String)(implicit tx: S#Tx): Unit = {
-      viewMap.-=(key)(tx.peer)
+      viewMap.remove(key)(tx.peer).foreach(_.dispose())
       deferTx {
         import TypeCheckedTripleEquals._
         val row = model.indexWhere(_._1 === key)
@@ -124,56 +140,21 @@ object AttrMapViewImpl {
       }
     }
 
-    private def warnNoView(key: String): Unit = println(s"Warning: AttrMapView - no view found for $key")
-
-    private def updateObjectName(objView: ObjView[S], nameOption: Option[String])(implicit tx: S#Tx): Unit =
-      deferTx { objView.nameOption = nameOption }
-
-    private def updateObject(objView: ListObjView[S], changes: Vec[event.Map.Change[S, String, Any]] /* Obj.AttrUpdate */ /* Change */)
-                            (implicit tx: S#Tx): Boolean =
-      (false /: changes) { (p, ch) =>
-        val p1 = ch match {
-// ELEM
-//          case Obj.ElemChange(u1) =>
-//            objView.isUpdateVisible(u1)
-          case Obj.AttrAdded  (ObjKeys.attrName, e: StringObj[S]) =>
-            updateObjectName(objView, Some(e.value))
-            true
-          case Obj.AttrRemoved(ObjKeys.attrName, _) =>
-            updateObjectName(objView, None)
-            true
-// ELEM
-//          case Obj.AttrChange (ObjKeys.attrName, _, nameChanges) =>
-//            (false /: nameChanges) {
-//              case (_, Obj.ElemChange(Change(_, name: String))) =>
-//                updateObjectName(objView, Some(name))
-//                true
-//              case (res, _) => res
-//            }
-          case _ => false
+    final protected def attrReplaced(key: String, before: Obj[S], now: Obj[S])(implicit tx: S#Tx): Unit = {
+      val view = mkValueView(key, now)
+      deferTx {
+        import TypeCheckedTripleEquals._
+        val row = model.indexWhere(_._1 === key)
+        if (row < 0) {
+          warnNoView(key)
+        } else {
+          model = model.patch(row, (key -> view) :: Nil, 1)
+          tableModel.fireTableRowsUpdated(row, row)
         }
-        p | p1
       }
+    }
 
-// ELEM
-//    final protected def attrChange(key: String, value: Obj[S], changes: Vec[Obj.AttrUpdate /* Change */[S /* , Any */]])
-//                                  (implicit tx: S#Tx): Unit = {
-//      val viewOpt = viewMap.get(key)(tx.peer)
-//      viewOpt.fold {
-//        warnNoView(key)
-//      } { view =>
-//        val isDirty = updateObject(view, changes)
-//        if (isDirty) deferTx {
-//          import TypeCheckedTripleEquals._
-//          val row = model.indexWhere(_._1 === key)
-//          if (row < 0) {
-//            warnNoView(key)
-//          } else {
-//            tableModel.fireTableRowsUpdated(row, row)
-//          }
-//        }
-//      }
-//    }
+    private def warnNoView(key: String): Unit = println(s"Warning: AttrMapView - no view found for $key")
 
     private object tableModel extends AbstractTableModel {
       def getRowCount   : Int = model.size
