@@ -32,10 +32,15 @@ object MenuBar {
          |<font size=+1><b>${Mellite.name}</b></font><p>
          |Version ${Mellite.version}<p>
          |<p>
-         |Copyright (c) 2012&ndash;2015 Hanns Holger Rutz. All rights reserved.<p>
-         |This software is published under the ${Mellite.license}<p>
-         |<p>
+         |Copyright (c) 2012&ndash;2016 Hanns Holger Rutz. All rights reserved.<p>
+         |This software is published under the ${Mellite.license}
+         |<p>&nbsp;<p><i>
+         |Scala v${de.sciss.mellite.BuildInfo.scalaVersion}<br>
+         |Java v${sys.props.getOrElse("java.version", "?")}<br>
+         |</i>
+         |<p>&nbsp;<p>
          |<a href="$url">$addr</a>
+         |<p>&nbsp;
          |""".stripMargin
     val lb = new Label(html) {
       // cf. http://stackoverflow.com/questions/527719/how-to-add-hyperlink-in-jlabel

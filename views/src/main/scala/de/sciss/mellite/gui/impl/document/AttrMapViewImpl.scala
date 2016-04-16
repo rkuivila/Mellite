@@ -58,12 +58,9 @@ object AttrMapViewImpl {
     val res = new Impl(objH, list0) {
       val observer = obj.attr.changed.react { implicit tx => upd =>
         upd.changes.foreach {
-          case Obj.AttrAdded  (key, value) =>
-            attrAdded(key, value)
-          case Obj.AttrRemoved(key, value) =>
-            attrRemoved(key)
-          case Obj.AttrReplaced(key, before, now) =>
-            attrReplaced(key, before = before, now = now)
+          case Obj.AttrAdded   (key, value)       => attrAdded   (key, value)
+          case Obj.AttrRemoved (key, value)       => attrRemoved (key)
+          case Obj.AttrReplaced(key, before, now) => attrReplaced(key, before = before, now = now)
           case _ =>
         }
       }
@@ -99,20 +96,25 @@ object AttrMapViewImpl {
 
     final def obj(implicit tx: S#Tx): Obj[S] = mapH()
 
+    // helper method that executes model updates on the EDT
+    private[this] def withRow(key: String)(fun: Int => Unit)(implicit tx: S#Tx): Unit = deferTx {
+      import TypeCheckedTripleEquals._
+      val row = model.indexWhere(_._1 === key)
+      if (row < 0) {
+        warnNoView(key)
+      } else {
+        fun(row)
+      }
+    }
+
     private[this] def mkValueView(key: String, value: Obj[S])(implicit tx: S#Tx): ListObjView[S] = {
       val view = ListObjView(value)
       viewMap.put(key, view)(tx.peer).foreach(_.dispose())
-      // XXX TODO -- we need a way to track view updates
       view.react { implicit tx => {
-        case ObjView.Repaint(_) => deferTx {
-          import TypeCheckedTripleEquals._
-          val row = model.indexWhere(_._1 === key)
-          if (row < 0) {
-            warnNoView(key)
-          } else {
+        case ObjView.Repaint(_) =>
+          withRow(key) { row =>
             tableModel.fireTableRowsUpdated(row, row)
           }
-        }
       }}
       view
     }
@@ -128,29 +130,17 @@ object AttrMapViewImpl {
 
     final protected def attrRemoved(key: String)(implicit tx: S#Tx): Unit = {
       viewMap.remove(key)(tx.peer).foreach(_.dispose())
-      deferTx {
-        import TypeCheckedTripleEquals._
-        val row = model.indexWhere(_._1 === key)
-        if (row < 0) {
-          warnNoView(key)
-        } else {
-          model = model.patch(row, Nil, 1)
-          tableModel.fireTableRowsDeleted(row, row)
-        }
+      withRow(key) { row =>
+        model = model.patch(row, Nil, 1)
+        tableModel.fireTableRowsDeleted(row, row)
       }
     }
 
     final protected def attrReplaced(key: String, before: Obj[S], now: Obj[S])(implicit tx: S#Tx): Unit = {
       val view = mkValueView(key, now)
-      deferTx {
-        import TypeCheckedTripleEquals._
-        val row = model.indexWhere(_._1 === key)
-        if (row < 0) {
-          warnNoView(key)
-        } else {
-          model = model.patch(row, (key -> view) :: Nil, 1)
-          tableModel.fireTableRowsUpdated(row, row)
-        }
+      withRow(key) { row =>
+        model = model.patch(row, (key -> view) :: Nil, 1)
+        tableModel.fireTableRowsUpdated(row, row)
       }
     }
 
@@ -228,10 +218,7 @@ object AttrMapViewImpl {
       colTpe  .setPreferredWidth( 96)
       colValue.setPreferredWidth(208)
       jt.setPreferredScrollableViewportSize(390 -> 160)
-      // val colName = tcm.getColumn(0)
-      //      colName.setCellEditor(new DefaultTreeTableCellEditor() {
-      //        override def stopCellEditing(): Boolean = super.stopCellEditing()
-      //      })
+
       colTpe.setCellRenderer(new DefaultTableCellRenderer {
         outer =>
         private val wrap = new Label { override lazy val peer = outer }
@@ -243,18 +230,6 @@ object AttrMapViewImpl {
             wrap.icon = view.icon
           case _ =>
         }
-
-        //        override def getTableCellRendererComponent(table: JTable, value: Any, isSelected: Boolean,
-        //                                                   hasFocus: Boolean, row: Int, column: Int): java.awt.Component = {
-        //          super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column)
-        //          value match {
-        //            case view: ObjView[_] =>
-        //              wrap.text = view.name
-        //              wrap.icon = view.icon
-        //            case _ =>
-        //          }
-        //          outer
-        //        }
       })
       colValue.setCellRenderer(new DefaultTableCellRenderer {
         outer =>
@@ -360,7 +335,6 @@ object AttrMapViewImpl {
       tab.reactions += {
         case TableRowsSelected(_, _, false) => // note: range is range of _changes_ rows, not current selection
           val sel = selection
-          // println(sel.map(_._1))
           dispatch(AttrMapView.SelectionChanged(impl, sel))
       }
     }
