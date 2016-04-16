@@ -57,7 +57,7 @@ trait TimelineActions[S <: Sys[S]] {
       _settings.file match {
         case Some(file) if ok =>
           import Mellite.compiler
-          performGUI(workspace, _settings, timelineObjH, file, window = window)
+          performGUI(workspace, _settings, timelineH, file, window = window)
         case _ =>
       }
     }
@@ -168,7 +168,7 @@ trait TimelineActions[S <: Sys[S]] {
   // -----------
 
   protected def timelineMod(implicit tx: S#Tx): Option[Timeline.Modifiable[S]] =
-    timelineObj.modifiableOption
+    timeline.modifiableOption
 
   // ---- clear ----
   // - find the objects that overlap with the selection span

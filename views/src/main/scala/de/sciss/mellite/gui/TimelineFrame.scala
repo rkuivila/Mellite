@@ -17,7 +17,7 @@ package gui
 
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.impl.timeline.{FrameImpl => Impl}
+import de.sciss.mellite.gui.impl.timeline.{TimelineFrameImpl => Impl}
 import de.sciss.synth.proc.Timeline
 
 object TimelineFrame {

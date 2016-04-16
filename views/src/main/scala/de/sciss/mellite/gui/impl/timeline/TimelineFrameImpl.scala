@@ -1,5 +1,5 @@
 /*
- *  FrameImpl.scala
+ *  TimelineFrameImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
@@ -17,17 +17,18 @@ package impl
 package timeline
 
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.lucre.swing.CellView
-import de.sciss.synth.proc.Timeline
-import de.sciss.lucre.stm
-import de.sciss.desktop.{Window, KeyStrokes, Menu, OptionPane}
-import org.scalautils.TypeCheckedTripleEquals
-import scala.swing.event.Key
-import scala.swing.Action
+import de.sciss.desktop.{KeyStrokes, Menu, OptionPane, Window}
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
+import de.sciss.lucre.stm
+import de.sciss.lucre.swing.CellView
 import de.sciss.lucre.synth.Sys
+import de.sciss.synth.proc.Timeline
+import org.scalautils.TypeCheckedTripleEquals
 
-object FrameImpl {
+import scala.swing.Action
+import scala.swing.event.Key
+
+object TimelineFrameImpl {
   def apply[S <: Sys[S]](group: Timeline[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): TimelineFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
@@ -92,8 +93,8 @@ object FrameImpl {
       )
 
       // --- timeline menu ---
-      import Menu.{Group, Item, proxy}
       import KeyStrokes._
+      import Menu.{Group, Item, proxy}
       val mTimeline = Group("timeline", "Timeline")
         // .add(Item("trimToSelection",    proxy("Trim to Selection",        (menu1 + Key.F5))))
         .add(Item("insert-span"           , proxy("Insert Span...",           menu1 + shift + Key.E)))

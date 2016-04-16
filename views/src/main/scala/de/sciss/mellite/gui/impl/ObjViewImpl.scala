@@ -674,20 +674,8 @@ object ObjViewImpl {
 
       def openView(parent: Option[Window[S]])
                   (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-//        val message = s"<html><b>Select View Type for $name:</b></html>"
-//        val entries = Seq("Timeline View", "Real-time View", "Cancel")
-//        val opt = OptionPane(message = message, optionType = OptionPane.Options.YesNoCancel,
-//          messageType = OptionPane.Message.Question, entries = entries)
-//        opt.title = s"View $name"
-//        (opt.show(None).id: @switch) match {
-//          case 0 =>
-            val frame = TimelineFrame[S](objH())
-            Some(frame)
-//          case 1 =>
-//            val frame = InstantGroupFrame[S](document, obj())
-//            Some(frame)
-//          case _ => None
-//        }
+        val frame = TimelineFrame[S](objH())
+        Some(frame)
       }
     }
   }
@@ -737,9 +725,8 @@ object ObjViewImpl {
 
       def openView(parent: Option[Window[S]])
                   (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        None
-//        val frame = GraphemeFrame[S](objH())
-//        Some(frame)
+        val frame = GraphemeFrame[S](objH())
+        Some(frame)
       }
     }
   }

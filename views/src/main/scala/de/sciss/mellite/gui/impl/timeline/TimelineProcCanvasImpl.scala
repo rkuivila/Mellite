@@ -1,5 +1,5 @@
 /*
- *  ProcCanvasImpl.scala
+ *  TimelineProcCanvasImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
@@ -20,7 +20,7 @@ import de.sciss.audiowidgets.impl.TimelineCanvasImpl
 import de.sciss.lucre.synth.Sys
 import TrackTool.EmptyRubber
 
-trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCanvas[S] {
+trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCanvas[S] {
   final val trackTools = TrackTools[S](this)
 
   import TrackTools._
@@ -31,7 +31,7 @@ trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCa
   protected var toolState: Option[Any]
   protected var rubberState: TrackTool.DragRubber = EmptyRubber
 
-  private val toolListener: TrackTool.Listener = {
+  private[this] val toolListener: TrackTool.Listener = {
     // case TrackTool.DragBegin =>
     case TrackTool.DragCancel =>
       log(s"Drag cancel $toolState")
@@ -87,7 +87,7 @@ trait ProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCa
   }
   trackTools.currentTool.addListener(toolListener)
 
-  private val selectionListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
+  private[this] val selectionListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
     case SelectionModel.Update(added, removed) =>
       canvasComponent.repaint() // XXX TODO: dirty rectangle optimization
   }

@@ -1,5 +1,5 @@
 /*
- *  ViewImpl.scala
+ *  TimelineViewImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
@@ -269,7 +269,7 @@ object TimelineViewImpl {
     tlView
   }
 
-  private final class Impl[S <: Sys[S]](val timelineObjH  : stm.Source[S#Tx, Timeline[S]],
+  private final class Impl[S <: Sys[S]](val timelineH  : stm.Source[S#Tx, Timeline[S]],
                                         val viewMap       : TimelineObjView.Map[S],
                                         val scanMap       : ProcObjView.ScanMap[S],
                                         val timelineModel : TimelineModel,
@@ -303,8 +303,8 @@ object TimelineViewImpl {
     private lazy val toolPatch    = TrackTool.patch   [S](canvasView)
     private lazy val toolAudition = TrackTool.audition[S](canvasView, this)
 
-    def timelineObj     (implicit tx: S#Tx) = timelineObjH()
-    def plainGroup(implicit tx: S#Tx) = timelineObj
+    def timeline(implicit tx: S#Tx) = timelineH()
+    def plainGroup(implicit tx: S#Tx) = timeline
 
     def window: Window = component.peer.getClientProperty("de.sciss.mellite.Window").asInstanceOf[Window]
 
@@ -496,7 +496,7 @@ object TimelineViewImpl {
         deferTx {
           view match {
             case pv: ProcObjView.Timeline[S] if pv.isGlobal => globalView.remove(pv)
-            case _                              => viewRange -= view
+            case _ => viewRange -= view
           }
 
           if (spanCh .isSignificant) view.spanValue   = spanCh .now
@@ -521,114 +521,6 @@ object TimelineViewImpl {
       //      else
       repaintAll() // XXX TODO: optimize dirty rectangle
     }
-
-    def objMuteChanged(timed: Timeline.Timed[S], newMute: Boolean)(implicit tx: S#Tx): Unit = {
-      val pvo = viewMap.get(timed.id)
-      logT(s"objMuteChanged(newMute = $newMute, view = $pvo")
-      pvo.fold {
-        warnViewNotFound("mute", timed)
-      } {
-        case pv: TimelineObjView.HasMute =>
-          deferTx {
-            pv.muted = newMute
-            objUpdated(pv)
-          }
-
-        case _ =>
-      }
-    }
-
-    def objNameChanged(timed: Timeline.Timed[S], newName: Option[String])(implicit tx: S#Tx): Unit = {
-      val pvo = viewMap.get(timed.id)
-      logT(s"objNameChanged(newName = $newName, view = $pvo")
-      pvo.fold {
-        warnViewNotFound("rename", timed)
-      } { pv =>
-        deferTx {
-          pv.nameOption = newName
-          objUpdated(pv)
-        }
-      }
-    }
-
-    def objColorChanged(timed: Timeline.Timed[S], newColor: Option[Color])(implicit tx: S#Tx): Unit = {
-      val pvo = viewMap.get(timed.id)
-      logT(s"objColorChanged(newColor = $newColor, view = $pvo")
-      pvo.fold {
-        warnViewNotFound("change color", timed)
-      } { pv =>
-        deferTx {
-          pv.colorOption = newColor
-          objUpdated(pv)
-        }
-      }
-    }
-
-    def procBusChanged(timed: Timeline.Timed[S], newBus: Option[Int])(implicit tx: S#Tx): Unit = {
-      val pvo = viewMap.get(timed.id)
-      logT(s"procBusChanged(newBus = $newBus, view = $pvo")
-      pvo.fold {
-        warnViewNotFound("change bus", timed)
-      } {
-        case pv: ProcObjView.Timeline[S] =>
-          deferTx {
-            pv.busOption = newBus
-            objUpdated(pv)
-          }
-
-        case _ =>
-      }
-    }
-
-    def objGainChanged(timed: Timeline.Timed[S], newGain: Double)(implicit tx: S#Tx): Unit = {
-      val pvo = viewMap.get(timed.id)
-      logT(s"objGainChanged(newGain = $newGain, view = $pvo")
-      pvo.fold {
-        warnViewNotFound("change gain", timed)
-      } {
-        case pv: TimelineObjView.HasGain =>
-          deferTx {
-            pv.gain = newGain
-            objUpdated(pv)
-          }
-
-        case _ =>
-      }
-    }
-
-    def objFadeChanged(timed: Timeline.Timed[S], newFadeIn: FadeSpec, newFadeOut: FadeSpec)(implicit tx: S#Tx): Unit = {
-      val pvo = viewMap.get(timed.id)
-      logT(s"objFadeChanged(newFadeIn = $newFadeIn, newFadeOut = $newFadeOut, view = $pvo")
-      pvo.fold {
-        warnViewNotFound("change fade", timed)
-      } {
-        case pv: TimelineObjView.HasFade => deferTx {
-          pv.fadeIn   = newFadeIn
-          pv.fadeOut  = newFadeOut
-          repaintAll()  // XXX TODO: optimize dirty rectangle
-        }
-
-        case _ =>
-      }
-    }
-
-    // SCAN
-//    private def withLink(timed: TimedProc[S], that: Scan[S])(fun: (ProcObjView.Timeline[S], ProcObjView.Timeline[S], String) => Unit)
-//                        (implicit tx: S#Tx): Unit =
-//      viewMap.get(timed.id).foreach {
-//        case thisView: ProcObjView.Timeline[S] =>
-//          scanMap.get(that .id).foreach {
-//            case (thatKey, thatIdH) =>
-//              viewMap.get(thatIdH()).foreach {
-//                case thatView: ProcObjView.Timeline[S] =>
-//                  deferTx {
-//                    fun(thisView, thatView, thatKey)
-//                    repaintAll()
-//                  }
-//                case _ =>
-//              }
-//          }
-//      }
 
     // SCAN
 //    def scanSinkAdded(timed: TimedProc[S], srcKey: String, src: Scan[S], sink: Scan[S])(implicit tx: S#Tx): Unit =
@@ -786,7 +678,7 @@ object TimelineViewImpl {
       editOpt.isDefined
     }
 
-    private final class View extends ProcCanvasImpl[S] {
+    private final class View extends TimelineProcCanvasImpl[S] {
       canvasImpl =>
 
       private var trkIdxOff = 0

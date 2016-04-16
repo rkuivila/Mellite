@@ -136,7 +136,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 //    }
 //    buildLinks(isInput = true )
 //    buildLinks(isInput = false)
-    println("WARNING: ProcObjView.mkTimelineView - buildLinks not yet implemented")  // SCAN
+    // println("WARNING: ProcObjView.mkTimelineView - buildLinks not yet implemented")  // SCAN
 
     // procMap.put(timed.id, res)
     res

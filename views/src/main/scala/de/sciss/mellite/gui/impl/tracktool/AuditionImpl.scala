@@ -76,7 +76,7 @@ class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv
     val playOpt = cursor.step { implicit tx =>
       Mellite.auralSystem.serverOption.map { server =>
         implicit val aural = AuralContext(server)
-        val auralTimeline = AuralObj.Timeline.empty(tlv.timelineObj)
+        val auralTimeline = AuralObj.Timeline.empty(tlv.timeline)
 
         (tlv.globalView.iterator ++ selMod.iterator).foreach { view =>
           auralTimeline.addObject(view.id, view.span, view.obj)

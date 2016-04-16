@@ -17,11 +17,11 @@ package impl
 
 import de.sciss.desktop
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.SpanLikeObj
-import de.sciss.lucre.stm.{Cursor, Obj}
-import de.sciss.lucre.swing.Window
-import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.expr.{LongObj, SpanLikeObj}
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.{Cursor, Obj}
+import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.impl.grapheme.GraphemeObjViewImpl
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 
 import scala.swing.{Component, Label}
@@ -34,7 +34,7 @@ object GenericObjView extends ObjView.Factory {
   // val typeID    = 0
   def tpe: Obj.Type = ???! // RRR
 
-  type E[~ <: stm.Sys[~]]       = Obj[~]
+  type E     [S <: stm.Sys[S]]  = Obj[S]
   type Config[S <: stm.Sys[S]]  = Unit
 
   def hasMakeDialog: Boolean = false
@@ -49,6 +49,11 @@ object GenericObjView extends ObjView.Factory {
     res
   }
 
+  def mkGraphemeView[S <: Sys[S]](/* id: S#ID, */ time: LongObj[S], obj: Obj[S])(implicit tx: S#Tx): GraphemeObjView[S] = {
+    val res = new GraphemeImpl(tx.newHandle(obj)).initAttrs(time, obj)
+    res
+  }
+
   def mkListView[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): ListObjView[S] =
     new ListImpl(tx.newHandle(obj)).initAttrs(obj)
 
@@ -58,19 +63,14 @@ object GenericObjView extends ObjView.Factory {
     final def value: Any = ()
 
     final def configureRenderer(label: Label): Component = label
-
-    // final def isUpdateVisible(update: Any)(implicit tx: S#Tx): Boolean = false
   }
 
   private final class ListImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Obj[S]])
     extends Impl[S] with ListObjView[S] with ListObjViewImpl.NonEditable[S] with ObjViewImpl.NonViewable[S]
 
   private final class TimelineImpl[S <: Sys[S]](val objH : stm.Source[S#Tx, Obj[S]])
-    extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] {
+    extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] with ObjViewImpl.NonViewable[S]
 
-    def openView(parent: Option[Window[S]])
-                (implicit tx: S#Tx, workspace: Workspace[S], cursor: Cursor[S]): Option[Window[S]] = None
-
-    def isViewable: Boolean = false
-  }
+  private final class GraphemeImpl[S <: Sys[S]](val objH : stm.Source[S#Tx, Obj[S]])
+    extends Impl[S] with GraphemeObjViewImpl.BasicImpl[S] with ObjViewImpl.NonViewable[S]
 }
