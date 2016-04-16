@@ -16,7 +16,6 @@ package gui
 package impl
 package document
 
-import java.io.FileInputStream
 import javax.swing.SpinnerNumberModel
 import javax.swing.undo.UndoableEdit
 
@@ -34,7 +33,6 @@ import de.sciss.mellite.gui.impl.component.CollectionViewImpl
 import de.sciss.swingplus.{GroupPanel, Spinner}
 import de.sciss.synth.proc.{Folder, ObjKeys}
 import org.scalautils.TypeCheckedTripleEquals
-import play.api.libs.json.Json
 
 import scala.collection.breakOut
 import scala.swing.Swing.EmptyIcon
@@ -117,9 +115,6 @@ object FolderFrameImpl {
 
     impl =>
 
-    //    protected def mkTitle(sOpt: Option[String]): String =
-    //      s"${workspace.folder.base}${sOpt.fold("")(s => s"/$s")} : Elements"
-
     protected type InsertConfig = Unit
 
     protected def prepareInsert(f: ObjView.Factory): Option[InsertConfig] = Some(())
@@ -132,17 +127,6 @@ object FolderFrameImpl {
       } (breakOut)
       CompoundEdit(edits, "Create Objects")
     }
-
-    //    override protected def canDuplicate = true
-    //
-    //    override protected def editDuplicate(xs: List[Obj[S]])(implicit tx: S#Tx): Option[UndoableEdit] = {
-    //      val (parent, idx) = impl.peer.insertionPoint
-    //      val copies = xs.map(Obj.copy(_))
-    //      val edits: List[UndoableEdit] = copies.zipWithIndex.map { case (x, j) =>
-    //        EditFolderInsertObj("Duplicate", parent, idx + j, x)
-    //      } (breakOut)
-    //      CompoundEdit(edits, "Duplicate Objects")
-    //    }
 
     def dispose()(implicit tx: S#Tx): Unit =
       peer.dispose()

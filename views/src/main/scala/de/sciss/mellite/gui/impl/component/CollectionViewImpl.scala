@@ -53,12 +53,6 @@ trait CollectionViewImpl[S <: Sys[S]]
 
   // ---- implemented ----
 
-  //  /** Override with `true` if duplication is supported. */
-  //  protected def canDuplicate: Boolean = false
-  //
-  //  /** Override if duplication is supported. */
-  //  protected def editDuplicate(xs: List[Obj[S]])(implicit tx: S#Tx): Option[UndoableEdit] = None
-
   lazy final protected val actionAttr: Action = Action(null) {
     val sel = selectedObjects
     val sz  = sel.size
@@ -77,18 +71,16 @@ trait CollectionViewImpl[S <: Sys[S]]
 
   protected def selectionChanged(sel: List[ObjView[S]]): Unit = {
     val nonEmpty  = sel.nonEmpty
-    actionAdd      .enabled  = sel.size < 2
-    actionDelete   .enabled  = nonEmpty
-    // actionDuplicate.enabled  = nonEmpty
-    actionView     .enabled  = nonEmpty && sel.exists(_.isViewable)
-    actionAttr     .enabled  = nonEmpty
+    actionAdd   .enabled = sel.size < 2
+    actionDelete.enabled = nonEmpty
+    actionView  .enabled = nonEmpty && sel.exists(_.isViewable)
+    actionAttr  .enabled = nonEmpty
   }
 
-  final protected var ggAdd       : Button = _
-  final protected var ggDelete    : Button = _
-  // final protected var ggDuplicate : Button = _
-  final protected var ggView      : Button = _
-  final protected var ggAttr      : Button = _
+  final protected var ggAdd   : Button = _
+  final protected var ggDelete: Button = _
+  final protected var ggView  : Button = _
+  final protected var ggAttr  : Button = _
 
   final def init()(implicit tx: S#Tx): this.type = {
     deferTx(guiInit())
@@ -119,14 +111,14 @@ trait CollectionViewImpl[S <: Sys[S]]
     val pop     = Popup()
     val tlP     = Application.topLevelObjects
     val flt     = Application.objectFilter
-    val f0      = ListObjView.factories.filter(f => f.hasMakeDialog && flt(f.prefix))
+    val f0      = ListObjView.factories.filter(f => f.hasMakeDialog && flt(f.prefix)).toSeq.sortBy(_.humanName)
     val (top0, sub) = f0.partition(f => tlP.contains(f.prefix))
     val top     = tlP.flatMap(prefix => top0.find(_.prefix == prefix))
     top.foreach { f =>
       pop.add(Item(f.prefix, new AddAction(f)))
     }
-    val subMap  = sub.groupBy(_.category)
-    subMap.keys.toList.sorted.foreach { categ =>
+    val subMap = sub.groupBy(_.category)
+    subMap.keys.toSeq.sorted.foreach { categ =>
       val group = Group(categ.toLowerCase, categ)
       subMap.getOrElse(categ, Nil).foreach { f =>
         group.add(Item(f.prefix, new AddAction(f)))
@@ -145,25 +137,16 @@ trait CollectionViewImpl[S <: Sys[S]]
     addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
   }
 
-  //  final protected lazy val actionDuplicate: Action = Action(null) {
-  //    val editOpt = cursor.step { implicit tx =>
-  //      editDuplicate(selectedObjects.map(_.obj()))
-  //    }
-  //    editOpt.foreach(undoManager.add)
-  //  }
-
   private def nameAttr = "Attributes Editor"
   private def nameView = "View Selected Element"
 
   private def guiInit(): Unit = {
-    ggAdd       = GUI.addButton       (actionAdd      , "Add Element")
-    ggDelete    = GUI.removeButton    (actionDelete   , "Remove Selected Element")
-    // ggDuplicate = GUI.duplicateButton (actionDuplicate, "Duplicate Selected Elements")
-    ggAttr      = GUI.attrButton      (actionAttr     , nameAttr)
-    ggView      = GUI.viewButton      (actionView     , nameView)
+    ggAdd    = GUI.addButton   (actionAdd   , "Add Element")
+    ggDelete = GUI.removeButton(actionDelete, "Remove Selected Element")
+    ggAttr   = GUI.attrButton  (actionAttr  , nameAttr)
+    ggView   = GUI.viewButton  (actionView  , nameView)
 
-    // if (!canDuplicate) ggDuplicate.visible = false
-    val buttonPanel = new FlowPanel(ggAdd, ggDelete, /* ggDuplicate, */ ggAttr, Swing.HStrut(32), ggView)
+    val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggAttr, Swing.HStrut(32), ggView)
 
     component = new BorderPanel {
       add(impl.peer.component, BorderPanel.Position.Center)
@@ -174,8 +157,3 @@ trait CollectionViewImpl[S <: Sys[S]]
     selectionChanged(selectedObjects)
   }
 }
-
-//class CollectionFrameImpl[S <: Sys[S]](val view: View[S])
-//  extends WindowImpl[S] {
-//  impl =>
-//}

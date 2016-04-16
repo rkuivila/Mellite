@@ -36,11 +36,12 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.mellite.gui.impl.component.PaintIcon
 import de.sciss.mellite.gui.impl.document.NuagesFolderFrameImpl
-import de.sciss.model.impl.ModelImpl
 import de.sciss.swingplus.{ColorChooser, GroupPanel, Spinner}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{Confluent, ObjKeys, TimeRef}
 
+import scala.collection.breakOut
+import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.swing.Swing.EmptyIcon
 import scala.swing.{Action, Alignment, BorderPanel, Button, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Swing, TextField}
 import scala.util.Try
@@ -49,8 +50,10 @@ object ObjViewImpl {
   import java.lang.{String => _String}
 
   import de.sciss.mellite.{Color => _Color}
+  import de.sciss.lucre.expr.{DoubleVector => _DoubleVector}
   import de.sciss.nuages.{Nuages => _Nuages}
-  import de.sciss.synth.proc.{Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Timeline => _Timeline, Grapheme => _Grapheme}
+  import de.sciss.synth.proc.{Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Timeline => _Timeline}
+  import de.sciss.synth.proc.{Grapheme => _Grapheme}
 
   import scala.{Boolean => _Boolean, Double => _Double, Long => _Long}
 
@@ -114,11 +117,6 @@ object ObjViewImpl {
       def convertEditValue(v: Any): Option[_String] = Some(v.toString)
 
       def expr(implicit tx: S#Tx) = objH()
-
-      def testValue(v: Any): Option[_String] = v match {
-        case s: _String => Some(s)
-        case _ => None
-      }
     }
   }
 
@@ -126,7 +124,7 @@ object ObjViewImpl {
 
   object Long extends ListObjView.Factory {
     type E[S <: stm.Sys[S]] = LongObj[S]
-    val icon      = raphaelIcon(Shapes.IntegerNumbers)  // XXX TODO
+    val icon      = raphaelIcon(Shapes.IntegerNumber)  // XXX TODO
     val prefix    = "Long"
     def humanName = prefix
     def tpe    = LongObj
@@ -181,11 +179,6 @@ object ObjViewImpl {
         case num: _Long => Some(num)
         case s: _String => Try(s.toLong).toOption
       }
-
-      def testValue(v: Any): Option[_Long] = v match {
-        case i: _Long => Some(i)
-        case _        => None
-      }
     }
   }
 
@@ -193,7 +186,7 @@ object ObjViewImpl {
 
   object Double extends ListObjView.Factory {
     type E[S <: stm.Sys[S]] = DoubleObj[S]
-    val icon      = raphaelIcon(Shapes.RealNumbers)
+    val icon      = raphaelIcon(Shapes.RealNumber)
     val prefix    = "Double"
     def humanName = prefix
     def tpe = DoubleObj
@@ -247,11 +240,6 @@ object ObjViewImpl {
         case num: _Double => Some(num)
         case s: _String => Try(s.toDouble).toOption
       }
-
-      def testValue(v: Any): Option[_Double] = v match {
-        case d: _Double => Some(d)
-        case _ => None
-      }
     }
   }
 
@@ -259,7 +247,7 @@ object ObjViewImpl {
 
   object Boolean extends ListObjView.Factory {
     type E[S <: stm.Sys[S]] = BooleanObj[S]
-    val icon      = raphaelIcon(Shapes.BooleanNumbers)
+    val icon      = raphaelIcon(Shapes.BooleanNumber)
     val prefix    = "Boolean"
     def humanName = prefix
     def tpe   = BooleanObj
@@ -306,6 +294,76 @@ object ObjViewImpl {
       def factory = Boolean
 
       def expr(implicit tx: S#Tx): BooleanObj[S] = objH()
+    }
+  }
+
+  // -------- DoubleVector --------
+
+  object DoubleVector extends ListObjView.Factory {
+    type E[S <: stm.Sys[S]] = _DoubleVector[S]
+    val icon          = raphaelIcon(Shapes.RealNumberVector)
+    val prefix        = "DoubleVector"
+    def humanName     = prefix
+    def tpe           = _DoubleVector
+    def hasMakeDialog = true
+
+    def category = ObjView.categPrimitives
+
+    def mkListView[S <: Sys[S]](obj: _DoubleVector[S])(implicit tx: S#Tx): ListObjView[S] = {
+      val ex          = obj
+      val value       = ex.value
+      val isEditable  = ex match {
+        case _DoubleVector.Var(_)  => true
+        case _            => false
+      }
+      val isViewable  = tx.isInstanceOf[Confluent.Txn]
+      new DoubleVector.Impl[S](tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).init(obj)
+    }
+
+    type Config[S <: stm.Sys[S]] = PrimitiveConfig[Vec[Double]]
+
+    private def parseString(s: String): Option[Vec[Double]] =
+      Try(s.split(" ").map(x => x.trim().toDouble)(breakOut): Vec[Double]).toOption
+
+    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                                   (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+      val ggValue = new TextField("0.0 0.0")
+      primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = parseString(ggValue.text))
+    }
+
+    def makeObj[S <: Sys[S]](config: (String, Vec[Double]))(implicit tx: S#Tx): List[Obj[S]] = {
+      val (name, value) = config
+      val obj = _DoubleVector.newVar(_DoubleVector.newConst[S](value))
+      obj.name = name
+      obj :: Nil
+    }
+
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, _DoubleVector[S]], var value: Vec[Double],
+                                  override val isEditable: _Boolean, val isViewable: _Boolean)
+      extends ListObjView[S]
+        with ObjViewImpl.Impl[S]
+        with ListObjViewImpl.SimpleExpr[S, Vec[Double], _DoubleVector] {
+
+      type E[~ <: stm.Sys[~]] = _DoubleVector[~]
+
+      def factory = DoubleVector
+
+      val exprType = _DoubleVector
+
+      def expr(implicit tx: S#Tx): _DoubleVector[S] = objH()
+
+      def convertEditValue(v: Any): Option[Vec[Double]] = v match {
+        case num: Vec[_] => (Option(Vec.empty[Double]) /: num) {
+          case (Some(prev), d: Double) => Some(prev :+ d)
+          case _ => None
+        }
+        case s: _String  => DoubleVector.parseString(s)
+      }
+
+      def configureRenderer(label: Label): Component = {
+        label.text = value.mkString(" ")
+        label
+      }
     }
   }
 
@@ -397,9 +455,7 @@ object ObjViewImpl {
         label
       }
 
-      def convertEditValue(v: Any): Option[_Color] = testValue(v) // XXX TODO -- what was the difference again
-
-      def testValue(v: Any): Option[_Color] = v match {
+      def convertEditValue(v: Any): Option[_Color] = v match {
         case c: _Color  => Some(c)
         case _          => None
       }

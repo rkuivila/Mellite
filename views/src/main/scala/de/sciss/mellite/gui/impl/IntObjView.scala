@@ -32,7 +32,7 @@ import proc.Implicits._
 
 object IntObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = IntObj[~]
-  val icon      = ObjViewImpl.raphaelIcon(Shapes.IntegerNumbers)
+  val icon      = ObjViewImpl.raphaelIcon(Shapes.IntegerNumber)
   val prefix    = "Int"
   def humanName = prefix
   def tpe = IntObj

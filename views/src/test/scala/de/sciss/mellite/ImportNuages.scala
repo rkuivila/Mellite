@@ -10,7 +10,9 @@ import de.sciss.synth.proc.Durable
 
 // quick hack to copy a nuages-only database into a regular mellite session
 object ImportNuages extends App {
-  val fIn     = userHome/"Documents"/"projects"/"Anemone"/"sessions"/"session_160409_172322"
+  val fIn     = args.headOption.map(file(_)).getOrElse(
+    userHome/"Documents"/"projects"/"Anemone"/"sessions"/"session_160409_172322"
+  )
   val fOut    = userHome/"mellite"/"sessions"/fIn.replaceExt(".mllt").name
   require(!fOut.exists())
 
@@ -26,7 +28,7 @@ object ImportNuages extends App {
     val nInH    = sysIn.root[Nuages[In]] { implicit tx => sys.error("Expecting existing Nuages file") }
     val wOut    = Workspace.Durable.empty(fOut, BerkeleyDB.Config())
     try {
-      Txn.copy[In, Out, Unit] { (txIn: In#Tx, tx: Out#Tx) => {
+      Txn.copy[In, Out, Unit] { (txIn: In#Tx, tx: Out#Tx) =>
         val cpy   = Copy[In, Out](txIn, tx)
         val nIn   = nInH()(txIn)
         val infoIn = nIn.surface match {
@@ -44,7 +46,7 @@ object ImportNuages extends App {
         val foldOut = wOut.root(tx)
         foldOut.addLast(nOut)(tx)
 
-      }} (sysIn, wOut.cursor)
+      } (sysIn, wOut.cursor)
 
     } finally {
       wOut.close()
