@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   viewBox="0 0 32 32"
+   x="0px"
+   y="0px"
+   id="svg2"
+   inkscape:version="0.48.5 r10040"
+   width="100%"
+   height="100%"
+   sodipodi:docname="icon_mute_path.svg">
+  <metadata
+     id="metadata20">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs18" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1440"
+     inkscape:window-height="834"
+     id="namedview16"
+     showgrid="false"
+     inkscape:zoom="9.8333333"
+     inkscape:cx="11.338983"
+     inkscape:cy="7.9322034"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2" />
+  <g
+     transform="matrix(1.7337733,0,0,1.7337733,-2.4675466,-46.510151)"
+     id="g4">
+    <g
+       transform="matrix(2,0,0,2,-2,-35.464102)"
+       id="g6">
+      <g
+         transform="matrix(-0.70710678,0.70710678,-0.70710678,-0.70710678,40.956162,54.634467)"
+         id="g10" />
+    </g>
+  </g>
+  <path
+     style="color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+     d="M 18.34375 1.1875 L 8.375 10.21875 L 1 10.71875 L 1 21.09375 L 8.375 21.8125 L 18.34375 30.625 L 18.34375 1.1875 z M 22.21875 10.375 L 20 12.59375 L 23.3125 15.90625 L 20 19.21875 L 22.21875 21.4375 L 25.5 18.125 L 28.8125 21.4375 L 31.03125 19.21875 L 27.71875 15.90625 L 31.03125 12.59375 L 28.8125 10.375 L 25.5 13.6875 L 22.21875 10.375 z "
+     id="rect3019" />
+</svg>
