@@ -361,14 +361,11 @@ object GraphemeViewImpl {
           g.fillRect(0, 0, w, h)
 
           val total     = graphemeModel.bounds
-          // val visible    = graphemeModel.visible
           val clipOrig  = g.getClip
-          // val strkOrig  = g.getStroke
           val cr        = clipOrig.getBounds
           val visStart  = screenToFrame(cr.x).toLong
           val visStop   = screenToFrame(cr.x + cr.width).toLong + 1 // plus one to avoid glitches
-
-          val sel = selectionModel
+          val sel       = selectionModel
 
           g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 

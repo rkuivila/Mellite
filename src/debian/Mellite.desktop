@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Mellite
+Version=2.2.0-SNAPSHOT
+GenericName=Mellite
+Comment=Mellite Computer Music Environment
+Exec=/usr/share/mellite/bin/mellite %F
+StartupWMClass=de-sciss-mellite-Mellite
+Icon=/usr/share/mellite/Mellite.png
+Categories=Audio;AudioVideo;Music
+Terminal=false
+Type=Application

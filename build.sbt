@@ -1,13 +1,18 @@
+import com.typesafe.sbt.packager.linux.LinuxPackageMapping
+
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
-lazy val fullDescr                  = "A computer music application based on SoundProcesses"
+lazy val appDescription             = "A computer music application based on SoundProcesses"
 lazy val projectVersion             = "2.2.0-SNAPSHOT"
 
 lazy val loggingEnabled             = true
 
+lazy val authorName                 = "Hanns Holger Rutz"
+lazy val authorEMail                = "contact@sciss.de"
+
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "3.4.1-SNAPSHOT"
+lazy val soundProcessesVersion      = "3.4.1"
 lazy val interpreterPaneVersion     = "1.7.3"
 lazy val scalaColliderUGenVersion   = "1.14.1"
 lazy val lucreVersion               = "3.3.1"
@@ -21,7 +26,7 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "2.5.0-SNAPSHOT"
+lazy val nuagesVersion              = "2.5.0"
 lazy val scalaColliderSwingVersion  = "1.28.0"
 lazy val lucreSwingVersion          = "1.3.0"
 lazy val swingPlusVersion           = "0.2.1"
@@ -33,9 +38,13 @@ lazy val raphaelIconsVersion        = "1.0.3"
 lazy val pdflitzVersion             = "1.2.1"
 lazy val subminVersion              = "0.2.0"
 
-// ----
+// ---- app packaging ----
 
-lazy val main = "de.sciss.mellite.Mellite"
+lazy val appMainClass               = Some("de.sciss.mellite.Mellite")
+def appName                         = baseName
+def appNameL                        = baseNameL
+
+// ---- common ----
 
 lazy val commonSettings = Seq(
   version            := projectVersion,
@@ -78,32 +87,79 @@ lazy val commonSettings = Seq(
   }
 )
 
+// ---- packaging ----
+
+//////////////// universal (directory) installer
+lazy val pkgUniversalSettings = Seq(
+  executableScriptName /* in Universal */ := appNameL,
+  // NOTE: doesn't work on Windows, where we have to
+  // provide manual file `MELLITE_config.txt` instead!
+  javaOptions in Universal ++= Seq(
+    // -J params will be added as jvm parameters
+    "-J-Xmx1024m"
+    // others will be added as app parameters
+    // "-Dproperty=true",
+  ),
+  // Since our class path is very very long,
+  // we use instead the wild-card, supported
+  // by Java 6+. In the packaged script this
+  // results in something like `java -cp "../lib/*" ...`.
+  // NOTE: `in Universal` does not work. It therefore
+  // also affects debian package building :-/
+  // We need this settings for Windows.
+  scriptClasspath /* in Universal */ := Seq("*")
+)
+
+//////////////// debian installer
+lazy val pkgDebianSettings = Seq(
+  name                      in Debian := appName,
+  packageName               in Debian := appNameL,
+  name                      in Linux  := appName,
+  packageName               in Linux  := appNameL,
+  packageSummary            in Debian := appDescription,
+  mainClass                 in Debian := appMainClass,
+  maintainer                in Debian := s"$authorName <$authorEMail>",
+  debianPackageDependencies in Debian += "java7-runtime",
+  packageDescription        in Debian :=
+    """Mellite is a computer music environment,
+      | a desktop application based on SoundProcesses.
+      | It manages workspaces of musical objects, including
+      | sound processes, timelines, code fragments, or
+      | live improvisation sets.
+      |""".stripMargin,
+  // include all files in src/debian in the installed base directory
+  linuxPackageMappings      in Debian ++= {
+    val n     = (name            in Debian).value.toLowerCase
+    val dir   = (sourceDirectory in Debian).value / "debian"
+    val f1    = (dir * "*").filter(_.isFile).get  // direct child files inside `debian` folder
+    val f2    = ((dir / "doc") * "*").get
+    //
+    def readOnly(in: LinuxPackageMapping) =
+      in.withUser ("root")
+        .withGroup("root")
+        .withPerms("0644")  // http://help.unc.edu/help/how-to-use-unix-and-linux-file-permissions/
+    //
+    val aux   = f1.map { fIn => packageMapping(fIn -> s"/usr/share/$n/${fIn.name}") }
+    val doc   = f2.map { fIn => packageMapping(fIn -> s"/usr/share/doc/$n/${fIn.name}") }
+    (aux ++ doc).map(readOnly)
+  }
+)
+
 // ---- projects ----
 
-lazy val root = Project(id = baseNameL, base = file(".")).
-  aggregate(core, views).
-  dependsOn(core, views).
-  settings(commonSettings).
-  settings(
-    name := baseName,
-    description := fullDescr,
-    mainClass in (Compile,run) := Some(main),
+lazy val root = Project(id = baseNameL, base = file("."))
+  .aggregate(core, views)
+  .dependsOn(core, views)
+  .enablePlugins(JavaAppPackaging, DebianPlugin)
+  .settings(commonSettings)
+  .settings(
+    name                       := baseName,
+    description                := appDescription,
+    mainClass in Compile       := appMainClass, // ! cf. https://stackoverflow.com/questions/23664963
     publishArtifact in (Compile, packageBin) := false, // there are no binaries
     publishArtifact in (Compile, packageDoc) := false, // there are no javadocs
     publishArtifact in (Compile, packageSrc) := false,  // there are no sources
-    // ---- packaging ----
-    //    appbundle.icon      := Some(baseDirectory.value / ".." / "icons" / "application.png"),
-    //    appbundle.target    := baseDirectory.value / "..",
-    //    appbundle.signature := "Ttm ",
-    //    appbundle.javaOptions ++= Seq("-Xms2048m", "-Xmx2048m", "-XX:PermSize=256m", "-XX:MaxPermSize=512m"),
-    //    appbundle.documents += appbundle.Document(
-    //      name       = "Mellite Document",
-    //      role       = appbundle.Document.Editor,
-    //      icon       = Some(baseDirectory.value / ".." / "icons" / "document.png"),
-    //      extensions = Seq("mllt"),
-    //      isPackage  = true
-    //    ),
-    mainClass             in assembly := Some(main),
+    mainClass             in assembly := appMainClass,
     target                in assembly := baseDirectory.value,
     assemblyJarName       in assembly := s"$baseName.jar",
     assemblyMergeStrategy in assembly := {
@@ -113,10 +169,13 @@ lazy val root = Project(id = baseNameL, base = file(".")).
         oldStrategy(x)
     }
   )
+  .settings(pkgUniversalSettings)
+  .settings(useNativeZip) // cf. https://github.com/sbt/sbt-native-packager/issues/334
+  .settings(pkgDebianSettings)
 
-lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
-  settings(commonSettings).
-  settings(
+lazy val core = Project(id = s"$baseNameL-core", base = file("core"))
+  .settings(commonSettings)
+  .settings(
     name        := s"$baseName-core",
     description := "Core layer for Mellite",
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
@@ -138,13 +197,13 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core")).
     initialCommands in console := "import de.sciss.mellite._"
   )
 
-lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
-  dependsOn(core).
-  enablePlugins(BuildInfoPlugin).
-  settings(commonSettings).
-  settings(
+lazy val views = Project(id = s"$baseNameL-views", base = file("views"))
+  .dependsOn(core)
+  .enablePlugins(BuildInfoPlugin)
+  .settings(commonSettings)
+  .settings(
     name        := s"$baseName-views",
-    description := fullDescr,
+    description := appDescription,
     libraryDependencies ++= Seq(
       "de.sciss" %% "soundprocesses-views"            % soundProcessesVersion,      // computer-music framework
       "de.sciss" %% "soundprocesses-compiler"         % soundProcessesVersion,      // computer-music framework
@@ -162,12 +221,11 @@ lazy val views = Project(id = s"$baseNameL-views", base = file("views")).
       "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
       "de.sciss" %  "submin"                          % subminVersion               // dark skin
     ),
-    mainClass in (Compile,run) := Some(main),
+    mainClass in (Compile,run) := appMainClass,
     initialCommands in console :=
       """import de.sciss.mellite._""".stripMargin,
     fork in run := true,  // required for shutdown hook, and also the scheduled thread pool, it seems
     // ---- build-info ----
-    // sourceGenerators in Compile <+= buildInfo,
     buildInfoKeys := Seq("name" -> baseName /* name */, organization, version, scalaVersion, description,
       BuildInfoKey.map(homepage) { case (k, opt) => k -> opt.get },
       BuildInfoKey.map(licenses) { case (_, Seq( (lic, _) )) => "license" -> lic }

@@ -17,7 +17,9 @@ The Mellite icon is based on the file [MELLITE Taillée Hongrie.jpg](https://de.
 
 ## download
 
-A binary version is provided through [Bintray](https://bintray.com/sciss/generic/Mellite).
+- A binary (executable) version is provided via [GitHub releases](https://github.com/Sciss/Mellite/releases/latest).
+  We provide a universal zip for all platforms as well as a dedicated Debian package.
+- The source code can be downloaded from [github.com/Sciss/Mellite](http://github.com/Sciss/Mellite).
 
 ## linking
 
@@ -25,21 +27,27 @@ The following artifact is available from Maven Central:
 
     "de.sciss" %% "mellite" % v
 
-The current version `v` is `"1.7.0"`.
+The current stable version `v` is `"1.7.0"`. The experimental version is `"2.2.0-SNAPSHOT"`.
 
 ## building
 
-Mellite builds with sbt 0.13 and Scala 2.11, 2.10. The dependencies should be downloaded automatically from Maven Central repository, except for snapshots during development.
+Mellite builds with sbt 0.13 and Scala 2.11, 2.10. The dependencies will be downloaded automatically from Maven Central repository, except for snapshots during development.
 
 Dependencies not found are all available from their respective [GitHub repositories](https://github.com/Sciss?tab=repositories), so in case you want to build a snapshot version, you may need to check out these projects and publish them yourself using `sbt publish-local`.
 
-To build a standalone application, run `sbt assembly`. This creates a fat `.jar` file in the root directory that can be executed via double-click. There is also a tiny shell script `Mellite.command` that will launch this jar file.
-
-On Linux, you can copy `Mellite.desktop` into `~/.local/share/applications` and edit this file to use the correct installation paths. You can then add Mellite to your desktop manager (GNOME, KDE, etc.)
+See section 'running' for ways of building and installing standalone bundles.
 
 ## contributing
 
 Please see the file [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## running
+
+The standalone jar, created via `sbt assembly` produces `Mellite.jar` which is double-clickable and can be run via:
+
+    $ java -jar Mellite.jar
+
+Runnable packages can be created via `sbt universal:packageBin` (all platforms) or `sbt debian:packageBin` (Debian).
 
 ## documentation
 
