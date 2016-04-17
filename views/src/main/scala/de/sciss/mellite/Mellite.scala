@@ -15,7 +15,6 @@ package de.sciss
 package mellite
 
 import javax.swing.UIManager
-import javax.swing.plaf.ColorUIResource
 
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
@@ -25,7 +24,6 @@ import de.sciss.lucre.synth.{Server, Txn}
 import de.sciss.mellite.gui.impl.document.DocumentHandlerImpl
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.nuages.Wolkenpumpe
-import de.sciss.synth.proc
 import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
 import scala.collection.immutable.{Seq => ISeq}
@@ -36,17 +34,17 @@ import scala.util.control.NonFatal
 
 object Mellite extends SwingApplicationImpl("Mellite") with Application {
 
-  // import de.sciss.synth.proc
-  //  //  lucre.event    .showLog = true
-  //  //  lucre.confluent.showLog = true
-  //  proc.showLog            = true
-  //  proc.showAuralLog       = true
-  //  proc.showTransportLog   = true
-  //  showLog                 = true
-  //  showTimelineLog         = true
-  //  de.sciss.lucre.bitemp.impl.BiGroupImpl.showLog = true
-  //  // gui.impl.timeline.TimelineViewImpl.DEBUG = true
-  //  de.sciss.lucre.event.showLog = true
+  import de.sciss.synth.proc
+//  //  lucre.event    .showLog = true
+//  //  lucre.confluent.showLog = true
+//  proc.showLog            = true
+//  proc.showAuralLog       = true
+//  proc.showTransportLog   = true
+//  showLog                 = true
+//  showTimelineLog         = true
+//  de.sciss.lucre.bitemp.impl.BiGroupImpl.showLog = true
+//  // gui.impl.timeline.TimelineViewImpl.DEBUG = true
+//  de.sciss.lucre.event.showLog = true
 
   def version : String = buildInfString("version")
   def license : String = buildInfString("license")
