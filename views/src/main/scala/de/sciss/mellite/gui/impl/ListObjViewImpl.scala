@@ -112,8 +112,9 @@ object ListObjViewImpl {
       convertEditValue(value).flatMap { newValue =>
         expr match {
           case exprType.Var(vr) =>
+            import de.sciss.equal.Implicits._
             vr() match {
-              case Expr.Const(`newValue`) => None
+              case Expr.Const(x) if x === newValue => None
               case _ =>
                 // val imp = ExprImplicits[S]
                 // import imp._

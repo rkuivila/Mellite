@@ -28,7 +28,7 @@ import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.sonogram.{Overview => SonoOverview}
 import de.sciss.span.Span
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{AudioCue, Grapheme, ObjKeys, Proc}
+import de.sciss.synth.proc.{AudioCue, ObjKeys, Proc}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.language.implicitConversions
@@ -40,7 +40,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Cogs)
   val prefix    = "Proc"
   val humanName = "Process"
-  def tpe = Proc
+  def tpe       = Proc
   def category  = ObjView.categComposition
 
   def hasMakeDialog = true
@@ -71,13 +71,14 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, ProcObjView[S]]
 
-  private final val DEBUG = false
+  // private final val DEBUG = false
 
   private def addLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
     map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
 
   private def removeLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] = {
-    val newVec = map.getOrElse(key, Vec.empty).filterNot(_ == value)
+    import de.sciss.equal.Implicits._
+    val newVec = map.getOrElse(key, Vec.empty).filterNot(_ === value)
     if (newVec.isEmpty) map - key else map + (key -> newVec)
   }
 
@@ -86,19 +87,19 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     */
   def mkTimelineView[S <: Sys[S]](timedID: S#ID, span: SpanLikeObj[S], obj: Proc[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): ProcObjView.Timeline[S] = {
-    val proc    = obj
+    // val proc    = obj
     // val inputs  = proc.inputs
-    val outputs = proc.outputs
+    // val outputs = proc.outputs
 
     val attr    = obj.attr
     val bus     = attr.$[IntObj](ObjKeys.attrBus    ).map(_.value)
     val res = new TimelineImpl[S](tx.newHandle(obj), busOption = bus, context = context)
       .init(timedID, span, obj)
 
-    lazy val idH = tx.newHandle(timedID)
-
-    import context.{scanMap, viewMap}
-
+//    lazy val idH = tx.newHandle(timedID)
+//
+//    import context.{scanMap, viewMap}
+//
 //    def buildLinks(isInput: Boolean): Unit = {
 //      val scans = if (isInput) inputs else outputs
 //      scans.iterator.foreach { case (key, scan) =>

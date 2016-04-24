@@ -18,7 +18,7 @@ lazy val scalaColliderUGenVersion   = "1.14.1"
 lazy val lucreVersion               = "3.3.1"
 lazy val fscapeJobsVersion          = "1.5.0"
 lazy val strugatzkiVersion          = "2.11.0"
-lazy val equalVersion               = "0.1.0"
+lazy val equalVersion               = "0.1.1"
 lazy val scalaOSCVersion            = "1.1.5"
 lazy val playJSONVersion            = "0.4.0"
 
