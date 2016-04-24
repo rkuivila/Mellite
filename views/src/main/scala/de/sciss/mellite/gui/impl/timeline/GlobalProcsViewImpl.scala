@@ -30,9 +30,8 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.edit.{EditTimelineInsertObj, Edits}
+import de.sciss.mellite.gui.edit.EditTimelineInsertObj
 import de.sciss.synth.proc.{Proc, Timeline}
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.annotation.switch
 import scala.collection.immutable.{IndexedSeq => Vec}
@@ -238,7 +237,7 @@ object GlobalProcsViewImpl {
               val pv    = procSeq(dl.getRow)
               val drag  = support.getTransferable.getTransferData(ListObjView.Flavor)
                 .asInstanceOf[ListObjView.Drag[S]]
-              import TypeCheckedTripleEquals._
+              import de.sciss.equal.Implicits._
               drag.workspace === workspace && {
                 drag.view match {
                   case iv: IntObjView[S] =>

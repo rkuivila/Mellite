@@ -19,7 +19,6 @@ import de.sciss.desktop.KeyStrokes._
 import de.sciss.desktop.Window
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.requireEDT
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.language.existentials
 import scala.swing.Action
@@ -68,7 +67,7 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
           "<p>Ok to proceed?</body></html>"
         val opt = desktop.OptionPane.confirmation(message = msg, messageType = desktop.OptionPane.Message.Warning,
           optionType = desktop.OptionPane.Options.OkCancel)
-        import TypeCheckedTripleEquals._
+        import de.sciss.equal.Implicits._
         opt.show(window, "Close Workspace") === desktop.OptionPane.Result.Ok
 
       case _=> true

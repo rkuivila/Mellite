@@ -18,7 +18,7 @@ lazy val scalaColliderUGenVersion   = "1.14.1"
 lazy val lucreVersion               = "3.3.1"
 lazy val fscapeJobsVersion          = "1.5.0"
 lazy val strugatzkiVersion          = "2.11.0"
-lazy val scalaUtilsVersion          = "2.1.7"
+lazy val equalVersion               = "0.1.0"
 lazy val scalaOSCVersion            = "1.1.5"
 lazy val playJSONVersion            = "0.4.0"
 
@@ -190,7 +190,7 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core"))
       "de.sciss"        %% "fscapejobs"               % fscapeJobsVersion,        // remote FScape invocation
       "de.sciss"        %% "strugatzki"               % strugatzkiVersion,        // feature extraction
       "de.sciss"        %% "span"                     % spanVersion,              // makes sbt happy :-E
-      "org.scalautils"  %% "scalautils"               % scalaUtilsVersion,        // type-safe equals
+      "de.sciss"        %% "equal"                    % equalVersion,             // type-safe equals
       "de.sciss"        %% "scalaosc"                 % scalaOSCVersion,          // important fixes
       "de.sciss"        %% "play-json-sealed"         % playJSONVersion
     ),

@@ -23,7 +23,6 @@ import de.sciss.lucre.stm.{Obj, Sys}
 import de.sciss.swingplus.Labeled
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Folder
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.swing.Dialog
@@ -83,7 +82,7 @@ object ActionArtifactLocation {
         opt.title = s"Choose Location for ${file.name}"
         val optRes = opt.show(window).id
         // println(s"res = $optRes, ok = ${OptionPane.Result.Ok.id}, cancel = ${OptionPane.Result.Cancel.id}")
-        import TypeCheckedTripleEquals._
+        import equal.Implicits._
         if (optRes === 0) {
           ggList.selection.items.headOption.map(v => Left(v.value))
         } else if (optRes === 1) {

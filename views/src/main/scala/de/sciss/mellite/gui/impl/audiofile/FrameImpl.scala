@@ -21,7 +21,6 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.swing.CellView
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc.AudioCue
-import org.scalautils.TypeCheckedTripleEquals
 
 object FrameImpl {
   def apply[S <: Sys[S]](obj: AudioCue.Obj[S])
@@ -31,7 +30,7 @@ object FrameImpl {
     val name0     = AttrCellView.name(obj)
     val file      = obj.value.artifact
     val fileName  = file.base
-    import TypeCheckedTripleEquals._
+    import de.sciss.equal.Implicits._
     val name      = name0.map { n =>
       if (n === fileName) n else s"$n- $fileName"
     }

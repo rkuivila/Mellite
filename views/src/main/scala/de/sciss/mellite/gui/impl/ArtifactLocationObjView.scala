@@ -28,7 +28,6 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditArtifactLocation
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Implicits._
-import org.scalautils.TypeCheckedTripleEquals
 
 object ArtifactLocationObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = ArtifactLocation[~] // Elem[S]
@@ -95,7 +94,7 @@ object ArtifactLocationObjView extends ListObjView.Factory {
       }
       dirOpt.flatMap { newDir =>
         val loc = obj
-        import TypeCheckedTripleEquals._
+        import de.sciss.equal.Implicits._
         if (loc.directory === newDir) None else ArtifactLocation.Var.unapply(loc).map { mod =>
           EditArtifactLocation(mod, newDir)
         }

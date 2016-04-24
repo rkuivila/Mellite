@@ -26,7 +26,6 @@ import de.sciss.mellite.ProcActions.{Move, Resize}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.{SynthGraph, proc}
 import de.sciss.synth.proc.{SynthGraphObj, Code, ObjKeys, Proc}
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.breakOut
 import scala.util.control.NonFatal
@@ -236,7 +235,7 @@ object Edits {
           case other => other
         }
 
-        import TypeCheckedTripleEquals._
+        import de.sciss.equal.Implicits._
         val newSpanEx = SpanLikeObj.newConst[S](newSpan)
         if (newSpanEx === oldSpan) None else {
           val name  = "Resize"
@@ -282,7 +281,7 @@ object Edits {
         case Some(IntObj.Var(vr)) => vr() + deltaTrack
         case other => other.fold(0)(_.value) + deltaTrack
       }
-      import TypeCheckedTripleEquals._
+      import de.sciss.equal.Implicits._
       val newTrackOpt = if (newTrack === IntObj.newConst[S](0)) None else Some(newTrack)
       implicit val intTpe = IntObj
       val edit = EditAttrMap.expr[S, Int, IntObj]("Adjust Track Placement", obj,

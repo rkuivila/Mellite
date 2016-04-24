@@ -37,7 +37,6 @@ import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
 import de.sciss.synth.proc.{AudioCue, TimeRef, Folder, Bounce, Code, Grapheme, Timeline}
 import de.sciss.synth.{proc, SynthGraph, addToTail}
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.blocking
@@ -210,7 +209,7 @@ object ActionBounceTimeline {
         }
         transformItemsCollected =  true
         ggTransform.items = transform
-        import TypeCheckedTripleEquals._
+        import equal.Implicits._
         for (t <- init.transform; lb <- transform.find(_.value === t)) {
           ggTransform.selection.item = lb
         }
@@ -289,7 +288,7 @@ object ActionBounceTimeline {
     val pSpan     = new GridPanel(0, 2)
     pSpan.hGap    = 4
     pSpan.contents ++= Seq(new Label("Channels:", EmptyIcon, Trailing), ggChannels)
-    import TypeCheckedTripleEquals._
+    import equal.Implicits._
     if (showSelection === SpanSelection) {
       ggSpanGroup.select(if (init.span.isEmpty) ggSpanAll else ggSpanUser)
       ggSpanUser.enabled   = tlSel.nonEmpty

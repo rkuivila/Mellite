@@ -33,7 +33,6 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.model.impl.ModelImpl
 import de.sciss.swingplus.DropMode
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.annotation.switch
 import scala.collection.breakOut
@@ -98,7 +97,7 @@ object AttrMapViewImpl {
 
     // helper method that executes model updates on the EDT
     private[this] def withRow(key: String)(fun: Int => Unit)(implicit tx: S#Tx): Unit = deferTx {
-      import TypeCheckedTripleEquals._
+      import de.sciss.equal.Implicits._
       val row = model.indexWhere(_._1 === key)
       if (row < 0) {
         warnNoView(key)
@@ -225,7 +224,7 @@ object AttrMapViewImpl {
 
         override def setValue(value: Any): Unit = value match {
           case view: ObjView[_] =>
-            import TypeCheckedTripleEquals._
+            import de.sciss.equal.Implicits._
             wrap.text = if (view.name === "<unnamed>") "" else view.name
             wrap.icon = view.icon
           case _ =>

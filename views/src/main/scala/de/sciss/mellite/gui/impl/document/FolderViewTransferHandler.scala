@@ -29,7 +29,6 @@ import de.sciss.lucre.swing.TreeTableView
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec}
 import de.sciss.synth.proc._
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.language.existentials
 import scala.util.Try
@@ -97,14 +96,13 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
                           (implicit tx: S#Tx): Option[UndoableEdit] = {
       // println(s"insert into $parent at index $idx")
 
+      import de.sciss.equal.Implicits._
       def isNested(c: Obj[S]): Boolean = c match {
         case objT: Folder[S] =>
-          import TypeCheckedTripleEquals._
           objT === newParent || objT.iterator.toList.exists(isNested)
         case _ => false
       }
 
-      import TypeCheckedTripleEquals._
       val isMove = dropAction === TransferHandler.MOVE
       val isCopy = dropAction === TransferHandler.COPY
 

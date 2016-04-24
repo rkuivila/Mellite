@@ -26,7 +26,6 @@ import de.sciss.lucre.{expr, stm}
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.synth
 import de.sciss.synth.proc.ObjKeys
-import org.scalautils.TypeCheckedTripleEquals
 
 final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Gain] {
@@ -62,7 +61,7 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
         case other =>
           other.fold(1.0)(_.value) * factor
       }
-      import TypeCheckedTripleEquals._
+      import de.sciss.equal.Implicits._
       val newGainOpt = if (newGain === DoubleObj.newConst[S](1.0)) None else Some(newGain)
       implicit val doubleTpe = DoubleObj
       val edit = EditAttrMap.expr[S, Double, DoubleObj](s"Adjust $name", obj, ObjKeys.attrGain, newGainOpt)

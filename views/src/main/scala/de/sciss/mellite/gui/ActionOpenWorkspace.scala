@@ -25,7 +25,6 @@ import de.sciss.lucre.swing.{CellView, defer}
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc
 import de.sciss.synth.proc.SoundProcesses
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Future, blocking}
@@ -84,7 +83,7 @@ object ActionOpenWorkspace extends Action("Open...") {
 //    } .foreach(_.front())
 
   def perform(folder: File): Unit = {
-    import TypeCheckedTripleEquals._
+    import de.sciss.equal.Implicits._
     val fOpt = Some(folder)
     dh.documents.find(_.folder === fOpt).fold(doOpen(folder)) { doc =>
       val doc1 = doc.asInstanceOf[Workspace[S] forSome { type S <: Sys[S] }]

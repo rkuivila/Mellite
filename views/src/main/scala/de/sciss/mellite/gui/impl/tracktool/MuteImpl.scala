@@ -27,7 +27,6 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.TrackTool.Mute
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.synth.proc.ObjKeys
-import org.scalautils.TypeCheckedTripleEquals
 
 object MuteImpl {
   private lazy val cursor: Cursor = {
@@ -54,7 +53,7 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       case Some(BooleanObj.Var(vr)) => val vOld = vr().value; !vOld
       case other => !other.exists(_.value)
     }
-    import TypeCheckedTripleEquals._
+    import de.sciss.equal.Implicits._
     val newMuteOpt = if (newMute === BooleanObj.newConst[S](false)) None else Some(newMute)
     implicit val booleanTpe = BooleanObj
     val edit = EditAttrMap.expr[S, Boolean, BooleanObj](s"Adjust $name", obj, ObjKeys.attrMute, newMuteOpt)

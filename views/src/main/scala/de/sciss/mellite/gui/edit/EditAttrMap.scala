@@ -20,7 +20,6 @@ import javax.swing.undo.{AbstractUndoableEdit, UndoableEdit}
 import de.sciss.lucre.expr.{Expr, Type}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Obj, Sys}
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.language.higherKinds
 import scala.reflect.ClassTag
@@ -82,7 +81,7 @@ object EditAttrMap {
       opt match {
         case Some(tpe.Var(vr)) =>
           // see above for an explanation about how we preserve a variable
-          import TypeCheckedTripleEquals._
+          import de.sciss.equal.Implicits._
           if (vr === elem) throw new IllegalArgumentException(s"Cyclic reference setting variable $vr")
           vr() = elem
         case _ => map.put(key, elem) // Obj(mkElem(elem)))

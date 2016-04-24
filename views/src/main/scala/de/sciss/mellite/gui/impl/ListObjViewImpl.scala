@@ -24,7 +24,6 @@ import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.stm
 import de.sciss.synth.proc.Confluent
-import org.scalautils.TypeCheckedTripleEquals
 
 import scala.language.higherKinds
 import scala.swing.{CheckBox, Component, Label}
@@ -113,9 +112,8 @@ object ListObjViewImpl {
       convertEditValue(value).flatMap { newValue =>
         expr match {
           case exprType.Var(vr) =>
-            import TypeCheckedTripleEquals._
             vr() match {
-              case Expr.Const(x) if x === newValue => None
+              case Expr.Const(`newValue`) => None
               case _ =>
                 // val imp = ExprImplicits[S]
                 // import imp._

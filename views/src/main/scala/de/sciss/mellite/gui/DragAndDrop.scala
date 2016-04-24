@@ -16,7 +16,6 @@ package mellite
 package gui
 
 import java.awt.datatransfer.{UnsupportedFlavorException, Transferable, DataFlavor}
-import org.scalautils.TypeCheckedTripleEquals
 
 import collection.breakOut
 
@@ -35,7 +34,7 @@ object DragAndDrop {
       // println(s"My flavor is $flavor")
       def getTransferDataFlavors: Array[DataFlavor] = Array(flavor) // flavors.toArray
       def isDataFlavorSupported(_flavor: DataFlavor): Boolean = {
-        import TypeCheckedTripleEquals._
+        import equal.Implicits._
         _flavor === flavor
       }
       def getTransferData(_flavor: DataFlavor): AnyRef  = {
