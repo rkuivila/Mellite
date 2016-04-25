@@ -24,6 +24,7 @@ import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc.{FadeSpec, Timeline}
 
 import scala.language.{higherKinds, implicitConversions}
+import scala.swing.Graphics2D
 
 object TimelineObjView {
   type SelectionModel[S <: stm.Sys[S]] = gui.SelectionModel[S, TimelineObjView[S]]
@@ -98,4 +99,7 @@ trait TimelineObjView[S <: stm.Sys[S]] extends ObjView[S] {
 
   var trackIndex : Int
   var trackHeight: Int
+
+  def paintBack (g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering): Unit
+  def paintFront(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering): Unit
 }

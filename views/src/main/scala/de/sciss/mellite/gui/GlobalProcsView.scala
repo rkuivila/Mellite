@@ -30,7 +30,7 @@ object GlobalProcsView {
                          undoManager: UndoManager): GlobalProcsView[S] =
       Impl(group, selectionModel)
 }
-trait GlobalProcsView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] {
+trait GlobalProcsView[S <: stm.Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] {
   def tableComponent: Table
 
   def selectionModel: SelectionModel[S, ProcObjView.Timeline[S]]

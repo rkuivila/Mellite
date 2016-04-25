@@ -25,11 +25,19 @@ trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with Timeli
 
   import TrackTools._
 
-  //  private var _toolState = Option.empty[Any]
-  //  final protected def toolState = _toolState
-
   protected var toolState: Option[Any]
   protected var rubberState: TrackTool.DragRubber = EmptyRubber
+
+  private[this] var _trackIndexOffset = 0
+
+  def trackIndexOffset: Int = _trackIndexOffset
+  def trackIndexOffset_=(value: Int): Unit = if (_trackIndexOffset != value) {
+    _trackIndexOffset = value
+    repaint()
+  }
+
+  final def screenToTrack(y    : Int): Int = y / TimelineView.TrackScale + trackIndexOffset
+  final def trackToScreen(track: Int): Int = (track - trackIndexOffset) * TimelineView.TrackScale
 
   private[this] val toolListener: TrackTool.Listener = {
     // case TrackTool.DragBegin =>

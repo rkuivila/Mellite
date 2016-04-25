@@ -15,14 +15,13 @@ package de.sciss.mellite
 package gui
 package impl.timeline
 
-import de.sciss.lucre.expr.{IntObj, BooleanObj, DoubleObj, SpanLikeObj}
+import de.sciss.lucre.expr.{BooleanObj, DoubleObj, SpanLikeObj}
+import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.stm
 import de.sciss.mellite.gui.TimelineObjView.{Context, Factory}
-import de.sciss.mellite.gui.impl.{ActionView, GenericObjView, ObjViewImpl, ProcObjView}
-import de.sciss.span.SpanLike
+import de.sciss.mellite.gui.impl.{ActionView, GenericObjView, ProcObjView}
 import de.sciss.synth.proc.{FadeSpec, ObjKeys, Timeline}
 
 object TimelineObjViewImpl {
@@ -54,67 +53,7 @@ object TimelineObjViewImpl {
 
   // -------- Generic --------
 
-//  def initGainAttrs[S <: stm.Sys[S]](span: SpanLikeObj[S], obj: Obj[S], view: TimelineObjView.HasGain)
-//                                (implicit tx: S#Tx): Unit = {
-//    val attr    = obj.attr
-//    view.gain   = attr.$[DoubleObj](ObjKeys.attrGain).fold(1.0)(_.value)
-//  }
-
-//  def initMuteAttrs[S <: stm.Sys[S]](span: SpanLikeObj[S], obj: Obj[S], view: TimelineObjView.HasMute)
-//                                (implicit tx: S#Tx): Unit = {
-//    val attr    = obj.attr
-//    view.muted  = attr.$[BooleanObj](ObjKeys.attrMute).exists(_.value)
-//  }
-
-//  def initFadeAttrs[S <: stm.Sys[S]](span: SpanLikeObj[S], obj: Obj[S], view: TimelineObjView.HasFade)
-//                                (implicit tx: S#Tx): Unit = {
-//    val attr          = obj.attr
-//    view.fadeIn  = attr.$[FadeSpec.Obj](ObjKeys.attrFadeIn ).fold(TrackTool.EmptyFade)(_.value)
-//    view.fadeOut = attr.$[FadeSpec.Obj](ObjKeys.attrFadeOut).fold(TrackTool.EmptyFade)(_.value)
-//  }
-
-  trait BasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with ObjViewImpl.Impl[S] {
-    var trackIndex  : Int = _
-    var trackHeight : Int = _
-    // var nameOption  : Option[String] = _
-    var spanValue   : SpanLike = _
-    var spanH       : stm.Source[S#Tx, SpanLikeObj[S]] = _
-
-    protected var idH  : stm.Source[S#Tx, S#ID] = _
-
-    def span(implicit tx: S#Tx) = spanH()
-    def id  (implicit tx: S#Tx) = idH()
-
-    def initAttrs(id: S#ID, span: SpanLikeObj[S], obj: Obj[S])(implicit tx: S#Tx): this.type = {
-      val attr      = obj.attr
-
-      implicit val intTpe = IntObj
-      val trackIdxView = AttrCellView[S, Int, IntObj](attr, TimelineObjView.attrTrackIndex)
-      disposables ::= trackIdxView.react { implicit tx => opt =>
-        deferTx {
-          trackIndex = opt.getOrElse(0)
-        }
-        fire(ObjView.Repaint(this))
-      }
-      trackIndex   = trackIdxView().getOrElse(0)
-
-      val trackHView = AttrCellView[S, Int, IntObj](attr, TimelineObjView.attrTrackHeight)
-      disposables ::= trackHView.react { implicit tx => opt =>
-        deferTx {
-          trackHeight = opt.getOrElse(4)
-        }
-        fire(ObjView.Repaint(this))
-      }
-      trackHeight   = trackHView().getOrElse(4)
-
-      spanH         = tx.newHandle(span)
-      spanValue     = span.value
-      idH           = tx.newHandle(id)
-      initAttrs(obj)
-    }
-  }
-
-  trait HasGainImpl[S <: stm.Sys[S]] extends BasicImpl[S] with TimelineObjView.HasGain {
+  trait HasGainImpl[S <: stm.Sys[S]] extends TimelineObjViewBasicImpl[S] with TimelineObjView.HasGain {
     var gain: Double = _
 
     override def initAttrs(id: S#ID, span: SpanLikeObj[S], obj: Obj[S])(implicit tx: S#Tx): this.type = {
@@ -133,7 +72,7 @@ object TimelineObjViewImpl {
     }
   }
 
-  trait HasMuteImpl[S <: stm.Sys[S]] extends BasicImpl[S] with TimelineObjView.HasMute {
+  trait HasMuteImpl[S <: stm.Sys[S]] extends TimelineObjViewBasicImpl[S] with TimelineObjView.HasMute {
     var muted: Boolean = _
 
     override def initAttrs(id: S#ID, span: SpanLikeObj[S], obj: Obj[S])(implicit tx: S#Tx): this.type = {
@@ -152,7 +91,7 @@ object TimelineObjViewImpl {
     }
   }
 
-  trait HasFadeImpl[S <: stm.Sys[S]] extends BasicImpl[S] with TimelineObjView.HasFade {
+  trait HasFadeImpl[S <: stm.Sys[S]] extends TimelineObjViewBasicImpl[S] with TimelineObjView.HasFade {
     var fadeIn : FadeSpec = _
     var fadeOut: FadeSpec = _
 

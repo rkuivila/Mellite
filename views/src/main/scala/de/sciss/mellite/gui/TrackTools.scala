@@ -31,11 +31,11 @@ import de.sciss.span.Span
 import de.sciss.lucre.synth.Sys
 
 object TrackTools {
-  sealed trait Update[S <: Sys[S]]
-  final case class ToolChanged          [S <: Sys[S]](change: Change[TrackTool[S, _]]) extends Update[S]
-  final case class VisualBoostChanged   [S <: Sys[S]](change: Change[Float          ]) extends Update[S]
-  final case class FadeViewModeChanged  [S <: Sys[S]](change: Change[FadeViewMode   ]) extends Update[S]
-  final case class RegionViewModeChanged[S <: Sys[S]](change: Change[RegionViewMode ]) extends Update[S]
+  sealed trait Update[S <: stm.Sys[S]]
+  final case class ToolChanged          [S <: stm.Sys[S]](change: Change[TrackTool[S, _]]) extends Update[S]
+  final case class VisualBoostChanged   [S <: stm.Sys[S]](change: Change[Float          ]) extends Update[S]
+  final case class FadeViewModeChanged  [S <: stm.Sys[S]](change: Change[FadeViewMode   ]) extends Update[S]
+  final case class RegionViewModeChanged[S <: stm.Sys[S]](change: Change[RegionViewMode ]) extends Update[S]
 
   def apply  [S <: Sys[S]](canvas: TimelineProcCanvas[S]): TrackTools[S] = new ToolsImpl(canvas)
   def palette[S <: Sys[S]](control: TrackTools[S], tools: Vec[TrackTool[S, _]]): Component =
@@ -76,7 +76,7 @@ sealed trait FadeViewMode {
   def id: Int
 }
 
-trait TrackTools[S <: Sys[S]] extends Model[TrackTools.Update[S]] {
+trait TrackTools[S <: stm.Sys[S]] extends Model[TrackTools.Update[S]] {
   var currentTool   : TrackTool[S, _]
   var visualBoost   : Float
   var fadeViewMode  : FadeViewMode
@@ -117,6 +117,12 @@ object TrackTool {
   final case class Mute    (engaged: Boolean)
   final case class Fade    (deltaFadeIn: Long, deltaFadeOut: Long, deltaFadeInCurve: Float, deltaFadeOutCurve: Float)
 
+  final val NoMove      = Move(deltaTime = 0L, deltaTrack = 0, copy = false)
+  final val NoResize    = Resize(deltaStart = 0L, deltaStop = 0L)
+  final val NoGain      = Gain(1f)
+  final val NoFade      = Fade(0L, 0L, 0f, 0f)
+  final val NoFunction  = Function(-1, -1, Span(0L, 0L))
+
   final case class Function(trackIndex: Int, trackHeight: Int, span: Span)
     extends Update[Nothing] with Rectangular
 
@@ -153,7 +159,7 @@ object TrackTool {
   * @tparam A   the type of element that represents an ongoing
   *             edit state (typically during mouse drag).
   */
-trait TrackTool[S <: Sys[S], A] extends Model[TrackTool.Update[A]] {
+trait TrackTool[S <: stm.Sys[S], A] extends Model[TrackTool.Update[A]] {
   /** The mouse cursor used when the tool is active. */
   def defaultCursor: Cursor
   /** The icon to use in a tool bar. */

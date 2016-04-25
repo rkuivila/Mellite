@@ -22,7 +22,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Cursor, Obj}
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.grapheme.GraphemeObjViewImpl
-import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
+import de.sciss.mellite.gui.impl.timeline.{TimelineObjViewBasicImpl, TimelineObjViewImpl}
 
 import scala.swing.{Component, Label}
 
@@ -69,7 +69,7 @@ object GenericObjView extends ObjView.Factory {
     extends Impl[S] with ListObjView[S] with ListObjViewImpl.NonEditable[S] with ObjViewImpl.NonViewable[S]
 
   private final class TimelineImpl[S <: Sys[S]](val objH : stm.Source[S#Tx, Obj[S]])
-    extends Impl[S] with TimelineObjViewImpl.BasicImpl[S] with ObjViewImpl.NonViewable[S]
+    extends Impl[S] with TimelineObjViewBasicImpl[S] with ObjViewImpl.NonViewable[S]
 
   private final class GraphemeImpl[S <: Sys[S]](val objH : stm.Source[S#Tx, Obj[S]])
     extends Impl[S] with GraphemeObjViewImpl.BasicImpl[S] with ObjViewImpl.NonViewable[S]

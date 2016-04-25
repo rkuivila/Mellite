@@ -113,7 +113,7 @@ object TimelineFrameImpl {
         .add(Item("sel-start-to-stop",     "Flip Selection Forward"))
 
       window.reactions += {
-        case Window.Activated(_) => view.canvasComponent.requestFocusInWindow()
+        case Window.Activated(_) => view.canvas.canvasComponent.requestFocusInWindow()
       }
 
       mf.add(me, mTimeline)

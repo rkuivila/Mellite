@@ -12,7 +12,7 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "3.4.1"
+lazy val soundProcessesVersion      = "3.5.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.3"
 lazy val scalaColliderUGenVersion   = "1.14.1"
 lazy val lucreVersion               = "3.3.1"
@@ -26,12 +26,12 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "2.5.0"
-lazy val scalaColliderSwingVersion  = "1.28.0"
-lazy val lucreSwingVersion          = "1.3.0"
+lazy val nuagesVersion              = "2.6.0-SNAPSHOT"
+lazy val scalaColliderSwingVersion  = "1.29.0-SNAPSHOT"
+lazy val lucreSwingVersion          = "1.4.0-SNAPSHOT"
 lazy val swingPlusVersion           = "0.2.1"
 lazy val spanVersion                = "1.3.1"
-lazy val audioWidgetsVersion        = "1.9.4"
+lazy val audioWidgetsVersion        = "1.10.0-SNAPSHOT"
 lazy val desktopVersion             = "0.7.2"
 lazy val sonogramVersion            = "1.9.0"
 lazy val raphaelIconsVersion        = "1.0.3"

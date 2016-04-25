@@ -23,7 +23,7 @@ import de.sciss.mellite.gui.impl.timeline.{TimelineViewImpl => Impl}
 import de.sciss.synth.proc.Timeline
 import de.sciss.synth.proc.gui.TransportView
 
-import scala.swing.{Action, Component}
+import scala.swing.Action
 
 object TimelineView {
   def apply[S <: Sys[S]](group: Timeline[S])
@@ -36,17 +36,17 @@ object TimelineView {
   /** Minimum duration in sample-frames for some cases where it should be greater than zero. */
   final val MinDur      = 32
 }
-trait TimelineView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] {
+trait TimelineView[S <: stm.Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] {
   def timelineModel   : TimelineModel
   def selectionModel  : TimelineObjView.SelectionModel[S]
 
   def timelineH: stm.Source[S#Tx, Timeline[S]]
   def timeline(implicit tx: S#Tx): Timeline[S]
 
-  def canvasComponent: Component
+  def canvas        : TimelineProcCanvas[S]
 
-  def globalView   : GlobalProcsView[S]
-  def transportView: TransportView  [S]
+  def globalView    : GlobalProcsView[S]
+  def transportView : TransportView  [S]
 
   // ---- GUI actions ----
   def actionBounce              : Action

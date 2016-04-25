@@ -28,10 +28,11 @@ import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.sonogram.{Overview => SonoOverview}
 import de.sciss.span.Span
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{AudioCue, ObjKeys, Proc}
+import de.sciss.synth.proc.{AudioCue, ObjKeys, Proc, TimeRef}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.language.implicitConversions
+import scala.swing.Graphics2D
 import scala.util.control.NonFatal
 
 object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
@@ -213,6 +214,39 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       this
     }
 
+    // paint sonogram
+    override protected def paintInner(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering,
+                                      x: Int, y: Int, w: Int, h: Int, px1C: Int, px2C: Int,
+                                      selected: Boolean): Unit =
+      audio.foreach { audioVal =>
+        val sonogramOpt = sonogram.orElse(acquireSonogram())
+
+        sonogramOpt.foreach { sonogram =>
+          val srRatio     = sonogram.inputSpec.sampleRate / TimeRef.SampleRate
+          // dStart is the frame inside the audio-file corresponding
+          // to the region's left margin. That is, if the grapheme segment
+          // starts early than the region (its start is less than zero),
+          // the frame accordingly increases.
+          val dStart      = (audioVal.fileOffset /* offset - segm.span.start */ +
+            (if (selected) r.ttResizeState.deltaStart else 0L)) * srRatio
+          // a factor to convert from pixel space to audio-file frames
+          val canvas      = tlv.canvas
+          val s2f         = canvas.screenToFrames(1) * srRatio
+          val lenC        = (px2C - px1C) * s2f
+          val visualBoost = canvas.trackTools.visualBoost
+          val boost       = if (selected) r.ttGainState.factor * visualBoost else visualBoost
+          r.sonogramBoost = (audioVal.gain * gain).toFloat * boost
+          val startP      = (px1C - x) * s2f + dStart
+          val stopP       = startP + lenC
+          val w1          = px2C - px1C
+          // println(s"${pv.name}; audio.offset = ${audio.offset}, segm.span.start = ${segm.span.start}, dStart = $dStart, px1C = $px1C, startC = $startC, startP = $startP")
+          // println(f"spanStart = $startP%1.2f, spanStop = $stopP%1.2f, tx = $px1C, ty = $y, width = $w1, height = $h, boost = ${r.sonogramBoost}%1.2f")
+
+          sonogram.paint(spanStart = startP, spanStop = stopP, g2 = g,
+            tx = px1C, ty = y, width = w1, height = h, ctrl = r)
+        }
+      }
+
     def releaseSonogram(): Unit =
       sonogram.foreach { ovr =>
         sonogram = None
@@ -226,9 +260,9 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     def acquireSonogram(): Option[SonoOverview] = {
       if (failedAcquire) return None
       releaseSonogram()
-      sonogram = audio.flatMap { segm =>
+      sonogram = audio.flatMap { audioVal =>
         try {
-          val ovr = SonogramManager.acquire(segm./* value. */artifact)  // XXX TODO: remove `Try` once manager is fixed
+          val ovr = SonogramManager.acquire(audioVal./* value. */artifact)  // XXX TODO: remove `Try` once manager is fixed
           failedAcquire = false
           Some(ovr)
         } catch {

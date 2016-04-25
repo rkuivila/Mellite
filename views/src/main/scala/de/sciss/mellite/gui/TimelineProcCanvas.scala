@@ -17,7 +17,7 @@ package gui
 
 import de.sciss.span.Span
 import de.sciss.audiowidgets.TimelineCanvas
-import de.sciss.lucre.synth.Sys
+import de.sciss.lucre.stm.Sys
 import de.sciss.synth.proc.Timeline
 
 trait TimelineProcCanvas[S <: Sys[S]] extends TimelineCanvas {
@@ -31,5 +31,8 @@ trait TimelineProcCanvas[S <: Sys[S]] extends TimelineCanvas {
 
   def findRegions(r: TrackTool.Rectangular): Iterator[TimelineObjView[S]]
 
-  def screenToTrack(y: Int): Int
+  def screenToTrack(y    : Int): Int
+  def trackToScreen(track: Int): Int
+
+  def trackTools: TrackTools[S]
 }
