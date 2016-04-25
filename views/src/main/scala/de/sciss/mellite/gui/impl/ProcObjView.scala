@@ -18,15 +18,17 @@ package impl
 import de.sciss.desktop
 import de.sciss.desktop.OptionPane
 import de.sciss.file._
+import de.sciss.fingertree.RangedSeq
 import de.sciss.icons.raphael
 import de.sciss.lucre.expr.{IntObj, SpanLikeObj}
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{IdentifierMap, Obj}
+import de.sciss.lucre.stm.{Disposable, IdentifierMap, Obj}
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.sonogram.{Overview => SonoOverview}
-import de.sciss.span.Span
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.synth.proc
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{AudioCue, ObjKeys, Proc, TimeRef}
 
@@ -74,14 +76,14 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   // private final val DEBUG = false
 
-  private def addLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
-    map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
-
-  private def removeLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] = {
-    import de.sciss.equal.Implicits._
-    val newVec = map.getOrElse(key, Vec.empty).filterNot(_ === value)
-    if (newVec.isEmpty) map - key else map + (key -> newVec)
-  }
+//  private def addLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
+//    map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
+//
+//  private def removeLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] = {
+//    import de.sciss.equal.Implicits._
+//    val newVec = map.getOrElse(key, Vec.empty).filterNot(_ === value)
+//    if (newVec.isEmpty) map - key else map + (key -> newVec)
+//  }
 
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
@@ -170,6 +172,48 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
+  private trait InputAttr[S <: Sys[S]] extends Disposable[S#Tx] {
+
+  }
+
+  private final class InputAttrTimeline[S <: Sys[S]](viewMap: IdentifierMap[S#ID, S#Tx, Any],
+                                                     context: TimelineObjView.Context[S])
+    extends InputAttr[S] {
+
+    private final case class Elem(span: SpanLike, source: Option[ProcObjView[S]]) {
+      def point: (Long, Long) = ???!
+    }
+
+    private[this] var observer: Disposable[S#Tx] = _
+
+    // EDT
+    private[this] var rangeSeq = RangedSeq.empty[Elem, Long](_.point, Ordering.Long)
+
+    private def addAttrIn(span: SpanLike, entry: proc.Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
+      entry.value match {
+        case out: proc.Output[S] =>
+          out.id
+        case _ => // no others supported ATM
+      }
+    }
+
+    private def removeAttrIn(span: SpanLike, entry: proc.Timeline.Timed[S])(implicit tx: S#Tx): Unit = {
+      ???
+    }
+
+    def init(tl: proc.Timeline[S])(implicit tx: S#Tx): Unit = {
+      observer = tl.changed.react { implicit tx => upd => upd.changes.foreach {
+        case proc.Timeline.Added  (span  , entry) => addAttrIn   (span, entry)
+        case proc.Timeline.Removed(span  , entry) => removeAttrIn(span, entry)
+        case proc.Timeline.Moved  (spanCh, entry) =>
+          removeAttrIn(spanCh.before, entry)
+          addAttrIn   (spanCh.now   , entry)
+      }}
+    }
+
+    def dispose()(implicit tx: S#Tx): Unit = observer.dispose()
+  }
+
   private final class TimelineImpl[S <: Sys[S]](val objH: stm.Source[S#Tx, Proc[S]],
                                                 var busOption : Option[Int], context: TimelineObjView.Context[S])
     extends Impl[S]
@@ -181,37 +225,65 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     override def toString = s"ProcView($name, $spanValue, $audio)"
 
     // var audio = Option.empty[Grapheme.Segment.Audio]
-    var audio = Option.empty[AudioCue]
+    private[this] var audio = Option.empty[AudioCue]
 
-    def debugString =
-      s"ProcView(span = $spanValue, trackIndex = $trackIndex, nameOption = $nameOption, muted = $muted, audio = $audio, " +
-      s"fadeIn = $fadeIn, fadeOut = $fadeOut, gain = $gain, busOption = $busOption)\n" +
-      inputs .mkString("  inputs  = [", ", ", "]\n") +
-      outputs.mkString("  outputs = [", ", ", "]\n")
+    def debugString = {
+      val basicS  = s"span = $spanValue, trackIndex = $trackIndex, nameOption = $nameOption, muted = $muted, audio = $audio, "
+      val fadeS   = s"fadeIn = $fadeIn, fadeOut = $fadeOut, gain = $gain, busOption = $busOption"
+      // val inputS   = inputs.mkString("  inputs  = [", ", ", "]\n")
+      // val outputS  = outputs.mkString("  outputs = [", ", ", "]\n")
+      s"ProcView($basicS, $fadeS)\n"
+      // s"ProcView($basicS, $fadeS)\n$inputS$outputS"
+    }
 
-    private var failedAcquire = false
-    var sonogram  = Option.empty[SonoOverview]
+    private[this] var failedAcquire = false
+    private[this] var sonogram      = Option.empty[SonoOverview]
 
-    var inputs    = Map.empty[String, Vec[ProcObjView.Link[S]]]
-    var outputs   = Map.empty[String, Vec[ProcObjView.Link[S]]]
+//    var inputs    = Map.empty[String, Vec[ProcObjView.Link[S]]]
+//    var outputs   = Map.empty[String, Vec[ProcObjView.Link[S]]]
 
     def init(id: S#ID, span: SpanLikeObj[S], obj: Proc[S])(implicit tx: S#Tx): this.type = {
       initAttrs(id, span, obj)
 
-      obj.attr.$[AudioCue.Obj](Proc.graphAudio).foreach { audio0 =>
+      // XXX TODO -- should use a dynamic AttrCellView here
+      val attr = obj.attr
+      attr.$[AudioCue.Obj](Proc.graphAudio).foreach { audio0 =>
         disposables ::= audio0.changed.react { implicit tx => upd =>
           val newAudio = upd.now // calcAudio(upd.grapheme)
-          deferTx {
+          deferAndRepaint {
             val newSonogram = upd.before.artifact != upd.now.artifact
             audio = Some(newAudio)
             if (newSonogram) releaseSonogram()
           }
-          fire(ObjView.Repaint(self))
         }
         audio = Some(audio0.value) // calcAudio(g)
       }
 
+      // attr.iterator.foreach { case (key, value) => addAttr(key, value) }
+      import Proc.mainIn
+      attr.get(mainIn).foreach(addAttrIn)
+      disposables ::= attr.changed.react { implicit tx => upd => upd.changes.foreach {
+        case Obj.AttrAdded   (`mainIn`, value) => addAttrIn(value)
+        case Obj.AttrRemoved (`mainIn`, value) => ???!
+        case Obj.AttrReplaced(`mainIn`, before, now) => ???!
+        case _ =>
+      }}
+
       this
+    }
+
+    private[this] def addAttrIn(value: Obj[S])(implicit tx: S#Tx): Unit = value match {
+      case tl : proc.Timeline[S] =>
+        println("addAttrIn: Timeline")
+      case gr : proc.Grapheme[S] =>
+        println("addAttrIn: Grapheme")
+        ???!
+      case f  : proc.Folder  [S] =>
+        println("addAttrIn: Folder")
+        ???!
+      case out: proc.Output  [S] =>
+        println("addAttrIn: Output")
+      case _ =>
     }
 
     // paint sonogram
@@ -247,7 +319,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
         }
       }
 
-    def releaseSonogram(): Unit =
+    private[this] def releaseSonogram(): Unit =
       sonogram.foreach { ovr =>
         sonogram = None
         SonogramManager.release(ovr)
@@ -257,7 +329,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       audio.fold(TimelineObjView.Unnamed)(_./* value. */artifact.base)
     }
 
-    def acquireSonogram(): Option[SonoOverview] = {
+    private[this] def acquireSonogram(): Option[SonoOverview] = {
       if (failedAcquire) return None
       releaseSonogram()
       sonogram = audio.flatMap { audioVal =>
@@ -281,44 +353,44 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 //        context.scanMap.remove(scan.id)
 //      }
       proc.outputs.iterator.foreach { case scan /* (_, scan) */ =>
-        context.scanMap.remove(scan.id)
+        context.removeAux(scan.id)
       }
       deferTx(disposeGUI())
     }
 
-    private def disposeGUI(): Unit = {
+    private[this] def disposeGUI(): Unit = {
       releaseSonogram()
 
-      def removeLinks(inp: Boolean): Unit = {
-        val map = if (inp) inputs else outputs
-        map.foreach { case (thisKey, links) =>
-          links.foreach { link =>
-            val thatView  = link.target
-            val thatKey   = link.targetKey
-            if (inp)
-              thatView.removeOutput(thatKey, self, thisKey)
-            else
-              thatView.removeInput (thatKey, self, thisKey)
-          }
-        }
-        if (inp) inputs = Map.empty else outputs = Map.empty
-      }
-
-      removeLinks(inp = true )
-      removeLinks(inp = false)
+//      def removeLinks(inp: Boolean): Unit = {
+//        val map = if (inp) inputs else outputs
+//        map.foreach { case (thisKey, links) =>
+//          links.foreach { link =>
+//            val thatView  = link.target
+//            val thatKey   = link.targetKey
+//            if (inp)
+//              thatView.removeOutput(thatKey, self, thisKey)
+//            else
+//              thatView.removeInput (thatKey, self, thisKey)
+//          }
+//        }
+//        if (inp) inputs = Map.empty else outputs = Map.empty
+//      }
+//
+//      removeLinks(inp = true )
+//      removeLinks(inp = false)
     }
 
-    def addInput (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
-      inputs  = addLink(inputs , thisKey, Link(thatView, thatKey))
-
-    def addOutput(thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
-      outputs = addLink(outputs, thisKey, Link(thatView, thatKey))
-
-    def removeInput (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
-      inputs  = removeLink(inputs , thisKey, Link(thatView, thatKey))
-
-    def removeOutput(thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
-      outputs = removeLink(outputs, thisKey, Link(thatView, thatKey))
+//    def addInput (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
+//      inputs  = addLink(inputs , thisKey, Link(thatView, thatKey))
+//
+//    def addOutput(thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
+//      outputs = addLink(outputs, thisKey, Link(thatView, thatKey))
+//
+//    def removeInput (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
+//      inputs  = removeLink(inputs , thisKey, Link(thatView, thatKey))
+//
+//    def removeOutput(thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit =
+//      outputs = removeLink(outputs, thisKey, Link(thatView, thatKey))
 
     def isGlobal: Boolean = {
       import de.sciss.equal.Implicits._
@@ -326,7 +398,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  case class Link[S <: stm.Sys[S]](target: ProcObjView.Timeline[S], targetKey: String)
+  final case class Link[S <: stm.Sys[S]](target: ProcObjView.Timeline[S], targetKey: String)
 
   /** A data set for graphical display of a proc. Accessors and mutators should
     * only be called on the event dispatch thread. Mutators are plain variables
@@ -339,37 +411,35 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     with TimelineObjView.HasGain
     with TimelineObjView.HasFade {
 
-    // override type E[~ <: stm.Sys[~]] = Proc.Elem[~]
-
     /** Convenience check for `span == Span.All` */
     def isGlobal: Boolean
 
-    var inputs : LinkMap[S]
-    var outputs: LinkMap[S]
-
-    def addInput    (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
-    def addOutput   (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
-
-    def removeInput (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
-    def removeOutput(thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
+//    var inputs : LinkMap[S]
+//    var outputs: LinkMap[S]
+//
+//    def addInput    (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
+//    def addOutput   (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
+//
+//    def removeInput (thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
+//    def removeOutput(thisKey: String, thatView: ProcObjView.Timeline[S], thatKey: String): Unit
 
     var busOption: Option[Int]
 
-    /** If this proc is bound to an audio grapheme for the default scan key, returns
-      * this grapheme segment (underlying audio file of a tape object). */
-    var audio: Option[AudioCue]
-
-    // var audio: Option[Grapheme.Segment.Audio]
-
-    var sonogram: Option[SonoOverview]
-
-    /** Releases a sonogram view. If none had been acquired, this is a safe no-op.
-      * Updates the `sono` variable.
-      */
-    def releaseSonogram(): Unit
-
-    /** Attempts to acquire a sonogram view. Updates the `sono` variable if successful. */
-    def acquireSonogram(): Option[SonoOverview]
+//    /** If this proc is bound to an audio grapheme for the default scan key, returns
+//      * this grapheme segment (underlying audio file of a tape object). */
+//    var audio: Option[AudioCue]
+//
+//    // var audio: Option[Grapheme.Segment.Audio]
+//
+//    var sonogram: Option[SonoOverview]
+//
+//    /** Releases a sonogram view. If none had been acquired, this is a safe no-op.
+//      * Updates the `sonogram` variable.
+//      */
+//    def releaseSonogram(): Unit
+//
+//    /** Attempts to acquire a sonogram view. Updates the `sonogram` variable if successful. */
+//    def acquireSonogram(): Option[SonoOverview]
 
     def debugString: String
   }

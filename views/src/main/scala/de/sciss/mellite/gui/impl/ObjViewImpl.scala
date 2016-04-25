@@ -562,10 +562,9 @@ object ObjViewImpl {
       def init(obj: _Artifact[S])(implicit tx: S#Tx): this.type = {
         initAttrs(obj)
         disposables ::= obj.changed.react { implicit tx => upd =>
-          deferTx {
+          deferAndRepaint {
             file = upd.now
           }
-          fire(ObjView.Repaint(this))
         }
         this
       }
@@ -782,10 +781,9 @@ object ObjViewImpl {
       def init(obj: _FadeSpec.Obj[S])(implicit tx: S#Tx): this.type = {
         initAttrs(obj)
         disposables ::= obj.changed.react { implicit tx => upd =>
-          deferTx {
+          deferAndRepaint {
             value = upd.now
           }
-          fire(ObjView.Repaint(this))
         }
         this
       }
@@ -893,10 +891,9 @@ object ObjViewImpl {
         disposables ::= obj.changed.react { implicit tx => upd =>
           upd.changes.foreach {
             case _Ensemble.Playing(ch) =>
-              deferTx {
+              deferAndRepaint {
                 playing = ch.now
               }
-              fire(ObjView.Repaint(this))
 
             case _ =>
           }
@@ -1019,22 +1016,31 @@ object ObjViewImpl {
 
     def dispose()(implicit tx: S#Tx): Unit = disposables.foreach(_.dispose())
 
+    final protected def deferAndRepaint(body: => Unit)(implicit tx: S#Tx): Unit = {
+      deferTx(body)
+      fire(ObjView.Repaint(this))
+    }
+
     /** Sets name and color. */
     def initAttrs(obj: Obj[S])(implicit tx: S#Tx): this.type = {
       val attr      = obj.attr
 
       implicit val stringTpe = StringObj
       val nameView  = AttrCellView[S, String, StringObj](attr, ObjKeys.attrName)
-      disposables ::= nameView.react { implicit tx => opt => deferTx {
-        nameOption = opt
-      }}
+      disposables ::= nameView.react { implicit tx => opt =>
+        deferAndRepaint {
+          nameOption = opt
+        }
+      }
       nameOption   = nameView()
 
       implicit val colorTpe = _Color.Obj
       val colorView = AttrCellView[S, _Color, _Color.Obj](attr, ObjView.attrColor)
-      disposables ::= colorView.react { implicit tx => opt => deferTx {
-        colorOption = opt
-      }}
+      disposables ::= colorView.react { implicit tx => opt =>
+        deferAndRepaint {
+          colorOption = opt
+        }
+      }
       colorOption  = colorView()
       this
     }

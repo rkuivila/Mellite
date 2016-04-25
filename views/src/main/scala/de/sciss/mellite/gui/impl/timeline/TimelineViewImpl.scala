@@ -16,7 +16,6 @@ package gui
 package impl
 package timeline
 
-import java.awt.geom.GeneralPath
 import java.awt.{BasicStroke, Font, Graphics2D, RenderingHints, Color => JColor}
 import java.util.Locale
 import javax.swing.UIManager
@@ -42,6 +41,7 @@ import de.sciss.span.{Span, SpanLike}
 import de.sciss.swingplus.ScrollBar
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
+import de.sciss.synth.proc.impl.AuxContextImpl
 import de.sciss.synth.proc.{AudioCue, Proc, TimeRef, Timeline, Transport}
 import de.sciss.{desktop, synth}
 
@@ -52,13 +52,12 @@ import scala.swing.{Action, BorderPanel, BoxPanel, Component, Dimension, Orienta
 import scala.util.Try
 
 object TimelineViewImpl {
-  private val colrDropRegionBg = new JColor(0xFF, 0xFF, 0xFF, 0x7F)
-  private val strkDropRegion = new BasicStroke(3f)
-  private val strkRubber = new BasicStroke(3f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 10.0f,
+  private val colrDropRegionBg  = new JColor(0xFF, 0xFF, 0xFF, 0x7F)
+  private val strkDropRegion    = new BasicStroke(3f)
+  private val strkRubber        = new BasicStroke(3f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 10.0f,
     Array[Float](3f, 5f), 0f)
   //  private val colrLink            = new awt.Color(0x80, 0x80, 0x80)
   //  private val strkLink            = new BasicStroke(2f)
-  private val path2d = new GeneralPath
 
   private final val LinkArrowLen = 0
   // 10  ; currently no arrow tip painted
@@ -73,11 +72,11 @@ object TimelineViewImpl {
   def apply[S <: Sys[S]](obj: Timeline[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undo: UndoManager): TimelineView[S] = {
-    val sampleRate = TimeRef.SampleRate
-    val tlm = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
-    tlm.visible = Span(0L, (sampleRate * 60 * 2).toLong)
-    val timeline = obj
-    val timelineH = tx.newHandle(obj)
+    val sampleRate  = TimeRef.SampleRate
+    val tlm         = new TimelineModelImpl(Span(0L, (sampleRate * 60 * 60).toLong), sampleRate)
+    tlm.visible     = Span(0L, (sampleRate * 60 * 2).toLong)
+    val timeline    = obj
+    val timelineH   = tx.newHandle(obj)
 
     var disposables = List.empty[Disposable[S#Tx]]
 
@@ -104,7 +103,7 @@ object TimelineViewImpl {
     disposables ::= global
 
     val transportView = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
-    val tlView = new Impl[S](timelineH, viewMap, scanMap, tlm, selectionModel, global, transportView)
+    val tlView = new Impl[S](timelineH, viewMap, scanMap, tlm, selectionModel, global, transportView, tx)
 
     timeline.iterator.foreach { case (span, seq) =>
       seq.foreach { timed =>
@@ -141,13 +140,13 @@ object TimelineViewImpl {
                                         val timelineModel: TimelineModel,
                                         val selectionModel: SelectionModel[S, TimelineObjView[S]],
                                         val globalView: GlobalProcsView[S],
-                                        val transportView: TransportView[S])
+                                        val transportView: TransportView[S], tx0: S#Tx)
                                        (implicit val workspace: Workspace[S], val cursor: Cursor[S],
                                         val undoManager: UndoManager)
     extends TimelineActions[S]
       with TimelineView[S]
       with ComponentHolder[Component]
-      with TimelineObjView.Context[S] {
+      with TimelineObjView.Context[S] with AuxContextImpl[S] {
 
     impl =>
 
@@ -159,16 +158,17 @@ object TimelineViewImpl {
     var canvas: TimelineProcCanvasImpl[S] = _
     val disposables = Ref(List.empty[Disposable[S#Tx]])
 
-    // def canvas: TimelineProcCanvas[S] = _canvas
+    protected val auxMap          = tx0.newInMemoryIDMap[Any]
+    protected val auxObservers    = tx0.newInMemoryIDMap[List[AuxObserver]]
 
-    private lazy val toolCursor = TrackTool.cursor[S](canvas)
-    private lazy val toolMove = TrackTool.move[S](canvas)
-    private lazy val toolResize = TrackTool.resize[S](canvas)
-    private lazy val toolGain = TrackTool.gain[S](canvas)
-    private lazy val toolMute = TrackTool.mute[S](canvas)
-    private lazy val toolFade = TrackTool.fade[S](canvas)
+    private lazy val toolCursor   = TrackTool.cursor  [S](canvas)
+    private lazy val toolMove     = TrackTool.move    [S](canvas)
+    private lazy val toolResize   = TrackTool.resize  [S](canvas)
+    private lazy val toolGain     = TrackTool.gain    [S](canvas)
+    private lazy val toolMute     = TrackTool.mute    [S](canvas)
+    private lazy val toolFade     = TrackTool.fade    [S](canvas)
     private lazy val toolFunction = TrackTool.function[S](canvas, this)
-    private lazy val toolPatch = TrackTool.patch[S](canvas)
+    private lazy val toolPatch    = TrackTool.patch   [S](canvas)
     private lazy val toolAudition = TrackTool.audition[S](canvas, this)
 
     def timeline(implicit tx: S#Tx) = timelineH()
@@ -737,10 +737,11 @@ object TimelineViewImpl {
 
           // Yo crazy mama, Wolkenpumpe "5" style
           val ctrlLen = math.min(LinkCtrlPtLen, math.abs(y2 - LinkArrowLen - y1))
-          path2d.reset()
-          path2d.moveTo(x1 - 0.5f, y1)
-          path2d.curveTo(x1 - 0.5f, y1 + ctrlLen, x2 - 0.5f, y2 - ctrlLen - LinkArrowLen, x2 - 0.5f, y2 - LinkArrowLen)
-          g.draw(path2d)
+          import rendering.shape1
+          shape1.reset()
+          shape1.moveTo(x1 - 0.5f, y1)
+          shape1.curveTo(x1 - 0.5f, y1 + ctrlLen, x2 - 0.5f, y2 - ctrlLen - LinkArrowLen, x2 - 0.5f, y2 - LinkArrowLen)
+          g.draw(shape1)
         }
 
         private def drawPatch(g: Graphics2D, patch: TrackTool.Patch[S]): Unit = {

@@ -15,13 +15,12 @@ package de.sciss.mellite
 package gui
 
 import de.sciss.lucre.expr.SpanLikeObj
+import de.sciss.lucre.stm
 import de.sciss.lucre.stm.IdentifierMap
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.stm
-import de.sciss.mellite.gui.impl.ProcObjView
 import de.sciss.mellite.gui.impl.timeline.{TimelineObjViewImpl => Impl}
 import de.sciss.span.{Span, SpanLike}
-import de.sciss.synth.proc.{FadeSpec, Timeline}
+import de.sciss.synth.proc.{AuxContext, FadeSpec, Timeline}
 
 import scala.language.{higherKinds, implicitConversions}
 import scala.swing.Graphics2D
@@ -43,11 +42,9 @@ object TimelineObjView {
 
   type Map[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, TimelineObjView[S]]
 
-  trait Context[S <: stm.Sys[S]] {
+  trait Context[S <: stm.Sys[S]] extends AuxContext[S] {
     /** A map from `TimedProc` ids to their views. This is used to establish scan links. */
     def viewMap: Map[S]
-    /** A map from `Scan` ids to their keys and a handle on the timed-proc's id. */
-    def scanMap: ProcObjView.ScanMap[S]
   }
 
   trait Factory extends ObjView.Factory {
@@ -87,7 +84,6 @@ object TimelineObjView {
   }
 }
 trait TimelineObjView[S <: stm.Sys[S]] extends ObjView[S] {
-  // def span: stm.Source[S#Tx, SpanLikeObj[S]]
 
   def spanH: stm.Source[S#Tx, SpanLikeObj[S]]
 
