@@ -30,14 +30,14 @@ object TimelineObjView {
 
   final val Unnamed = "<unnamed>"
 
-  implicit def span[S <: stm.Sys[S]](view: TimelineObjView[S]): (Long, Long) = {
-    view.spanValue match {
-      case Span(start, stop)  => (start, stop)
-      case Span.From(start)   => (start, Long.MaxValue)
-      case Span.Until(stop)   => (Long.MinValue, stop)
-      case Span.All           => (Long.MinValue, Long.MaxValue)
-      case Span.Void          => (Long.MinValue, Long.MinValue)
-    }
+  implicit def viewToPoint[S <: stm.Sys[S]](view: TimelineObjView[S]): (Long, Long) = spanToPoint(view.spanValue)
+
+  def spanToPoint(span: SpanLike): (Long, Long) = span match {
+    case Span(start, stop)  => (start, stop)
+    case Span.From(start)   => (start, Long.MaxValue)
+    case Span.Until(stop)   => (Long.MinValue, stop)
+    case Span.All           => (Long.MinValue, Long.MaxValue)
+    case Span.Void          => (Long.MinValue, Long.MinValue)
   }
 
   type Map[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, TimelineObjView[S]]

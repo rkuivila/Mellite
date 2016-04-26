@@ -65,8 +65,21 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
     initAttrs(obj)
   }
 
-  protected def paintInner(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, x: Int, y: Int, w: Int, h: Int,
-                           px1C: Int, px2C: Int, selected: Boolean): Unit = ()
+  protected def paintInner(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, selected: Boolean): Unit = ()
+
+  /** These are updated by paintBack and will thus be valid in paintFront as well. */
+  protected var px  = 0
+  protected var py  = 0
+  protected var pw  = 0
+  protected var ph  = 0
+  /** Inner (after title bar) */
+  protected var phi = 0
+  /** Inner (after title bar) */
+  protected var pyi = 0
+  /** Clipped left */
+  protected var px1c  = 0
+  /** Clipped right */
+  protected var px2c  = 0
 
   def paintBack(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering): Unit = {
     val selected        = tlv.selectionModel.contains(this)
@@ -150,16 +163,16 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
     }
 
     val pTrk  = if (selected) math.max(0, trackIndex + moveState.deltaTrack) else trackIndex
-    val py    = trackToScreen(pTrk)
-    val px    = x1
-    val pw    = x2 - x1
-    val ph    = trackToScreen(pTrk + trackHeight) - py
+    py        = trackToScreen(pTrk)
+    px        = x1
+    pw        = x2 - x1
+    ph        = trackToScreen(pTrk + trackHeight) - py
 
     // clipped coordinates
-    val px1C    = math.max(px +  1, clipRect.x - 2)
-    val px2C    = math.min(px + pw, clipRect.x + clipRect.width + 3)
+    px1c      = math.max(px +  1, clipRect.x - 2)
+    px2c      = math.min(px + pw, clipRect.x + clipRect.width + 3)
 
-    if (px1C < px2C) {  // skip this if we are not overlapping with clip
+    if (px1c < px2c) {  // skip this if we are not overlapping with clip
       import r.{pntBackground, pntFadeFill, pntFadeOutline, pntNameDark, pntNameLight, pntNameShadowDark, pntNameShadowLight, pntRegionBackground, pntRegionBackgroundMuted, pntRegionBackgroundSelected, pntRegionOutline, pntRegionOutlineSelected, regionTitleBaseline, regionTitleHeight, shape1, shape2}
 
       if (regionViewMode != RegionViewMode.None) {
@@ -179,34 +192,33 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
         case RegionViewMode.TitledBox  => regionTitleHeight
       }
 
-      val innerH    = ph - (hndl + 1)
-      val innerY    = py + hndl
+      phi           = ph - (hndl + 1)
+      pyi           = py + hndl
       val clipOrig  = g.getClip
-      g.clipRect(px + 1, innerY, pw - 2, innerH)
+      g.clipRect(px + 1, pyi, pw - 2, phi)
 
-      paintInner(g, tlv = tlv, r = r, x = px, y = innerY, w = pw, h = innerH, px1C = px1C, px2C = px2C,
-        selected = selected)
+      paintInner(g, tlv = tlv, r = r, selected = selected)
 
       // --- fades ---
       def paintFade(curve: Curve, fw: Float, y1: Float, y2: Float, x: Float, x0: Float): Unit = {
         import math.{log10, max}
         shape1.reset()
         shape2.reset()
-        val vScale  = innerH / -3f
-        val y1s     = max(-3, log10(y1)) * vScale + innerY
+        val vScale  = phi / -3f
+        val y1s     = max(-3, log10(y1)) * vScale + pyi
         shape1.moveTo(x, y1s)
         shape2.moveTo(x, y1s)
         var xs = 4
         while (xs < fw) {
-          val ys = max(-3, log10(curve.levelAt(xs / fw, y1, y2))) * vScale + innerY
+          val ys = max(-3, log10(curve.levelAt(xs / fw, y1, y2))) * vScale + pyi
           shape1.lineTo(x + xs, ys)
           shape2.lineTo(x + xs, ys)
           xs += 3
         }
-        val y2s     = max(-3, log10(y2)) * vScale + innerY
+        val y2s     = max(-3, log10(y2)) * vScale + pyi
         shape1.lineTo(x + fw, y2s)
         shape2.lineTo(x + fw, y2s)
-        shape1.lineTo(x0, innerY)
+        shape1.lineTo(x0, pyi)
         g.setPaint(pntFadeFill)
         g.fill    (shape1)
         g.setPaint(pntFadeOutline)

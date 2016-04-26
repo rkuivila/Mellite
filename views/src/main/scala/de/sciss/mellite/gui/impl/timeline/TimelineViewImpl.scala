@@ -146,7 +146,8 @@ object TimelineViewImpl {
     extends TimelineActions[S]
       with TimelineView[S]
       with ComponentHolder[Component]
-      with TimelineObjView.Context[S] with AuxContextImpl[S] {
+      with TimelineObjView.Context[S]
+      with AuxContextImpl[S] {
 
     impl =>
 
@@ -641,40 +642,13 @@ object TimelineViewImpl {
 
           g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-          // var procViews = Nil: List[ProcObjView.Timeline[S]]
           // warning: iterator, we need to traverse twice!
-          viewRange.filterOverlaps((visStart, visStop)).foreach { view =>
-            //            val pv = view match {
-            //              case _pv: ProcObjView.Timeline[S] =>
-            //                procViews ::= _pv
-            //                _pv
-            //
-            //              case _ =>
-            //                null
-            //            }
-
+          val iVal = (visStart, visStop)
+          viewRange.filterOverlaps(iVal).foreach { view =>
             view.paintBack(g, impl, rendering)
-
-            //          // --- links ---
-            //          if (procViews.nonEmpty) {
-            //            g.setColor (colrLink)
-            //            g.setStroke(strkLink)
-            //            procViews.foreach { pv =>
-            //              // println(s"For ${pv.name} inputs = ${pv.inputs}, outputs = ${pv.outputs}")
-            //              pv.outputs.foreach { case (_, links) =>
-            //                links.foreach { link =>
-            //                  if (link.target.isGlobal) {
-            //                    if (regionViewMode == RegionViewMode.TitledBox) {
-            //                      // XXX TODO: extra info such as gain
-            //                    }
-            //
-            //                  } else {
-            //                    drawLink(g, pv, link.target)
-            //                  }
-            //                }
-            //              }
-            //            }
-            //            g.setStroke(strkOrig)
+          }
+          viewRange.filterOverlaps(iVal).foreach { view =>
+            view.paintFront(g, impl, rendering)
           }
 
           // --- timeline cursor and selection ---
