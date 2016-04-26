@@ -105,12 +105,6 @@ object TimelineViewImpl {
     val transportView = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
     val tlView = new Impl[S](timelineH, viewMap, scanMap, tlm, selectionModel, global, transportView, tx)
 
-    timeline.iterator.foreach { case (span, seq) =>
-      seq.foreach { timed =>
-        tlView.objAdded(span, timed, repaint = false)
-      }
-    }
-
     val obsTimeline = timeline.changed.react { implicit tx => upd =>
       upd.changes.foreach {
         case BiGroup.Added(span, timed) =>
@@ -131,6 +125,14 @@ object TimelineViewImpl {
     tlView.disposables.set(disposables)(tx.peer)
 
     deferTx(tlView.guiInit())
+
+    // must come after guiInit because views might call `repaint` in the meantime!
+    timeline.iterator.foreach { case (span, seq) =>
+      seq.foreach { timed =>
+        tlView.objAdded(span, timed, repaint = false)
+      }
+    }
+
     tlView
   }
 
@@ -329,8 +331,7 @@ object TimelineViewImpl {
       view.react { implicit tx => {
         case ObjView.Repaint(_) => objUpdated(view)
         case _ =>
-      }
-      }
+      }}
     }
 
     private def warnViewNotFound(action: String, timed: BiGroup.Entry[S, Obj[S]]): Unit =
@@ -386,7 +387,7 @@ object TimelineViewImpl {
       }
     }
 
-    private def objUpdated(view: TimelineObjView[S]): Unit = {
+    private def objUpdated(view: TimelineObjView[S])(implicit tx: S#Tx): Unit = deferTx {
       //      if (view.isGlobal)
       //        globalView.updated(view)
       //      else

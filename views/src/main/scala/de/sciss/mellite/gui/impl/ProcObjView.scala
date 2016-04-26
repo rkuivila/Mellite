@@ -81,58 +81,10 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     */
   def mkTimelineView[S <: Sys[S]](timedID: S#ID, span: SpanLikeObj[S], obj: Proc[S],
                                   context: TimelineObjView.Context[S])(implicit tx: S#Tx): ProcObjView.Timeline[S] = {
-    // val proc    = obj
-    // val inputs  = proc.inputs
-    // val outputs = proc.outputs
-
-    val attr    = obj.attr
-    val bus     = attr.$[IntObj](ObjKeys.attrBus    ).map(_.value)
-    val res = new TimelineImpl[S](tx.newHandle(obj), busOption = bus, context = context)
+    val attr = obj.attr
+    val bus  = attr.$[IntObj](ObjKeys.attrBus    ).map(_.value)
+    new TimelineImpl[S](tx.newHandle(obj), busOption = bus, context = context)
       .init(timedID, span, obj)
-
-//    lazy val idH = tx.newHandle(timedID)
-//
-//    import context.{scanMap, viewMap}
-//
-//    def buildLinks(isInput: Boolean): Unit = {
-//      val scans = if (isInput) inputs else outputs
-//      scans.iterator.foreach { case (key, scan) =>
-//        if (DEBUG) println(s"PV $timedID add scan ${scan.id}, $key")
-//        scanMap.put(scan.id, key -> idH)
-//        val it = scan.iterator
-//        it.foreach {
-//          case Scan.Link.Scan(peer) if scanMap.contains(peer.id) =>
-//            val Some((thatKey, thatIdH)) = scanMap.get(peer.id)
-//            val thatID = thatIdH()
-//            viewMap.get(thatID).foreach {
-//              case thatView: ProcObjView.Timeline[S] =>
-//                if (DEBUG) println(s"PV $timedID add link from $key to $thatID, $thatKey")
-//                if (isInput) {
-//                  res     .addInput (key    , thatView, thatKey)
-//                  thatView.addOutput(thatKey, res     , key    )
-//                } else {
-//                  res     .addOutput(key    , thatView, thatKey)
-//                  thatView.addInput (thatKey, res     , key    )
-//                }
-//
-//              case _ =>
-//            }
-//
-//          case other =>
-//            if (DEBUG) other match {
-//              case Scan.Link.Scan(peer) =>
-//                println(s"PV $timedID missing link from $key to scan $peer")
-//              case _ =>
-//            }
-//        }
-//      }
-//    }
-//    buildLinks(isInput = true )
-//    buildLinks(isInput = false)
-    // println("WARNING: ProcObjView.mkTimelineView - buildLinks not yet implemented")  // SCAN
-
-    // procMap.put(timed.id, res)
-    res
   }
 
   // -------- Proc --------
@@ -226,6 +178,10 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
           shape1.lineTo(x + 3.5, py - 6)
           shape1.closePath()
           g.fill(shape1)
+
+          elem.source.foreach { source =>
+            g.drawLine(x, py, x, source.py + source.ph)
+          }
         }
 
         elem.span match {
@@ -350,8 +306,24 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
         case _ =>
       }}
 
+      obj.outputs.iterator.foreach(outputAdded)
+
+      disposables ::= obj.changed.react { implicit tx => upd =>
+        upd.changes.foreach {
+          case proc.Proc.OutputAdded  (out) => outputAdded  (out)
+          case proc.Proc.OutputRemoved(out) => outputRemoved(out)
+          case _ =>
+        }
+      }
+
       this
     }
+
+    private[this] def outputAdded(out: proc.Output[S])(implicit tx: S#Tx): Unit =
+      context.putAux[ProcObjView.Timeline[S]](out.id, this)
+
+    private[this] def outputRemoved(out: proc.Output[S])(implicit tx: S#Tx): Unit =
+      context.removeAux(out.id)
 
     private[this] val attrInRef = Ref(Option.empty[InputAttr[S]])
     private[this] var attrInEDT =     Option.empty[InputAttr[S]]
@@ -444,38 +416,15 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
 
     override def dispose()(implicit tx: S#Tx): Unit = {
+      super.dispose()
+      import TxnLike.peer
       val proc = obj
-      // SCAN
-//      proc.inputs.iterator.foreach { case (_, scan) =>
-//        context.scanMap.remove(scan.id)
-//      }
-      proc.outputs.iterator.foreach { case scan /* (_, scan) */ =>
-        context.removeAux(scan.id)
-      }
+      proc.outputs.iterator.foreach(outputRemoved)
+      attrInRef.swap(None).foreach(_.dispose())
       deferTx(disposeGUI())
     }
 
-    private[this] def disposeGUI(): Unit = {
-      releaseSonogram()
-
-//      def removeLinks(inp: Boolean): Unit = {
-//        val map = if (inp) inputs else outputs
-//        map.foreach { case (thisKey, links) =>
-//          links.foreach { link =>
-//            val thatView  = link.target
-//            val thatKey   = link.targetKey
-//            if (inp)
-//              thatView.removeOutput(thatKey, self, thisKey)
-//            else
-//              thatView.removeInput (thatKey, self, thisKey)
-//          }
-//        }
-//        if (inp) inputs = Map.empty else outputs = Map.empty
-//      }
-//
-//      removeLinks(inp = true )
-//      removeLinks(inp = false)
-    }
+    private[this] def disposeGUI(): Unit = releaseSonogram()
 
     def isGlobal: Boolean = {
       import de.sciss.equal.Implicits._
