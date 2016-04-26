@@ -68,14 +68,18 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
   protected def paintInner(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, selected: Boolean): Unit = ()
 
   /** These are updated by paintBack and will thus be valid in paintFront as well. */
-  protected var px  = 0
-  protected var py  = 0
-  protected var pw  = 0
-  protected var ph  = 0
+  var px  = 0
+  var py  = 0
+  var pw  = 0
+  var ph  = 0
+
+  var pStart = 0L
+  var pStop  = 0L
+
   /** Inner (after title bar) */
-  protected var phi = 0
+  protected var phi   = 0
   /** Inner (after title bar) */
-  protected var pyi = 0
+  protected var pyi   = 0
   /** Clipped left */
   protected var px1c  = 0
   /** Clipped right */
@@ -86,14 +90,13 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
     val canvas          = tlv.canvas
     val trackTools      = canvas.trackTools
     val regionViewMode  = trackTools.regionViewMode
-    var start           = Long.MinValue
     var x1              = -5
     val peer            = canvas.canvasComponent.peer
     val w               = peer.getWidth
     // val h            = peer.getHeight
     var x2              = w + 5
 
-    var move            = 0L
+    // var move            = 0L
     import canvas.{frameToScreen, trackToScreen, framesToScreen}
     import r.{ttFadeState => fadeState, ttMoveState => moveState, ttResizeState => resizeState}
     import r.clipRect
@@ -116,44 +119,46 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
         }
       } else 0L
 
-    def adjustMove(start: Long): Long =
-      if (selected) {
-        val dt0 = moveState.deltaTime
-        if (dt0 >= 0) dt0 else {
-          val total = tlv.timelineModel.bounds
-          math.max(-(start - total.start), dt0)
-        }
-      } else 0L
+//    def adjustMove(start: Long): Long =
+//      if (selected) {
+//        val dt0 = moveState.deltaTime
+//        if (dt0 >= 0) dt0 else {
+//          val total = tlv.timelineModel.bounds
+//          math.max(-(start - total.start), dt0)
+//        }
+//      } else 0L
 
     spanValue match {
-      case Span(_start, stop) =>
-        start         = _start
+      case Span(start, stop) =>
         val dStart    = adjustStart(start)
         val dStop     = adjustStop (stop )
-        val newStart  = start + dStart
-        val newStop   = math.max(newStart + TimelineView.MinDur, stop + dStop)
-        x1            = frameToScreen(newStart).toInt
-        x2            = frameToScreen(newStop ).toInt
-        move          = adjustMove(start)
+        pStart        = start + dStart
+        pStop         = stop + dStop
+        val newStop   = math.max(pStart + TimelineView.MinDur, pStop)
+        x1            = frameToScreen(pStart ).toInt
+        x2            = frameToScreen(newStop).toInt
+        // move          = adjustMove(start)
 
-      case Span.From(_start) =>
-        start         = _start
+      case Span.From(start) =>
         val dStart    = adjustStart(start)
-        val newStart  = start + dStart
-        x1            = frameToScreen(newStart).toInt
+        pStart        = start + dStart
+        pStop         = Long.MaxValue
+        x1            = frameToScreen(pStart).toInt
         // x2         = w + 5
-        move          = adjustMove(start)
+        // move          = adjustMove(start)
 
       case Span.Until(stop) =>
         val dStop     = adjustStop(stop)
-        val newStop   = stop + dStop
-        x2            = frameToScreen(newStop).toInt
+        pStart        = Long.MinValue
+        pStop         = stop + dStop
+        x2            = frameToScreen(pStop).toInt
       // start         = Long.MinValue
       // x1         = -5
       // move       = 0L
 
       case Span.All =>
-      // start         = Long.MinValue
+       pStart         = Long.MinValue
+       pStop          = Long.MaxValue
       // x1            = -5
       // x2            = w + 5
       // move            = 0L

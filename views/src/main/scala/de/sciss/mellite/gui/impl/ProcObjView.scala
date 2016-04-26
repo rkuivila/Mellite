@@ -31,6 +31,7 @@ import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{AudioCue, AuxContext, ObjKeys, Proc, TimeRef}
+import java.awt.{Color => JColor}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.stm.{Ref, TSet}
@@ -74,17 +75,6 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   type ScanMap[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
 
   type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, ProcObjView[S]]
-
-  // private final val DEBUG = false
-
-//  private def addLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] =
-//    map + (key -> (map.getOrElse(key, Vec.empty) :+ value))
-//
-//  private def removeLink[A, B](map: Map[A, Vec[B]], key: A, value: B): Map[A, Vec[B]] = {
-//    import de.sciss.equal.Implicits._
-//    val newVec = map.getOrElse(key, Vec.empty).filterNot(_ === value)
-//    if (newVec.isEmpty) map - key else map + (key -> newVec)
-//  }
 
   /** Constructs a new proc view from a given proc, and a map with the known proc (views).
     * This will automatically add the new view to the map!
@@ -174,7 +164,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   }
 
   private trait InputAttr[S <: Sys[S]] extends Disposable[S#Tx] {
-    def paintInputAttr(g: Graphics2D): Unit
+    def paintInputAttr(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, px1c: Int, px2c: Int): Unit
   }
 
   private final class InputAttrTimeline[S <: Sys[S]](parent: ProcObjView.Timeline[S],
@@ -212,8 +202,43 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       xs.foreach(addAttrIn(span, _, fire = false)(tx0))
     }
 
-    def paintInputAttr(g: Graphics2D): Unit = {
-      println(s"paintInputAttr(${rangeSeq.iterator.size})")
+    def paintInputAttr(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, px1c: Int, px2c: Int): Unit = {
+      // println(s"paintInputAttr(${rangeSeq.iterator.size})")
+      val canvas  = tlv.canvas
+      val pStart  = parent.pStart
+      val pStop   = parent.pStop
+      val py      = parent.py
+      val start   = math.max(pStart, canvas.screenToFrame(px1c - 4).toLong) - pStart
+      val stop    = math.min(pStop , canvas.screenToFrame(px2c + 4).toLong) - pStart
+
+      val it      = rangeSeq.filterOverlaps((start, stop))
+      if (it.isEmpty) return
+
+      g.setColor(JColor.gray)
+      it.foreach { elem =>
+        import r.shape1
+
+        def drawArrow(pos: Long): Unit = {
+          shape1.reset()
+          val x = canvas.frameToScreen(pos + pStart).toInt
+          shape1.moveTo(x + 0.5, py)
+          shape1.lineTo(x - 2.5, py - 6)
+          shape1.lineTo(x + 3.5, py - 6)
+          shape1.closePath()
+          g.fill(shape1)
+        }
+
+        elem.span match {
+          case Span(eStart, eStop) =>
+            drawArrow(eStart)
+            drawArrow(eStop)
+          case Span.From(eStart) =>
+            drawArrow(eStart)
+          case Span.Until(eStop) =>
+            drawArrow(eStop)
+          case _ =>
+        }
+      }
     }
 
     private def addAttrIn(span: SpanLike, entry: proc.Timeline.Timed[S], fire: Boolean)(implicit tx: S#Tx): Unit =
@@ -355,8 +380,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
 
     override def paintFront(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering): Unit =
-      attrInEDT.foreach { attrInView =>
-        attrInView.paintInputAttr(g)
+      if (pStart > Long.MinValue) attrInEDT.foreach { attrInView =>
+        attrInView.paintInputAttr(g, tlv = tlv, r = r, px1c = px1c, px2c = px2c)
       }
 
     // paint sonogram
@@ -481,6 +506,14 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     var busOption: Option[Int]
 
     def debugString: String
+
+    def px: Int
+    def py: Int
+    def pw: Int
+    def ph: Int
+
+    def pStart: Long
+    def pStop : Long
   }
 }
 trait ProcObjView[S <: stm.Sys[S]] extends ObjView[S] {
