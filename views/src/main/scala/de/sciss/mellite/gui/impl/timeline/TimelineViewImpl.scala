@@ -59,8 +59,7 @@ object TimelineViewImpl {
   //  private val colrLink            = new awt.Color(0x80, 0x80, 0x80)
   //  private val strkLink            = new BasicStroke(2f)
 
-  private final val LinkArrowLen = 0
-  // 10  ; currently no arrow tip painted
+  private final val LinkArrowLen  = 0   // 10  ; currently no arrow tip painted
   private final val LinkCtrlPtLen = 20
 
   private val DEBUG = false // true
@@ -219,7 +218,6 @@ object TimelineViewImpl {
             import synth._
             canvas.trackTools.visualBoost = value.linexp(0, 64, 1, 512) // .toFloat
         }
-        // trackColor = awt.Color.white
         preferredSize = new Dimension(33, 28)
         background = null
         // paintTrack = false

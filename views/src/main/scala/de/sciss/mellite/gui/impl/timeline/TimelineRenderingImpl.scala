@@ -18,7 +18,7 @@ package timeline
 
 import java.awt.geom.Path2D
 import java.awt.image.{BufferedImage, ImageObserver}
-import java.awt.{LinearGradientPaint, Paint, Rectangle, TexturePaint, Color => JColor}
+import java.awt.{BasicStroke, LinearGradientPaint, Paint, Rectangle, Stroke, TexturePaint, Color => JColor}
 
 import scala.swing.Component
 
@@ -65,10 +65,15 @@ object TimelineRenderingImpl {
     new TexturePaint(imgLight, new Rectangle(0, 0, 4, 4))
   }
 
-  private val pntNameShadowDark : Paint = new JColor(0, 0, 0, 0x80)
-  private val pntNameShadowLight: Paint = new JColor(0xFF, 0xFF, 0xFF, 0x80)
-  private val pntNameDark       : Paint = JColor.white
-  private val pntNameLight      : Paint = JColor.black
+  private val pntNameShadowDark : Paint   = new JColor(0, 0, 0, 0x80)
+  private val pntNameShadowLight: Paint   = new JColor(0xFF, 0xFF, 0xFF, 0x80)
+  private val pntNameDark       : Paint   = JColor.white
+  private val pntNameLight      : Paint   = JColor.black
+
+  private val pntInlet          : Paint   = JColor.gray
+  private val pntInletSpan      : Paint   = JColor.gray
+  private val strkInletSpan     : Stroke  = new BasicStroke(1f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 10f,
+    Array[Float](0.5f, 1.5f), 0f)
 }
 
 final class TimelineRenderingImpl(component: Component, isDark: Boolean) extends TimelineRendering {
@@ -96,6 +101,10 @@ final class TimelineRenderingImpl(component: Component, isDark: Boolean) extends
   
   val regionTitleHeight           : Int               = 15
   val regionTitleBaseline         : Int               = 12
+
+  val pntInlet                    : Paint             = Impl.pntInlet
+  val pntInletSpan                : Paint             = Impl.pntInletSpan
+  val strokeInletSpan             : Stroke            = Impl.strkInletSpan
 
   var ttMoveState                 : TrackTool.Move    = TrackTool.NoMove
   var ttResizeState               : TrackTool.Resize  = TrackTool.NoResize

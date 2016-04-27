@@ -31,8 +31,8 @@ import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{AudioCue, AuxContext, ObjKeys, Proc, TimeRef}
-import java.awt.{Color => JColor}
 
+import scala.annotation.switch
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.stm.{Ref, TSet}
 import scala.language.implicitConversions
@@ -166,35 +166,207 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       val it      = rangeSeq.filterOverlaps((start, stop))
       if (it.isEmpty) return
 
-      g.setColor(JColor.gray)
+      /*
+        Algorithm: (patching-study.svg)
+
+        - foreground and background shapes
+        - foreground is one of: <start>, <stop>, <stop-cut>
+          each of which occupies a horizontal space.
+          A <start> overlapping a <stop> transforms it into
+          a <stop-cut>
+        - background: a set of lines. foreground shapes
+          but these lines
+        - traverse range-seq, build up foreground and background
+          and perform cuts as we proceed
+        - optional extension: add <plus> decorator to <start>
+          if a line exists that extends beyond the start point
+        - draw background shapes with dashed stroke
+        - fill foreground shapes
+
+        Data structure:
+
+         foreground: [x: Int, tpe: Int] * N
+
+           where tpe = 0 start, 1 start with plus, 2 stop, 3 stop-cut
+           and predefined 'padding' for each shape
+
+           for start, we add (source-pos << 2) or (0x1fffffff << 2)
+
+         background: [x-start: Int, x-stop: Int] * N
+
+       */
+
+      // ---- calculate shapes ----
+
+      var fgSize = 0
+      var bgSize = 0
+      var fg     = new Array[Int](16 * 2) // XXX TODO -- avoid allocation
+      var bg     = new Array[Int](16 * 2)
+
       it.foreach { elem =>
-        import r.shape1
+        @inline
+        def frameToScreen(pos: Long): Int = canvas.frameToScreen(pos + pStart).toInt
 
-        def drawArrow(pos: Long): Unit = {
-          shape1.reset()
-          val x = canvas.frameToScreen(pos + pStart).toInt
-          shape1.moveTo(x + 0.5, py)
-          shape1.lineTo(x - 2.5, py - 6)
-          shape1.lineTo(x + 3.5, py - 6)
-          shape1.closePath()
-          g.fill(shape1)
+        def addToFg(x: Int, tpe: Int): Unit = {
+          if (fgSize == fg.length) {
+            val tmp = fg
+            fg = new Array[Int](fgSize * 2)
+            System.arraycopy(tmp, 0, fg, 0, fgSize)
+          }
+          fg(fgSize)      = x
+          fg(fgSize + 1)  = tpe
+          fgSize += 2
+        }
 
-          elem.source.foreach { source =>
-            g.drawLine(x, py, x, source.py + source.ph)
+        def addToBg(x1: Int, x2: Int): Unit = {
+          if (bgSize == bg.length) {
+            val tmp = bg
+            bg = new Array[Int](bgSize * 2)
+            System.arraycopy(tmp, 0, bg, 0, bgSize)
+          }
+          bg(bgSize)      = x1
+          bg(bgSize + 1)  = x2
+          bgSize += 2
+        }
+
+        def addStart(pos: Long, elem: Elem): Unit = {
+          val x   = frameToScreen(pos)
+          val tpe = elem.source.fold(0x7ffffffc)(src => (src.py + src.ph) << 2)
+
+          addToFg(x, tpe)
+
+          val x1  = x - 3 // stop overlaps
+          val x2  = x + 3 // stop overlaps
+
+          var i = 0
+          while (i < fgSize) {
+            if (fg(i + 1) == 2 /* stop */) {
+              val xStop = fg(i)
+              if (xStop > x1 && xStop < x2) {
+                fg(i)     = x1
+                fg(i + 1) = 3 // stop-cut
+              }
+            }
+            i += 2
+          }
+        }
+
+        def addStop(pos: Long): Unit = {
+          val x = frameToScreen(pos)
+          addToFg(x, 2)
+        }
+
+        def addSpan(start: Long, stop: Long): Unit = {
+          val thisStart = frameToScreen(start)
+          val thisStop  = frameToScreen(stop )
+
+          // 'union'
+          var i = 0
+          var startFound = false
+          while (i < bgSize && !startFound) {
+            val thatStop = bg(i + 1)
+            if (thisStart <= thatStop) {
+              startFound = true
+            } else {
+              i += 2
+            }
+          }
+          
+          if (i < bgSize) {
+            bg(i) = math.min(bg(i), thisStart)
+            var j = i + 2
+            var stopFound = false
+            while (j < bgSize && !stopFound) {
+              val thatStart = bg(j)
+              if (thisStop < thatStart) {
+                stopFound = true
+              } else {
+                j += 2
+              }
+            }
+            j -= 2
+            if (j > i) {  // 'compress' the array, remove consumed elements
+              System.arraycopy(bg, j + 1, bg, i + 1, bgSize - (j + 1))
+              bgSize -= j - i
+              j = i
+            }
+            bg(j + 1) = math.max(bg(j + 1), thisStop)
+
+          } else {
+            addToBg(thisStart, thisStop)
           }
         }
 
         elem.span match {
           case Span(eStart, eStop) =>
-            drawArrow(eStart)
-            drawArrow(eStop)
+            addStart(eStart, elem)
+            addStop (eStop )
+            addSpan (eStart, eStop)
           case Span.From(eStart) =>
-            drawArrow(eStart)
+            addStart(eStart, elem)
+            // addSpan(eStart, ?)  XXX TODO
           case Span.Until(eStop) =>
-            drawArrow(eStop)
+            addStop(eStop)
+            addSpan (0L, eStop)
           case _ =>
         }
       }
+
+      // XXX TODO: subtract foreground from background
+
+      // ---- draw ----
+
+      def drawArrow(x: Int, srcY: Int): Unit = {
+        import r.shape1
+        shape1.reset()
+        shape1.moveTo(x + 0.5, py)
+        shape1.lineTo(x - 2.5, py - 6)
+        shape1.lineTo(x + 3.5, py - 6)
+        shape1.closePath()
+        g.fill(shape1)
+
+        if (srcY != 0x1fffffff) {
+          g.drawLine(x, py - 6, x, srcY /* source.py + source.ph */)
+        }
+      }
+
+      @inline
+      def drawStop(x: Int): Unit =
+        g.drawLine(x, py, x, py - 6)
+
+      @inline
+      def drawStopCut(x: Int): Unit =
+        g.drawLine(x + 1, py, x - 2, py - 6)
+
+      // ---- draw foreground ----
+
+      g.setPaint(r.pntInlet)
+      var ii = 0
+      while (ii < fgSize) {
+        val x   = fg(ii)
+        val tpe = fg(ii + 1)
+        (tpe & 3: @switch) match {
+          case 0 => drawArrow  (x, tpe >> 2)
+          case 1 => drawArrow  (x, tpe >> 2) // XXX TODO: drawPlus
+          case 2 => drawStop   (x)
+          case 3 => drawStopCut(x)
+        }
+        ii += 2
+      }
+
+      // ---- draw background ----
+
+      val strkOrig = g.getStroke
+      g.setPaint(r.pntInletSpan)
+      g.setStroke(r.strokeInletSpan)
+      var jj = 0
+      while (jj < bgSize) {
+        val x1 = bg(jj)
+        val x2 = bg(jj + 1)
+        g.drawLine(x1, py - 3, x2, py - 3)
+        jj += 2
+      }
+      g.setStroke(strkOrig)
     }
 
     private def addAttrIn(span: SpanLike, entry: proc.Timeline.Timed[S], fire: Boolean)(implicit tx: S#Tx): Unit =
