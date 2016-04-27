@@ -194,6 +194,9 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
          background: [x-start: Int, x-stop: Int] * N
 
+         we use linear search here; binary search would be faster, but also more involved,
+         and typically we will only have very few elements
+
        */
 
       // ---- calculate shapes ----
@@ -257,15 +260,15 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
         }
 
         def addSpan(start: Long, stop: Long): Unit = {
-          val thisStart = frameToScreen(start)
-          val thisStop  = frameToScreen(stop )
+          val fgStart = frameToScreen(start)
+          val fgStop  = frameToScreen(stop )
 
           // 'union'
           var i = 0
           var startFound = false
           while (i < bgSize && !startFound) {
-            val thatStop = bg(i + 1)
-            if (thisStart <= thatStop) {
+            val bgStop = bg(i + 1)
+            if (fgStart <= bgStop) {
               startFound = true
             } else {
               i += 2
@@ -273,12 +276,12 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
           }
           
           if (i < bgSize) {
-            bg(i) = math.min(bg(i), thisStart)
+            bg(i) = math.min(bg(i), fgStart)
             var j = i + 2
             var stopFound = false
             while (j < bgSize && !stopFound) {
-              val thatStart = bg(j)
-              if (thisStop < thatStart) {
+              val bgStart = bg(j)
+              if (fgStop < bgStart) {
                 stopFound = true
               } else {
                 j += 2
@@ -290,10 +293,10 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
               bgSize -= j - i
               j = i
             }
-            bg(j + 1) = math.max(bg(j + 1), thisStop)
+            bg(j + 1) = math.max(bg(j + 1), fgStop)
 
           } else {
-            addToBg(thisStart, thisStop)
+            addToBg(fgStart, fgStop)
           }
         }
 
@@ -304,7 +307,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
             addSpan (eStart, eStop)
           case Span.From(eStart) =>
             addStart(eStart, elem)
-            // addSpan(eStart, ?)  XXX TODO
+            // quasi ellipsis
+            addSpan(eStart, math.min(stop, eStart + canvas.screenToFrames(16).toLong))
           case Span.Until(eStop) =>
             addStop(eStop)
             addSpan (0L, eStop)
@@ -312,7 +316,97 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
         }
       }
 
-      // XXX TODO: subtract foreground from background
+      // ---- subtract foreground from background ----
+      // XXX TODO -- this could go into a generic library, it's a very useful algorithm
+
+      var kk = 0
+      while (kk < fgSize) {
+        val x   = fg(kk)
+        val tpe = fg(kk + 1) & 3
+        if (tpe < 3) {  // ignore <stop-cut> because it's redundant with causal <start>
+          val fgStart  = if (tpe == 2) x      else x - 3
+          val fgStop   = /* if (tpe == 2) x + 3  else */ x + 3
+
+          var i = 0
+          var startFound = false
+          while (i < bgSize && !startFound) {
+            val bgStop = bg(i + 1)
+            if (fgStart < bgStop) {
+              startFound = true
+            } else {
+              i += 2
+            }
+          }
+
+          if (i < bgSize) {
+            var j = i
+            var stopFound = false
+            while (j < bgSize && !stopFound) {
+              val bgStart = bg(j)
+              if (fgStop < bgStart) {
+                stopFound = true
+              } else {
+                j += 2
+              }
+            }
+            j -= 2
+
+            // cases:
+            // i > j --- nothing to be removed
+            // i == j
+            //   - fgStart == bgStart && fgStop == bgStop: remove
+            //   - fgStart >  bgStart && fgStop == bgStop: replace
+            //   - fgStart == bgStart && fgStop < bgStop : replace
+            //   - fgStart >  bgStart && fgStop < bgStop : replace and insert
+            // i < j
+            //   - implies fgStop == bgStop
+            //   - fgStart == bgStart: remove
+            //   - fgStart > bgStart : replace
+            //   - process 'inner'
+            //   - last: if fgStop < bgStop replace else remove
+
+            if (i <= j) {
+              if (i == j && bg(i) < fgStart && bg(i + 1) > fgStop) { // bgSize grows
+                j += 2
+                val bgIn = if (bgSize == bg.length) {
+                  val tmp = bg
+                  bg = new Array[Int](bgSize * 2)
+                  System.arraycopy(tmp, 0, bg, 0, j)  // include i
+                  tmp
+                } else bg
+
+                System.arraycopy(bgIn, i, bg, j, bgSize - i)  // include i
+                bg(i + 1) = fgStart   // replace-stop
+                bg(j    ) = fgStop    // replace-start
+                bgSize += 2
+
+              } else {    // bgSize stays the same or shrinks
+                var read  = i
+                var write = i
+                while (read <= j) {
+                  val bgStart = bg(read)
+                  val bgStop  = bg(read + 1)
+                  if (fgStart > bgStart) {
+                    bg(read + 1) = fgStart  // replace-stop
+                    write += 2
+                  } else if (fgStop < bgStop) {
+                    bg(read) = fgStop       // replace-start
+                    write += 2
+                  } // else remove
+                  read += 2
+                }
+
+                if (write < read) {
+                  System.arraycopy(bg, read, bg, write, bgSize - read)
+                  bgSize -= read - write
+                }
+              }
+            }
+          }
+        }
+
+        kk += 2
+      }
 
       // ---- draw ----
 

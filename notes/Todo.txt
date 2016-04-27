@@ -1,18 +1,7 @@
 AttrMapView
 
-[OK]    - FadeSpec -> missing view
-[OK]    - Boolean  -> missing view
-[OK]    - Value updates not reflected (e.g. gain change)
         - Drag-and-drop
         - Title
-[OK]    - Icon/Type
-[OK]    - custom ObjView renderers
-[OK]    - editable
-[OK]    - sortable columns
-
-ElementsView
-
-        - rename yields 'unnamed'
 
 Cursors
 
@@ -20,14 +9,5 @@ Cursors
 
 TimelineView
 
-[OK]    - rename not reflected
-        - use undo manager
-        - removal and adding of attributes
-
-General
-
-        - use sample rate 14112000 throughout
-
-ObjView
-
-        - allow custom editors (+ click count)
+        - title of regions should always appear on window (visual span)
+        - grapheme display (modulator output links)
