@@ -17,25 +17,20 @@ package gui
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
-import de.sciss.lucre.swing.View
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.document.{AttrMapViewImpl => Impl}
-import de.sciss.model.Model
 
 object AttrMapView {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undoManager: UndoManager): AttrMapView[S] =
     Impl(obj)
 
-  type Selection[S <: Sys[S]] = List[(String, ObjView[S])]
+  type Selection[S <: Sys[S]] = MapView.Selection[S]
 
-  sealed trait Update[S <: Sys[S]] { def view: AttrMapView[S] }
-  final case class SelectionChanged[S <: Sys[S]](view: AttrMapView[S], selection: Selection[S])
-    extends Update[S]
+  type Update[S <: Sys[S]] = MapView.Update[S, AttrMapView[S]]
+  type SelectionChanged[S <: Sys[S]]  = MapView.SelectionChanged[S, AttrMapView[S]]
+  val  SelectionChanged               = MapView.SelectionChanged
 }
-trait AttrMapView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] with Model[AttrMapView.Update[S]] {
-  def selection: AttrMapView.Selection[S]
+trait AttrMapView[S <: stm.Sys[S]] extends MapView[S, AttrMapView[S]] {
   def obj(implicit tx: S#Tx): Obj[S]
-
-  def queryKey(initial: String = "key"): Option[String]
 }

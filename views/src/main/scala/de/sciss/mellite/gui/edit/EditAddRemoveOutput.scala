@@ -1,5 +1,5 @@
 /*
- *  EditAddRemoveScan.scala
+ *  EditAddRemoveOutput.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
@@ -23,9 +23,9 @@ import de.sciss.synth.proc.Proc
 
 // direction: true = insert, false = remove
 // XXX TODO - should disconnect links and restore them in undo
-private[edit] final class EditAddRemoveScan[S <: Sys[S]](isAdd: Boolean,
+private[edit] final class EditAddRemoveOutput[S <: Sys[S]](isAdd: Boolean,
                                                          procH: stm.Source[S#Tx, Proc[S]],
-                                                         key: String, isInput: Boolean)(implicit cursor: stm.Cursor[S])
+                                                         key: String)(implicit cursor: stm.Cursor[S])
   extends AbstractUndoableEdit {
 
   override def undo(): Unit = {
@@ -50,31 +50,30 @@ private[edit] final class EditAddRemoveScan[S <: Sys[S]](isAdd: Boolean,
 
   private def perform(isUndo: Boolean)(implicit tx: S#Tx): Unit = {
     val proc    = procH()
-    ???! // SCAN
-//    val scans   = if (isInput) proc.inputs else proc.outputs
-//    if (isAdd ^ isUndo)
-//      scans.add   (key)
-//    else
-//      scans.remove(key)
+    val outputs = proc.outputs
+    if (isAdd ^ isUndo)
+      outputs.add   (key)
+    else
+      outputs.remove(key)
   }
 
-  override def getPresentationName = s"${if (isAdd) "Add" else "Remove"} Scan"
+  override def getPresentationName = s"${if (isAdd) "Add" else "Remove"} Output"
 }
-object EditAddScan {
-  def apply[S <: Sys[S]](proc: Proc[S], key: String, isInput: Boolean)
+object EditAddOutput {
+  def apply[S <: Sys[S]](proc: Proc[S], key: String)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val procH = tx.newHandle(proc)
-    val res = new EditAddRemoveScan(isAdd = true, procH = procH, key = key, isInput = isInput)
+    val res = new EditAddRemoveOutput(isAdd = true, procH = procH, key = key)
     res.perform()
     res
   }
 }
 
-object EditRemoveScan {
-  def apply[S <: Sys[S]](proc: Proc[S], key: String, isInput: Boolean)
+object EditRemoveOutput {
+  def apply[S <: Sys[S]](proc: Proc[S], key: String)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val procH = tx.newHandle(proc)
-    val res = new EditAddRemoveScan(isAdd = false, procH = procH, key = key, isInput = isInput)
+    val res = new EditAddRemoveOutput(isAdd = false, procH = procH, key = key)
     res.perform()
     res
   }

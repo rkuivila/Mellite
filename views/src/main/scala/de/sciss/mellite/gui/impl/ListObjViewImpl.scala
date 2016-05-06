@@ -17,7 +17,7 @@ package impl
 
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.lucre.expr.{Type, BooleanObj, Expr}
+import de.sciss.lucre.expr.{BooleanObj, Expr, Type}
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{Window, deferTx}
@@ -68,7 +68,8 @@ object ListObjViewImpl {
     ObjViewImpl.FadeSpec        .tpe.typeID -> ObjViewImpl.FadeSpec,
     ActionView                  .tpe.typeID -> ActionView,
     ObjViewImpl.Ensemble        .tpe.typeID -> ObjViewImpl.Ensemble,
-    ObjViewImpl.Nuages          .tpe.typeID -> ObjViewImpl.Nuages
+    ObjViewImpl.Nuages          .tpe.typeID -> ObjViewImpl.Nuages,
+    OutputObjView               .tpe.typeID -> OutputObjView
   )
 
   /** A trait that when mixed in provides `isEditable` and `tryEdit` as non-op methods. */

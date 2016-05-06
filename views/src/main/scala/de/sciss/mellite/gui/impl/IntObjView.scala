@@ -18,17 +18,15 @@ package impl
 import javax.swing.SpinnerNumberModel
 
 import de.sciss.desktop
-import de.sciss.lucre.expr.{IntObj, Expr}
+import de.sciss.lucre.expr.IntObj
+import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.stm
 import de.sciss.swingplus.Spinner
-import de.sciss.synth.proc
 import de.sciss.synth.proc.Confluent
+import de.sciss.synth.proc.Implicits._
 
 import scala.util.Try
-
-import proc.Implicits._
 
 object IntObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = IntObj[~]

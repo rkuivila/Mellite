@@ -124,10 +124,10 @@ object ObjViewImpl {
 
   object Long extends ListObjView.Factory {
     type E[S <: stm.Sys[S]] = LongObj[S]
-    val icon      = raphaelIcon(Shapes.IntegerNumber)  // XXX TODO
-    val prefix    = "Long"
-    def humanName = prefix
-    def tpe    = LongObj
+    val icon          = raphaelIcon(Shapes.IntegerNumber)  // XXX TODO
+    val prefix        = "Long"
+    def humanName     = prefix
+    def tpe           = LongObj
     def hasMakeDialog = true
 
     def category = ObjView.categPrimitives
@@ -186,10 +186,10 @@ object ObjViewImpl {
 
   object Double extends ListObjView.Factory {
     type E[S <: stm.Sys[S]] = DoubleObj[S]
-    val icon      = raphaelIcon(Shapes.RealNumber)
-    val prefix    = "Double"
-    def humanName = prefix
-    def tpe = DoubleObj
+    val icon          = raphaelIcon(Shapes.RealNumber)
+    val prefix        = "Double"
+    def humanName     = prefix
+    def tpe           = DoubleObj
     def hasMakeDialog = true
 
     def category = ObjView.categPrimitives

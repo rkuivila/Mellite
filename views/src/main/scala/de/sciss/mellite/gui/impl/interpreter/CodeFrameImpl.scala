@@ -21,14 +21,15 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{OptionPane, UndoManager}
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Obj, Sys, IDPeek}
+import de.sciss.lucre.stm.{IDPeek, Obj}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.{CellView, View}
+import de.sciss.lucre.synth.Sys
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.impl.ActionImpl
-import de.sciss.synth.proc.{SynthGraphObj, Action, Code, Proc}
+import de.sciss.synth.proc.{Action, Code, Proc, SynthGraphObj}
 
-import scala.swing.{Component, Orientation, SplitPane}
+import scala.swing.{Component, Dimension, Orientation, SplitPane}
 
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
@@ -67,9 +68,9 @@ object CodeFrameImpl {
     }
 
     implicit val undo = new UndoManagerImpl
-    // val bottomView = ScansView[S](obj) // SCANS
+    val rightView = OutputsView[S](obj) // SCANS
 
-    make(obj, codeObj, code0, Some(handler), hasExecute = false, bottomViewOpt = None /* Some(bottomView) */)
+    make(obj, codeObj, code0, Some(handler), hasExecute = false, rightViewOpt = Some(rightView))
   }
 
   // ---- adapter for editing a Action's source ----
@@ -118,7 +119,7 @@ object CodeFrameImpl {
     }
 
     implicit val undo = new UndoManagerImpl
-    make(obj, codeObj, code0, handlerOpt, hasExecute = true, bottomViewOpt = None)
+    make(obj, codeObj, code0, handlerOpt, hasExecute = true, rightViewOpt = None)
   }
 
   // ---- general constructor ----
@@ -129,23 +130,33 @@ object CodeFrameImpl {
     val _codeEx = obj
     val _code   = _codeEx.value
     implicit val undo = new UndoManagerImpl
-    make[S, _code.In, _code.Out](obj, obj, _code, None, hasExecute = hasExecute, bottomViewOpt = None)
+    make[S, _code.In, _code.Out](obj, obj, _code, None, hasExecute = hasExecute, rightViewOpt = None)
   }
   
   private def make[S <: Sys[S], In0, Out0](pObj: Obj[S], obj: Code.Obj[S], code0: Code { type In = In0; type Out = Out0 },
                                 handler: Option[CodeView.Handler[S, In0, Out0]], hasExecute: Boolean,
-                                bottomViewOpt: Option[View[S]])
+                                rightViewOpt: Option[View[S]])
                                (implicit tx: S#Tx, ws: Workspace[S], csr: stm.Cursor[S],
                                 undoMgr: UndoManager, compiler: Code.Compiler): CodeFrame[S] = {
     // val _name   = /* title getOrElse */ obj.attr.name
     val codeView  = CodeView(obj, code0, hasExecute = hasExecute)(handler)
-    val view      = bottomViewOpt.fold[View[S]](codeView) { bottomView =>
+    val view      = rightViewOpt.fold[View[S]](codeView) { bottomView =>
       new View.Editable[S] with ViewHasWorkspace[S] {
         val undoManager = undoMgr
         val cursor      = csr
         val workspace   = ws
 
-        lazy val component: Component = new SplitPane(Orientation.Vertical, codeView.component, bottomView.component)
+        lazy val component: Component = {
+          val res = new SplitPane(Orientation.Vertical, codeView.component, bottomView.component)
+          res.oneTouchExpandable  = true
+          res.resizeWeight        = 1.0
+          // XXX TODO - doesn't work
+//          res.resetToPreferredSizes()
+//          res.peer.validate()
+//          res.bottomComponent.minimumSize = new Dimension() // cf. https://stackoverflow.com/questions/4934499
+//          res.dividerLocation     = 1.0
+          res
+        }
 
         def dispose()(implicit tx: S#Tx): Unit = {
           codeView  .dispose()

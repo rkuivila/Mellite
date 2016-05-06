@@ -119,6 +119,30 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     def paintInputAttr(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, px1c: Int, px2c: Int): Unit
   }
 
+  private final class InputAttrOutput[S <: Sys[S]](parent: ProcObjView.Timeline[S],
+                                                   out: proc.Output[S], tx0: S#Tx)
+    extends InputAttr[S] {
+
+    def paintInputAttr(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, px1c: Int, px2c: Int): Unit = {
+      // XXX TODO
+      println("TODO: InputAttrOutput.paintInputAttr")
+    }
+
+    def dispose()(implicit tx: S#Tx): Unit = ()
+  }
+
+  private final class InputAttrFolder[S <: Sys[S]](parent: ProcObjView.Timeline[S],
+                                                   f: proc.Folder[S], tx0: S#Tx)
+    extends InputAttr[S] {
+
+    def paintInputAttr(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, px1c: Int, px2c: Int): Unit = {
+      // XXX TODO
+      println("TODO: InputAttrFolder.paintInputAttr")
+    }
+
+    def dispose()(implicit tx: S#Tx): Unit = ()
+  }
+
   private final class InputAttrTimeline[S <: Sys[S]](parent: ProcObjView.Timeline[S],
                                                      tl: proc.Timeline[S], tx0: S#Tx)
     extends InputAttr[S] {
@@ -566,9 +590,11 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       import Proc.mainIn
       attr.get(mainIn).foreach(addAttrIn(_, fire = false))
       disposables ::= attr.changed.react { implicit tx => upd => upd.changes.foreach {
-        case Obj.AttrAdded   (`mainIn`, value) => addAttrIn(value, fire = true)
-        case Obj.AttrRemoved (`mainIn`, value) => ???!
-        case Obj.AttrReplaced(`mainIn`, before, now) => ???!
+        case Obj.AttrAdded   (`mainIn`, value) => addAttrIn   (value)
+        case Obj.AttrRemoved (`mainIn`, value) => removeAttrIn(value)
+        case Obj.AttrReplaced(`mainIn`, before, now) =>
+          removeAttrIn(before)
+          addAttrIn   (now   )
         case _ =>
       }}
 
@@ -594,27 +620,47 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     private[this] val attrInRef = Ref(Option.empty[InputAttr[S]])
     private[this] var attrInEDT =     Option.empty[InputAttr[S]]
 
-    private[this] def addAttrIn(value: Obj[S], fire: Boolean)(implicit tx: S#Tx): Unit = value match {
-      case tl: proc.Timeline[S] =>
-        import TxnLike.peer
-        // println("addAttrIn: Timeline")
-        val tlView  = new InputAttrTimeline(this, tl, tx)
-        val opt     =  Some(tlView)
-        attrInRef.swap(opt).foreach(_.dispose())
+    private[this] def removeAttrIn(value: Obj[S])(implicit tx: S#Tx): Unit = {
+      import TxnLike.peer
+      attrInRef.swap(None).foreach { view =>
+        view.dispose()
         deferAndRepaint {
-          attrInEDT = opt
+          attrInEDT = None
         }
+      }
+    }
 
-      case gr: proc.Grapheme[S] =>
-        println("addAttrIn: Grapheme")
-        ???!
-      case f: proc.Folder  [S] =>
-        println("addAttrIn: Folder")
-        ???!
-      case out: proc.Output  [S] =>
-        println("addAttrIn: Output")
-        ???!
-      case _ =>
+    private[this] def addAttrIn(value: Obj[S], fire: Boolean = true)(implicit tx: S#Tx): Unit = {
+      import TxnLike.peer
+      val viewOpt: Option[InputAttr[S]] = value match {
+        case tl: proc.Timeline[S] =>
+          val tlView  = new InputAttrTimeline(this, tl, tx)
+          Some(tlView)
+
+        case gr: proc.Grapheme[S] =>
+          println("addAttrIn: Grapheme")
+          ???!
+
+        case f: proc.Folder[S] =>
+          val tlView  = new InputAttrFolder(this, f, tx)
+          Some(tlView)
+
+        case out: proc.Output[S] =>
+          val tlView  = new InputAttrOutput(this, out, tx)
+          Some(tlView)
+
+        case _ => None
+      }
+
+      val old = attrInRef.swap(viewOpt)
+      old.foreach(_.dispose())
+      import de.sciss.equal.Implicits._
+      if (viewOpt !== old) {
+        deferTx {
+          attrInEDT = viewOpt
+        }
+        if (fire) this.fire(ObjView.Repaint(this))
+      }
     }
 
     override def paintFront(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering): Unit =
@@ -634,7 +680,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
           // to the region's left margin. That is, if the grapheme segment
           // starts early than the region (its start is less than zero),
           // the frame accordingly increases.
-          val dStart      = (audioVal.fileOffset /* offset - segm.span.start */ +
+          val dStart      = (audioVal.offset /* - segm.span.start */ +
             (if (selected) r.ttResizeState.deltaStart else 0L)) * srRatio
           // a factor to convert from pixel space to audio-file frames
           val canvas      = tlv.canvas

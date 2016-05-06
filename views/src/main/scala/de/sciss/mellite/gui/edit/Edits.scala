@@ -18,16 +18,17 @@ package edit
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.lucre.expr.{StringObj, IntObj, LongObj, SpanLikeObj}
+import de.sciss.lucre.expr.{IntObj, LongObj, SpanLikeObj, StringObj}
 import de.sciss.lucre.{expr, stm}
-import de.sciss.lucre.stm.{Sys, Obj}
+import de.sciss.lucre.stm.{Obj, Sys}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.mellite.ProcActions.{Move, Resize}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.{SynthGraph, proc}
-import de.sciss.synth.proc.{SynthGraphObj, Code, ObjKeys, Proc}
+import de.sciss.synth.proc.{Code, Folder, ObjKeys, Output, Proc, SynthGraphObj}
 
 import scala.collection.breakOut
+import scala.collection.immutable.{Seq => ISeq}
 import scala.util.control.NonFatal
 
 object Edits {
@@ -139,67 +140,60 @@ object Edits {
 //    // source.removeSink(Scan.Link.Scan(sink))
 //    EditRemoveScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
 //  }
-//
-//  def findLink[S <: Sys[S]](out: Proc[S], in: Proc[S])
-//                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[(Scan[S], Scan[S])] = {
-//    val outsIt  = out.outputs.iterator // .toList
-//    val insSeq0 = in .inputs .iterator.toIndexedSeq
-//
-//    // if there is already a link between the two, take the drag gesture as a command to remove it
-//    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
-//      srcScan.iterator.toList.flatMap {
-//        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
-//          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
-//        }
-//
-//        case _ => None
-//      }
-//    }
-//    if (existIt.isEmpty) None else {
-//      val (_ /* sourceKey */, source, _ /* sinkKey */, sink) = existIt.next()
-//      Some((source, sink))
-//    }
-//  }
+
+  sealed trait SinkType[S <: Sys[S]]
+  final case class SinkDirect[S <: Sys[S]]() extends SinkType[S]
+  final case class SinkFolder[S <: Sys[S]](f: Folder[S], index: Int) extends SinkType[S]
+
+  final case class Link[S <: Sys[S]](source: Output[S], sink: Proc[S], key: String, sinkType: SinkType[S])
+
+  def findLink[S <: Sys[S]](out: Proc[S], in: Proc[S], keys: ISeq[String] = Proc.mainIn :: Nil)
+                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[Link[S]] = {
+    val attr = in.attr
+    val it = out.outputs.iterator.flatMap { out =>
+      keys.iterator.flatMap { key =>
+        val sinkTypeOpt = attr.get(key).flatMap {
+          case `out` => Some(SinkDirect[S]())
+          case f: Folder[S] =>
+            val idx = f.indexOf(out)
+            if (idx < 0) None else Some(SinkFolder[S](f, index = idx))
+          case _ => None
+        }
+        sinkTypeOpt.map(tpe => Link(source = out, sink = in, key = key, sinkType = tpe))
+      } // .headOption
+    }
+
+    if (it.isEmpty) None else Some(it.next()) // XXX TODO -- why no `headOption` on iterator?
+  }
 
   def linkOrUnlink[S <: Sys[S]](out: Proc[S], in: Proc[S])
                                (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
-    ???! // SCAN
-//    val outsIt  = out.outputs.iterator // .toList
-//    val insSeq0 = in .inputs .iterator.toIndexedSeq
-//
-//    // if there is already a link between the two, take the drag gesture as a command to remove it
-//    val existIt = outsIt.flatMap { case (srcKey, srcScan) =>
-//      srcScan.iterator.toList.flatMap {
-//        case Scan.Link.Scan(peer) => insSeq0.find(_._2 == peer).map {
-//          case (sinkKey, sinkScan) => (srcKey, srcScan, sinkKey, sinkScan)
-//        }
-//
-//        case _ => None
-//      }
-//    }
-//
-//    findLink(out = out, in = in).fold[Option[UndoableEdit]] {
-//      // XXX TODO cheesy way to distinguish ins and outs now :-E ... filter by name
-//      val outsSeq = out.outputs.iterator.filter(_._1.startsWith("out")).toIndexedSeq
-//      val insSeq  = insSeq0                       .filter(_._1.startsWith("in"))
-//
-//      if (outsSeq.isEmpty || insSeq.isEmpty) return None  // nothing to patch
-//
-//      if (outsSeq.size == 1 && insSeq.size == 1) {    // exactly one possible connection, go ahead
-//        val (sourceKey, source) = outsSeq.head
-//        val (sinkKey  , sink  ) = insSeq .head
-//        val edit = addLink(sourceKey, source, sinkKey, sink)
-//        Some(edit)
-//
-//      } else {  // present dialog to user
-//        log(s"Possible outs: ${outsSeq.map(_._1).mkString(", ")}; possible ins: ${insSeq.map(_._1).mkString(", ")}")
-//        println(s"Woop. Multiple choice... Dialog not yet implemented...")
-//        None
-//      }
-//    } { case (source, sink) =>
-//      val edit = removeLink(/* sourceKey, */ source, /* sinkKey, */ sink)
-//      Some(edit)
-//    }
+    findLink(out = out, in = in).fold[Option[UndoableEdit]] {
+      out.outputs.get(Proc.mainOut).map { out =>
+        val key = Proc.mainIn
+        in.attr.get(key) match {
+          case Some(f: Folder[S]) =>
+            val index = f.size
+            EditFolderInsertObj("Link", parent = f, index = index, child = out)
+          case Some(other) =>
+            val f = Folder[S]
+            f.addLast(other)
+            f.addLast(out)
+            EditAttrMap("Add Link", obj = in, key = key, value = Some(f))
+
+          case None =>
+            EditAttrMap("Add Link", obj = in, key = key, value = Some(out))
+        }
+      }
+    } { link =>
+      val edit = link.sinkType match {
+        case SinkDirect() =>
+          EditAttrMap("Remove Link", obj = in, key = link.key, value = None)
+        case SinkFolder(f, index) =>
+          EditFolderRemoveObj("Link", parent = f, index = index, child = link.source)
+      }
+      Some(edit)
+    }
   }
 
   def resize[S <: Sys[S]](span: SpanLikeObj[S], obj: Obj[S], amount: Resize, minStart: Long)
