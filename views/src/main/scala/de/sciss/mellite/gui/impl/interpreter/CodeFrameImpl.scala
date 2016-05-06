@@ -16,6 +16,7 @@ package gui
 package impl
 package interpreter
 
+import javax.swing.event.{AncestorEvent, AncestorListener}
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.impl.UndoManagerImpl
@@ -29,7 +30,7 @@ import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.impl.ActionImpl
 import de.sciss.synth.proc.{Action, Code, Proc, SynthGraphObj}
 
-import scala.swing.{Component, Dimension, Orientation, SplitPane}
+import scala.swing.{Component, Orientation, SplitPane}
 
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
@@ -150,11 +151,12 @@ object CodeFrameImpl {
           val res = new SplitPane(Orientation.Vertical, codeView.component, bottomView.component)
           res.oneTouchExpandable  = true
           res.resizeWeight        = 1.0
-          // XXX TODO - doesn't work
-//          res.resetToPreferredSizes()
-//          res.peer.validate()
-//          res.bottomComponent.minimumSize = new Dimension() // cf. https://stackoverflow.com/questions/4934499
-//          res.dividerLocation     = 1.0
+          // cf. https://stackoverflow.com/questions/4934499
+          res.peer.addAncestorListener(new AncestorListener {
+            def ancestorAdded  (e: AncestorEvent): Unit = res.dividerLocation = 1.0
+            def ancestorRemoved(e: AncestorEvent): Unit = ()
+            def ancestorMoved  (e: AncestorEvent): Unit = ()
+          })
           res
         }
 
