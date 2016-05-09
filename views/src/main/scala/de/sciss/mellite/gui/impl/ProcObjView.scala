@@ -129,8 +129,10 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
         new Elem(span = span, source = newSource, obs = obs)
     }
 
-    protected def     viewMap: IdentifierMap[S#ID, S#Tx, Elem]
-    private[this] val viewSet = TSet.empty[Elem]  // because `viewMap.iterator` does not exist...
+    protected def viewMap: IdentifierMap[S#ID, S#Tx, Elem]
+
+    // _not_ [this] because Scala 2.10 crashes!
+    private /* [this] */ val viewSet = TSet.empty[Elem]  // because `viewMap.iterator` does not exist...
 
     def paintInputAttr(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, px1c: Int, px2c: Int): Unit = {
       // println(s"paintInputAttr(${rangeSeq.iterator.size})")
