@@ -114,6 +114,9 @@ final class TimelineRenderingImpl(component: Component, isDark: Boolean) extends
 
   val clipRect                    : Rectangle         = new Rectangle
 
+  val intArray1                   : Array[Int]        = new Array(32)
+  val intArray2                   : Array[Int]        = new Array(32)
+
   // ---- sonogram ----
 
   var sonogramBoost: Float = 1.0f

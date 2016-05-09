@@ -59,4 +59,11 @@ trait TimelineRendering extends sonogram.PaintController {
   def clipRect                    : Rectangle
 
   var sonogramBoost               : Float
+
+  /* General purpose. */
+
+  /** Size guaranteed to be even. */
+  def intArray1 : Array[Int]
+  /** Size guaranteed to be even. */
+  def intArray2 : Array[Int]
 }
