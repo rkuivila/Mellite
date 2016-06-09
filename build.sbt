@@ -12,8 +12,9 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- core dependencies ----
 
-lazy val soundProcessesVersion      = "3.5.0"
+lazy val soundProcessesVersion      = "3.5.2-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.3"
+lazy val syntaxPaneVersion          = "1.1.5"
 lazy val scalaColliderUGenVersion   = "1.14.1"
 lazy val lucreVersion               = "3.3.1"
 lazy val fscapeJobsVersion          = "1.5.0"
@@ -26,7 +27,7 @@ lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- views dependencies ----
 
-lazy val nuagesVersion              = "2.6.0"
+lazy val nuagesVersion              = "2.7.0"
 lazy val scalaColliderSwingVersion  = "1.29.0"
 lazy val lucreSwingVersion          = "1.4.0"
 lazy val swingPlusVersion           = "0.2.1"
@@ -182,6 +183,7 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core"))
     libraryDependencies ++= Seq(
       "de.sciss"        %% "soundprocesses-core"      % soundProcessesVersion,    // computer-music framework
       "de.sciss"        %% "scalainterpreterpane"     % interpreterPaneVersion,   // REPL
+      "de.sciss"        %  "syntaxpane"               % syntaxPaneVersion,        // REPL view
       "de.sciss"        %% "scalacolliderugens-api"   % scalaColliderUGenVersion, // need latest version
       "de.sciss"        %  "scalacolliderugens-spec"  % scalaColliderUGenVersion, // meta data
       "de.sciss"        %% "lucre-core"               % lucreVersion,

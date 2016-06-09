@@ -25,7 +25,7 @@ import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.mellite.ProcActions.{Move, Resize}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.{SynthGraph, proc}
-import de.sciss.synth.proc.{Code, Folder, ObjKeys, Output, Proc, SynthGraphObj}
+import de.sciss.synth.proc.{AudioCue, Code, Folder, ObjKeys, Output, Proc, SynthGraphObj}
 
 import scala.collection.breakOut
 import scala.collection.immutable.{Seq => ISeq}
@@ -235,21 +235,27 @@ object Edits {
           val name  = "Resize"
           implicit val spanLikeTpe = SpanLikeObj
           val edit0 = EditVar.Expr[S, SpanLike, SpanLikeObj](name, vr, newSpanEx)
-          val edit1Opt = if (dStartCC == 0L) None else obj match {
+          val edit1Opt: Option[UndoableEdit] = if (dStartCC == 0L) None else obj match {
             case objT: Proc[S] =>
               for {
-                // objT <- Proc.unapply(obj)
-                (LongObj.Var(time), g, audio) <- ProcActions.getAudioRegion2(objT)
+                audioCue <- ProcActions.getAudioRegion(objT)
               } yield {
-                // XXX TODO --- crazy work-around. BiPin / Grapheme
-                // must be observed, otherwise underlying SkipList is not updated !!!
-                val temp = g.changed.react(_ => _ => ())
-                import expr.Ops._
-                val newAudioSpan = time() - dStartCC
-                implicit val longTpe = LongObj
-                val res = EditVar.Expr[S, Long, LongObj](name, time, newAudioSpan)
-                temp.dispose()
-                res
+                // Crazy heuristics
+                audioCue match {
+                  case AudioCue.Obj.Shift(peer, amt) =>
+                    import expr.Ops._
+                    amt match {
+                      case LongObj.Var(amtVr) =>
+                        implicit val longObj = LongObj
+                        EditVar.Expr[S, Long, LongObj](name, amtVr, amtVr() + dStartCC)
+                      case _ =>
+                        val newCue = AudioCue.Obj.Shift(peer, LongObj.newVar(amt + dStartCC))
+                        EditAttrMap(name, objT, Proc.graphAudio, Some(newCue))
+                    }
+                  case other =>
+                    val newCue = AudioCue.Obj.Shift(other, LongObj.newVar(dStartCC))
+                    EditAttrMap(name, objT, Proc.graphAudio, Some(newCue))
+                }
               }
             case _ => None
           }

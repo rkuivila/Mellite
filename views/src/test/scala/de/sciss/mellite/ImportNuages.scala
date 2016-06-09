@@ -11,7 +11,7 @@ import de.sciss.synth.proc.Durable
 // quick hack to copy a nuages-only database into a regular mellite session
 object ImportNuages extends App {
   val fIn     = args.headOption.map(file(_)).getOrElse(
-    userHome/"Documents"/"projects"/"Anemone"/"sessions"/"session_160409_172322"
+    userHome/"Documents"/"projects"/"Anemone"/"sessions"/"session_160527_164131"
   )
   val fOut    = userHome/"mellite"/"sessions"/fIn.replaceExt(".mllt").name
   require(!fOut.exists())

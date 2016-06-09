@@ -20,7 +20,7 @@ import de.sciss.lucre.expr
 import de.sciss.lucre.expr.{BooleanObj, DoubleObj, IntObj, LongObj, SpanLikeObj, StringObj}
 import de.sciss.lucre.stm.{Copy, Obj, Sys}
 import de.sciss.span.Span
-import de.sciss.synth.proc.{SynthGraphObj, AudioCue, Code, Grapheme, ObjKeys, Proc, Timeline}
+import de.sciss.synth.proc.{AudioCue, Code, ObjKeys, Proc, SynthGraphObj, Timeline}
 import de.sciss.synth.ugen.{BinaryOpUGen, Constant, UnaryOpUGen}
 import de.sciss.synth.{GE, Lazy, Rate, SynthGraph, UGenSpec, proc}
 
@@ -39,39 +39,8 @@ object ProcActions {
   final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean)
 
   /** Queries the audio region's grapheme segment start and audio element. */
-  def getAudioRegion[S <: Sys[S]](/* span: SpanLikeObj[S], */ proc: Proc[S])
-                                 (implicit tx: S#Tx): Option[(LongObj[S], AudioCue.Obj[S])] =
-  ???! // SCAN
-//    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
-//      scan.iterator.toList.headOption match {
-//        case Some(Scan.Link.Grapheme(g)) =>
-//          g.at(0L).flatMap { entry =>
-//            entry.value match {
-//              case audio: Grapheme.Expr.Audio[S] => Some((entry.key, audio))
-//              case _ => None
-//            }
-//          }
-//        case _ => None
-//      }
-//    }
-
-  /** FOR DEBUGGING PURPOSES, ALSO RETURNS THE GRAPHEME **/
-  def getAudioRegion2[S <: Sys[S]](/* span: SpanLikeObj[S], */ proc: Proc[S])
-                                 (implicit tx: S#Tx): Option[(LongObj[S], Grapheme[S], AudioCue.Obj[S])] =
-  ???! // SCAN
-//    proc.inputs.get(Proc.graphAudio).flatMap { scan =>
-//      scan.iterator.toList.headOption match {
-//        case Some(Scan.Link.Grapheme(g)) =>
-//          g.at(0L).flatMap { entry =>
-//            entry.value match {
-//              case audio: Grapheme.Expr.Audio[S] =>
-//                Some((entry.key, g, audio))
-//              case _ => None
-//            }
-//          }
-//        case _ => None
-//      }
-//    }
+  def getAudioRegion[S <: Sys[S]](proc: Proc[S])(implicit tx: S#Tx): Option[AudioCue.Obj[S]] =
+    proc.attr.$[AudioCue.Obj](Proc.graphAudio)
 
   def resize[S <: Sys[S]](span: SpanLikeObj[S], obj: Obj[S],
                           amount: Resize, minStart: Long /* timelineModel: TimelineModel */)
@@ -114,19 +83,20 @@ object ProcActions {
       if (dStartCC != 0L) obj match {
         case objT: Proc[S] =>
           for {
-            (LongObj.Var(time), g, audio) <- getAudioRegion2(objT)
+            audioCue <- getAudioRegion[S](objT)
           } {
-            // --- crazy work-around. BiPin / Grapheme
-            // must be observed, otherwise underlying SkipList is not updated !!!
-            val temp = g.changed.react(_ => _ => ())
-            import expr.Ops._
-            // println(s"BEFORE RESIZE BY $dStartCC:")
-            // println(g.debugList())
-            val newTime = time() - dStartCC
-            time() = newTime
-            // println(s"AFTER  RESIZE BY $dStartCC:")
-            // println(g.debugList())
-            temp.dispose()
+            audioCue match {
+              case AudioCue.Obj.Shift(peer, amt) =>
+                import expr.Ops._
+                amt match {
+                  case LongObj.Var(amtVr) =>
+                    amtVr() = amtVr() + dStartCC
+                  case _ =>
+                    AudioCue.Obj.Shift(peer, LongObj.newVar(amt + dStartCC))
+                }
+              case other =>
+                AudioCue.Obj.Shift(other, LongObj.newVar(dStartCC))
+            }
           }
         case _ =>
       }
@@ -151,8 +121,9 @@ object ProcActions {
     }
   }
 
-  /** Makes a copy of a proc. Copies the graph and all attributes, creates scans with the same keys
-    * and connects scans.
+  /** Makes a copy of a proc. Copies the graph and all attributes.
+    * Currently has no way to determine where the outputs of a `Proc` leading to,
+    * so they are not rewired.
     *
     * @param obj the process to copy
     */
@@ -161,25 +132,6 @@ object ProcActions {
     context.putHint(obj, Proc.hintFilterLinks, (_: Proc[S]) => false) // do not duplicate linked objects
     val res = context(obj)
     context.finish()
-
-    ???! // SCAN
-//    (obj, res) match {
-//      case (inProc: Proc[S], outProc: Proc[S]) =>   // now re-link scans
-//        def copyMap(in: Scans[S], out: Scans[S]): Unit =
-//          in.iterator.foreach { case (key, scanIn) =>
-//            val Some(scanOut) = out.get(key)
-//            scanIn.iterator.foreach {
-//              case link @ Scan.Link.Scan(_) => scanOut.add(link)
-//              case _ =>
-//            }
-//          }
-//
-//        copyMap(inProc.inputs , outProc.inputs )
-//        copyMap(inProc.outputs, outProc.outputs)
-//
-//      case _ =>
-//    }
-
     res
   }
 
@@ -314,7 +266,15 @@ object ProcActions {
 //    val gOffset1    = gOffset + audioCue.value.offset
 //    val audioCueOff = audioCue.replaceOffset(LongObj.newVar(gOffset1))
 
-    val audioCueOff = audioCue.shift(LongObj.newVar(gOffset))
+    // XXX TODO -- cheese louise, the heuristics will get nasty
+    val audioCueOff = if (gOffset == 0L) audioCue else {
+      audioCue match {
+        case AudioCue.Obj.Shift(peer, amt) =>
+          AudioCue.Obj.Shift(peer, LongObj.newVar(amt + gOffset))
+        case other =>
+          AudioCue.Obj.Shift(other, LongObj.newVar(gOffset))
+      }
+    }
 
     // val gStart  = LongObj.newVar(time - selection.start)
     // require(time.start == 0, s"mkAudioRegion - don't know yet how to handle relative grapheme time")

@@ -11,8 +11,7 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 
 import javax.swing.UIManager
 
@@ -24,6 +23,7 @@ import de.sciss.lucre.synth.{Server, Txn}
 import de.sciss.mellite.gui.impl.document.DocumentHandlerImpl
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.nuages.Wolkenpumpe
+import de.sciss.{mellite, osc}
 import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
 import scala.collection.immutable.{Seq => ISeq}
