@@ -249,11 +249,11 @@ object Edits {
                         implicit val longObj = LongObj
                         EditVar.Expr[S, Long, LongObj](name, amtVr, amtVr() + dStartCC)
                       case _ =>
-                        val newCue = AudioCue.Obj.Shift(peer, LongObj.newVar(amt + dStartCC))
+                        val newCue = AudioCue.Obj.Shift(peer, LongObj.newVar[S](amt + dStartCC))
                         EditAttrMap(name, objT, Proc.graphAudio, Some(newCue))
                     }
                   case other =>
-                    val newCue = AudioCue.Obj.Shift(other, LongObj.newVar(dStartCC))
+                    val newCue = AudioCue.Obj.Shift(other, LongObj.newVar[S](dStartCC))
                     EditAttrMap(name, objT, Proc.graphAudio, Some(newCue))
                 }
               }

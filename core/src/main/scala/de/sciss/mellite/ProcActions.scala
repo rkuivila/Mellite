@@ -92,10 +92,10 @@ object ProcActions {
                   case LongObj.Var(amtVr) =>
                     amtVr() = amtVr() + dStartCC
                   case _ =>
-                    AudioCue.Obj.Shift(peer, LongObj.newVar(amt + dStartCC))
+                    AudioCue.Obj.Shift(peer, LongObj.newVar[S](amt + dStartCC))
                 }
               case other =>
-                AudioCue.Obj.Shift(other, LongObj.newVar(dStartCC))
+                AudioCue.Obj.Shift(other, LongObj.newVar[S](dStartCC))
             }
           }
         case _ =>
@@ -270,9 +270,9 @@ object ProcActions {
     val audioCueOff = if (gOffset == 0L) audioCue else {
       audioCue match {
         case AudioCue.Obj.Shift(peer, amt) =>
-          AudioCue.Obj.Shift(peer, LongObj.newVar(amt + gOffset))
+          AudioCue.Obj.Shift(peer, LongObj.newVar[S](amt + gOffset))
         case other =>
-          AudioCue.Obj.Shift(other, LongObj.newVar(gOffset))
+          AudioCue.Obj.Shift(other, LongObj.newVar[S](gOffset))
       }
     }
 
