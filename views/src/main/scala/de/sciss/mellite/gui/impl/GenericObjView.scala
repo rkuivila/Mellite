@@ -22,7 +22,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Cursor, Obj}
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.grapheme.GraphemeObjViewImpl
-import de.sciss.mellite.gui.impl.timeline.{TimelineObjViewBasicImpl, TimelineObjViewImpl}
+import de.sciss.mellite.gui.impl.timeline.TimelineObjViewBasicImpl
 
 import scala.swing.{Component, Label}
 

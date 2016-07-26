@@ -11,8 +11,7 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 
 import java.awt.event.{ActionEvent, ActionListener}
@@ -21,7 +20,9 @@ import java.awt.{BasicStroke, Graphics, Graphics2D, RenderingHints, Shape}
 import javax.swing.{Icon, JComponent, KeyStroke, SwingUtilities}
 
 import de.sciss.audiowidgets.Transport
+import de.sciss.desktop
 import de.sciss.desktop.{KeyStrokes, OptionPane}
+import de.sciss.equal
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys

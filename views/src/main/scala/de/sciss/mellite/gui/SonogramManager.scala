@@ -11,11 +11,13 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite.gui
+package de.sciss.mellite
+package gui
 
-import de.sciss.sonogram
 import java.io.File
-import de.sciss.dsp.{Threading, ConstQ}
+
+import de.sciss.dsp.{ConstQ, Threading}
+import de.sciss.sonogram
 
 object SonogramManager {
   private lazy val _instance = {

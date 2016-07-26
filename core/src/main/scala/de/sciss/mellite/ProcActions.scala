@@ -396,7 +396,7 @@ object ProcActions {
       val argVals   = elem.productIterator.toIndexedSeq
 
       val line = ugenMap.get(elemName).fold[GraphLine] {
-        val ins = argVals.map(new ArgAssign(None, UGenSpec.SignalShape.Generic, _))
+        val ins = argVals.map(ArgAssign(None, UGenSpec.SignalShape.Generic, _))
 
         new GraphLine(elemName = elemName, constructor = "apply", args = ins)
       } { spec =>
@@ -417,7 +417,7 @@ object ProcActions {
             case UGenSpec.ArgumentType.GE(sh, _) => sh
             case _ => UGenSpec.SignalShape.Generic
           }
-          new ArgAssign(Some(arg.name), shape, argVal)
+          ArgAssign(Some(arg.name), shape, argVal)
         }
         new GraphLine(elemName = elemName, constructor = rateMethodName, args = ins)
       }

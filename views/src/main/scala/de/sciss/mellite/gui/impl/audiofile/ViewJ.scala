@@ -16,18 +16,18 @@ package gui
 package impl
 package audiofile
 
-import de.sciss.{desktop, sonogram}
 import java.awt.{Color, Graphics2D}
-import de.sciss.synth.proc.{TimeRef, Timeline}
 
-import scala.swing.event.MousePressed
-import scala.util.Failure
-import scala.util.Success
-import scala.swing.{Action, Swing, Component}
-import Swing._
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
 import de.sciss.lucre.swing._
+import de.sciss.synth.proc.TimeRef
+import de.sciss.{desktop, sonogram}
+
+import scala.swing.Component
+import scala.swing.Swing._
+import scala.swing.event.MousePressed
+import scala.util.{Failure, Success}
 
 final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
   extends TimelineCanvasImpl {

@@ -11,18 +11,19 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 
 import java.awt.{Color, Font}
 
 import de.sciss.audiowidgets.PeakMeter
+import de.sciss.desktop
 import de.sciss.desktop.{Desktop, Menu, Preferences, Window, WindowHandler}
 import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.synth.{Bus, Group, Server, Synth, Txn}
 import de.sciss.numbers.Implicits._
+import de.sciss.osc
 import de.sciss.synth.proc.gui.AudioBusMeter
 import de.sciss.synth.proc.{AuralSystem, SensorSystem}
 import de.sciss.synth.swing.ServerStatusPanel

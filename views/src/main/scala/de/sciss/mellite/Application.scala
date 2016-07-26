@@ -24,7 +24,7 @@ object Application extends SwingApplication { me =>
 
   type Document = mellite.Workspace[_ <: Sys[_]]
 
-  private[this] var peer: Application = null
+  private[this] var peer: Application = _
 
   private[this] val sync = new AnyRef
 

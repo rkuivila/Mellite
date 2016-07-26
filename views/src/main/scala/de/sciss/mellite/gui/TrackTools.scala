@@ -11,24 +11,24 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 
 import java.awt.Cursor
-import javax.swing.undo.UndoableEdit
-import de.sciss.lucre.stm
-import de.sciss.mellite.gui.impl.ProcObjView
-
-import annotation.switch
-import de.sciss.model.{Change, Model}
-import de.sciss.synth.proc.FadeSpec
-import scala.swing.Component
 import javax.swing.Icon
-import collection.immutable.{IndexedSeq => Vec}
-import de.sciss.mellite.gui.impl.tracktool.{AuditionImpl, PatchImpl, FunctionImpl, CursorImpl, PaletteImpl, ToolsImpl, ResizeImpl, MuteImpl, MoveImpl, GainImpl, FadeImpl}
-import de.sciss.span.Span
+import javax.swing.undo.UndoableEdit
+
+import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.impl.ProcObjView
+import de.sciss.mellite.gui.impl.tracktool.{AuditionImpl, CursorImpl, FadeImpl, FunctionImpl, GainImpl, MoveImpl, MuteImpl, PaletteImpl, PatchImpl, ResizeImpl, ToolsImpl}
+import de.sciss.model.{Change, Model}
+import de.sciss.span.Span
+import de.sciss.synth.proc.FadeSpec
+
+import scala.annotation.switch
+import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.swing.Component
 
 object TrackTools {
   sealed trait Update[S <: stm.Sys[S]]

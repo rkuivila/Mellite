@@ -11,11 +11,11 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite.gui
+package de.sciss.mellite
+package gui
 
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.{View => SView}
-import de.sciss.mellite.Workspace
 
 trait ViewHasWorkspace[S <: Sys[S]] extends SView.Cursor[S] {
   implicit def workspace: Workspace[S]

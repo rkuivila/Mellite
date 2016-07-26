@@ -47,7 +47,8 @@ package object mellite {
 
   /** Exception are sometimes swallowed without printing in a transaction. This ensures a print. */
   def ???! : Nothing = {
-    new Exception("???").printStackTrace()
-    ???
+    val err = new NotImplementedError
+    err.printStackTrace()
+    throw err
   }
 }

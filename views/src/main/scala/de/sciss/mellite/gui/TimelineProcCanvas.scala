@@ -11,13 +11,12 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 
-import de.sciss.span.Span
 import de.sciss.audiowidgets.TimelineCanvas
 import de.sciss.lucre.stm.Sys
+import de.sciss.span.Span
 import de.sciss.synth.proc.Timeline
 
 trait TimelineProcCanvas[S <: Sys[S]] extends TimelineCanvas {

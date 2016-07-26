@@ -11,8 +11,7 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 
 import java.io.{EOFException, File}
@@ -20,23 +19,28 @@ import java.text.ParseException
 import javax.swing.{JFormattedTextField, SpinnerNumberModel, SwingUtilities}
 
 import de.sciss.audiowidgets.{AxisFormat, TimelineModel}
+import de.sciss.desktop
 import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, UndoManager, Window}
+import de.sciss.equal
 import de.sciss.file._
-import de.sciss.lucre.artifact.{ArtifactLocation, Artifact}
+import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.expr.{DoubleObj, LongObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
-import de.sciss.lucre.swing.{defer, deferTx, requireEDT}
+import de.sciss.lucre.swing.defer
 import de.sciss.lucre.synth.{Buffer, Server, Synth, Sys}
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
+import de.sciss.numbers
 import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.processor.{Processor, ProcessorLike}
 import de.sciss.span.Span.SpanOrVoid
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
-import de.sciss.synth.proc.{AudioCue, TimeRef, Folder, Bounce, Code, Grapheme, Timeline}
-import de.sciss.synth.{proc, SynthGraph, addToTail}
+import de.sciss.synth.proc.Implicits._
+import de.sciss.synth.proc.{AudioCue, Bounce, Code, Folder, TimeRef, Timeline}
+import de.sciss.synth
+import de.sciss.synth.{SynthGraph, addToTail}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.blocking
@@ -45,8 +49,6 @@ import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.swing.{Alignment, BoxPanel, Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Orientation, ProgressBar, RadioButton, Swing, TextField}
 import scala.util.Try
 import scala.util.control.NonFatal
-
-import proc.Implicits._
 
 object ActionBounceTimeline {
   private val DEBUG = false
@@ -494,7 +496,7 @@ object ActionBounceTimeline {
       defer(fDispose())
       (settings.importFile, settings.location) match {
         case (true, Some(locSource)) =>
-          val elemName  = file.base
+          // val elemName  = file.base
           val spec      = AudioFile.readSpec(file)
           cursor.step { implicit tx =>
             val loc       = locSource()

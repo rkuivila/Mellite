@@ -16,7 +16,6 @@ package de.sciss.tallin
 import de.sciss.lucre.stm.Sys
 import de.sciss.nuages.{ExpWarp, IntWarp, LinWarp, Nuages, ParamSpec, ScissProcs}
 import de.sciss.synth.GE
-import de.sciss.synth.proc.Proc
 import de.sciss.{nuages, synth}
 
 import scala.collection.immutable.{IndexedSeq => Vec}

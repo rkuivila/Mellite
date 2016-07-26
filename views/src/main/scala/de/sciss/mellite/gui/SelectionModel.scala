@@ -11,8 +11,7 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 
 import de.sciss.lucre.stm.Sys

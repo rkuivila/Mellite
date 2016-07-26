@@ -26,7 +26,6 @@ import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing._
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditArtifactLocation
-import de.sciss.synth.proc
 import de.sciss.synth.proc.Implicits._
 
 object ArtifactLocationObjView extends ListObjView.Factory {

@@ -1,7 +1,6 @@
 package de.sciss.tallin
 
-import de.sciss.file._
-import de.sciss.nuages.{NamedBusConfig, ScissProcs, Nuages}
+import de.sciss.nuages.{NamedBusConfig, Nuages, ScissProcs}
 
 object Settings {
   def apply(nConfig: Nuages.ConfigBuilder, sConfig: ScissProcs.ConfigBuilder): Unit = {

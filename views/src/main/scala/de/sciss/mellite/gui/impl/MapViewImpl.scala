@@ -265,7 +265,7 @@ abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S]
         val sel     = selection
         val trans1 = if (sel.size == 1) {
           val _res = DragAndDrop.Transferable(ListObjView.Flavor) {
-            new ListObjView.Drag(workspace, sel.head._2)
+            ListObjView.Drag(workspace, sel.head._2)
           }
           _res
         } else null

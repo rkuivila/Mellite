@@ -11,20 +11,17 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 
 import javax.swing.Icon
 
+import de.sciss.desktop
 import de.sciss.lucre.event.Observable
+import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.Window
 import de.sciss.lucre.synth.Sys
-import de.sciss.lucre.stm
-import de.sciss.mellite.gui.ObjView.Update
-import de.sciss.model.Model
-import de.sciss.model.Model.Listener
 
 import scala.language.higherKinds
 

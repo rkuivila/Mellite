@@ -11,19 +11,19 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 
-import desktop.KeyStrokes
-import impl.interpreter.{InterpreterFrameImpl => Impl}
+import de.sciss.desktop
+import de.sciss.mellite.gui.impl.interpreter.{InterpreterFrameImpl => Impl}
+
 import scala.swing.event.Key
 
 object InterpreterFrame {
   def apply(): InterpreterFrame = Impl()
 
   object Action extends swing.Action("Interpreter") {
-    import KeyStrokes._
+    import desktop.KeyStrokes._
     accelerator = Some(menu1 + Key.R)
 
     def apply(): Unit = InterpreterFrame()

@@ -30,12 +30,12 @@ class ActionWindowShot(w: desktop.Window) extends Action("Window Screen-Shot") {
 
   private def windowShot(): Unit = {
     val c = new pdflitz.Generate.Source {
-      import w.component
-      def render(g: Graphics2D): Unit = component.peer.paint(g)
+      import w.{component => comp}
+      def render(g: Graphics2D): Unit = comp.peer.paint(g)
 
-      def preferredSize: Dimension = component.preferredSize
+      def preferredSize: Dimension = comp.preferredSize
 
-      def size: Dimension = component.size
+      def size: Dimension = comp.size
     }
     new pdflitz.SaveAction(c :: Nil).apply()
   }

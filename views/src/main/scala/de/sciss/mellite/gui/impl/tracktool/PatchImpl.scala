@@ -20,7 +20,6 @@ import java.awt.event.MouseEvent
 import java.awt.geom.{Area, Ellipse2D}
 import java.awt.image.BufferedImage
 import java.awt.{Color, Point, RenderingHints, Toolkit}
-import javax.swing.ImageIcon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.Desktop
@@ -29,10 +28,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
-import de.sciss.swingplus.PaddedIcon
 import de.sciss.synth.proc.Proc
-
-import scala.swing.Insets
 
 object PatchImpl {
   private def mkImage(aa: Boolean): BufferedImage = {

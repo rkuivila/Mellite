@@ -11,10 +11,10 @@
  *  contact@sciss.de
  */
 
-package de.sciss
-package mellite
+package de.sciss.mellite
 package gui
 
+import de.sciss.lucre
 import de.sciss.lucre.stm
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.timeline.{TimelineFrameImpl => Impl}

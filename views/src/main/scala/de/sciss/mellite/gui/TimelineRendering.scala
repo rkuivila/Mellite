@@ -14,9 +14,10 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.sonogram
-import java.awt.{Paint, Rectangle, Stroke}
 import java.awt.geom.Path2D
+import java.awt.{Paint, Rectangle, Stroke}
+
+import de.sciss.sonogram
 
 /** Paint support. */
 trait TimelineRendering extends sonogram.PaintController {

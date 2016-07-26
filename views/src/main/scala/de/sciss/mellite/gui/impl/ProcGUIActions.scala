@@ -21,7 +21,7 @@ import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.requireEDT
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.edit.{EditTimelineRemoveObj, Edits}
+import de.sciss.mellite.gui.edit.EditTimelineRemoveObj
 import de.sciss.synth.proc.{Proc, Timeline}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
