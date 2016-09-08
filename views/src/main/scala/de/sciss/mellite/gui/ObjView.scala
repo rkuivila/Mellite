@@ -51,7 +51,8 @@ object ObjView {
 
     /** Provides an optional initial configuration for the make-new-instance dialog. */
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                   (implicit cursor: stm.Cursor[S]): Option[Config[S]]
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit
 
     def category: String
 

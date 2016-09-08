@@ -85,16 +85,18 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_String]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val ggValue   = new TextField(20)
       ggValue.text  = "Value"
-      primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = Some(ggValue.text))
+      val res = primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = Some(ggValue.text))
+      res.foreach(ok(_))
     }
 
     def makeObj[S <: Sys[S]](config: (_String, _String))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = StringObj.newVar(StringObj.newConst[S](value))
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -143,16 +145,19 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Long]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val model     = new SpinnerNumberModel(0L, _Long.MinValue, _Long.MaxValue, 1L)
       val ggValue   = new Spinner(model)
-      primitiveConfig[S, _Long](window, tpe = prefix, ggValue = ggValue, prepare = Some(model.getNumber.longValue()))
+      val res = primitiveConfig[S, _Long](window, tpe = prefix, ggValue = ggValue, prepare =
+        Some(model.getNumber.longValue()))
+      res.foreach(ok(_))
     }
 
     def makeObj[S <: Sys[S]](config: (String, _Long))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = LongObj.newVar(LongObj.newConst[S](value))
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -205,16 +210,18 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Double]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val model     = new SpinnerNumberModel(0.0, _Double.NegativeInfinity, _Double.PositiveInfinity, 1.0)
       val ggValue   = new Spinner(model)
-      primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = Some(model.getNumber.doubleValue))
+      val res = primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = Some(model.getNumber.doubleValue))
+      res.foreach(ok(_))
     }
 
     def makeObj[S <: Sys[S]](config: (String, _Double))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = DoubleObj.newVar(DoubleObj.newConst[S](value))
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -265,15 +272,17 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Boolean]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val ggValue = new CheckBox()
-      primitiveConfig[S, _Boolean](window, tpe = prefix, ggValue = ggValue, prepare = Some(ggValue.selected))
+      val res = primitiveConfig[S, _Boolean](window, tpe = prefix, ggValue = ggValue, prepare = Some(ggValue.selected))
+      res.foreach(ok(_))
     }
 
     def makeObj[S <: Sys[S]](config: (String, _Boolean))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = BooleanObj.newVar(BooleanObj.newConst[S](value))
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -321,15 +330,17 @@ object ObjViewImpl {
       Try(s.split(" ").map(x => x.trim().toDouble)(breakOut): Vec[Double]).toOption
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                   (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val ggValue = new TextField("0.0 0.0")
-      primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = parseString(ggValue.text))
+      val res = primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = parseString(ggValue.text))
+      res.foreach(ok(_))
     }
 
     def makeObj[S <: Sys[S]](config: (String, Vec[Double]))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = _DoubleVector.newVar(_DoubleVector.newConst[S](value))
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -386,9 +397,12 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = PrimitiveConfig[_Color]
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                   (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val (ggValue, ggChooser) = mkColorEditor()
-      primitiveConfig[S, _Color](window, tpe = prefix, ggValue = ggValue, prepare = Some(fromAWT(ggChooser.color)))
+      val res = primitiveConfig[S, _Color](window, tpe = prefix, ggValue = ggValue, prepare =
+        Some(fromAWT(ggChooser.color)))
+      res.foreach(ok(_))
     }
 
     private def mkColorEditor(): (Component, ColorChooser) = {
@@ -422,7 +436,7 @@ object ObjViewImpl {
     def makeObj[S <: Sys[S]](config: (String, _Color))(implicit tx: S#Tx): List[Obj[S]] = {
       val (name, value) = config
       val obj = _Color.Obj.newVar(_Color.Obj.newConst[S](value))
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -514,58 +528,6 @@ object ObjViewImpl {
     private val ListIcon = new PaintIcon(java.awt.Color.black, 48, 16)
   }
 
-  // -------- Artifact --------
-
-  object Artifact extends ListObjView.Factory {
-    type E[~ <: stm.Sys[~]] = _Artifact[~]
-    val icon          = raphaelIcon(raphael.Shapes.PagePortrait)
-    val prefix        = "Artifact"
-    def humanName     = "File"
-    def tpe           = _Artifact
-    def category      = ObjView.categResources
-    def hasMakeDialog = true
-
-    def mkListView[S <: Sys[S]](obj: _Artifact[S])(implicit tx: S#Tx): ListObjView[S] = {
-      val peer      = obj
-      val value     = peer.value  // peer.child.path
-      val editable  = false // XXX TODO -- peer.modifiableOption.isDefined
-      new Artifact.Impl[S](tx.newHandle(obj), value, isEditable = editable).init(obj)
-    }
-
-    type Config[S <: stm.Sys[S]] = PrimitiveConfig[File]
-
-    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                   (implicit cursor: stm.Cursor[S]): Option[Config[S]] = None // XXX TODO
-
-    def makeObj[S <: Sys[S]](config: (_String, File))(implicit tx: S#Tx): List[Obj[S]] = ???!
-
-    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, _Artifact[S]],
-                                  var file: File, val isEditable: _Boolean)
-      extends ListObjView /* .Artifact */[S]
-      with ObjViewImpl.Impl[S]
-      with ListObjViewImpl.StringRenderer
-      with NonViewable[S] {
-
-      type E[~ <: stm.Sys[~]] = _Artifact[~]
-
-      def factory = Artifact
-
-      def value   = file
-
-      def init(obj: _Artifact[S])(implicit tx: S#Tx): this.type = {
-        initAttrs(obj)
-        disposables ::= obj.changed.react { implicit tx => upd =>
-          deferAndRepaint {
-            file = upd.now
-          }
-        }
-        this
-      }
-
-      def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = None // XXX TODO
-    }
-  }
-
   // -------- Folder --------
 
   object Folder extends ListObjView.Factory {
@@ -583,17 +545,18 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = _String
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S],window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
         messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = "New Folder"
       val res = opt.show(window)
-      res
+      res.foreach(ok(_))
     }
 
     def makeObj[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
       val obj  = _Folder[S]
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -636,17 +599,18 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = _String
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
         messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = s"New $prefix"
       val res = opt.show(window)
-      res
+      res.foreach(ok(_))
     }
 
     def makeObj[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
       val obj = _Timeline[S] // .Modifiable[S]
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -687,17 +651,18 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = _String
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                   (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
         messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = s"New $prefix"
       val res = opt.show(window)
-      res
+      res.foreach(ok(_))
     }
 
     def makeObj[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
       val obj = _Grapheme[S] // .Modifiable[S]
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -740,8 +705,9 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = Unit
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
-      None
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
+      None // XXX TODO
 //      val ggShape = new ComboBox()
 //      Curve.cubed
 //      val ggValue = new ComboBox(Seq(_Code.FileTransform.name, _Code.SynthGraph.name))
@@ -811,7 +777,8 @@ object ObjViewImpl {
     final case class Config[S <: stm.Sys[S]](name: String, offset: Long, playing: Boolean)
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val ggName    = new TextField(10)
       ggName.text   = prefix
       val offModel  = new SpinnerNumberModel(0.0, 0.0, 1.0e6 /* _Double.MaxValue */, 0.1)
@@ -838,21 +805,23 @@ object ObjViewImpl {
       pane.title  = s"New $prefix"
       val res = pane.show(window)
 
-      if (res != Dialog.Result.Ok) None else {
+      if (res == Dialog.Result.Ok) {
         val name      = ggName.text
         val seconds   = offModel.getNumber.doubleValue()
         val offset    = (seconds * TimeRef.SampleRate + 0.5).toLong
         val playing   = ggPlay.selected
-        Some(Config(name = name, offset = offset, playing = playing))
+        val res = Config[S](name = name, offset = offset, playing = playing)
+        ok(res)
       }
     }
 
     def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = {
+      import config.name
       val folder    = _Folder[S] // XXX TODO - can we ask the user to pick one?
       val offset    = LongObj   .newVar(LongObj   .newConst[S](config.offset ))
       val playing   = BooleanObj.newVar(BooleanObj.newConst[S](config.playing))
       val obj      = _Ensemble[S](folder, offset, playing)
-      obj.name = config.name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -915,18 +884,19 @@ object ObjViewImpl {
     type Config[S <: stm.Sys[S]] = _String
 
     def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                               (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
       val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
         messageType = OptionPane.Message.Question, initial = prefix)
       opt.title = s"New $prefix"
       val res = opt.show(window)
-      res
+      res.foreach(ok(_))
     }
 
     def makeObj[S <: Sys[S]](name: _String)(implicit tx: S#Tx): List[Obj[S]] = {
       val tl  = _Timeline[S]
       val obj = _Nuages[S](_Nuages.Surface.Timeline(tl))
-      obj.name = name
+      if (!name.isEmpty) obj.name = name
       obj :: Nil
     }
 
@@ -963,6 +933,7 @@ object ObjViewImpl {
 
   type PrimitiveConfig[A] = (String, A)
 
+  /** Displays a simple new-object configuration dialog, prompting for a name and a value. */
   def primitiveConfig[S <: Sys[S], A](window: Option[desktop.Window], tpe: String, ggValue: Component,
                                       prepare: => Option[A]): Option[PrimitiveConfig[A]] = {
     val nameOpt = GUI.keyValueDialog(value = ggValue, title = s"New $tpe", defaultName = tpe, window = window)

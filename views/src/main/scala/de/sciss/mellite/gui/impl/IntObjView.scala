@@ -51,17 +51,19 @@ object IntObjView extends ListObjView.Factory {
   type Config[S <: stm.Sys[S]] = ObjViewImpl.PrimitiveConfig[Int]
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                 (ok: Config[S] => Unit)
+                                 (implicit cursor: stm.Cursor[S]): Unit = {
     val model     = new SpinnerNumberModel(0, Int.MinValue, Int.MaxValue, 1)
     val ggValue   = new Spinner(model)
-    ObjViewImpl.primitiveConfig[S, Int](window, tpe = prefix, ggValue = ggValue,
+    val res = ObjViewImpl.primitiveConfig[S, Int](window, tpe = prefix, ggValue = ggValue,
       prepare = Some(model.getNumber.intValue()))
+    res.foreach(ok(_))
   }
 
   def makeObj[S <: Sys[S]](config: (String, Int))(implicit tx: S#Tx): List[Obj[S]] = {
     val (name, value) = config
     val obj = IntObj.newVar(IntObj.newConst[S](value))
-    obj.name = name
+    if (!name.isEmpty) obj.name = name
     obj :: Nil
   }
 

@@ -46,36 +46,40 @@ object CodeObjView extends ListObjView.Factory {
   type Config[S <: stm.Sys[S]] = ObjViewImpl.PrimitiveConfig[Code]
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                 (ok: Config[S] => Unit)
+                                 (implicit cursor: stm.Cursor[S]): Unit = {
     val ggValue = new ComboBox(Seq(Code.FileTransform.name, Code.SynthGraph.name))
-    ObjViewImpl.primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = ggValue.selection.index match {
-      case 0 => Some(Code.FileTransform(
-        """|val aIn   = AudioFile.openRead(in)
-          |val aOut  = AudioFile.openWrite(out, aIn.spec)
-          |val bufSz = 8192
-          |val buf   = aIn.buffer(bufSz)
-          |var rem   = aIn.numFrames
-          |while (rem > 0) {
-          |  val chunk = math.min(bufSz, rem).toInt
-          |  aIn .read (buf, 0, chunk)
-          |  // ...
-          |  aOut.write(buf, 0, chunk)
-          |  rem -= chunk
-          |  // checkAbort()
-          |}
-          |aOut.close()
-          |aIn .close()
-          |""".stripMargin))
+    val res = ObjViewImpl.primitiveConfig[S, Code](window, tpe = prefix, ggValue = ggValue, prepare =
+      ggValue.selection.index match {
+        case 0 => Some(Code.FileTransform(
+          """|val aIn   = AudioFile.openRead(in)
+            |val aOut  = AudioFile.openWrite(out, aIn.spec)
+            |val bufSz = 8192
+            |val buf   = aIn.buffer(bufSz)
+            |var rem   = aIn.numFrames
+            |while (rem > 0) {
+            |  val chunk = math.min(bufSz, rem).toInt
+            |  aIn .read (buf, 0, chunk)
+            |  // ...
+            |  aOut.write(buf, 0, chunk)
+            |  rem -= chunk
+            |  // checkAbort()
+            |}
+            |aOut.close()
+            |aIn .close()
+            |""".stripMargin))
 
-      case 1 => Some(Code.SynthGraph(
-        """|val in   = ScanIn("in")
-          |val sig  = in
-          |ScanOut("out", sig)
-          |""".stripMargin
-      ))
+        case 1 => Some(Code.SynthGraph(
+          """|val in   = ScanIn("in")
+            |val sig  = in
+            |ScanOut("out", sig)
+            |""".stripMargin
+        ))
 
-      case _  => None
-    })
+        case _  => None
+      }
+    )
+    res.foreach(ok(_))
   }
 
   def makeObj[S <: Sys[S]](config: (String, Code))(implicit tx: S#Tx): List[Obj[S]] = {
@@ -83,7 +87,7 @@ object CodeObjView extends ListObjView.Factory {
     val (name, value) = config
     val peer  = Code.Obj.newVar[S](Code.Obj.newConst(value))
     val obj   = peer // Obj(Code.Elem(peer))
-    obj.name = name
+    if (!name.isEmpty) obj.name = name
     obj :: Nil
   }
 

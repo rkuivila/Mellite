@@ -39,7 +39,8 @@ object GenericObjView extends ObjView.Factory {
   type Config[S <: stm.Sys[S]]  = Unit
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                 (implicit cursor: Cursor[S]): Option[Config[S]] = None
+                                 (ok: Config[S] => Unit)
+                                 (implicit cursor: Cursor[S]): Unit = ()
 
   def makeObj[S <: Sys[S]](config: Unit)(implicit tx: S#Tx): List[Obj[S]] = Nil
 

@@ -47,12 +47,13 @@ object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
   def hasMakeDialog   = true
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                 (ok: Config[S] => Unit)
+                                 (implicit cursor: stm.Cursor[S]): Unit = {
     val opt = OptionPane.textInput(message = s"Enter initial ${prefix.toLowerCase} name:",
       messageType = OptionPane.Message.Question, initial = prefix)
     opt.title = s"New $prefix"
     val res = opt.show(window)
-    res
+    res.foreach(ok(_))
   }
 
   def makeObj[S <: Sys[S]](name: String)(implicit tx: S#Tx): List[Obj[S]] = {

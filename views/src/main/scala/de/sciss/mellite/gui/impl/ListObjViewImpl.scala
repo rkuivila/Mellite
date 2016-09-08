@@ -58,7 +58,7 @@ object ListObjViewImpl {
     ObjViewImpl.Color           .tpe.typeID -> ObjViewImpl.Color,
     AudioCueObjView             .tpe.typeID -> AudioCueObjView,
     ArtifactLocationObjView     .tpe.typeID -> ArtifactLocationObjView,
-    ObjViewImpl.Artifact        .tpe.typeID -> ObjViewImpl.Artifact,
+    ArtifactObjView             .tpe.typeID -> ArtifactObjView,
     // ObjViewImpl.Recursion       .typeID -> ObjViewImpl.Recursion,
     ObjViewImpl.Folder          .tpe.typeID -> ObjViewImpl.Folder,
     ProcObjView                 .tpe.typeID -> ProcObjView,

@@ -17,8 +17,6 @@ lazy val interpreterPaneVersion     = "1.7.3"
 lazy val syntaxPaneVersion          = "1.1.5"
 lazy val scalaColliderUGenVersion   = "1.15.3"
 lazy val lucreVersion               = "3.3.1"
-lazy val fscapeJobsVersion          = "1.5.0"
-lazy val strugatzkiVersion          = "2.12.0"
 lazy val equalVersion               = "0.1.1"
 lazy val scalaOSCVersion            = "1.1.5"
 lazy val playJSONVersion            = "0.4.0"
@@ -189,8 +187,6 @@ lazy val core = Project(id = s"$baseNameL-core", base = file("core"))
       "de.sciss"        %% "lucre-core"               % lucreVersion,
       "de.sciss"        %% "lucre-confluent"          % lucreVersion,
       "de.sciss"        %% s"lucre-$bdb"              % lucreVersion,             // database backend
-      "de.sciss"        %% "fscapejobs"               % fscapeJobsVersion,        // remote FScape invocation
-      "de.sciss"        %% "strugatzki"               % strugatzkiVersion,        // feature extraction
       "de.sciss"        %% "span"                     % spanVersion,              // makes sbt happy :-E
       "de.sciss"        %% "equal"                    % equalVersion,             // type-safe equals
       "de.sciss"        %% "scalaosc"                 % scalaOSCVersion,          // important fixes

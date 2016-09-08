@@ -46,24 +46,26 @@ object AudioCueObjView extends ListObjView.Factory {
     new Impl(tx.newHandle(obj), value).init(obj)
   }
 
-  final case class Config1[S <: stm.Sys[S]](file: File, spec: AudioFileSpec,
-                                            location: Either[stm.Source[S#Tx, ArtifactLocation[S]], (String, File)])
+  type LocationConfig[S <: stm.Sys[S]] = Either[stm.Source[S#Tx, ArtifactLocation[S]], (String, File)]
+
+  final case class Config1[S <: stm.Sys[S]](file: File, spec: AudioFileSpec, location: LocationConfig[S])
   type Config[S <: stm.Sys[S]] = List[Config1[S]]
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {
+                                 (ok: Config[S] => Unit)
+                                 (implicit cursor: stm.Cursor[S]): Unit = {
     val dlg = FileDialog.open(init = None /* locViews.headOption.map(_.directory) */, title = "Add Audio Files")
     dlg.setFilter(f => Try(AudioFile.identify(f).isDefined).getOrElse(false))
     dlg.multiple = true
-    val ok = dlg.show(window).isDefined
+    val dlgOk = dlg.show(window).isDefined
 
-    val list = if (!ok) Nil else dlg.files.flatMap { f =>
+    val list = if (!dlgOk) Nil else dlg.files.flatMap { f =>
       ActionArtifactLocation.query[S](workspace.rootH, file = f, window = window).map { location =>
         val spec = AudioFile.readSpec(f)
         Config1(file = f, spec = spec, location = location)
       }
     }
-    if (list.isEmpty) None else Some(list)
+    if (list.nonEmpty) ok(list)
   }
 
   def makeObj[S <: Sys[S]](config: Config[S])(implicit tx: S#Tx): List[Obj[S]] = config.flatMap { cfg =>

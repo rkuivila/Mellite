@@ -92,8 +92,7 @@ trait CollectionViewImpl[S <: Sys[S]]
 
     def apply(): Unit = {
       val winOpt    = Window.find(component)
-      val confOpt   = f.initMakeDialog[S](workspace, /* parentH, */ winOpt)
-      confOpt.foreach { conf =>
+      f.initMakeDialog[S](workspace, /* parentH, */ winOpt) { conf =>
         val confOpt2  = prepareInsert(f)
         confOpt2.foreach { insConf =>
           val editOpt = cursor.step { implicit tx =>

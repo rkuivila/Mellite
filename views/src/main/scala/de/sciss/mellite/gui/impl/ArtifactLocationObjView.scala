@@ -47,13 +47,14 @@ object ArtifactLocationObjView extends ListObjView.Factory {
   type Config[S <: stm.Sys[S]] = ObjViewImpl.PrimitiveConfig[File]
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
-                                 (implicit cursor: stm.Cursor[S]): Option[Config[S]] =
-    ActionArtifactLocation.queryNew(window = window)
+                                 (ok: Config[S] => Unit)
+                                 (implicit cursor: stm.Cursor[S]): Unit =
+    ActionArtifactLocation.queryNew(window = window).foreach(ok(_))
 
   def makeObj[S <: Sys[S]](config: (String, File))(implicit tx: S#Tx): List[Obj[S]] = {
     val (name, directory) = config
     val obj  = ArtifactLocation.newVar[S](directory)
-    obj.name = name
+    if (!name.isEmpty) obj.name = name
     obj :: Nil
   }
 
