@@ -175,7 +175,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     val graph = SynthGraph {
       import de.sciss.synth._
       import ugen._
-      import Ops._
+      import Ops.stringToControl
       val in        = In.ar(0, numOuts)
       val mainAmp   = Lag.ar("amp".kr(0f))
       val mainIn    = in * mainAmp
