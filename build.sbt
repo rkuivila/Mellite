@@ -10,7 +10,7 @@ lazy val loggingEnabled             = true
 lazy val authorName                 = "Hanns Holger Rutz"
 lazy val authorEMail                = "contact@sciss.de"
 
-// ---- core dependencies ----
+// ---- dependencies ----
 
 lazy val soundProcessesVersion      = "3.6.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.3"
@@ -18,24 +18,18 @@ lazy val syntaxPaneVersion          = "1.1.5"
 lazy val scalaColliderUGenVersion   = "1.15.3"
 lazy val lucreVersion               = "3.3.1"
 lazy val equalVersion               = "0.1.1"
-lazy val scalaOSCVersion            = "1.1.5"
 lazy val playJSONVersion            = "0.4.0"
-
-lazy val bdb = "bdb" // either "bdb" or "bdb6"
-
-// ---- views dependencies ----
-
 lazy val nuagesVersion              = "2.8.0-SNAPSHOT"
 lazy val scalaColliderSwingVersion  = "1.30.0"
 lazy val lucreSwingVersion          = "1.4.0"
-lazy val swingPlusVersion           = "0.2.1"
-lazy val spanVersion                = "1.3.1"
 lazy val audioWidgetsVersion        = "1.10.0"
 lazy val desktopVersion             = "0.7.2"
 lazy val sonogramVersion            = "1.9.0"
 lazy val raphaelIconsVersion        = "1.0.3"
 lazy val pdflitzVersion             = "1.2.1"
 lazy val subminVersion              = "0.2.1"
+
+lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
 // ---- app packaging ----
 
@@ -146,18 +140,7 @@ lazy val pkgDebianSettings = Seq(
 
 // ---- projects ----
 
-lazy val root = Project(id = baseNameL, base = file("."))
-  .aggregate(core, views)
-  .dependsOn(core, views)
-  .enablePlugins(JavaAppPackaging, DebianPlugin)
-  .settings(commonSettings)
-  .settings(
-    name                       := baseName,
-    description                := appDescription,
-    mainClass in Compile       := appMainClass, // ! cf. https://stackoverflow.com/questions/23664963
-    publishArtifact in (Compile, packageBin) := false, // there are no binaries
-    publishArtifact in (Compile, packageDoc) := false, // there are no javadocs
-    publishArtifact in (Compile, packageSrc) := false,  // there are no sources
+lazy val assemblySettings = Seq(
     mainClass             in assembly := appMainClass,
     target                in assembly := baseDirectory.value,
     assemblyJarName       in assembly := s"$baseName.jar",
@@ -168,48 +151,31 @@ lazy val root = Project(id = baseNameL, base = file("."))
         oldStrategy(x)
     }
   )
-  .settings(pkgUniversalSettings)
-  .settings(useNativeZip) // cf. https://github.com/sbt/sbt-native-packager/issues/334
-  .settings(pkgDebianSettings)
 
-lazy val core = Project(id = s"$baseNameL-core", base = file("core"))
-  .settings(commonSettings)
-  .settings(
-    name        := s"$baseName-core",
-    description := "Core layer for Mellite",
-    resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
-    libraryDependencies ++= Seq(
-      "de.sciss"        %% "soundprocesses-core"      % soundProcessesVersion,    // computer-music framework
-      "de.sciss"        %% "scalainterpreterpane"     % interpreterPaneVersion,   // REPL
-      "de.sciss"        %  "syntaxpane"               % syntaxPaneVersion,        // REPL view
-      "de.sciss"        %% "scalacolliderugens-api"   % scalaColliderUGenVersion, // need latest version
-      "de.sciss"        %  "scalacolliderugens-spec"  % scalaColliderUGenVersion, // meta data
-      "de.sciss"        %% "lucre-core"               % lucreVersion,
-      "de.sciss"        %% "lucre-confluent"          % lucreVersion,
-      "de.sciss"        %% s"lucre-$bdb"              % lucreVersion,             // database backend
-      "de.sciss"        %% "span"                     % spanVersion,              // makes sbt happy :-E
-      "de.sciss"        %% "equal"                    % equalVersion,             // type-safe equals
-      "de.sciss"        %% "scalaosc"                 % scalaOSCVersion,          // important fixes
-      "de.sciss"        %% "play-json-sealed"         % playJSONVersion
-    ),
-    initialCommands in console := "import de.sciss.mellite._"
-  )
-
-lazy val views = Project(id = s"$baseNameL-views", base = file("views"))
-  .dependsOn(core)
+lazy val root = Project(id = baseName, base = file("."))
   .enablePlugins(BuildInfoPlugin)
+  .enablePlugins(JavaAppPackaging, DebianPlugin)
   .settings(commonSettings)
+  .settings(pkgUniversalSettings)
+  .settings(pkgDebianSettings)
+  .settings(useNativeZip) // cf. https://github.com/sbt/sbt-native-packager/issues/334
+  .settings(assemblySettings)
   .settings(
-    name        := s"$baseName-views",
+    name        := baseName,
     description := appDescription,
+    resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
     libraryDependencies ++= Seq(
       "de.sciss" %% "soundprocesses-views"            % soundProcessesVersion,      // computer-music framework
       "de.sciss" %% "soundprocesses-compiler"         % soundProcessesVersion,      // computer-music framework
+      "de.sciss" %% "scalainterpreterpane"            % interpreterPaneVersion,     // REPL
+      "de.sciss" %  "scalacolliderugens-spec"         % scalaColliderUGenVersion,   // meta data
+      "de.sciss" %% s"lucre-$bdb"                     % lucreVersion,               // database backend
+      "de.sciss" %% "equal"                           % equalVersion,               // type-safe equals
+      "de.sciss" %% "play-json-sealed"                % playJSONVersion,
       "de.sciss" %% "wolkenpumpe"                     % nuagesVersion,              // live improv
-      "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL
+      "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL view
+      "de.sciss" %  "syntaxpane"                      % syntaxPaneVersion,          // REPL view
       "de.sciss" %% "lucreswing"                      % lucreSwingVersion,          // reactive Swing components
-      "de.sciss" %% "swingplus"                       % swingPlusVersion,           // newest version: color-chooser
-      "de.sciss" %% "span"                            % spanVersion,
       "de.sciss" %% "audiowidgets-swing"              % audioWidgetsVersion,        // audio application widgets
       "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets
       "de.sciss" %% "desktop"                         % desktopVersion,

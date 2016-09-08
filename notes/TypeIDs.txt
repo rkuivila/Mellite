@@ -25,6 +25,7 @@
 20  Warp
 21  ParamSpec
 22 	Color
+23  fscape.Graph
 
 :: non-expr elements (mutables) ::
 
@@ -41,6 +42,8 @@
 0x10008     Artifact
 0x10009  	Scan
 0x1000A  	Nuages
+
+0x1000B     fscape.FScape
 
 :: indeterminus ::
 
