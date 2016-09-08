@@ -27,17 +27,16 @@ import de.sciss.mellite.gui.impl.timeline.TimelineObjViewBasicImpl
 import scala.swing.{Component, Label}
 
 object GenericObjView extends ObjView.Factory {
-  val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.No)
-  val prefix    = "Generic"
-  def humanName = prefix
-  val category  = "None"
+  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.No)
+  val prefix        = "Generic"
+  def humanName     = prefix
+  def tpe           = ???! : Obj.Type // RRR
+  val category      = "None"
+  def hasMakeDialog = false
   // val typeID    = 0
-  def tpe: Obj.Type = ???! // RRR
 
   type E     [S <: stm.Sys[S]]  = Obj[S]
   type Config[S <: stm.Sys[S]]  = Unit
-
-  def hasMakeDialog: Boolean = false
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                  (implicit cursor: Cursor[S]): Option[Config[S]] = None

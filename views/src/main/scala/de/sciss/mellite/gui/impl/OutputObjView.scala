@@ -24,11 +24,12 @@ import de.sciss.synth.proc.Output
 
 object OutputObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = Output[~]
-  val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Export)
-  val prefix    = "Output"
-  def humanName = prefix
-  def tpe       = Output
-  def category  = ObjView.categMisc
+  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Export)
+  val prefix        = "Output"
+  def humanName     = prefix
+  def tpe           = Output
+  def category      = ObjView.categMisc
+  def hasMakeDialog = false
 
   def mkListView[S <: Sys[S]](obj: Output[S])(implicit tx: S#Tx): OutputObjView[S] with ListObjView[S] = {
     val value = obj.key
@@ -36,8 +37,6 @@ object OutputObjView extends ListObjView.Factory {
   }
 
   type Config[S <: stm.Sys[S]] = Unit
-
-  def hasMakeDialog = false
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                  (implicit cursor: stm.Cursor[S]): Option[Config[S]] = None

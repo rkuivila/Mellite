@@ -37,9 +37,8 @@ object AudioCueObjView extends ListObjView.Factory {
   val prefix        = "AudioCue"
   def humanName     = "Audio File"
   def tpe           = AudioCue.Obj // ElemImpl.AudioGrapheme.typeID
+  def category      = ObjView.categResources
   def hasMakeDialog = true
-
-  def category = ObjView.categResources
 
   def mkListView[S <: Sys[S]](obj: AudioCue.Obj[S])
                              (implicit tx: S#Tx): AudioCueObjView[S] with ListObjView[S] = {

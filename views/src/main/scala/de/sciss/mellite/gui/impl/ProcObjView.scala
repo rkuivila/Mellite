@@ -42,12 +42,11 @@ import scala.util.control.NonFatal
 object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   type E[~ <: stm.Sys[~]] = Proc[~]
 
-  val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Cogs)
-  val prefix    = "Proc"
-  val humanName = "Process"
-  def tpe       = Proc
-  def category  = ObjView.categComposition
-
+  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Cogs)
+  val prefix        = "Proc"
+  val humanName     = "Process"
+  def tpe           = Proc
+  def category      = ObjView.categComposition
   def hasMakeDialog = true
 
   def mkListView[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx): ProcObjView[S] with ListObjView[S] =

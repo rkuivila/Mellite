@@ -30,12 +30,12 @@ import scala.util.Try
 
 object IntObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = IntObj[~]
-  val icon      = ObjViewImpl.raphaelIcon(Shapes.IntegerNumber)
-  val prefix    = "Int"
-  def humanName = prefix
-  def tpe = IntObj
-
-  def category = ObjView.categPrimitives
+  val icon          = ObjViewImpl.raphaelIcon(Shapes.IntegerNumber)
+  val prefix        = "Int"
+  def humanName     = prefix
+  def tpe           = IntObj
+  def category      = ObjView.categPrimitives
+  def hasMakeDialog = true
 
   def mkListView[S <: Sys[S]](obj: IntObj[S])(implicit tx: S#Tx): IntObjView[S] with ListObjView[S] = {
     val ex          = obj
@@ -49,8 +49,6 @@ object IntObjView extends ListObjView.Factory {
   }
 
   type Config[S <: stm.Sys[S]] = ObjViewImpl.PrimitiveConfig[Int]
-
-  def hasMakeDialog = true
 
   def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
                                  (implicit cursor: stm.Cursor[S]): Option[Config[S]] = {

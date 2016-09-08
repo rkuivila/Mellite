@@ -31,12 +31,12 @@ import scala.swing.{Component, Label}
 
 object CodeObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = Code.Obj[~]
-  val icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Code)
-  val prefix      = "Code"
-  def humanName   = "Source Code"
-  def category    = ObjView.categMisc
-  def tpe = Code.Obj
-  def hasMakeDialog   = true
+  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Code)
+  val prefix        = "Code"
+  def humanName     = "Source Code"
+  def tpe           = Code.Obj
+  def category      = ObjView.categMisc
+  def hasMakeDialog = true
 
   def mkListView[S <: Sys[S]](obj: Code.Obj[S])(implicit tx: S#Tx): CodeObjView[S] with ListObjView[S] = {
     val value   = obj.value

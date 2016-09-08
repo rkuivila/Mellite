@@ -30,13 +30,12 @@ import de.sciss.synth.proc.Implicits._
 
 object ArtifactLocationObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = ArtifactLocation[~] // Elem[S]
-  val icon      = ObjViewImpl.raphaelIcon(raphael.Shapes.Location)
-  val prefix    = "ArtifactLocation"
-  def humanName = "File Location"
-  def tpe    = ArtifactLocation
+  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Location)
+  val prefix        = "ArtifactLocation"
+  def humanName     = "File Location"
+  def tpe           = ArtifactLocation
+  def category      = ObjView.categResources
   def hasMakeDialog = true
-
-  def category = ObjView.categResources
 
   def mkListView[S <: Sys[S]](obj: ArtifactLocation[S])(implicit tx: S#Tx): ArtifactLocationObjView[S] with ListObjView[S] = {
     val peer      = obj
