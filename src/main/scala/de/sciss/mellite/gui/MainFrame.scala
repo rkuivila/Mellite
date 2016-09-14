@@ -169,8 +169,8 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
     val numOuts = s.peer.config.outputBusChannels
 
-    val group   = Group(s.defaultGroup, addAfter)
-    val mGroup  = Group(group, addToHead)
+    val group   = Group.play(s.defaultGroup, addAfter)
+    val mGroup  = Group.play(group, addToHead)
 
     val graph = SynthGraph {
       import de.sciss.synth._
