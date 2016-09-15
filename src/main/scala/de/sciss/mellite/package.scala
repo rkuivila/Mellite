@@ -16,7 +16,7 @@ package de.sciss
 import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
 
-import de.sciss.synth.proc.{Color, Confluent, Cursors, SoundProcesses}
+import de.sciss.synth.proc.Confluent
 
 import scala.annotation.elidable
 import scala.annotation.elidable.CONFIG
