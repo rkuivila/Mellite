@@ -17,6 +17,7 @@ import javax.swing.UIManager
 
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
+import de.sciss.fscape.lucre.FScape
 import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.requireEDT
 import de.sciss.lucre.synth.{Server, Txn}
@@ -24,7 +25,7 @@ import de.sciss.mellite.gui.impl.document.DocumentHandlerImpl
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
 import de.sciss.nuages.Wolkenpumpe
 import de.sciss.osc
-import de.sciss.synth.proc.{AuralSystem, Code, Color, Cursors, SensorSystem, SoundProcesses}
+import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem, SoundProcesses}
 
 import scala.collection.immutable.{Seq => ISeq}
 import scala.concurrent.stm.{TxnExecutor, atomic}
@@ -166,6 +167,7 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
   def initTypes(): Unit = {
     SoundProcesses.init()
     Wolkenpumpe   .init()
+    FScape        .init()
     // StringOption.init()
   }
 
@@ -175,7 +177,6 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
     // ---- type extensions ----
 
     initTypes()
-    Wolkenpumpe.init()
 
     // ---- look and feel
 

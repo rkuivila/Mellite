@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.3.0"
+lazy val projectVersion             = "2.3.1-SNAPSHOT"
 
 lazy val loggingEnabled             = true
 
@@ -12,7 +12,8 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.6.0"
+lazy val soundProcessesVersion      = "3.6.1-SNAPSHOT"
+lazy val fscapeVersion              = "2.0.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.7.3"
 lazy val syntaxPaneVersion          = "1.1.5"
 lazy val scalaColliderUGenVersion   = "1.15.3"
@@ -167,6 +168,7 @@ lazy val root = Project(id = baseName, base = file("."))
     libraryDependencies ++= Seq(
       "de.sciss" %% "soundprocesses-views"            % soundProcessesVersion,      // computer-music framework
       "de.sciss" %% "soundprocesses-compiler"         % soundProcessesVersion,      // computer-music framework
+      "de.sciss" %% "fscape-lucre"                    % fscapeVersion,              // offline audio rendering
       "de.sciss" %% "scalainterpreterpane"            % interpreterPaneVersion,     // REPL
       "de.sciss" %  "scalacolliderugens-spec"         % scalaColliderUGenVersion,   // meta data
       "de.sciss" %% s"lucre-$bdb"                     % lucreVersion,               // database backend

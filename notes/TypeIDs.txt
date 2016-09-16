@@ -25,7 +25,15 @@
 20  Warp
 21  ParamSpec
 22 	Color
-23  fscape.Graph
+
+23  expr.List
+24  lucre.event.Map
+25  BiPin
+26  BiPin.Entry
+27  BiGroup
+28  BiGroup.Entry
+
+100 fscape.GraphObj
 
 :: non-expr elements (mutables) ::
 
@@ -34,7 +42,7 @@
 0x10002	    AudioGrapheme	XXX should be 13
 0x10003     ArtifactLocation
 
-0x10004     expr.List
+0x10004     expr.List ???
 0x10005     Proc
 
 0x10006     Timeline
@@ -93,3 +101,12 @@ Warp 1
 	1000 to 1000 - ParamSpec
 
 
+/////////////////////////////////////////////////////////
+
+Code ids
+
+0: FileTransform
+1: SynthGraph
+2: Action
+
+4: fscape.Graph

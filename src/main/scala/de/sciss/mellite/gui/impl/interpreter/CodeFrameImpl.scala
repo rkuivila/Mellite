@@ -21,6 +21,7 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{OptionPane, UndoManager}
+import de.sciss.fscape.lucre.FScape
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{IDPeek, Obj}
 import de.sciss.lucre.swing.edit.EditVar
@@ -42,7 +43,7 @@ object CodeFrameImpl {
       init = {
         val txt     = ProcActions.extractSource(obj.graph.value)
         val comment = if (txt.isEmpty)
-            "graph function source code"
+            "SoundProcesses graph function source code"
           else
             "source code automatically extracted"
         s"// $comment\n\n$txt"
@@ -80,7 +81,7 @@ object CodeFrameImpl {
                          (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                           compiler: Code.Compiler): CodeFrame[S] = {
     val codeObj = mkSource(obj = obj, codeID = Code.Action.id, key = Action.attrSource,
-      init = "// action source code\n\n")
+      init = "// Action source code\n\n")
 
     val codeEx0 = codeObj
     val code0   = codeEx0.value match {
@@ -121,6 +122,53 @@ object CodeFrameImpl {
 
     implicit val undo = new UndoManagerImpl
     make(obj, codeObj, code0, handlerOpt, hasExecute = true, rightViewOpt = None)
+  }
+
+  // ---- adapter for editing an FScape's source ----
+
+  def fscape[S <: Sys[S]](obj: FScape[S])
+                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                          compiler: Code.Compiler): CodeFrame[S] = {
+    val codeObj = mkSource(obj = obj, codeID = FScape.Code.id, key = FScape.attrSource,
+      init = "// FScape graph function source code\n\n")
+
+    val codeEx0 = codeObj
+    val objH    = tx.newHandle(obj)
+    val code0   = codeEx0.value match {
+      case cs: FScape.Code => cs
+      case other => sys.error(s"FScape source code does not produce fscape.Graph: ${other.contextName}")
+    }
+
+    import de.sciss.fscape.Graph
+    import de.sciss.fscape.lucre.GraphObj
+    import de.sciss.fscape.stream.Control
+
+    val handler = new CodeView.Handler[S, Unit, Graph] {
+      def in(): Unit = ()
+
+      def save(in: Unit, out: Graph)(implicit tx: S#Tx): UndoableEdit = {
+        val obj = objH()
+        implicit val tpe = GraphObj
+        EditVar.Expr[S, Graph, GraphObj]("Change FScape Graph", obj.graph, GraphObj.newConst[S](out))
+      }
+
+      def execute()(implicit tx: S#Tx): Unit = {
+        val obj       = objH()
+        val config    = Control.Config()
+//        config.progressReporter
+//        config.blockSize
+//        config.nodeBufferSize
+//        config.executionContext
+//        config.seed
+        val rendering = obj.run(config)
+        ???
+      }
+
+      def dispose()(implicit tx: S#Tx) = ()
+    }
+
+    implicit val undo = new UndoManagerImpl
+    make(obj, codeObj, code0, Some(handler), hasExecute = true, rightViewOpt = None)
   }
 
   // ---- general constructor ----
