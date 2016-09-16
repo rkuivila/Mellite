@@ -436,7 +436,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   }
   // XXX TODO: removeClient
 
-  title           = Mellite.name
+  title           = Application.name
   closeOperation  = Window.CloseIgnore
 
   reactions += {

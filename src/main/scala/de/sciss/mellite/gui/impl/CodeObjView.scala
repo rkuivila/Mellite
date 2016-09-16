@@ -79,7 +79,7 @@ object CodeObjView extends ListObjView.Factory {
         case _  => None
       }
     )
-    res.foreach(ok(_))
+    res.foreach(ok)
   }
 
   def makeObj[S <: Sys[S]](config: (String, Code))(implicit tx: S#Tx): List[Obj[S]] = {
@@ -110,7 +110,7 @@ object CodeObjView extends ListObjView.Factory {
     def openView(parent: Option[Window[S]])
                 (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
       import de.sciss.mellite.Mellite.compiler
-      val frame = CodeFrame(obj, hasExecute = false)
+      val frame = CodeFrame(obj, bottom = Nil)
       Some(frame)
     }
 

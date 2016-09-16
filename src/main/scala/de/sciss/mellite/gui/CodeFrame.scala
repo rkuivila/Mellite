@@ -17,15 +17,18 @@ package gui
 import de.sciss.fscape.lucre.FScape
 import de.sciss.lucre
 import de.sciss.lucre.stm
+import de.sciss.lucre.swing.View
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.interpreter.{CodeFrameImpl => Impl}
 import de.sciss.synth.proc.{Action, Code, Proc, Workspace}
 
+import scala.collection.immutable.{Seq => ISeq}
+
 object CodeFrame {
-  def apply[S <: Sys[S]](obj: Code.Obj[S], hasExecute: Boolean)
+  def apply[S <: Sys[S]](obj: Code.Obj[S], bottom: ISeq[View[S]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          compiler: Code.Compiler): CodeFrame[S] =
-    Impl(obj, hasExecute = hasExecute)
+    Impl(obj, bottom = bottom)
 
   def proc[S <: Sys[S]](proc: Proc[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],

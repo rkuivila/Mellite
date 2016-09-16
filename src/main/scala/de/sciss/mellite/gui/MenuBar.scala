@@ -29,7 +29,7 @@ object MenuBar {
     val addr  = url // url.substring(math.min(url.length, url.indexOf("//") + 2))
     val html  =
       s"""<html><center>
-         |<font size=+1><b>${Mellite.name}</b></font><p>
+         |<font size=+1><b>${Application.name}</b></font><p>
          |Version ${Mellite.version}<p>
          |<p>
          |Copyright (c) 2012&ndash;2016 Hanns Holger Rutz. All rights reserved.<p>
@@ -72,31 +72,31 @@ object MenuBar {
       )
       .add(Item("open", ActionOpenWorkspace))
       .add(ActionOpenWorkspace.recentMenu)
-      .add(Item("close",              proxy("Close",                    menu1 + Key.W)))
+      .add(Item("close",              proxy(("Close",                   menu1 + Key.W))))
       .add(Item("close-all", ActionCloseAllWorkspaces))
       .addLine()
-      .add(Item("bounce",             proxy("Bounce...",                menu1 + Key.B)))
+      .add(Item("bounce",             proxy(("Bounce...",               menu1 + Key.B))))
       // .add(Item("bounce-transform",   proxy("Bounce And Transform...",  (menu1 + shift + Key.B))))
     if (itQuit.visible) mFile.addLine().add(itQuit)
 
     val keyRedo = if (Desktop.isWindows) menu1 + Key.Y else menu1 + shift + Key.Z
 
     val mEdit = Group("edit", "Edit")
-      .add(Item("undo",               proxy("Undo",                     menu1 + Key.Z)))
-      .add(Item("redo",               proxy("Redo",                     keyRedo)))
+      .add(Item("undo",               proxy(("Undo",                    menu1 + Key.Z))))
+      .add(Item("redo",               proxy(("Redo",                    keyRedo))))
       .addLine()
-      .add(Item("cut",                proxy("Cut",                      menu1 + Key.X)))
-      .add(Item("copy",               proxy("Copy",                     menu1 + Key.C)))
-      .add(Item("paste",              proxy("Paste",                    menu1 + Key.V)))
-      .add(Item("delete",             proxy("Delete",                   plain + Key.BackSpace)))
+      .add(Item("cut",                proxy(("Cut",                     menu1 + Key.X))))
+      .add(Item("copy",               proxy(("Copy",                    menu1 + Key.C))))
+      .add(Item("paste",              proxy(("Paste",                   menu1 + Key.V))))
+      .add(Item("delete",             proxy(("Delete",                  plain + Key.BackSpace))))
       .addLine()
-      .add(Item("select-all",         proxy("Select All",               menu1 + Key.A)))
+      .add(Item("select-all",         proxy(("Select All",              menu1 + Key.A))))
 
     if (itPrefs.visible /* && Desktop.isLinux */) mEdit.addLine().add(itPrefs)
 
     val mActions = Group("actions", "Actions")
-      .add(Item("stop-all-sound",     proxy("Stop All Sound",           menu1 + Key.Period)))
-      .add(Item("debug-print",        proxy("Debug Print",              menu2 + Key.P)))
+      .add(Item("stop-all-sound",     proxy(("Stop All Sound",          menu1 + Key.Period))))
+      .add(Item("debug-print",        proxy(("Debug Print",             menu2 + Key.P))))
       .add(Item("debug-threads")("Debug Thread Dump")(debugThreads()))
       .add(Item("dump-osc")("Dump OSC" -> (ctrl + shift + Key.D))(dumpOSC()))
       .add(Item("window-shot",        proxy("Export Window as PDF...")))

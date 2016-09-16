@@ -25,12 +25,11 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{KeyStrokes, UndoManager}
 import de.sciss.icons.raphael
-import de.sciss.lucre.expr.{Expr, StringObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.lucre.swing.{defer, deferTx, requireEDT}
+import de.sciss.lucre.swing.{View, defer, deferTx, requireEDT}
 import de.sciss.model.impl.ModelImpl
 import de.sciss.scalainterpreter.{CodePane, Interpreter, InterpreterPane}
 import de.sciss.swingplus.Implicits._
@@ -38,13 +37,14 @@ import de.sciss.swingplus.SpinningProgressBar
 import de.sciss.syntaxpane.SyntaxDocument
 import de.sciss.synth.proc.{Code, Workspace}
 
+import scala.collection.immutable.{Seq => ISeq}
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.swing.Swing._
 import scala.swing.event.Key
-import scala.swing.{Action, BorderPanel, Button, Component, FlowPanel, Swing}
-import scala.util.{Failure, Success}
+import scala.swing.{Action, BorderPanel, Button, Component, FlowPanel}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 object CodeViewImpl {
   private val intpMap = mutable.WeakHashMap.empty[Int, Future[Interpreter]]
@@ -61,7 +61,7 @@ object CodeViewImpl {
     })
   }
 
-  def apply[S <: Sys[S]](obj: Code.Obj[S], code0: Code, hasExecute: Boolean)
+  def apply[S <: Sys[S]](obj: Code.Obj[S], code0: Code, bottom: ISeq[View[S]])
                         (handlerOpt: Option[CodeView.Handler[S, code0.In, code0.Out]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          compiler: Code.Compiler,
@@ -77,7 +77,7 @@ object CodeViewImpl {
     // val code0   = codeEx.value
     // val source0 = code0.source
     // val sourceH = tx.newHandle(sourceCode)(StringObj.varSerializer[S])
-    val res     = new Impl[S, code0.In, code0.Out](codeVarHOpt, code0, handlerOpt, hasExecute = hasExecute)
+    val res     = new Impl[S, code0.In, code0.Out](codeVarHOpt, code0, handlerOpt, bottom = bottom)
     res.init()
     res
   }
@@ -85,7 +85,7 @@ object CodeViewImpl {
   private final class Impl[S <: Sys[S], In0, Out0](codeVarHOpt: Option[stm.Source[S#Tx, Code.Obj.Var[S]]],
                                         private var code: Code { type In = In0; type Out = Out0 },
                                         handlerOpt: Option[CodeView.Handler[S, In0, Out0]],
-                                        hasExecute: Boolean)
+                                        bottom: ISeq[View[S]])
                                        (implicit undoManager: UndoManager, val workspace: Workspace[S],
                                         val cursor: stm.Cursor[S], compiler: Code.Compiler)
     extends ComponentHolder[Component] with CodeView[S] with ModelImpl[CodeView.Update] {
@@ -283,18 +283,7 @@ object CodeViewImpl {
       lazy val ggApply: Button = GUI.toolButton(actionApply, raphael.Shapes.Check , tooltip = "Save text changes")
 
       val bot0: List[Component] = ggProgress :: Nil
-      val bot1 = handlerOpt.fold(bot0) { handler =>
-        if (!hasExecute) bot0
-        else {
-          val actionExecute = Action(null) {
-            cursor.step { implicit tx =>
-              handler.execute()
-            }
-          }
-          val ggExecute = GUI.toolButton(actionExecute, raphael.Shapes.Bolt, tooltip = "Run body")
-          ggExecute :: bot0
-        }
-      }
+      val bot1 = if (bottom.isEmpty) bot0 else bot0 ++ bottom.map(_.component)
       val bot2 = HGlue :: ggApply :: ggCompile :: bot1
       val panelBottom = new FlowPanel(FlowPanel.Alignment.Trailing)(bot2: _*)
 

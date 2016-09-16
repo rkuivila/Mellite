@@ -19,10 +19,12 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Disposable, Sys}
+import de.sciss.lucre.swing.View
 import de.sciss.mellite.gui.impl.interpreter.{CodeViewImpl => Impl}
 import de.sciss.model.Model
 import de.sciss.synth.proc.{Code, Workspace}
 
+import scala.collection.immutable.{Seq => ISeq}
 import scala.concurrent.Future
 import scala.swing.Action
 
@@ -30,16 +32,15 @@ object CodeView {
   trait Handler[S <: Sys[S], In, -Out] extends Disposable[S#Tx] {
     def in(): In
     def save(in: In, out: Out)(implicit tx: S#Tx): UndoableEdit
-    def execute()(implicit tx: S#Tx): Unit // (in: In, out: Out)(implicit tx: S#Tx): Unit
   }
 
   /** If `graph` is given, the `apply` action is tied to updating the graph variable. */
-  def apply[S <: Sys[S]](obj: Code.Obj[S], code0: Code, hasExecute: Boolean)
+  def apply[S <: Sys[S]](obj: Code.Obj[S], code0: Code, bottom: ISeq[View[S]])
                         (handler: Option[Handler[S, code0.In, code0.Out]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          compiler: Code.Compiler,
                          undoManager: UndoManager): CodeView[S] =
-    Impl(obj, code0, hasExecute = hasExecute)(handler)
+    Impl(obj, code0, bottom = bottom)(handler)
 
   sealed trait Update
   case class DirtyChange(value: Boolean) extends Update

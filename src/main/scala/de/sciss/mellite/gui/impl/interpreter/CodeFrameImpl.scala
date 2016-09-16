@@ -22,16 +22,19 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{OptionPane, UndoManager}
 import de.sciss.fscape.lucre.FScape
+import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{IDPeek, Obj}
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.swing.{CellView, View}
+import de.sciss.lucre.swing.{CellView, View, defer, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.impl.ActionImpl
 import de.sciss.synth.proc.{Action, Code, Proc, SynthGraphObj, Workspace}
 
-import scala.swing.{Component, Orientation, SplitPane}
+import scala.collection.immutable.{Seq => ISeq}
+import scala.concurrent.stm.Ref
+import scala.swing.{Component, Orientation, ProgressBar, SplitPane}
 
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
@@ -66,13 +69,13 @@ object CodeFrameImpl {
       }
 
       def dispose()(implicit tx: S#Tx) = ()
-      def execute()(implicit tx: S#Tx) = ()
     }
 
     implicit val undo = new UndoManagerImpl
     val rightView = OutputsView[S](obj) // SCANS
 
-    make(obj, codeObj, code0, Some(handler), hasExecute = false, rightViewOpt = Some(rightView))
+    // XXX TODO --- bottom could have play/power button similar to ensemble; even a meter
+    make(obj, codeObj, code0, Some(handler), bottom = Nil, rightViewOpt = Some(rightView))
   }
 
   // ---- adapter for editing a Action's source ----
@@ -89,7 +92,7 @@ object CodeFrameImpl {
       case other => sys.error(s"Action source code does not produce plain function: ${other.contextName}")
     }
 
-    val handlerOpt = obj match {
+    val (handlerOpt, bottom) = obj match {
       case Action.Var(vr) =>
         val varH  = tx.newHandle(vr)
         val objH  = tx.newHandle(obj)
@@ -106,22 +109,27 @@ object CodeFrameImpl {
             EditVar[S, Action[S], Action.Var[S]](name = "Change Action Body", expr = obj, value = value)
           }
 
-          def execute()(implicit tx: S#Tx): Unit = {
-            val obj       = objH()
-            val universe  = Action.Universe(obj, workspace)
-            obj.execute(universe)
-            // ActionImpl.execute[S](name = in, jar = out)
-          }
-
           def dispose()(implicit tx: S#Tx) = ()
         }
-        Some(handler)
 
-      case _ => None
+        val viewExecute = View.wrap[S] {
+          val actionExecute = swing.Action(null) {
+            cursor.step { implicit tx =>
+              val obj = objH()
+              val universe = Action.Universe(obj, workspace)
+              obj.execute(universe)
+            }
+          }
+          GUI.toolButton(actionExecute, raphael.Shapes.Bolt, tooltip = "Run body")
+        }
+
+        (Some(handler), viewExecute :: Nil)
+
+      case _ => (None, Nil)
     }
 
     implicit val undo = new UndoManagerImpl
-    make(obj, codeObj, code0, handlerOpt, hasExecute = true, rightViewOpt = None)
+    make(obj, codeObj, code0, handlerOpt, bottom = bottom, rightViewOpt = None)
   }
 
   // ---- adapter for editing an FScape's source ----
@@ -152,43 +160,97 @@ object CodeFrameImpl {
         EditVar.Expr[S, Graph, GraphObj]("Change FScape Graph", obj.graph, GraphObj.newConst[S](out))
       }
 
-      def execute()(implicit tx: S#Tx): Unit = {
-        val obj       = objH()
-        val config    = Control.Config()
-//        config.progressReporter
-//        config.blockSize
-//        config.nodeBufferSize
-//        config.executionContext
-//        config.seed
-        val rendering = obj.run(config)
-        ???
-      }
-
       def dispose()(implicit tx: S#Tx) = ()
     }
 
+    val renderRef = Ref(Option.empty[FScape.Rendering[S]])
+
+    lazy val ggProgress: ProgressBar = new ProgressBar {
+      max = 160
+    }
+
+    val viewProgress = View.wrap[S](ggProgress)
+
+    lazy val actionCancel: swing.Action = new swing.Action(null) {
+      def apply(): Unit = cursor.step { implicit tx =>
+        renderRef.swap(None)(tx.peer).foreach(_.cancel())
+      }
+      enabled = false
+    }
+
+    val viewCancel = View.wrap[S] {
+      GUI.toolButton(actionCancel, raphael.Shapes.Cross, tooltip = "Abort Rendering")
+    }
+
+    // XXX TODO --- should use custom view so we can cancel upon `dispose`
+    val viewRender = View.wrap[S] {
+      val actionRender = new swing.Action("Render") { self =>
+        def apply(): Unit = cursor.step { implicit tx =>
+          if (renderRef.get(tx.peer).isEmpty) {
+            val obj       = objH()
+            val config    = Control.Config()
+             config.progressReporter = { report =>
+               defer {
+                 ggProgress.value = (report.total * ggProgress.max).toInt
+               }
+             }
+            // config.blockSize
+            // config.nodeBufferSize
+            // config.executionContext
+            // config.seed
+
+            def finished()(implicit tx: S#Tx): Unit = {
+              renderRef.set(None)(tx.peer)
+              deferTx {
+                actionCancel.enabled  = false
+                self.enabled          = true
+              }
+            }
+
+            val rendering = obj.run(config)
+            /* val obs = */ rendering.reactNow { implicit tx => {
+              case FScape.Rendering.Success => finished()
+              case FScape.Rendering.Failure(FScape.Rendering.Cancelled()) => finished()
+              case FScape.Rendering.Failure(ex) =>
+                finished()
+                deferTx(ex.printStackTrace())
+              case FScape.Rendering.Running =>
+                deferTx {
+                  actionCancel.enabled = true
+                  self        .enabled = false
+                }
+            }}
+            renderRef.set(Some(rendering))(tx.peer)
+          }
+        }
+      }
+      GUI.toolButton(actionRender, Shapes.Sparks)
+    }
+
+    val bottom = viewProgress :: viewCancel :: viewRender :: Nil
+
     implicit val undo = new UndoManagerImpl
-    make(obj, codeObj, code0, Some(handler), hasExecute = true, rightViewOpt = None)
+    make(obj, codeObj, code0, Some(handler), bottom = bottom, rightViewOpt = None)
   }
 
   // ---- general constructor ----
 
-  def apply[S <: Sys[S]](obj: Code.Obj[S], hasExecute: Boolean)
+  def apply[S <: Sys[S]](obj: Code.Obj[S], bottom: ISeq[View[S]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          compiler: Code.Compiler): CodeFrame[S] = {
     val _codeEx = obj
     val _code   = _codeEx.value
     implicit val undo = new UndoManagerImpl
-    make[S, _code.In, _code.Out](obj, obj, _code, None, hasExecute = hasExecute, rightViewOpt = None)
+    make[S, _code.In, _code.Out](obj, obj, _code, None, bottom = bottom, rightViewOpt = None)
   }
   
   private def make[S <: Sys[S], In0, Out0](pObj: Obj[S], obj: Code.Obj[S], code0: Code { type In = In0; type Out = Out0 },
-                                handler: Option[CodeView.Handler[S, In0, Out0]], hasExecute: Boolean,
+                                handler: Option[CodeView.Handler[S, In0, Out0]], bottom: ISeq[View[S]],
                                 rightViewOpt: Option[View[S]])
                                (implicit tx: S#Tx, ws: Workspace[S], csr: stm.Cursor[S],
                                 undoMgr: UndoManager, compiler: Code.Compiler): CodeFrame[S] = {
     // val _name   = /* title getOrElse */ obj.attr.name
-    val codeView  = CodeView(obj, code0, hasExecute = hasExecute)(handler)
+    val codeView  = CodeView(obj, code0, bottom = bottom)(handler)
     val view      = rightViewOpt.fold[View[S]](codeView) { bottomView =>
       new View.Editable[S] with ViewHasWorkspace[S] {
         val undoManager = undoMgr
