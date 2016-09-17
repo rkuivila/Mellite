@@ -21,20 +21,18 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{OptionPane, UndoManager}
-import de.sciss.fscape.lucre.FScape
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{IDPeek, Obj}
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.swing.{CellView, View, defer, deferTx}
+import de.sciss.lucre.swing.{CellView, View}
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.impl.ActionImpl
 import de.sciss.synth.proc.{Action, Code, Proc, SynthGraphObj, Workspace}
 
 import scala.collection.immutable.{Seq => ISeq}
-import scala.concurrent.stm.Ref
-import scala.swing.{Component, Orientation, ProgressBar, SplitPane}
+import scala.swing.{Component, Orientation, SplitPane}
 
 object CodeFrameImpl {
   // ---- adapter for editing a Proc's source ----
@@ -132,107 +130,6 @@ object CodeFrameImpl {
     make(obj, codeObj, code0, handlerOpt, bottom = bottom, rightViewOpt = None)
   }
 
-  // ---- adapter for editing an FScape's source ----
-
-  def fscape[S <: Sys[S]](obj: FScape[S])
-                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
-                          compiler: Code.Compiler): CodeFrame[S] = {
-    val codeObj = mkSource(obj = obj, codeID = FScape.Code.id, key = FScape.attrSource,
-      init = "// FScape graph function source code\n\n")
-
-    val codeEx0 = codeObj
-    val objH    = tx.newHandle(obj)
-    val code0   = codeEx0.value match {
-      case cs: FScape.Code => cs
-      case other => sys.error(s"FScape source code does not produce fscape.Graph: ${other.contextName}")
-    }
-
-    import de.sciss.fscape.Graph
-    import de.sciss.fscape.lucre.GraphObj
-    import de.sciss.fscape.stream.Control
-
-    val handler = new CodeView.Handler[S, Unit, Graph] {
-      def in(): Unit = ()
-
-      def save(in: Unit, out: Graph)(implicit tx: S#Tx): UndoableEdit = {
-        val obj = objH()
-        implicit val tpe = GraphObj
-        EditVar.Expr[S, Graph, GraphObj]("Change FScape Graph", obj.graph, GraphObj.newConst[S](out))
-      }
-
-      def dispose()(implicit tx: S#Tx) = ()
-    }
-
-    val renderRef = Ref(Option.empty[FScape.Rendering[S]])
-
-    lazy val ggProgress: ProgressBar = new ProgressBar {
-      max = 160
-    }
-
-    val viewProgress = View.wrap[S](ggProgress)
-
-    lazy val actionCancel: swing.Action = new swing.Action(null) {
-      def apply(): Unit = cursor.step { implicit tx =>
-        renderRef.swap(None)(tx.peer).foreach(_.cancel())
-      }
-      enabled = false
-    }
-
-    val viewCancel = View.wrap[S] {
-      GUI.toolButton(actionCancel, raphael.Shapes.Cross, tooltip = "Abort Rendering")
-    }
-
-    // XXX TODO --- should use custom view so we can cancel upon `dispose`
-    val viewRender = View.wrap[S] {
-      val actionRender = new swing.Action("Render") { self =>
-        def apply(): Unit = cursor.step { implicit tx =>
-          if (renderRef.get(tx.peer).isEmpty) {
-            val obj       = objH()
-            val config    = Control.Config()
-             config.progressReporter = { report =>
-               defer {
-                 ggProgress.value = (report.total * ggProgress.max).toInt
-               }
-             }
-            // config.blockSize
-            // config.nodeBufferSize
-            // config.executionContext
-            // config.seed
-
-            def finished()(implicit tx: S#Tx): Unit = {
-              renderRef.set(None)(tx.peer)
-              deferTx {
-                actionCancel.enabled  = false
-                self.enabled          = true
-              }
-            }
-
-            val rendering = obj.run(config)
-            /* val obs = */ rendering.reactNow { implicit tx => {
-              case FScape.Rendering.Success => finished()
-              case FScape.Rendering.Failure(FScape.Rendering.Cancelled()) => finished()
-              case FScape.Rendering.Failure(ex) =>
-                finished()
-                deferTx(ex.printStackTrace())
-              case FScape.Rendering.Running =>
-                deferTx {
-                  actionCancel.enabled = true
-                  self        .enabled = false
-                }
-            }}
-            renderRef.set(Some(rendering))(tx.peer)
-          }
-        }
-      }
-      GUI.toolButton(actionRender, Shapes.Sparks)
-    }
-
-    val bottom = viewProgress :: viewCancel :: viewRender :: Nil
-
-    implicit val undo = new UndoManagerImpl
-    make(obj, codeObj, code0, Some(handler), bottom = bottom, rightViewOpt = None)
-  }
-
   // ---- general constructor ----
 
   def apply[S <: Sys[S]](obj: Code.Obj[S], bottom: ISeq[View[S]])
@@ -244,7 +141,7 @@ object CodeFrameImpl {
     make[S, _code.In, _code.Out](obj, obj, _code, None, bottom = bottom, rightViewOpt = None)
   }
   
-  private def make[S <: Sys[S], In0, Out0](pObj: Obj[S], obj: Code.Obj[S], code0: Code { type In = In0; type Out = Out0 },
+  def make[S <: Sys[S], In0, Out0](pObj: Obj[S], obj: Code.Obj[S], code0: Code { type In = In0; type Out = Out0 },
                                 handler: Option[CodeView.Handler[S, In0, Out0]], bottom: ISeq[View[S]],
                                 rightViewOpt: Option[View[S]])
                                (implicit tx: S#Tx, ws: Workspace[S], csr: stm.Cursor[S],
@@ -284,7 +181,7 @@ object CodeFrameImpl {
 
   // ---- util ----
 
-  private def mkSource[S <: Sys[S]](obj: Obj[S], codeID: Int, key: String, init: => String)
+  def mkSource[S <: Sys[S]](obj: Obj[S], codeID: Int, key: String, init: => String)
                                    (implicit tx: S#Tx): Code.Obj[S] = {
     // if there is no source code attached,
     // create a new code object and add it to the attribute map.

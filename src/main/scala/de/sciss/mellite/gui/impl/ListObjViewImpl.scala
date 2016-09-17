@@ -59,7 +59,7 @@ object ListObjViewImpl {
     AudioCueObjView             .tpe.typeID -> AudioCueObjView,
     ArtifactLocationObjView     .tpe.typeID -> ArtifactLocationObjView,
     ArtifactObjView             .tpe.typeID -> ArtifactObjView,
-    FScapeObjView               .tpe.typeID -> FScapeObjView,
+//    FScapeObjView               .tpe.typeID -> FScapeObjView,
     ObjViewImpl.Folder          .tpe.typeID -> ObjViewImpl.Folder,
     ProcObjView                 .tpe.typeID -> ProcObjView,
     ObjViewImpl.Timeline        .tpe.typeID -> ObjViewImpl.Timeline,

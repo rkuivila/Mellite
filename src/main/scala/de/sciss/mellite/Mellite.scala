@@ -17,15 +17,13 @@ import javax.swing.UIManager
 
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
 import de.sciss.desktop.{OptionPane, WindowHandler}
-import de.sciss.fscape.lucre.FScape
 import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.requireEDT
 import de.sciss.lucre.synth.{Server, Txn}
 import de.sciss.mellite.gui.impl.document.DocumentHandlerImpl
 import de.sciss.mellite.gui.{DocumentViewHandler, LogFrame, MainFrame, MenuBar}
-import de.sciss.nuages.Wolkenpumpe
 import de.sciss.osc
-import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem, SoundProcesses}
+import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
 import scala.collection.immutable.{Seq => ISeq}
 import scala.concurrent.stm.{TxnExecutor, atomic}
@@ -33,7 +31,7 @@ import scala.language.existentials
 import scala.swing.Label
 import scala.util.control.NonFatal
 
-object Mellite extends SwingApplicationImpl("Mellite") with Application {
+object Mellite extends SwingApplicationImpl("Mellite") with Application with Init {
 
   import de.sciss.synth.proc
 //  //  lucre.event    .showLog = true
@@ -162,13 +160,6 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application {
       implicit val tx = TxnLike.wrap(itx)
       sensorSystem.start(config.build)
     }
-  }
-
-  def initTypes(): Unit = {
-    SoundProcesses.init()
-    Wolkenpumpe   .init()
-    FScape        .init()
-    // StringOption.init()
   }
 
   override protected def init(): Unit = {

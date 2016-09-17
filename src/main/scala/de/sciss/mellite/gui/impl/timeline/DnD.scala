@@ -128,7 +128,7 @@ trait DnD[S <: SSys[S]] {
         }
       } else if (t.isDataFlavorSupported(ListObjView.Flavor)) {
         t.getTransferData(ListObjView.Flavor) match {
-          case ListObjView.Drag(ws, view) if ws == workspace =>
+          case ListObjView.Drag(ws, _, view) if ws == workspace =>
             Some(DnD.ObjectDrag(workspace, view.asInstanceOf[ObjView[S]]))
           case _ => None
         }

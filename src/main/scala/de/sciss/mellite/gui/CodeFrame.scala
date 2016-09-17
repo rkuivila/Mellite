@@ -14,7 +14,6 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.fscape.lucre.FScape
 import de.sciss.lucre
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.View
@@ -40,10 +39,10 @@ object CodeFrame {
                           compiler: Code.Compiler): CodeFrame[S] =
     Impl.action(action)
 
-  def fscape[S <: Sys[S]](fscape: FScape[S])
-                       (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
-                        compiler: Code.Compiler): CodeFrame[S] =
-    Impl.fscape(fscape)
+//  def fscape[S <: Sys[S]](fscape: FScape[S])
+//                       (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+//                        compiler: Code.Compiler): CodeFrame[S] =
+//    Impl.fscape(fscape)
 }
 
 trait CodeFrame[S <: stm.Sys[S]] extends lucre.swing.Window[S] {
