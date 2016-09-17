@@ -57,7 +57,7 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
       }
       val trans1 = if (sel.size == 1) {
         val _res = DragAndDrop.Transferable(ListObjView.Flavor) {
-          new ListObjView.Drag[S](fv.workspace, sel.head.renderData)
+          new ListObjView.Drag[S](fv.workspace, fv.cursor, sel.head.renderData)
         }
         DragAndDrop.Transferable.seq(trans0, _res)
       } else trans0
@@ -66,33 +66,79 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
     }
 
     // ---- import ----
+
     override def canImport(support: TransferSupport): Boolean =
-      treeView.dropLocation match {
-        case Some(tdl) =>
-          val locOk = tdl.index >= 0 || (tdl.column == 0 && !tdl.path.lastOption.exists(_.isLeaf))
-          if (locOk) {
-            val isSelection = support.isDataFlavorSupported(FolderView.SelectionFlavor)
-            if (isSelection) {
-              val data = support.getTransferable.getTransferData(FolderView.SelectionFlavor)
-                .asInstanceOf[FolderView.SelectionDnDData[_]]
-              if (data.workspace != workspace) {
-                // no linking between sessions
-                support.setDropAction(TransferHandler.COPY)
-              }
-              true
-            } else {
-              support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)
+      treeView.dropLocation.exists { tdl =>
+        val locOk = tdl.index >= 0 || (tdl.column == 0 && !tdl.path.lastOption.exists(_.isLeaf))
+        locOk && {
+          if (support.isDataFlavorSupported(FolderView.SelectionFlavor)) {
+            val data = support.getTransferable.getTransferData(FolderView.SelectionFlavor)
+              .asInstanceOf[FolderView.SelectionDnDData[_]]
+            if (data.workspace != workspace) {
+              // no linking between sessions
+              support.setDropAction(TransferHandler.COPY)
             }
-
+            true
+          } else if (support.isDataFlavorSupported(ListObjView.Flavor)) {
+            val data = support.getTransferable.getTransferData(ListObjView.Flavor)
+              .asInstanceOf[ListObjView.Drag[_]]
+            if (data.workspace != workspace) {
+              // no linking between sessions
+              support.setDropAction(TransferHandler.COPY)
+            }
+            true
           } else {
-            false
+            support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)
           }
-
-        case _ => false
+        }
       }
 
+    override def importData(support: TransferSupport): Boolean =
+      treeView.dropLocation.exists { tdl =>
+        val editOpt: Option[UndoableEdit] = {
+          val isFolder  = support.isDataFlavorSupported(FolderView.SelectionFlavor)
+          val isList    = support.isDataFlavorSupported(ListObjView.Flavor)
+          val crossSessionFolder = isFolder &&
+            (support.getTransferable.getTransferData(FolderView.SelectionFlavor)
+              .asInstanceOf[FolderView.SelectionDnDData[_]].workspace != workspace)
+          val crossSessionList = !crossSessionFolder && isList &&
+            (support.getTransferable.getTransferData(ListObjView.Flavor)
+              .asInstanceOf[ListObjView.Drag[_]].workspace != workspace)
+
+          if (crossSessionFolder)
+            copyFolderData(support)
+          else if (crossSessionList) {
+            copyListData(support)
+          }
+          else cursor.step { implicit tx =>
+            parentOption.flatMap { case (parent,idx) =>
+              if (isFolder)
+                insertFolderData(support, parent, idx)
+              else if (isList) {
+                insertListData(support, parent, idx)
+              }
+              else if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
+                importFiles(support, parent, idx)
+              else None
+            }
+          }
+        }
+        editOpt.foreach(undoManager.add)
+        editOpt.isDefined
+      }
+
+    // ---- folder: link ----
+
+    private def insertFolderData(support: TransferSupport, parent: Folder[S], index: Int)
+                                (implicit tx: S#Tx): Option[UndoableEdit] = {
+      val data = support.getTransferable.getTransferData(FolderView.SelectionFlavor)
+        .asInstanceOf[FolderView.SelectionDnDData[S]]
+
+      insertFolderData1(data.selection, parent, idx = index, dropAction = support.getDropAction)
+    }
+
     // XXX TODO: not sure whether removal should be in exportDone or something
-    private def insertData(sel: FolderView.Selection[S], newParent: Folder[S], idx: Int, dropAction: Int)
+    private def insertFolderData1(sel: FolderView.Selection[S], newParent: Folder[S], idx: Int, dropAction: Int)
                           (implicit tx: S#Tx): Option[UndoableEdit] = {
       // println(s"insert into $parent at index $idx")
 
@@ -159,36 +205,24 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
       val prefix = if (isMove) "Move" else if (isCopy) "Copy" else "Link"
       CompoundEdit(edits, s"$prefix $name")
     }
+    
+    // ---- folder: copy ----
 
-    private def importSelection(support: TransferSupport, parent: Folder[S], index: Int)
-                               (implicit tx: S#Tx): Option[UndoableEdit] = {
-      val data = support.getTransferable.getTransferData(FolderView.SelectionFlavor)
-        .asInstanceOf[FolderView.SelectionDnDData[S]]
-
-      // we have performed this check already before:
-      // if (data.workspace === workspace) {
-        insertData(data.selection, parent, idx = index, dropAction = support.getDropAction)
-      // } else {
-      //  None
-      // }
-    }
-
-    private def copyData(support: TransferSupport): Option[UndoableEdit] = {
+    private def copyFolderData(support: TransferSupport): Option[UndoableEdit] = {
       // cf. https://stackoverflow.com/questions/20982681
       val data  = support.getTransferable.getTransferData(FolderView.SelectionFlavor)
         .asInstanceOf[FolderView.SelectionDnDData[In] forSome { type In <: Sys[In] }]
-      copyData1(data)
+      copyFolderData1(data)
     }
 
-    private def copyData1[In <: Sys[In]](data: FolderView.SelectionDnDData[In]): Option[UndoableEdit] = {
+    private def copyFolderData1[In <: Sys[In]](data: FolderView.SelectionDnDData[In]): Option[UndoableEdit] =
       Txn.copy[In, S, Option[UndoableEdit]] { (txIn: In#Tx, tx: S#Tx) => {
         parentOption(tx).flatMap { case (parent, idx) =>
-          copyData2(data.selection, parent, idx)(txIn, tx)
+          copyFolderData2(data.selection, parent, idx)(txIn, tx)
         }
       }} (data.cursor, fv.cursor)
-    }
 
-    private def copyData2[In <: Sys[In]](sel: FolderView.Selection[In], newParent: Folder[S], idx: Int)
+    private def copyFolderData2[In <: Sys[In]](sel: FolderView.Selection[In], newParent: Folder[S], idx: Int)
                                        (implicit txIn: In#Tx, tx: S#Tx): Option[UndoableEdit] = {
       val idx1 = if (idx >= 0) idx else newParent.size
 
@@ -205,6 +239,54 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
       }
       CompoundEdit(edits, s"Import $name From Other Workspace")
     }
+
+    // ---- list: link ----
+
+    private def insertListData(support: TransferSupport, parent: Folder[S], index: Int)
+                              (implicit tx: S#Tx): Option[UndoableEdit] = {
+      val data = support.getTransferable.getTransferData(ListObjView.Flavor)
+        .asInstanceOf[ListObjView.Drag[S]]
+
+      val edit = insertListData1(data, parent, idx = index, dropAction = support.getDropAction)
+      Some(edit)
+    }
+
+    // XXX TODO: not sure whether removal should be in exportDone or something
+    private def insertListData1(data: ListObjView.Drag[S], parent: Folder[S], idx: Int, dropAction: Int)
+                               (implicit tx: S#Tx): UndoableEdit = {
+      val idx1    = if (idx >= 0) idx else parent.size
+      val nv      = data.view
+      val in      = nv.obj
+      val edit    = EditFolderInsertObj[S](nv.name, parent, idx1, child = in)
+      edit
+    }
+
+    // ---- list: copy ----
+
+    private def copyListData(support: TransferSupport): Option[UndoableEdit] = {
+      // cf. https://stackoverflow.com/questions/20982681
+      val data  = support.getTransferable.getTransferData(ListObjView.Flavor)
+        .asInstanceOf[ListObjView.Drag[In] forSome { type In <: Sys[In] }]
+      copyListData1(data)
+    }
+
+    private def copyListData1[In <: Sys[In]](data: ListObjView.Drag[In]): Option[UndoableEdit] =
+      Txn.copy[In, S, Option[UndoableEdit]] { (txIn: In#Tx, tx: S#Tx) =>
+        parentOption(tx).map { case (parent, idx) =>
+          implicit val txIn0  = txIn
+          implicit val txOut0 = tx
+          val idx1    = if (idx >= 0) idx else parent.size
+          val context = Copy[In, S]
+          val nv      = data.view
+          val in      = nv.obj
+          val out     = context(in)
+          val edit    = EditFolderInsertObj[S](nv.name, parent, idx1, child = out)
+          context.finish()
+          edit
+        }
+      } (data.cursor, fv.cursor)
+
+    // ---- files ----
 
     private def importFiles(support: TransferSupport, parent: Folder[S], index: Int)
                            (implicit tx: S#Tx): Option[UndoableEdit] = {
@@ -244,29 +326,6 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
           }
         }
         parentOpt.map(_ -> tdl.index)
-      }
-
-    override def importData(support: TransferSupport): Boolean =
-      treeView.dropLocation.exists { tdl =>
-        val editOpt = {
-          val crossSession = support.isDataFlavorSupported(FolderView.SelectionFlavor) &&
-            (support.getTransferable.getTransferData(FolderView.SelectionFlavor)
-              .asInstanceOf[FolderView.SelectionDnDData[_]].workspace != workspace)
-
-          if (crossSession)
-            copyData(support)
-          else cursor.step { implicit tx =>
-            parentOption.flatMap { case (parent,idx) =>
-              if (support.isDataFlavorSupported(FolderView.SelectionFlavor))
-                importSelection(support, parent, idx)
-              else if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor))
-                importFiles(support, parent, idx)
-              else None
-            }
-          }
-        }
-        editOpt.foreach(undoManager.add)
-        editOpt.isDefined
       }
   }
 }

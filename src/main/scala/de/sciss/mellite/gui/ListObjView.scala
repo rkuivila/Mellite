@@ -26,7 +26,7 @@ import scala.language.higherKinds
 import scala.swing.{Component, Label}
 
 object ListObjView {
-  final case class Drag[S <: Sys[S]](workspace: Workspace[S], view: ObjView[S])
+  final case class Drag[S <: Sys[S]](workspace: Workspace[S], cursor: stm.Cursor[S], view: ObjView[S])
 
   // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
   val Flavor = DragAndDrop.internalFlavor[Drag[_]]

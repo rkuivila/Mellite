@@ -266,7 +266,7 @@ abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S]
         val sel     = selection
         val trans1 = if (sel.size == 1) {
           val _res = DragAndDrop.Transferable(ListObjView.Flavor) {
-            ListObjView.Drag(workspace, sel.head._2)
+            ListObjView.Drag(workspace, cursor, sel.head._2)
           }
           _res
         } else null
@@ -294,10 +294,13 @@ abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S]
         val res = support.isDrop && {
           val dl        = support.getDropLocation.asInstanceOf[JTable.DropLocation]
           val isInsert  = dl.isInsertRow
-          val view      = support.getTransferable.getTransferData(ListObjView.Flavor).asInstanceOf[ListObjView.Drag[S]].view
+          val data      = support.getTransferable.getTransferData(ListObjView.Flavor).asInstanceOf[ListObjView.Drag[_]]
+          require(data.workspace == workspace, "Cross-session list copy not yet implemented")
+          val view      = data.view.asInstanceOf[ObjView[S]]
+
           val keyOpt = if (isInsert) { // ---- create new entry with key via dialog ----
             queryKey("key")
-          } else {          // ---- update value of existing entrywith key via dialog ----
+          } else {          // ---- update value of existing entry with key via dialog ----
           val rowV  = dl.getRow
             val row   = jt.convertRowIndexToModel(rowV)
             Some(modelEDT(row)._1)

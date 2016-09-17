@@ -42,6 +42,8 @@ object FolderView {
   // type Selection[S <: Sys[S]] = Vec[stm.Source[S#Tx, Obj[S]]]
 
   final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], cursor: stm.Cursor[S], selection: Selection[S]) {
+    type S1 = S
+
     lazy val types: Set[Int] = selection.map(_.renderData.factory.tpe.typeID)(breakOut)
   }
 
