@@ -1,9 +1,9 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>Target - Mellite v2.4.0 API - de.sciss.synth.proc.AuralAttribute.Target</title>
-          <meta name="description" content="Target - Mellite v2.4.0 API - de.sciss.synth.proc.AuralAttribute.Target" />
-          <meta name="keywords" content="Target Mellite v2.4.0 API de.sciss.synth.proc.AuralAttribute.Target" />
+          <title>Target - Mellite 2.4.0 API - de.sciss.synth.proc.AuralAttribute.Target</title>
+          <meta name="description" content="Target - Mellite 2.4.0 API - de.sciss.synth.proc.AuralAttribute.Target" />
+          <meta name="keywords" content="Target Mellite 2.4.0 API de.sciss.synth.proc.AuralAttribute.Target" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
@@ -47,7 +47,7 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">Target</span><span class="tparams">[<span name="S">S &lt;: <span class="extype" name="de.sciss.lucre.stm.Sys">Sys</span>[<span class="extype" name="de.sciss.synth.proc.AuralAttribute.Target.S">S</span>]</span>]</span><span class="result"> extends <span class="extype" name="de.sciss.lucre.event.Observable">Observable</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">AuralAttribute.Target.S.Tx</span>, <a href="AuralAttribute$$Value.html" class="extype" name="de.sciss.synth.proc.AuralAttribute.Value">Value</a>]</span>
+        <span class="name">Target</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.synth.proc.AuralAttribute.Target.S">S</span>]</span>]</span><span class="result"> extends <a href="../../lucre/event/Observable.html" class="extype" name="de.sciss.lucre.event.Observable">Observable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">AuralAttribute.Target.S.Tx</span>, <a href="AuralAttribute$$Value.html" class="extype" name="de.sciss.synth.proc.AuralAttribute.Value">Value</a>]</span>
       </span>
       </h4>
       
@@ -63,7 +63,7 @@ a stream input will have a bus to which is <i>writes</i>, whereas
 the target itself may provide a bus from this node <i>reads</i>.
 </p></div><div class="toggleContainer block">
           <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.lucre.event.Observable">Observable</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span>, <a href="AuralAttribute$$Value.html" class="extype" name="de.sciss.synth.proc.AuralAttribute.Value">Value</a>], <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><a href="../../lucre/event/Observable.html" class="extype" name="de.sciss.lucre.event.Observable">Observable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span>, <a href="AuralAttribute$$Value.html" class="extype" name="de.sciss.synth.proc.AuralAttribute.Value">Value</a>], <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -147,14 +147,18 @@ the target itself may provide a bus from this node <i>reads</i>.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">react</span><span class="params">(<span name="fun">fun: (<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span>) ⇒ (<a href="AuralAttribute$$Value.html" class="extype" name="de.sciss.synth.proc.AuralAttribute.Value">Value</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span></span>)</span><span class="result">: <span class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span>]</span>
+        <span class="name">react</span><span class="params">(<span name="fun">fun: (<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span>) ⇒ (<a href="AuralAttribute$$Value.html" class="extype" name="de.sciss.synth.proc.AuralAttribute.Value">Value</a>) ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span></span>)</span><span class="result">: <a href="../../lucre/stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span>]</span>
       </span>
       </h4><span class="permalink">
       <a href="../../../../index.html#de.sciss.synth.proc.AuralAttribute$$Target@react(fun:Tx=&gt;(A=&gt;Unit))(implicittx:Tx):de.sciss.lucre.stm.Disposable[Tx]" title="Permalink" target="_top">
         <img src="../../../../lib/permalink.png" alt="Permalink" />
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Observable</dd></dl></div>
+      <p class="shortcomment cmt">Registers a live observer with this observable.</p><div class="fullcomment"><div class="comment cmt"><p>Registers a live observer with this observable. The method is called with the
+observing function which receives the observable's update message of type <code>A</code>, and the
+method generates an opaque <code>Disposable</code> instance, which may be used to
+remove the observer eventually (through the <code>dispose</code> method).
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../lucre/event/Observable.html" class="extype" name="de.sciss.lucre.event.Observable">Observable</a></dd></dl></div>
     </li><li name="de.sciss.synth.proc.AuralAttribute.Target#remove" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="remove(attr:de.sciss.synth.proc.AuralAttribute[S])(implicittx:S#Tx):Unit"></a>
       <a id="remove(AuralAttribute[S])(S.Tx):Unit"></a>
@@ -557,7 +561,7 @@ the target itself may provide a bus from this node <i>reads</i>.
 
         <div id="inheritedMembers">
         <div class="parent" name="de.sciss.lucre.event.Observable">
-              <h3>Inherited from <span class="extype" name="de.sciss.lucre.event.Observable">Observable</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span>, <a href="AuralAttribute$$Value.html" class="extype" name="de.sciss.synth.proc.AuralAttribute.Value">Value</a>]</h3>
+              <h3>Inherited from <a href="../../lucre/event/Observable.html" class="extype" name="de.sciss.lucre.event.Observable">Observable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">S.Tx</span>, <a href="AuralAttribute$$Value.html" class="extype" name="de.sciss.synth.proc.AuralAttribute.Value">Value</a>]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
