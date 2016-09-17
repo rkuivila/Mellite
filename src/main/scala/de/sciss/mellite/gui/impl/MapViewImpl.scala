@@ -301,7 +301,7 @@ abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S]
           val keyOpt = if (isInsert) { // ---- create new entry with key via dialog ----
             queryKey("key")
           } else {          // ---- update value of existing entry with key via dialog ----
-          val rowV  = dl.getRow
+            val rowV  = dl.getRow
             val row   = jt.convertRowIndexToModel(rowV)
             Some(modelEDT(row)._1)
           }
