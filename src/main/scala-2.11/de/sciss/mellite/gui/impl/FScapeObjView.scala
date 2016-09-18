@@ -31,7 +31,7 @@ import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{Code, Workspace}
 
 import scala.concurrent.stm.Ref
-import scala.swing.ProgressBar
+import scala.swing.{Button, ProgressBar}
 
 object FScapeObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = FScape[~]
@@ -189,7 +189,17 @@ object FScapeObjView extends ListObjView.Factory {
       GUI.toolButton(actionRender, Shapes.Sparks)
     }
 
-    val bottom = viewProgress :: viewCancel :: viewRender :: Nil
+    val viewDebug = View.wrap[S] {
+      Button("Debug") {
+        renderRef.single.get.foreach { r =>
+          val ctrl = r.control
+          println(ctrl.stats)
+          ctrl.debugDotGraph()
+        }
+      }
+    }
+
+    val bottom = viewProgress :: viewCancel :: viewRender :: viewDebug :: Nil
 
     implicit val undo = new UndoManagerImpl
     make(obj, codeObj, code0, Some(handler), bottom = bottom, rightViewOpt = None)

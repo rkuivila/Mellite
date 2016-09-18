@@ -165,10 +165,6 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application with Ini
   override protected def init(): Unit = {
     Application.init(this)
 
-    // ---- type extensions ----
-
-    initTypes()
-
     // ---- look and feel
 
     try {
@@ -182,11 +178,16 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application with Ini
       case NonFatal(e) => e.printStackTrace()
     }
 
-    UIManager.getDefaults.remove("SplitPane.ancestorInputMap")  // I don't remember -- what was this about?
-    //    if (isDarkSkin) {
-    //      UIManager.put("Table.background", new ColorUIResource( 29,  32,  36))
-    //      UIManager.put("Table.foreground", new ColorUIResource(220, 220, 220))
-    //    }
+    // I don't remember -- what was this about?
+    // I think space bar hijacking in the timeline frame
+    UIManager.getDefaults.remove("SplitPane.ancestorInputMap")
+
+    // ---- type extensions ----
+    // since some are registering view factories,
+    // and those might use `isDarkSkin`, we place
+    // this call after `lafInfo.install()`.
+
+    initTypes()
 
     if (Prefs.useLogFrame) LogFrame.instance    // init
     DocumentViewHandler.instance    // init
