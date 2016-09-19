@@ -9,7 +9,7 @@ lazy val oscVersion            = "1.1.5"
 lazy val audioFileVersion      = "1.4.5"
 lazy val scalaColliderVersion  = "1.20.1"
 lazy val ugensVersion          = "1.15.3"
-lazy val fscapeVersion         = "2.0.0"
+lazy val fscapeVersion         = "2.1.0"
 lazy val lucreVersion          = "3.3.1"
 
 val commonSettings = Seq(
