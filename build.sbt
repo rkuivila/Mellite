@@ -3,8 +3,8 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.5.0-SNAPSHOT"
-lazy val mimaVersion                = "2.3.0"
+lazy val projectVersion             = "2.5.0"
+lazy val mimaVersion                = "2.4.0"
 
 lazy val loggingEnabled             = true
 
@@ -13,9 +13,9 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.7.0-SNAPSHOT"
-lazy val fscapeVersion              = "2.1.0-SNAPSHOT"  // Scala 2.11 only
-lazy val nuagesVersion              = "2.8.0-SNAPSHOT"
+lazy val soundProcessesVersion      = "3.7.0"
+lazy val fscapeVersion              = "2.1.0"  // Scala 2.11 only
+lazy val nuagesVersion              = "2.9.0"
 lazy val interpreterPaneVersion     = "1.7.3"
 lazy val syntaxPaneVersion          = "1.1.5"
 lazy val scalaColliderUGenVersion   = "1.15.3"
@@ -190,7 +190,7 @@ lazy val root = Project(id = baseName, base = file("."))
     ),
     libraryDependencies ++= {
       if (scalaVersion.value.startsWith("2.10")) Nil else Seq(
-        "de.sciss" %% "fscape-lucre"                  % fscapeVersion               // offline audio rendering
+        "de.sciss" %% "fscape" % fscapeVersion  // offline audio rendering
       )
     },
     mimaPreviousArtifacts := Set("de.sciss" %% baseNameL % mimaVersion),
