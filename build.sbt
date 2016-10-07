@@ -3,8 +3,8 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.5.0"
-lazy val mimaVersion                = "2.4.0"
+lazy val projectVersion             = "2.6.0"
+lazy val mimaVersion                = "2.6.0"
 
 lazy val loggingEnabled             = true
 
@@ -13,16 +13,16 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.7.0"
-lazy val fscapeVersion              = "2.1.0"  // Scala 2.11 only
-lazy val nuagesVersion              = "2.9.0"
+lazy val soundProcessesVersion      = "3.8.0"
+lazy val fscapeVersion              = "2.2.0"  // Scala 2.11 only
+lazy val nuagesVersion              = "2.10.0"
 lazy val interpreterPaneVersion     = "1.7.3"
 lazy val syntaxPaneVersion          = "1.1.5"
-lazy val scalaColliderUGenVersion   = "1.15.3"
+lazy val scalaColliderUGenVersion   = "1.16.0"
 lazy val lucreVersion               = "3.3.1"
 lazy val equalVersion               = "0.1.1"
 lazy val playJSONVersion            = "0.4.0"
-lazy val scalaColliderSwingVersion  = "1.30.0"
+lazy val scalaColliderSwingVersion  = "1.31.0"
 lazy val lucreSwingVersion          = "1.4.0"
 lazy val audioWidgetsVersion        = "1.10.0"
 lazy val desktopVersion             = "0.7.2"
@@ -149,6 +149,7 @@ lazy val assemblySettings = Seq(
     assemblyJarName       in assembly := s"$baseName.jar",
     assemblyMergeStrategy in assembly := {
       case PathList("org", "xmlpull", xs @ _*) => MergeStrategy.first
+      case PathList("org", "w3c", "dom", "events", xs @ _*) => MergeStrategy.first // bloody Apache Batik
       case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)

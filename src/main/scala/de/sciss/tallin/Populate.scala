@@ -469,7 +469,7 @@ object Populate {
       val numFrames   = SampleRate.ir * 30
       val buf         = LocalBuf(numFrames = numFrames, numChannels = Pad(1, in))
       val time        = Lag.ar(pTime)
-      val lin         = Pad.LocalIn.ar(in)
+      val lin         = LocalIn.ar(Pad(0, in)) // Pad.LocalIn.ar(in)
       val feed        = pFeed
       val wDry        = (1 - feed).sqrt
       val wWet        = feed.sqrt
