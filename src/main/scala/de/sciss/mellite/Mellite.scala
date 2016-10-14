@@ -205,7 +205,7 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application with Ini
   // ---- Application trait ----
 
   lazy val topLevelObjects: ISeq[String] =
-    List("Folder", "AudioGrapheme", "Proc", "Timeline")
+    List("Folder", "AudioCue", "Proc", "Timeline")
 
   /** All objects included */
   lazy val objectFilter: String => Boolean = _ => true
