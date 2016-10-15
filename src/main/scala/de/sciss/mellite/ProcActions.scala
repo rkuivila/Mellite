@@ -527,6 +527,12 @@ object ProcActions {
             val escaped = ru.Literal(ru.Constant(s)).toString()
             escaped
 
+          case f: Float =>
+            if (f.isPosInfinity) "inf" else if (f.isNegInfinity) "-inf" else if (f.isNaN) "Float.NaN" else s"${f}f"
+
+          case d: Double =>
+            if (d.isPosInfinity) "inf" else if (d.isNegInfinity) "-inf" else if (d.isNaN) "Double.NaN" else d.toString
+
           case other =>
             other.toString
         }
@@ -539,11 +545,10 @@ object ProcActions {
         line.args.head.value match {
           case op: BinaryOpUGen.Op =>
             val opS = uncapitalize(op.name)
-            val Seq(_, a0, b) = args
-            // XXX TODO --- stupid workaround for ScalaCollider #52
-            val a = if ((opS == "min" || opS == "max") && line.args(1).value.isInstanceOf[Constant])
-              s"Constant($a0)"
-            else a0
+            val Seq(_, a, b) = args
+//            val a = if ((opS == "min" || opS == "max") && line.args(1).value.isInstanceOf[Constant])
+//              s"Constant(${a0}f)"
+//            else a0
             s"$a $opS $b"
         }
       } else if (line.elemName == "UnaryOpUGen") {
