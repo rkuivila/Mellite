@@ -13,7 +13,7 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.8.0"
+lazy val soundProcessesVersion      = "3.8.1-SNAPSHOT"
 lazy val fscapeVersion              = "2.2.0"  // Scala 2.11 only
 lazy val nuagesVersion              = "2.10.0"
 lazy val interpreterPaneVersion     = "1.7.3"
