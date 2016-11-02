@@ -71,6 +71,8 @@
 :: negatum ::
 
 0x40000     Negatum
+0x40001     SVMModel
+0x40002     SOM
 
 :: higher-order ::
 
