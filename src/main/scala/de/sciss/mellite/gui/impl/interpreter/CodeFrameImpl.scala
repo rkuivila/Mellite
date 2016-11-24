@@ -90,10 +90,21 @@ object CodeFrameImpl {
       case other => sys.error(s"Action source code does not produce plain function: ${other.contextName}")
     }
 
-    val (handlerOpt, bottom) = obj match {
+    val objH  = tx.newHandle(obj)
+    val viewExecute = View.wrap[S] {
+      val actionExecute = swing.Action(null) {
+        cursor.step { implicit tx =>
+          val obj = objH()
+          val universe = Action.Universe(obj, workspace)
+          obj.execute(universe)
+        }
+      }
+      GUI.toolButton(actionExecute, raphael.Shapes.Bolt, tooltip = "Run body")
+    }
+
+    val handlerOpt = obj match {
       case Action.Var(vr) =>
         val varH  = tx.newHandle(vr)
-        val objH  = tx.newHandle(obj)
         val handler = new CodeView.Handler[S, String, Array[Byte]] {
           def in(): String = cursor.step { implicit tx =>
             val id = tx.newID()
@@ -110,21 +121,12 @@ object CodeFrameImpl {
           def dispose()(implicit tx: S#Tx) = ()
         }
 
-        val viewExecute = View.wrap[S] {
-          val actionExecute = swing.Action(null) {
-            cursor.step { implicit tx =>
-              val obj = objH()
-              val universe = Action.Universe(obj, workspace)
-              obj.execute(universe)
-            }
-          }
-          GUI.toolButton(actionExecute, raphael.Shapes.Bolt, tooltip = "Run body")
-        }
+        Some(handler)
 
-        (Some(handler), viewExecute :: Nil)
-
-      case _ => (None, Nil)
+      case _ => None
     }
+
+    val bottom = viewExecute :: Nil
 
     implicit val undo = new UndoManagerImpl
     make(obj, codeObj, code0, handlerOpt, bottom = bottom, rightViewOpt = None)
