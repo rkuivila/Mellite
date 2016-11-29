@@ -164,6 +164,19 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
     fun(tx)
   }
 
+  private[this] val synOpt          = Ref(Option.empty[Synth])
+  private[this] var ggMainVolumeOpt = Option.empty[Slider]
+
+  def setMainVolume(linear: Double)(implicit tx: Txn): Unit = {
+    synOpt.get(tx.peer).foreach { syn => syn.set("amp" -> linear) }
+    deferTx {
+      ggMainVolumeOpt.foreach { slid =>
+        val db      = math.min(18, math.max(-72, (linear.ampdb + 0.5).toInt))
+        slid.value  = db
+      }
+    }
+  }
+
   private def auralSystemStarted(s: Server)(implicit tx: Txn): Unit = {
     log("MainFrame: AuralSystem started")
 
@@ -208,6 +221,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
     val syn = Synth.playOnce(graph = graph, nameHint = Some("master"))(target = group,
       addAction = addToTail, args = List("hp-bus" -> hpBus), dependencies = Nil)
+    synOpt.set(Some(syn))(tx.peer)
 
     val meterOption = if (!Prefs.useAudioMeters) None else {
       val outBus  = Bus.soundOut(s, numOuts)
@@ -242,6 +256,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
     val ggMainVolume    = mkAmpFader("amp"   , Prefs.audioMasterVolume)
     val ggHPVolume      = mkAmpFader("hp-amp", Prefs.headphonesVolume )
+    ggMainVolumeOpt = Some(ggMainVolume)
 
     def mkToggle(label: String, prefs: Preferences.Entry[Boolean], default: Boolean = false)
                 (fun: Boolean => Unit): ToggleButton = {
@@ -366,7 +381,8 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
 
   private def auralSystemStopped()(implicit tx: Txn): Unit = {
     log("MainFrame: AuralSystem stopped")
-    meter.swap(None)(tx.peer).foreach(_.dispose())
+    meter .swap(None)(tx.peer).foreach(_.dispose())
+    synOpt.swap(None)(tx.peer)
     deferTx {
       audioServerPane.server = None
       onlinePane.foreach { p =>
@@ -400,6 +416,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   private def sensorSystemStopped()(implicit tx: TxnLike): Unit = {
     log("MainFrame: SensorSystem stopped")
     deferTx {
+      ggMainVolumeOpt = None
       actionStartStopSensors.title = "Start"
       ggDumpSensors.enabled   = false
       ggDumpSensors.selected  = false

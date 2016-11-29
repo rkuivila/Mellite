@@ -18,7 +18,7 @@ import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.View
 import de.sciss.lucre.synth.Sys
-import de.sciss.synth.proc.{Ensemble, Workspace}
+import de.sciss.synth.proc.{Ensemble, Transport, Workspace}
 import impl.document.{EnsembleViewImpl => Impl}
 
 object EnsembleView {
@@ -30,4 +30,6 @@ trait EnsembleView[S <: Sys[S]] extends /* Model[EnsembleView.Update[S]] with */
   def folderView: FolderView[S]
 
   def ensemble(implicit tx: S#Tx): Ensemble[S]
+
+  def transport: Transport[S]
 }

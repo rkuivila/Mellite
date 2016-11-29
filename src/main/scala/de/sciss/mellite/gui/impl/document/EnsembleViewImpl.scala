@@ -19,6 +19,7 @@ package document
 import de.sciss.desktop.UndoManager
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.Disposable
 import de.sciss.lucre.swing.{BooleanCheckBoxView, View, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
@@ -40,13 +41,11 @@ object EnsembleViewImpl {
     val transport = Transport[S](Mellite.auralSystem)
     transport.addObject(ensObj)
     val res = new Impl(tx.newHandle(ensObj), transport, folder1, playing)
-    deferTx {
-      res.guiInit()
-    }
+    res.init()
     res
   }
 
-  final class Impl[S <: Sys[S]](ensembleH: stm.Source[S#Tx, Ensemble[S]], transport: Transport[S],
+  final class Impl[S <: Sys[S]](ensembleH: stm.Source[S#Tx, Ensemble[S]], val transport: Transport[S],
                                         val view: FolderFrameImpl.ViewImpl[S], playing: View[S])
                                        (implicit val undoManager: UndoManager, val workspace: Workspace[S],
                                         val cursor: stm.Cursor[S])
@@ -56,8 +55,29 @@ object EnsembleViewImpl {
 
     def folderView = view.peer
 
+    private[this] var obsTransp: Disposable[S#Tx] = _
+    private[this] var ggPower: ToggleButton = _
+
+    def init()(implicit tx: S#Tx): this.type = {
+      deferTx {
+        guiInit()
+      }
+      obsTransp = transport.react { implicit tx => {
+        case Transport.Play(_, _) =>
+          deferTx {
+            ggPower.selected = true
+          }
+        case Transport.Stop(_, _) =>
+          deferTx {
+            ggPower.selected = false
+          }
+        case _ =>
+      }}
+      this
+    }
+
     def guiInit(): Unit = {
-      val ggPower = new ToggleButton {
+      ggPower = new ToggleButton {
         listenTo(this)
         reactions += {
           case ButtonClicked(_) =>
@@ -90,6 +110,7 @@ object EnsembleViewImpl {
     }
 
     def dispose()(implicit tx: S#Tx): Unit = {
+      obsTransp .dispose()
       transport .dispose()
       view      .dispose()
       playing   .dispose()
