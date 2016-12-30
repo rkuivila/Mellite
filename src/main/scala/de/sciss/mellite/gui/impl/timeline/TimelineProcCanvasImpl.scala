@@ -21,7 +21,7 @@ import de.sciss.lucre.synth.Sys
 import TrackTool.EmptyRubber
 
 trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with TimelineProcCanvas[S] {
-  final val trackTools = TrackTools[S](this)
+  final val trackTools: TrackTools[S] = TrackTools(this)
 
   import TrackTools._
 

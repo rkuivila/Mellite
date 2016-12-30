@@ -17,6 +17,7 @@ package impl
 package tracktool
 
 import java.awt.Cursor
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.lucre.expr.SpanLikeObj
@@ -29,11 +30,11 @@ import de.sciss.span.Span
 final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Resize] {
 
-  import TrackTool.{Cursor => _, _}
+  import TrackTool.Resize
 
-  def defaultCursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
-  val name          = "Resize"
-  val icon          = GUI.iconNormal(Shapes.Crop) // ToolsImpl.getIcon("hresize")
+  def defaultCursor: Cursor = Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR)
+  val name                  = "Resize"
+  val icon: Icon            = GUI.iconNormal(Shapes.Crop) // ToolsImpl.getIcon("hresize")
 
   protected def dialog(): Option[Resize] = None // not yet supported
 

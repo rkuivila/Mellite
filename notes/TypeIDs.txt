@@ -48,10 +48,11 @@
 0x10006     Timeline
 0x10007     Ensemble
 0x10008     Artifact
-0x10009  	Scan
+0x10009  	Output
 0x1000A  	Nuages
-
 0x1000B     fscape.FScape
+0x1000C     Cursors
+0x1000D     fscape.FScape.Output
 
 :: indeterminus ::
 

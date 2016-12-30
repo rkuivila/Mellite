@@ -153,7 +153,7 @@ object ListObjViewImpl {
           val name = AttrCellView.name[Confluent](obj.asInstanceOf[Obj[Confluent]])
             .map(n => s"History for '$n'")
           val w = new WindowImpl[Confluent](name) {
-            val view = ExprHistoryView[A, Ex](cf, expr.asInstanceOf[Ex[Confluent]])
+            val view: ViewHasWorkspace[Confluent] = ExprHistoryView[A, Ex](cf, expr.asInstanceOf[Ex[Confluent]])
             init()
           }
           Some(w.asInstanceOf[Window[S]])

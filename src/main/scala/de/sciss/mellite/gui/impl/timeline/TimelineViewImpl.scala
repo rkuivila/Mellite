@@ -31,7 +31,7 @@ import de.sciss.lucre.bitemp.BiGroup
 import de.sciss.lucre.bitemp.impl.BiGroupImpl
 import de.sciss.lucre.expr.{IntObj, SpanLikeObj}
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Cursor, Disposable, Obj}
+import de.sciss.lucre.stm.{Cursor, Disposable, IdentifierMap, Obj}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
@@ -160,8 +160,8 @@ object TimelineViewImpl {
     var canvas: TimelineProcCanvasImpl[S] = _
     val disposables = Ref(List.empty[Disposable[S#Tx]])
 
-    protected val auxMap          = tx0.newInMemoryIDMap[Any]
-    protected val auxObservers    = tx0.newInMemoryIDMap[List[AuxObserver]]
+    protected val auxMap: IdentifierMap[S#ID, S#Tx, Any]                      = tx0.newInMemoryIDMap
+    protected val auxObservers: IdentifierMap[S#ID, S#Tx, List[AuxObserver]]  = tx0.newInMemoryIDMap
 
     private lazy val toolCursor   = TrackTool.cursor  [S](canvas)
     private lazy val toolMove     = TrackTool.move    [S](canvas)
@@ -173,9 +173,8 @@ object TimelineViewImpl {
     private lazy val toolPatch    = TrackTool.patch   [S](canvas)
     private lazy val toolAudition = TrackTool.audition[S](canvas, this)
 
-    def timeline(implicit tx: S#Tx) = timelineH()
-
-    def plainGroup(implicit tx: S#Tx) = timeline
+    def timeline  (implicit tx: S#Tx): Timeline[S] = timelineH()
+    def plainGroup(implicit tx: S#Tx): Timeline[S] = timeline
 
     def window: Window = component.peer.getClientProperty("de.sciss.mellite.Window").asInstanceOf[Window]
 
@@ -522,12 +521,10 @@ object TimelineViewImpl {
     private final class View extends TimelineProcCanvasImpl[S] {
       canvasImpl =>
 
-      // import AbstractTimelineView._
-      def timelineModel = impl.timelineModel
+      def timelineModel : TimelineModel                         = impl.timelineModel
+      def selectionModel: SelectionModel[S, TimelineObjView[S]] = impl.selectionModel
 
-      def selectionModel = impl.selectionModel
-
-      def timeline(implicit tx: S#Tx) = impl.plainGroup
+      def timeline(implicit tx: S#Tx): Timeline[S] = impl.plainGroup
 
       def intersect(span: Span): Iterator[TimelineObjView[S]] = viewRange.filterOverlaps((span.start, span.stop))
 
@@ -577,7 +574,7 @@ object TimelineViewImpl {
       private var _toolState = Option.empty[Any]
       private var patchState = NoPatch
 
-      protected def toolState = _toolState
+      protected def toolState: Option[Any] = _toolState
 
       protected def toolState_=(state: Option[Any]): Unit = {
         _toolState        = state
@@ -601,9 +598,8 @@ object TimelineViewImpl {
       }
 
       object canvasComponent extends Component with DnD[S] {
-        protected def timelineModel = impl.timelineModel
-
-        protected def workspace = impl.workspace
+        protected def timelineModel : TimelineModel = impl.timelineModel
+        protected def workspace     : Workspace[S]  = impl.workspace
 
         private var currentDrop = Option.empty[DnD.Drop[S]]
 

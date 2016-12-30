@@ -90,10 +90,8 @@ object CodeViewImpl {
                                         val cursor: stm.Cursor[S], compiler: Code.Compiler)
     extends ComponentHolder[Component] with CodeView[S] with ModelImpl[CodeView.Update] {
 
-    // import ExecutionContext.Implicits.global
-
-    private var _dirty = false
-    def dirty = _dirty
+    private[this] var _dirty = false
+    def dirty: Boolean = _dirty
     def dirty_=(value: Boolean): Unit = if (_dirty != value) {
       _dirty = value
       actionApply.enabled = value
@@ -113,7 +111,7 @@ object CodeViewImpl {
       }
     }
 
-    private val codeCfg = {
+    private[this] val codeCfg = {
       val b = CodePane.Config()
       b.text = code.source
       // XXX TODO - cheesy hack
@@ -124,9 +122,9 @@ object CodeViewImpl {
 
     // import code.{id => codeID}
 
-    private var codePane: CodePane = _
-    private var futCompile = Option.empty[Future[Any]]
-    private var actionApply: Action = _
+    private[this] var codePane: CodePane = _
+    private[this] var futCompile = Option.empty[Future[Any]]
+    private[this] var actionApply: Action = _
 
     def isCompiling: Boolean = {
       requireEDT()
@@ -135,7 +133,7 @@ object CodeViewImpl {
 
     protected def currentText: String = codePane.editor.text
 
-    def dispose()(implicit tx: S#Tx) = ()
+    def dispose()(implicit tx: S#Tx): Unit = ()
 
     def undoAction: Action = Action.wrap(codePane.editor.peer.getActionMap.get("undo"))
     def redoAction: Action = Action.wrap(codePane.editor.peer.getActionMap.get("redo"))

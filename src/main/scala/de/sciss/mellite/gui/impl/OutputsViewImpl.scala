@@ -22,7 +22,7 @@ import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{OptionPane, UndoManager, Window}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
@@ -42,7 +42,7 @@ object OutputsViewImpl {
     }  .toIndexedSeq
 
     new Impl(list0, tx.newHandle(obj)) {
-      protected val observer = obj.changed.react { implicit tx => upd =>
+      protected val observer: Disposable[S#Tx] = obj.changed.react { implicit tx =>upd =>
         upd.changes.foreach {
           case Proc.OutputAdded  (out) => attrAdded(out.key, out)
           case Proc.OutputRemoved(out) => attrRemoved(out.key)

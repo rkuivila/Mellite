@@ -13,19 +13,14 @@
 
 package de.sciss.mellite
 
-import java.{util => ju}
-
 import de.sciss.lucre.expr
 import de.sciss.lucre.expr.{BooleanObj, DoubleObj, IntObj, LongObj, SpanLikeObj, StringObj}
 import de.sciss.lucre.stm.{Copy, Obj, Sys}
 import de.sciss.span.Span
-import de.sciss.synth
-import de.sciss.synth.proc.{AudioCue, Code, ObjKeys, Proc, SynthGraphObj, Timeline}
 import de.sciss.synth.proc.impl.MkSynthGraphSource
-import de.sciss.synth.ugen.{BinaryOpUGen, Constant, UnaryOpUGen}
-import de.sciss.synth.{GE, Lazy, Rate, SynthGraph, UGenSpec, proc}
+import de.sciss.synth.proc.{AudioCue, Code, ObjKeys, Proc, SynthGraphObj, Timeline}
+import de.sciss.synth.{SynthGraph, proc}
 
-import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.language.existentials
 import scala.util.control.NonFatal
 

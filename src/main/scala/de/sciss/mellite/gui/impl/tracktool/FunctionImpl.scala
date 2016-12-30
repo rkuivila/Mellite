@@ -18,6 +18,7 @@ package tracktool
 
 import java.awt.Cursor
 import java.awt.event.MouseEvent
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.icons.raphael
@@ -31,12 +32,11 @@ import de.sciss.synth.proc.Proc
 final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv: TimelineView[S])
   extends RegionLike[S, TrackTool.Function] with Dragging[S, TrackTool.Function] {
 
-  import TrackTool.{Cursor => _, _}
+  import TrackTool.Function
 
-  def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-  val name          = "Function"
-  // val icon          = GUI.iconNormal(de.sciss.synth.swing.Shapes.SynthDef) // ToolsImpl.getIcon("function")
-  val icon          = GUI.iconNormal(raphael.Shapes.Cogs)
+  def defaultCursor: Cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+  val name                  = "Function"
+  val icon: Icon            = GUI.iconNormal(raphael.Shapes.Cogs)
 
   protected type Initial = Unit
 

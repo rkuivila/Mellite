@@ -15,6 +15,8 @@ package de.sciss.mellite
 package gui
 package impl
 
+import javax.swing.Icon
+
 import de.sciss.audiowidgets.AxisFormat
 import de.sciss.desktop
 import de.sciss.desktop.FileDialog
@@ -33,12 +35,12 @@ import scala.util.Try
 
 object AudioCueObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = AudioCue.Obj[~] // Grapheme.Expr.Audio[S]
-  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Music)
-  val prefix        = "AudioCue"
-  def humanName     = "Audio File"
-  def tpe           = AudioCue.Obj // ElemImpl.AudioGrapheme.typeID
-  def category      = ObjView.categResources
-  def hasMakeDialog = true
+  val icon: Icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Music)
+  val prefix            = "AudioCue"
+  def humanName         = "Audio File"
+  def tpe               = AudioCue.Obj // ElemImpl.AudioGrapheme.typeID
+  def category: String  = ObjView.categResources
+  def hasMakeDialog     = true
 
   def mkListView[S <: Sys[S]](obj: AudioCue.Obj[S])
                              (implicit tx: S#Tx): AudioCueObjView[S] with ListObjView[S] = {
@@ -90,7 +92,7 @@ object AudioCueObjView extends ListObjView.Factory {
     with ObjViewImpl.Impl[S]
     with ListObjViewImpl.NonEditable[S] {
 
-    override def obj(implicit tx: S#Tx) = objH()
+    override def obj(implicit tx: S#Tx): AudioCue.Obj[S] = objH()
 
     type E[~ <: stm.Sys[~]] = AudioCue.Obj[~]
 

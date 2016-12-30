@@ -17,6 +17,7 @@ package impl
 package tracktool
 
 import java.awt.Cursor
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.lucre.expr.{DoubleObj, SpanLikeObj}
@@ -30,11 +31,11 @@ import de.sciss.synth.proc.ObjKeys
 final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Gain] {
 
-  import TrackTool.{Cursor => _, _}
+  import TrackTool.Gain
 
-  def defaultCursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
-  val name          = "Gain"
-  val icon          = GUI.iconNormal(Shapes.Gain) // ToolsImpl.getIcon("vresize")
+  def defaultCursor: Cursor = Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR)
+  val name                  = "Gain"
+  val icon: Icon            = GUI.iconNormal(Shapes.Gain) // ToolsImpl.getIcon("vresize")
 
   protected def dialog(): Option[Gain] = None // not yet supported
 

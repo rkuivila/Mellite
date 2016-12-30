@@ -53,7 +53,7 @@ object EnsembleViewImpl {
 
     def ensemble(implicit tx: S#Tx): Ensemble[S] = ensembleH()
 
-    def folderView = view.peer
+    def folderView: FolderView[S] = view.peer
 
     private[this] var obsTransp: Disposable[S#Tx] = _
     private[this] var ggPower: ToggleButton = _

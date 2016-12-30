@@ -15,6 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop
@@ -31,12 +32,12 @@ import de.sciss.synth.proc.Workspace
 
 object ArtifactLocationObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = ArtifactLocation[~] // Elem[S]
-  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Location)
-  val prefix        = "ArtifactLocation"
-  def humanName     = "File Location"
-  def tpe           = ArtifactLocation
-  def category      = ObjView.categResources
-  def hasMakeDialog = true
+  val icon: Icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Location)
+  val prefix            = "ArtifactLocation"
+  def humanName         = "File Location"
+  def tpe               = ArtifactLocation
+  def category: String  = ObjView.categResources
+  def hasMakeDialog     = true
 
   def mkListView[S <: Sys[S]](obj: ArtifactLocation[S])(implicit tx: S#Tx): ArtifactLocationObjView[S] with ListObjView[S] = {
     val peer      = obj
@@ -67,13 +68,13 @@ object ArtifactLocationObjView extends ListObjView.Factory {
     with ListObjViewImpl.StringRenderer
     with ObjViewImpl.NonViewable[S] {
 
-    override def obj(implicit tx: S#Tx) = objH()
+    override def obj(implicit tx: S#Tx): ArtifactLocation[S] = objH()
 
     type E[~ <: stm.Sys[~]] = ArtifactLocation[~]
 
     def factory = ArtifactLocationObjView
 
-    def value   = directory
+    def value: File = directory
 
     def init(obj: ArtifactLocation[S])(implicit tx: S#Tx): this.type = {
       initAttrs(obj)

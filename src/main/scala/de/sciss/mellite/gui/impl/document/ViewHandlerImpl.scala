@@ -49,7 +49,7 @@ object ViewHandlerImpl {
         }
     }
 
-    def activeDocument = _active
+    def activeDocument: Option[DocumentHandler.Document] = _active
     def activeDocument_=[S <: Sys[S]](value: Option[Workspace[S]]): Unit = {
       requireEDT()
       if (_active != value) {

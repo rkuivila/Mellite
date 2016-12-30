@@ -16,6 +16,7 @@ package gui
 package impl
 
 import de.sciss.desktop
+import de.sciss.desktop.WindowHandler
 import de.sciss.file._
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
@@ -33,7 +34,7 @@ object WindowImpl {
 
     if (undecorated) makeUndecorated()
 
-    def handler = Application.windowHandler
+    def handler: WindowHandler = Application.windowHandler
 
     bindMenu("actions.window-shot", new ActionWindowShot(this))
 

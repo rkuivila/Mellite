@@ -21,7 +21,7 @@ import de.sciss.scalainterpreter.{CodePane, Interpreter, InterpreterPane}
 import java.io.{File, FileInputStream, IOException}
 
 import scala.swing.event.Key
-import de.sciss.desktop.{KeyStrokes, Window}
+import de.sciss.desktop.{KeyStrokes, Window, WindowHandler}
 import de.sciss.synth.proc.Workspace
 
 // careful... tripping over SI-3809 "illegal cyclic reference involving class Array"...
@@ -112,7 +112,7 @@ private[gui] object InterpreterFrameImpl {
       val component = new de.sciss.desktop.impl.WindowImpl {
         frame =>
 
-        def handler = Application.windowHandler
+        def handler: WindowHandler = Application.windowHandler
 
         // override def style = Window.Auxiliary
 

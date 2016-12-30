@@ -55,7 +55,7 @@ final class ToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
   import TrackTools._
 
   private var _currentTool: TrackTool[S, _] = TrackTool.cursor(canvas)
-  def currentTool = _currentTool
+  def currentTool: TrackTool[S, _] = _currentTool
   def currentTool_=(value: TrackTool[S, _]): Unit =
     if (_currentTool != value) {
       val oldTool   = _currentTool
@@ -66,7 +66,7 @@ final class ToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
     }
 
   private var _visualBoost: Float = 1f
-  def visualBoost = _visualBoost
+  def visualBoost: Float = _visualBoost
   def visualBoost_=(value: Float): Unit =
     if (_visualBoost != value) {
       val oldBoost  = _visualBoost
@@ -75,7 +75,7 @@ final class ToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
     }
 
   private var _fadeViewMode: FadeViewMode = FadeViewMode.Curve
-  def fadeViewMode = _fadeViewMode
+  def fadeViewMode: FadeViewMode = _fadeViewMode
   def fadeViewMode_=(value: FadeViewMode): Unit =
     if (_fadeViewMode != value) {
       val oldMode   = _fadeViewMode
@@ -84,7 +84,7 @@ final class ToolsImpl[S <: Sys[S]](canvas: TimelineProcCanvas[S])
     }
 
   private var _regionViewMode: RegionViewMode = RegionViewMode.TitledBox
-  def regionViewMode = _regionViewMode
+  def regionViewMode: RegionViewMode = _regionViewMode
   def regionViewMode_=(value: RegionViewMode): Unit =
     if (_regionViewMode != value) {
       val oldMode     = _regionViewMode

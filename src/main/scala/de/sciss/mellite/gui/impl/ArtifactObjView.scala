@@ -15,6 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop
@@ -34,12 +35,12 @@ import scala.swing.event.SelectionChanged
 
 object ArtifactObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = Artifact[~]
-  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.PagePortrait)
-  val prefix        = "Artifact"
-  def humanName     = "File"
-  def tpe           = Artifact
-  def category      = ObjView.categResources
-  def hasMakeDialog = true
+  val icon: Icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.PagePortrait)
+  val prefix            = "Artifact"
+  def humanName         = "File"
+  def tpe               = Artifact
+  def category: String  = ObjView.categResources
+  def hasMakeDialog     = true
 
   def mkListView[S <: Sys[S]](obj: Artifact[S])(implicit tx: S#Tx): ArtifactObjView[S] with ListObjView[S] = {
     val peer      = obj

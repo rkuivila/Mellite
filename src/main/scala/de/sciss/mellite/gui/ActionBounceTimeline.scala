@@ -432,7 +432,7 @@ object ActionBounceTimeline {
       process.abort()
       // currently process doesn't seem to abort under certain errors
       // (e.g. buffer allocator exhausted). XXX TODO
-      val run = new Runnable { def run() = { Thread.sleep(1000); defer(fDispose()) }}
+      val run = new Runnable { def run(): Unit = { Thread.sleep(1000); defer(fDispose()) }}
       new Thread(run).start()
     }
     ggCancel.focusable = false

@@ -25,7 +25,7 @@ import de.sciss.desktop.UndoManager
 import de.sciss.lucre.artifact.Artifact
 import de.sciss.lucre.expr.StringObj
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Disposable, Obj}
+import de.sciss.lucre.stm.{Disposable, IdentifierMap, Obj}
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{TreeTableView, deferTx}
@@ -48,8 +48,8 @@ object FolderViewImpl {
     implicit val folderSer = Folder.serializer[S]
 
     new Impl[S] {
-      val mapViews  = tx.newInMemoryIDMap[ObjView[S]]  // folder IDs to renderers
-      val treeView  = TreeTableView[S, Obj[S], Folder[S], ListObjView[S]](root0, TTHandler)
+      val mapViews: IdentifierMap[S#ID, S#Tx, ObjView[S]]               = tx.newInMemoryIDMap  // folder IDs to renderers
+      val treeView: TreeTableView[S, Obj[S], Folder[S], ListObjView[S]] = TreeTableView(root0, TTHandler)
 
       deferTx {
         guiInit()
@@ -175,7 +175,7 @@ object FolderViewImpl {
       private lazy val defaultEditor: TreeTableCellEditor = {
         val res = new DefaultTreeTableCellEditor(defaultEditorJ)
         res.addCellEditorListener(new CellEditorListener {
-          def editingCanceled(e: ChangeEvent) = ()
+          def editingCanceled(e: ChangeEvent): Unit = ()
           def editingStopped (e: ChangeEvent): Unit = editView.foreach { objView =>
             editView = None
             val editOpt: Option[UndoableEdit] = cursor.step { implicit tx =>
@@ -204,7 +204,7 @@ object FolderViewImpl {
 
       def isEditable(data: Data, column: Int): Boolean = column == 0 || data.isEditable
 
-      val columnNames = Vec[String]("Name", "Value")
+      val columnNames: Vec[String] = Vector("Name", "Value")
 
       def editor(tt: TreeTableView[S, Obj[S], Folder[S], Data], node: NodeView, row: Int, column: Int,
                  selected: Boolean): (Component, CellEditor) = {
@@ -225,7 +225,7 @@ object FolderViewImpl {
       treeView.dispose()
     }
 
-    def root = treeView.root
+    def root: stm.Source[S#Tx, Folder[S]] = treeView.root
 
     protected def guiInit(): Unit = {
       val t = treeView.treeTable

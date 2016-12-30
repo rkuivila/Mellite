@@ -18,6 +18,7 @@ package tracktool
 
 import java.awt.Cursor
 import java.awt.event.MouseEvent
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.OptionPane
@@ -31,9 +32,9 @@ import de.sciss.span.Span
 import scala.swing.{FlowPanel, Label, TextField}
 
 final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends RegionImpl[S, TrackTool.Cursor] {
-  def defaultCursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
-  def name          = "Cursor"
-  val icon          = GUI.iconNormal(Shapes.Pointer) // ToolsImpl.getIcon("text")
+  def defaultCursor: Cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
+  def name                  = "Cursor"
+  val icon: Icon            = GUI.iconNormal(Shapes.Pointer) // ToolsImpl.getIcon("text")
 
   private def renameName = "Rename Region"
 

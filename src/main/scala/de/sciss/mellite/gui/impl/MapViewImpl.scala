@@ -21,7 +21,7 @@ import java.util.EventObject
 import javax.swing.TransferHandler.TransferSupport
 import javax.swing.table.{AbstractTableModel, DefaultTableCellRenderer, TableCellEditor}
 import javax.swing.undo.UndoableEdit
-import javax.swing.{AbstractCellEditor, JComponent, JTable, TransferHandler}
+import javax.swing.{AbstractCellEditor, JComponent, JLabel, JTable, TransferHandler}
 
 import de.sciss.desktop.{OptionPane, UndoManager, Window}
 import de.sciss.lucre.stm
@@ -207,7 +207,7 @@ abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S]
 
       colTpe.setCellRenderer(new DefaultTableCellRenderer {
         outer =>
-        private val wrap = new Label { override lazy val peer = outer }
+        private val wrap: Label = new Label { override lazy val peer: JLabel = outer }
 
         override def setValue(value: Any): Unit = value match {
           case view: ObjView[_] =>
@@ -219,7 +219,7 @@ abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S]
       })
       colValue.setCellRenderer(new DefaultTableCellRenderer {
         outer =>
-        private val wrap = new Label { override lazy val peer = outer }
+        private val wrap: Label = new Label { override lazy val peer: JLabel = outer }
         override def getTableCellRendererComponent(table: JTable, value: Any, isSelected: Boolean,
                                                    hasFocus: Boolean, row: Int, column: Int): java.awt.Component = {
           super.getTableCellRendererComponent(table, null, isSelected, hasFocus, row, column)

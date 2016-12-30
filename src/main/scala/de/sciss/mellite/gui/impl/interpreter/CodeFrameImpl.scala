@@ -58,7 +58,7 @@ object CodeFrameImpl {
     }
 
     val handler = new CodeView.Handler[S, Unit, SynthGraph] {
-      def in() = ()
+      def in(): Unit = ()
 
       def save(in: Unit, out: SynthGraph)(implicit tx: S#Tx): UndoableEdit = {
         val obj = objH()
@@ -66,7 +66,7 @@ object CodeFrameImpl {
         EditVar.Expr[S, SynthGraph, SynthGraphObj]("Change SynthGraph", obj.graph, SynthGraphObj.newConst[S](out))
       }
 
-      def dispose()(implicit tx: S#Tx) = ()
+      def dispose()(implicit tx: S#Tx): Unit = ()
     }
 
     implicit val undo = new UndoManagerImpl
@@ -118,7 +118,7 @@ object CodeFrameImpl {
             EditVar[S, Action[S], Action.Var[S]](name = "Change Action Body", expr = obj, value = value)
           }
 
-          def dispose()(implicit tx: S#Tx) = ()
+          def dispose()(implicit tx: S#Tx): Unit = ()
         }
 
         Some(handler)
@@ -152,9 +152,9 @@ object CodeFrameImpl {
     val codeView  = CodeView(obj, code0, bottom = bottom)(handler)
     val view      = rightViewOpt.fold[View[S]](codeView) { bottomView =>
       new View.Editable[S] with ViewHasWorkspace[S] {
-        val undoManager = undoMgr
-        val cursor      = csr
-        val workspace   = ws
+        val undoManager: UndoManager  = undoMgr
+        val cursor: stm.Cursor[S]     = csr
+        val workspace: Workspace[S]   = ws
 
         lazy val component: Component = {
           val res = new SplitPane(Orientation.Vertical, codeView.component, bottomView.component)

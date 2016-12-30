@@ -34,8 +34,8 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
 
   protected var idH  : stm.Source[S#Tx, S#ID] = _
 
-  def span(implicit tx: S#Tx) = spanH()
-  def id  (implicit tx: S#Tx) = idH()
+  def span(implicit tx: S#Tx): SpanLikeObj[S] = spanH()
+  def id  (implicit tx: S#Tx): S#ID           = idH()
 
   def initAttrs(id: S#ID, span: SpanLikeObj[S], obj: Obj[S])(implicit tx: S#Tx): this.type = {
     val attr      = obj.attr

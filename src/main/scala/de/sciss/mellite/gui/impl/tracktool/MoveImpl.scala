@@ -18,6 +18,7 @@ package tracktool
 
 import java.awt.Cursor
 import java.awt.event.MouseEvent
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.icons.raphael
@@ -30,11 +31,11 @@ import de.sciss.mellite.gui.edit.Edits
 final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Move] with RubberBand[S, TrackTool.Move] {
 
-  import TrackTool.{Cursor => _, _}
+  import TrackTool.Move
 
-  def defaultCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-  val name          = "Move"
-  val icon          = GUI.iconNormal(raphael.Shapes.Hand) // ToolsImpl.getIcon("openhand")
+  def defaultCursor: Cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+  val name                  = "Move"
+  val icon: Icon            = GUI.iconNormal(raphael.Shapes.Hand) // ToolsImpl.getIcon("openhand")
 
   protected def dragToParam(d: Drag): Move = {
     val eNow  = d.currentEvent

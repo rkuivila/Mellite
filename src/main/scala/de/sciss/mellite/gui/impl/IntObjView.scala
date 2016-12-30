@@ -15,7 +15,7 @@ package de.sciss.mellite
 package gui
 package impl
 
-import javax.swing.SpinnerNumberModel
+import javax.swing.{Icon, SpinnerNumberModel}
 
 import de.sciss.desktop
 import de.sciss.lucre.expr.IntObj
@@ -30,12 +30,12 @@ import scala.util.Try
 
 object IntObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = IntObj[~]
-  val icon          = ObjViewImpl.raphaelIcon(Shapes.IntegerNumber)
-  val prefix        = "Int"
-  def humanName     = prefix
-  def tpe           = IntObj
-  def category      = ObjView.categPrimitives
-  def hasMakeDialog = true
+  val icon: Icon        = ObjViewImpl.raphaelIcon(Shapes.IntegerNumber)
+  val prefix            = "Int"
+  def humanName: String = prefix
+  def tpe               = IntObj
+  def category: String  = ObjView.categPrimitives
+  def hasMakeDialog     = true
 
   def mkListView[S <: Sys[S]](obj: IntObj[S])(implicit tx: S#Tx): IntObjView[S] with ListObjView[S] = {
     val ex          = obj
@@ -77,7 +77,7 @@ object IntObjView extends ListObjView.Factory {
     with ListObjViewImpl.StringRenderer
     /* with NonViewable[S] */ {
 
-    override def obj(implicit tx: S#Tx) = objH()
+    override def obj(implicit tx: S#Tx): IntObj[S] = objH()
 
     type E[~ <: stm.Sys[~]] = IntObj[~]
 
@@ -85,7 +85,7 @@ object IntObjView extends ListObjView.Factory {
 
     val exprType = IntObj
 
-    def expr(implicit tx: S#Tx) = obj
+    def expr(implicit tx: S#Tx): IntObj[S] = obj
 
     def convertEditValue(v: Any): Option[Int] = v match {
       case num: Int  => Some(num)

@@ -18,6 +18,7 @@ package tracktool
 
 import java.awt.event.{MouseAdapter, MouseEvent}
 import java.awt.{Cursor, Point, Toolkit}
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.lucre.stm
@@ -52,11 +53,11 @@ object AuditionImpl {
 class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv: TimelineView[S])
   extends RegionLike[S, Unit] with RubberBand[S, Unit] {
 
-  import TrackTool.{Cursor => _}
+  // import TrackTool.{Cursor => _}
 
-  def defaultCursor = AuditionImpl.cursor
-  val name          = "Audition"
-  val icon          = GUI.iconNormal(Shapes.Audition)
+  def defaultCursor: Cursor = AuditionImpl.cursor
+  val name                  = "Audition"
+  val icon: Icon            = GUI.iconNormal(Shapes.Audition)
 
   protected def handlePress(e: MouseEvent, hitTrack: Int, pos: Long, regionOpt: Option[TimelineObjView[S]]): Unit = {
     handleMouseSelection(e, regionOpt = regionOpt)

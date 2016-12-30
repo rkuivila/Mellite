@@ -29,8 +29,8 @@ final class SelectionModelImpl[S <: Sys[S], Repr]
 
   def iterator: Iterator[Repr] = set.iterator
 
-  def isEmpty   = set.isEmpty
-  def nonEmpty  = set.nonEmpty
+  def isEmpty : Boolean = set.isEmpty
+  def nonEmpty: Boolean = set.nonEmpty
 
   def +=(view: Repr): Unit =
     if (!set.contains(view)) {

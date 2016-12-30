@@ -65,9 +65,9 @@ object GlobalProcsViewImpl {
 
     private var table: Table = _
 
-    def tableComponent = table
+    def tableComponent: Table = table
 
-    val selectionModel = SelectionModel[S, ProcObjView.Timeline[S]]
+    val selectionModel: SelectionModel[S, ProcObjView.Timeline[S]] = SelectionModel.apply
 
 //    private[this] val tlSelListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
 //      case SelectionModel.Update(_, _) =>
@@ -95,8 +95,8 @@ object GlobalProcsViewImpl {
 
     // columns: name, gain, muted, bus
     private val tm = new AbstractTableModel {
-      def getRowCount     = procSeq.size
-      def getColumnCount  = 4
+      def getRowCount   : Int = procSeq.size
+      def getColumnCount: Int = 4
 
       def getValueAt(row: Int, col: Int): AnyRef = {
         val pv  = procSeq(row)

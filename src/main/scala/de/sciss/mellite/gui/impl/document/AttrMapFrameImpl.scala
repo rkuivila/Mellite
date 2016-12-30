@@ -28,7 +28,7 @@ import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.mellite.gui.impl.component.CollectionViewImpl
 import de.sciss.synth.proc.Workspace
 
-import scala.swing.Action
+import scala.swing.{Action, Component}
 
 object AttrMapFrameImpl {
   def apply[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx, workspace: Workspace[S],
@@ -49,9 +49,9 @@ object AttrMapFrameImpl {
 
     impl =>
 
-    def workspace = peer.workspace
+    def workspace: Workspace[S] = peer.workspace
 
-    def dispose()(implicit tx: S#Tx) = ()
+    def dispose()(implicit tx: S#Tx): Unit = ()
 
     protected lazy val actionDelete: Action = Action(null) {
       val sel = peer.selection
@@ -95,7 +95,7 @@ object AttrMapFrameImpl {
 
     def contents: AttrMapView[S] = view.peer
 
-    def component = contents.component
+    def component: Component = contents.component
 
     protected def selectedObjects: List[ObjView[S]] = contents.selection.map(_._2)
 

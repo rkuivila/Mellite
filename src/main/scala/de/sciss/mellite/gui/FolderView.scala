@@ -21,6 +21,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Obj, Sys}
 import de.sciss.lucre.swing.{TreeTableView, View}
 import de.sciss.lucre.synth.{Sys => SSys}
+import de.sciss.mellite.gui.DragAndDrop.Flavor
 import de.sciss.mellite.gui.impl.ArtifactLocationObjView
 import de.sciss.mellite.gui.impl.document.{FolderViewImpl => Impl}
 import de.sciss.model.Model
@@ -48,7 +49,7 @@ object FolderView {
   }
 
   // Document not serializable -- local JVM only DnD -- cf. stackoverflow #10484344
-  val SelectionFlavor = DragAndDrop.internalFlavor[SelectionDnDData[_]]
+  val SelectionFlavor: Flavor[SelectionDnDData[_]] = DragAndDrop.internalFlavor
 
   sealed trait Update[S <: Sys[S]] { def view: FolderView[S] }
   final case class SelectionChanged[S <: Sys[S]](view: FolderView[S], selection: Selection[S])

@@ -22,8 +22,8 @@ import scala.swing.Graphics2D
 
 object Logo {
   def icon(size: Int = 256): Icon = new Icon {
-    val getIconWidth  = (size * 192 / 256 + 0.5).toInt
-    val getIconHeight = size
+    val getIconWidth : Int = (size * 192 / 256 + 0.5).toInt
+    val getIconHeight: Int = size
 
     def paintIcon(c: Component, g: Graphics, x: Int, y: Int): Unit = {
       val g2 = g.asInstanceOf[Graphics2D]

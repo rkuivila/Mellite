@@ -95,18 +95,18 @@ object Prefs {
 
   // ---- audio ----
 
-  final val defaultSuperCollider    = file("<SC_HOME>")
-  final val defaultAudioDevice      = "<default>"
-  final val defaultAudioSampleRate  = 0
+  final val defaultSuperCollider: File  = file("<SC_HOME>")
+  final val defaultAudioDevice          = "<default>"
+  final val defaultAudioSampleRate      = 0
 
-  final val defaultAudioBlockSize   = 64
-  final val defaultAudioNumInputs   = 8
-  final val defaultAudioNumOutputs  = 8
-  final val defaultAudioNumPrivate  = 512
-  final val defaultAudioNumWireBufs = 256
-  final val defaultAudioMemorySize  = 64
+  final val defaultAudioBlockSize       = 64
+  final val defaultAudioNumInputs       = 8
+  final val defaultAudioNumOutputs      = 8
+  final val defaultAudioNumPrivate      = 512
+  final val defaultAudioNumWireBufs     = 256
+  final val defaultAudioMemorySize      = 64
 
-  final val defaultHeadphonesBus    = 0
+  final val defaultHeadphonesBus        = 0
 
   def superCollider   : Entry[File   ] = userPrefs("supercollider"      )
   def audioDevice     : Entry[String ] = userPrefs("audio-device"       )
@@ -124,10 +124,10 @@ object Prefs {
 
   // ---- sensor ----
 
-  final val defaultSensorProtocol = osc.UDP: osc.Transport.Net
-  def defaultSensorPort     = SensorSystem.defaultPort // 0x4D6C  // "Ml"
-  def defaultSensorCommand  = SensorSystem.defaultCommand
-  final val defaultSensorChannels = 16
+  final val defaultSensorProtocol: osc.Transport.Net = osc.UDP
+  def defaultSensorPort   : Int     = SensorSystem.defaultPort // 0x4D6C  // "Ml"
+  def defaultSensorCommand: String  = SensorSystem.defaultCommand
+  final val defaultSensorChannels   = 16
 
   def sensorProtocol : Entry[osc.Transport.Net] = userPrefs("sensor-protocol")
   def sensorPort     : Entry[Int              ] = userPrefs("sensor-port"    )

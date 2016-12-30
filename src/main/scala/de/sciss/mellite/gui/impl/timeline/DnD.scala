@@ -26,6 +26,7 @@ import de.sciss.file._
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.synth.{Sys => SSys}
+import de.sciss.mellite.gui.DragAndDrop.Flavor
 import de.sciss.span.Span
 import de.sciss.synth.proc.{AudioCue, Proc, Workspace}
 
@@ -59,7 +60,7 @@ object DnD {
 
   final case class Drop[S <: Sys[S]](frame: Long, y: Int, drag: Drag[S])
 
-  final val flavor = DragAndDrop.internalFlavor[Drag[_]]
+  final val flavor: Flavor[Drag[_]] = DragAndDrop.internalFlavor[Drag[_]]
 }
 trait DnD[S <: SSys[S]] {
   _: Component =>

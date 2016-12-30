@@ -24,12 +24,13 @@ import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.stm
-import de.sciss.lucre.swing._
+import de.sciss.lucre.swing.{DoubleSpinnerView, View, deferTx}
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.component.DragSourceButton
 import de.sciss.span.Span
 import de.sciss.synth.SynthGraph
+import de.sciss.synth.proc.AudioCue.Obj
 import de.sciss.synth.proc.graph.ScanIn
 import de.sciss.synth.proc.gui.TransportView
 import de.sciss.synth.proc.{AudioCue, AuralSystem, Proc, TimeRef, Timeline, Transport, Workspace, WorkspaceHandle}
@@ -92,10 +93,10 @@ object ViewImpl {
     val gainView    = DoubleSpinnerView[S](audioCue.value.gain /* RRR */, "Gain", width = 90)
     val res: Impl[S, I] = new Impl[S, I](gainView = gainView) {
       val timelineModel = new TimelineModelImpl(fullSpanTL, TimeRef.SampleRate)
-      val workspace     = _workspace
-      val cursor        = _cursor
-      val holder        = tx.newHandle(obj0)
-      val transportView: TransportView[I] = TransportView[I](transport, timelineModel, hasMillis = true, hasLoop = true)
+      val workspace: Workspace[S]           = _workspace
+      val cursor: stm.Cursor[S]             = _cursor
+      val holder: stm.Source[S#Tx, Obj[S]]  = tx.newHandle(obj0)
+      val transportView: TransportView[I]   = TransportView[I](transport, timelineModel, hasMillis = true, hasLoop = true)
     }
 
     deferTx {

@@ -41,17 +41,18 @@ object CursorsFrameImpl {
   def apply(workspace: Workspace.Confluent)(implicit tx: D#Tx): DocumentCursorsFrame = {
     val root      = workspace.cursors
     val rootView  = createView(workspace, parent = None, elem = root)
-    val view      = new ViewImpl(rootView)(workspace, tx.system) {
-      val observer = root.changed.react { implicit tx => upd =>
+    val _view     = new ViewImpl(rootView)(workspace, tx.system) {
+      self =>
+      val observer: Disposable[D#Tx] = root.changed.react { implicit tx =>upd =>
         log(s"DocumentCursorsFrame update $upd")
-        view.elemUpdated(rootView, upd.changes)
+        self.elemUpdated(rootView, upd.changes)
       }
     }
-    view.init()
-    view.addChildren(rootView, root)
+    _view.init()
+    _view.addChildren(rootView, root)
     // document.addDependent(view)
 
-    val res = new FrameImpl(view)
+    val res = new FrameImpl(_view)
     // missing from WindowImpl because of system mismatch
     workspace.addDependent(res.WorkspaceClosed)
     res.init()
@@ -78,7 +79,7 @@ object CursorsFrameImpl {
 
     impl =>
 
-    def workspace = view.workspace
+    def workspace: Workspace[S] = view.workspace
 
     object WorkspaceClosed extends Disposable[S#Tx] {
       def dispose()(implicit tx: S#Tx): Unit = impl.dispose()(workspace.system.durableTx(tx))
@@ -107,7 +108,7 @@ object CursorsFrameImpl {
       ActionCloseAllWorkspaces.close(workspace)
     }
 
-    override protected def placement = (1f, 0f, 24)
+    override protected def placement: (Float, Float, Int) = (1f, 0f, 24)
   }
 
   private abstract class ViewImpl(val _root: CursorView)
@@ -120,8 +121,7 @@ object CursorsFrameImpl {
 
     private var mapViews = Map.empty[Cursors[S, D], Node]
 
-    final def view   = this
-    // def window = component
+//    final def view   = this
 
     final def cursor: stm.Cursor[S] = confluent.Cursor.wrap(workspace.cursors.cursor)(workspace.system)
 
@@ -263,13 +263,13 @@ object CursorsFrameImpl {
 
       val colCreated = new TreeColumnModel.Column[Node, Date]("Origin") {
         def apply(node: Node): Date = new Date(node.created)
-        def update(node: Node, value: Date) = ()
+        def update(node: Node, value: Date): Unit = ()
         def isEditable(node: Node) = false
       }
 
       val colUpdated = new TreeColumnModel.Column[Node, Date]("Updated") {
         def apply(node: Node): Date = new Date(node.updated)
-        def update(node: Node, value: Date) = ()
+        def update(node: Node, value: Date): Unit = ()
         def isEditable(node: Node) = false
       }
 

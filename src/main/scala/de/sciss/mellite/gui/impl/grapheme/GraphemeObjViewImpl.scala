@@ -52,7 +52,7 @@ object GraphemeObjViewImpl {
 
     // protected var idH  : stm.Source[S#Tx, S#ID] = _
 
-    def time(implicit tx: S#Tx) = timeH()
+    def time(implicit tx: S#Tx): LongObj[S] = timeH()
 
     // def id  (implicit tx: S#Tx) = idH()
 

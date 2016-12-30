@@ -86,14 +86,14 @@ trait Dragging[S <: Sys[S], A] {
                        val firstPos: Long, val initial: Initial)
     extends MouseInputAdapter with KeyListener {
 
-    private var started         = false
-    private var _currentEvent   = firstEvent
-    private var _currentTrack   = firstTrack
-    private var _currentPos     = firstPos
+    private[this] var started         = false
+    private[this] var _currentEvent   = firstEvent
+    private[this] var _currentTrack   = firstTrack
+    private[this] var _currentPos     = firstPos
 
-    def currentEvent  = _currentEvent
-    def currentTrack  = _currentTrack
-    def currentPos    = _currentPos
+    def currentEvent: MouseEvent  = _currentEvent
+    def currentTrack: Int         = _currentTrack
+    def currentPos  : Long        = _currentPos
 
     // ---- constructor ----
     {
@@ -151,7 +151,7 @@ trait Dragging[S <: Sys[S], A] {
         dragCancel(this)
       }
 
-    def keyTyped   (e: KeyEvent) = ()
-    def keyReleased(e: KeyEvent) = ()
+    def keyTyped   (e: KeyEvent): Unit = ()
+    def keyReleased(e: KeyEvent): Unit = ()
   }
 }

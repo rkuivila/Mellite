@@ -15,7 +15,6 @@ package de.sciss.mellite
 
 import de.sciss.desktop.{Preferences, SwingApplication, WindowHandler}
 import de.sciss.lucre.stm.Sys
-import de.sciss.mellite
 import de.sciss.synth.proc.Workspace
 
 import scala.collection.immutable.{Seq => ISeq}

@@ -18,6 +18,7 @@ package tracktool
 
 import java.awt.event.MouseEvent
 import java.awt.{Cursor, Point, Toolkit}
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.lucre.expr.{BooleanObj, SpanLikeObj}
@@ -39,9 +40,9 @@ object MuteImpl {
 final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends RegionImpl[S, Mute] with RubberBand[S, Mute] {
 
-  def defaultCursor = MuteImpl.cursor
-  val name          = "Mute"
-  val icon          = GUI.iconNormal(Shapes.Mute) // ToolsImpl.getIcon("mute")
+  def defaultCursor: Cursor = MuteImpl.cursor
+  val name                  = "Mute"
+  val icon: Icon            = GUI.iconNormal(Shapes.Mute) // ToolsImpl.getIcon("mute")
 
   // ProcActions.toggleMute(obj)
 

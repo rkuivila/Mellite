@@ -15,6 +15,8 @@ package de.sciss.mellite
 package gui
 package impl
 
+import javax.swing.Icon
+
 import de.sciss.desktop
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm.Obj
@@ -31,12 +33,12 @@ import scala.swing.{Component, Label}
 
 object CodeObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = Code.Obj[~]
-  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Code)
-  val prefix        = "Code"
-  def humanName     = "Source Code"
-  def tpe           = Code.Obj
-  def category      = ObjView.categMisc
-  def hasMakeDialog = true
+  val icon: Icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Code)
+  val prefix            = "Code"
+  def humanName         = "Source Code"
+  def tpe               = Code.Obj
+  def category: String  = ObjView.categMisc
+  def hasMakeDialog     = true
 
   def mkListView[S <: Sys[S]](obj: Code.Obj[S])(implicit tx: S#Tx): CodeObjView[S] with ListObjView[S] = {
     val value   = obj.value
@@ -99,7 +101,7 @@ object CodeObjView extends ListObjView.Factory {
 
     type E[~ <: stm.Sys[~]] = Code.Obj[~]
 
-    override def obj(implicit tx: S#Tx) = objH()
+    override def obj(implicit tx: S#Tx): Code.Obj[S] = objH()
 
     def factory = CodeObjView
 

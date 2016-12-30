@@ -19,7 +19,7 @@ package grapheme
 import java.awt
 import java.awt.{Font, Graphics2D, LinearGradientPaint, RenderingHints}
 import java.util.Locale
-import javax.swing.UIManager
+import javax.swing.{JComponent, UIManager}
 
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineModelImpl
@@ -127,8 +127,8 @@ object GraphemeViewImpl {
 //    private lazy val toolCursor   = TrackTool.cursor  [S](canvasView)
 //    private lazy val toolMove     = TrackTool.move    [S](canvasView)
 
-    def grapheme(implicit tx: S#Tx) = graphemeH()
-    def plainGroup(implicit tx: S#Tx) = grapheme
+    def grapheme  (implicit tx: S#Tx): Grapheme[S] = graphemeH()
+    def plainGroup(implicit tx: S#Tx): Grapheme[S] = grapheme
 
     def window: Window = component.peer.getClientProperty("de.sciss.mellite.Window").asInstanceOf[Window]
 
@@ -288,9 +288,9 @@ object GraphemeViewImpl {
       canvasImpl =>
 
       // import AbstractGraphemeView._
-      def timelineModel               = impl.timelineModel
-      def selectionModel              = impl.selectionModel
-      def grapheme(implicit tx: S#Tx) = impl.plainGroup
+      def timelineModel : TimelineModel                         = impl.timelineModel
+      def selectionModel: SelectionModel[S, GraphemeObjView[S]] = impl.selectionModel
+      def grapheme(implicit tx: S#Tx): Grapheme[S]              = impl.plainGroup
 
       def findView(pos: Long): Option[GraphemeObjView[S]] =
         viewRange.range(pos, Long.MaxValue).headOption.map(_._2)
@@ -317,7 +317,7 @@ object GraphemeViewImpl {
       private var _toolState    = Option.empty[Any]
       private var moveState     = NoMove
 
-      protected def toolState = _toolState
+      protected def toolState: Option[Any] = _toolState
       protected def toolState_=(state: Option[Any]): Unit = {
         _toolState    = state
         moveState     = NoMove
@@ -329,8 +329,8 @@ object GraphemeViewImpl {
       }
 
       object canvasComponent extends Component /* with DnD[S] */ /* with sonogram.PaintController */ {
-        protected def graphemeModel = impl.timelineModel
-        protected def workspace     = impl.workspace
+        protected def graphemeModel: TimelineModel  = impl.timelineModel
+        protected def workspace: Workspace[S]       = impl.workspace
 
         // private var currentDrop = Option.empty[DnD.Drop[S]]
 
@@ -351,7 +351,7 @@ object GraphemeViewImpl {
 //
 //        protected def acceptDnD(drop: DnD.Drop[S]): Boolean = performDrop(drop)
 
-        def imageObserver = peer
+        def imageObserver: JComponent = peer
 
         override protected def paintComponent(g: Graphics2D): Unit = {
           super.paintComponent(g)

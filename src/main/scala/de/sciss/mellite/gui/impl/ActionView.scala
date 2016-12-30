@@ -15,6 +15,8 @@ package de.sciss.mellite
 package gui
 package impl
 
+import javax.swing.Icon
+
 import de.sciss.desktop
 import de.sciss.desktop.OptionPane
 import de.sciss.icons.raphael
@@ -30,13 +32,11 @@ import proc.Implicits._
 
 object ActionView extends ListObjView.Factory with TimelineObjView.Factory {
   type E[~ <: stm.Sys[~]] = Action[~] // .Elem[S]
-  val icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Bolt)
-  val prefix      = "Action"
-  def humanName   = prefix
-  // def typeID      = Action.typeID
-  def tpe = Action
-
-  def category    = ObjView.categComposition
+  val icon: Icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Bolt)
+  val prefix            = "Action"
+  def humanName: String = prefix
+  def tpe               = Action
+  def category: String  = ObjView.categComposition
 
   def mkListView[S <: Sys[S]](obj: Action[S])(implicit tx: S#Tx): ListObjView[S] =
     new ListImpl(tx.newHandle(obj)).initAttrs(obj)

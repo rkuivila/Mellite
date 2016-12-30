@@ -15,6 +15,8 @@ package de.sciss.mellite
 package gui
 package impl
 
+import javax.swing.Icon
+
 import de.sciss.desktop
 import de.sciss.desktop.OptionPane
 import de.sciss.file._
@@ -42,12 +44,12 @@ import scala.util.control.NonFatal
 object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   type E[~ <: stm.Sys[~]] = Proc[~]
 
-  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.Cogs)
-  val prefix        = "Proc"
-  val humanName     = "Process"
-  def tpe           = Proc
-  def category      = ObjView.categComposition
-  def hasMakeDialog = true
+  val icon: Icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.Cogs)
+  val prefix            = "Proc"
+  val humanName         = "Process"
+  def tpe               = Proc
+  def category: String  = ObjView.categComposition
+  def hasMakeDialog     = true
 
   def mkListView[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx): ProcObjView[S] with ListObjView[S] =
     new ListImpl(tx.newHandle(obj)).initAttrs(obj)
@@ -510,7 +512,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
                                                    out: proc.Output[S], tx0: S#Tx)
     extends InputAttr[S] {
 
-    protected val viewMap = tx0.newInMemoryIDMap[Elem]
+    protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
     private[this] var _elem: Elem = _
 
     protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] = Iterator.single(_elem)
@@ -525,7 +527,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
                                                    f: proc.Folder[S], tx0: S#Tx)
     extends InputAttr[S] {
 
-    protected val viewMap = tx0.newInMemoryIDMap[Elem]
+    protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
 
     protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] = ???!
 
@@ -538,7 +540,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
                                                      tl: proc.Timeline[S], tx0: S#Tx)
     extends InputAttr[S] {
 
-    protected val viewMap = tx0.newInMemoryIDMap[Elem]
+    protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
 
     // EDT
     private[this] var rangeSeq = RangedSeq.empty[Elem, Long](_.point, Ordering.Long)
@@ -735,7 +737,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
         SonogramManager.release(ovr)
       }
 
-    override def name = nameOption.getOrElse {
+    override def name: String = nameOption.getOrElse {
       audio.fold(TimelineObjView.Unnamed)(_./* value. */artifact.base)
     }
 

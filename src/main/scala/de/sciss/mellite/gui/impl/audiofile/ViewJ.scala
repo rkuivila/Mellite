@@ -17,6 +17,7 @@ package impl
 package audiofile
 
 import java.awt.{Color, Graphics2D}
+import javax.swing.JComponent
 
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineCanvasImpl
@@ -53,8 +54,8 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
       paintPosAndSelection(g, height)
     }
 
-    @inline def width   = peer.getWidth
-    @inline def height  = peer.getHeight
+    @inline def width : Int = peer.getWidth
+    @inline def height: Int = peer.getHeight
 
     preferredSize = {
       val b = desktop.Util.maximumWindowBounds
@@ -76,9 +77,9 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
       sono.paint(spanStart = fileStart, spanStop = fileStop, g, 0, 0, width, height, this)
     }
 
-    def adjustGain(amp: Float, pos: Double) = amp
+    def adjustGain(amp: Float, pos: Double): Float = amp
 
-    def imageObserver = peer
+    def imageObserver: JComponent = peer
 
     private def ready(): Unit = {
       paintFun = paintReady

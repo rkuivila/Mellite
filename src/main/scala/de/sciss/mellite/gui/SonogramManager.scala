@@ -19,6 +19,8 @@ import java.io.File
 import de.sciss.dsp.{ConstQ, Threading}
 import de.sciss.sonogram
 
+import scala.concurrent.ExecutionContext
+
 object SonogramManager {
   private lazy val _instance = {
     val cfg               = sonogram.OverviewManager.Config()
@@ -44,5 +46,5 @@ object SonogramManager {
   }
   def release(overview: sonogram.Overview): Unit = _instance.release(overview)
 
-  implicit def executionContext = _instance.config.executionContext
+  implicit def executionContext: ExecutionContext = _instance.config.executionContext
 }

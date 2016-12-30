@@ -19,7 +19,8 @@ package tracktool
 import java.awt.event.MouseEvent
 import java.awt.geom.{Area, Ellipse2D}
 import java.awt.image.BufferedImage
-import java.awt.{Color, Point, RenderingHints, Toolkit}
+import java.awt.{Color, Cursor, Point, RenderingHints, Toolkit}
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.Desktop
@@ -56,12 +57,11 @@ object PatchImpl {
 final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends RegionImpl[S, TrackTool.Patch[S]] with Dragging[S, TrackTool.Patch[S]] {
 
-  import TrackTool._
+  import TrackTool.Patch
 
-  def defaultCursor = PatchImpl.cursor
-  val name          = "Patch"
-  // val icon          = new PaddedIcon(new ImageIcon(PatchImpl.image), new Insets(1, 1, 2, 2)) // make it 20x20
-  val icon          = GUI.iconNormal(Shapes.Patch)
+  def defaultCursor: Cursor = PatchImpl.cursor
+  val name                  = "Patch"
+  val icon: Icon            = GUI.iconNormal(Shapes.Patch)
 
   protected type Initial = ProcObjView.Timeline[S] // TimelineObjView[S]
 

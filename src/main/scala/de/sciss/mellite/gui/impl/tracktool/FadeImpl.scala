@@ -17,6 +17,7 @@ package impl
 package tracktool
 
 import java.awt.Cursor
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
@@ -32,11 +33,11 @@ import de.sciss.synth.proc.{FadeSpec, ObjKeys}
 final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Fade] {
 
-  import TrackTool.{Cursor => _, _}
+  import TrackTool.{Fade, EmptyFade}
 
-  def defaultCursor = Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR)
-  val name          = "Fade"
-  val icon          = GUI.iconNormal(Shapes.Aperture) // ToolsImpl.getIcon("fade")
+  def defaultCursor: Cursor = Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR)
+  val name                  = "Fade"
+  val icon: Icon            = GUI.iconNormal(Shapes.Aperture) // ToolsImpl.getIcon("fade")
 
   private var dragCurve = false
 

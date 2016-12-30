@@ -16,7 +16,7 @@ package de.sciss.mellite
 import javax.swing.UIManager
 
 import de.sciss.desktop.impl.{SwingApplicationImpl, WindowHandlerImpl}
-import de.sciss.desktop.{OptionPane, WindowHandler}
+import de.sciss.desktop.{Menu, OptionPane, WindowHandler}
 import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.requireEDT
 import de.sciss.lucre.synth.{Server, Txn}
@@ -60,14 +60,14 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application with Ini
   lazy val isDarkSkin: Boolean = UIManager.getBoolean("dark-skin")
 
   override lazy val windowHandler: WindowHandler = new WindowHandlerImpl(this, menuFactory) {
-    override lazy val usesInternalFrames = {
+    override lazy val usesInternalFrames: Boolean = {
       false // XXX TODO: eventually a preferences entry
     }
 
-    override lazy val usesNativeDecoration = Prefs.nativeWindowDecoration.getOrElse(true)
+    override lazy val usesNativeDecoration: Boolean = Prefs.nativeWindowDecoration.getOrElse(true)
   }
 
-  protected def menuFactory = MenuBar.instance
+  protected def menuFactory: Menu.Root = MenuBar.instance
 
   private lazy val _aural     = AuralSystem ()
   private lazy val _sensor    = SensorSystem()

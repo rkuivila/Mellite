@@ -21,7 +21,7 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.UndoManager
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Obj
+import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditAttrMap
@@ -41,11 +41,11 @@ object AttrMapViewImpl {
     } .toIndexedSeq
 
     val res = new MapViewImpl[S, AttrMapView[S]](list0) with AttrMapView[S] {
-      protected val mapH = tx.newHandle(_obj)
+      protected val mapH: stm.Source[S#Tx, Obj[S]] = tx.newHandle(_obj)
 
       final def obj(implicit tx: S#Tx): Obj[S] = mapH()
 
-      val observer = _obj.attr.changed.react { implicit tx => upd =>
+      val observer: Disposable[S#Tx] = _obj.attr.changed.react { implicit tx =>upd =>
         upd.changes.foreach {
           case Obj.AttrAdded   (key, value)       => attrAdded   (key, value)
           case Obj.AttrRemoved (key, value)       => attrRemoved (key)

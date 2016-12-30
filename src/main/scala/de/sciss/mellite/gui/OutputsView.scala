@@ -18,13 +18,14 @@ import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.View
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.DragAndDrop.Flavor
 import de.sciss.mellite.gui.impl.{OutputsViewImpl => Impl}
 import de.sciss.synth.proc.{Proc, Workspace}
 
 object OutputsView {
   final case class Drag[S <: Sys[S]](workspace: Workspace[S], proc: stm.Source[S#Tx, Proc[S]], key: String)
 
-  final val flavor = DragAndDrop.internalFlavor[Drag[_]]
+  final val flavor: Flavor[Drag[_]] = DragAndDrop.internalFlavor
 
   def apply[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
                                            workspace: Workspace[S], undoManager: UndoManager): OutputsView[S] =

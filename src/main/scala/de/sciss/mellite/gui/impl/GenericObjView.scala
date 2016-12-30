@@ -15,6 +15,8 @@ package de.sciss.mellite
 package gui
 package impl
 
+import javax.swing.Icon
+
 import de.sciss.desktop
 import de.sciss.icons.raphael
 import de.sciss.lucre.expr.{LongObj, SpanLikeObj}
@@ -28,13 +30,12 @@ import de.sciss.synth.proc.Workspace
 import scala.swing.{Component, Label}
 
 object GenericObjView extends ObjView.Factory {
-  val icon          = ObjViewImpl.raphaelIcon(raphael.Shapes.No)
-  val prefix        = "Generic"
-  def humanName     = prefix
-  def tpe           = ???! : Obj.Type // RRR
-  val category      = "None"
-  def hasMakeDialog = false
-  // val typeID    = 0
+  val icon: Icon        = ObjViewImpl.raphaelIcon(raphael.Shapes.No)
+  val prefix            = "Generic"
+  def humanName: String = prefix
+  def tpe: Obj.Type     = ???!  // RRR
+  val category          = "None"
+  def hasMakeDialog     = false
 
   type E     [S <: stm.Sys[S]]  = Obj[S]
   type Config[S <: stm.Sys[S]]  = Unit

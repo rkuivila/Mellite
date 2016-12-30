@@ -162,7 +162,7 @@ object Populate {
 
   private final val RecName = "rec"
 
-  final val BaseDir = userHome/"Documents"/"applications"/"140616_SteiermarkRiga"/"tallin"
+  final val BaseDir: File = userHome/"Documents"/"applications"/"140616_SteiermarkRiga"/"tallin"
 
   private final val RecDir  = BaseDir / "rec"
 

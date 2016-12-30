@@ -13,6 +13,7 @@
 
 package de.sciss.mellite.gui.impl
 
+import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop
@@ -35,12 +36,12 @@ import scala.swing.{Button, ProgressBar}
 
 object FScapeObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = FScape[~]
-  val icon          = ObjViewImpl.raphaelIcon(Shapes.Sparks)
-  val prefix        = "FScape"
-  def humanName     = prefix
-  def tpe           = FScape
-  def category      = ObjView.categComposition
-  def hasMakeDialog = true
+  val icon: Icon        = ObjViewImpl.raphaelIcon(Shapes.Sparks)
+  val prefix            = "FScape"
+  def humanName: String = prefix
+  def tpe               = FScape
+  def category: String  = ObjView.categComposition
+  def hasMakeDialog     = true
 
   private[this] lazy val _init: Unit = ListObjView.addFactory(this)
 
@@ -75,7 +76,7 @@ object FScapeObjView extends ListObjView.Factory {
       with NonEditable[S]
       /* with NonViewable[S] */ {
 
-    override def obj(implicit tx: S#Tx) = objH()
+    override def obj(implicit tx: S#Tx): FScape[S] = objH()
 
     type E[~ <: stm.Sys[~]] = FScape[~]
 
@@ -122,7 +123,7 @@ object FScapeObjView extends ListObjView.Factory {
         EditVar.Expr[S, Graph, GraphObj]("Change FScape Graph", obj.graph, GraphObj.newConst[S](out))
       }
 
-      def dispose()(implicit tx: S#Tx) = ()
+      def dispose()(implicit tx: S#Tx): Unit = ()
     }
 
     val renderRef = Ref(Option.empty[FScape.Rendering[S]])

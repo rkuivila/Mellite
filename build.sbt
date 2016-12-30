@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.8.0"
+lazy val projectVersion             = "2.9.0-SNAPSHOT"
 lazy val mimaVersion                = "2.8.0"
 
 lazy val loggingEnabled             = true
@@ -13,23 +13,23 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.10.0"
-lazy val fscapeVersion              = "2.5.0"  // Scala 2.11 only
-lazy val nuagesVersion              = "2.12.0"
-lazy val interpreterPaneVersion     = "1.7.3"
+lazy val soundProcessesVersion      = "3.10.2"
+lazy val fscapeVersion              = "2.6.0-SNAPSHOT"  // Scala 2.11, 2.12 only
+lazy val nuagesVersion              = "2.12.1"
+lazy val interpreterPaneVersion     = "1.7.5"
 lazy val syntaxPaneVersion          = "1.1.5"
-lazy val scalaColliderVersion       = "1.22.1"
-lazy val scalaColliderUGenVersion   = "1.16.2"
-lazy val lucreVersion               = "3.3.1"
-lazy val equalVersion               = "0.1.1"
+lazy val scalaColliderVersion       = "1.22.3"
+lazy val scalaColliderUGenVersion   = "1.16.4"
+lazy val lucreVersion               = "3.3.2"
+lazy val equalVersion               = "0.1.2"
 lazy val playJSONVersion            = "0.4.0"
-lazy val scalaColliderSwingVersion  = "1.32.0"
-lazy val lucreSwingVersion          = "1.4.2"
-lazy val audioWidgetsVersion        = "1.10.1"
-lazy val desktopVersion             = "0.7.2"
-lazy val sonogramVersion            = "1.9.0"
-lazy val raphaelIconsVersion        = "1.0.3"
-lazy val pdflitzVersion             = "1.2.1"
+lazy val scalaColliderSwingVersion  = "1.32.2"
+lazy val lucreSwingVersion          = "1.4.3"
+lazy val audioWidgetsVersion        = "1.10.2"
+lazy val desktopVersion             = "0.7.3"
+lazy val sonogramVersion            = "1.9.1"
+lazy val raphaelIconsVersion        = "1.0.4"
+lazy val pdflitzVersion             = "1.2.2"
 lazy val subminVersion              = "0.2.1"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
@@ -47,8 +47,8 @@ lazy val commonSettings = Seq(
   organization       := "de.sciss",
   homepage           := Some(url(s"https://github.com/Sciss/$baseName")),
   licenses           := Seq("GNU General Public License v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
-  scalaVersion       := "2.11.8",
-  crossScalaVersions := Seq("2.11.8", "2.10.6"),
+  scalaVersion       := "2.12.1",
+  crossScalaVersions := Seq("2.12.1", "2.11.8", "2.10.6"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
     val ys = if (scalaVersion.value.startsWith("2.10")) xs else xs :+ "-Xlint:-stars-align,_"  // syntax not supported in Scala 2.10
@@ -177,7 +177,7 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss" %  "scalacolliderugens-spec"         % scalaColliderUGenVersion,   // meta data
       "de.sciss" %% s"lucre-$bdb"                     % lucreVersion,               // database backend
       "de.sciss" %% "equal"                           % equalVersion,               // type-safe equals
-      "de.sciss" %% "play-json-sealed"                % playJSONVersion,
+//      "de.sciss" %% "play-json-sealed"                % playJSONVersion,
       "de.sciss" %% "wolkenpumpe"                     % nuagesVersion,              // live improv
       "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL view
       "de.sciss" %  "syntaxpane"                      % syntaxPaneVersion,          // REPL view
