@@ -203,7 +203,7 @@ object CodeViewImpl {
             val out = code.execute(in)
             (in, out)
           }
-          _fut.onSuccess { case (in, out) =>
+          _fut.foreach { case (in, out) =>
             defer {
               val editOpt = cursor.step { implicit tx =>
                 saveSourceAndObject(newCode, in, out)

@@ -47,7 +47,7 @@ import scala.concurrent.blocking
 import scala.swing.Swing._
 import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.swing.{Alignment, BoxPanel, Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Orientation, ProgressBar, RadioButton, Swing, TextField}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 object ActionBounceTimeline {
@@ -477,8 +477,12 @@ object ActionBounceTimeline {
               codeProc.addListener {
                 case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt / progDiv + 50)
               }
-              codeProc.onSuccess { case _ => allDone() }
-              codeProc.onFailure(onFailure)
+              codeProc.onComplete {
+                case Success(_)   => allDone()
+                case Failure(ex)  => onFailure(ex)
+              }
+//              codeProc.onSuccess { case _ => allDone() }
+//              codeProc.onFailure(onFailure)
             }))
           case _ =>
             println("WARNING: Code does not denote a file transform")
@@ -526,8 +530,12 @@ object ActionBounceTimeline {
       }
     }
 
-    process.onSuccess { case _ => bounceDone() }
-    process.onFailure(onFailure)
+    process.onComplete {
+      case Success(_)   => bounceDone()
+      case Failure(ex)  => onFailure(ex)
+    }
+//    process.onSuccess { case _ => bounceDone() }
+//    process.onFailure(onFailure)
 
     desktop.Util.delay(500) {
       if (!processCompleted) op.show(window)

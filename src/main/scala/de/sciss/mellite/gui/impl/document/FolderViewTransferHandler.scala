@@ -290,9 +290,9 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
 
     private def importFiles(support: TransferSupport, parent: Folder[S], index: Int)
                            (implicit tx: S#Tx): Option[UndoableEdit] = {
-      import scala.collection.JavaConversions._
+      import scala.collection.JavaConverters._
       val data: List[File] = support.getTransferable.getTransferData(DataFlavor.javaFileListFlavor)
-        .asInstanceOf[java.util.List[File]].toList
+        .asInstanceOf[java.util.List[File]].asScala.toList
       val tup: List[(File, AudioFileSpec)] = data.flatMap { f =>
         Try(AudioFile.readSpec(f)).toOption.map(f -> _)
       }

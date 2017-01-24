@@ -29,10 +29,11 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.ListObjViewImpl.NonEditable
 import de.sciss.mellite.gui.{CodeFrame, CodeView, GUI, ListObjView, ObjView, Shapes}
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{Code, Workspace}
+import de.sciss.synth.proc.{Code, GenContext, Workspace}
 
 import scala.concurrent.stm.Ref
 import scala.swing.{Button, ProgressBar}
+import scala.util.Failure
 
 object FScapeObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = FScape[~]
@@ -170,18 +171,21 @@ object FScapeObjView extends ListObjView.Factory {
               }
             }
 
+            implicit val context = GenContext[S]
             val rendering = obj.run(config)
+            deferTx {
+              actionCancel.enabled = true
+              self        .enabled = false
+            }
             /* val obs = */ rendering.reactNow { implicit tx => {
-              case FScape.Rendering.Success => finished()
-              case FScape.Rendering.Failure(FScape.Rendering.Cancelled()) => finished()
-              case FScape.Rendering.Failure(ex) =>
+              case FScape.Rendering.Completed =>
                 finished()
-                deferTx(ex.printStackTrace())
-              case FScape.Rendering.Running =>
-                deferTx {
-                  actionCancel.enabled = true
-                  self        .enabled = false
+                rendering.result.foreach {
+                  case Failure(ex) =>
+                    deferTx(ex.printStackTrace())
+                  case _ =>
                 }
+              case _ =>
             }}
             renderRef.set(Some(rendering))(tx.peer)
           }
