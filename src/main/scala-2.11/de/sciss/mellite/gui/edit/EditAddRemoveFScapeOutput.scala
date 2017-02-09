@@ -17,15 +17,15 @@ package edit
 
 import javax.swing.undo.{AbstractUndoableEdit, UndoableEdit}
 
+import de.sciss.fscape.lucre.FScape
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Sys
-import de.sciss.synth.proc.Proc
+import de.sciss.lucre.stm.{Obj, Sys}
 
 // direction: true = insert, false = remove
 // XXX TODO - should disconnect links and restore them in undo
-private[edit] final class EditAddRemoveOutput[S <: Sys[S]](isAdd: Boolean,
-                                                         procH: stm.Source[S#Tx, Proc[S]],
-                                                         key: String)(implicit cursor: stm.Cursor[S])
+private[edit] final class EditAddRemoveFScapeOutput[S <: Sys[S]](isAdd: Boolean,
+                                                               fscapeH: stm.Source[S#Tx, FScape[S]],
+                                                               key: String, tpe: Obj.Type)(implicit cursor: stm.Cursor[S])
   extends AbstractUndoableEdit {
 
   override def undo(): Unit = {
@@ -49,31 +49,34 @@ private[edit] final class EditAddRemoveOutput[S <: Sys[S]](isAdd: Boolean,
   def perform()(implicit tx: S#Tx): Unit = perform(isUndo = false)
 
   private def perform(isUndo: Boolean)(implicit tx: S#Tx): Unit = {
-    val proc    = procH()
-    val outputs = proc.outputs
+    val fscape = fscapeH()
+    val outputs = fscape.outputs
     if (isAdd ^ isUndo)
-      outputs.add   (key)
+      outputs.add   (key, tpe)
     else
       outputs.remove(key)
   }
 
   override def getPresentationName = s"${if (isAdd) "Add" else "Remove"} Output"
 }
-object EditAddOutput {
-  def apply[S <: Sys[S]](proc: Proc[S], key: String)
+object EditAddFScapeOutput {
+  def apply[S <: Sys[S]](fscape: FScape[S], key: String, tpe: Obj.Type)
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    val procH = tx.newHandle(proc)
-    val res = new EditAddRemoveOutput(isAdd = true, procH = procH, key = key)
+    val fscapeH = tx.newHandle(fscape)
+    val res = new EditAddRemoveFScapeOutput(isAdd = true, fscapeH = fscapeH, key = key, tpe = tpe)
     res.perform()
     res
   }
 }
 
-object EditRemoveOutput {
-  def apply[S <: Sys[S]](proc: Proc[S], key: String)
+object EditRemoveFScapeOutput {
+  def apply[S <: Sys[S]](output: FScape.Output[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-    val procH = tx.newHandle(proc)
-    val res = new EditAddRemoveOutput(isAdd = false, procH = procH, key = key)
+    val fscape  = output.fscape
+    val key     = output.key
+    val tpe     = output.tpe
+    val fscapeH = tx.newHandle(fscape)
+    val res = new EditAddRemoveFScapeOutput(isAdd = false, fscapeH = fscapeH, key = key, tpe = tpe)
     res.perform()
     res
   }

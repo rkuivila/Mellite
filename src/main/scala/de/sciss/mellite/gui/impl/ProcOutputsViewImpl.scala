@@ -1,5 +1,5 @@
 /*
- *  OutputsViewImpl.scala
+ *  ProcOutputsViewImpl.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
@@ -26,7 +26,7 @@ import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.edit.{EditAddOutput, EditRemoveOutput}
+import de.sciss.mellite.gui.edit.{EditAddProcOutput, EditRemoveProcOutput}
 import de.sciss.mellite.gui.impl.component.DragSourceButton
 import de.sciss.synth.proc.{Proc, Workspace}
 
@@ -34,9 +34,9 @@ import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.swing.{Action, BoxPanel, Button, Component, FlowPanel, Orientation, ScrollPane}
 import scala.swing.Swing.HGlue
 
-object OutputsViewImpl {
+object ProcOutputsViewImpl {
   def apply[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
-                                           workspace: Workspace[S], undoManager: UndoManager): OutputsView[S] = {
+                                           workspace: Workspace[S], undoManager: UndoManager): ProcOutputsView[S] = {
     val list0 = obj.outputs.iterator.map { out =>
       (out.key, ListObjView(out))
     }  .toIndexedSeq
@@ -58,7 +58,7 @@ object OutputsViewImpl {
                                             objH: stm.Source[S#Tx, Proc[S]])
                                        (implicit cursor: stm.Cursor[S], workspace: Workspace[S],
                                         undoManager: UndoManager)
-    extends MapViewImpl[S, OutputsView[S]](list0) with OutputsView[S] with ComponentHolder[Component] { impl =>
+    extends MapViewImpl[S, ProcOutputsView[S]](list0) with ProcOutputsView[S] with ComponentHolder[Component] { impl =>
 
     protected final def editRenameKey(before: String, now: String, value: Obj[S])(implicit tx: S#Tx) = None
     protected final def editImport(key: String, value: Obj[S], isInsert: Boolean)(implicit tx: S#Tx) = None
@@ -74,7 +74,7 @@ object OutputsViewImpl {
         opt.title = s"Add $tpe"
         opt.show(Window.find(component)).foreach { key =>
           val edit = cursor.step { implicit tx =>
-            EditAddOutput(objH(), key = key)
+            EditAddProcOutput(objH(), key = key)
           }
           undoManager.add(edit)
         }
@@ -96,7 +96,7 @@ object OutputsViewImpl {
 //            edits1
 //          }
           edits3.foreach(e => println(e.getPresentationName))
-          val editMain = EditRemoveOutput(objH(), key = key)
+          val editMain = EditRemoveProcOutput(objH(), key = key)
           CompoundEdit(edits3 :+ editMain, "Remove Output")
         }
         editOpt.foreach(undoManager.add)
@@ -118,7 +118,7 @@ object OutputsViewImpl {
       ggDrag        = new DragSourceButton() {
         protected def createTransferable(): Option[Transferable] =
           selection.headOption.map { case (key, view) =>
-            DragAndDrop.Transferable(OutputsView.flavor)(OutputsView.Drag[S](
+            DragAndDrop.Transferable(ProcOutputsView.flavor)(ProcOutputsView.Drag[S](
               workspace, objH, key))
           }
       }

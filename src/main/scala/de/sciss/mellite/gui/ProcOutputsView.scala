@@ -1,5 +1,5 @@
 /*
- *  OutputsView.scala
+ *  ProcOutputsView.scala
  *  (Mellite)
  *
  *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
@@ -19,16 +19,16 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.swing.View
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.DragAndDrop.Flavor
-import de.sciss.mellite.gui.impl.{OutputsViewImpl => Impl}
+import de.sciss.mellite.gui.impl.{ProcOutputsViewImpl => Impl}
 import de.sciss.synth.proc.{Proc, Workspace}
 
-object OutputsView {
+object ProcOutputsView {
   final case class Drag[S <: Sys[S]](workspace: Workspace[S], proc: stm.Source[S#Tx, Proc[S]], key: String)
 
   final val flavor: Flavor[Drag[_]] = DragAndDrop.internalFlavor
 
   def apply[S <: Sys[S]](obj: Proc[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
-                                           workspace: Workspace[S], undoManager: UndoManager): OutputsView[S] =
+                                           workspace: Workspace[S], undoManager: UndoManager): ProcOutputsView[S] =
     Impl(obj)
 }
-trait OutputsView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S]
+trait ProcOutputsView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S]

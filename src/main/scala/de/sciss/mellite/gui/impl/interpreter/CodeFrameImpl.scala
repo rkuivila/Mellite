@@ -70,7 +70,7 @@ object CodeFrameImpl {
     }
 
     implicit val undo = new UndoManagerImpl
-    val rightView = OutputsView[S](obj) // SCANS
+    val rightView = ProcOutputsView[S](obj) // SCANS
 
     // XXX TODO --- bottom could have play/power button similar to ensemble; even a meter
     make(obj, codeObj, code0, Some(handler), bottom = Nil, rightViewOpt = Some(rightView))

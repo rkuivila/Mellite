@@ -55,7 +55,7 @@ object FolderView {
   final case class SelectionChanged[S <: Sys[S]](view: FolderView[S], selection: Selection[S])
     extends Update[S]
 }
-trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with View.Editable[S] {
+trait FolderView[S <: Sys[S]] extends Model[FolderView.Update[S]] with View.Editable[S] with ViewHasWorkspace[S] {
   def selection: FolderView.Selection[S]
 
   def locations: Vec[ArtifactLocationObjView[S]]

@@ -26,7 +26,7 @@ object EnsembleView {
                                                 cursor: stm.Cursor[S], undoManager: UndoManager): EnsembleView[S] =
     Impl(ensemble)
 }
-trait EnsembleView[S <: Sys[S]] extends /* Model[EnsembleView.Update[S]] with */ View.Editable[S] {
+trait EnsembleView[S <: Sys[S]] extends View.Editable[S] with ViewHasWorkspace[S] {
   def folderView: FolderView[S]
 
   def ensemble(implicit tx: S#Tx): Ensemble[S]
