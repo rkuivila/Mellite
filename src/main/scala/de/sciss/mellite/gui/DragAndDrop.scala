@@ -20,10 +20,10 @@ import java.awt.datatransfer.{UnsupportedFlavorException, Transferable, DataFlav
 import collection.breakOut
 
 object DragAndDrop {
-  sealed trait Flavor[+A] extends DataFlavor
+  sealed trait Flavor[A] extends DataFlavor
 
   def internalFlavor[A](implicit ct: reflect.ClassTag[A]): Flavor[A] =
-    new DataFlavor(DataFlavor.javaJVMLocalObjectMimeType + ";class=\"" + ct.runtimeClass.getName + "\"") with Flavor[A]
+    new DataFlavor(s"""${DataFlavor.javaJVMLocalObjectMimeType};class="${ct.runtimeClass.getName}"""") with Flavor[A]
 
   object Transferable {
     /** Creates a transferable for one particular flavor. */

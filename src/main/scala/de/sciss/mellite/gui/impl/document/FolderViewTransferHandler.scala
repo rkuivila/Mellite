@@ -70,7 +70,7 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
     override def canImport(support: TransferSupport): Boolean =
       treeView.dropLocation.exists { tdl =>
         val locOk = tdl.index >= 0 || (tdl.column == 0 && !tdl.path.lastOption.exists(_.isLeaf))
-        locOk && {
+        val res = locOk && {
           if (support.isDataFlavorSupported(FolderView.SelectionFlavor)) {
             val data = support.getTransferable.getTransferData(FolderView.SelectionFlavor)
               .asInstanceOf[FolderView.SelectionDnDData[_]]
@@ -91,13 +91,20 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
             support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)
           }
         }
+        // println(s"canImport? $res")
+        res
       }
 
     override def importData(support: TransferSupport): Boolean =
       treeView.dropLocation.exists { tdl =>
+        // println("importData")
         val editOpt: Option[UndoableEdit] = {
           val isFolder  = support.isDataFlavorSupported(FolderView.SelectionFlavor)
           val isList    = support.isDataFlavorSupported(ListObjView.Flavor)
+
+          // println(s"importData -- isFolder $isFolder, isList $isList")
+          // println(support.getTransferable.getTransferDataFlavors.mkString("flavors: ", ", ", ""))
+
           val crossSessionFolder = isFolder &&
             (support.getTransferable.getTransferData(FolderView.SelectionFlavor)
               .asInstanceOf[FolderView.SelectionDnDData[_]].workspace != workspace)
@@ -105,13 +112,17 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
             (support.getTransferable.getTransferData(ListObjView.Flavor)
               .asInstanceOf[ListObjView.Drag[_]].workspace != workspace)
 
+          // println(s"importData -- crossSession ${crossSessionFolder | crossSessionList}")
+
           if (crossSessionFolder)
             copyFolderData(support)
           else if (crossSessionList) {
             copyListData(support)
           }
           else cursor.step { implicit tx =>
-            parentOption.flatMap { case (parent,idx) =>
+            val pOpt = parentOption
+            // println(s"parentOption.isDefined? ${pOpt.isDefined}")
+            pOpt.flatMap { case (parent,idx) =>
               if (isFolder)
                 insertFolderData(support, parent, idx)
               else if (isList) {
