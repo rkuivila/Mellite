@@ -78,7 +78,7 @@ object FScapeOutputsViewImpl {
         val seqTpe: Seq[(Obj.Type, Icon, String)] = ListObjView.factories.map { fact =>
           (fact.tpe, fact.icon, fact.humanName)
         } (breakOut)
-        val ggTpe = new ComboBox(seqTpe)
+        val ggTpe = new ComboBox(seqTpe.sortBy(_._3))
         // mein Gott, was fuer ein Terror
         val rDef = (new DefaultListCellRenderer).asInstanceOf[ListCellRenderer[AnyRef]]
         ggTpe.renderer = ListView.Renderer.wrap(new ListCellRenderer[(Obj.Type, Icon, String)] {
