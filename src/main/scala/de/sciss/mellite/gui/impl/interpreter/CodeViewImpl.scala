@@ -31,7 +31,7 @@ import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{View, defer, deferTx, requireEDT}
 import de.sciss.model.impl.ModelImpl
-import de.sciss.scalainterpreter.{CodePane, Interpreter, InterpreterPane}
+import de.sciss.scalainterpreter.{CodePane, Interpreter, InterpreterPane, Style}
 import de.sciss.swingplus.Implicits._
 import de.sciss.swingplus.SpinningProgressBar
 import de.sciss.syntaxpane.SyntaxDocument
@@ -113,6 +113,8 @@ object CodeViewImpl {
 
     private[this] val codeCfg = {
       val b = CodePane.Config()
+      // XXX TODO - should be a preferences option
+      b.style = if (Mellite.isDarkSkin) Style.BlueForest else Style.Light
       b.text = code.source
       // XXX TODO - cheesy hack
       b.keyMap += (KeyStrokes.menu1 + Key.Key1 -> (() => loadText(1)))
