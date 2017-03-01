@@ -15,8 +15,11 @@ package de.sciss.mellite.gui
 package impl
 package document
 
+import javax.swing.JComponent
 import javax.swing.undo.UndoableEdit
 
+import de.sciss.desktop
+import de.sciss.desktop.KeyStrokes.menu1
 import de.sciss.desktop.UndoManager
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
@@ -28,6 +31,7 @@ import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.mellite.gui.impl.component.CollectionViewImpl
 import de.sciss.synth.proc.Workspace
 
+import scala.swing.event.Key
 import scala.swing.{Action, Component}
 
 object AttrMapFrameImpl {
@@ -93,11 +97,22 @@ object AttrMapFrameImpl {
     extends WindowImpl[S](name.map(n => s"$n : Attributes"))
     with AttrMapFrame[S] {
 
+    override protected def style: desktop.Window.Style = desktop.Window.Auxiliary
+
     def contents: AttrMapView[S] = view.peer
 
     def component: Component = contents.component
 
     protected def selectedObjects: List[ObjView[S]] = contents.selection.map(_._2)
+
+    override protected def initGUI(): Unit = {
+      super.initGUI()
+
+      val c = component
+      val a = Action(null)(handleClose())
+      c.peer.getActionMap.put("click", a.peer)
+      c.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(menu1 + Key.W, "click")
+    }
 
     protected lazy val actionDelete: Action = Action(null) {
       val sel = contents.selection
