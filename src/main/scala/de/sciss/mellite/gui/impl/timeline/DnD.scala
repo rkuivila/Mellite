@@ -22,13 +22,16 @@ import java.awt.dnd.{DropTarget, DropTargetAdapter, DropTargetDragEvent, DropTar
 import javax.swing.TransferHandler._
 
 import de.sciss.audiowidgets.TimelineModel
+import de.sciss.desktop.Desktop
+import de.sciss.equal.Implicits._
 import de.sciss.file._
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.mellite.gui.DragAndDrop.Flavor
 import de.sciss.span.Span
-import de.sciss.synth.proc.{AudioCue, Proc, Workspace}
+import de.sciss.synth.io.AudioFile
+import de.sciss.synth.proc.{AudioCue, Proc, TimeRef, Workspace}
 
 import scala.swing.Component
 import scala.util.Try
@@ -91,19 +94,29 @@ trait DnD[S <: SSys[S]] {
       Drop(frame = frame, y = y, drag = d)
     }
 
+    private[this] var lastFile: AudioCue = _
+
     private def mkExtStringDrag(t: Transferable, isDragging: Boolean): Option[DnD.ExtAudioRegionDrag[S]] = {
       // stupid OS X doesn't give out the string data before drop actually happens
-      if (isDragging) {
+      if (isDragging && !Desktop.isLinux) {
         return Some(ExtAudioRegionDrag(workspace, file(""), Span(0, 0)))
       }
 
       val data  = t.getTransferData(DataFlavor.stringFlavor)
       val str   = data.toString
-      val arr   = str.split(":")
+      val arr   = str.split(java.io.File.pathSeparator)
       if (arr.length == 3) {
         Try {
           val path = file(arr(0))
-          val span = Span(arr(1).toLong, arr(2).toLong)
+          // cheesy caching so we read spec only once during drag
+          if (lastFile == null || (lastFile.artifact !== path)) {
+            val spec = AudioFile.readSpec(path)
+            lastFile = AudioCue(path, spec, 0L, 1.0)
+          }
+          val ratio = TimeRef.SampleRate / lastFile.spec.sampleRate
+          val start = (arr(1).toLong * ratio + 0.5).toLong
+          val stop  = (arr(2).toLong * ratio + 0.5).toLong
+          val span  = Span(start, stop)
           ExtAudioRegionDrag[S](workspace, path, span)
         } .toOption
       } else None
@@ -113,6 +126,7 @@ trait DnD[S <: SSys[S]] {
       val loc   = e.getLocation
       val drop  = mkDrop(drag, loc)
       updateDnD(Some(drop))
+      lastFile  = null
       e.acceptDrag(e.getDropAction) // COPY
     }
 
