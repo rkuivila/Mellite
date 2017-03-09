@@ -19,11 +19,11 @@ package timeline
 import java.awt.datatransfer.Transferable
 import javax.swing.TransferHandler.TransferSupport
 import javax.swing.table.{AbstractTableModel, TableColumnModel}
-import javax.swing.{DropMode, JComponent, TransferHandler}
+import javax.swing.{DropMode, JComponent, SwingUtilities, TransferHandler}
 
-import de.sciss.desktop
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{Menu, OptionPane, UndoManager}
+import de.sciss.{desktop, equal}
 import de.sciss.icons.raphael
 import de.sciss.lucre.expr.IntObj
 import de.sciss.lucre.stm
@@ -31,13 +31,16 @@ import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditTimelineInsertObj
+import de.sciss.span.Span
+import de.sciss.swingplus.{ComboBox, GroupPanel}
+import de.sciss.synth.proc
 import de.sciss.synth.proc.{Proc, Timeline, Workspace}
 
 import scala.annotation.switch
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.swing.Swing._
-import scala.swing.event.{MouseButtonEvent, MouseEvent, TableRowsSelected}
-import scala.swing.{Action, BorderPanel, BoxPanel, Button, Component, FlowPanel, Orientation, ScrollPane, Table}
+import scala.swing.event.{MouseButtonEvent, MouseEvent, SelectionChanged, TableRowsSelected}
+import scala.swing.{Action, BorderPanel, BoxPanel, Button, Component, FlowPanel, Label, Orientation, ScrollPane, Swing, Table, TextField}
 import scala.util.Try
 
 object GlobalProcsViewImpl {
@@ -125,7 +128,7 @@ object GlobalProcsViewImpl {
               }
             }
 
-          case (2, muted: Boolean) =>
+          case (2, _ /* muted */: Boolean) =>
             atomic { implicit tx =>
               ProcActions.toggleMute(pv.obj)
             }
@@ -159,21 +162,62 @@ object GlobalProcsViewImpl {
 
     private def addItemWithDialog(): Unit =
       groupHOpt.foreach { groupH =>
-        val op    = OptionPane.textInput(message = "Name:", initial = "Bus")
-        op.title  = "Add Global Proc"
-        op.show(None).foreach { name =>
-          // println(s"Add proc: $name")
-          atomic { implicit tx =>
-            ProcActions.insertGlobalRegion(groupH(), name, bus = None)
+        val lbName    = new Label("Name:")
+        val ggName    = new TextField("Bus", 12)
+        val lbPreset  = new Label("Preset:")
+        val ggPreset  = new ComboBox(GlobalProcPreset.all) {
+          listenTo(selection)
+        }
+        val flow      = new BoxPanel(Orientation.Vertical)
+        val op        = OptionPane(flow, OptionPane.Options.OkCancel, focus = Some(ggName))
+
+        var presetCtl: GlobalProcPreset.Controls = null
+
+        def updatePreset(): Unit = {
+          val preset = ggPreset.selection.item
+          if (flow.contents.size > 2) flow.contents.remove(1)
+          presetCtl = preset.mkControls()
+          flow.contents.insert(1, presetCtl.component)
+          Option(SwingUtilities.getWindowAncestor(op.peer)).foreach(_.pack())
+        }
+
+        ggPreset.reactions += {
+          case SelectionChanged(_) => updatePreset()
+        }
+        val pane      = new GroupPanel {
+          horizontal  = Seq(Par(lbName, lbPreset), Par(ggName, ggPreset))
+          vertical    = Seq(Par(Baseline)(lbName, ggName), Par(Baseline)(lbPreset, ggPreset))
+        }
+
+        flow.contents += pane
+        flow.contents += Swing.VStrut(4)
+
+        updatePreset()
+
+        val objType   = "Global Proc"
+        op.title      = s"Add $objType"
+        val opRes     = op.show(None)
+        import equal.Implicits._
+        if (opRes === OptionPane.Result.Ok) {
+          val name = ggName.text
+          val edit = atomic { implicit tx =>
+//            ProcActions.insertGlobalRegion(groupH(), name, bus = None)
+            val obj   = presetCtl.make[S]()
+            import proc.Implicits._
+            obj.name  = name
+            val group = groupH()
+            EditTimelineInsertObj(objType, group, Span.All, obj)
           }
+          undoManager.add(edit)
         }
       }
 
     private def removeProcs(pvs: Iterable[ProcObjView.Timeline[S]]): Unit =
       if (pvs.nonEmpty) groupHOpt.foreach { groupH =>
-        atomic { implicit tx =>
+        val editOpt = atomic { implicit tx =>
           ProcGUIActions.removeProcs(groupH(), pvs)
         }
+        editOpt.foreach(undoManager.add)
       }
 
     private def setColumnWidth(tcm: TableColumnModel, idx: Int, w: Int): Unit = {
@@ -349,11 +393,11 @@ object GlobalProcsViewImpl {
       if (hasGlobal) {
         import Menu._
         // val itSelect      = Item("select"        )("Select Connected Regions")(selectRegions())
-        val itDup         = Item("duplicate"     )("Duplicate")(duplicate(connect = false))
-        val itDupC        = Item("duplicate-con" )("Duplicate with Connections")(duplicate(connect = true))
-        val itConnect     = Item("connect"       )("Connect to Selected Regions")(connectToRegions())
+        val itDup         = Item("duplicate"     )("Duplicate"                       )(duplicate(connect = false))
+        val itDupC        = Item("duplicate-con" )("Duplicate with Connections"      )(duplicate(connect = true))
+        val itConnect     = Item("connect"       )("Connect to Selected Regions"     )(connectToRegions())
         val itDisconnect  = Item("disconnect"    )("Disconnect from Selected Regions")(disconnectFromSelectedRegions())
-        val itDisconnectA = Item("disconnect-all")("Disconnect from All Regions")(disconnectFromAllRegions())
+        val itDisconnectA = Item("disconnect-all")("Disconnect from All Regions"     )(disconnectFromAllRegions())
         if (groupHOpt.isEmpty) {
           itDup .disable()
           itDupC.disable()
