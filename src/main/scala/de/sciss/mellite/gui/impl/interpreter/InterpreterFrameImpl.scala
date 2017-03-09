@@ -61,7 +61,7 @@ private[gui] object InterpreterFrameImpl {
         // val txnId = txnCount
         // txnCount += 1
         Application.documentHandler.activeDocument.foreach {
-          case cd: Workspace.Confluent =>
+          case _: Workspace.Confluent =>
                         //            val txnTxt =
             //              s"""class _txnBody$txnId(implicit t: scala.concurrent.stm.InTxn) {
             //             |import MelliteDSL._

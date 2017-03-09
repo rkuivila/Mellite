@@ -70,10 +70,10 @@ object CodeFrameImpl {
     }
 
     implicit val undo = new UndoManagerImpl
-    val rightView = ProcOutputsView[S](obj) // SCANS
+    val rightView = ProcOutputsView [S](obj)
+    val viewPower = PlayToggleButton[S](obj)
 
-    // XXX TODO --- bottom could have play/power button similar to ensemble; even a meter ZBOOK
-    make(obj, codeObj, code0, Some(handler), bottom = Nil, rightViewOpt = Some(rightView))
+    make(obj, codeObj, code0, Some(handler), bottom = viewPower :: Nil, rightViewOpt = Some(rightView))
   }
 
   // ---- adapter for editing a Action's source ----
