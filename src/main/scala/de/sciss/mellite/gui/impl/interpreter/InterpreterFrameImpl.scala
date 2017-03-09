@@ -2,7 +2,7 @@
  *  InterpreterFrameImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -17,7 +17,7 @@ package impl
 package interpreter
 
 import de.sciss.desktop
-import de.sciss.scalainterpreter.{CodePane, Interpreter, InterpreterPane}
+import de.sciss.scalainterpreter.{CodePane, Interpreter, InterpreterPane, Style}
 import java.io.{File, FileInputStream, IOException}
 
 import scala.swing.event.Key
@@ -42,6 +42,8 @@ private[gui] object InterpreterFrameImpl {
 
   def apply(): InterpreterFrame = {
     val codeCfg = CodePane.Config()
+    // XXX TODO - should be a preferences option
+    codeCfg.style = if (Mellite.isDarkSkin) Style.BlueForest else Style.Light
 
     val file = new File(/* new File( "" ).getAbsoluteFile.getParentFile, */ "interpreter.txt")
     if (file.isFile) try {

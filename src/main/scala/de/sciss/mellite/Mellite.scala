@@ -2,7 +2,7 @@
  *  Mellite.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -54,7 +54,7 @@ object Mellite extends SwingApplicationImpl("Mellite") with Application with Ini
     val m     = clazz.getMethod(key)
     m.invoke(null).toString
   } catch {
-    case NonFatal(e) => "?"
+    case NonFatal(_) => "?"
   }
 
   lazy val isDarkSkin: Boolean = UIManager.getBoolean("dark-skin")

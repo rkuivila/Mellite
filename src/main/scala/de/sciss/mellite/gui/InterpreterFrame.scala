@@ -2,7 +2,7 @@
  *  InterpreterFrame.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -38,7 +38,7 @@ object InterpreterFrame {
 
     def confluentDocument: Workspace.Confluent = document match {
       case cd: Workspace.Confluent => cd
-      case other => sys.error("Not a confluent document")
+      case _ => sys.error("Not a confluent document")
     }
   }
 }

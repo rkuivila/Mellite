@@ -2,7 +2,7 @@
  *  CodeFrameImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -72,7 +72,7 @@ object CodeFrameImpl {
     implicit val undo = new UndoManagerImpl
     val rightView = ProcOutputsView[S](obj) // SCANS
 
-    // XXX TODO --- bottom could have play/power button similar to ensemble; even a meter
+    // XXX TODO --- bottom could have play/power button similar to ensemble; even a meter ZBOOK
     make(obj, codeObj, code0, Some(handler), bottom = Nil, rightViewOpt = Some(rightView))
   }
 

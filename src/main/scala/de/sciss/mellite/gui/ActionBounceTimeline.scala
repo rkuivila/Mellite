@@ -2,7 +2,7 @@
  *  ActionBounceTimeline.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -102,7 +102,7 @@ object ActionBounceTimeline {
       xs match {
         case (objT: Code.Obj[S]) :: tail =>
           val res1 = objT.value match {
-            case ft: Code.FileTransform => res :+ Labeled(tx.newHandle(objT))(objT.name)
+            case _: Code.FileTransform => res :+ Labeled(tx.newHandle(objT))(objT.name)
             case _ => res
           }
           loop(tail, res1)

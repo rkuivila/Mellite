@@ -2,7 +2,7 @@
  *  ProcActions.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -266,9 +266,9 @@ object ProcActions {
     val audioCueOff = if (gOffset == 0L) audioCue else {
       audioCue match {
         case AudioCue.Obj.Shift(peer, amt) =>
-          AudioCue.Obj.Shift(peer, LongObj.newVar[S](amt + gOffset))
+          AudioCue.Obj.Shift(peer , LongObj.newVar[S](amt + gOffset))
         case other =>
-          AudioCue.Obj.Shift(other, LongObj.newVar[S](gOffset))
+          AudioCue.Obj.Shift(other, LongObj.newVar[S](      gOffset))
       }
     }
 

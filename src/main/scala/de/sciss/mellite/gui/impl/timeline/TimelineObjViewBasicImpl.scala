@@ -2,7 +2,7 @@
  *  TimelineObjViewBasicImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -239,7 +239,7 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
           }
 
           val st      = if (selected) fadeState else TrackTool.NoFade
-          val fdIn    = fv.fadeIn  // XXX TODO: continue here. add delta
+          val fdIn    = fv.fadeIn  // (don't remember this comment: "continue here. add delta")
           val fdInFr  = fdIn.numFrames + st.deltaFadeIn
           if (fdInFr > 0) {
             val fw    = framesToScreen(fdInFr).toFloat

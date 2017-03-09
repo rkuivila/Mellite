@@ -2,7 +2,7 @@
  *  ListObjViewImpl.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -186,7 +186,6 @@ object ListObjViewImpl {
 
   private final val ggCheckBox = new CheckBox()
 
-  // XXX TODO -- Ex doesn't make sense, should always imply BooleanObj
   trait BooleanExprLike[S <: Sys[S]] extends ExprLike[S, Boolean, BooleanObj] {
     _: ListObjView[S] =>
 

@@ -2,7 +2,7 @@
  *  ProcGUIActions.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -63,7 +63,7 @@ object ProcGUIActions {
 
 //          deleteLinks(isInput = true )
 //          deleteLinks(isInput = false)
-          println("WARNING: ProcGUIActions.removeProcs - deleteLinks not yet implemented")  // SCAN
+          println("WARNING: ProcGUIActions.removeProcs - deleteLinks not yet implemented")  // XXX TODO -- ZBOOK
 
           edits.result()
 

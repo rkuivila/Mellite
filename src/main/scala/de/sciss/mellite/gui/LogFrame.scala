@@ -2,7 +2,7 @@
  *  LogFrame.scala
  *  (Mellite)
  *
- *  Copyright (c) 2012-2016 Hanns Holger Rutz. All rights reserved.
+ *  Copyright (c) 2012-2017 Hanns Holger Rutz. All rights reserved.
  *
  *  This software is published under the GNU General Public License v3+
  *
@@ -14,11 +14,11 @@
 package de.sciss.mellite
 package gui
 
-import de.sciss.desktop
-import de.sciss.scalainterpreter.Style
-import de.sciss.desktop.{LogPane, WindowHandler, Window}
-import de.sciss.desktop.impl.LogWindowImpl
 import java.awt.Font
+
+import de.sciss.desktop
+import de.sciss.desktop.impl.LogWindowImpl
+import de.sciss.desktop.{LogPane, Window, WindowHandler}
 
 object LogFrame {
   val horizontalPlacement   = 1.0f
@@ -28,8 +28,8 @@ object LogFrame {
   lazy val instance: LogFrame  = new LogWindowImpl with LogFrame { frame =>
     def handler: WindowHandler = Application.windowHandler
 
-    log.background  = Style.BlueForest.background
-    log.foreground  = Style.BlueForest.foreground
+//    log.background  = Style.BlueForest.background
+//    log.foreground  = Style.BlueForest.foreground
     log.font        = new Font(Font.MONOSPACED, Font.PLAIN, 12)
 
     pack()  // after changing font!
