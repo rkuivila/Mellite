@@ -23,7 +23,7 @@ import de.sciss.lucre.swing.deferTx
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.Curve
 
-import scala.swing._
+import scala.swing.Graphics2D
 
 trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with ObjViewImpl.Impl[S] {
   var trackIndex  : Int = _

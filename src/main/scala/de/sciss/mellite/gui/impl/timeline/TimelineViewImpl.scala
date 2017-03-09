@@ -746,9 +746,6 @@ object TimelineViewImpl {
           g.setStroke(strkOrig)
         }
       }
-
     }
-
   }
-
 }

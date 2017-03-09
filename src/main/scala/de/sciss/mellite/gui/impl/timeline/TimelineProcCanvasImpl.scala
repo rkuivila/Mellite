@@ -89,14 +89,14 @@ trait TimelineProcCanvasImpl[S <: Sys[S]] extends TimelineCanvasImpl with Timeli
     case ToolChanged(change) =>
       change.before.removeListener(toolListener)
       change.now   .addListener   (toolListener)
-    case VisualBoostChanged   (change) => repaint()
-    case FadeViewModeChanged  (change) => repaint()
-    case RegionViewModeChanged(change) => repaint()
+    case VisualBoostChanged   (_) => repaint()
+    case FadeViewModeChanged  (_) => repaint()
+    case RegionViewModeChanged(_) => repaint()
   }
   trackTools.currentTool.addListener(toolListener)
 
   private[this] val selectionListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
-    case SelectionModel.Update(added, removed) =>
+    case SelectionModel.Update(_ /* added */, _ /* removed */) =>
       canvasComponent.repaint() // XXX TODO: dirty rectangle optimization
   }
 
