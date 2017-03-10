@@ -72,9 +72,9 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     obj :: Nil
   }
 
-  type LinkMap[S <: stm.Sys[S]] = Map[String, Vec[ProcObjView.Link[S]]]
-  type ProcMap[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcObjView[S]]
-  type ScanMap[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
+//  type LinkMap[S <: stm.Sys[S]] = Map[String, Vec[ProcObjView.Link[S]]]
+//  type ProcMap[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, ProcObjView[S]]
+//  type ScanMap[S <: stm.Sys[S]] = IdentifierMap[S#ID, S#Tx, (String, stm.Source[S#Tx, S#ID])]
 
   type SelectionModel[S <: Sys[S]] = gui.SelectionModel[S, ProcObjView[S]]
 
@@ -775,7 +775,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  final case class Link[S <: stm.Sys[S]](target: ProcObjView.Timeline[S], targetKey: String)
+//  final case class Link[S <: stm.Sys[S]](target: ProcObjView.Timeline[S], targetKey: String)
 
   /** A data set for graphical display of a proc. Accessors and mutators should
     * only be called on the event dispatch thread. Mutators are plain variables

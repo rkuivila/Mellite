@@ -82,14 +82,14 @@ object TimelineViewImpl {
     // XXX TODO --- should use TransportView now!
 
     val viewMap = tx.newInMemoryIDMap[TimelineObjView[S]]
-    val scanMap = tx.newInMemoryIDMap[(String, stm.Source[S#Tx, S#ID])]
+//    val scanMap = tx.newInMemoryIDMap[(String, stm.Source[S#Tx, S#ID])]
 
     // ugly: the view dispose method cannot iterate over the procs
     // (other than through a GUI driven data structure). thus, it
     // only call pv.disposeGUI() and the procMap and scanMap must be
     // freed directly...
     disposables ::= viewMap
-    disposables ::= scanMap
+//    disposables ::= scanMap
     val transport = Transport[S](Mellite.auralSystem) // = proc.Transport [S, workspace.I](group, sampleRate = sampleRate)
     disposables ::= transport
     // val auralView = proc.AuralPresentation.run[S](transport, Mellite.auralSystem, Some(Mellite.sensorSystem))
@@ -102,7 +102,7 @@ object TimelineViewImpl {
     disposables ::= global
 
     val transportView = TransportView(transport, tlm, hasMillis = true, hasLoop = true)
-    val tlView = new Impl[S](timelineH, viewMap, scanMap, tlm, selectionModel, global, transportView, tx)
+    val tlView = new Impl[S](timelineH, viewMap, /* scanMap, */ tlm, selectionModel, global, transportView, tx)
 
     val obsTimeline = timeline.changed.react { implicit tx => upd =>
       upd.changes.foreach {
@@ -137,7 +137,7 @@ object TimelineViewImpl {
 
   private final class Impl[S <: Sys[S]](val timelineH: stm.Source[S#Tx, Timeline[S]],
                                         val viewMap: TimelineObjView.Map[S],
-                                        val scanMap: ProcObjView.ScanMap[S],
+//                                        val scanMap: ProcObjView.ScanMap[S],
                                         val timelineModel: TimelineModel,
                                         val selectionModel: SelectionModel[S, TimelineObjView[S]],
                                         val globalView: GlobalProcsView[S],
