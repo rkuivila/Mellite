@@ -25,6 +25,14 @@ import scala.language.higherKinds
 import scala.reflect.ClassTag
 
 object EditAttrMap {
+  def add[S <: Sys[S]](name: String, obj: Obj[S], key: String, value: Obj[S])
+                      (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit =
+    apply(name = s"Add $name", obj = obj, key = key, value = Some(value))
+
+  def remove[S <: Sys[S]](name: String, obj: Obj[S], key: String)
+                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit =
+    apply(name = s"Remove $name", obj = obj, key = key, value = None)
+
   def apply[S <: Sys[S]](name: String, obj: Obj[S], key: String, value: Option[Obj[S]])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val before    = obj.attr.get(key)

@@ -16,6 +16,7 @@ package gui
 package impl
 
 import javax.swing.Icon
+import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop
 import de.sciss.desktop.OptionPane
@@ -24,18 +25,19 @@ import de.sciss.fingertree.RangedSeq
 import de.sciss.icons.raphael
 import de.sciss.lucre.expr.{IntObj, SpanLikeObj}
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Disposable, IdentifierMap, Obj, TxnLike}
+import de.sciss.lucre.stm.{Disposable, Identifiable, IdentifierMap, Obj, TxnLike}
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.edit.{EditAttrMap, EditTimelineRemoveObj}
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.sonogram.{Overview => SonoOverview}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{AudioCue, AuxContext, ObjKeys, Proc, TimeRef, Workspace}
+import de.sciss.synth.proc.Timeline.Timed
+import de.sciss.synth.proc.{AudioCue, AuxContext, ObjKeys, Output, Proc, TimeRef, Workspace}
 
 import scala.annotation.switch
-import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.stm.{Ref, TSet}
 import scala.language.implicitConversions
 import scala.swing.Graphics2D
@@ -117,21 +119,73 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  private trait InputAttr[S <: Sys[S]] extends Disposable[S#Tx] {
-    protected def parent: ProcObjView.Timeline[S]
+  trait LinkTarget[S <: stm.Sys[S]] {
+    def remove()(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit]
+  }
 
-    // source views are updated by calling `copy` as they appear and disappear
-    protected final class Elem(val span: SpanLike, val source: Option[ProcObjView.Timeline[S]],
-                               obs: Disposable[S#Tx]) extends Disposable[S#Tx] {
-      def point: (Long, Long) = TimelineObjView.spanToPoint(span)
+  private final class LinkTargetTimeline[S <: Sys[S]](attr: InputAttrTimeline[S],
+                                                      spanH: stm.Source[S#Tx, SpanLikeObj[S]],
+                                                      objH : stm.Source[S#Tx, Obj[S]])
+    extends LinkTarget[S] {
 
-      def dispose()(implicit tx: S#Tx): Unit = obs.dispose()
+    def remove()(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+      val tl = attr.timeline
+      tl.modifiableOption.map { tlMod =>
+        val span = spanH()
+        val obj  = objH()
+        EditTimelineRemoveObj("Proc", tlMod, span, obj)
+      }
+    }
+  }
 
-      def copy(newSource: Option[ProcObjView.Timeline[S]]): Elem =
-        new Elem(span = span, source = newSource, obs = obs)
+  private final class LinkTargetOutput[S <: Sys[S]](attr: InputAttrOutput[S])
+    extends LinkTarget[S] {
+
+    def remove()(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+      // val out = attr.output
+      val obj  = attr.parent.obj
+      val edit = EditAttrMap.remove("Output", obj = obj, key = attr.key)
+      Some(edit)
+    }
+  }
+
+  /* Reference to an element referred to by an input-attr.
+   * Source views are updated by calling `copy` as they appear and disappear
+   */
+  private final class InputElem[S <: Sys[S]](val span: SpanLike, val source: Option[ProcObjView.Timeline[S]],
+                                             val target: LinkTarget[S], obs: Disposable[S#Tx], tx0: S#Tx)
+    extends Disposable[S#Tx] {
+
+    source.foreach(_.addTarget(target)(tx0))
+
+    def point: (Long, Long) = TimelineObjView.spanToPoint(span)
+
+    def dispose()(implicit tx: S#Tx): Unit = {
+      obs.dispose()
+      source.foreach(_.removeTarget(target))
     }
 
+    def copy(newSource: Option[ProcObjView.Timeline[S]])(implicit tx: S#Tx): InputElem[S] = {
+      source.foreach(_.removeTarget(target))
+      new InputElem(span = span, source = newSource, target = target, obs = obs, tx0 = tx)
+    }
+  }
+
+  private trait InputAttr[S <: Sys[S]] extends Disposable[S#Tx] {
+    // ---- abstract ----
+
+    def parent: ProcObjView.Timeline[S]
+    def key: String
+
     protected def viewMap: IdentifierMap[S#ID, S#Tx, Elem]
+
+    protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem]
+    protected def elemAddedEDT  (elem: Elem): Unit
+    protected def elemRemovedEDT(elem: Elem): Unit
+
+    // ---- impl ----
+
+    final type Elem = InputElem[S]
 
     // _not_ [this] because Scala 2.10 crashes!
     private /* [this] */ val viewSet = TSet.empty[Elem]  // because `viewMap.iterator` does not exist...
@@ -445,24 +499,25 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       g.setStroke(strkOrig)
     }
 
-    protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem]
-    protected def elemAddedEDT                 (elem: Elem): Unit
-    protected def elemRemovedEDT               (elem: Elem): Unit
-
     def dispose()(implicit tx: S#Tx): Unit = {
       import TxnLike.peer
       viewSet.foreach(_.dispose())
       viewSet.clear()
     }
 
-    final protected def addAttrIn(span: SpanLike, entryID: S#ID, value: Obj[S], fire: Boolean)
+    type Entry <: Identifiable[S#ID]
+
+    protected def mkTarget(entry: Entry)(implicit tx: S#Tx): LinkTarget[S]
+
+    final protected def addAttrIn(span: SpanLike, entry: Entry, value: Obj[S], fire: Boolean)
                                  (implicit tx: S#Tx): Unit =
       value match {
         case out: proc.Output[S] =>
           import TxnLike.peer
-          val idH      = tx.newHandle(entryID)
-          val viewInit = parent.context.getAux[ProcObjView.Timeline[S]](out.id)
-          val obs  = parent.context.observeAux[ProcObjView.Timeline[S]](out.id) { implicit tx => upd =>
+          val entryID   = entry.id
+          val idH       = tx.newHandle(entryID)
+          val viewInit  = parent.context.getAux    [ProcObjView.Timeline[S]](out.id)
+          val obs       = parent.context.observeAux[ProcObjView.Timeline[S]](out.id) { implicit tx => upd =>
             val id = idH()
             viewMap.get(id).foreach { elem1 =>
               // elem2 keeps the observer, so no `dispose` call here
@@ -470,6 +525,9 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
                 case AuxContext.Added(_, sourceView)  => elem1.copy(Some(sourceView))
                 case AuxContext.Removed(_)            => elem1.copy(None)
               }
+              elem1.source.foreach(_.removeTarget(elem1.target))
+              elem2.source.foreach(_.addTarget   (elem2.target))
+
               viewMap.put(id, elem2)  // replace
               viewSet.remove(elem1)
               viewSet.add   (elem2)
@@ -482,7 +540,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
               parent.fireRepaint()
             }
           }
-          val elem0 = new Elem(span, viewInit, obs)
+          val elem0 = new Elem(span, viewInit, mkTarget(entry), obs, tx)
           viewMap.put(entryID, elem0)
           viewSet.add(elem0)
           deferTx {
@@ -508,24 +566,35 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       }
   }
 
-  private final class InputAttrOutput[S <: Sys[S]](protected val parent: ProcObjView.Timeline[S],
+  private final class InputAttrOutput[S <: Sys[S]](val parent: ProcObjView.Timeline[S], val key: String,
                                                    out: proc.Output[S], tx0: S#Tx)
     extends InputAttr[S] {
 
     protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
     private[this] var _elem: Elem = _
 
+    type Entry = proc.Output[S]
+
+    private[this] val outH = tx0.newHandle(out)
+
+    def output(implicit tx: S#Tx): proc.Output[S] = outH()
+
     protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] = Iterator.single(_elem)
 
-    addAttrIn(span = Span.From(0L), entryID = out.id, value = out, fire = false)(tx0)
+    addAttrIn(span = Span.From(0L), entry = out, value = out, fire = false)(tx0)
 
     protected def elemAddedEDT  (elem: Elem): Unit = _elem = elem
     protected def elemRemovedEDT(elem: Elem): Unit = ()
+
+    protected def mkTarget(entry: proc.Output[S])(implicit tx: S#Tx): LinkTarget[S] =
+      new LinkTargetOutput[S](this)
   }
 
-  private final class InputAttrFolder[S <: Sys[S]](protected val parent: ProcObjView.Timeline[S],
+  private final class InputAttrFolder[S <: Sys[S]](val parent: ProcObjView.Timeline[S], val key: String,
                                                    f: proc.Folder[S], tx0: S#Tx)
     extends InputAttr[S] {
+
+    type Entry = Obj[S]
 
     protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
 
@@ -534,11 +603,22 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     protected def elemAddedEDT(elem: Elem): Unit = ???!
 
     protected def elemRemovedEDT(elem: Elem): Unit = ???!
+
+    protected def mkTarget(entry: Obj[S])(implicit tx: S#Tx): LinkTarget[S] = ???!
   }
 
-  private final class InputAttrTimeline[S <: Sys[S]](protected val parent: ProcObjView.Timeline[S],
+  private final class InputAttrTimeline[S <: Sys[S]](val parent: ProcObjView.Timeline[S], val key: String,
                                                      tl: proc.Timeline[S], tx0: S#Tx)
     extends InputAttr[S] {
+
+    type Entry = proc.Timeline.Timed[S]
+
+    protected def mkTarget(entry: Entry)(implicit tx: S#Tx): LinkTarget[S] =
+      new LinkTargetTimeline[S](this, tx.newHandle(entry.span), tx.newHandle(entry.value))
+
+    private[this] val tlH = tx0.newHandle(tl)
+
+    def timeline(implicit tx: S#Tx): proc.Timeline[S] = tlH()
 
     protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
 
@@ -548,16 +628,16 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     private[this] val observer: Disposable[S#Tx] =
       tl.changed.react { implicit tx => upd => upd.changes.foreach {
         case proc.Timeline.Added  (span  , entry) =>
-          addAttrIn(span, entryID = entry.id, value = entry.value, fire = true)
+          addAttrIn(span, entry = entry, value = entry.value, fire = true)
         case proc.Timeline.Removed(span  , entry) => removeAttrIn(span, entryID = entry.id)
         case proc.Timeline.Moved  (spanCh, entry) =>
           removeAttrIn(spanCh.before, entryID = entry.id)
-          addAttrIn   (spanCh.now, entryID = entry.id, value = entry.value, fire = true)
+          addAttrIn   (spanCh.now, entry = entry, value = entry.value, fire = true)
       }} (tx0)
 
     // init
     tl.iterator(tx0).foreach { case (span, xs) =>
-      xs.foreach(entry => addAttrIn(span, entryID = entry.id, value = entry.value, fire = false)(tx0))
+      xs.foreach(entry => addAttrIn(span, entry = entry, value = entry.value, fire = false)(tx0))
     }
 
     protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] =
@@ -586,6 +666,10 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     private[this] var audio         = Option.empty[AudioCue]
     private[this] var failedAcquire = false
     private[this] var sonogram      = Option.empty[SonoOverview]
+    private[this] val targets       = TSet.empty[LinkTarget[S]]
+
+    def addTarget   (tgt: LinkTarget[S])(implicit tx: S#Tx): Unit = targets.add   (tgt)(tx.peer)
+    def removeTarget(tgt: LinkTarget[S])(implicit tx: S#Tx): Unit = targets.remove(tgt)(tx.peer)
 
     def debugString: String = {
       val basic1S = s"span = $spanValue, trackIndex = $trackIndex, nameOption = $nameOption"
@@ -619,13 +703,13 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
       // attr.iterator.foreach { case (key, value) => addAttr(key, value) }
       import Proc.mainIn
-      attr.get(mainIn).foreach(addAttrIn(_, fire = false))
+      attr.get(mainIn).foreach(v => addAttrIn(key = mainIn, value = v, fire = false))
       disposables ::= attr.changed.react { implicit tx => upd => upd.changes.foreach {
-        case Obj.AttrAdded   (`mainIn`, value) => addAttrIn   (value)
+        case Obj.AttrAdded   (`mainIn`, value) => addAttrIn   (key = mainIn, value = value)
         case Obj.AttrRemoved (`mainIn`, value) => removeAttrIn(value)
         case Obj.AttrReplaced(`mainIn`, before, now) =>
           removeAttrIn(before)
-          addAttrIn   (now   )
+          addAttrIn(key = mainIn, value = now)
         case _ =>
       }}
 
@@ -661,11 +745,11 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       }
     }
 
-    private[this] def addAttrIn(value: Obj[S], fire: Boolean = true)(implicit tx: S#Tx): Unit = {
+    private[this] def addAttrIn(key: String, value: Obj[S], fire: Boolean = true)(implicit tx: S#Tx): Unit = {
       import TxnLike.peer
       val viewOpt: Option[InputAttr[S]] = value match {
         case tl: proc.Timeline[S] =>
-          val tlView  = new InputAttrTimeline(this, tl, tx)
+          val tlView  = new InputAttrTimeline(this, key, tl, tx)
           Some(tlView)
 
         case gr: proc.Grapheme[S] =>
@@ -673,11 +757,11 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
           ???!
 
         case f: proc.Folder[S] =>
-          val tlView  = new InputAttrFolder(this, f, tx)
+          val tlView  = new InputAttrFolder(this, key, f, tx)
           Some(tlView)
 
         case out: proc.Output[S] =>
-          val tlView  = new InputAttrOutput(this, out, tx)
+          val tlView  = new InputAttrOutput(this, key, out, tx)
           Some(tlView)
 
         case _ => None
@@ -806,6 +890,9 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     def pStart: Long
     def pStop : Long
+
+    def addTarget   (tgt: LinkTarget[S])(implicit tx: S#Tx): Unit
+    def removeTarget(tgt: LinkTarget[S])(implicit tx: S#Tx): Unit
   }
 }
 trait ProcObjView[S <: stm.Sys[S]] extends ObjView[S] {
