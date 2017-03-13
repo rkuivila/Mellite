@@ -22,8 +22,9 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.swing.requireEDT
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditTimelineRemoveObj
-import de.sciss.synth.proc.{Proc, Timeline}
+import de.sciss.synth.proc.Timeline
 
+import scala.collection.breakOut
 import scala.collection.immutable.{IndexedSeq => Vec}
 
 /** These actions require being executed on the EDT. */
@@ -38,34 +39,10 @@ object ProcGUIActions {
       val span  = pv0.span
       val obj   = pv0.obj
 
-      val editsUnlink: Vec[UndoableEdit] = (pv0, obj) match {
-        case (pv: ProcObjView.Timeline[S], procObj: Proc[S]) =>
-          val thisProc  = procObj
-          val edits     = Vector.newBuilder[UndoableEdit]
-
-//          def deleteLinks[A](isInput: Boolean): Unit = {
-//            val map = if (isInput) pv.inputs else pv.outputs
-//            map.foreach { case (thisKey, links) =>
-//              links.foreach{ case ProcObjView.Link(thatView, thatKey) =>
-//                val thisScans = if (isInput) thisProc.inputs else thisProc.outputs
-//                val thatProc  = thatView.obj
-//                val thatScans = if (isInput) thatProc.outputs else thatProc.inputs
-//                thisScans.get(thisKey).foreach { thisScan =>
-//                  thatScans.get(thatKey).foreach { thatScan =>
-//                    val source = if (isInput) thatScan else thisScan
-//                    val sink   = if (isInput) thisScan else thatScan
-//                    edits += Edits.removeLink(source = source, sink = sink)
-//                  }
-//                }
-//              }
-//            }
-//          }
-
-//          deleteLinks(isInput = true )
-//          deleteLinks(isInput = false)
-          println("WARNING: ProcGUIActions.removeProcs - deleteLinks not yet implemented")  // XXX TODO -- ZBOOK
-
-          edits.result()
+      val editsUnlink: Vec[UndoableEdit] = pv0 match {
+        case pv: ProcObjView.Timeline[S] =>
+          val edits     = pv.targets.flatMap(_.remove())(breakOut): Vec[UndoableEdit]
+          edits
 
         case _ => Vector.empty
       }
