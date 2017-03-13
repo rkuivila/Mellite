@@ -63,6 +63,8 @@ object TimelineFrameImpl {
               case pv: ProcObjView.Timeline[S] =>
                 println(pv.debugString)
                 println(_cursor.step { implicit tx => pv.obj.toString() })
+                println("--- targets ---")
+                println(_cursor.step { implicit tx => pv.targets.mkString("\n") })
               case _ =>
             }
           else {

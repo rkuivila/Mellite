@@ -28,14 +28,13 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Disposable, Identifiable, IdentifierMap, Obj, TxnLike}
 import de.sciss.lucre.swing.{Window, deferTx}
 import de.sciss.lucre.synth.Sys
-import de.sciss.mellite.gui.edit.{EditAttrMap, EditTimelineRemoveObj}
+import de.sciss.mellite.gui.edit.{EditAttrMap, EditFolderRemoveObj, EditTimelineRemoveObj}
 import de.sciss.mellite.gui.impl.timeline.TimelineObjViewImpl
 import de.sciss.sonogram.{Overview => SonoOverview}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.Timeline.Timed
-import de.sciss.synth.proc.{AudioCue, AuxContext, ObjKeys, Output, Proc, TimeRef, Workspace}
+import de.sciss.synth.proc.{AudioCue, AuxContext, ObjKeys, Proc, TimeRef, Workspace}
 
 import scala.annotation.switch
 import scala.concurrent.stm.{Ref, TSet}
@@ -128,6 +127,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
                                                       objH : stm.Source[S#Tx, Obj[S]])
     extends LinkTarget[S] {
 
+    override def toString: String = s"LinkTargetTimeline($attr)@${hashCode.toHexString}"
+
     def remove()(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       val tl = attr.timeline
       tl.modifiableOption.map { tlMod =>
@@ -141,11 +142,30 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   private final class LinkTargetOutput[S <: Sys[S]](attr: InputAttrOutput[S])
     extends LinkTarget[S] {
 
+    override def toString: String = s"LinkTargetOutput($attr)@${hashCode.toHexString}"
+
     def remove()(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
       // val out = attr.output
       val obj  = attr.parent.obj
       val edit = EditAttrMap.remove("Output", obj = obj, key = attr.key)
       Some(edit)
+    }
+  }
+
+  private final class LinkTargetFolder[S <: Sys[S]](attr: InputAttrFolder[S],
+                                                    objH : stm.Source[S#Tx, Obj[S]])
+    extends LinkTarget[S] {
+
+    override def toString: String = s"LinkTargetFolder($attr)@${hashCode.toHexString}"
+
+    def remove()(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+      val f     = attr.folder
+      val obj   = objH()
+      val index = f.indexOf(obj)
+      if (index < 0) None else {
+        val edit = EditFolderRemoveObj("Proc", f, index = index, child = obj)
+        Some(edit)
+      }
     }
   }
 
@@ -552,7 +572,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
         case _ => // no others supported ATM
       }
 
-    final protected def removeAttrIn(span: SpanLike, entryID: S#ID)(implicit tx: S#Tx): Unit =
+    final protected def removeAttrIn(/* span: SpanLike, */ entryID: S#ID)(implicit tx: S#Tx): Unit =
       viewMap.get(entryID).foreach { elem0 =>
         import TxnLike.peer
         viewMap.remove(entryID)
@@ -570,46 +590,79 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
                                                    out: proc.Output[S], tx0: S#Tx)
     extends InputAttr[S] {
 
-    protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
-    private[this] var _elem: Elem = _
+    override def toString: String = s"InputAttrOutput(parent = $parent, key = $key)"
 
     type Entry = proc.Output[S]
+
+    protected def mkTarget(entry: proc.Output[S])(implicit tx: S#Tx): LinkTarget[S] =
+      new LinkTargetOutput[S](this)
 
     private[this] val outH = tx0.newHandle(out)
 
     def output(implicit tx: S#Tx): proc.Output[S] = outH()
 
-    protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] = Iterator.single(_elem)
+    protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
 
-    addAttrIn(span = Span.From(0L), entry = out, value = out, fire = false)(tx0)
+    // EDT
+    private[this] var edtElem: Elem = _
 
-    protected def elemAddedEDT  (elem: Elem): Unit = _elem = elem
+    protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] = Iterator.single(edtElem)
+
+    protected def elemAddedEDT  (elem: Elem): Unit = edtElem = elem
     protected def elemRemovedEDT(elem: Elem): Unit = ()
 
-    protected def mkTarget(entry: proc.Output[S])(implicit tx: S#Tx): LinkTarget[S] =
-      new LinkTargetOutput[S](this)
+    // ---- init ----
+    addAttrIn(span = Span.From(0L), entry = out, value = out, fire = false)(tx0)
   }
 
   private final class InputAttrFolder[S <: Sys[S]](val parent: ProcObjView.Timeline[S], val key: String,
                                                    f: proc.Folder[S], tx0: S#Tx)
     extends InputAttr[S] {
 
+    override def toString: String = s"InputAttrFolder(parent = $parent, key = $key)"
+
     type Entry = Obj[S]
+
+    protected def mkTarget(entry: Obj[S])(implicit tx: S#Tx): LinkTarget[S] =
+      new LinkTargetFolder[S](this, tx.newHandle(entry))
+
+    private[this] val fH = tx0.newHandle(f)
+
+    def folder(implicit tx: S#Tx): proc.Folder[S] = fH()
 
     protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
 
-    protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] = ???!
+    // EDT
+    private[this] var edtSet = Set.empty[Elem]  // XXX TODO --- do we need a multi-set in theory?
 
-    protected def elemAddedEDT(elem: Elem): Unit = ???!
+    protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] = edtSet.iterator
 
-    protected def elemRemovedEDT(elem: Elem): Unit = ???!
+    protected def elemAddedEDT  (elem: Elem): Unit = edtSet += elem
+    protected def elemRemovedEDT(elem: Elem): Unit = edtSet -= elem
 
-    protected def mkTarget(entry: Obj[S])(implicit tx: S#Tx): LinkTarget[S] = ???!
+    private[this] val observer: Disposable[S#Tx] =
+      f.changed.react { implicit tx => upd => upd.changes.foreach {
+        case proc.Folder.Added  (_ /* index */, child) =>
+          addAttrIn(Span.From(0L), entry = child, value = child, fire = true)
+        case proc.Folder.Removed(_ /* index */, child) => removeAttrIn(entryID = child.id)
+      }} (tx0)
+
+    override def dispose()(implicit tx: S#Tx): Unit = {
+      super.dispose()
+      observer.dispose()
+    }
+
+    // ---- init ----
+    f.iterator(tx0).foreach { child =>
+      addAttrIn(Span.From(0L), entry = child, value = child, fire = false)(tx0)
+    }
   }
 
   private final class InputAttrTimeline[S <: Sys[S]](val parent: ProcObjView.Timeline[S], val key: String,
                                                      tl: proc.Timeline[S], tx0: S#Tx)
     extends InputAttr[S] {
+
+    override def toString: String = s"InputAttrTimeline(parent = $parent, key = $key)"
 
     type Entry = proc.Timeline.Timed[S]
 
@@ -623,33 +676,32 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     protected val viewMap: IdentifierMap[S#ID, S#Tx, Elem] = tx0.newInMemoryIDMap
 
     // EDT
-    private[this] var rangeSeq = RangedSeq.empty[Elem, Long](_.point, Ordering.Long)
+    private[this] var edtRange = RangedSeq.empty[Elem, Long](_.point, Ordering.Long)
+
+    protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] =
+      edtRange.filterOverlaps((start, stop))
+
+    protected def elemAddedEDT  (elem: Elem): Unit = edtRange += elem
+    protected def elemRemovedEDT(elem: Elem): Unit = edtRange -= elem
 
     private[this] val observer: Disposable[S#Tx] =
       tl.changed.react { implicit tx => upd => upd.changes.foreach {
         case proc.Timeline.Added  (span  , entry) =>
           addAttrIn(span, entry = entry, value = entry.value, fire = true)
-        case proc.Timeline.Removed(span  , entry) => removeAttrIn(span, entryID = entry.id)
+        case proc.Timeline.Removed(_ /* span */, entry) => removeAttrIn(/* span, */ entryID = entry.id)
         case proc.Timeline.Moved  (spanCh, entry) =>
-          removeAttrIn(spanCh.before, entryID = entry.id)
+          removeAttrIn(/* spanCh.before, */ entryID = entry.id)
           addAttrIn   (spanCh.now, entry = entry, value = entry.value, fire = true)
       }} (tx0)
-
-    // init
-    tl.iterator(tx0).foreach { case (span, xs) =>
-      xs.foreach(entry => addAttrIn(span, entry = entry, value = entry.value, fire = false)(tx0))
-    }
-
-    protected def elemOverlappingEDT(start: Long, stop: Long): Iterator[Elem] =
-      rangeSeq.filterOverlaps((start, stop))
-
-
-    protected def elemAddedEDT  (elem: Elem): Unit = rangeSeq += elem
-    protected def elemRemovedEDT(elem: Elem): Unit = rangeSeq -= elem
 
     override def dispose()(implicit tx: S#Tx): Unit = {
       super.dispose()
       observer.dispose()
+    }
+
+    // ---- init ----
+    tl.iterator(tx0).foreach { case (span, xs) =>
+      xs.foreach(entry => addAttrIn(span, entry = entry, value = entry.value, fire = false)(tx0))
     }
   }
 
@@ -666,10 +718,15 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     private[this] var audio         = Option.empty[AudioCue]
     private[this] var failedAcquire = false
     private[this] var sonogram      = Option.empty[SonoOverview]
-    private[this] val targets       = TSet.empty[LinkTarget[S]]
+    private[this] val _targets      = TSet.empty[LinkTarget[S]]
 
-    def addTarget   (tgt: LinkTarget[S])(implicit tx: S#Tx): Unit = targets.add   (tgt)(tx.peer)
-    def removeTarget(tgt: LinkTarget[S])(implicit tx: S#Tx): Unit = targets.remove(tgt)(tx.peer)
+    def addTarget   (tgt: LinkTarget[S])(implicit tx: S#Tx): Unit = _targets.add   (tgt)(tx.peer)
+    def removeTarget(tgt: LinkTarget[S])(implicit tx: S#Tx): Unit = _targets.remove(tgt)(tx.peer)
+
+    def targets(implicit tx: S#Tx): Set[LinkTarget[S]] = {
+      import TxnLike.peer
+      _targets.toSet
+    }
 
     def debugString: String = {
       val basic1S = s"span = $spanValue, trackIndex = $trackIndex, nameOption = $nameOption"
@@ -752,7 +809,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
           val tlView  = new InputAttrTimeline(this, key, tl, tx)
           Some(tlView)
 
-        case gr: proc.Grapheme[S] =>
+        case _: proc.Grapheme[S] =>
           println("addAttrIn: Grapheme")
           ???!
 
@@ -893,6 +950,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     def addTarget   (tgt: LinkTarget[S])(implicit tx: S#Tx): Unit
     def removeTarget(tgt: LinkTarget[S])(implicit tx: S#Tx): Unit
+
+    def targets(implicit tx: S#Tx): Set[LinkTarget[S]]
   }
 }
 trait ProcObjView[S <: stm.Sys[S]] extends ObjView[S] {

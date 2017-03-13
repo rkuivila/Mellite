@@ -40,7 +40,7 @@ trait TimelineView[S <: stm.Sys[S]] extends ViewHasWorkspace[S] with View.Editab
   def timelineModel   : TimelineModel
   def selectionModel  : TimelineObjView.SelectionModel[S]
 
-  def timelineH: stm.Source[S#Tx, Timeline[S]]
+  def timelineH: stm.Source[S#Tx , Timeline[S]]
   def timeline(implicit tx: S#Tx): Timeline[S]
 
   def canvas        : TimelineProcCanvas[S]

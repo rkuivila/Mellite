@@ -155,7 +155,7 @@ object TimelineViewImpl {
     import cursor.step
 
     private[this] var viewRange = RangedSeq.empty[TimelineObjView[S], Long]
-    private[this] val viewSet = TSet.empty[TimelineObjView[S]]
+    private[this] val viewSet   = TSet     .empty[TimelineObjView[S]]
 
     var canvas: TimelineProcCanvasImpl[S] = _
     val disposables = Ref(List.empty[Disposable[S#Tx]])

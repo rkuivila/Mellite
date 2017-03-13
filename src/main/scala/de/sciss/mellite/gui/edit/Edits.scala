@@ -126,20 +126,37 @@ object Edits {
     edit
   }
 
-  // SCAN
-//  def addLink[S <: Sys[S]](sourceKey: String, source: Scan[S], sinkKey: String, sink: Scan[S])
-//                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-//    log(s"Link $sourceKey / $source to $sinkKey / $sink")
-//    // source.addSink(Scan.Link.Scan(sink))
+  def addLink[S <: Sys[S]](source: Output[S], sink: Proc[S], key: String)
+                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
+    log(s"Link $source to $sink / $key")
+    // source.addSink(Scan.Link.Scan(sink))
 //    EditAddScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
-//  }
-//
-//  def removeLink[S <: Sys[S]](source: Scan[S], sink: Scan[S])
-//                             (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
-//    log(s"Unlink $source from $sink")
-//    // source.removeSink(Scan.Link.Scan(sink))
-//    EditRemoveScanLink(source = source /* , sourceKey */ , sink = sink /* , sinkKey */)
-//  }
+    sink.attr.get(key) match {
+      case Some(f: Folder[S]) =>
+        val index = f.size
+        EditFolderInsertObj("Link", parent = f, index = index, child = source)
+      case Some(other) =>
+        val f = Folder[S]
+        f.addLast(other)
+        f.addLast(source)
+        EditAttrMap("Add Link", obj = sink, key = key, value = Some(f))
+
+      case None =>
+        EditAttrMap("Add Link", obj = sink, key = key, value = Some(source))
+    }
+  }
+
+  def removeLink[S <: Sys[S]](link: Link[S])
+                             (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
+    log(s"Unlink $link")
+    val edit = link.sinkType match {
+      case SinkDirect() =>
+        EditAttrMap("Remove Link", obj = link.sink, key = link.key, value = None)
+      case SinkFolder(f, index) =>
+        EditFolderRemoveObj("Link", parent = f, index = index, child = link.source)
+    }
+    edit
+  }
 
   sealed trait SinkType[S <: Sys[S]]
   final case class SinkDirect[S <: Sys[S]]() extends SinkType[S]
@@ -171,27 +188,10 @@ object Edits {
     findLink(out = out, in = in).fold[Option[UndoableEdit]] {
       out.outputs.get(Proc.mainOut).map { out =>
         val key = Proc.mainIn
-        in.attr.get(key) match {
-          case Some(f: Folder[S]) =>
-            val index = f.size
-            EditFolderInsertObj("Link", parent = f, index = index, child = out)
-          case Some(other) =>
-            val f = Folder[S]
-            f.addLast(other)
-            f.addLast(out)
-            EditAttrMap("Add Link", obj = in, key = key, value = Some(f))
-
-          case None =>
-            EditAttrMap("Add Link", obj = in, key = key, value = Some(out))
-        }
+        addLink(source = out, sink = in, key = key)
       }
     } { link =>
-      val edit = link.sinkType match {
-        case SinkDirect() =>
-          EditAttrMap("Remove Link", obj = in, key = link.key, value = None)
-        case SinkFolder(f, index) =>
-          EditFolderRemoveObj("Link", parent = f, index = index, child = link.source)
-      }
+      val edit = removeLink(link)
       Some(edit)
     }
   }

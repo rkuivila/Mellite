@@ -125,7 +125,7 @@ object ProcActions {
     */
   def copy[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Obj[S] = {
     val context = Copy[S, S]
-    context.putHint(obj, Proc.hintFilterLinks, (_: Proc[S]) => false) // do not duplicate linked objects
+    // context.putHint(obj, Proc.hintFilterLinks, (_: Proc[S]) => false) // do not duplicate linked objects
     val res = context(obj)
     context.finish()
     res

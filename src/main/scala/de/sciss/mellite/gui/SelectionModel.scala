@@ -32,6 +32,6 @@ trait SelectionModel[S <: Sys[S], Repr]
   def -=(view: Repr): Unit
   def clear(): Unit
   def iterator: Iterator[Repr]
-  def isEmpty: Boolean
+  def isEmpty : Boolean
   def nonEmpty: Boolean
 }
