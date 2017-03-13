@@ -13,6 +13,7 @@
 
 package de.sciss.mellite
 
+import de.sciss.equal
 import de.sciss.lucre.expr
 import de.sciss.lucre.expr.{BooleanObj, DoubleObj, IntObj, LongObj, SpanLikeObj, StringObj}
 import de.sciss.lucre.stm.{Copy, Obj, Sys}
@@ -117,18 +118,25 @@ object ProcActions {
     }
   }
 
-  /** Makes a copy of a proc. Copies the graph and all attributes.
-    * Currently has no way to determine where the outputs of a `Proc` leading to,
-    * so they are not rewired.
+  /** Makes a copy of a proc. Copies the graph and all attributes,
+    * except for `Proc.mainIn`
     *
-    * @param obj the process to copy
+    * @param in  the process to copy
     */
-  def copy[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): Obj[S] = {
-    val context = Copy[S, S]
-    // context.putHint(obj, Proc.hintFilterLinks, (_: Proc[S]) => false) // do not duplicate linked objects
-    val res = context(obj)
+  def copy[S <: Sys[S]](in: Obj[S])(implicit tx: S#Tx): Obj[S] = {
+    val context = Copy.apply1[S, S]
+    val out     = context.copyPlain(in)
+    val attrIn  = in .attr
+    val attrOut = out.attr
+    attrIn.iterator.foreach { case (key, valueIn) =>
+      import equal.Implicits._
+      if (key !== Proc.mainIn) {
+        val valueOut = context(valueIn)
+        attrOut.put(key, valueOut)
+      }
+    }
     context.finish()
-    res
+    out
   }
 
   def setGain[S <: Sys[S]](proc: Proc[S], gain: Double)(implicit tx: S#Tx): Unit = {
