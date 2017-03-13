@@ -53,11 +53,11 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
     val trackHView = AttrCellView[S, Int, IntObj](attr, TimelineObjView.attrTrackHeight)
     disposables ::= trackHView.react { implicit tx => opt =>
       deferTx {
-        trackHeight = opt.getOrElse(4)
+        trackHeight = opt.getOrElse(TimelineView.DefaultTrackHeight)
       }
       fire(ObjView.Repaint(this))
     }
-    trackHeight   = trackHView().getOrElse(4)
+    trackHeight   = trackHView().getOrElse(TimelineView.DefaultTrackHeight)
 
     spanH         = tx.newHandle(span)
     spanValue     = span.value

@@ -105,13 +105,23 @@ object AttrMapFrameImpl {
 
     protected def selectedObjects: List[ObjView[S]] = contents.selection.map(_._2)
 
+    // XXX TODO --- there should be a general mechanism for
+    // binding actions even if the menu bar is absent.
     override protected def initGUI(): Unit = {
       super.initGUI()
 
-      val c = component
-      val a = Action(null)(handleClose())
-      c.peer.getActionMap.put("click", a.peer)
-      c.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(menu1 + Key.W, "click")
+      val c           = component
+      val actionClose = Action(null)(handleClose())
+      val am          = c.peer.getActionMap
+      val im          = c.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+      am.put("file.close", actionClose.peer)
+      im.put(menu1 + Key.W, "file.close")
+      undoRedoActions.foreach { case (undo, redo) =>
+        am.put("edit.undo", undo.peer)
+        im.put(MenuBar.keyUndo, "edit.undo")
+        am.put("edit.redo", redo.peer)
+        im.put(MenuBar.keyRedo, "edit.redo")
+      }
     }
 
     protected lazy val actionDelete: Action = Action(null) {

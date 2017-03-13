@@ -32,9 +32,11 @@ object TimelineView {
     Impl[S](group)
 
   /** Number of pixels for one unit of track height (convention). */
-  final val TrackScale  = 16
+  final val TrackScale  = 8
   /** Minimum duration in sample-frames for some cases where it should be greater than zero. */
   final val MinDur      = 32
+
+  final val DefaultTrackHeight = 8
 }
 trait TimelineView[S <: stm.Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] {
   def timelineModel   : TimelineModel

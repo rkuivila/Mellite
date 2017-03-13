@@ -15,13 +15,16 @@ package de.sciss.mellite
 package gui
 
 import java.net.URL
+import javax.swing.KeyStroke
 
-import de.sciss.desktop.{OptionPane, Desktop, KeyStrokes, Menu}
+import de.sciss.desktop.KeyStrokes.{menu1, shift}
+import de.sciss.desktop.{Desktop, KeyStrokes, Menu, OptionPane}
 import de.sciss.lucre.synth.Txn
 import de.sciss.osc
+
 import scala.concurrent.stm.TxnExecutor
 import scala.swing.Label
-import scala.swing.event.{MouseClicked, Key}
+import scala.swing.event.{Key, MouseClicked}
 
 object MenuBar {
   private def showAbout(): Unit = {
@@ -57,6 +60,9 @@ object MenuBar {
     OptionPane.message(message = lb.peer, icon = Logo.icon(128)).show(None, title = "About")
   }
 
+  def keyUndo: KeyStroke = menu1 + Key.Z
+  def keyRedo: KeyStroke = if (Desktop.isWindows) menu1 + Key.Y else menu1 + shift + Key.Z
+
   lazy val instance: Menu.Root = {
     import Menu._
     import KeyStrokes._
@@ -79,10 +85,8 @@ object MenuBar {
       // .add(Item("bounce-transform",   proxy("Bounce And Transform...",  (menu1 + shift + Key.B))))
     if (itQuit.visible) mFile.addLine().add(itQuit)
 
-    val keyRedo = if (Desktop.isWindows) menu1 + Key.Y else menu1 + shift + Key.Z
-
     val mEdit = Group("edit", "Edit")
-      .add(Item("undo",               proxy(("Undo",                    menu1 + Key.Z))))
+      .add(Item("undo",               proxy(("Undo",                    keyUndo))))
       .add(Item("redo",               proxy(("Redo",                    keyRedo))))
       .addLine()
       .add(Item("cut",                proxy(("Cut",                     menu1 + Key.X))))

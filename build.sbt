@@ -20,7 +20,7 @@ lazy val interpreterPaneVersion     = "1.7.5"
 lazy val syntaxPaneVersion          = "1.1.5"
 lazy val scalaColliderVersion       = "1.22.3"
 lazy val scalaColliderUGenVersion   = "1.16.4"
-lazy val lucreVersion               = "3.3.3-SNAPSHOT"
+lazy val lucreVersion               = "3.3.3"
 lazy val equalVersion               = "0.1.2"
 lazy val playJSONVersion            = "0.4.0"
 lazy val scalaColliderSwingVersion  = "1.32.2"
@@ -30,6 +30,7 @@ lazy val desktopVersion             = "0.7.3"
 lazy val sonogramVersion            = "1.9.1"
 lazy val raphaelIconsVersion        = "1.0.4"
 lazy val pdflitzVersion             = "1.2.2"
+lazy val webLaFVersion              = "2.1.2"
 lazy val subminVersion              = "0.2.1"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
@@ -189,6 +190,7 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component
       "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
       "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
+      "de.sciss" %  "weblaf"                          % webLaFVersion,              // look and feel
       "de.sciss" %  "submin"                          % subminVersion               // dark skin
     ),
     libraryDependencies ++= {
