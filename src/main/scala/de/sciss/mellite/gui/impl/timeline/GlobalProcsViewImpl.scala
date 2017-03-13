@@ -40,6 +40,7 @@ import de.sciss.synth.proc.{Proc, Timeline, Workspace}
 
 import scala.annotation.switch
 import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.concurrent.stm.TxnExecutor
 import scala.swing.Swing._
 import scala.swing.event.{MouseButtonEvent, MouseEvent, SelectionChanged, TableRowsSelected}
 import scala.swing.{Action, BorderPanel, BoxPanel, Button, Component, FlowPanel, Label, Orientation, ScrollPane, Swing, Table, TextField}
@@ -74,29 +75,28 @@ object GlobalProcsViewImpl {
 
     val selectionModel: SelectionModel[S, ProcObjView.Timeline[S]] = SelectionModel.apply
 
-//    private[this] val tlSelListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
-//      case SelectionModel.Update(_, _) =>
-//        val items = tlSelModel.iterator.flatMap {
-//          case pv: ProcObjView.Timeline[S] =>
-//            pv.outputs.flatMap {
-//              case (_, links) =>
-//                links.flatMap { link =>
-//                  val tgt = link.target
-//                  if (tgt.isGlobal) Some(tgt) else None
-//                }
-//            }
-//          case _ => Nil
-//
-//        } .toSet
-//
-//        val indices   = items.map(procSeq.indexOf(_))
-//        val rows      = table.selection.rows
-//        val toAdd     = indices.filterNot(rows   .contains)
-//        val toRemove  = rows   .filterNot(indices.contains)
-//
-//        if (toRemove.nonEmpty) rows --= toRemove
-//        if (toAdd   .nonEmpty) rows ++= toAdd
-//    }
+    private[this] val tlSelListener: SelectionModel.Listener[S, TimelineObjView[S]] = {
+      case SelectionModel.Update(_, _) =>
+        val items: Set[ProcObjView.Timeline[S]] = TxnExecutor.defaultAtomic { implicit itx =>
+          tlSelModel.iterator.flatMap {
+            case pv: ProcObjView.Timeline[S] =>
+              pv.targets.flatMap { link =>
+                val tgt = link.attr.parent
+                if (tgt.isGlobal) Some(tgt) else None
+              }
+
+            case _ => Nil
+          } .toSet
+        }
+
+        val indices   = items.map(procSeq.indexOf(_))
+        val rows      = table.selection.rows
+        val toAdd     = indices.diff(rows)
+        val toRemove  = rows   .diff(indices)
+
+        if (toRemove.nonEmpty) rows --= toRemove
+        if (toAdd   .nonEmpty) rows ++= toAdd
+    }
 
     // columns: name, gain, muted, bus
     private val tm = new AbstractTableModel {
@@ -208,7 +208,7 @@ object GlobalProcsViewImpl {
             import proc.Implicits._
             obj.name  = name
             val group = groupH()
-            EditTimelineInsertObj(objType, group, Span.All, obj)
+            EditTimelineInsertObj[S](objType, group, Span.All, obj)
           }
           undoManager.add(edit)
         }
@@ -373,8 +373,7 @@ object GlobalProcsViewImpl {
         case e: MouseButtonEvent if e.triggersPopup => showPopup(e)
       }
 
-      // SCAN
-      // tlSelModel addListener tlSelListener
+      tlSelModel addListener tlSelListener
 
       val pBottom = new BoxPanel(Orientation.Vertical)
       if (groupHOpt.isDefined) {
@@ -514,8 +513,7 @@ object GlobalProcsViewImpl {
     }
 
     def dispose()(implicit tx: S#Tx): Unit = deferTx {
-      // SCAN
-//      tlSelModel removeListener tlSelListener
+      tlSelModel removeListener tlSelListener
     }
 
     def add(proc: ProcObjView.Timeline[S]): Unit = {

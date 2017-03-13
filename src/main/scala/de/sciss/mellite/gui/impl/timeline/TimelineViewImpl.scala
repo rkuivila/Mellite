@@ -655,13 +655,13 @@ object TimelineViewImpl {
               case ad: DnD.AudioDragLike[S] =>
                 val track = screenToTrack(drop.y)
                 val span = Span(drop.frame, drop.frame + ad.selection.length)
-                drawDropFrame(g, track, 4, span, rubber = false)
+                drawDropFrame(g, track, TimelineView.DefaultTrackHeight, span, rubber = false)
 
               case DnD.ObjectDrag(_, view) /* : ObjView.Proc[S] */ =>
                 val track = screenToTrack(drop.y)
                 val length = defaultDropLength(view, inProgress = true)
                 val span = Span(drop.frame, drop.frame + length)
-                drawDropFrame(g, track, 4, span, rubber = false)
+                drawDropFrame(g, track, TimelineView.DefaultTrackHeight, span, rubber = false)
 
               case _ =>
             }

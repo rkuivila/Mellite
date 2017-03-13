@@ -119,10 +119,11 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   }
 
   trait LinkTarget[S <: stm.Sys[S]] {
+    def attr: InputAttr[S]
     def remove()(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit]
   }
 
-  private final class LinkTargetTimeline[S <: Sys[S]](attr: InputAttrTimeline[S],
+  private final class LinkTargetTimeline[S <: Sys[S]](val attr: InputAttrTimeline[S],
                                                       spanH: stm.Source[S#Tx, SpanLikeObj[S]],
                                                       objH : stm.Source[S#Tx, Obj[S]])
     extends LinkTarget[S] {
@@ -139,7 +140,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  private final class LinkTargetOutput[S <: Sys[S]](attr: InputAttrOutput[S])
+  private final class LinkTargetOutput[S <: Sys[S]](val attr: InputAttrOutput[S])
     extends LinkTarget[S] {
 
     override def toString: String = s"LinkTargetOutput($attr)@${hashCode.toHexString}"
@@ -152,7 +153,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  private final class LinkTargetFolder[S <: Sys[S]](attr: InputAttrFolder[S],
+  private final class LinkTargetFolder[S <: Sys[S]](val attr: InputAttrFolder[S],
                                                     objH : stm.Source[S#Tx, Obj[S]])
     extends LinkTarget[S] {
 
@@ -172,7 +173,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
   /* Reference to an element referred to by an input-attr.
    * Source views are updated by calling `copy` as they appear and disappear
    */
-  private final class InputElem[S <: Sys[S]](val span: SpanLike, val source: Option[ProcObjView.Timeline[S]],
+  private final class InputElem[S <: stm.Sys[S]](val span: SpanLike, val source: Option[ProcObjView.Timeline[S]],
                                              val target: LinkTarget[S], obs: Disposable[S#Tx], tx0: S#Tx)
     extends Disposable[S#Tx] {
 
@@ -191,11 +192,13 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     }
   }
 
-  private trait InputAttr[S <: Sys[S]] extends Disposable[S#Tx] {
-    // ---- abstract ----
-
+  trait InputAttr[S <: stm.Sys[S]] extends Disposable[S#Tx] {
     def parent: ProcObjView.Timeline[S]
     def key: String
+  }
+
+  private trait InputAttrImpl[S <: stm.Sys[S]] extends InputAttr[S] {
+    // ---- abstract ----
 
     protected def viewMap: IdentifierMap[S#ID, S#Tx, Elem]
 
@@ -588,7 +591,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   private final class InputAttrOutput[S <: Sys[S]](val parent: ProcObjView.Timeline[S], val key: String,
                                                    out: proc.Output[S], tx0: S#Tx)
-    extends InputAttr[S] {
+    extends InputAttrImpl[S] {
 
     override def toString: String = s"InputAttrOutput(parent = $parent, key = $key)"
 
@@ -617,7 +620,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   private final class InputAttrFolder[S <: Sys[S]](val parent: ProcObjView.Timeline[S], val key: String,
                                                    f: proc.Folder[S], tx0: S#Tx)
-    extends InputAttr[S] {
+    extends InputAttrImpl[S] {
 
     override def toString: String = s"InputAttrFolder(parent = $parent, key = $key)"
 
@@ -660,7 +663,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
   private final class InputAttrTimeline[S <: Sys[S]](val parent: ProcObjView.Timeline[S], val key: String,
                                                      tl: proc.Timeline[S], tx0: S#Tx)
-    extends InputAttr[S] {
+    extends InputAttrImpl[S] {
 
     override def toString: String = s"InputAttrTimeline(parent = $parent, key = $key)"
 
@@ -720,10 +723,10 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     private[this] var sonogram      = Option.empty[SonoOverview]
     private[this] val _targets      = TSet.empty[LinkTarget[S]]
 
-    def addTarget   (tgt: LinkTarget[S])(implicit tx: S#Tx): Unit = _targets.add   (tgt)(tx.peer)
-    def removeTarget(tgt: LinkTarget[S])(implicit tx: S#Tx): Unit = _targets.remove(tgt)(tx.peer)
+    def addTarget   (tgt: LinkTarget[S])(implicit tx: TxnLike): Unit = _targets.add   (tgt)(tx.peer)
+    def removeTarget(tgt: LinkTarget[S])(implicit tx: TxnLike): Unit = _targets.remove(tgt)(tx.peer)
 
-    def targets(implicit tx: S#Tx): Set[LinkTarget[S]] = {
+    def targets(implicit tx: TxnLike): Set[LinkTarget[S]] = {
       import TxnLike.peer
       _targets.toSet
     }
@@ -789,8 +792,8 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     private[this] def outputRemoved(out: proc.Output[S])(implicit tx: S#Tx): Unit =
       context.removeAux(out.id)
 
-    private[this] val attrInRef = Ref(Option.empty[InputAttr[S]])
-    private[this] var attrInEDT =     Option.empty[InputAttr[S]]
+    private[this] val attrInRef = Ref(Option.empty[InputAttrImpl[S]])
+    private[this] var attrInEDT =     Option.empty[InputAttrImpl[S]]
 
     private[this] def removeAttrIn(value: Obj[S])(implicit tx: S#Tx): Unit = {
       import TxnLike.peer
@@ -804,7 +807,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
 
     private[this] def addAttrIn(key: String, value: Obj[S], fire: Boolean = true)(implicit tx: S#Tx): Unit = {
       import TxnLike.peer
-      val viewOpt: Option[InputAttr[S]] = value match {
+      val viewOpt: Option[InputAttrImpl[S]] = value match {
         case tl: proc.Timeline[S] =>
           val tlView  = new InputAttrTimeline(this, key, tl, tx)
           Some(tlView)
@@ -948,10 +951,10 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     def pStart: Long
     def pStop : Long
 
-    def addTarget   (tgt: LinkTarget[S])(implicit tx: S#Tx): Unit
-    def removeTarget(tgt: LinkTarget[S])(implicit tx: S#Tx): Unit
+    def addTarget   (tgt: LinkTarget[S])(implicit tx: TxnLike): Unit
+    def removeTarget(tgt: LinkTarget[S])(implicit tx: TxnLike): Unit
 
-    def targets(implicit tx: S#Tx): Set[LinkTarget[S]]
+    def targets(implicit tx: TxnLike): Set[LinkTarget[S]]
   }
 }
 trait ProcObjView[S <: stm.Sys[S]] extends ObjView[S] {
