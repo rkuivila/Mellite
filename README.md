@@ -15,7 +15,7 @@ The `licenses` folder contains the license headers for all dependencies and tran
 
 The Mellite icon is based on the file [MELLITE Taillée Hongrie.jpg](https://de.wikipedia.org/wiki/Mellit#/media/File:MELLITE_Taill%C3%A9e_Hongrie.jpg), provided by Didier Descouens under CC BY 4.0 license.
 
-<img src="screenshot.png" alt="screenshot" width="696" height="436"/>
+<img src="site/src/paradox/assets/images/screenshot.png" alt="screenshot" width="696" height="436"/>
 
 ## download
 

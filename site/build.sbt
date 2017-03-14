@@ -43,6 +43,7 @@ val root = (project in file("."))
     git.gitCurrentBranch := "master",
     paradoxTheme         := Some(builtinParadoxTheme("generic")),
     paradoxProperties in Paradox ++= Map(
+      "image.base_url"          -> "assets/images",
       "snippet.base_dir"        -> s"${baseDirectory.value}/snippets/src/main"
       // "swingversion"            -> scalaColliderSwingVersion,
       // "extref.swingdl.base_url" -> s"https://github.com/Sciss/ScalaColliderSwing/releases/download/v${scalaColliderSwingVersion}/ScalaColliderSwing_${scalaColliderSwingVersion}%s"
