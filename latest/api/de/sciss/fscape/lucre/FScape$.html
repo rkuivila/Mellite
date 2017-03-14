@@ -1,44 +1,213 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>FScape - Mellite 2.6.0 API - de.sciss.fscape.lucre.FScape</title>
-          <meta name="description" content="FScape - Mellite 2.6.0 API - de.sciss.fscape.lucre.FScape" />
-          <meta name="keywords" content="FScape Mellite 2.6.0 API de.sciss.fscape.lucre.FScape" />
+          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <title>Mellite 2.10.0 API  - de.sciss.fscape.lucre.FScape</title>
+          <meta name="description" content="Mellite 2.10.0 API - de.sciss.fscape.lucre.FScape" />
+          <meta name="keywords" content="Mellite 2.10.0 API de.sciss.fscape.lucre.FScape" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
+      <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
-      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
-      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.panzoom.min.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.mousewheel.min.js"></script>
+      <script type="text/javascript" src="../../../../lib/index.js"></script>
+      <script type="text/javascript" src="../../../../index.js"></script>
+      <script type="text/javascript" src="../../../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
       
       <script type="text/javascript">
-         if(top === self) {
-            var url = '../../../../index.html';
-            var hash = 'de.sciss.fscape.lucre.FScape$';
-            var anchor = window.location.hash;
-            var anchor_opt = '';
-            if (anchor.length >= 1)
-              anchor_opt = '@' + anchor.substring(1);
-            window.location.href = url + '#' + hash + anchor_opt;
-         }
-   	  </script>
+        /* this variable can be used by the JS to determine the path to the root document */
+        var toRoot = '../../../../';
+      </script>
     
         </head>
-        <body class="value">
-      <div id="definition">
-        <a href="FScape.html" title="See companion trait"><img alt="Object/Trait" src="../../../../lib/object_to_trait_big.png" /></a>
-        <p id="owner"><a href="../../../package.html" class="extype" name="de">de</a>.<a href="../../package.html" class="extype" name="de.sciss">sciss</a>.<a href="../package.html" class="extype" name="de.sciss.fscape">fscape</a>.<a href="package.html" class="extype" name="de.sciss.fscape.lucre">lucre</a></p>
-        <h1><a href="FScape.html" title="See companion trait">FScape</a></h1><h3><span class="morelinks"><div>
-            Related Docs:
-            <a href="FScape.html" title="See companion trait">trait FScape</a>
-            | <a href="package.html" class="extype" name="de.sciss.fscape.lucre">package lucre</a>
-          </div></span></h3><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+        <body>
+      <div id="search">
+        <span id="doc-title">Mellite 2.10.0 API<span id="doc-version"></span></span>
+        <span class="close-results"><span class="left">&lt;</span> Back</span>
+        <div id="textfilter">
+          <span class="input">
+            <input autocapitalize="none" placeholder="Search" id="index-input" type="text" accesskey="/" />
+            <i class="clear material-icons"></i>
+            <i id="search-icon" class="material-icons"></i>
+          </span>
+        </div>
+    </div>
+      <div id="search-results">
+        <div id="search-progress">
+          <div id="progress-fill"></div>
+        </div>
+        <div id="results-content">
+          <div id="entity-results"></div>
+          <div id="member-results"></div>
+        </div>
+      </div>
+      <div id="content-scroll-container" style="-webkit-overflow-scrolling: touch;">
+        <div id="content-container" style="-webkit-overflow-scrolling: touch;">
+          <div id="subpackage-spacer">
+            <div id="packages">
+              <h1>Packages</h1>
+              <ul>
+                <li name="_root_.root" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="_root_"></a><a id="root:_root_"></a>
+      <span class="permalink">
+      <a href="index.html#_root_" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../../../index.html">
+              <span class="name">root</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="_root_.de" visbl="pub" class="indented1 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="de"></a><a id="de:de"></a>
+      <span class="permalink">
+      <a href="index.html#de" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../../index.html">
+              <span class="name">de</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="de.sciss" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="sciss"></a><a id="sciss:sciss"></a>
+      <span class="permalink">
+      <a href="../de/index.html#sciss" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../index.html">
+              <span class="name">sciss</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../index.html" class="extype" name="de">de</a></dd></dl></div>
+    </li><li name="de.sciss.fscape" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="fscape"></a><a id="fscape:fscape"></a>
+      <span class="permalink">
+      <a href="../../de/sciss/index.html#fscape" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../index.html">
+              <span class="name">fscape</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="de.sciss">sciss</a></dd></dl></div>
+    </li><li name="de.sciss.fscape.lucre" visbl="pub" class="indented4 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="lucre"></a><a id="lucre:lucre"></a>
+      <span class="permalink">
+      <a href="../../../de/sciss/fscape/index.html#lucre" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="index.html">
+              <span class="name">lucre</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="de.sciss.fscape">fscape</a></dd></dl></div>
+    </li><li name="de.sciss.fscape.lucre.graph" visbl="pub" class="indented5 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="graph"></a><a id="graph:graph"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/index.html#graph" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="graph/index.html">
+              <span class="name">graph</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="index.html" class="extype" name="de.sciss.fscape.lucre">lucre</a></dd></dl></div>
+    </li><li class="current-entities indented4">
+                        <a class="object" href="Cache$.html" title=""></a>
+                        <a class="trait" href="Cache.html" title=""></a>
+                        <a href="Cache.html" title="">
+                          Cache
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="" title=""></a>
+                        <a class="trait" href="FScape.html" title="The FScape trait is the basic entity representing a sound process."></a>
+                        <a href="FScape.html" title="The FScape trait is the basic entity representing a sound process.">
+                          FScape
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="GraphObj$.html" title=""></a>
+                        <a class="trait" href="GraphObj.html" title=""></a>
+                        <a href="GraphObj.html" title="">
+                          GraphObj
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="OutputGenView$.html" title=""></a>
+                        <a class="trait" href="OutputGenView.html" title=""></a>
+                        <a href="OutputGenView.html" title="">
+                          OutputGenView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="UGenGraphBuilder$.html" title=""></a>
+                        <a class="trait" href="UGenGraphBuilder.html" title=""></a>
+                        <a href="UGenGraphBuilder.html" title="">
+                          UGenGraphBuilder
+                        </a>
+                      </li>
+              </ul>
+            </div>
+          </div>
+          <div id="content">
+            <body class="object value">
+      <div id="definition">
+        <a href="FScape.html" title="See companion trait"><div class="big-circle object-companion-trait">o</div></a>
+        <p id="owner"><a href="../../../index.html" class="extype" name="de">de</a>.<a href="../../index.html" class="extype" name="de.sciss">sciss</a>.<a href="../index.html" class="extype" name="de.sciss.fscape">fscape</a>.<a href="index.html" class="extype" name="de.sciss.fscape.lucre">lucre</a></p>
+        <h1><a href="FScape.html" title="See companion trait">FScape</a><span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span></h1>
+        <h3><span class="morelinks"><div>
+            Companion <a href="FScape.html" title="See companion trait">trait FScape</a>
+          </div></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
@@ -50,40 +219,52 @@
         <span class="name">FScape</span><span class="result"> extends <a href="../../lucre/stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a></span>
       </span>
       </h4>
+
       
           <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
-          <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><a href="../../lucre/stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a>, <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a>, <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
+          <span class="toggle">
+            Linear Supertypes
+          </span>
+          <div class="superTypes hiddenContent"><a href="../../lucre/stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a>, <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a>, <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
       <div id="mbrsel">
-        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
-        <div id="order">
-              <span class="filtertype">Ordering</span>
-              <ol>
-                
-                <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By Inheritance</span></li>
-              </ol>
-            </div>
-        <div id="ancestors">
-                <span class="filtertype">Inherited<br />
-                </span>
-                <ol id="linearization">
-                  <li class="in" name="de.sciss.fscape.lucre.FScape"><span>FScape</span></li><li class="in" name="de.sciss.lucre.stm.Obj.Type"><span>Type</span></li><li class="in" name="de.sciss.lucre.stm.Elem.Type"><span>Type</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
-                </ol>
-              </div><div id="ancestors">
-            <span class="filtertype"></span>
+        <div class="toggle"></div>
+        <div id="memberfilter">
+          <i class="material-icons arrow"></i>
+          <span class="input">
+            <input id="mbrsel-input" placeholder="Filter all members" type="text" accesskey="/" />
+          </span>
+          <i class="clear material-icons"></i>
+        </div>
+        <div id="filterby">
+          <div id="order">
+            <span class="filtertype">Ordering</span>
             <ol>
-              <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show All</span></li>
+              
+              <li class="alpha in"><span>Alphabetic</span></li>
+              <li class="inherit out"><span>By Inheritance</span></li>
             </ol>
           </div>
-        <div id="visbl">
-            <span class="filtertype">Visibility</span>
-            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
-          </div>
+          <div class="ancestors">
+                  <span class="filtertype">Inherited<br />
+                  </span>
+                  <ol id="linearization">
+                    <li class="in" name="de.sciss.fscape.lucre.FScape"><span>FScape</span></li><li class="in" name="de.sciss.lucre.stm.Obj.Type"><span>Type</span></li><li class="in" name="de.sciss.lucre.stm.Elem.Type"><span>Type</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  </ol>
+                </div><div class="ancestors">
+              <span class="filtertype"></span>
+              <ol>
+                <li class="hideall out"><span>Hide All</span></li>
+                <li class="showall in"><span>Show All</span></li>
+              </ol>
+            </div>
+          <div id="visbl">
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+            </div>
+        </div>
       </div>
 
       <div id="template">
@@ -92,102 +273,201 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="de.sciss.fscape.lucre.FScape.Change" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="Change[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsAnyRef"></a>
-      <a id="Change[S&lt;:Sys[S]]:Change[S]"></a>
-      <h4 class="signature">
+              <ol><li name="de.sciss.fscape.lucre.FScape.Change" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Change[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsAnyRef"></a><a id="Change[S&lt;:Sys[S]]:Change[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#Change[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">sealed </span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="FScape$$Change.html"><span class="name">Change</span></a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Change.S">S</span>]</span>]</span><span class="result"> extends <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <a title="A change is either a state change, or a scan or a grapheme change" href="FScape$$Change.html">
+              <span class="name">Change</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Change.S">S</span>]</span>]</span><span class="result"> extends <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@Change[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsAnyRef" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <p class="shortcomment cmt">A change is either a state change, or a scan or a grapheme change</p>
-    </li><li name="de.sciss.fscape.lucre.FScape.Code" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="CodeextendsCodewithProductwithSerializable"></a>
-      <a id="Code:Code"></a>
-      <h4 class="signature">
+    </li><li name="de.sciss.fscape.lucre.FScape.Code" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CodeextendsCodewithProductwithSerializable"></a><a id="Code:Code"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#CodeextendsCodewithProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="FScape$$Code.html"><span class="name">Code</span></a><span class="params">(<span name="source">source: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="../../synth/proc/Code.html" class="extype" name="de.sciss.synth.proc.Code">synth.proc.Code</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a title="" href="FScape$$Code.html">
+              <span class="name">Code</span>
+            </a><span class="params">(<span name="source">source: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="../../synth/proc/Code.html" class="extype" name="de.sciss.synth.proc.Code">synth.proc.Code</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@CodeextendsCodewithProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape.GraphChange" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="GraphChange[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.Change[S]withProductwithSerializable"></a><a id="GraphChange[S&lt;:Sys[S]]:GraphChange[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#GraphChange[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.Change[S]withProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      
-    </li><li name="de.sciss.fscape.lucre.FScape.GraphChange" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="GraphChange[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.Change[S]withProductwithSerializable"></a>
-      <a id="GraphChange[S&lt;:Sys[S]]:GraphChange[S]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="FScape$$GraphChange.html"><span class="name">GraphChange</span></a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.GraphChange.S">S</span>]</span>]</span><span class="params">(<span name="change">change: <span class="extype" name="de.sciss.model.Change">model.Change</span>[<a href="../Graph.html" class="extype" name="de.sciss.fscape.Graph">Graph</a>]</span>)</span><span class="result"> extends <a href="FScape$$Change.html" class="extype" name="de.sciss.fscape.lucre.FScape.Change">Change</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.GraphChange.S">S</span>] with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a title="" href="FScape$$GraphChange.html">
+              <span class="name">GraphChange</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.GraphChange.S">S</span>]</span>]</span><span class="params">(<span name="change">change: <span class="extype" name="de.sciss.model.Change">model.Change</span>[<a href="../Graph.html" class="extype" name="de.sciss.fscape.Graph">Graph</a>]</span>)</span><span class="result"> extends <a href="FScape$$Change.html" class="extype" name="de.sciss.fscape.lucre.FScape.Change">Change</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.GraphChange.S">S</span>] with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@GraphChange[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.Change[S]withProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape.Output" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Output[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsGen[S]"></a><a id="Output[S&lt;:Sys[S]]:Output[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#Output[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsGen[S]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      
-    </li><li name="de.sciss.fscape.lucre.FScape.Rendering" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="Rendering[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsObservable[S#Tx,de.sciss.fscape.lucre.FScape.Rendering.State]withDisposable[S#Tx]"></a>
-      <a id="Rendering[S&lt;:Sys[S]]:Rendering[S]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a href="FScape$$Rendering.html"><span class="name">Rendering</span></a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Rendering.S">S</span>]</span>]</span><span class="result"> extends <a href="../../lucre/event/Observable.html" class="extype" name="de.sciss.lucre.event.Observable">Observable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">FScape.Rendering.S.Tx</span>, <a href="FScape$$Rendering$$State.html" class="extype" name="de.sciss.fscape.lucre.FScape.Rendering.State">State</a>] with <a href="../../lucre/stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">FScape.Rendering.S.Tx</span>]</span>
+        <a title="" href="FScape$$Output.html">
+              <span class="name">Output</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Output.S">S</span>]</span>]</span><span class="result"> extends <a href="../../synth/proc/Gen.html" class="extype" name="de.sciss.synth.proc.Gen">Gen</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Output.S">S</span>]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@Rendering[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsObservable[S#Tx,de.sciss.fscape.lucre.FScape.Rendering.State]withDisposable[S#Tx]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape.OutputAdded" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OutputAdded[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.OutputsChange[S]withProductwithSerializable"></a><a id="OutputAdded[S&lt;:Sys[S]]:OutputAdded[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#OutputAdded[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.OutputsChange[S]withProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      
-    </li><li name="de.sciss.fscape.lucre.FScape.Update" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Update[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsProductwithSerializable"></a>
-      <a id="Update[S&lt;:Sys[S]]:Update[S]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a href="FScape$$Update.html"><span class="name">Update</span></a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Update.S">S</span>]</span>]</span><span class="params">(<span name="proc">proc: <a href="FScape.html" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Update.S">S</span>]</span>, <span name="changes">changes: <span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<a href="FScape$$Change.html" class="extype" name="de.sciss.fscape.lucre.FScape.Change">Change</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Update.S">S</span>]]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+        <a title="" href="FScape$$OutputAdded.html">
+              <span class="name">OutputAdded</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.OutputAdded.S">S</span>]</span>]</span><span class="params">(<span name="output">output: <a href="FScape$$Output.html" class="extype" name="de.sciss.fscape.lucre.FScape.Output">Output</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.OutputAdded.S">S</span>]</span>)</span><span class="result"> extends <a href="FScape$$OutputsChange.html" class="extype" name="de.sciss.fscape.lucre.FScape.OutputsChange">OutputsChange</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.OutputAdded.S">S</span>] with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@Update[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsProductwithSerializable" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape.OutputRemoved" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="OutputRemoved[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.OutputsChange[S]withProductwithSerializable"></a><a id="OutputRemoved[S&lt;:Sys[S]]:OutputRemoved[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#OutputRemoved[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.OutputsChange[S]withProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="FScape$$OutputRemoved.html">
+              <span class="name">OutputRemoved</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.OutputRemoved.S">S</span>]</span>]</span><span class="params">(<span name="output">output: <a href="FScape$$Output.html" class="extype" name="de.sciss.fscape.lucre.FScape.Output">Output</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.OutputRemoved.S">S</span>]</span>)</span><span class="result"> extends <a href="FScape$$OutputsChange.html" class="extype" name="de.sciss.fscape.lucre.FScape.OutputsChange">OutputsChange</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.OutputRemoved.S">S</span>] with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape.Outputs" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Outputs[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsAnyRef"></a><a id="Outputs[S&lt;:Sys[S]]:Outputs[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#Outputs[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="FScape$$Outputs.html">
+              <span class="name">Outputs</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Outputs.S">S</span>]</span>]</span><span class="result"> extends <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape.OutputsChange" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="OutputsChange[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.Change[S]"></a><a id="OutputsChange[S&lt;:Sys[S]]:OutputsChange[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#OutputsChange[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsFScape.Change[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="An output change is either adding or removing an output" href="FScape$$OutputsChange.html">
+              <span class="name">OutputsChange</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.OutputsChange.S">S</span>]</span>]</span><span class="result"> extends <a href="FScape$$Change.html" class="extype" name="de.sciss.fscape.lucre.FScape.Change">Change</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.OutputsChange.S">S</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">An output change is either adding or removing an output</p>
+    </li><li name="de.sciss.fscape.lucre.FScape.Rendering" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Rendering[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsObservable[S#Tx,de.sciss.fscape.lucre.FScape.Rendering.State]withDisposable[S#Tx]"></a><a id="Rendering[S&lt;:Sys[S]]:Rendering[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#Rendering[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsObservable[S#Tx,de.sciss.fscape.lucre.FScape.Rendering.State]withDisposable[S#Tx]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="FScape$$Rendering.html">
+              <span class="name">Rendering</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Rendering.S">S</span>]</span>]</span><span class="result"> extends <a href="../../lucre/event/Observable.html" class="extype" name="de.sciss.lucre.event.Observable">Observable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">FScape.Rendering.S.Tx</span>, <a href="FScape$$Rendering$.html#State=de.sciss.synth.proc.GenView.State" class="extmbr" name="de.sciss.fscape.lucre.FScape.Rendering.State">State</a>] with <a href="../../lucre/stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">FScape.Rendering.S.Tx</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape.Update" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Update[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsProductwithSerializable"></a><a id="Update[S&lt;:Sys[S]]:Update[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#Update[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="An update is a sequence of changes" href="FScape$$Update.html">
+              <span class="name">Update</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Update.S">S</span>]</span>]</span><span class="params">(<span name="proc">proc: <a href="FScape.html" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Update.S">S</span>]</span>, <span name="changes">changes: <span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<a href="FScape$$Change.html" class="extype" name="de.sciss.fscape.lucre.FScape.Change">Change</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.Update.S">S</span>]]</span>)</span><span class="result"> extends <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
       <p class="shortcomment cmt">An update is a sequence of changes</p>
     </li></ol>
             </div>
 
         
 
-        <div id="values" class="values members">
+        <div class="values members">
               <h3>Value Members</h3>
-              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:Any):Boolean"></a>
-      <a id="!=(Any):Boolean"></a>
-      <h4 class="signature">
+              <ol>
+                <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#!=(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -195,16 +475,15 @@
       <span class="symbol">
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@!=(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html###():Int" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="##():Int"></a>
-      <a id="##():Int"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -212,16 +491,15 @@
       <span class="symbol">
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@##():Int" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#==(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:Any):Boolean"></a>
-      <a id="==(Any):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -229,50 +507,15 @@
       <span class="symbol">
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@==(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.fscape.lucre.FScape.Code" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Code"></a>
-      <a id="Code:Code"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="FScape$$Code$.html"><span class="name">Code</span></a><span class="result"> extends <a href="../../synth/proc/Code$$Type.html" class="extype" name="de.sciss.synth.proc.Code.Type">Type</a> with <span class="extype" name="scala.Serializable">Serializable</span></span>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@Code" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+    </li><li name="de.sciss.fscape.lucre.FScape#apply" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="apply[S&lt;:de.sciss.lucre.stm.Sys[S]](implicittx:S#Tx):de.sciss.fscape.lucre.FScape[S]"></a><a id="apply[S&lt;:Sys[S]](FScape.apply.S.Tx):FScape[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#apply[S&lt;:de.sciss.lucre.stm.Sys[S]](implicittx:S#Tx):de.sciss.fscape.lucre.FScape[S]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      
-    </li><li name="de.sciss.fscape.lucre.FScape.Rendering" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Rendering"></a>
-      <a id="Rendering:Rendering"></a>
-      <h4 class="signature">
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a href="FScape$$Rendering$.html"><span class="name">Rendering</span></a>
-      </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@Rendering" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
-      
-    </li><li name="de.sciss.fscape.lucre.FScape#apply" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="apply[S&lt;:de.sciss.lucre.stm.Sys[S]](implicittx:S#Tx):de.sciss.fscape.lucre.FScape[S]"></a>
-      <a id="apply[S&lt;:Sys[S]](FScape.apply.S.Tx):FScape[S]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -280,16 +523,15 @@
       <span class="symbol">
         <span class="name">apply</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.apply.S">S</span>]</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">FScape.apply.S.Tx</span></span>)</span><span class="result">: <a href="FScape.html" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.apply.S">S</span>]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@apply[S&lt;:de.sciss.lucre.stm.Sys[S]](implicittx:S#Tx):de.sciss.fscape.lucre.FScape[S]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#asInstanceOf[T0]:T0" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      
-    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="asInstanceOf[T0]:T0"></a>
-      <a id="asInstanceOf[T0]:T0"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -297,16 +539,15 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@asInstanceOf[T0]:T0" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="de.sciss.fscape.lucre.FScape#attrSource" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="attrSource:String(&quot;graph-source&quot;)"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#attrSource:String(&quot;graph-source&quot;)" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="de.sciss.fscape.lucre.FScape#attrSource" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="attrSource:String(&quot;graph-source&quot;)"></a>
-      <a id="attrSource:String(&quot;graph-source&quot;)"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">val</span>
@@ -314,28 +555,23 @@
       <span class="symbol">
         <span class="name">attrSource</span><span class="result">: String(&quot;graph-source&quot;)</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@attrSource:String(&quot;graph-source&quot;)" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <p class="shortcomment cmt">Source code of the graph function.</p>
+    </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a><a id="clone():AnyRef"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#clone():Object" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <p class="shortcomment cmt">Source code of the graph function.</p>
-    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="clone():Object"></a>
-      <a id="clone():AnyRef"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@clone():Object" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -343,27 +579,29 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="eq(x$1:AnyRef):Boolean"></a>
-      <a id="eq(AnyRef):Boolean"></a>
-      <h4 class="signature">
+    </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#equals(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="equals(x$1:Any):Boolean"></a>
-      <a id="equals(Any):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -371,16 +609,15 @@
       <span class="symbol">
         <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@equals(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#finalize():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="finalize():Unit"></a>
-      <a id="finalize():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -388,11 +625,7 @@
       <span class="symbol">
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@finalize():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -400,10 +633,29 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="de.sciss.fscape.lucre.FScape#genViewFactory" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="genViewFactory(config:de.sciss.fscape.stream.Control.Config):de.sciss.synth.proc.GenView.Factory"></a><a id="genViewFactory(Config):Factory"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#genViewFactory(config:de.sciss.fscape.stream.Control.Config):de.sciss.synth.proc.GenView.Factory" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">genViewFactory</span><span class="params">(<span name="config">config: <span class="extype" name="de.sciss.fscape.stream.Control.Config">Config</span> = <span class="symbol"><span class="name"><a href="../../../index.html">Control.Config()</a></span></span></span>)</span><span class="result">: <a href="../../synth/proc/GenView$$Factory.html" class="extype" name="de.sciss.synth.proc.GenView.Factory">Factory</a></span>
+      </span>
+      
+      
+    </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
-      <a id="getClass():Class[_]"></a>
-      <h4 class="signature">
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#getClass():Class[_]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -411,16 +663,15 @@
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@getClass():Class[_]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#hashCode():Int" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="hashCode():Int"></a>
-      <a id="hashCode():Int"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -428,16 +679,15 @@
       <span class="symbol">
         <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@hashCode():Int" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="de.sciss.fscape.lucre.FScape#init" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="init():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#init():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.fscape.lucre.FScape#init" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="init():Unit"></a>
-      <a id="init():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -445,18 +695,17 @@
       <span class="symbol">
         <span class="name">init</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@init():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <p class="shortcomment cmt">Registers this type and the graph object type.</p><div class="fullcomment"><div class="comment cmt"><p>Registers this type and the graph object type.
 You can use this call to register all FScape components.
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a> → <a href="../../lucre/stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a> → <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
-    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
-      <a id="isInstanceOf[T0]:Boolean"></a>
-      <h4 class="signature">
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#isInstanceOf[T0]:Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -464,33 +713,31 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ne(x$1:AnyRef):Boolean"></a>
-      <a id="ne(AnyRef):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#notify():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="notify():Unit"></a>
-      <a id="notify():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -498,16 +745,15 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@notify():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#notifyAll():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="notifyAll():Unit"></a>
-      <a id="notifyAll():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -515,16 +761,15 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@notifyAll():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="de.sciss.fscape.lucre.FScape#read" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="read[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.fscape.lucre.FScape[S]"></a><a id="read[S&lt;:Sys[S]](DataInput,FScape.read.S.Acc)(FScape.read.S.Tx):FScape[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#read[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.fscape.lucre.FScape[S]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="de.sciss.fscape.lucre.FScape#read" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="read[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.fscape.lucre.FScape[S]"></a>
-      <a id="read[S&lt;:Sys[S]](DataInput,FScape.read.S.Acc)(FScape.read.S.Tx):FScape[S]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -532,16 +777,15 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">read</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.read.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">FScape.read.S.Acc</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">FScape.read.S.Tx</span></span>)</span><span class="result">: <a href="FScape.html" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.read.S">S</span>]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@read[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.fscape.lucre.FScape[S]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape#readIdentifiedObj" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="readIdentifiedObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]"></a><a id="readIdentifiedObj[S&lt;:Sys[S]](DataInput,FScape.readIdentifiedObj.S.Acc)(FScape.readIdentifiedObj.S.Tx):Obj[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#readIdentifiedObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      
-    </li><li name="de.sciss.fscape.lucre.FScape#readIdentifiedObj" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="readIdentifiedObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]"></a>
-      <a id="readIdentifiedObj[S&lt;:Sys[S]](DataInput,FScape.readIdentifiedObj.S.Acc)(FScape.readIdentifiedObj.S.Tx):Obj[S]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -549,16 +793,15 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">readIdentifiedObj</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.readIdentifiedObj.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">FScape.readIdentifiedObj.S.Acc</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">FScape.readIdentifiedObj.S.Tx</span></span>)</span><span class="result">: <a href="../../lucre/stm/Obj.html" class="extype" name="de.sciss.lucre.stm.Obj">Obj</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.readIdentifiedObj.S">S</span>]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@readIdentifiedObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a> → <a href="../../lucre/stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a> → <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.stm.Obj.Type#readObj" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="readObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]"></a><a id="readObj[S&lt;:Sys[S]](DataInput,lucre.stm.Obj.Type.readObj.S.Acc)(lucre.stm.Obj.Type.readObj.S.Tx):Obj[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#readObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a> → <a href="../../lucre/stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a> → <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
-    </li><li name="de.sciss.lucre.stm.Obj.Type#readObj" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="readObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]"></a>
-      <a id="readObj[S&lt;:Sys[S]](DataInput,lucre.stm.Obj.Type.readObj.S.Acc)(lucre.stm.Obj.Type.readObj.S.Tx):Obj[S]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -566,16 +809,15 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">readObj</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.stm.Obj.Type.readObj.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">lucre.stm.Obj.Type.readObj.S.Acc</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">lucre.stm.Obj.Type.readObj.S.Tx</span></span>)</span><span class="result">: <a href="../../lucre/stm/Obj.html" class="extype" name="de.sciss.lucre.stm.Obj">Obj</a>[<span class="extype" name="de.sciss.lucre.stm.Obj.Type.readObj.S">S</span>]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@readObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../lucre/stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a> → <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
+    </li><li name="de.sciss.fscape.lucre.FScape#serializer" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="serializer[S&lt;:de.sciss.lucre.stm.Sys[S]]:de.sciss.serial.Serializer[S#Tx,S#Acc,de.sciss.fscape.lucre.FScape[S]]"></a><a id="serializer[S&lt;:Sys[S]]:Serializer[FScape.serializer.S.Tx,FScape.serializer.S.Acc,FScape[S]]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#serializer[S&lt;:de.sciss.lucre.stm.Sys[S]]:de.sciss.serial.Serializer[S#Tx,S#Acc,de.sciss.fscape.lucre.FScape[S]]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../lucre/stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a> → <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
-    </li><li name="de.sciss.fscape.lucre.FScape#serializer" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="serializer[S&lt;:de.sciss.lucre.stm.Sys[S]]:de.sciss.serial.Serializer[S#Tx,S#Acc,de.sciss.fscape.lucre.FScape[S]]"></a>
-      <a id="serializer[S&lt;:Sys[S]]:Serializer[FScape.serializer.S.Tx,FScape.serializer.S.Acc,FScape[S]]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">implicit </span>
         <span class="kind">def</span>
@@ -583,16 +825,15 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">serializer</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.serializer.S">S</span>]</span>]</span><span class="result">: <span class="extype" name="de.sciss.serial.Serializer">Serializer</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">FScape.serializer.S.Tx</span>, <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">FScape.serializer.S.Acc</span>, <a href="FScape.html" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a>[<span class="extype" name="de.sciss.fscape.lucre.FScape.serializer.S">S</span>]]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@serializer[S&lt;:de.sciss.lucre.stm.Sys[S]]:de.sciss.serial.Serializer[S#Tx,S#Acc,de.sciss.fscape.lucre.FScape[S]]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      
-    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
-      <a id="synchronized[T0](⇒T0):T0"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -600,16 +841,15 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#toString():String" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="toString():String"></a>
-      <a id="toString():String"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -617,16 +857,15 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@toString():String" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="de.sciss.fscape.lucre.FScape#typeID" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="typeID:Int(65547)"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#typeID:Int(65547)" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.fscape.lucre.FScape#typeID" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="typeID:Int(65547)"></a>
-      <a id="typeID:Int(65547)"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">val</span>
@@ -634,16 +873,15 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">typeID</span><span class="result">: Int(65547)</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@typeID:Int(65547)" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a> → <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#wait():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a> → <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
-    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="wait():Unit"></a>
-      <a id="wait():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -651,11 +889,7 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@wait():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -663,10 +897,13 @@ You can use this call to register all FScape components.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
-      <a id="wait(Long,Int):Unit"></a>
-      <h4 class="signature">
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -674,11 +911,7 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -686,10 +919,13 @@ You can use this call to register all FScape components.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="wait(x$1:Long):Unit"></a>
-      <a id="wait(Long):Unit"></a>
-      <h4 class="signature">
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#wait(x$1:Long):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -697,11 +933,7 @@ You can use this call to register all FScape components.
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.fscape.lucre.FScape$@wait(x$1:Long):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -709,7 +941,62 @@ You can use this call to register all FScape components.
     </span>)</span>
               
         </dd></dl></div>
-    </li></ol>
+    </li><li name="de.sciss.fscape.lucre.FScape.Code" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Code"></a><a id="Code:Code"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#Code" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="FScape$$Code$.html">
+              <span class="name">Code</span>
+            </a><span class="result"> extends <a href="../../synth/proc/Code$$Type.html" class="extype" name="de.sciss.synth.proc.Code.Type">Type</a> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape.Output" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Output"></a><a id="Output:Output"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#Output" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="FScape$$Output$.html">
+              <span class="name">Output</span>
+            </a><span class="result"> extends <a href="../../lucre/stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a></span>
+      </span>
+      
+      
+    </li><li name="de.sciss.fscape.lucre.FScape.Rendering" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Rendering"></a><a id="Rendering:Rendering"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#Rendering" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="FScape$$Rendering$.html">
+              <span class="name">Rendering</span>
+            </a>
+      </span>
+      
+      
+    </li>
+              </ol>
             </div>
 
         
@@ -723,7 +1010,7 @@ You can use this call to register all FScape components.
             </div><div class="parent" name="de.sciss.lucre.stm.Elem.Type">
               <h3>Inherited from <a href="../../lucre/stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
             </div>
@@ -742,7 +1029,9 @@ You can use this call to register all FScape components.
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-
-
+    </body>
+          </div>
+        </div>
+      </div>
     </body>
       </html>

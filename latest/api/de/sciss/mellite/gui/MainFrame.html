@@ -1,42 +1,487 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>MainFrame - Mellite 2.6.0 API - de.sciss.mellite.gui.MainFrame</title>
-          <meta name="description" content="MainFrame - Mellite 2.6.0 API - de.sciss.mellite.gui.MainFrame" />
-          <meta name="keywords" content="MainFrame Mellite 2.6.0 API de.sciss.mellite.gui.MainFrame" />
+          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <title>Mellite 2.10.0 API  - de.sciss.mellite.gui.MainFrame</title>
+          <meta name="description" content="Mellite 2.10.0 API - de.sciss.mellite.gui.MainFrame" />
+          <meta name="keywords" content="Mellite 2.10.0 API de.sciss.mellite.gui.MainFrame" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
+      <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
-      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
-      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.panzoom.min.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.mousewheel.min.js"></script>
+      <script type="text/javascript" src="../../../../lib/index.js"></script>
+      <script type="text/javascript" src="../../../../index.js"></script>
+      <script type="text/javascript" src="../../../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
       
       <script type="text/javascript">
-         if(top === self) {
-            var url = '../../../../index.html';
-            var hash = 'de.sciss.mellite.gui.MainFrame';
-            var anchor = window.location.hash;
-            var anchor_opt = '';
-            if (anchor.length >= 1)
-              anchor_opt = '@' + anchor.substring(1);
-            window.location.href = url + '#' + hash + anchor_opt;
-         }
-   	  </script>
+        /* this variable can be used by the JS to determine the path to the root document */
+        var toRoot = '../../../../';
+      </script>
     
         </head>
-        <body class="type">
-      <div id="definition">
-        <img alt="Class" src="../../../../lib/class_big.png" />
-        <p id="owner"><a href="../../../package.html" class="extype" name="de">de</a>.<a href="../../package.html" class="extype" name="de.sciss">sciss</a>.<a href="../package.html" class="extype" name="de.sciss.mellite">mellite</a>.<a href="package.html" class="extype" name="de.sciss.mellite.gui">gui</a></p>
-        <h1>MainFrame</h1><h3><span class="morelinks"><div>Related Doc:
-            <a href="package.html" class="extype" name="de.sciss.mellite.gui">package gui</a>
-          </div></span></h3><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+        <body>
+      <div id="search">
+        <span id="doc-title">Mellite 2.10.0 API<span id="doc-version"></span></span>
+        <span class="close-results"><span class="left">&lt;</span> Back</span>
+        <div id="textfilter">
+          <span class="input">
+            <input autocapitalize="none" placeholder="Search" id="index-input" type="text" accesskey="/" />
+            <i class="clear material-icons"></i>
+            <i id="search-icon" class="material-icons"></i>
+          </span>
+        </div>
+    </div>
+      <div id="search-results">
+        <div id="search-progress">
+          <div id="progress-fill"></div>
+        </div>
+        <div id="results-content">
+          <div id="entity-results"></div>
+          <div id="member-results"></div>
+        </div>
+      </div>
+      <div id="content-scroll-container" style="-webkit-overflow-scrolling: touch;">
+        <div id="content-container" style="-webkit-overflow-scrolling: touch;">
+          <div id="subpackage-spacer">
+            <div id="packages">
+              <h1>Packages</h1>
+              <ul>
+                <li name="_root_.root" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="_root_"></a><a id="root:_root_"></a>
+      <span class="permalink">
+      <a href="index.html#_root_" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../../../index.html">
+              <span class="name">root</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="_root_.de" visbl="pub" class="indented1 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="de"></a><a id="de:de"></a>
+      <span class="permalink">
+      <a href="index.html#de" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../../index.html">
+              <span class="name">de</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="de.sciss" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="sciss"></a><a id="sciss:sciss"></a>
+      <span class="permalink">
+      <a href="../de/index.html#sciss" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../index.html">
+              <span class="name">sciss</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../index.html" class="extype" name="de">de</a></dd></dl></div>
+    </li><li name="de.sciss.mellite" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="mellite"></a><a id="mellite:mellite"></a>
+      <span class="permalink">
+      <a href="../../de/sciss/index.html#mellite" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../index.html">
+              <span class="name">mellite</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="de.sciss">sciss</a></dd></dl></div>
+    </li><li name="de.sciss.mellite.gui" visbl="pub" class="indented4 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="gui"></a><a id="gui:gui"></a>
+      <span class="permalink">
+      <a href="../../../de/sciss/mellite/index.html#gui" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="index.html">
+              <span class="name">gui</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="de.sciss.mellite">mellite</a></dd></dl></div>
+    </li><li name="de.sciss.mellite.gui.edit" visbl="pub" class="indented5 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="edit"></a><a id="edit:edit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/index.html#edit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="edit/index.html">
+              <span class="name">edit</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="index.html" class="extype" name="de.sciss.mellite.gui">gui</a></dd></dl></div>
+    </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionArtifactLocation$.html" title=""></a>
+                        <a href="ActionArtifactLocation$.html" title="">
+                          ActionArtifactLocation
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionBounceTimeline$.html" title=""></a>
+                        <a href="ActionBounceTimeline$.html" title="">
+                          ActionBounceTimeline
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionCloseAllWorkspaces$.html" title=""></a>
+                        <a href="ActionCloseAllWorkspaces$.html" title="">
+                          ActionCloseAllWorkspaces
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionNewWorkspace$.html" title=""></a>
+                        <a href="ActionNewWorkspace$.html" title="">
+                          ActionNewWorkspace
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionOpenWorkspace$.html" title=""></a>
+                        <a href="ActionOpenWorkspace$.html" title="">
+                          ActionOpenWorkspace
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionPreferences$.html" title=""></a>
+                        <a href="ActionPreferences$.html" title="">
+                          ActionPreferences
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="AttrCellView$.html" title=""></a>
+                        <a href="AttrCellView$.html" title="">
+                          AttrCellView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="AttrMapFrame$.html" title=""></a>
+                        <a class="trait" href="AttrMapFrame.html" title=""></a>
+                        <a href="AttrMapFrame.html" title="">
+                          AttrMapFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="AttrMapView$.html" title=""></a>
+                        <a class="trait" href="AttrMapView.html" title=""></a>
+                        <a href="AttrMapView.html" title="">
+                          AttrMapView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="AudioFileFrame$.html" title=""></a>
+                        <a class="trait" href="AudioFileFrame.html" title=""></a>
+                        <a href="AudioFileFrame.html" title="">
+                          AudioFileFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="AudioFileView$.html" title=""></a>
+                        <a class="trait" href="AudioFileView.html" title=""></a>
+                        <a href="AudioFileView.html" title="">
+                          AudioFileView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="CodeFrame$.html" title=""></a>
+                        <a class="trait" href="CodeFrame.html" title=""></a>
+                        <a href="CodeFrame.html" title="">
+                          CodeFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="CodeView$.html" title=""></a>
+                        <a class="trait" href="CodeView.html" title=""></a>
+                        <a href="CodeView.html" title="">
+                          CodeView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="DocumentCursorsFrame$.html" title=""></a>
+                        <a class="trait" href="DocumentCursorsFrame.html" title=""></a>
+                        <a href="DocumentCursorsFrame.html" title="">
+                          DocumentCursorsFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="DocumentCursorsView.html" title=""></a>
+                        <a href="DocumentCursorsView.html" title="">
+                          DocumentCursorsView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="DocumentViewHandler$.html" title=""></a>
+                        <a class="trait" href="DocumentViewHandler.html" title=""></a>
+                        <a href="DocumentViewHandler.html" title="">
+                          DocumentViewHandler
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="DragAndDrop$.html" title=""></a>
+                        <a href="DragAndDrop$.html" title="">
+                          DragAndDrop
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="EnsembleFrame$.html" title=""></a>
+                        <a class="trait" href="EnsembleFrame.html" title=""></a>
+                        <a href="EnsembleFrame.html" title="">
+                          EnsembleFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="EnsembleView$.html" title=""></a>
+                        <a class="trait" href="EnsembleView.html" title=""></a>
+                        <a href="EnsembleView.html" title="">
+                          EnsembleView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="FScapeOutputsView$.html" title=""></a>
+                        <a class="trait" href="FScapeOutputsView.html" title=""></a>
+                        <a href="FScapeOutputsView.html" title="">
+                          FScapeOutputsView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="FadeViewMode$.html" title=""></a>
+                        <a class="trait" href="FadeViewMode.html" title=""></a>
+                        <a href="FadeViewMode.html" title="">
+                          FadeViewMode
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="FolderFrame$.html" title=""></a>
+                        <a class="trait" href="FolderFrame.html" title=""></a>
+                        <a href="FolderFrame.html" title="">
+                          FolderFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="FolderView$.html" title=""></a>
+                        <a class="trait" href="FolderView.html" title=""></a>
+                        <a href="FolderView.html" title="">
+                          FolderView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="GUI$.html" title=""></a>
+                        <a href="GUI$.html" title="">
+                          GUI
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="GlobalProcsView$.html" title=""></a>
+                        <a class="trait" href="GlobalProcsView.html" title=""></a>
+                        <a href="GlobalProcsView.html" title="">
+                          GlobalProcsView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="GraphemeFrame$.html" title=""></a>
+                        <a class="trait" href="GraphemeFrame.html" title=""></a>
+                        <a href="GraphemeFrame.html" title="">
+                          GraphemeFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="GraphemeObjView$.html" title=""></a>
+                        <a class="trait" href="GraphemeObjView.html" title=""></a>
+                        <a href="GraphemeObjView.html" title="">
+                          GraphemeObjView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="GraphemeView$.html" title=""></a>
+                        <a class="trait" href="GraphemeView.html" title=""></a>
+                        <a href="GraphemeView.html" title="">
+                          GraphemeView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="InterpreterFrame$.html" title=""></a>
+                        <a class="trait" href="InterpreterFrame.html" title=""></a>
+                        <a href="InterpreterFrame.html" title="">
+                          InterpreterFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="ListObjView$.html" title=""></a>
+                        <a class="trait" href="ListObjView.html" title=""></a>
+                        <a href="ListObjView.html" title="">
+                          ListObjView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="LogFrame$.html" title=""></a>
+                        <a class="trait" href="LogFrame.html" title=""></a>
+                        <a href="LogFrame.html" title="">
+                          LogFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="Logo$.html" title=""></a>
+                        <a href="Logo$.html" title="">
+                          Logo
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="" title=""></a>
+                        <a href="" title="">
+                          MainFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="MapView$.html" title=""></a>
+                        <a class="trait" href="MapView.html" title=""></a>
+                        <a href="MapView.html" title="">
+                          MapView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="MenuBar$.html" title=""></a>
+                        <a href="MenuBar$.html" title="">
+                          MenuBar
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="ObjView$.html" title=""></a>
+                        <a class="trait" href="ObjView.html" title=""></a>
+                        <a href="ObjView.html" title="">
+                          ObjView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="PlayToggleButton$.html" title=""></a>
+                        <a class="trait" href="PlayToggleButton.html" title=""></a>
+                        <a href="PlayToggleButton.html" title="">
+                          PlayToggleButton
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="ProcOutputsView$.html" title=""></a>
+                        <a class="trait" href="ProcOutputsView.html" title=""></a>
+                        <a href="ProcOutputsView.html" title="">
+                          ProcOutputsView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="RegionViewMode$.html" title=""></a>
+                        <a class="trait" href="RegionViewMode.html" title=""></a>
+                        <a href="RegionViewMode.html" title="">
+                          RegionViewMode
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="Removable.html" title=""></a>
+                        <a href="Removable.html" title="">
+                          Removable
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="SelectionModel$.html" title=""></a>
+                        <a class="trait" href="SelectionModel.html" title=""></a>
+                        <a href="SelectionModel.html" title="">
+                          SelectionModel
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="Shapes$.html" title=""></a>
+                        <a href="Shapes$.html" title="">
+                          Shapes
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="SonogramManager$.html" title=""></a>
+                        <a href="SonogramManager$.html" title="">
+                          SonogramManager
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TimelineFrame$.html" title=""></a>
+                        <a class="trait" href="TimelineFrame.html" title=""></a>
+                        <a href="TimelineFrame.html" title="">
+                          TimelineFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TimelineObjView$.html" title=""></a>
+                        <a class="trait" href="TimelineObjView.html" title=""></a>
+                        <a href="TimelineObjView.html" title="">
+                          TimelineObjView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="TimelineProcCanvas.html" title=""></a>
+                        <a href="TimelineProcCanvas.html" title="">
+                          TimelineProcCanvas
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="TimelineRendering.html" title="Paint support."></a>
+                        <a href="TimelineRendering.html" title="Paint support.">
+                          TimelineRendering
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TimelineView$.html" title=""></a>
+                        <a class="trait" href="TimelineView.html" title=""></a>
+                        <a href="TimelineView.html" title="">
+                          TimelineView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TrackTool$.html" title=""></a>
+                        <a class="trait" href="TrackTool.html" title="A tool that operates on object inside the timeline view."></a>
+                        <a href="TrackTool.html" title="A tool that operates on object inside the timeline view.">
+                          TrackTool
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TrackTools$.html" title=""></a>
+                        <a class="trait" href="TrackTools.html" title=""></a>
+                        <a href="TrackTools.html" title="">
+                          TrackTools
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="ViewHasWorkspace.html" title=""></a>
+                        <a href="ViewHasWorkspace.html" title="">
+                          ViewHasWorkspace
+                        </a>
+                      </li>
+              </ul>
+            </div>
+          </div>
+          <div id="content">
+            <body class="class type">
+      <div id="definition">
+        <div class="big-circle class">c</div>
+        <p id="owner"><a href="../../../index.html" class="extype" name="de">de</a>.<a href="../../index.html" class="extype" name="de.sciss">sciss</a>.<a href="../index.html" class="extype" name="de.sciss.mellite">mellite</a>.<a href="index.html" class="extype" name="de.sciss.mellite.gui">gui</a></p>
+        <h1>MainFrame<span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span></h1>
+        <h3><span class="morelinks"></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
@@ -48,50 +493,65 @@
         <span class="name">MainFrame</span><span class="result"> extends <span class="extype" name="de.sciss.desktop.impl.WindowImpl">WindowImpl</span></span>
       </span>
       </h4>
+
       
           <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Self Type</dt><dd><a href="" class="extype" name="de.sciss.mellite.gui.MainFrame">MainFrame</a></dd></dl><div class="toggleContainer block">
-          <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.desktop.impl.WindowImpl">WindowImpl</span>, <span class="extype" name="de.sciss.desktop.impl.WindowStub">WindowStub</span>, <span class="extype" name="de.sciss.desktop.Window">Window</span>, <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
+          <span class="toggle">
+            Linear Supertypes
+          </span>
+          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.desktop.impl.WindowImpl">WindowImpl</span>, <span class="extype" name="de.sciss.desktop.impl.WindowStub">WindowStub</span>, <span class="extype" name="de.sciss.desktop.Window">Window</span>, <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
       <div id="mbrsel">
-        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
-        <div id="order">
-              <span class="filtertype">Ordering</span>
-              <ol>
-                
-                <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By Inheritance</span></li>
-              </ol>
-            </div>
-        <div id="ancestors">
-                <span class="filtertype">Inherited<br />
-                </span>
-                <ol id="linearization">
-                  <li class="in" name="de.sciss.mellite.gui.MainFrame"><span>MainFrame</span></li><li class="in" name="de.sciss.desktop.impl.WindowImpl"><span>WindowImpl</span></li><li class="in" name="de.sciss.desktop.impl.WindowStub"><span>WindowStub</span></li><li class="in" name="de.sciss.desktop.Window"><span>Window</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
-                </ol>
-              </div><div id="ancestors">
-            <span class="filtertype"></span>
+        <div class="toggle"></div>
+        <div id="memberfilter">
+          <i class="material-icons arrow"></i>
+          <span class="input">
+            <input id="mbrsel-input" placeholder="Filter all members" type="text" accesskey="/" />
+          </span>
+          <i class="clear material-icons"></i>
+        </div>
+        <div id="filterby">
+          <div id="order">
+            <span class="filtertype">Ordering</span>
             <ol>
-              <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show All</span></li>
+              
+              <li class="alpha in"><span>Alphabetic</span></li>
+              <li class="inherit out"><span>By Inheritance</span></li>
             </ol>
           </div>
-        <div id="visbl">
-            <span class="filtertype">Visibility</span>
-            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
-          </div>
+          <div class="ancestors">
+                  <span class="filtertype">Inherited<br />
+                  </span>
+                  <ol id="linearization">
+                    <li class="in" name="de.sciss.mellite.gui.MainFrame"><span>MainFrame</span></li><li class="in" name="de.sciss.desktop.impl.WindowImpl"><span>WindowImpl</span></li><li class="in" name="de.sciss.desktop.impl.WindowStub"><span>WindowStub</span></li><li class="in" name="de.sciss.desktop.Window"><span>Window</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  </ol>
+                </div><div class="ancestors">
+              <span class="filtertype"></span>
+              <ol>
+                <li class="hideall out"><span>Hide All</span></li>
+                <li class="showall in"><span>Show All</span></li>
+              </ol>
+            </div>
+          <div id="visbl">
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+            </div>
+        </div>
       </div>
 
       <div id="template">
         <div id="allMembers">
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
-              <ol><li name="de.sciss.mellite.gui.MainFrame#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;():de.sciss.mellite.gui.MainFrame"></a>
-      <a id="&lt;init&gt;:MainFrame"></a>
-      <h4 class="signature">
+              <ol><li name="de.sciss.mellite.gui.MainFrame#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;():de.sciss.mellite.gui.MainFrame"></a><a id="&lt;init&gt;:MainFrame"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#&lt;init&gt;():de.sciss.mellite.gui.MainFrame" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">new</span>
@@ -99,11 +559,7 @@
       <span class="symbol">
         <span class="name">MainFrame</span><span class="params">()</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@&lt;init&gt;():de.sciss.mellite.gui.MainFrame" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       
     </li></ol>
             </div>
@@ -112,12 +568,16 @@
 
         
 
-        <div id="values" class="values members">
+        <div class="values members">
               <h3>Value Members</h3>
-              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:Any):Boolean"></a>
-      <a id="!=(Any):Boolean"></a>
-      <h4 class="signature">
+              <ol>
+                <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#!=(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -125,16 +585,15 @@
       <span class="symbol">
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@!=(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html###():Int" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="##():Int"></a>
-      <a id="##():Int"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -142,16 +601,15 @@
       <span class="symbol">
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@##():Int" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#==(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:Any):Boolean"></a>
-      <a id="==(Any):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -159,16 +617,15 @@
       <span class="symbol">
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@==(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#active" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="active:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#active:Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#active" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="active:Boolean"></a>
-      <a id="active:Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -176,16 +633,15 @@
       <span class="symbol">
         <span class="name">active</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@active:Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#addAction" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="addAction(key:String,action:scala.swing.Action):Unit"></a><a id="addAction(String,Action):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#addAction(key:String,action:scala.swing.Action):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#addAction" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="addAction(key:String,action:scala.swing.Action):Unit"></a>
-      <a id="addAction(String,Action):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -193,16 +649,15 @@
       <span class="symbol">
         <span class="name">addAction</span><span class="params">(<span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="action">action: <span class="extype" name="scala.swing.Action">Action</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@addAction(key:String,action:scala.swing.Action):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#addActions" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="addActions(entries:(String,scala.swing.Action)*):Unit"></a><a id="addActions((String,Action)*):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#addActions(entries:(String,scala.swing.Action)*):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#addActions" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="addActions(entries:&lt;?&gt;):Unit"></a>
-      <a id="addActions((String,Action)*):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -210,16 +665,15 @@
       <span class="symbol">
         <span class="name">addActions</span><span class="params">(<span name="entries">entries: (<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.swing.Action">Action</span>)*</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@addActions(entries:(String,scala.swing.Action)*):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#alpha" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="alpha:Float"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#alpha:Float" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#alpha" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="alpha:Float"></a>
-      <a id="alpha:Float"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -227,16 +681,15 @@
       <span class="symbol">
         <span class="name">alpha</span><span class="result">: <span class="extype" name="scala.Float">Float</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@alpha:Float" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#alpha_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="alpha_=(value:Float):Unit"></a><a id="alpha_=(Float):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#alpha_=(value:Float):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#alpha_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="alpha_=(value:&lt;?&gt;):Unit"></a>
-      <a id="alpha_=(Float):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -244,16 +697,15 @@
       <span class="symbol">
         <span title="gt4s: alpha_$eq" class="name">alpha_=</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Float">Float</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@alpha_=(value:Float):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#alwaysOnTop" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="alwaysOnTop:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#alwaysOnTop:Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#alwaysOnTop" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="alwaysOnTop:Boolean"></a>
-      <a id="alwaysOnTop:Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -261,16 +713,15 @@
       <span class="symbol">
         <span class="name">alwaysOnTop</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@alwaysOnTop:Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#alwaysOnTop_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="alwaysOnTop_=(value:Boolean):Unit"></a><a id="alwaysOnTop_=(Boolean):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#alwaysOnTop_=(value:Boolean):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#alwaysOnTop_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="alwaysOnTop_=(value:Boolean):Unit"></a>
-      <a id="alwaysOnTop_=(Boolean):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -278,16 +729,15 @@
       <span class="symbol">
         <span title="gt4s: alwaysOnTop_$eq" class="name">alwaysOnTop_=</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@alwaysOnTop_=(value:Boolean):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#application" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="application:de.sciss.desktop.SwingApplication"></a><a id="application:SwingApplication"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#application:de.sciss.desktop.SwingApplication" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#application" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="application:de.sciss.desktop.SwingApplication"></a>
-      <a id="application:SwingApplication"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -295,16 +745,15 @@
       <span class="symbol">
         <span class="name">application</span><span class="result">: <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@application:de.sciss.desktop.SwingApplication" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#asInstanceOf[T0]:T0" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="asInstanceOf[T0]:T0"></a>
-      <a id="asInstanceOf[T0]:T0"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -312,16 +761,15 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@asInstanceOf[T0]:T0" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#bindMenu" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="bindMenu(path:String,action:scala.swing.Action):Unit"></a><a id="bindMenu(String,Action):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#bindMenu(path:String,action:scala.swing.Action):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#bindMenu" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="bindMenu(path:String,action:scala.swing.Action):Unit"></a>
-      <a id="bindMenu(String,Action):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -329,16 +777,15 @@
       <span class="symbol">
         <span class="name">bindMenu</span><span class="params">(<span name="path">path: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="action">action: <span class="extype" name="scala.swing.Action">Action</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@bindMenu(path:String,action:scala.swing.Action):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#bindMenus" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="bindMenus(entries:(String,scala.swing.Action)*):Unit"></a><a id="bindMenus((String,Action)*):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#bindMenus(entries:(String,scala.swing.Action)*):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#bindMenus" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="bindMenus(entries:(String,scala.swing.Action)*):Unit"></a>
-      <a id="bindMenus((String,Action)*):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -346,16 +793,15 @@
       <span class="symbol">
         <span class="name">bindMenus</span><span class="params">(<span name="entries">entries: (<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.swing.Action">Action</span>)*</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@bindMenus(entries:(String,scala.swing.Action)*):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#bounds" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="bounds:java.awt.Rectangle"></a><a id="bounds:Rectangle"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#bounds:java.awt.Rectangle" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#bounds" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="bounds:java.awt.Rectangle"></a>
-      <a id="bounds:Rectangle"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -363,16 +809,15 @@
       <span class="symbol">
         <span class="name">bounds</span><span class="result">: <span class="extype" name="java.awt.Rectangle">Rectangle</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@bounds:java.awt.Rectangle" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#bounds_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="bounds_=(value:java.awt.Rectangle):Unit"></a><a id="bounds_=(Rectangle):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#bounds_=(value:java.awt.Rectangle):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#bounds_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="bounds_=(value:&lt;?&gt;):Unit"></a>
-      <a id="bounds_=(Rectangle):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -380,28 +825,23 @@
       <span class="symbol">
         <span title="gt4s: bounds_$eq" class="name">bounds_=</span><span class="params">(<span name="value">value: <span class="extype" name="java.awt.Rectangle">Rectangle</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@bounds_=(value:java.awt.Rectangle):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a><a id="clone():AnyRef"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#clone():Object" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="clone():Object"></a>
-      <a id="clone():AnyRef"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@clone():Object" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -409,10 +849,13 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#closeOperation" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="closeOperation:de.sciss.desktop.Window.CloseOperation"></a>
-      <a id="closeOperation:CloseOperation"></a>
-      <h4 class="signature">
+    </li><li name="de.sciss.desktop.impl.WindowStub#closeOperation" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="closeOperation:de.sciss.desktop.Window.CloseOperation"></a><a id="closeOperation:CloseOperation"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#closeOperation:de.sciss.desktop.Window.CloseOperation" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -420,16 +863,15 @@
       <span class="symbol">
         <span class="name">closeOperation</span><span class="result">: <span class="extype" name="de.sciss.desktop.Window.CloseOperation">CloseOperation</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@closeOperation:de.sciss.desktop.Window.CloseOperation" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#closeOperation_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="closeOperation_=(value:de.sciss.desktop.Window.CloseOperation):Unit"></a><a id="closeOperation_=(CloseOperation):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#closeOperation_=(value:de.sciss.desktop.Window.CloseOperation):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#closeOperation_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="closeOperation_=(value:de.sciss.desktop.Window.CloseOperation):Unit"></a>
-      <a id="closeOperation_=(CloseOperation):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -437,16 +879,15 @@
       <span class="symbol">
         <span title="gt4s: closeOperation_$eq" class="name">closeOperation_=</span><span class="params">(<span name="value">value: <span class="extype" name="de.sciss.desktop.Window.CloseOperation">CloseOperation</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@closeOperation_=(value:de.sciss.desktop.Window.CloseOperation):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#component" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="component:scala.swing.RootPanel"></a><a id="component:RootPanel"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#component:scala.swing.RootPanel" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#component" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="component:scala.swing.RootPanel"></a>
-      <a id="component:RootPanel"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -454,33 +895,31 @@
       <span class="symbol">
         <span class="name">component</span><span class="result">: <span class="extype" name="scala.swing.RootPanel">RootPanel</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@component:scala.swing.RootPanel" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#contents" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="contents:Seq[scala.swing.Component]"></a><a id="contents:Seq[Component]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#contents:Seq[scala.swing.Component]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#contents" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="contents:Seq[scala.swing.Component]"></a>
-      <a id="contents:Seq[Component]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">contents</span><span class="result">: <a href="../../../../scala/package.html#Seq[+A]=Seq[A]" class="extmbr" name="scala.Seq">Seq</a>[<span class="extype" name="scala.swing.Component">Component</span>]</span>
+        <span class="name">contents</span><span class="result">: <a href="../../../../scala/index.html#Seq[+A]=Seq[A]" class="extmbr" name="scala.Seq">Seq</a>[<span class="extype" name="scala.swing.Component">Component</span>]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@contents:Seq[scala.swing.Component]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#contents_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="contents_=(value:scala.swing.Component):Unit"></a><a id="contents_=(Component):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#contents_=(value:scala.swing.Component):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#contents_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="contents_=(value:scala.swing.Component):Unit"></a>
-      <a id="contents_=(Component):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -488,16 +927,15 @@
       <span class="symbol">
         <span title="gt4s: contents_$eq" class="name">contents_=</span><span class="params">(<span name="value">value: <span class="extype" name="scala.swing.Component">Component</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@contents_=(value:scala.swing.Component):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowImpl#delegate" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="delegate:de.sciss.desktop.impl.WindowImpl.Delegate"></a><a id="delegate:Delegate"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#delegate:de.sciss.desktop.impl.WindowImpl.Delegate" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowImpl#delegate" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="delegate:de.sciss.desktop.impl.WindowImpl.Delegate"></a>
-      <a id="delegate:Delegate"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">lazy val</span>
@@ -505,16 +943,15 @@
       <span class="symbol">
         <span class="name">delegate</span><span class="result">: <span class="extype" name="de.sciss.desktop.impl.WindowImpl.Delegate">Delegate</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@delegate:de.sciss.desktop.impl.WindowImpl.Delegate" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>WindowImpl → WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#dirty" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dirty:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#dirty:Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>WindowImpl → WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#dirty" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="dirty:Boolean"></a>
-      <a id="dirty:Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -522,16 +959,15 @@
       <span class="symbol">
         <span class="name">dirty</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@dirty:Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#dirty_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dirty_=(value:Boolean):Unit"></a><a id="dirty_=(Boolean):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#dirty_=(value:Boolean):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#dirty_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="dirty_=(value:Boolean):Unit"></a>
-      <a id="dirty_=(Boolean):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -539,16 +975,15 @@
       <span class="symbol">
         <span title="gt4s: dirty_$eq" class="name">dirty_=</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@dirty_=(value:Boolean):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#dispose" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dispose():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#dispose():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#dispose" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="dispose():Unit"></a>
-      <a id="dispose():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -556,33 +991,31 @@
       <span class="symbol">
         <span class="name">dispose</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@dispose():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="eq(x$1:AnyRef):Boolean"></a>
-      <a id="eq(AnyRef):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#equals(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="equals(x$1:Any):Boolean"></a>
-      <a id="equals(Any):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -590,16 +1023,15 @@
       <span class="symbol">
         <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@equals(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#file" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="file:Option[de.sciss.file.File]"></a><a id="file:Option[File]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#file:Option[de.sciss.file.File]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#file" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="file:Option[de.sciss.file.File]"></a>
-      <a id="file:Option[File]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -607,16 +1039,15 @@
       <span class="symbol">
         <span class="name">file</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="de.sciss.file.File">File</span>]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@file:Option[de.sciss.file.File]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#file_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="file_=(value:Option[de.sciss.file.File]):Unit"></a><a id="file_=(Option[File]):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#file_=(value:Option[de.sciss.file.File]):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#file_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="file_=(value:Option[de.sciss.file.File]):Unit"></a>
-      <a id="file_=(Option[File]):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -624,16 +1055,15 @@
       <span class="symbol">
         <span title="gt4s: file_$eq" class="name">file_=</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="de.sciss.file.File">File</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@file_=(value:Option[de.sciss.file.File]):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#finalize():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="finalize():Unit"></a>
-      <a id="finalize():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -641,11 +1071,7 @@
       <span class="symbol">
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@finalize():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -653,10 +1079,13 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#floating" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="de.sciss.desktop.impl.WindowStub#floating" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="floating:Boolean"></a>
-      <a id="floating:Boolean"></a>
-      <h4 class="signature">
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#floating:Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -664,16 +1093,15 @@
       <span class="symbol">
         <span class="name">floating</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@floating:Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#front" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="front():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#front():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#front" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="front():Unit"></a>
-      <a id="front():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -681,16 +1109,15 @@
       <span class="symbol">
         <span class="name">front</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@front():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#getClass():Class[_]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="getClass():Class[_]"></a>
-      <a id="getClass():Class[_]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -698,16 +1125,15 @@
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@getClass():Class[_]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="de.sciss.mellite.gui.MainFrame#handler" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="handler:de.sciss.desktop.WindowHandler"></a><a id="handler:WindowHandler"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#handler:de.sciss.desktop.WindowHandler" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.mellite.gui.MainFrame#handler" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="handler:de.sciss.desktop.WindowHandler"></a>
-      <a id="handler:WindowHandler"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -715,16 +1141,15 @@
       <span class="symbol">
         <span class="name">handler</span><span class="result">: <span class="extype" name="de.sciss.desktop.WindowHandler">WindowHandler</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@handler:de.sciss.desktop.WindowHandler" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.gui.MainFrame">MainFrame</a> → Window</dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#hashCode():Int" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.gui.MainFrame">MainFrame</a> → Window</dd></dl></div>
-    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="hashCode():Int"></a>
-      <a id="hashCode():Int"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -732,16 +1157,15 @@
       <span class="symbol">
         <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@hashCode():Int" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#isInstanceOf[T0]:Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="isInstanceOf[T0]:Boolean"></a>
-      <a id="isInstanceOf[T0]:Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -749,16 +1173,15 @@
       <span class="symbol">
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#location" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="location:java.awt.Point"></a><a id="location:Point"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#location:java.awt.Point" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#location" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="location:java.awt.Point"></a>
-      <a id="location:Point"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -766,16 +1189,15 @@
       <span class="symbol">
         <span class="name">location</span><span class="result">: <span class="extype" name="java.awt.Point">Point</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@location:java.awt.Point" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#location_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="location_=(value:java.awt.Point):Unit"></a><a id="location_=(Point):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#location_=(value:java.awt.Point):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#location_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="location_=(value:java.awt.Point):Unit"></a>
-      <a id="location_=(Point):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -783,16 +1205,15 @@
       <span class="symbol">
         <span title="gt4s: location_$eq" class="name">location_=</span><span class="params">(<span name="value">value: <span class="extype" name="java.awt.Point">Point</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@location_=(value:java.awt.Point):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#makeUndecorated" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="makeUndecorated():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#makeUndecorated():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#makeUndecorated" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="makeUndecorated():Unit"></a>
-      <a id="makeUndecorated():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -800,16 +1221,15 @@
       <span class="symbol">
         <span class="name">makeUndecorated</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@makeUndecorated():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#makeUnifiedLook" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="makeUnifiedLook():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#makeUnifiedLook():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#makeUnifiedLook" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="makeUnifiedLook():Unit"></a>
-      <a id="makeUnifiedLook():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -817,33 +1237,31 @@
       <span class="symbol">
         <span class="name">makeUnifiedLook</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@makeUnifiedLook():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ne(x$1:AnyRef):Boolean"></a>
-      <a id="ne(AnyRef):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#notify():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="notify():Unit"></a>
-      <a id="notify():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -851,16 +1269,15 @@
       <span class="symbol">
         <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@notify():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#notifyAll():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="notifyAll():Unit"></a>
-      <a id="notifyAll():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -868,16 +1285,15 @@
       <span class="symbol">
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@notifyAll():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#pack" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="pack():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#pack():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#pack" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="pack():Unit"></a>
-      <a id="pack():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -885,16 +1301,15 @@
       <span class="symbol">
         <span class="name">pack</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@pack():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#putClientProperty" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="putClientProperty(key:String,value:Any):Unit"></a><a id="putClientProperty(String,Any):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#putClientProperty(key:String,value:Any):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#putClientProperty" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="putClientProperty(key:&lt;?&gt;,value:&lt;?&gt;):Unit"></a>
-      <a id="putClientProperty(String,Any):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -902,16 +1317,15 @@
       <span class="symbol">
         <span class="name">putClientProperty</span><span class="params">(<span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@putClientProperty(key:String,value:Any):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#reactions" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="reactions:scala.swing.Reactions"></a><a id="reactions:Reactions"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#reactions:scala.swing.Reactions" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#reactions" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="reactions:scala.swing.Reactions"></a>
-      <a id="reactions:Reactions"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -919,16 +1333,15 @@
       <span class="symbol">
         <span class="name">reactions</span><span class="result">: <span class="extype" name="scala.swing.Reactions">Reactions</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@reactions:scala.swing.Reactions" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#resizable" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="resizable:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#resizable:Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#resizable" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="resizable:Boolean"></a>
-      <a id="resizable:Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -936,16 +1349,15 @@
       <span class="symbol">
         <span class="name">resizable</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@resizable:Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#resizable_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="resizable_=(value:Boolean):Unit"></a><a id="resizable_=(Boolean):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#resizable_=(value:Boolean):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#resizable_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="resizable_=(value:Boolean):Unit"></a>
-      <a id="resizable_=(Boolean):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -953,16 +1365,31 @@
       <span class="symbol">
         <span title="gt4s: resizable_$eq" class="name">resizable_=</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@resizable_=(value:Boolean):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.mellite.gui.MainFrame#setMainVolume" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="setMainVolume(linear:Double)(implicittx:de.sciss.lucre.synth.Txn):Unit"></a><a id="setMainVolume(Double)(Txn):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#setMainVolume(linear:Double)(implicittx:de.sciss.lucre.synth.Txn):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#showDialog" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="showDialog[A&lt;:&lt;?&gt;](source:&lt;?&gt;):A"></a>
-      <a id="showDialog[A](DialogSource[A]):A"></a>
-      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">setMainVolume</span><span class="params">(<span name="linear">linear: <span class="extype" name="scala.Double">Double</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <a href="../../lucre/synth/Txn.html" class="extype" name="de.sciss.lucre.synth.Txn">Txn</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      
+    </li><li name="de.sciss.desktop.impl.WindowStub#showDialog" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="showDialog[A](source:de.sciss.desktop.DialogSource[A]):A"></a><a id="showDialog[A](DialogSource[A]):A"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#showDialog[A](source:de.sciss.desktop.DialogSource[A]):A" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -970,16 +1397,15 @@
       <span class="symbol">
         <span class="name">showDialog</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="source">source: <span class="extype" name="de.sciss.desktop.DialogSource">DialogSource</span>[<span class="extype" name="de.sciss.desktop.impl.WindowStub.showDialog.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="de.sciss.desktop.impl.WindowStub.showDialog.A">A</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@showDialog[A](source:de.sciss.desktop.DialogSource[A]):A" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#size" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="size:java.awt.Dimension"></a><a id="size:Dimension"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#size:java.awt.Dimension" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#size" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="size:java.awt.Dimension"></a>
-      <a id="size:Dimension"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -987,16 +1413,15 @@
       <span class="symbol">
         <span class="name">size</span><span class="result">: <span class="extype" name="java.awt.Dimension">Dimension</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@size:java.awt.Dimension" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#size_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="size_=(value:java.awt.Dimension):Unit"></a><a id="size_=(Dimension):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#size_=(value:java.awt.Dimension):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#size_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="size_=(value:&lt;?&gt;):Unit"></a>
-      <a id="size_=(Dimension):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -1004,16 +1429,15 @@
       <span class="symbol">
         <span title="gt4s: size_$eq" class="name">size_=</span><span class="params">(<span name="value">value: <span class="extype" name="java.awt.Dimension">Dimension</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@size_=(value:java.awt.Dimension):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="de.sciss.mellite.gui.MainFrame#stopSensorSystem" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="stopSensorSystem():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#stopSensorSystem():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="de.sciss.mellite.gui.MainFrame#stopSensorSystem" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="stopSensorSystem():Unit"></a>
-      <a id="stopSensorSystem():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -1021,16 +1445,15 @@
       <span class="symbol">
         <span class="name">stopSensorSystem</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@stopSensorSystem():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      
+    </li><li name="de.sciss.desktop.impl.WindowStub#style" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="style:de.sciss.desktop.Window.Style"></a><a id="style:Style"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#style:de.sciss.desktop.Window.Style" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      
-    </li><li name="de.sciss.desktop.impl.WindowStub#style" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="style:de.sciss.desktop.Window.Style"></a>
-      <a id="style:Style"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -1038,16 +1461,15 @@
       <span class="symbol">
         <span class="name">style</span><span class="result">: <span class="extype" name="de.sciss.desktop.Window.Style">Style</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@style:de.sciss.desktop.Window.Style" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
-      <a id="synchronized[T0](⇒T0):T0"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -1055,16 +1477,15 @@
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#title" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="title:String"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#title:String" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#title" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="title:String"></a>
-      <a id="title:String"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -1072,16 +1493,15 @@
       <span class="symbol">
         <span class="name">title</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@title:String" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#title_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="title_=(value:String):Unit"></a><a id="title_=(String):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#title_=(value:String):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#title_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="title_=(value:String):Unit"></a>
-      <a id="title_=(String):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -1089,16 +1509,15 @@
       <span class="symbol">
         <span title="gt4s: title_$eq" class="name">title_=</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@title_=(value:String):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#toString():String" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub</dd></dl></div>
-    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="toString():String"></a>
-      <a id="toString():String"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -1106,16 +1525,15 @@
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@toString():String" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#visible" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="visible:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#visible:Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#visible" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="visible:Boolean"></a>
-      <a id="visible:Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -1123,16 +1541,15 @@
       <span class="symbol">
         <span class="name">visible</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@visible:Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="de.sciss.desktop.impl.WindowStub#visible_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="visible_=(value:Boolean):Unit"></a><a id="visible_=(Boolean):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#visible_=(value:Boolean):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="de.sciss.desktop.impl.WindowStub#visible_=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="visible_=(value:Boolean):Unit"></a>
-      <a id="visible_=(Boolean):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -1140,16 +1557,15 @@
       <span class="symbol">
         <span title="gt4s: visible_$eq" class="name">visible_=</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@visible_=(value:Boolean):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#wait():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>WindowStub → Window</dd></dl></div>
-    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="wait():Unit"></a>
-      <a id="wait():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -1157,11 +1573,7 @@
       <span class="symbol">
         <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@wait():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1169,10 +1581,13 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
-      <a id="wait(Long,Int):Unit"></a>
-      <h4 class="signature">
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -1180,11 +1595,7 @@
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1192,10 +1603,13 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="wait(x$1:Long):Unit"></a>
-      <a id="wait(Long):Unit"></a>
-      <h4 class="signature">
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/MainFrame.html#wait(x$1:Long):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -1203,11 +1617,7 @@
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.MainFrame@wait(x$1:Long):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -1215,7 +1625,8 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li></ol>
+    </li>
+              </ol>
             </div>
 
         
@@ -1231,7 +1642,7 @@
             </div><div class="parent" name="de.sciss.desktop.Window">
               <h3>Inherited from <span class="extype" name="de.sciss.desktop.Window">Window</span></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
             </div>
@@ -1250,7 +1661,9 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-
-
+    </body>
+          </div>
+        </div>
+      </div>
     </body>
       </html>

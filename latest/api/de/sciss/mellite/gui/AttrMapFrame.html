@@ -1,44 +1,489 @@
 <!DOCTYPE html >
 <html>
         <head>
-          <title>AttrMapFrame - Mellite 2.6.0 API - de.sciss.mellite.gui.AttrMapFrame</title>
-          <meta name="description" content="AttrMapFrame - Mellite 2.6.0 API - de.sciss.mellite.gui.AttrMapFrame" />
-          <meta name="keywords" content="AttrMapFrame Mellite 2.6.0 API de.sciss.mellite.gui.AttrMapFrame" />
+          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <title>Mellite 2.10.0 API  - de.sciss.mellite.gui.AttrMapFrame</title>
+          <meta name="description" content="Mellite 2.10.0 API - de.sciss.mellite.gui.AttrMapFrame" />
+          <meta name="keywords" content="Mellite 2.10.0 API de.sciss.mellite.gui.AttrMapFrame" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
+      <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
-      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
-      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.panzoom.min.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.mousewheel.min.js"></script>
+      <script type="text/javascript" src="../../../../lib/index.js"></script>
+      <script type="text/javascript" src="../../../../index.js"></script>
+      <script type="text/javascript" src="../../../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
       
       <script type="text/javascript">
-         if(top === self) {
-            var url = '../../../../index.html';
-            var hash = 'de.sciss.mellite.gui.AttrMapFrame';
-            var anchor = window.location.hash;
-            var anchor_opt = '';
-            if (anchor.length >= 1)
-              anchor_opt = '@' + anchor.substring(1);
-            window.location.href = url + '#' + hash + anchor_opt;
-         }
-   	  </script>
+        /* this variable can be used by the JS to determine the path to the root document */
+        var toRoot = '../../../../';
+      </script>
     
         </head>
-        <body class="type">
-      <div id="definition">
-        <a href="AttrMapFrame$.html" title="See companion object"><img alt="Trait/Object" src="../../../../lib/trait_to_object_big.png" /></a>
-        <p id="owner"><a href="../../../package.html" class="extype" name="de">de</a>.<a href="../../package.html" class="extype" name="de.sciss">sciss</a>.<a href="../package.html" class="extype" name="de.sciss.mellite">mellite</a>.<a href="package.html" class="extype" name="de.sciss.mellite.gui">gui</a></p>
-        <h1><a href="AttrMapFrame$.html" title="See companion object">AttrMapFrame</a></h1><h3><span class="morelinks"><div>
-            Related Docs:
-            <a href="AttrMapFrame$.html" title="See companion object">object AttrMapFrame</a>
-            | <a href="package.html" class="extype" name="de.sciss.mellite.gui">package gui</a>
-          </div></span></h3><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+        <body>
+      <div id="search">
+        <span id="doc-title">Mellite 2.10.0 API<span id="doc-version"></span></span>
+        <span class="close-results"><span class="left">&lt;</span> Back</span>
+        <div id="textfilter">
+          <span class="input">
+            <input autocapitalize="none" placeholder="Search" id="index-input" type="text" accesskey="/" />
+            <i class="clear material-icons"></i>
+            <i id="search-icon" class="material-icons"></i>
+          </span>
+        </div>
+    </div>
+      <div id="search-results">
+        <div id="search-progress">
+          <div id="progress-fill"></div>
+        </div>
+        <div id="results-content">
+          <div id="entity-results"></div>
+          <div id="member-results"></div>
+        </div>
+      </div>
+      <div id="content-scroll-container" style="-webkit-overflow-scrolling: touch;">
+        <div id="content-container" style="-webkit-overflow-scrolling: touch;">
+          <div id="subpackage-spacer">
+            <div id="packages">
+              <h1>Packages</h1>
+              <ul>
+                <li name="_root_.root" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="_root_"></a><a id="root:_root_"></a>
+      <span class="permalink">
+      <a href="index.html#_root_" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../../../index.html">
+              <span class="name">root</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="_root_.de" visbl="pub" class="indented1 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="de"></a><a id="de:de"></a>
+      <span class="permalink">
+      <a href="index.html#de" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../../index.html">
+              <span class="name">de</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="de.sciss" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="sciss"></a><a id="sciss:sciss"></a>
+      <span class="permalink">
+      <a href="../de/index.html#sciss" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../index.html">
+              <span class="name">sciss</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../index.html" class="extype" name="de">de</a></dd></dl></div>
+    </li><li name="de.sciss.mellite" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="mellite"></a><a id="mellite:mellite"></a>
+      <span class="permalink">
+      <a href="../../de/sciss/index.html#mellite" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../index.html">
+              <span class="name">mellite</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="de.sciss">sciss</a></dd></dl></div>
+    </li><li name="de.sciss.mellite.gui" visbl="pub" class="indented4 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="gui"></a><a id="gui:gui"></a>
+      <span class="permalink">
+      <a href="../../../de/sciss/mellite/index.html#gui" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="index.html">
+              <span class="name">gui</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="de.sciss.mellite">mellite</a></dd></dl></div>
+    </li><li name="de.sciss.mellite.gui.edit" visbl="pub" class="indented5 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="edit"></a><a id="edit:edit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/index.html#edit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="edit/index.html">
+              <span class="name">edit</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="index.html" class="extype" name="de.sciss.mellite.gui">gui</a></dd></dl></div>
+    </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionArtifactLocation$.html" title=""></a>
+                        <a href="ActionArtifactLocation$.html" title="">
+                          ActionArtifactLocation
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionBounceTimeline$.html" title=""></a>
+                        <a href="ActionBounceTimeline$.html" title="">
+                          ActionBounceTimeline
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionCloseAllWorkspaces$.html" title=""></a>
+                        <a href="ActionCloseAllWorkspaces$.html" title="">
+                          ActionCloseAllWorkspaces
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionNewWorkspace$.html" title=""></a>
+                        <a href="ActionNewWorkspace$.html" title="">
+                          ActionNewWorkspace
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionOpenWorkspace$.html" title=""></a>
+                        <a href="ActionOpenWorkspace$.html" title="">
+                          ActionOpenWorkspace
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="ActionPreferences$.html" title=""></a>
+                        <a href="ActionPreferences$.html" title="">
+                          ActionPreferences
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="AttrCellView$.html" title=""></a>
+                        <a href="AttrCellView$.html" title="">
+                          AttrCellView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="AttrMapFrame$.html" title=""></a>
+                        <a class="trait" href="" title=""></a>
+                        <a href="" title="">
+                          AttrMapFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="AttrMapView$.html" title=""></a>
+                        <a class="trait" href="AttrMapView.html" title=""></a>
+                        <a href="AttrMapView.html" title="">
+                          AttrMapView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="AudioFileFrame$.html" title=""></a>
+                        <a class="trait" href="AudioFileFrame.html" title=""></a>
+                        <a href="AudioFileFrame.html" title="">
+                          AudioFileFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="AudioFileView$.html" title=""></a>
+                        <a class="trait" href="AudioFileView.html" title=""></a>
+                        <a href="AudioFileView.html" title="">
+                          AudioFileView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="CodeFrame$.html" title=""></a>
+                        <a class="trait" href="CodeFrame.html" title=""></a>
+                        <a href="CodeFrame.html" title="">
+                          CodeFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="CodeView$.html" title=""></a>
+                        <a class="trait" href="CodeView.html" title=""></a>
+                        <a href="CodeView.html" title="">
+                          CodeView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="DocumentCursorsFrame$.html" title=""></a>
+                        <a class="trait" href="DocumentCursorsFrame.html" title=""></a>
+                        <a href="DocumentCursorsFrame.html" title="">
+                          DocumentCursorsFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="DocumentCursorsView.html" title=""></a>
+                        <a href="DocumentCursorsView.html" title="">
+                          DocumentCursorsView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="DocumentViewHandler$.html" title=""></a>
+                        <a class="trait" href="DocumentViewHandler.html" title=""></a>
+                        <a href="DocumentViewHandler.html" title="">
+                          DocumentViewHandler
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="DragAndDrop$.html" title=""></a>
+                        <a href="DragAndDrop$.html" title="">
+                          DragAndDrop
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="EnsembleFrame$.html" title=""></a>
+                        <a class="trait" href="EnsembleFrame.html" title=""></a>
+                        <a href="EnsembleFrame.html" title="">
+                          EnsembleFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="EnsembleView$.html" title=""></a>
+                        <a class="trait" href="EnsembleView.html" title=""></a>
+                        <a href="EnsembleView.html" title="">
+                          EnsembleView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="FScapeOutputsView$.html" title=""></a>
+                        <a class="trait" href="FScapeOutputsView.html" title=""></a>
+                        <a href="FScapeOutputsView.html" title="">
+                          FScapeOutputsView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="FadeViewMode$.html" title=""></a>
+                        <a class="trait" href="FadeViewMode.html" title=""></a>
+                        <a href="FadeViewMode.html" title="">
+                          FadeViewMode
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="FolderFrame$.html" title=""></a>
+                        <a class="trait" href="FolderFrame.html" title=""></a>
+                        <a href="FolderFrame.html" title="">
+                          FolderFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="FolderView$.html" title=""></a>
+                        <a class="trait" href="FolderView.html" title=""></a>
+                        <a href="FolderView.html" title="">
+                          FolderView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="GUI$.html" title=""></a>
+                        <a href="GUI$.html" title="">
+                          GUI
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="GlobalProcsView$.html" title=""></a>
+                        <a class="trait" href="GlobalProcsView.html" title=""></a>
+                        <a href="GlobalProcsView.html" title="">
+                          GlobalProcsView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="GraphemeFrame$.html" title=""></a>
+                        <a class="trait" href="GraphemeFrame.html" title=""></a>
+                        <a href="GraphemeFrame.html" title="">
+                          GraphemeFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="GraphemeObjView$.html" title=""></a>
+                        <a class="trait" href="GraphemeObjView.html" title=""></a>
+                        <a href="GraphemeObjView.html" title="">
+                          GraphemeObjView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="GraphemeView$.html" title=""></a>
+                        <a class="trait" href="GraphemeView.html" title=""></a>
+                        <a href="GraphemeView.html" title="">
+                          GraphemeView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="InterpreterFrame$.html" title=""></a>
+                        <a class="trait" href="InterpreterFrame.html" title=""></a>
+                        <a href="InterpreterFrame.html" title="">
+                          InterpreterFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="ListObjView$.html" title=""></a>
+                        <a class="trait" href="ListObjView.html" title=""></a>
+                        <a href="ListObjView.html" title="">
+                          ListObjView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="LogFrame$.html" title=""></a>
+                        <a class="trait" href="LogFrame.html" title=""></a>
+                        <a href="LogFrame.html" title="">
+                          LogFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="Logo$.html" title=""></a>
+                        <a href="Logo$.html" title="">
+                          Logo
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="MainFrame.html" title=""></a>
+                        <a href="MainFrame.html" title="">
+                          MainFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="MapView$.html" title=""></a>
+                        <a class="trait" href="MapView.html" title=""></a>
+                        <a href="MapView.html" title="">
+                          MapView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="MenuBar$.html" title=""></a>
+                        <a href="MenuBar$.html" title="">
+                          MenuBar
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="ObjView$.html" title=""></a>
+                        <a class="trait" href="ObjView.html" title=""></a>
+                        <a href="ObjView.html" title="">
+                          ObjView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="PlayToggleButton$.html" title=""></a>
+                        <a class="trait" href="PlayToggleButton.html" title=""></a>
+                        <a href="PlayToggleButton.html" title="">
+                          PlayToggleButton
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="ProcOutputsView$.html" title=""></a>
+                        <a class="trait" href="ProcOutputsView.html" title=""></a>
+                        <a href="ProcOutputsView.html" title="">
+                          ProcOutputsView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="RegionViewMode$.html" title=""></a>
+                        <a class="trait" href="RegionViewMode.html" title=""></a>
+                        <a href="RegionViewMode.html" title="">
+                          RegionViewMode
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="Removable.html" title=""></a>
+                        <a href="Removable.html" title="">
+                          Removable
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="SelectionModel$.html" title=""></a>
+                        <a class="trait" href="SelectionModel.html" title=""></a>
+                        <a href="SelectionModel.html" title="">
+                          SelectionModel
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="Shapes$.html" title=""></a>
+                        <a href="Shapes$.html" title="">
+                          Shapes
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="SonogramManager$.html" title=""></a>
+                        <a href="SonogramManager$.html" title="">
+                          SonogramManager
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TimelineFrame$.html" title=""></a>
+                        <a class="trait" href="TimelineFrame.html" title=""></a>
+                        <a href="TimelineFrame.html" title="">
+                          TimelineFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TimelineObjView$.html" title=""></a>
+                        <a class="trait" href="TimelineObjView.html" title=""></a>
+                        <a href="TimelineObjView.html" title="">
+                          TimelineObjView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="TimelineProcCanvas.html" title=""></a>
+                        <a href="TimelineProcCanvas.html" title="">
+                          TimelineProcCanvas
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="TimelineRendering.html" title="Paint support."></a>
+                        <a href="TimelineRendering.html" title="Paint support.">
+                          TimelineRendering
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TimelineView$.html" title=""></a>
+                        <a class="trait" href="TimelineView.html" title=""></a>
+                        <a href="TimelineView.html" title="">
+                          TimelineView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TrackTool$.html" title=""></a>
+                        <a class="trait" href="TrackTool.html" title="A tool that operates on object inside the timeline view."></a>
+                        <a href="TrackTool.html" title="A tool that operates on object inside the timeline view.">
+                          TrackTool
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="TrackTools$.html" title=""></a>
+                        <a class="trait" href="TrackTools.html" title=""></a>
+                        <a href="TrackTools.html" title="">
+                          TrackTools
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="ViewHasWorkspace.html" title=""></a>
+                        <a href="ViewHasWorkspace.html" title="">
+                          ViewHasWorkspace
+                        </a>
+                      </li>
+              </ul>
+            </div>
+          </div>
+          <div id="content">
+            <body class="trait type">
+      <div id="definition">
+        <a href="AttrMapFrame$.html" title="See companion object"><div class="big-circle trait-companion-object">t</div></a>
+        <p id="owner"><a href="../../../index.html" class="extype" name="de">de</a>.<a href="../../index.html" class="extype" name="de.sciss">sciss</a>.<a href="../index.html" class="extype" name="de.sciss.mellite">mellite</a>.<a href="index.html" class="extype" name="de.sciss.mellite.gui">gui</a></p>
+        <h1><a href="AttrMapFrame$.html" title="See companion object">AttrMapFrame</a><span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span></h1>
+        <h3><span class="morelinks"><div>
+            Companion <a href="AttrMapFrame$.html" title="See companion object">object AttrMapFrame</a>
+          </div></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
@@ -50,40 +495,52 @@
         <span class="name">AttrMapFrame</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/synth/Sys.html" class="extype" name="de.sciss.lucre.synth.Sys">Sys</a>[<span class="extype" name="de.sciss.mellite.gui.AttrMapFrame.S">S</span>]</span>]</span><span class="result"> extends <span class="extype" name="de.sciss.lucre.swing.Window">Window</span>[<span class="extype" name="de.sciss.mellite.gui.AttrMapFrame.S">S</span>]</span>
       </span>
       </h4>
+
       
           <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
-          <span class="toggle">Linear Supertypes</span>
-          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.lucre.swing.Window">Window</span>[<span class="extype" name="de.sciss.mellite.gui.AttrMapFrame.S">S</span>], <a href="../../lucre/stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a>[<span class="extype" name="de.sciss.lucre.synth.Sys.Tx">S.Tx</span>], <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
+          <span class="toggle">
+            Linear Supertypes
+          </span>
+          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.lucre.swing.Window">Window</span>[<span class="extype" name="de.sciss.mellite.gui.AttrMapFrame.S">S</span>], <a href="../../lucre/stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a>[<span class="extype" name="de.sciss.lucre.synth.Sys.Tx">S.Tx</span>], <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
       <div id="mbrsel">
-        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
-        <div id="order">
-              <span class="filtertype">Ordering</span>
-              <ol>
-                
-                <li class="alpha in"><span>Alphabetic</span></li>
-                <li class="inherit out"><span>By Inheritance</span></li>
-              </ol>
-            </div>
-        <div id="ancestors">
-                <span class="filtertype">Inherited<br />
-                </span>
-                <ol id="linearization">
-                  <li class="in" name="de.sciss.mellite.gui.AttrMapFrame"><span>AttrMapFrame</span></li><li class="in" name="de.sciss.lucre.swing.Window"><span>Window</span></li><li class="in" name="de.sciss.lucre.stm.Disposable"><span>Disposable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
-                </ol>
-              </div><div id="ancestors">
-            <span class="filtertype"></span>
+        <div class="toggle"></div>
+        <div id="memberfilter">
+          <i class="material-icons arrow"></i>
+          <span class="input">
+            <input id="mbrsel-input" placeholder="Filter all members" type="text" accesskey="/" />
+          </span>
+          <i class="clear material-icons"></i>
+        </div>
+        <div id="filterby">
+          <div id="order">
+            <span class="filtertype">Ordering</span>
             <ol>
-              <li class="hideall out"><span>Hide All</span></li>
-              <li class="showall in"><span>Show All</span></li>
+              
+              <li class="alpha in"><span>Alphabetic</span></li>
+              <li class="inherit out"><span>By Inheritance</span></li>
             </ol>
           </div>
-        <div id="visbl">
-            <span class="filtertype">Visibility</span>
-            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
-          </div>
+          <div class="ancestors">
+                  <span class="filtertype">Inherited<br />
+                  </span>
+                  <ol id="linearization">
+                    <li class="in" name="de.sciss.mellite.gui.AttrMapFrame"><span>AttrMapFrame</span></li><li class="in" name="de.sciss.lucre.swing.Window"><span>Window</span></li><li class="in" name="de.sciss.lucre.stm.Disposable"><span>Disposable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  </ol>
+                </div><div class="ancestors">
+              <span class="filtertype"></span>
+              <ol>
+                <li class="hideall out"><span>Hide All</span></li>
+                <li class="showall in"><span>Show All</span></li>
+              </ol>
+            </div>
+          <div id="visbl">
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+            </div>
+        </div>
       </div>
 
       <div id="template">
@@ -92,12 +549,15 @@
 
         
 
-        <div id="values" class="values members">
+        <div class="values members">
               <h3>Abstract Value Members</h3>
-              <ol><li name="de.sciss.mellite.gui.AttrMapFrame#contents" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="contents:de.sciss.mellite.gui.AttrMapView[S]"></a>
-      <a id="contents:AttrMapView[S]"></a>
-      <h4 class="signature">
+              <ol><li name="de.sciss.mellite.gui.AttrMapFrame#contents" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="contents:de.sciss.mellite.gui.AttrMapView[S]"></a><a id="contents:AttrMapView[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#contents:de.sciss.mellite.gui.AttrMapView[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
@@ -105,16 +565,15 @@
       <span class="symbol">
         <span class="name">contents</span><span class="result">: <a href="AttrMapView.html" class="extype" name="de.sciss.mellite.gui.AttrMapView">AttrMapView</a>[<span class="extype" name="de.sciss.mellite.gui.AttrMapFrame.S">S</span>]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@contents:de.sciss.mellite.gui.AttrMapView[S]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      
+    </li><li name="de.sciss.lucre.stm.Disposable#dispose" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="dispose()(implicittx:Tx):Unit"></a><a id="dispose()(S.Tx):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#dispose()(implicittx:Tx):Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      
-    </li><li name="de.sciss.lucre.stm.Disposable#dispose" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="dispose()(implicittx:Tx):Unit"></a>
-      <a id="dispose()(S.Tx):Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
@@ -122,16 +581,15 @@
       <span class="symbol">
         <span class="name">dispose</span><span class="params">()</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.synth.Sys.Tx">S.Tx</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@dispose()(implicittx:Tx):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../lucre/stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.swing.Window#view" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="view:de.sciss.lucre.swing.View[S]"></a><a id="view:View[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#view:de.sciss.lucre.swing.View[S]" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../lucre/stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a></dd></dl></div>
-    </li><li name="de.sciss.lucre.swing.Window#view" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="view:de.sciss.lucre.swing.View[S]"></a>
-      <a id="view:View[S]"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
@@ -139,16 +597,15 @@
       <span class="symbol">
         <span class="name">view</span><span class="result">: <span class="extype" name="de.sciss.lucre.swing.View">View</span>[<span class="extype" name="de.sciss.mellite.gui.AttrMapFrame.S">S</span>]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@view:de.sciss.lucre.swing.View[S]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Window</dd></dl></div>
+    </li><li name="de.sciss.lucre.swing.Window#window" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="window:de.sciss.desktop.Window"></a><a id="window:Window"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#window:de.sciss.desktop.Window" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Window</dd></dl></div>
-    </li><li name="de.sciss.lucre.swing.Window#window" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="window:de.sciss.desktop.Window"></a>
-      <a id="window:Window"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">abstract </span>
         <span class="kind">def</span>
@@ -156,21 +613,21 @@
       <span class="symbol">
         <span class="name">window</span><span class="result">: <span class="extype" name="de.sciss.desktop.Window">Window</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@window:de.sciss.desktop.Window" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Window</dd></dl></div>
     </li></ol>
             </div>
 
-        <div id="values" class="values members">
+        <div class="values members">
               <h3>Concrete Value Members</h3>
-              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="!=(x$1:Any):Boolean"></a>
-      <a id="!=(Any):Boolean"></a>
-      <h4 class="signature">
+              <ol>
+                <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#!=(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -178,16 +635,15 @@
       <span class="symbol">
         <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@!=(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html###():Int" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="##():Int"></a>
-      <a id="##():Int"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -195,16 +651,15 @@
       <span class="symbol">
         <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@##():Int" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#==(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="==(x$1:Any):Boolean"></a>
-      <a id="==(Any):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -212,16 +667,15 @@
       <span class="symbol">
         <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@==(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#asInstanceOf[T0]:T0" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="asInstanceOf[T0]:T0"></a>
-      <a id="asInstanceOf[T0]:T0"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -229,28 +683,23 @@
       <span class="symbol">
         <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@asInstanceOf[T0]:T0" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a><a id="clone():AnyRef"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#clone():Object" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="scala.AnyRef#clone" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="clone():Object"></a>
-      <a id="clone():AnyRef"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@clone():Object" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -258,27 +707,29 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="eq(x$1:AnyRef):Boolean"></a>
-      <a id="eq(AnyRef):Boolean"></a>
-      <h4 class="signature">
+    </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@eq(x$1:AnyRef):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#equals(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="equals(x$1:Any):Boolean"></a>
-      <a id="equals(Any):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -286,16 +737,15 @@
       <span class="symbol">
         <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@equals(x$1:Any):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#finalize():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="finalize():Unit"></a>
-      <a id="finalize():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -303,11 +753,7 @@
       <span class="symbol">
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@finalize():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -315,10 +761,13 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
-      <a id="getClass():Class[_]"></a>
-      <h4 class="signature">
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#getClass():Class[_]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -326,16 +775,15 @@
       <span class="symbol">
         <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@getClass():Class[_]" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#hashCode():Int" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="hashCode():Int"></a>
-      <a id="hashCode():Int"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -343,16 +791,15 @@
       <span class="symbol">
         <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@hashCode():Int" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#isInstanceOf[T0]:Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="isInstanceOf[T0]:Boolean"></a>
-      <a id="isInstanceOf[T0]:Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -360,33 +807,31 @@
       <span class="symbol">
         <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@isInstanceOf[T0]:Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ne(x$1:AnyRef):Boolean"></a>
-      <a id="ne(AnyRef):Boolean"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@ne(x$1:AnyRef):Boolean" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#notify():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="notify():Unit"></a>
-      <a id="notify():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -394,16 +839,15 @@
       <span class="symbol">
         <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@notify():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#notifyAll():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="notifyAll():Unit"></a>
-      <a id="notifyAll():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -411,16 +855,15 @@
       <span class="symbol">
         <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@notifyAll():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
-      <a id="synchronized[T0](⇒T0):T0"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -428,16 +871,15 @@
       <span class="symbol">
         <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@synchronized[T0](x$1:=&gt;T0):T0" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#toString():String" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="toString():String"></a>
-      <a id="toString():String"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
         <span class="kind">def</span>
@@ -445,16 +887,15 @@
       <span class="symbol">
         <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@toString():String" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#wait():Unit" title="Permalink">
+        <i class="material-icons"></i>
       </a>
     </span>
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="wait():Unit"></a>
-      <a id="wait():Unit"></a>
-      <h4 class="signature">
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -462,11 +903,7 @@
       <span class="symbol">
         <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@wait():Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -474,10 +911,13 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
-      <a id="wait(Long,Int):Unit"></a>
-      <h4 class="signature">
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -485,11 +925,7 @@
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@wait(x$1:Long,x$2:Int):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -497,10 +933,13 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="wait(x$1:Long):Unit"></a>
-      <a id="wait(Long):Unit"></a>
-      <h4 class="signature">
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/AttrMapFrame.html#wait(x$1:Long):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
       <span class="modifier_kind">
         <span class="modifier">final </span>
         <span class="kind">def</span>
@@ -508,11 +947,7 @@
       <span class="symbol">
         <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
-      </h4><span class="permalink">
-      <a href="../../../../index.html#de.sciss.mellite.gui.AttrMapFrame@wait(x$1:Long):Unit" title="Permalink" target="_top">
-        <img src="../../../../lib/permalink.png" alt="Permalink" />
-      </a>
-    </span>
+      
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
@@ -520,7 +955,8 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li></ol>
+    </li>
+              </ol>
             </div>
 
         
@@ -534,7 +970,7 @@
             </div><div class="parent" name="de.sciss.lucre.stm.Disposable">
               <h3>Inherited from <a href="../../lucre/stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a>[<span class="extype" name="de.sciss.lucre.synth.Sys.Tx">S.Tx</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="../../../../scala/package.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="../../../../scala/index.html#AnyRef=Object" class="extmbr" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
             </div>
@@ -553,7 +989,9 @@
       <div id="tooltip"></div>
 
       <div id="footer">  </div>
-
-
+    </body>
+          </div>
+        </div>
+      </div>
     </body>
       </html>
