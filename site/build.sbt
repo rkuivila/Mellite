@@ -1,46 +1,55 @@
-import UnidocKeys._
-
-lazy val melliteVersion        = "2.6.0"
+lazy val melliteVersion        = "2.10.0"
 lazy val PROJECT_VERSION       = melliteVersion
 lazy val baseName              = "Mellite"
 
-lazy val soundProcessesVersion = "3.8.0"
+lazy val soundProcessesVersion = "3.11.0"
 lazy val oscVersion            = "1.1.5"
-lazy val audioFileVersion      = "1.4.5"
-lazy val scalaColliderVersion  = "1.21.0"
-lazy val ugensVersion          = "1.16.0"
-lazy val fscapeVersion         = "2.2.0"
-lazy val lucreVersion          = "3.3.1"
+lazy val audioFileVersion      = "1.4.6"
+lazy val scalaColliderVersion  = "1.22.3"
+lazy val ugensVersion          = "1.16.4"
+lazy val fscapeVersion         = "2.6.1"
+lazy val lucreVersion          = "3.3.3"
 
 val commonSettings = Seq(
   organization := "de.sciss",
   version      := PROJECT_VERSION,
-  scalaVersion := "2.11.8"
+  scalaVersion := "2.12.1"
 )
 
-val scalaOSC           = RootProject(uri(s"git://github.com/Sciss/ScalaOSC.git#v${oscVersion}"))
-val scalaAudioFile     = RootProject(uri(s"git://github.com/Sciss/ScalaAudioFile.git#v${audioFileVersion}"))
-val scalaColliderUGens = RootProject(uri(s"git://github.com/Sciss/ScalaColliderUGens.git#v${ugensVersion}"))
-val scalaCollider      = RootProject(uri(s"git://github.com/Sciss/ScalaCollider.git#v${scalaColliderVersion}"))
-val fscape             = RootProject(uri(s"git://github.com/Sciss/FScape-next.git#v${fscapeVersion}"))
-val soundProcesses     = RootProject(uri(s"git://github.com/Sciss/SoundProcesses.git#v${soundProcessesVersion}"))
-val mellite            = RootProject(uri(s"git://github.com/Sciss/${baseName}.git#v${PROJECT_VERSION}"))
+val lScalaOSC           = RootProject(uri(s"git://github.com/Sciss/ScalaOSC.git#v${oscVersion}"))
+val lScalaAudioFile     = RootProject(uri(s"git://github.com/Sciss/ScalaAudioFile.git#v${audioFileVersion}"))
+val lScalaColliderUGens = RootProject(uri(s"git://github.com/Sciss/ScalaColliderUGens.git#v${ugensVersion}"))
+val lScalaCollider      = RootProject(uri(s"git://github.com/Sciss/ScalaCollider.git#v${scalaColliderVersion}"))
+val lFScape             = RootProject(uri(s"git://github.com/Sciss/FScape-next.git#v${fscapeVersion}"))
+val lSoundProcesses     = RootProject(uri(s"git://github.com/Sciss/SoundProcesses.git#v${soundProcessesVersion}"))
+val lMellite            = RootProject(uri(s"git://github.com/Sciss/${baseName}.git#v${PROJECT_VERSION}"))
 
-val lucreURI           = uri(s"git://github.com/Sciss/Lucre.git#v${lucreVersion}")
-val lucreCore          = ProjectRef(lucreURI, "lucre-core")
-val lucreExpr          = ProjectRef(lucreURI, "lucre-expr")
-val lucreBdb6          = ProjectRef(lucreURI, "lucre-bdb6")
+val lucreURI            = uri(s"git://github.com/Sciss/Lucre.git#v${lucreVersion}")
+val lLucreCore          = ProjectRef(lucreURI, "lucre-core")
+val lLucreExpr          = ProjectRef(lucreURI, "lucre-expr")
+val lLucreBdb6          = ProjectRef(lucreURI, "lucre-bdb6")
 
 git.gitCurrentBranch in ThisBuild := "master"
 
 val root = (project in file("."))
   .settings(commonSettings: _*)
-  .settings(unidocSettings: _*)
-  .settings(site.settings ++ ghpages.settings: _*)
+  .enablePlugins(ScalaUnidocPlugin, GhpagesPlugin, ParadoxSitePlugin, SiteScaladocPlugin)
   .settings(
     name := baseName,
-    site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api"),
+    siteSubdirName in SiteScaladoc := "latest/api",
+    // site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api"),
+    mappings in packageDoc in Compile := (mappings  in (ScalaUnidoc, packageDoc)).value,
     git.remoteRepo := s"git@github.com:Sciss/${baseName}.git",
+    git.gitCurrentBranch := "master",
+    paradoxTheme         := Some(builtinParadoxTheme("generic")),
+    paradoxProperties in Paradox ++= Map(
+      "snippet.base_dir"        -> s"${baseDirectory.value}/snippets/src/main"
+      // "swingversion"            -> scalaColliderSwingVersion,
+      // "extref.swingdl.base_url" -> s"https://github.com/Sciss/ScalaColliderSwing/releases/download/v${scalaColliderSwingVersion}/ScalaColliderSwing_${scalaColliderSwingVersion}%s"
+    ),
+    libraryDependencies ++= Seq(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided" // this is needed for sbt-unidoc to work with macros used by Mellite!
+    ),
     scalacOptions in (Compile, doc) ++= Seq(
       "-skip-packages", Seq(
         "akka.stream.sciss",
@@ -64,12 +73,19 @@ val root = (project in file("."))
         "de.sciss.synth.proc.gui.impl",
         "de.sciss.synth.proc.impl",
         "de.sciss.synth.ugen.impl",
-        "de.sciss.tallin"
+        "de.sciss.tallin",
+        "snippets"
       ).mkString(":"),
       "-doc-title", s"${baseName} ${PROJECT_VERSION} API"
     ),
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(lucreBdb6)
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(lLucreBdb6)
   )
   // XXX TODO --- don't know how to exclude bdb5/6 from lucre
-  .aggregate(scalaOSC, scalaAudioFile, scalaColliderUGens, scalaCollider, fscape, soundProcesses, lucreCore, lucreExpr, mellite)
+  .aggregate(lScalaOSC, lScalaAudioFile, lScalaColliderUGens, lScalaCollider, lFScape, lSoundProcesses, lLucreCore, lLucreExpr, lMellite)
+
+val snippets = (project in file("snippets"))
+  // .dependsOn(lMellite)
+  .settings(
+    name := s"$baseName-Snippets"
+  )
 
