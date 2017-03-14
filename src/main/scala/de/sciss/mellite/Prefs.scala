@@ -39,7 +39,7 @@ object Prefs {
 
   // ---- system ----
 
-  final val defaultDbLockTimeout = 1000
+  final val defaultDbLockTimeout = 500
   def dbLockTimeout: Entry[Int] = userPrefs("lock-timeout")
 
   // ---- gui ----
@@ -100,8 +100,8 @@ object Prefs {
   final val defaultAudioSampleRate      = 0
 
   final val defaultAudioBlockSize       = 64
-  final val defaultAudioNumInputs       = 8
-  final val defaultAudioNumOutputs      = 8
+  final val defaultAudioNumInputs       = 2
+  final val defaultAudioNumOutputs      = 2
   final val defaultAudioNumPrivate      = 512
   final val defaultAudioNumWireBufs     = 256
   final val defaultAudioMemorySize      = 64
