@@ -53,7 +53,7 @@ Runnable packages can be created via `sbt universal:packageBin` (all platforms) 
 
 ## documentation
 
-The API docs can be found online here: https://sciss.github.io/Mellite/latest/api/
+The API docs can be found online here: https://sciss.github.io/Mellite/latest/api/de/sciss/
 
 Note that this project is in __highly experimental__ state. While I have been composing already pieces with it, I recommend anyone to approach this with extreme care. I cannot guarantee that the application is bug free, in particular you may end up with a corrupt session database (although unlikely), and also I might introduce changes that render it impossible for new versions to open sessions created with previous versions. You have been warned!
 

@@ -54,6 +54,7 @@ val root = (project in file("."))
     scalacOptions in (Compile, doc) ++= Seq(
       "-skip-packages", Seq(
         "akka.stream.sciss",
+        "scala.tools",
         "de.sciss.fscape.graph.impl",
         "de.sciss.fscape.lucre.impl",
         "de.sciss.fscape.lucre.stream",

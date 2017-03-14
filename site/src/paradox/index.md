@@ -2,7 +2,7 @@
 
 @@@ index
 
-- [Tutorial](tutorial.md)
+- [Tutorials](tutorials.md)
 - [Links](links.md)
 
 @@@
@@ -43,6 +43,6 @@ In order to run Mellite, you also need to have installed on your computer:
 
 ## Resources
 
-The API docs can be found [here](https://sciss.github.io/Mellite/latest/api/).
+The API docs can be found [here](latest/api/de/sciss/).
 
 The best way to ask questions, no matter if newbie or expert, is to use the [Gitter Channel](https://gitter.im/Sciss/Mellite). You need a GitHub or Twitter account to sign in.
