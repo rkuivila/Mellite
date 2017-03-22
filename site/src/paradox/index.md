@@ -31,6 +31,7 @@ obtain the source code, clone the source code repository of Mellite (see above),
 `build.sbt` add the qualification `withSources()` to any library before running `sbt update`.
 For example, to receive the source code of the PDFlitz library used by Mellite, change
 `"de.sciss" %% "pdflitz" % pdflitzVersion` to `"de.sciss" %% "pdflitz" % pdflitzVersion withSources()`.
+The sources will be downloaded to `~/.ivy2/cache/de.sciss/pdflitz_2.12/srcs`.
 If you have trouble obtaining the source code of incorporated libraries, I can send it to you via e-mail
 in compliance with the GNU GPL.
 

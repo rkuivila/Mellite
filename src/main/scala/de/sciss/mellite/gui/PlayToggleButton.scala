@@ -22,24 +22,27 @@ import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.mellite.Mellite
 import de.sciss.synth.proc.{SoundProcesses, Transport, WorkspaceHandle}
 
+import scala.concurrent.stm.Ref
 import scala.swing.ToggleButton
 import scala.swing.event.ButtonClicked
 
 object PlayToggleButton {
   def apply[S <: Sys[S]](transport: Transport[S])(implicit tx: S#Tx): PlayToggleButton[S] =
-    new Impl(transport, disposeTransport = false).init()
+    new Impl(transport, objH = None, disposeTransport = false).init()
 
   def apply[S <: SSys[S]](obj: Obj[S])(implicit tx: S#Tx, cursor: stm.Cursor[S],
                                       workspace: WorkspaceHandle[S]): PlayToggleButton[S] = {
     val t = Transport[S](Mellite.auralSystem)
-    t.addObject(obj)
-    new Impl(t, disposeTransport = true).init()
+//    t.addObject(obj)
+    new Impl(t, objH = Some(tx.newHandle(obj)), disposeTransport = true).init()
   }
 
-  private final class Impl[S <: Sys[S]](val transport: Transport[S], disposeTransport: Boolean)
+  private final class Impl[S <: Sys[S]](val transport: Transport[S], objH: Option[stm.Source[S#Tx, Obj[S]]],
+                                        disposeTransport: Boolean)
     extends PlayToggleButton[S] with ComponentHolder[ToggleButton] {
 
     private[this] var obs: Disposable[S#Tx] = _
+    private[this] val added = Ref(false)
 
     def dispose()(implicit tx: S#Tx): Unit = {
       obs.dispose()
@@ -69,8 +72,15 @@ object PlayToggleButton {
             val sel = selected
             SoundProcesses.atomic[S, Unit] { implicit tx =>
               transport.stop()
+              if (added.swap(false)(tx.peer)) objH.foreach(h => transport.removeObject(h()))
               transport.seek(0L)
-              if (sel) transport.play()
+              if (sel) {
+                objH.foreach { h =>
+                  transport.addObject(h())
+                  added.set(true)(tx.peer)
+                }
+                transport.play()
+              }
             } (transport.scheduler.cursor)
         }
       }
