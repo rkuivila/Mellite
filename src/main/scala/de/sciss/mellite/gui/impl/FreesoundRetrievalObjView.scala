@@ -15,14 +15,17 @@ package de.sciss.mellite
 package gui
 package impl
 
+import java.awt.Toolkit
+import java.awt.datatransfer.DataFlavor
+import java.net.URI
 import java.util.Date
 import javax.swing.Icon
-import javax.swing.event.{HyperlinkEvent, HyperlinkListener}
 
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{Desktop, FileDialog, OptionPane, PathField, Preferences, UndoManager}
 import de.sciss.equal.Implicits._
 import de.sciss.file._
+import de.sciss.freesound.impl.FreesoundImpl
 import de.sciss.freesound.lucre.{PreviewsCache, Retrieval, RetrievalView, TextSearchObj}
 import de.sciss.freesound.swing.SoundTableView
 import de.sciss.freesound.{Auth, Client, Freesound, Sound, TextSearch}
@@ -34,6 +37,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.ListObjViewImpl.NonEditable
 import de.sciss.mellite.gui.impl.document.FolderFrameImpl
 import de.sciss.processor.Processor
+import de.sciss.swingplus.GroupPanel
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.Workspace
 import de.sciss.{desktop, freesound}
@@ -41,7 +45,8 @@ import de.sciss.{desktop, freesound}
 import scala.collection.breakOut
 import scala.concurrent.Future
 import scala.concurrent.stm.Ref
-import scala.swing.{Action, BorderPanel, Component, Dimension, EditorPane, FlowPanel, Label, Rectangle, ScrollPane, SequentialContainer, TabbedPane, TextField}
+import scala.swing.{Action, Alignment, Button, Component, Label, SequentialContainer, TabbedPane, TextField}
+import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
 object FreesoundRetrievalObjView extends ListObjView.Factory {
@@ -145,7 +150,7 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
   private final case class Download(sound: Sound, mode: DownloadMode)
 
   private implicit object AuthPrefsType extends Preferences.Type[Auth] {
-    def toString(value: Auth): String = s"${value.accessToken};${value.refreshToken};${value.expires}"
+    def toString(value: Auth): String = s"${value.accessToken};${value.refreshToken};${value.expires.getTime}"
 
     def valueOf(string: String): Option[Auth] = {
       val arr = string.split(";")
@@ -189,41 +194,54 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
           s"""<html>
              |<body>
              |<p>
-             |Mellite has not yet been authorized to download
-             |files via your Freesound user account. If you have not yet
-             |created a Freesound user account, this is the first step
-             |you need to do. Next open the following URL, authorize
-             |Mellite and paste the result code back into the
-             |answer box in this dialog below:
-             |</p>
-             |<p>
-             |<A HREF="$codeURL">$codeURL</A>.
+             |Mellite has not yet been authorized to download<br>
+             |files via your Freesound user account. If you<br>
+             |have not yet created a Freesound user account,<br>
+             |this is the first step you need to do. Next open<br>
+             |the following URL, authorize Mellite and paste<br>
+             |the result code back into the answer box in this<br>
+             |dialog below:
              |</p>
              |</body>
              |""".stripMargin
-        val ggEditor = new EditorPane("text/html", codeHTML)
-        ggEditor.editable = false
-        ggEditor.peer.addHyperlinkListener(new HyperlinkListener {
-          def hyperlinkUpdate(e: HyperlinkEvent): Unit =
-            if (e.getEventType == HyperlinkEvent.EventType.ACTIVATED) Desktop.browseURI(e.getURL.toURI)
-        })
-        val lbCode = new Label("Result Code:")
-        val ggCode = new TextField(8)
-        val paneBot = new FlowPanel(lbCode, ggCode)
-        val scroll = new ScrollPane(ggEditor)
-        scroll.preferredSize = new Dimension(paneBot.preferredSize.width * 2, 300)  // XXX TODO --- how to determine this?
-        ggEditor.preferredSize = scroll.preferredSize
-        // ggEditor.maximumSize   = ggEditor.preferredSize
-        scroll.peer.getViewport.scrollRectToVisible(new Rectangle(0, 0, 1, 1))
+        val lbInfo = new Label(codeHTML)
 
-        val pane = new BorderPanel {
-          add(scroll , BorderPanel.Position.Center)
-          add(paneBot, BorderPanel.Position.South)
+        val lbLink = new Label("Link:", null, Alignment.Trailing)
+        val ggLink = new TextField(codeURL, 24)
+        ggLink.caret.position = 0
+        ggLink.editable = false
+        val ggOpen = Button("Browse") {
+          Desktop.browseURI(new URI(codeURL))
         }
+
+        val lbCode = new Label("Result Code:", null, Alignment.Trailing)
+        val ggCode = new TextField(24)
+        val ggPaste = Button("Paste") {
+          val cb = Toolkit.getDefaultToolkit.getSystemClipboard
+          try {
+            val str = cb.getData(DataFlavor.stringFlavor).asInstanceOf[String]
+            ggCode.text = str
+          } catch {
+            case NonFatal(_) =>
+          }
+        }
+
+        val pane = new GroupPanel {
+          horizontal = Par(lbInfo, Seq(
+            Par(lbLink, lbCode), Par(Seq(ggLink, ggOpen), Seq(ggCode, ggPaste))
+          ))
+          vertical = Seq(
+            lbInfo, Par(GroupPanel.Alignment.Baseline)(lbLink, ggLink, ggOpen),
+            Par(GroupPanel.Alignment.Baseline)(lbCode, ggCode, ggPaste)
+          )
+        }
+
         val optPane = OptionPane.confirmation(message = pane, optionType = OptionPane.Options.OkCancel)
         val res = optPane.show(window)
-        if (res === OptionPane.Result.Ok && ggCode.text.nonEmpty) {
-          val fut = Freesound.getAuth(ggCode.text)
+        val code = ggCode.text.trim
+        if (res === OptionPane.Result.Ok && code.nonEmpty) {
+//          FreesoundImpl.DEBUG = true
+          val fut = Freesound.getAuth(code)
           andStore(fut)
 
         } else {
@@ -302,7 +320,7 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
   }
 
   private[this] final val ak = Array(
-    4848160278938271032L, 2898367906212102934L, 378926037498280734L, 2614081517227147591L, 2038488051324617750L
+    2455899147606491166L, 2677468186055286084L, 3764232225906169915L, 4834682473675565318L, 5060424300801244677L
   )
 }
 trait FreesoundRetrievalObjView[S <: stm.Sys[S]] extends ObjView[S] {
