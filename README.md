@@ -9,7 +9,7 @@
 
 ## statement
 
-Mellite is a computer music application, implemented as a graphical front end for [SoundProcesses](http://github.com/Sciss/SoundProcesses). It is (C)opyright 2012&ndash;2016 by Hanns Holger Rutz. All rights reserved. Mellite is released under the [GNU General Public License](http://github.com/Sciss/Mellite/blob/master/licenses/Mellite-License.txt) v3+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
+Mellite is a computer music application, implemented as a graphical front end for [SoundProcesses](http://github.com/Sciss/SoundProcesses). It is (C)opyright 2012&ndash;2017 by Hanns Holger Rutz. All rights reserved. Mellite is released under the [GNU General Public License](http://github.com/Sciss/Mellite/blob/master/licenses/Mellite-License.txt) v3+ and comes with absolutely no warranties. To contact the author, send an email to `contact at sciss.de`.
 
 The `licenses` folder contains the license headers for all dependencies and transitive dependencies. For the binary release of Mellite, source code is not included but available via the respective OSS project pages, as indicated in the license files, or&mdash;in compliance with GPL/LGPL&mdash;on request via E-Mail. All source code with group-ID `de.sciss` is available from [github.com/Sciss](https://github.com/Sciss).
 
@@ -33,7 +33,7 @@ The current version `v` is `"2.10.2"`.
 
 ## building
 
-Mellite builds with sbt 0.13 and Scala 2.12, 2.11, 2.10. The dependencies will be downloaded automatically from Maven Central repository, except for snapshots during development.
+Mellite builds with sbt 0.13 and Scala 2.12, 2.11. The dependencies will be downloaded automatically from Maven Central repository, except for snapshots during development.
 
 Dependencies not found are all available from their respective [GitHub repositories](https://github.com/Sciss?tab=repositories), so in case you want to build a snapshot version, you may need to check out these projects and publish them yourself using `sbt publish-local`.
 

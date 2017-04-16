@@ -11,9 +11,7 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
-package gui
-package impl
+package de.sciss.mellite.gui.impl
 
 import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
@@ -29,6 +27,7 @@ import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.ListObjViewImpl.NonEditable
+import de.sciss.mellite.gui.{CodeFrame, CodeView, FScapeOutputsView, GUI, ListObjView, ObjView, Shapes}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{Code, GenContext, Workspace}
 

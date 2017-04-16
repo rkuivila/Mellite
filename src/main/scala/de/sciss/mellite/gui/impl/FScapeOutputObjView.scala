@@ -11,19 +11,18 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
-package gui
-package impl
+package de.sciss.mellite.gui.impl
 
 import javax.swing.Icon
 
 import de.sciss.desktop
-import de.sciss.icons.raphael
 import de.sciss.fscape.lucre.FScape
+import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
-import de.sciss.synth.proc.{Output, Workspace}
+import de.sciss.mellite.gui.{ListObjView, ObjView}
+import de.sciss.synth.proc.Workspace
 
 object FScapeOutputObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = FScape.Output[~]

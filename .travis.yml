@@ -3,23 +3,19 @@ language: scala
 scala:
   - 2.12.1
   - 2.11.8
-  - 2.10.6
 
 env:
   - JDK=oraclejdk8
-  - JDK=openjdk6
+  - JDK=openjdk7
 
 before_script:
   - jdk_switcher use $JDK
 
 matrix:
   # scala 2.12 requires java 8.
-  # scala 2.11 has FScape and the view has problems with Java 6 type-erased Swing
   exclude:
     - scala: 2.12.1
-      env: JDK=openjdk6
-    - scala: 2.11.8
-      env: JDK=openjdk6
+      env: JDK=openjdk7
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION test assembly

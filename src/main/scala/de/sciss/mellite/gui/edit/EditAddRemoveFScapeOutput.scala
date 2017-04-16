@@ -11,9 +11,7 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite
-package gui
-package edit
+package de.sciss.mellite.gui.edit
 
 import javax.swing.undo.{AbstractUndoableEdit, UndoableEdit}
 

@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.10.2"
+lazy val projectVersion             = "2.10.3-SNAPSHOT"
 lazy val mimaVersion                = "2.10.0"
 
 lazy val loggingEnabled             = true
@@ -14,7 +14,7 @@ lazy val authorEMail                = "contact@sciss.de"
 // ---- dependencies ----
 
 lazy val soundProcessesVersion      = "3.11.0"
-lazy val fscapeVersion              = "2.6.1"  // Scala 2.11, 2.12 only
+lazy val fscapeVersion              = "2.6.1"
 lazy val nuagesVersion              = "2.13.0"
 lazy val interpreterPaneVersion     = "1.7.5"
 lazy val syntaxPaneVersion          = "1.1.5"
@@ -22,6 +22,7 @@ lazy val scalaColliderVersion       = "1.22.3"
 lazy val scalaColliderUGenVersion   = "1.16.4"
 lazy val lucreVersion               = "3.3.3"
 lazy val equalVersion               = "0.1.2"
+lazy val freesoundVersion           = "1.0.0-SNAPSHOT"
 lazy val playJSONVersion            = "0.4.0"
 lazy val scalaColliderSwingVersion  = "1.32.2"
 lazy val lucreSwingVersion          = "1.4.3"
@@ -49,11 +50,10 @@ lazy val commonSettings = Seq(
   homepage           := Some(url(s"https://github.com/Sciss/$baseName")),
   licenses           := Seq("GNU General Public License v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
   scalaVersion       := "2.12.1",
-  crossScalaVersions := Seq("2.12.1", "2.11.8", "2.10.6"),
+  crossScalaVersions := Seq("2.12.1", "2.11.8"),
   scalacOptions ++= {
-    val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture")
-    val ys = if (scalaVersion.value.startsWith("2.10")) xs else xs :+ "-Xlint:-stars-align,_"  // syntax not supported in Scala 2.10
-    if (loggingEnabled || isSnapshot.value) ys else ys ++ Seq("-Xelide-below", "INFO")
+    val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture", "-Xlint:-stars-align,_")
+    if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
   },
   javacOptions ++= Seq("-source", "1.6", "-target", "1.6"),
   resolvers += "Typesafe Maven Repository" at "http://repo.typesafe.com/typesafe/maven-releases/", // https://stackoverflow.com/questions/23979577
@@ -176,6 +176,7 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss" %% "scalainterpreterpane"            % interpreterPaneVersion,     // REPL
       "de.sciss" %% "scalacollider"                   % scalaColliderVersion,
       "de.sciss" %  "scalacolliderugens-spec"         % scalaColliderUGenVersion,   // meta data
+      "de.sciss" %% s"lucre-core"                     % lucreVersion,               // (satisfy sbt)
       "de.sciss" %% s"lucre-$bdb"                     % lucreVersion,               // database backend
       "de.sciss" %% "equal"                           % equalVersion,               // type-safe equals
 //      "de.sciss" %% "play-json-sealed"                % playJSONVersion,
@@ -189,15 +190,12 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss" %% "desktop-mac"                     % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component
       "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
+      "de.sciss" %% "fscape"                          % fscapeVersion,              // offline audio rendering
+      "de.sciss" %% "scalafreesound-lucre"            % freesoundVersion,           // Freesound support
       "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
       "de.sciss" %  "weblaf"                          % webLaFVersion,              // look and feel
       "de.sciss" %  "submin"                          % subminVersion               // dark skin
     ),
-    libraryDependencies ++= {
-      if (scalaVersion.value.startsWith("2.10")) Nil else Seq(
-        "de.sciss" %% "fscape" % fscapeVersion  // offline audio rendering
-      )
-    },
     mimaPreviousArtifacts := Set("de.sciss" %% baseNameL % mimaVersion),
     mainClass in (Compile,run) := appMainClass,
     initialCommands in console :=
