@@ -25,11 +25,11 @@ import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{Desktop, FileDialog, OptionPane, PathField, Preferences, UndoManager}
 import de.sciss.equal.Implicits._
 import de.sciss.file._
-import de.sciss.freesound.impl.FreesoundImpl
-import de.sciss.freesound.lucre.{PreviewsCache, Retrieval, RetrievalView, TextSearchObj}
+import de.sciss.freesound.lucre.{PreviewsCache, Retrieval, RetrievalView, SoundObj, TextSearchObj}
 import de.sciss.freesound.swing.SoundTableView
 import de.sciss.freesound.{Auth, Client, Freesound, Sound, TextSearch}
-import de.sciss.lucre.artifact.ArtifactLocation
+import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
+import de.sciss.lucre.expr.{DoubleObj, LongObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Obj, TxnLike}
 import de.sciss.lucre.swing._
@@ -38,16 +38,17 @@ import de.sciss.mellite.gui.impl.ListObjViewImpl.NonEditable
 import de.sciss.mellite.gui.impl.document.FolderFrameImpl
 import de.sciss.processor.Processor
 import de.sciss.swingplus.GroupPanel
+import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.Workspace
+import de.sciss.synth.proc.{AudioCue, Folder, Workspace}
 import de.sciss.{desktop, freesound}
 
 import scala.collection.breakOut
 import scala.concurrent.Future
 import scala.concurrent.stm.Ref
-import scala.swing.{Action, Alignment, Button, Component, Label, SequentialContainer, TabbedPane, TextField}
+import scala.swing.{Action, Alignment, Button, Component, Label, ProgressBar, SequentialContainer, TabbedPane, TextField}
 import scala.util.control.NonFatal
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 object FreesoundRetrievalObjView extends ListObjView.Factory {
   type E[~ <: stm.Sys[~]] = Retrieval[~]
@@ -132,15 +133,21 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
       val fv            = FolderView[S](r.downloads)
       val downloadsView = new FolderFrameImpl.ViewImpl[S](fv).init()
       val name          = AttrCellView.name[S](r)
+      val locH          = tx.newHandle(r.downloadLocation)
+      val folderH       = tx.newHandle(r.downloads)
       val w = new WindowImpl[S](name) {
-        val view: View[S] = new EditorImpl[S](rv, downloadsView, tx.newHandle(r.downloadLocation)).init()
+        val view: View[S] = new EditorImpl[S](rv, downloadsView, locH, folderH).init()
       }
       w.init()
       Some(w)
     }
   }
 
-  private sealed trait DownloadMode { def downloadFile: File; def out: File }
+  private sealed trait DownloadMode {
+    def downloadFile: File
+    def out: File
+    def isConvert: Boolean = downloadFile != out
+  }
   private final case class Direct (out: File) extends DownloadMode {
     def downloadFile: File = out
   }
@@ -150,7 +157,9 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
   private final case class Download(sound: Sound, mode: DownloadMode)
 
   private implicit object AuthPrefsType extends Preferences.Type[Auth] {
-    def toString(value: Auth): String = s"${value.accessToken};${value.refreshToken};${value.expires.getTime}"
+    def toString(value: Auth): String = if (value == null) null else {
+      s"${value.accessToken};${value.refreshToken};${value.expires.getTime}"
+    }
 
     def valueOf(string: String): Option[Auth] = {
       val arr = string.split(";")
@@ -237,7 +246,7 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
         }
 
         val optPane = OptionPane.confirmation(message = pane, optionType = OptionPane.Options.OkCancel)
-        val res = optPane.show(window)
+        val res = optPane.show(window, title = "Freesound authorization required")
         val code = ggCode.text.trim
         if (res === OptionPane.Result.Ok && code.nonEmpty) {
 //          FreesoundImpl.DEBUG = true
@@ -251,10 +260,14 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
   }
 
   private final class EditorImpl[S <: Sys[S]](peer: RetrievalView[S], downloadsView: View[S],
-                                              locH: stm.Source[S#Tx, ArtifactLocation[S]])
+                                              locH: stm.Source[S#Tx, ArtifactLocation[S]],
+                                              folderH: stm.Source[S#Tx, Folder[S]])
                                              (implicit val workspace: Workspace[S], val cursor: stm.Cursor[S],
                                               val undoManager: UndoManager)
     extends ViewHasWorkspace[S] with View.Editable[S] {
+
+    private[this] var ggProgressDL: ProgressBar = _
+    private[this] var actionDL    : Action      = _
 
     def component: Component = peer.component
 
@@ -263,56 +276,137 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
       this
     }
 
-//    private def performDL(xs: List[Download]): Unit = {
-//      xs match {
-//        case head :: tail =>
-//          Freesound.download(head.sound.id, head.mode.downloadFile)
-//      }
-////      Future.sequence()
-//    }
+    private def authThenDownload(): Unit = {
+      val authFut = findAuth(desktop.Window.find(component))
+      authFut.onComplete {
+        //          println(s"Authorization result: $res")
+        case Failure(Processor.Aborted()) =>
+        case Failure(other) =>
+          other.printStackTrace()
+          val optPane = OptionPane.confirmation("Could not retrieve authorization. Remove old key to try anew?")
+          val res = optPane.show(desktop.Window.find(component), title = "Authorization failed")
+          if (res === OptionPane.Result.Yes) prefsFreesoundAuth.put(null) // XXX TODO --- need `remove` API
 
-    private def guiInit(): Unit = {
-      val actionDL = Action("Download") {
-        val sel = peer.soundTableView.selection
-        val dir = cursor.step { implicit tx => locH().value }
-        val dl: List[Download] = sel.flatMap { s =>
-          val n0: String = s.fileName.collect {
-            case c    if c.isLetterOrDigit => c
-            case ' ' => '-'
-            case '-' => '-'
-            case '_' => '_'
-          } (breakOut)
+        case Success(auth) =>
+          defer {
+            if (_futDL.isEmpty) tryDownload()(auth)
+          }
+      }
+    }
 
-          val n1: String = n0.take(12)
-          val needsConversion = s.fileType.isCompressed
-          val ext = if (needsConversion) "aif" else s.fileType.toProperty
-          val n   = s"${s.id}_$n1.$ext"
-          val f   = dir / n
-          val m: DownloadMode = if (needsConversion) {
-            val temp = File.createTemp(suffix = s.fileType.toProperty)
-            Convert(temp, f)
-          } else Direct(f)
-          if (f.exists()) None else Some(Download(s, m))
+    private def selectedSounds: Seq[Sound] = peer.soundTableView.selection
+
+    private[this] var _futDL = Option.empty[Future[Any]]
+
+    private def tryDownload()(implicit auth: Auth): Unit = {
+      requireEDT()
+
+      val sel = selectedSounds
+      val dir = cursor.step { implicit tx => locH().value }
+      val dl: List[Download] = sel.flatMap { s =>
+        val n0 = file(s.fileName).base
+        val n1: String = n0.collect {
+          case c if c.isLetterOrDigit   => c
+          case c if c >= ' ' & c < '.'  => c
+          case '.' => '-'
         } (breakOut)
 
-        if (sel.nonEmpty && dl.isEmpty)
-          println(s"${if (sel.size > 1) "Files have" else "File has"} already been downloaded.")
+        val n2: String = n1.take(18)
+        val needsConversion = s.fileType.isCompressed
+        val ext = if (needsConversion) "aif" else s.fileType.toProperty
+        val n   = s"${s.id}_$n2.$ext"
+        val f   = dir / n
+        val m: DownloadMode = if (needsConversion) {
+          val temp = File.createTemp(suffix = s.fileType.toProperty)
+          Convert(temp, f)
+        } else Direct(f)
+        if (f.exists()) None else Some(Download(s, m))
+      } (breakOut)
 
-        val authFut = findAuth(desktop.Window.find(component))
-        authFut.onComplete { res =>
-          println(s"Authorization result: $res")
+      if (sel.nonEmpty && dl.isEmpty)
+        println(s"${if (sel.size > 1) "Files have" else "File has"} already been downloaded.")
+
+      val futDL = performDL(dl, off = 0, num = dl.size, done = Nil)
+      _futDL = Some(futDL)
+      actionDL.enabled = false
+
+      futDL.onComplete { tr =>
+        defer {
+          actionDL.enabled = selectedSounds.nonEmpty
+          _futDL = None
+        }
+        cursor.step { implicit tx =>
+          val loc    = locH()
+          val folder = folderH()
+          tr match {
+            case Failure(ex)    => ex.printStackTrace()
+            case Success(list)  =>
+              (dl zip list).foreach {
+                case (dl0, Failure(ex)) =>
+                  println(s"---- Download of sound # ${dl0.sound.id} failed: ----")
+                  ex.printStackTrace()
+
+                case (dl0, Success(_)) =>
+                  try {
+                    val f     = dl0.mode.out
+                    val spec  = AudioFile.readSpec(f)
+                    val art   = Artifact.apply(loc, f)
+                    val cue   = AudioCue.Obj[S](art, spec, offset = LongObj.newVar(0L), gain = DoubleObj.newVar(1.0))
+                    val snd   = SoundObj.newConst[S](dl0.sound)
+                    cue.attr.put(Retrieval.attrFreesound, snd)
+                    cue.name  = f.base
+                    folder.addLast(cue)
+                  } catch {
+                    case NonFatal(ex) =>
+                      println(s"---- Cannot read downloaded sound # ${dl0.sound.id} failed: ----")
+                      ex.printStackTrace()
+                  }
+              }
+          }
         }
       }
+    }
+
+    private def performDL(xs: List[Download], off: Int, num: Int, done: List[Try[Unit]])
+                         (implicit auth: Auth): Future[List[Try[Unit]]] = {
+      xs match {
+        case head :: tail =>
+          val proc = Freesound.download(head.sound.id, head.mode.downloadFile)
+          proc.addListener {
+            case Processor.Progress(_, amt) =>
+              val amtTot = ((off + amt)/num * 100).toInt
+              defer(ggProgressDL.value = amtTot)
+          }
+          val futA = if (!head.mode.isConvert) proc else proc.map { _ =>
+            throw new NotImplementedError("Conversion from compressed format not yet implemented")
+          }
+          val futB = futA.map[Try[Unit]](_ => Success(())).recover { case ex => Failure(ex) }
+          futB.flatMap { res =>
+            val done1 = done :+ res
+            performDL(xs = tail, off = off + 1, num = num, done = done1)
+          }
+
+        case _ =>
+          Future.successful(done)
+      }
+    }
+
+
+    private def guiInit(): Unit = {
+      ggProgressDL = new ProgressBar
+
+      actionDL = Action("Download")(authThenDownload())
       actionDL.enabled = false
       val bot: SequentialContainer = peer.resultBottomComponent
       val ggDL = GUI.toolButton(actionDL, freesound.swing.Shapes.Download,
         tooltip = "Downloads selected sound to folder")
       bot.contents += ggDL
+      bot.contents += ggProgressDL
       peer.tabbedPane.pages += new TabbedPane.Page("Downloads", downloadsView.component, null)
 
       peer.soundTableView.addListener {
         case SoundTableView.Selection(sounds) =>
-          actionDL.enabled = sounds.nonEmpty
+          actionDL.enabled = sounds.nonEmpty && _futDL.isEmpty
       }
     }
 
