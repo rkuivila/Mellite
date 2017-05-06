@@ -82,7 +82,7 @@ object ProcOutputsViewImpl {
     }
 
     private lazy val actionRemove = Action(null) {
-      selection.headOption.foreach { case (key, view) =>
+      selection.headOption.foreach { case (key, _ /* view */) =>
         val editOpt = cursor.step { implicit tx =>
 //          val obj     = objH()
           val edits3: List[UndoableEdit] = Nil
@@ -117,7 +117,7 @@ object ProcOutputsViewImpl {
       val ggDelete  = GUI.toolButton(actionRemove, raphael.Shapes.Minus, "Remove Output")
       ggDrag        = new DragSourceButton() {
         protected def createTransferable(): Option[Transferable] =
-          selection.headOption.map { case (key, view) =>
+          selection.headOption.map { case (key, _ /* view */) =>
             DragAndDrop.Transferable(ProcOutputsView.flavor)(ProcOutputsView.Drag[S](
               workspace, objH, key))
           }

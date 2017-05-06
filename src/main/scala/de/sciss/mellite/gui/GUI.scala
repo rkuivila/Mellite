@@ -17,12 +17,12 @@ package gui
 import java.awt.event.{ActionEvent, ActionListener}
 import java.awt.geom.{AffineTransform, Area, Path2D}
 import java.awt.{BasicStroke, Graphics, Graphics2D, RenderingHints, Shape}
+import javax.swing.event.{AncestorEvent, AncestorListener}
 import javax.swing.{Icon, JComponent, KeyStroke, SwingUtilities}
 
-import de.sciss.audiowidgets.Transport
-import de.sciss.desktop
+import de.sciss.audiowidgets.{RotaryKnob, Transport}
 import de.sciss.desktop.{KeyStrokes, OptionPane}
-import de.sciss.equal
+import de.sciss.{desktop, equal, numbers}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
@@ -32,8 +32,8 @@ import de.sciss.synth.proc.SoundProcesses
 
 import scala.concurrent.Future
 import scala.swing.Swing._
-import scala.swing.event.Key
-import scala.swing.{AbstractButton, Action, Alignment, Button, Component, Dialog, Label, TextField}
+import scala.swing.event.{Key, ValueChanged}
+import scala.swing.{AbstractButton, Action, Alignment, Button, Component, Dialog, Dimension, Label, TextField}
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
@@ -147,6 +147,17 @@ object GUI {
     b.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, "click")
   }
 
+  /** Same as `addGlobalKey`, but only performs action if the button is
+    * currently showing (e.g. in the currently showing tabbed pane page).
+    */
+  def addGlobalKeyWhenVisible(b: AbstractButton, keyStroke: KeyStroke): Unit = {
+    val click = Action(null) {
+      if (b.showing) b.doClick()
+    }
+    b.peer.getActionMap.put("click", click.peer)
+    b.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, "click")
+  }
+
   def viewButton(action: Action, tooltip: String = ""): Button = {
     val res = toolButton(action, raphael.Shapes.View, tooltip)
     addGlobalKey(res, KeyStrokes.menu1 + Key.Enter)
@@ -175,6 +186,52 @@ object GUI {
     val res = toolButton(action, raphael.Shapes.SplitArrows, tooltip)
     addGlobalKey(res, KeyStrokes.menu1 + Key.D)
     res
+  }
+
+  def setInitialFocus(c: Component): Unit = {
+//    val adapter = new ComponentAdapter {
+//      override def componentShown(e: ComponentEvent): Unit = {
+//        c.peer.removeComponentListener(this)
+//        val res = c.requestFocusInWindow()
+//        println(s"requestFocusInWindow(): $res")
+//      }
+//    }
+    val adapter = new AncestorListener {
+      def ancestorAdded(e: AncestorEvent): Unit = {
+        c.peer.removeAncestorListener(this)
+        /* val res = */ c.requestFocusInWindow()
+//        println(s"requestFocusInWindow(): $res")
+      }
+
+      def ancestorMoved  (e: AncestorEvent): Unit = ()
+      def ancestorRemoved(e: AncestorEvent): Unit = ()
+    }
+
+//    c.peer.addComponentListener(adapter)
+    c.peer.addAncestorListener (adapter)
+  }
+
+  def boostRotary(lo: Float = 1, hi: Float = 512, tooltip: String = "Sonogram Brightness")
+                 (fun: Float => Unit): Component = {
+    val knob = new RotaryKnob {
+      min       = 0
+      max       = 64
+      value     = 0
+      focusable = false
+      listenTo(this)
+      reactions += {
+        case ValueChanged(_) =>
+          import numbers.Implicits._
+          val scaled = value.linexp(0, 64, lo, hi)
+          fun(scaled)
+      }
+      preferredSize = new Dimension(33, 28)
+      background    = null
+      // paintTrack = false
+    }
+    knob.tooltip = tooltip
+    desktop.Util.fixWidth(knob)
+    knob
   }
 
   def atomic[S <: Sys[S], A](title: String, message: String, window: Option[desktop.Window] = None,

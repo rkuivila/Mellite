@@ -21,6 +21,8 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.document.{FolderFrameImpl => Impl}
 import de.sciss.synth.proc.{Folder, Workspace}
 
+import scala.swing.{Component, SequentialContainer}
+
 object FolderFrame {
   /** Creates a new frame for a folder view.
     *
@@ -41,4 +43,6 @@ object FolderFrame {
 
 trait FolderFrame[S <: Sys[S]] extends lucre.swing.Window[S] {
   def folderView: FolderView[S]
+
+  def bottomComponent: Component with SequentialContainer
 }

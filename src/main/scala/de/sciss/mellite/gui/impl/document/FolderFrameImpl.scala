@@ -36,7 +36,7 @@ import de.sciss.synth.proc.{Folder, ObjKeys, Workspace}
 import scala.collection.breakOut
 import scala.swing.Swing.EmptyIcon
 import scala.swing.event.Key
-import scala.swing.{Action, Alignment, CheckBox, Dialog, Label, Swing, TextField}
+import scala.swing.{Action, Alignment, CheckBox, Component, Dialog, Label, SequentialContainer, Swing, TextField}
 
 object FolderFrameImpl {
   def apply[S <: Sys[S]](name: CellView[S#Tx, String],
@@ -77,10 +77,12 @@ object FolderFrameImpl {
     def workspace : Workspace [S] = view.workspace
     def folderView: FolderView[S] = view.peer
 
+    def bottomComponent: Component with SequentialContainer = view.bottomComponent
+
     private var quitAcceptor = Option.empty[() => Boolean]
 
     override protected def initGUI(): Unit = {
-      addDuplicateAction (this, view.actionDuplicate )
+      addDuplicateAction (this, view.actionDuplicate)
       // addImportJSONAction(this, view.actionImportJSON)
       if (interceptQuit) quitAcceptor = Some(Desktop.addQuitAcceptor(checkClose()))
     }

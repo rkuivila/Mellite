@@ -131,7 +131,9 @@ object ViewImpl {
       //      sono.onComplete {
       //        case x => println(s"<view> $x")
       //      }
-      val sonogramView = new ViewJ(_sonogram, timelineModel)
+
+      val sonogramView  = new ViewJ(_sonogram, timelineModel)
+      val ggVisualBoost = GUI.boostRotary()(sonogramView.visualBoost = _)
 
       // val ggDragRegion = new DnD.Button(holder, snapshot, timelineModel)
       val ggDragRegion = new DragSourceButton() {
@@ -155,6 +157,8 @@ object ViewImpl {
           HStrut(4),
           new Label("Gain:"),
           gainView.component,
+          HStrut(8),
+          ggVisualBoost,
           HGlue,
           HStrut(4),
           transportView.component,
@@ -169,7 +173,7 @@ object ViewImpl {
       }
 
       component = pane
-      // sonogramView.component.requestFocus()
+      GUI.setInitialFocus(sonogramView.canvasComponent)
     }
 
     def obj(implicit tx: S#Tx): AudioCue.Obj[S] = holder()

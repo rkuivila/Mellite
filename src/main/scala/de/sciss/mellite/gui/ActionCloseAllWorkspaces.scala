@@ -35,11 +35,8 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
   checkCloseAll()
 
   dh.addListener {
-    case desktop.DocumentHandler.Added(doc) =>
-      checkCloseAll()
-
-    case desktop.DocumentHandler.Removed(doc) =>
-      checkCloseAll()
+    case desktop.DocumentHandler.Added  (_) => checkCloseAll()
+    case desktop.DocumentHandler.Removed(_) => checkCloseAll()
   }
 
   def apply(): Unit = {
@@ -62,7 +59,7 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
   def check[S <: Sys[S]](doc: Workspace[S], window: Option[Window]): Boolean = {
     requireEDT()
     doc match {
-      case docI: Workspace.InMemory =>
+      case _: Workspace.InMemory =>
         val msg = "<html><body>Closing an in-memory workspace means<br>" +
           "all contents will be <b>irrevocably lost</b>.<br>" +
           "<p>Ok to proceed?</body></html>"

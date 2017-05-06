@@ -320,7 +320,7 @@ object Edits {
   def unlinkAndRemove[S <: Sys[S]](timeline: proc.Timeline.Modifiable[S], span: SpanLikeObj[S], obj: Obj[S])
                                   (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val scanEdits = obj match {
-      case objT: Proc[S] =>
+      case _: Proc[S] =>
 //        val proc  = objT
 //        // val scans = proc.scans
 //        val edits1 = proc.inputs.iterator.toList.flatMap { case (key, scan) =>

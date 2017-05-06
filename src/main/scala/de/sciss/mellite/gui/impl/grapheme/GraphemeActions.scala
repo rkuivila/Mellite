@@ -33,8 +33,8 @@ trait GraphemeActions[S <: Sys[S]] {
 
   object actionDelete extends Action("Delete") {
     def apply(): Unit = {
-      val editOpt = withSelection { implicit tx => views =>
-        graphemeMod.flatMap { groupMod =>
+      val editOpt = withSelection { implicit tx =>_ =>
+        graphemeMod.flatMap { _ =>
           ???! // ProcGUIActions.removeProcs(groupMod, views) // XXX TODO - probably should be replaced by Edits.unlinkAndRemove
         }
       }
@@ -65,14 +65,14 @@ trait GraphemeActions[S <: Sys[S]] {
 
     def apply(): Unit = {
       timelineModel.selection.nonEmptyOption.foreach { selSpan =>
-        val minStart = timelineModel.bounds.start
+//        val minStart = timelineModel.bounds.start
         val editOpt = cursor.step { implicit tx =>
-          graphemeMod.flatMap { groupMod =>
+          graphemeMod.flatMap { _ =>
             // ---- remove ----
             // - first call 'clear'
             // - then move everything right of the selection span's stop to the left
             //   by the selection span's length
-            val editClear = editClearSpan(groupMod, selSpan)
+//            val editClear = editClearSpan(groupMod, selSpan)
             ???!
 //            val affected  = groupMod.intersect(Span.From(selSpan.stop))
 //            val amount    = ProcActions.Move(deltaTime = -selSpan.length, deltaTrack = 0, copy = false)
@@ -99,7 +99,7 @@ trait GraphemeActions[S <: Sys[S]] {
     enabled = false
 
     def apply(): Unit = {
-      val pos = timelineModel.position
+//      val pos = timelineModel.position
       ???!
 //      val edits = withSelection { implicit tx => views =>
 //        val list = views.flatMap { view =>

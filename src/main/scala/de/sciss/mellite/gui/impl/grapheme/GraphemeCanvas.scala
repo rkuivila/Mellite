@@ -33,7 +33,7 @@ trait GraphemeCanvas[S <: Sys[S]] extends TimelineCanvasImpl {
   // ---- impl ----
 
   private[this] val selectionListener: SelectionModel.Listener[S, GraphemeObjView[S]] = {
-    case SelectionModel.Update(added, removed) =>
+    case SelectionModel.Update(_ /* added */, _ /* removed */) =>
       canvasComponent.repaint() // XXX TODO: dirty rectangle optimization
   }
 

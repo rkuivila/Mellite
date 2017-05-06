@@ -19,7 +19,7 @@ import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.net.URI
 import java.util.Date
-import javax.swing.Icon
+import javax.swing.{Icon, KeyStroke}
 
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{Desktop, FileDialog, OptionPane, PathField, Preferences, UndoManager}
@@ -46,7 +46,8 @@ import de.sciss.{desktop, freesound}
 import scala.collection.breakOut
 import scala.concurrent.Future
 import scala.concurrent.stm.Ref
-import scala.swing.{Action, Alignment, Button, Component, Label, ProgressBar, SequentialContainer, TabbedPane, TextField}
+import scala.swing.event.Key
+import scala.swing.{Action, Alignment, Button, Component, Label, ProgressBar, SequentialContainer, Swing, TabbedPane, TextField}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -132,6 +133,29 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
       implicit val undo = new UndoManagerImpl
       val fv            = FolderView[S](r.downloads)
       val downloadsView = new FolderFrameImpl.ViewImpl[S](fv).init()
+
+      def viewInfo(): Unit = {
+        val sounds = cursor.step { implicit tx =>
+          fv.selection.flatMap { nv =>
+            val obj = nv.modelData()
+            obj.attr.$[SoundObj](Retrieval.attrFreesound).map(_.value)
+          }
+        }
+        sounds match {
+          case single :: Nil =>
+            rv.soundView.sound = Some(single)
+            rv.showInfo()
+          case _ =>
+        }
+      }
+
+      deferTx {
+        val ggInfo  = GUI.toolButton(Action(null)(viewInfo()), freesound.swing.Shapes.SoundInfo, tooltip = "View Sound Information")
+        val menu1   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
+        GUI.addGlobalKeyWhenVisible(ggInfo, KeyStroke.getKeyStroke(Key.I.id, menu1))
+        val cont    = downloadsView.bottomComponent.contents
+        cont.insert(0, ggInfo, Swing.HStrut(4))
+      }
       val name          = AttrCellView.name[S](r)
       val locH          = tx.newHandle(r.downloadLocation)
       val folderH       = tx.newHandle(r.downloads)

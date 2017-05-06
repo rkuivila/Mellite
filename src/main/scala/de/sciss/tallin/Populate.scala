@@ -908,7 +908,7 @@ object Populate {
       val masterCfg         = NamedBusConfig("", 0, numChans)
       val masterGroupsCfg   = masterCfg +: sConfig.masterGroups
 
-      masterGroupsCfg.zipWithIndex.foreach { case (cfg, idx) =>
+      masterGroupsCfg.zipWithIndex.foreach { case (cfg, _ /* idx */) =>
         def placeChannels(sig: GE): GE = {
           if (cfg.numChannels == numChans) sig
           else {

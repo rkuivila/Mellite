@@ -180,7 +180,7 @@ object CursorsFrameImpl {
       val nameOpt = GUI.keyValueDialog(value = ggValue, title = nameAdd,
         defaultName = "branch", window = Window.find(component))
       (nameOpt, ggValue.peer.getValue) match {
-        case (Some(name), seminalDate: Date) =>
+        case (Some(_), seminalDate: Date) =>
           val parentElem = parent.elem
           confluent.Cursor.wrap(parentElem.cursor)(workspace.system).step { implicit tx =>
             implicit val dtx = tx.durable: D#Tx // proc.Confluent.durable(tx)
@@ -335,7 +335,7 @@ object CursorsFrameImpl {
 
       t.listenTo(t.selection)
       t.reactions += {
-        case e: TreeTableSelectionChanged[_, _] =>  // this crappy untyped event doesn't help us at all
+        case _: TreeTableSelectionChanged[_, _] =>  // this crappy untyped event doesn't help us at all
           val selSize = t.selection.paths.size
           actionAdd .enabled  = selSize == 1
           // actionDelete.enabled  = selSize > 0

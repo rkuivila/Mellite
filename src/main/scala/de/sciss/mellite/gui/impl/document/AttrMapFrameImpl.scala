@@ -128,7 +128,7 @@ object AttrMapFrameImpl {
       val sel = contents.selection
       if (sel.nonEmpty) {
         val editOpt = cursor.step { implicit tx =>
-          val ed1 = sel.map { case (key, view1) =>
+          val ed1 = sel.map { case (key, _) =>
             EditAttrMap(name = s"Remove Attribute '$key'", objH(), key = key, value = None)
           }
           CompoundEdit(ed1, "Remove Attributes")

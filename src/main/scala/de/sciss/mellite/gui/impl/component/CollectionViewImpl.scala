@@ -21,11 +21,11 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.Window
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.impl.ComponentHolder
-import de.sciss.lucre.swing.{View, deferTx}
+import de.sciss.lucre.swing.{View, deferTx, requireEDT}
 import de.sciss.lucre.synth.Sys
 import de.sciss.swingplus.PopupMenu
 
-import scala.swing.{Action, BorderPanel, Button, Component, FlowPanel, Swing}
+import scala.swing.{Action, BorderPanel, Button, Component, FlowPanel, SequentialContainer, Swing}
 
 trait CollectionViewImpl[S <: Sys[S]]
   extends ViewHasWorkspace[S]
@@ -87,6 +87,19 @@ trait CollectionViewImpl[S <: Sys[S]]
     this
   }
 
+  final protected lazy val actionAdd: Action = Action(null) {
+    val bp = ggAdd
+    addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
+  }
+
+  final def bottomComponent: Component with SequentialContainer = {
+    requireEDT()
+    if (_bottomComponent == null) throw new IllegalStateException("Called component before GUI was initialized")
+    _bottomComponent
+  }
+
+  // ---- private ----
+
   private final class AddAction(f: ObjView.Factory) extends Action(f.humanName) {
     icon = f.icon
 
@@ -131,13 +144,10 @@ trait CollectionViewImpl[S <: Sys[S]]
     res
   }
 
-  final protected lazy val actionAdd: Action = Action(null) {
-    val bp = ggAdd
-    addPopup.show(bp, (bp.size.width - addPopup.size.width) >> 1, bp.size.height - 4)
-  }
-
   private def nameAttr = "Attributes Editor"
   private def nameView = "View Selected Element"
+
+  private[this] var _bottomComponent: FlowPanel = _
 
   private def guiInit(): Unit = {
     ggAdd    = GUI.addButton   (actionAdd   , "Add Element")
@@ -145,11 +155,11 @@ trait CollectionViewImpl[S <: Sys[S]]
     ggAttr   = GUI.attrButton  (actionAttr  , nameAttr)
     ggView   = GUI.viewButton  (actionView  , nameView)
 
-    val buttonPanel = new FlowPanel(ggAdd, ggDelete, ggAttr, Swing.HStrut(32), ggView)
+    _bottomComponent = new FlowPanel(ggAdd, ggDelete, ggAttr, Swing.HStrut(32), ggView)
 
     component = new BorderPanel {
       add(impl.peer.component, BorderPanel.Position.Center)
-      add(buttonPanel, BorderPanel.Position.South)
+      add(_bottomComponent, BorderPanel.Position.South)
     }
 
     initGUI2()

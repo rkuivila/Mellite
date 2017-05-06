@@ -96,7 +96,7 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
       }
 
     override def importData(support: TransferSupport): Boolean =
-      treeView.dropLocation.exists { tdl =>
+      treeView.dropLocation.exists { _ =>
         // println("importData")
         val editOpt: Option[UndoableEdit] = {
           val isFolder  = support.isDataFlavorSupported(FolderView.SelectionFlavor)
@@ -318,7 +318,7 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
           ActionArtifactLocation.merge(either).fold((idx0, list0)) { case (xs, locM) =>
             val (idx2, list2) = ((idx0, list0) /: xs) { case ((idx1, list1), x) =>
               val edit1 = EditFolderInsertObj[S]("Location", parent, idx1, x)
-              (idx1 + 1, list0 :+ edit1)
+              (idx1 + 1, list1 :+ edit1)
             }
             val obj   = ObjectActions.mkAudioFile(locM, f, spec)
             val edit2 = EditFolderInsertObj[S]("Audio File", parent, idx2, obj)

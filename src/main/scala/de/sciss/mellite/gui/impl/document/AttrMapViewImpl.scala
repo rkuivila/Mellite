@@ -48,7 +48,7 @@ object AttrMapViewImpl {
       val observer: Disposable[S#Tx] = _obj.attr.changed.react { implicit tx =>upd =>
         upd.changes.foreach {
           case Obj.AttrAdded   (key, value)       => attrAdded   (key, value)
-          case Obj.AttrRemoved (key, value)       => attrRemoved (key)
+          case Obj.AttrRemoved (key, _    )       => attrRemoved (key)
           case Obj.AttrReplaced(key, before, now) => attrReplaced(key, before = before, now = now)
           case _ =>
         }

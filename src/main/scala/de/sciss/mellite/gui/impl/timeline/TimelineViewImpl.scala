@@ -21,8 +21,9 @@ import java.util.Locale
 import javax.swing.UIManager
 import javax.swing.undo.UndoableEdit
 
+import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineModelImpl
-import de.sciss.audiowidgets.{RotaryKnob, TimelineModel}
+import de.sciss.desktop
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{UndoManager, Window}
 import de.sciss.fingertree.RangedSeq
@@ -43,12 +44,11 @@ import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
 import de.sciss.synth.proc.impl.AuxContextImpl
 import de.sciss.synth.proc.{AudioCue, Proc, TimeRef, Timeline, Transport, Workspace}
-import de.sciss.{desktop, synth}
 
 import scala.concurrent.stm.{Ref, TSet}
 import scala.swing.Swing._
 import scala.swing.event.ValueChanged
-import scala.swing.{Action, BorderPanel, BoxPanel, Component, Dimension, Orientation, SplitPane}
+import scala.swing.{Action, BorderPanel, BoxPanel, Component, Orientation, SplitPane}
 import scala.util.Try
 
 object TimelineViewImpl {
@@ -204,24 +204,7 @@ object TimelineViewImpl {
 
     def guiInit(): Unit = {
       canvas = new View
-      val ggVisualBoost = new RotaryKnob {
-        min = 0
-        max = 64
-        value = 0
-        focusable = false
-        tooltip = "Sonogram Brightness"
-        // peer.putClientProperty("JComponent.sizeVariant", "small")
-        listenTo(this)
-        reactions += {
-          case ValueChanged(_) =>
-            import synth._
-            canvas.trackTools.visualBoost = value.linexp(0, 64, 1, 512) // .toFloat
-        }
-        preferredSize = new Dimension(33, 28)
-        background = null
-        // paintTrack = false
-      }
-      desktop.Util.fixWidth(ggVisualBoost)
+      val ggVisualBoost = GUI.boostRotary()(canvas.trackTools.visualBoost = _)
 
       val actionAttr: Action = Action(null) {
         withSelection { implicit tx =>

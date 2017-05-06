@@ -45,9 +45,17 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
   //    res
   //  }
 
+  def visualBoost: Float = canvasComponent.sonogramBoost
+  def visualBoost_=(value: Float): Unit = {
+    canvasComponent.sonogramBoost = value
+    canvasComponent.repaint()
+  }
+
   object canvasComponent extends Component with sonogram.PaintController {
     private var paintFun: Graphics2D => Unit = paintChecker("Calculating...")
     private val srRatio = sono.inputSpec.sampleRate / TimeRef.SampleRate
+
+    private[ViewJ] var sonogramBoost: Float = 1f
 
     override def paintComponent(g: Graphics2D): Unit = {
       paintFun(g)
@@ -77,7 +85,7 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
       sono.paint(spanStart = fileStart, spanStop = fileStop, g, 0, 0, width, height, this)
     }
 
-    def adjustGain(amp: Float, pos: Double): Float = amp
+    def adjustGain(amp: Float, pos: Double): Float = amp * sonogramBoost
 
     def imageObserver: JComponent = peer
 

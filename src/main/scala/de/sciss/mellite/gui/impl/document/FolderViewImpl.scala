@@ -96,14 +96,14 @@ object FolderViewImpl {
       def observe(obj: Obj[S], dispatch: S#Tx => MUpdate => Unit)
                  (implicit tx: S#Tx): Disposable[S#Tx] = {
         val objH      = tx.newHandle(obj)
-        val objReact  = obj.changed.react { implicit tx => u1 =>
+        val objReact  = obj.changed.react { implicit tx => _ =>
           // theoretically, we don't need to refresh the object,
           // because `treeView` uses an id-map for lookup.
           // however, there might be a problem with objects
           // created in the same transaction as the call to `observe`.
           //
           val obj = objH()
-          val isDirty = treeView.nodeView(obj).exists { nv =>
+          val isDirty = treeView.nodeView(obj).exists { _ =>
             // val objView = nv.renderData
             false // XXX TODO RRR ELEM objView.isUpdateVisible(u1)
           }
@@ -237,7 +237,7 @@ object FolderViewImpl {
 
       t.listenTo(t.selection)
       t.reactions += {
-        case e: TreeTableSelectionChanged[_, _] =>  // this crappy untyped event doesn't help us at all
+        case _: TreeTableSelectionChanged[_, _] =>  // this crappy untyped event doesn't help us at all
           // println(s"selection: $e")
           dispatch(FolderView.SelectionChanged(view, selection))
         // case e => println(s"other: $e")

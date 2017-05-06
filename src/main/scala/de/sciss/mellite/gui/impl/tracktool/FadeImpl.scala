@@ -45,8 +45,8 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     val firstSpan = d.initial.spanValue
     val leftHand = firstSpan match {
       case Span(start, stop)  => math.abs(d.firstPos - start) < math.abs(d.firstPos - stop)
-      case Span.From(start)   => true
-      case Span.Until(stop)   => false
+      case Span.From (_)      => true
+      case Span.Until(_)      => false
       case _                  => true
     }
     val (deltaTime, deltaCurve) = if (dragCurve) {

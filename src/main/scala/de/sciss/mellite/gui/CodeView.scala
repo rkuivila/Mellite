@@ -40,7 +40,7 @@ object CodeView {
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          compiler: Code.Compiler,
                          undoManager: UndoManager): CodeView[S] =
-    Impl(obj, code0, bottom = bottom)(handler)
+    Impl[S](obj, code0, bottom = bottom)(handler)
 
   sealed trait Update
   case class DirtyChange(value: Boolean) extends Update
