@@ -142,4 +142,8 @@ object AudioCueObjView extends ListObjView.Factory {
 }
 trait AudioCueObjView[S <: stm.Sys[S]] extends ObjView[S] {
   override def obj(implicit tx: S#Tx): AudioCue.Obj[S]
+
+  override def objH: stm.Source[S#Tx, AudioCue.Obj[S]]
+
+  def value: AudioCue
 }

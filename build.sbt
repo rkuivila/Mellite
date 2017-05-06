@@ -3,8 +3,8 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.11.0-SNAPSHOT"
-lazy val mimaVersion                = "2.10.0"
+lazy val projectVersion             = "2.11.0"
+lazy val mimaVersion                = "2.11.0"
 
 lazy val loggingEnabled             = true
 
@@ -117,7 +117,7 @@ lazy val pkgDebianSettings = Seq(
   packageSummary            in Debian := appDescription,
   mainClass                 in Debian := appMainClass,
   maintainer                in Debian := s"$authorName <$authorEMail>",
-  debianPackageDependencies in Debian += "java7-runtime",
+  debianPackageDependencies in Debian += "java8-runtime",
   packageDescription        in Debian :=
     """Mellite is a computer music environment,
       | a desktop application based on SoundProcesses.

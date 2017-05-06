@@ -378,7 +378,10 @@ object TimelineViewImpl {
     // call on EDT!
     private def defaultDropLength(view: ObjView[S], inProgress: Boolean): Long = {
       val d = view match {
-        case _: AudioCueObjView[S] | _: ProcObjView[S] =>
+        case a: AudioCueObjView[S] =>
+          val v = a.value
+          (v.numFrames * TimeRef.SampleRate / v.sampleRate).toLong
+        case _: ProcObjView[S] =>
           timelineModel.sampleRate * 2 // two seconds
         case _ =>
           if (inProgress)
@@ -475,11 +478,19 @@ object TimelineViewImpl {
           Edits.setSynthGraph[S](regions.map(_.obj), codeElem)
         }
 
+        case DnD.ObjectDrag(ws, view: AudioCueObjView[S]) =>
+          val length  = defaultDropLength(view, inProgress = false)
+          val span    = Span(0L, length)
+          val ad      = DnD.AudioDrag(ws, view.objH, span)
+          step { implicit tx =>
+            insertAudioRegion(drop, ad, ad.source())
+          }
+
         case DnD.ObjectDrag(_, view /* : ObjView.Proc[S] */) => step { implicit tx =>
           plainGroup.modifiableOption.map { group =>
-            val length = defaultDropLength(view, inProgress = false)
-            val span = Span(drop.frame, drop.frame + length)
-            val spanEx = SpanLikeObj.newVar[S](SpanLikeObj.newConst(span))
+            val length  = defaultDropLength(view, inProgress = false)
+            val span    = Span(drop.frame, drop.frame + length)
+            val spanEx  = SpanLikeObj.newVar[S](SpanLikeObj.newConst(span))
             EditTimelineInsertObj(view.humanName, group, spanEx, view.obj)
           }
           // CompoundEdit(edits, "Insert Objects")
@@ -636,14 +647,14 @@ object TimelineViewImpl {
           if (currentDrop.isDefined) currentDrop.foreach { drop =>
             drop.drag match {
               case ad: DnD.AudioDragLike[S] =>
-                val track = screenToTrack(drop.y)
-                val span = Span(drop.frame, drop.frame + ad.selection.length)
+                val track   = screenToTrack(drop.y)
+                val span    = Span(drop.frame, drop.frame + ad.selection.length)
                 drawDropFrame(g, track, TimelineView.DefaultTrackHeight, span, rubber = false)
 
               case DnD.ObjectDrag(_, view) /* : ObjView.Proc[S] */ =>
-                val track = screenToTrack(drop.y)
-                val length = defaultDropLength(view, inProgress = true)
-                val span = Span(drop.frame, drop.frame + length)
+                val track   = screenToTrack(drop.y)
+                val length  = defaultDropLength(view, inProgress = true)
+                val span    = Span(drop.frame, drop.frame + length)
                 drawDropFrame(g, track, TimelineView.DefaultTrackHeight, span, rubber = false)
 
               case _ =>
