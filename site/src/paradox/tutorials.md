@@ -37,7 +37,19 @@ This tutorial introduces the timeline object and shows how to arrange sound file
  - using the mute state to control filter bypass
  - bouncing to disk
 
-## Tutorial 3...
+## Tutorial 3 - Freesound.org
+
+[Video Link](https://vimeo.com/216298165) (16 min)
+
+This tutorial introduces the freesound.org sound file retrieval object:
+
+ - creating a retrieval object
+ - specifying query terms and search filter
+ - reviewing the search results and previewing sounds
+ - authorizing the application to download sounds
+ - downloading sounds and using them within Mellite
+
+## Tutorial 4...
 
 More tutorials that cover the API and ways of actually programming the system will appear soon (hopefully)...
 
