@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.11.0"
+lazy val projectVersion             = "2.11.1-SNAPSHOT"
 lazy val mimaVersion                = "2.11.0"
 
 lazy val loggingEnabled             = true
@@ -14,15 +14,15 @@ lazy val authorEMail                = "contact@sciss.de"
 // ---- dependencies ----
 
 lazy val soundProcessesVersion      = "3.11.0"
-lazy val fscapeVersion              = "2.6.3"
-lazy val nuagesVersion              = "2.13.0"
+lazy val fscapeVersion              = "2.6.4"
+lazy val nuagesVersion              = "2.13.1"
 lazy val interpreterPaneVersion     = "1.7.5"
 lazy val syntaxPaneVersion          = "1.1.5"
 lazy val scalaColliderVersion       = "1.22.3"
 lazy val scalaColliderUGenVersion   = "1.16.4"
 lazy val lucreVersion               = "3.3.3"
 lazy val equalVersion               = "0.1.2"
-lazy val freesoundVersion           = "1.1.0"
+lazy val freesoundVersion           = "1.1.2"
 lazy val playJSONVersion            = "0.4.0"
 lazy val scalaColliderSwingVersion  = "1.32.2"
 lazy val lucreSwingVersion          = "1.4.3"
@@ -150,8 +150,8 @@ lazy val assemblySettings = Seq(
     target                in assembly := baseDirectory.value,
     assemblyJarName       in assembly := s"$baseName.jar",
     assemblyMergeStrategy in assembly := {
-      case PathList("org", "xmlpull", xs @ _*) => MergeStrategy.first
-      case PathList("org", "w3c", "dom", "events", xs @ _*) => MergeStrategy.first // bloody Apache Batik
+      case PathList("org", "xmlpull", _ @ _*) => MergeStrategy.first
+      case PathList("org", "w3c", "dom", "events", _ @ _*) => MergeStrategy.first // bloody Apache Batik
       case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)
@@ -191,7 +191,7 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component
       "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
       "de.sciss" %% "fscape"                          % fscapeVersion,              // offline audio rendering
-      "de.sciss" %% "scalafreesound-lucre"            % freesoundVersion,           // Freesound support
+      "de.sciss" %% "scalafreesound"                  % freesoundVersion,           // Freesound support
       "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
       "de.sciss" %  "weblaf"                          % webLaFVersion,              // look and feel
       "de.sciss" %  "submin"                          % subminVersion               // dark skin

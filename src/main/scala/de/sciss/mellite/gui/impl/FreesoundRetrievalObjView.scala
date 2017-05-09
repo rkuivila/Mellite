@@ -27,7 +27,7 @@ import de.sciss.equal.Implicits._
 import de.sciss.file._
 import de.sciss.freesound.lucre.{PreviewsCache, Retrieval, RetrievalView, SoundObj, TextSearchObj}
 import de.sciss.freesound.swing.SoundTableView
-import de.sciss.freesound.{Auth, Client, Freesound, Sound, TextSearch}
+import de.sciss.freesound.{Auth, Client, Codec, Freesound, Sound, TextSearch}
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.expr.{DoubleObj, LongObj}
 import de.sciss.lucre.stm
@@ -44,7 +44,7 @@ import de.sciss.synth.proc.{AudioCue, Folder, Workspace}
 import de.sciss.{desktop, freesound}
 
 import scala.collection.breakOut
-import scala.concurrent.Future
+import scala.concurrent.{blocking, Future}
 import scala.concurrent.stm.Ref
 import scala.swing.event.Key
 import scala.swing.{Action, Alignment, Button, Component, Label, ProgressBar, SequentialContainer, Swing, TabbedPane, TextField}
@@ -337,11 +337,11 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
 
         val n2: String = n1.take(18)
         val needsConversion = s.fileType.isCompressed
-        val ext = if (needsConversion) "aif" else s.fileType.toProperty
+        val ext = if (needsConversion) "wav" else s.fileType.toProperty
         val n   = s"${s.id}_$n2.$ext"
         val f   = dir / n
         val m: DownloadMode = if (needsConversion) {
-          val temp = File.createTemp(suffix = s.fileType.toProperty)
+          val temp = File.createTemp(suffix = s".${s.fileType.toProperty}")
           Convert(temp, f)
         } else Direct(f)
         if (f.exists()) None else Some(Download(s, m))
@@ -402,7 +402,9 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
               defer(ggProgressDL.value = amtTot)
           }
           val futA = if (!head.mode.isConvert) proc else proc.map { _ =>
-            throw new NotImplementedError("Conversion from compressed format not yet implemented")
+            blocking {
+              Codec.convertToWave(in = head.mode.downloadFile, inType = head.sound.fileType, out = head.mode.out)
+            }
           }
           val futB = futA.map[Try[Unit]](_ => Success(())).recover { case ex => Failure(ex) }
           futB.flatMap { res =>
