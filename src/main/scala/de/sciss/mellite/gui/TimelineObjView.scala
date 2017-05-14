@@ -22,7 +22,7 @@ import de.sciss.mellite.gui.impl.timeline.{TimelineObjViewImpl => Impl}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc.{AuxContext, FadeSpec, Timeline}
 
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.implicitConversions
 import scala.swing.Graphics2D
 
 object TimelineObjView {

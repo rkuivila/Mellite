@@ -98,7 +98,7 @@ object CodeViewImpl {
       dispatch(CodeView.DirtyChange(value))
     }
 
-    private type CodeT = Code { type In = In0; type Out = Out0 }
+//    private type CodeT = Code { type In = In0; type Out = Out0 }
 
     private def loadText(idx: Int): Unit = {
       try {

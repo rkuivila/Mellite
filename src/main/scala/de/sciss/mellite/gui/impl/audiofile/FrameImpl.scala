@@ -41,7 +41,6 @@ object FrameImpl {
 
   private final class Impl[S <: Sys[S]](/* val document: Workspace[S], */ val view: AudioFileView[S],
                                         name: CellView[S#Tx, String], _file: File)
-                                       (implicit cursor: stm.Cursor[S])
     extends WindowImpl[S](name)
     with AudioFileFrame[S] {
 

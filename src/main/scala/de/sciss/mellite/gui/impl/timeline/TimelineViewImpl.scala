@@ -43,7 +43,7 @@ import de.sciss.swingplus.ScrollBar
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.gui.TransportView
 import de.sciss.synth.proc.impl.AuxContextImpl
-import de.sciss.synth.proc.{AudioCue, Proc, TimeRef, Timeline, Transport, Workspace}
+import de.sciss.synth.proc.{AudioCue, TimeRef, Timeline, Transport, Workspace}
 
 import scala.concurrent.stm.{Ref, TSet}
 import scala.swing.Swing._
@@ -66,7 +66,7 @@ object TimelineViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  private type TimedProc[S <: Sys[S]] = BiGroup.Entry[S, Proc[S]]
+//  private type TimedProc[S <: Sys[S]] = BiGroup.Entry[S, Proc[S]]
 
   def apply[S <: Sys[S]](obj: Timeline[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],

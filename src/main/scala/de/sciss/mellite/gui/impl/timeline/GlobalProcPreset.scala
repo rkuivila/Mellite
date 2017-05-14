@@ -24,7 +24,6 @@ import de.sciss.synth.proc.{Code, Proc, SynthGraphObj}
 import de.sciss.synth.{GE, SynthGraph}
 
 import scala.collection.immutable.{Seq => ISeq}
-import scala.language.higherKinds
 import scala.swing.{Component, FlowPanel, Label, Swing}
 
 object GlobalProcPreset {

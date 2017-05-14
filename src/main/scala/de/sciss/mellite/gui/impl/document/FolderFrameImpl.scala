@@ -143,7 +143,7 @@ object FolderFrameImpl {
             println("WARNING: Parent folder of object not found")
             None
           } else {
-            implicit val folderSer = Folder.serializer[S]
+//            implicit val folderSer = Folder.serializer[S]
             val edit = EditFolderRemoveObj[S](nodeView.renderData.humanName, parent, idx, child)
             Some(edit)
           }

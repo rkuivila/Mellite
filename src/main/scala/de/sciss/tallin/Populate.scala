@@ -190,7 +190,7 @@ object Populate {
   }
 
   def apply[S <: Sys[S]](n: Nuages[S], nConfig: Nuages.Config, sConfig: ScissProcs.Config)
-                        (implicit tx: S#Tx, cursor: stm.Cursor[S]): Unit = {
+                        (implicit tx: S#Tx): Unit = {
     implicit val _n = n
     val dsl = nuages.DSL[S]
     import dsl._

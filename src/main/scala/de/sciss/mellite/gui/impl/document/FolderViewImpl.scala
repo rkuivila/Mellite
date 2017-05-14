@@ -25,7 +25,7 @@ import de.sciss.desktop.UndoManager
 import de.sciss.lucre.artifact.Artifact
 import de.sciss.lucre.expr.StringObj
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Disposable, IdentifierMap, Obj}
+import de.sciss.lucre.stm.{Disposable, Obj}
 import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{TreeTableView, deferTx}
@@ -48,7 +48,7 @@ object FolderViewImpl {
     implicit val folderSer = Folder.serializer[S]
 
     new Impl[S] {
-      val mapViews: IdentifierMap[S#ID, S#Tx, ObjView[S]]               = tx.newInMemoryIDMap  // folder IDs to renderers
+//      val mapViews: IdentifierMap[S#ID, S#Tx, ObjView[S]]               = tx.newInMemoryIDMap  // folder IDs to renderers
       val treeView: TreeTableView[S, Obj[S], Folder[S], ListObjView[S]] = TreeTableView(root0, TTHandler)
 
       deferTx {
@@ -139,7 +139,7 @@ object FolderViewImpl {
         }
       }
 
-      private def updateBranch(parent: Folder[S], changes: Vec[Folder.Change[S]])(implicit tx: S#Tx): Vec[MUpdate] =
+      private def updateBranch(parent: Folder[S], changes: Vec[Folder.Change[S]]): Vec[MUpdate] =
         changes.flatMap {
           case Folder.Added  (idx, obj) => Vec(TreeTableView.NodeAdded  (parent, idx, obj): MUpdate)
           case Folder.Removed(idx, obj) => Vec(TreeTableView.NodeRemoved(parent, idx, obj): MUpdate)

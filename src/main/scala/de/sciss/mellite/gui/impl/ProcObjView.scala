@@ -38,7 +38,6 @@ import de.sciss.synth.proc.{AudioCue, AuxContext, ObjKeys, Proc, TimeRef, Worksp
 
 import scala.annotation.switch
 import scala.concurrent.stm.{Ref, TSet}
-import scala.language.implicitConversions
 import scala.swing.Graphics2D
 import scala.util.control.NonFatal
 

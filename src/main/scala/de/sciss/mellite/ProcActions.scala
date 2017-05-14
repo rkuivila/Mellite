@@ -22,7 +22,6 @@ import de.sciss.synth.proc.impl.MkSynthGraphSource
 import de.sciss.synth.proc.{AudioCue, Code, ObjKeys, Proc, SynthGraphObj, Timeline}
 import de.sciss.synth.{SynthGraph, proc}
 
-import scala.language.existentials
 import scala.util.control.NonFatal
 
 object ProcActions {

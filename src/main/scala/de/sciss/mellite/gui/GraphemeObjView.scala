@@ -20,8 +20,6 @@ import de.sciss.lucre.stm.{IdentifierMap, Obj}
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.grapheme.{GraphemeObjViewImpl => Impl}
 
-import scala.language.{higherKinds, implicitConversions}
-
 object GraphemeObjView {
   type SelectionModel[S <: stm.Sys[S]] = gui.SelectionModel[S, GraphemeObjView[S]]
 

@@ -27,7 +27,6 @@ import de.sciss.synth.proc.{AuralSystem, Code, SensorSystem}
 
 import scala.collection.immutable.{Seq => ISeq}
 import scala.concurrent.stm.{TxnExecutor, atomic}
-import scala.language.existentials
 import scala.swing.Label
 import scala.util.control.NonFatal
 

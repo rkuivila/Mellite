@@ -923,7 +923,7 @@ object ObjViewImpl {
     // val parent = targetFolder
     // parent.addLast(obj)
     val idx = parent.size
-    implicit val folderSer = _Folder.serializer[S]
+//    implicit val folderSer = _Folder.serializer[S]
     EditFolderInsertObj[S](name, parent, idx, obj)
   }
 
@@ -1001,7 +1001,8 @@ object ObjViewImpl {
   }
 
   /** A trait that when mixed in provides `isViewable` and `openView` as non-op methods. */
-  trait NonViewable[S <: stm.Sys[S]] {
+  trait NonViewable[S <: stm.Sys[S]] extends ObjView[S] {
+
     def isViewable: _Boolean = false
 
     def openView(parent: Option[Window[S]])

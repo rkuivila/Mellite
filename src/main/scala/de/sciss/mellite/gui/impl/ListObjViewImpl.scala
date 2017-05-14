@@ -73,7 +73,7 @@ object ListObjViewImpl {
   )
 
   /** A trait that when mixed in provides `isEditable` and `tryEdit` as non-op methods. */
-  trait NonEditable[S <: stm.Sys[S]] {
+  trait NonEditable[S <: stm.Sys[S]] extends ListObjView[S] {
     def isEditable: Boolean = false
 
     def tryEdit(value: Any)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = None
@@ -94,9 +94,7 @@ object ListObjViewImpl {
     }
   }
 
-  trait ExprLike[S <: stm.Sys[S], A, Ex[~ <: stm.Sys[~]] <: Expr[~, A]] {
-    _: ListObjView[S] =>
-
+  trait ExprLike[S <: stm.Sys[S], A, Ex[~ <: stm.Sys[~]] <: Expr[~, A]] extends ListObjView[S] {
     protected var exprValue: A
 
     // def obj: stm.Source[S#Tx, Obj.T[S, Elem { type Peer = Expr[S, A] }]]

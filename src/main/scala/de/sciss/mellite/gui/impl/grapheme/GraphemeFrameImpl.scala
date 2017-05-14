@@ -41,7 +41,6 @@ object GraphemeFrameImpl {
 
   private final class Impl[S <: Sys[S]](val view: GraphemeView[S], name: CellView[S#Tx, String],
                                         groupH: stm.Source[S#Tx, Grapheme[S]])
-                                       (implicit _cursor: stm.Cursor[S])
     extends WindowImpl[S](name.map(n => s"$n : Grapheme"))
       with GraphemeFrame[S] {
 

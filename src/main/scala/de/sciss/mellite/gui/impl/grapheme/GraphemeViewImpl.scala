@@ -26,7 +26,7 @@ import de.sciss.audiowidgets.impl.TimelineModelImpl
 import de.sciss.desktop
 import de.sciss.desktop.{UndoManager, Window}
 import de.sciss.icons.raphael
-import de.sciss.lucre.bitemp.{BiGroup, BiPin}
+import de.sciss.lucre.bitemp.BiPin
 import de.sciss.lucre.stm.{Cursor, Disposable, TxnLike}
 import de.sciss.lucre.swing.deferTx
 import de.sciss.lucre.swing.impl.ComponentHolder
@@ -34,7 +34,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{GraphemeHasIterator, stm}
 import de.sciss.model.Change
 import de.sciss.span.Span
-import de.sciss.synth.proc.{Grapheme, Proc, TimeRef, Workspace}
+import de.sciss.synth.proc.{Grapheme, TimeRef, Workspace}
 
 import scala.collection.immutable.{SortedMap => ISortedMap}
 import scala.concurrent.stm.{Ref, TMap, TSet}
@@ -58,7 +58,7 @@ object GraphemeViewImpl {
 
   import de.sciss.mellite.{logTimeline => logT}
 
-  private type EntryProc[S <: Sys[S]] = BiGroup.Entry[S, Proc[S]]
+//  private type EntryProc[S <: Sys[S]] = BiGroup.Entry[S, Proc[S]]
 
   def apply[S <: Sys[S]](obj: Grapheme[S])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],

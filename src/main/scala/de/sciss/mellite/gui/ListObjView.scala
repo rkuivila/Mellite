@@ -23,7 +23,6 @@ import de.sciss.mellite.gui.DragAndDrop.Flavor
 import de.sciss.mellite.gui.impl.ListObjViewImpl
 import de.sciss.synth.proc.Workspace
 
-import scala.language.higherKinds
 import scala.swing.{Component, Label}
 
 object ListObjView {

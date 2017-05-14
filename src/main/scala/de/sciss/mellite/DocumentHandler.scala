@@ -19,8 +19,6 @@ import de.sciss.mellite.impl.{DocumentHandlerImpl => Impl}
 import de.sciss.model.Model
 import de.sciss.synth.proc.Workspace
 
-import scala.language.existentials
-
 object DocumentHandler {
   type Document = Workspace[_ <: Sys[_]]
 

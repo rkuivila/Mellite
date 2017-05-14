@@ -544,7 +544,6 @@ object ActionBounceTimeline {
 
   def perform[S <: Sys[S]](document: Workspace[S], settings: PerformSettings[S])
                           (implicit cursor: stm.Cursor[S]): Processor[File] = {
-    import document.inMemoryBridge
     implicit val workspace = document
 
     // for real-time, we generally have to overshoot because in SC 3.6, DiskOut's

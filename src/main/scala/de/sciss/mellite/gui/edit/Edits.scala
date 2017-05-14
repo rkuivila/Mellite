@@ -165,7 +165,7 @@ object Edits {
   final case class Link[S <: Sys[S]](source: Output[S], sink: Proc[S], key: String, sinkType: SinkType[S])
 
   def findLink[S <: Sys[S]](out: Proc[S], in: Proc[S], keys: ISeq[String] = Proc.mainIn :: Nil)
-                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[Link[S]] = {
+                           (implicit tx: S#Tx): Option[Link[S]] = {
     val attr = in.attr
     val it = out.outputs.iterator.flatMap { out =>
       keys.iterator.flatMap { key =>

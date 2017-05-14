@@ -3,8 +3,8 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.11.1-SNAPSHOT"
-lazy val mimaVersion                = "2.11.0"
+lazy val projectVersion             = "2.12.0"
+lazy val mimaVersion                = "2.12.0"
 
 lazy val loggingEnabled             = true
 
@@ -13,19 +13,19 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.11.0"
-lazy val fscapeVersion              = "2.6.4"
-lazy val nuagesVersion              = "2.13.1"
+lazy val soundProcessesVersion      = "3.12.0"
+lazy val fscapeVersion              = "2.7.0"
+lazy val nuagesVersion              = "2.14.0"
 lazy val interpreterPaneVersion     = "1.7.5"
-lazy val syntaxPaneVersion          = "1.1.5"
+lazy val syntaxPaneVersion          = "1.1.6"
 lazy val scalaColliderVersion       = "1.22.3"
 lazy val scalaColliderUGenVersion   = "1.16.4"
-lazy val lucreVersion               = "3.3.3"
+lazy val lucreVersion               = "3.4.0"
 lazy val equalVersion               = "0.1.2"
-lazy val freesoundVersion           = "1.1.3"
+lazy val freesoundVersion           = "1.2.0"
 lazy val playJSONVersion            = "0.4.0"
 lazy val scalaColliderSwingVersion  = "1.32.2"
-lazy val lucreSwingVersion          = "1.4.3"
+lazy val lucreSwingVersion          = "1.5.0"
 lazy val audioWidgetsVersion        = "1.10.2"
 lazy val desktopVersion             = "0.7.3"
 lazy val sonogramVersion            = "1.9.1"
@@ -33,6 +33,7 @@ lazy val raphaelIconsVersion        = "1.0.4"
 lazy val pdflitzVersion             = "1.2.2"
 lazy val webLaFVersion              = "2.1.3"
 lazy val subminVersion              = "0.2.1"
+lazy val jlineVersion               = "2.14.3"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
@@ -49,8 +50,8 @@ lazy val commonSettings = Seq(
   organization       := "de.sciss",
   homepage           := Some(url(s"https://github.com/Sciss/$baseName")),
   licenses           := Seq("GNU General Public License v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
-  scalaVersion       := "2.12.1",
-  crossScalaVersions := Seq("2.12.1", "2.11.8"),
+  scalaVersion       := "2.12.2",
+  crossScalaVersions := Seq("2.12.2", "2.11.11"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture", "-Xlint:-stars-align,_")
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
@@ -173,10 +174,11 @@ lazy val root = Project(id = baseName, base = file("."))
     libraryDependencies ++= Seq(
       "de.sciss" %% "soundprocesses-views"            % soundProcessesVersion,      // computer-music framework
       "de.sciss" %% "soundprocesses-compiler"         % soundProcessesVersion,      // computer-music framework
+      "jline"    %  "jline"                           % jlineVersion,               // must match scala-compiler
       "de.sciss" %% "scalainterpreterpane"            % interpreterPaneVersion,     // REPL
       "de.sciss" %% "scalacollider"                   % scalaColliderVersion,
       "de.sciss" %  "scalacolliderugens-spec"         % scalaColliderUGenVersion,   // meta data
-      "de.sciss" %% s"lucre-core"                     % lucreVersion,               // (satisfy sbt)
+      "de.sciss" %% s"lucre-core"                     % lucreVersion,
       "de.sciss" %% s"lucre-$bdb"                     % lucreVersion,               // database backend
       "de.sciss" %% "equal"                           % equalVersion,               // type-safe equals
 //      "de.sciss" %% "play-json-sealed"                % playJSONVersion,
