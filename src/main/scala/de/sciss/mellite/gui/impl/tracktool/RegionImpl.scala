@@ -24,6 +24,7 @@ import de.sciss.lucre.expr.SpanLikeObj
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
+import de.sciss.synth.proc.Timeline
 
 /** A more complete implementation for track tools that process selected regions.
   * It implements `handlePress` to update the region selection and then
@@ -45,10 +46,11 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
   }
 
   def commit(drag: A)(implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    lazy val tl = canvas.timeline
     val edits = canvas.selectionModel.iterator.flatMap { pv =>
       val span = pv.span
       val proc = pv.obj
-      commitObj(drag)(span, proc)
+      commitObj(drag)(span, proc, tl)
     } .toList
     val name = edits.headOption.fold("Edit") { ed =>
       val n = ed.getPresentationName
@@ -58,7 +60,7 @@ trait RegionImpl[S <: Sys[S], A] extends RegionLike[S, A] {
     CompoundEdit(edits, name)
   }
 
-  protected def commitObj(drag: A)(span: SpanLikeObj[S], proc: Obj[S])
+  protected def commitObj(drag: A)(span: SpanLikeObj[S], proc: Obj[S], timeline: Timeline[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit]
 
   protected def handleSelect (e: MouseEvent, hitTrack: Int, pos: Long, region: TimelineObjView[S]): Unit

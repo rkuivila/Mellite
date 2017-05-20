@@ -56,42 +56,42 @@ private[edit] class EditTimelineInsertRemoveObj[S <: Sys[S]](direction: Boolean,
 }
 
 object EditTimelineInsertObj {
-  def apply[S <: Sys[S]](objType: String, timeline: Timeline.Modifiable[S], span: SpanLikeObj[S], elem: Obj[S])
+  def apply[S <: Sys[S]](name: String, timeline: Timeline.Modifiable[S], span: SpanLikeObj[S], elem: Obj[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val spanH     = tx.newHandle(span)
     val timelineH = tx.newHandle(timeline)
     val elemH     = tx.newHandle(elem)
-    val res = new Impl(objType, timelineH, spanH, elemH)
+    val res = new Impl(name, timelineH, spanH, elemH)
     res.perform()
     res
   }
 
-  private class Impl[S <: Sys[S]](objType: String,
+  private class Impl[S <: Sys[S]](name: String,
                                   timelineH: stm.Source[S#Tx, Timeline.Modifiable[S]],
                                   spanH: stm.Source[S#Tx, SpanLikeObj[S]],
                                   elemH: stm.Source[S#Tx, Obj[S]])(implicit cursor: stm.Cursor[S])
     extends EditTimelineInsertRemoveObj[S](true, timelineH, spanH, elemH) {
 
-    override def getPresentationName = s"Insert $objType"
+    override def getPresentationName: String = name
   }
 }
 
 object EditTimelineRemoveObj {
-  def apply[S <: Sys[S]](objType: String, timeline: Timeline.Modifiable[S], span: SpanLikeObj[S], elem: Obj[S])
+  def apply[S <: Sys[S]](name: String, timeline: Timeline.Modifiable[S], span: SpanLikeObj[S], elem: Obj[S])
                         (implicit tx: S#Tx, cursor: stm.Cursor[S]): UndoableEdit = {
     val spanH     = tx.newHandle(span)
     val timelineH = tx.newHandle(timeline)
     val elemH     = tx.newHandle(elem)
-    val res = new Impl(objType, timelineH, spanH, elemH)
+    val res = new Impl(name, timelineH, spanH, elemH)
     res.perform()
     res
   }
 
-  private class Impl[S <: Sys[S]](objType: String, timelineH: stm.Source[S#Tx, Timeline.Modifiable[S]],
+  private class Impl[S <: Sys[S]](name: String, timelineH: stm.Source[S#Tx, Timeline.Modifiable[S]],
                                   spanH: stm.Source[S#Tx, SpanLikeObj[S]],
                                   elemH: stm.Source[S#Tx, Obj[S]])(implicit cursor: stm.Cursor[S])
     extends EditTimelineInsertRemoveObj[S](false, timelineH, spanH, elemH) {
 
-    override def getPresentationName = s"Remove $objType"
+    override def getPresentationName: String = name
   }
 }

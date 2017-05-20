@@ -27,7 +27,7 @@ import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.TrackTool.Mute
 import de.sciss.mellite.gui.edit.EditAttrMap
-import de.sciss.synth.proc.ObjKeys
+import de.sciss.synth.proc.{ObjKeys, Timeline}
 
 object MuteImpl {
   private lazy val cursor: Cursor = {
@@ -44,9 +44,7 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   val name                  = "Mute"
   val icon: Icon            = GUI.iconNormal(Shapes.Mute) // ToolsImpl.getIcon("mute")
 
-  // ProcActions.toggleMute(obj)
-
-  protected def commitObj(mute: Mute)(span: SpanLikeObj[S], obj: Obj[S])
+  protected def commitObj(mute: Mute)(span: SpanLikeObj[S], obj: Obj[S], timeline: Timeline[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     // val imp = ExprImplicits[S]
     val newMute: BooleanObj[S] = obj.attr.$[BooleanObj](ObjKeys.attrMute) match {
@@ -58,9 +56,6 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     val newMuteOpt = if (newMute === BooleanObj.newConst[S](false)) None else Some(newMute)
     implicit val booleanTpe = BooleanObj
     val edit = EditAttrMap.expr[S, Boolean, BooleanObj](s"Adjust $name", obj, ObjKeys.attrMute, newMuteOpt)
-//    { ex =>
-//      BooleanObj.newVar(ex)
-//    }
     Some(edit)
   }
 
@@ -68,6 +63,4 @@ final class MuteImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     case hm: TimelineObjView.HasMute => dispatch(TrackTool.Adjust(Mute(!hm.muted)))
     case _ =>
   }
-
-  //  dispatch(TrackTool.Adjust(Mute(!region.muted)))
 }

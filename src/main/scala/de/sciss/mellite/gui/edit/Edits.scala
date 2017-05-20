@@ -25,7 +25,7 @@ import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.mellite.ProcActions.{Move, Resize}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.{SynthGraph, proc}
-import de.sciss.synth.proc.{AudioCue, Code, Folder, ObjKeys, Output, Proc, SynthGraphObj}
+import de.sciss.synth.proc.{AudioCue, Code, Folder, ObjKeys, Output, Proc, SynthGraphObj, Timeline}
 
 import scala.collection.breakOut
 import scala.collection.immutable.{Seq => ISeq}
@@ -264,7 +264,42 @@ object Edits {
       } else None
     }
 
-  def move[S <: Sys[S]](span: SpanLikeObj[S], obj: Obj[S], amount: Move, minStart: Long)
+  private def copyImpl[S <: Sys[S]](span: SpanLikeObj[S], obj: Obj[S], timeline: Timeline[S], amount: Move, minStart: Long)
+                                   (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
+    timeline.modifiableOption.map { tlMod =>
+      val objCopy = ProcActions.copy[S](obj, connectInput = true)
+      import amount._
+      if (deltaTrack != 0) {
+        val newTrack: IntObj[S] = IntObj.newVar[S](
+          obj.attr.$[IntObj](TimelineObjView.attrTrackIndex).map(_.value).getOrElse(0) + deltaTrack
+        )
+        objCopy.attr.put(TimelineObjView.attrTrackIndex, newTrack)
+      }
+
+      val deltaC  = calcDeltaC(span, amount, minStart = minStart)
+      val newSpan: SpanLikeObj[S] = SpanLikeObj.newVar[S](
+        span.value.shift(deltaC)
+      )
+      EditTimelineInsertObj("Insert Region", tlMod, newSpan, objCopy)
+    }
+  }
+
+  def moveOrCopy[S <: Sys[S]](span: SpanLikeObj[S], obj: Obj[S], timeline: Timeline[S], amount: Move, minStart: Long)
+                             (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
+    if (amount.copy) copyImpl(span, obj, timeline, amount, minStart = minStart)
+    else             moveImpl(span, obj, timeline, amount, minStart = minStart)
+
+  private def calcDeltaC[S <: Sys[S]](span: SpanLikeObj[S], amount: Move, minStart: Long)(implicit tx: S#Tx): Long = {
+    import amount.deltaTime
+    if (deltaTime >= 0) deltaTime else span.value match {
+      case Span.HasStart(oldStart) => math.max(-(oldStart - minStart      ), deltaTime)
+      case Span.HasStop (oldStop ) => math.max(-(oldStop  - minStart + 32), deltaTime)
+      case _ => 0 // e.g., Span.All
+    }
+  }
+
+  private def moveImpl[S <: Sys[S]](span: SpanLikeObj[S], obj: Obj[S], timeline: Timeline[S], amount: Move,
+                                    minStart: Long)
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     var edits = List.empty[UndoableEdit]
 
@@ -286,20 +321,12 @@ object Edits {
       implicit val intTpe = IntObj
       val edit = EditAttrMap.expr[S, Int, IntObj]("Adjust Track Placement", obj,
         TimelineObjView.attrTrackIndex, newTrackOpt)
-//      { ex =>
-//          IntObj(IntObj.newVar(ex))
-//        }
+
       edits ::= edit
     }
 
-    val oldSpan   = span.value
-    // val minStart  = canvas.timelineModel.bounds.start
-    val deltaC    = if (deltaTime >= 0) deltaTime else oldSpan match {
-      case Span.HasStart(oldStart)  => math.max(-(oldStart - minStart)         , deltaTime)
-      case Span.HasStop (oldStop)   => math.max(-(oldStop  - minStart + 32 /* MinDur */), deltaTime)
-      case _                        => 0  // e.g., Span.All
-    }
-    val name  = "Move"
+    val name    = "Move"
+    val deltaC  = calcDeltaC(span, amount, minStart = minStart)
     if (deltaC != 0L) {
       // val imp = ExprImplicits[S]
       span match {
@@ -340,7 +367,8 @@ object Edits {
 
       case _ => Nil
     }
-    val objEdit = EditTimelineRemoveObj("Object", timeline, span, obj)
-    CompoundEdit(scanEdits :+ objEdit, "Remove Object").get // XXX TODO - not nice, `get`
+    val name    = "Remove Object"
+    val objEdit = EditTimelineRemoveObj(name, timeline, span, obj)
+    CompoundEdit(scanEdits :+ objEdit, name).get // XXX TODO - not nice, `get`
   }
 }

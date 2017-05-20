@@ -86,20 +86,31 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
   protected var px2c  = 0
 
   def paintBack(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering): Unit = {
-    val selected        = tlv.selectionModel.contains(this)
+    val selected  = tlv.selectionModel.contains(this)
+    val move0     = r.ttMoveState
+    if (!move0.copy) {
+      updateBounds (g, tlv, r, move0, selected = selected)
+      paintBackImpl(g, tlv, r,        selected = selected)
+    } else {
+      // cheesy work around to show both original and copy
+      val move1 = TrackTool.NoMove
+      updateBounds (g, tlv, r, move1, selected = selected)
+      paintBackImpl(g, tlv, r,        selected = selected)
+      updateBounds (g, tlv, r, move0, selected = selected)
+      paintBackImpl(g, tlv, r,        selected = selected)
+    }
+  }
+
+  private[this] def updateBounds(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering,
+                                 moveState: TrackTool.Move, selected: Boolean): Unit = {
     val canvas          = tlv.canvas
-    val trackTools      = canvas.trackTools
-    val regionViewMode  = trackTools.regionViewMode
     var x1              = -5
     val peer            = canvas.canvasComponent.peer
     val w               = peer.getWidth
-    // val h            = peer.getHeight
     var x2              = w + 5
 
-    // var move            = 0L
-    import canvas.{frameToScreen, trackToScreen, framesToScreen}
-    import r.{ttFadeState => fadeState, ttMoveState => moveState, ttResizeState => resizeState}
-    import r.clipRect
+    import canvas.{frameToScreen, trackToScreen}
+    import r.{clipRect, ttResizeState => resizeState}
 
     def adjustStart(start: Long): Long =
       if (selected) {
@@ -133,7 +144,7 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
         val dStart    = adjustStart(start)
         val dStop     = adjustStop (stop )
         pStart        = start + dStart
-        pStop         = stop + dStop
+        pStop         = stop  + dStop
         val newStop   = math.max(pStart + TimelineView.MinDur, pStop)
         x1            = frameToScreen(pStart ).toInt
         x2            = frameToScreen(newStop).toInt
@@ -176,6 +187,15 @@ trait TimelineObjViewBasicImpl[S <: stm.Sys[S]] extends TimelineObjView[S] with 
     // clipped coordinates
     px1c      = math.max(px +  1, clipRect.x - 2)
     px2c      = math.min(px + pw, clipRect.x + clipRect.width + 3)
+  }
+
+  private[this] def paintBackImpl(g: Graphics2D, tlv: TimelineView[S], r: TimelineRendering, selected: Boolean): Unit = {
+    val canvas          = tlv.canvas
+    val trackTools      = canvas.trackTools
+    val regionViewMode  = trackTools.regionViewMode
+
+    import canvas.framesToScreen
+    import r.{ttFadeState => fadeState}
 
     if (px1c < px2c) {  // skip this if we are not overlapping with clip
       import r.{pntBackground, pntFadeFill, pntFadeOutline, pntNameDark, pntNameLight, pntNameShadowDark, pntNameShadowLight, pntRegionBackground, pntRegionBackgroundMuted, pntRegionBackgroundSelected, pntRegionOutline, pntRegionOutlineSelected, regionTitleBaseline, regionTitleHeight, shape1, shape2}

@@ -26,7 +26,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{expr, stm}
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.synth
-import de.sciss.synth.proc.ObjKeys
+import de.sciss.synth.proc.{ObjKeys, Timeline}
 
 final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Gain] {
@@ -50,7 +50,7 @@ final class GainImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     Gain(factor)
   }
 
-  protected def commitObj(drag: Gain)(span: SpanLikeObj[S], obj: Obj[S])
+  protected def commitObj(drag: Gain)(span: SpanLikeObj[S], obj: Obj[S], timeline: Timeline[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     import drag.factor
     // ProcActions.adjustGain(obj, drag.factor)

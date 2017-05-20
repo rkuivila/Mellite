@@ -26,6 +26,7 @@ import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
 import de.sciss.span.Span
+import de.sciss.synth.proc.Timeline
 
 final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Resize] {
@@ -59,7 +60,7 @@ final class ResizeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   // ProcActions.resize(span, obj, drag, minStart = minStart)
 
-  protected def commitObj(drag: Resize)(span: SpanLikeObj[S], obj: Obj[S])
+  protected def commitObj(drag: Resize)(span: SpanLikeObj[S], obj: Obj[S], timeline: Timeline[S])
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
     Edits.resize(span, obj, drag, minStart = canvas.timelineModel.bounds.start)
 }

@@ -27,6 +27,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
+import de.sciss.synth.proc.Timeline
 
 final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Move] with RubberBand[S, TrackTool.Move] {
@@ -58,9 +59,9 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   override protected def handleOutside(e: MouseEvent, hitTrack: Int, pos: Long): Unit =
     mkRubber(e, hitTrack = hitTrack, pos = pos)
 
-  protected def commitObj(drag: Move)(span: SpanLikeObj[S], obj: Obj[S])
+  protected def commitObj(drag: Move)(span: SpanLikeObj[S], obj: Obj[S], timeline: Timeline[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
-    Edits.move(span, obj, drag, minStart = canvas.timelineModel.bounds.start)
+    Edits.moveOrCopy(span, obj, timeline, drag, minStart = canvas.timelineModel.bounds.start)
 
   protected def dialog(): Option[Move] = {
     println("Not yet implemented - movement dialog")

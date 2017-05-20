@@ -35,6 +35,7 @@ object ProcGUIActions {
   def removeProcs[S <: Sys[S]](group: TimelineMod[S], views: TraversableOnce[TimelineObjView[S]])
                               (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     requireEDT()
+    val name = "Remove Object"
     val edits = views.flatMap { pv0 =>
       val span  = pv0.span
       val obj   = pv0.obj
@@ -48,9 +49,9 @@ object ProcGUIActions {
       }
 
       // group.remove(span, obj)
-      editsUnlink :+ EditTimelineRemoveObj("Object", group, span, obj)
+      editsUnlink :+ EditTimelineRemoveObj(name, group, span, obj)
     } .toList
 
-    CompoundEdit(edits, "Remove Object")
+    CompoundEdit(edits, name)
   }
 }

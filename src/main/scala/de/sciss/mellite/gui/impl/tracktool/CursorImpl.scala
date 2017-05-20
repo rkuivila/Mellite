@@ -28,6 +28,7 @@ import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
 import de.sciss.span.Span
+import de.sciss.synth.proc.Timeline
 
 import scala.swing.{FlowPanel, Label, TextField}
 
@@ -66,7 +67,7 @@ final class CursorImpl[S <: Sys[S]](val canvas: TimelineProcCanvas[S]) extends R
       }
     }
 
-  protected def commitObj(drag: TrackTool.Cursor)(span: SpanLikeObj[S], obj: Obj[S])
+  protected def commitObj(drag: TrackTool.Cursor)(span: SpanLikeObj[S], obj: Obj[S], timeline: Timeline[S])
                           (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
     Some(Edits.setName(obj, drag.name.map(n => StringObj.newConst(n): StringObj[S])))
 }

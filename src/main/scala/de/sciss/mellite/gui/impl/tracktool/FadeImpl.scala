@@ -28,7 +28,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.span.Span
 import de.sciss.synth.Curve
-import de.sciss.synth.proc.{FadeSpec, ObjKeys}
+import de.sciss.synth.proc.{FadeSpec, ObjKeys, Timeline}
 
 final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
   extends BasicRegion[S, TrackTool.Fade] {
@@ -68,7 +68,7 @@ final class FadeImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
     result
   }
 
-  protected def commitObj(drag: Fade)(span: SpanLikeObj[S], obj: Obj[S])
+  protected def commitObj(drag: Fade)(span: SpanLikeObj[S], obj: Obj[S], timeline: Timeline[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] = {
     import drag._
 

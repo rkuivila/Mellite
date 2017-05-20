@@ -29,7 +29,7 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.Edits
-import de.sciss.synth.proc.Proc
+import de.sciss.synth.proc.{Proc, Timeline}
 
 object PatchImpl {
   private def mkImage(aa: Boolean): BufferedImage = {
@@ -82,7 +82,7 @@ final class PatchImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
       case _ =>
     }
 
-  protected def commitObj(drag: Patch[S])(span: SpanLikeObj[S], outObj: Obj[S])
+  protected def commitObj(drag: Patch[S])(span: SpanLikeObj[S], outObj: Obj[S], timeline: Timeline[S])
                          (implicit tx: S#Tx, cursor: stm.Cursor[S]): Option[UndoableEdit] =
     (drag.sink, outObj) match {
       case (Patch.Linked(view), out: Proc[S]) =>

@@ -79,9 +79,9 @@ class AuditionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S], tlv
         implicit val aural = AuralContext(server)
         val auralTimeline = AuralObj.Timeline.empty(tlv.timeline)
 
-        (tlv.globalView.iterator ++ selMod.iterator).foreach { view =>
-          auralTimeline.addObject(view.id, view.span, view.obj)
-        }
+//        (/* tlv.globalView.iterator ++ */ selMod.iterator).foreach { view =>
+//          auralTimeline.addObject(view.id, view.span, view.obj)
+//        }
         auralTimeline.play(TimeRef(tlv.timelineModel.bounds, offset = playPos), ())
         auralTimeline
       }

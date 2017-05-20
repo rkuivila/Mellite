@@ -431,7 +431,7 @@ object GlobalProcsViewImpl {
           val inObj   = inView.obj
           val span    = inView.span   // not necessary to copy
           val outObj  = ProcActions.copy[S](inObj, connectInput = connect)
-          EditTimelineInsertObj("Global Proc", tl, span, outObj)
+          EditTimelineInsertObj("Insert Global Proc", tl, span, outObj)
         }
         it.toList   // tricky, need to unwind transactional iterator
       }

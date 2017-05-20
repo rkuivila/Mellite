@@ -73,7 +73,7 @@ final class FunctionImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S
       obj.attr.put(TimelineObjView.attrTrackHeight, IntObj.newVar(IntObj.newConst(drag.trackHeight)))
       log(s"Add function region $p, span = ${drag.span}, trackIndex = ${drag.trackIndex}")
       // import SpanLikeObj.serializer
-      EditTimelineInsertObj(name, g, span, obj)
+      EditTimelineInsertObj(s"Insert $name", g, span, obj)
       // g.add(span, obj)
 
       // canvas.selectionModel.clear()

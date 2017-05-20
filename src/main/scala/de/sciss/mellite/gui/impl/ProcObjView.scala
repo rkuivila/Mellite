@@ -134,7 +134,7 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
       tl.modifiableOption.map { tlMod =>
         val span = spanH()
         val obj  = objH()
-        EditTimelineRemoveObj("Proc", tlMod, span, obj)
+        EditTimelineRemoveObj("Remove Proc", tlMod, span, obj)
       }
     }
   }

@@ -126,7 +126,7 @@ trait TimelineActions[S <: Sys[S]] {
             val editsMove = affected.flatMap {
               case (_ /* elemSpan */, elems) =>
                 elems.flatMap { timed =>
-                  Edits.move(timed.span, timed.value, amount, minStart = minStart)
+                  Edits.moveOrCopy(timed.span, timed.value, groupMod, amount, minStart = minStart)
                 }
             } .toList
 
@@ -148,13 +148,14 @@ trait TimelineActions[S <: Sys[S]] {
     def apply(): Unit = {
       val pos = timelineModel.position
       val edits = withSelection { implicit tx => views =>
-        val list = views.flatMap { view =>
+        val tl    = timeline
+        val list  = views.flatMap { view =>
           val span = view.span
           span.value match {
             case hs: Span.HasStart if hs.start != pos =>
               val delta   = pos - hs.start
               val amount  = ProcActions.Move(deltaTime = delta, deltaTrack = 0, copy = false)
-              Edits.move(span, view.obj, amount = amount, minStart = 0L)
+              Edits.moveOrCopy(span, view.obj, tl, amount = amount, minStart = 0L)
             case _ => None
           }
         }
@@ -256,7 +257,7 @@ trait TimelineActions[S <: Sys[S]] {
     }
 
     // group.add(rightSpan, rightObj)
-    val editAdd = EditTimelineInsertObj("Region", groupMod, rightSpan, rightObj)
+    val editAdd = EditTimelineInsertObj("Split Region", groupMod, rightSpan, rightObj)
 
     // debugCheckConsistency(s"Split left = $leftObj, oldSpan = $oldVal; right = $rightObj, rightSpan = ${rightSpan.value}")
     val list1 = editAdd :: Nil

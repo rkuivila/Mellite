@@ -248,22 +248,22 @@ object TimelineViewImpl {
       selectionModel.addListener {
         case _ =>
           val hasSome = selectionModel.nonEmpty
-          actionAttr.enabled = hasSome
-          actionSplitObjects.enabled = hasSome
+          actionAttr                .enabled = hasSome
+          actionSplitObjects        .enabled = hasSome
           actionAlignObjectsToCursor.enabled = hasSome
       }
 
       timelineModel.addListener {
         case TimelineModel.Selection(_, span) if span.before.isEmpty != span.now.isEmpty =>
           val hasSome = span.now.nonEmpty
-          actionClearSpan.enabled = hasSome
+          actionClearSpan .enabled = hasSome
           actionRemoveSpan.enabled = hasSome
       }
 
       val pane2 = new SplitPane(Orientation.Vertical, globalView.component, canvas.component)
-      pane2.dividerSize = 4
-      pane2.border = null
-      pane2.oneTouchExpandable = true
+      pane2.dividerSize         = 4
+      pane2.border              = null
+      pane2.oneTouchExpandable  = true
 
       val pane = new BorderPanel {
 
@@ -403,7 +403,7 @@ object TimelineViewImpl {
           audioCue = audioCue, gOffset = drag.selection.start /*, bus = None */) // , bus = ad.bus.map(_.apply().entity))
       val track = canvas.screenToTrack(drop.y)
         obj.attr.put(TimelineObjView.attrTrackIndex, IntObj.newVar(IntObj.newConst(track)))
-        val edit = EditTimelineInsertObj("Audio Region", groupM, span, obj)
+        val edit = EditTimelineInsertObj("Insert Audio Region", groupM, span, obj)
         edit
       }
 
@@ -491,7 +491,7 @@ object TimelineViewImpl {
             val length  = defaultDropLength(view, inProgress = false)
             val span    = Span(drop.frame, drop.frame + length)
             val spanEx  = SpanLikeObj.newVar[S](SpanLikeObj.newConst(span))
-            EditTimelineInsertObj(view.humanName, group, spanEx, view.obj)
+            EditTimelineInsertObj(s"Insert ${view.humanName}", group, spanEx, view.obj)
           }
           // CompoundEdit(edits, "Insert Objects")
         }
@@ -627,7 +627,7 @@ object TimelineViewImpl {
           import rendering.clipRect
           g.getClipBounds(clipRect)
           val visStart = screenToFrame(clipRect.x).toLong
-          val visStop = screenToFrame(clipRect.x + clipRect.width).toLong + 1 // plus one to avoid glitches
+          val visStop  = screenToFrame(clipRect.x + clipRect.width).toLong + 1 // plus one to avoid glitches
 
           g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
