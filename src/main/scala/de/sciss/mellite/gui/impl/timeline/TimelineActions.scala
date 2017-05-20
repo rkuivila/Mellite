@@ -219,7 +219,7 @@ trait TimelineActions[S <: Sys[S]] {
                           obj: Obj[S])(implicit tx: S#Tx): (List[UndoableEdit], SpanLikeObj.Var[S], Obj[S]) = {
     // val imp = ExprImplicits[S]
     val leftObj   = obj // pv.obj()
-    val rightObj  = ProcActions.copy[S](leftObj /*, Some(oldSpan) */)
+    val rightObj  = ProcActions.copy[S](leftObj, connectInput = true)
     rightObj.attr.remove(ObjKeys.attrFadeIn)
 
     val oldVal    = oldSpan.value

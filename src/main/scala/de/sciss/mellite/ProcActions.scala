@@ -31,8 +31,12 @@ object ProcActions {
   // private type TimelineMod[S <: Sys[S]] = Timeline.Modifiable[S] // BiGroup.Modifiable[S, Proc[S], Proc.Update[S]]
   private type TimelineMod[S <: Sys[S]] = Timeline.Modifiable[S]
 
-  final case class Resize(deltaStart: Long, deltaStop: Long)
-  final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean)
+  final case class Resize(deltaStart: Long, deltaStop: Long) {
+    override def toString = s"$productPrefix(deltaStart = $deltaStart, deltaStop = $deltaStop)"
+  }
+  final case class Move  (deltaTime : Long, deltaTrack: Int, copy: Boolean) {
+    override def toString = s"$productPrefix(deltaTime = $deltaTime, deltaTrack = $deltaTrack, copy = $copy)"
+  }
 
   /** Queries the audio region's grapheme segment start and audio element. */
   def getAudioRegion[S <: Sys[S]](proc: Proc[S])(implicit tx: S#Tx): Option[AudioCue.Obj[S]] =
@@ -88,10 +92,12 @@ object ProcActions {
                   case LongObj.Var(amtVr) =>
                     amtVr() = amtVr() + dStartCC
                   case _ =>
-                    AudioCue.Obj.Shift(peer, LongObj.newVar[S](amt + dStartCC))
+                    val newCue = AudioCue.Obj.Shift(peer, LongObj.newVar[S](amt + dStartCC))
+                    objT.attr.put(Proc.graphAudio, newCue)
                 }
               case other =>
-                AudioCue.Obj.Shift(other, LongObj.newVar[S](dStartCC))
+                val newCue = AudioCue.Obj.Shift(other, LongObj.newVar[S](dStartCC))
+                objT.attr.put(Proc.graphAudio, newCue)
             }
           }
         case _ =>
@@ -122,7 +128,14 @@ object ProcActions {
     *
     * @param in  the process to copy
     */
-  def copy[S <: Sys[S]](in: Obj[S])(implicit tx: S#Tx): Obj[S] = {
+  def copy[S <: Sys[S]](in: Obj[S])(implicit tx: S#Tx): Obj[S] = copy(in, connectInput = false)
+
+    /** Makes a copy of a proc. Copies the graph and all attributes.
+    * If `connect` is falls, does not put `Proc.mainIn`
+    *
+    * @param in  the process to copy
+    */
+  def copy[S <: Sys[S]](in: Obj[S], connectInput: Boolean)(implicit tx: S#Tx): Obj[S] = {
     val context = Copy.apply1[S, S]
     val out     = context.copyPlain(in)
     val attrIn  = in .attr
@@ -132,6 +145,15 @@ object ProcActions {
       if (key !== Proc.mainIn) {
         val valueOut = context(valueIn)
         attrOut.put(key, valueOut)
+      } else if (connectInput) {
+        val valueOpt = attrIn.get(Proc.mainIn).collect {
+          case op: proc.Output[S] => op
+          case fIn: proc.Folder[S] =>
+            val fOut = proc.Folder[S]
+            fIn.iterator.foreach { op => fOut.addLast(op) }
+            fOut
+        }
+        valueOpt.foreach(value => attrOut.put(Proc.mainIn, value))
       }
     }
     context.finish()

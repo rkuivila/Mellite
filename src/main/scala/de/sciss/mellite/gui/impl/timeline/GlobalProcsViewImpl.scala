@@ -430,19 +430,7 @@ object GlobalProcsViewImpl {
         val it = itGlob.map { inView =>
           val inObj   = inView.obj
           val span    = inView.span   // not necessary to copy
-          val outObj  = ProcActions.copy[S](inObj)
-          // `copy` is not connected.
-          // So connect if necessary.
-          if (connect) {
-            val valueOpt = inObj.attr.get(Proc.mainIn).collect {
-              case op: proc.Output[S] => op
-              case fIn: proc.Folder[S] =>
-                val fOut = proc.Folder[S]
-                fIn.iterator.foreach { op => fOut.addLast(op) }
-                fOut
-            }
-            valueOpt.foreach(value => outObj.attr.put(Proc.mainIn, value))
-          }
+          val outObj  = ProcActions.copy[S](inObj, connectInput = connect)
           EditTimelineInsertObj("Global Proc", tl, span, outObj)
         }
         it.toList   // tricky, need to unwind transactional iterator
