@@ -746,19 +746,17 @@ object ProcObjView extends ListObjView.Factory with TimelineObjView.Factory {
     def init(id: S#ID, span: SpanLikeObj[S], obj: Proc[S])(implicit tx: S#Tx): this.type = {
       initAttrs(id, span, obj)
 
-      // XXX TODO -- should use a dynamic AttrCellView here
-      val attr = obj.attr
-      attr.$[AudioCue.Obj](Proc.graphAudio).foreach { audio0 =>
-        disposables ::= audio0.changed.react { implicit tx => upd =>
-          val newAudio = upd.now // calcAudio(upd.grapheme)
-          deferAndRepaint {
-            val newSonogram = upd.before.artifact != upd.now.artifact
-            audio = Some(newAudio)
-            if (newSonogram) releaseSonogram()
-          }
+      val attr    = obj.attr
+      implicit val tpe = AudioCue.Obj
+      val cueView = AttrCellView[S, AudioCue, AudioCue.Obj](attr, Proc.graphAudio)
+      disposables ::= cueView.react { implicit tx => newAudio =>
+        deferAndRepaint {
+          val newSonogram = audio.map(_.artifact) != newAudio.map(_.artifact)
+          audio = newAudio
+          if (newSonogram) releaseSonogram()
         }
-        audio = Some(audio0.value) // calcAudio(g)
       }
+      audio = cueView()
 
       // attr.iterator.foreach { case (key, value) => addAttr(key, value) }
       import Proc.mainIn
