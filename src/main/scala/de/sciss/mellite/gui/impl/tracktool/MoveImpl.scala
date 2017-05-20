@@ -40,7 +40,7 @@ final class MoveImpl[S <: Sys[S]](protected val canvas: TimelineProcCanvas[S])
 
   protected def dragToParam(d: Drag): Move = {
     val eNow  = d.currentEvent
-    val dTim0 = d.currentPos - d.firstPos
+    val dTim0 = d.currentPos   - d.firstPos
     val dTrk0 = d.currentTrack - d.firstTrack
     val (dTim, dTrk) = if (eNow.isShiftDown) { // constrain movement to either horizontal or vertical
       val eBefore = d.firstEvent

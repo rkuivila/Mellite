@@ -131,7 +131,7 @@ trait Dragging[S <: Sys[S], A] {
       //      }
       //      val convE     = SwingUtilities.convertMouseEvent(comp, e, _currentTrack.renderer.trackComponent)
       _currentPos   = canvas.screenToFrame(e.getX).toLong
-      _currentTrack = canvas.screenToTrack(e.getY - firstEvent.getY) + canvas.screenToTrack(firstEvent.getY)
+      _currentTrack = canvas.screenToTrack(e.getY) // - firstEvent.getY) + canvas.screenToTrack(firstEvent.getY)
     }
 
     override def mouseDragged(e: MouseEvent): Unit = {
