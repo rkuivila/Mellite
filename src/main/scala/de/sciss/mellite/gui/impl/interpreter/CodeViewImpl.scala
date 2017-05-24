@@ -79,7 +79,6 @@ object CodeViewImpl {
     // val sourceH = tx.newHandle(sourceCode)(StringObj.varSerializer[S])
     val res     = new Impl[S, code0.In, code0.Out](codeVarHOpt, code0, handlerOpt, bottom = bottom)
     res.init()
-    res
   }
 
   private final class Impl[S <: Sys[S], In0, Out0](codeVarHOpt: Option[stm.Source[S#Tx, Code.Obj.Var[S]]],
@@ -255,17 +254,18 @@ object CodeViewImpl {
 
     private var clearGreen = false
 
-    def init()(implicit tx: S#Tx): Unit = deferTx(guiInit())
+    def init()(implicit tx: S#Tx): this.type = {
+      deferTx(guiInit())
+      this
+    }
 
     private def guiInit(): Unit = {
-      codePane        = CodePane(codeCfg)
-      codePane.component.peer.putClientProperty("styleId", "undecorated")
-      val iPane       = InterpreterPane.wrapAsync(interpreter(code.id), codePane)
-
-      actionApply = Action("Apply")(save())
+      codePane            = CodePane(codeCfg)
+      val iPane           = InterpreterPane.wrapAsync(interpreter(code.id), codePane)
+      actionApply         = Action("Apply")(save())
       actionApply.enabled = false
+      lazy val doc        = codePane.editor.peer.getDocument.asInstanceOf[SyntaxDocument]
 
-      lazy val doc = codePane.editor.peer.getDocument.asInstanceOf[SyntaxDocument]
       doc.addUndoableEditListener(
         new UndoableEditListener {
           def undoableEditHappened(e: UndoableEditEvent): Unit =

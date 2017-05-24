@@ -32,6 +32,7 @@
 26  BiPin.Entry
 27  BiGroup
 28  BiGroup.Entry
+29  Markdown
 
 100 fscape.GraphObj
 200 freesound.lucre.TextSearchObj

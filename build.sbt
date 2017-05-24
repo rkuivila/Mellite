@@ -4,7 +4,7 @@ lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
 lazy val projectVersion             = "2.13.0-SNAPSHOT"
-lazy val mimaVersion                = "2.12.0"
+lazy val mimaVersion                = "2.13.0"
 
 lazy val loggingEnabled             = true
 
@@ -16,8 +16,7 @@ lazy val authorEMail                = "contact@sciss.de"
 lazy val soundProcessesVersion      = "3.12.1-SNAPSHOT"
 lazy val fscapeVersion              = "2.7.0"
 lazy val nuagesVersion              = "2.14.0"
-lazy val interpreterPaneVersion     = "1.7.5"
-lazy val syntaxPaneVersion          = "1.1.6"
+lazy val interpreterPaneVersion     = "1.7.6-SNAPSHOT"
 lazy val scalaColliderVersion       = "1.22.3"
 lazy val scalaColliderUGenVersion   = "1.16.4"
 lazy val lucreVersion               = "3.4.0"
@@ -184,7 +183,6 @@ lazy val root = Project(id = baseName, base = file("."))
 //      "de.sciss" %% "play-json-sealed"                % playJSONVersion,
       "de.sciss" %% "wolkenpumpe"                     % nuagesVersion,              // live improv
       "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL view
-      "de.sciss" %  "syntaxpane"                      % syntaxPaneVersion,          // REPL view
       "de.sciss" %% "lucreswing"                      % lucreSwingVersion,          // reactive Swing components
       "de.sciss" %% "audiowidgets-swing"              % audioWidgetsVersion,        // audio application widgets
       "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets

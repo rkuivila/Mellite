@@ -101,7 +101,7 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
 
   final protected def bindMenus(entries: (String, Action)*): Unit = windowImpl.bindMenus(entries: _*)
 
-  final def init()(implicit tx: S#Tx): Unit = {
+  final def init()(implicit tx: S#Tx): this.type = {
     view match {
       case wv: ViewHasWorkspace[S] => wv.workspace.addDependent(impl)
       case _ =>
@@ -116,6 +116,8 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
       titleObserver = Some(obs)
       update(ex())
     }
+
+    this
   }
 
   private def initGUI0(): Unit = {

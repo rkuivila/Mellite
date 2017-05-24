@@ -69,7 +69,8 @@ object ListObjViewImpl {
     ActionView                  .tpe.typeID -> ActionView,
     ObjViewImpl.Ensemble        .tpe.typeID -> ObjViewImpl.Ensemble,
     ObjViewImpl.Nuages          .tpe.typeID -> ObjViewImpl.Nuages,
-    OutputObjView               .tpe.typeID -> OutputObjView
+    OutputObjView               .tpe.typeID -> OutputObjView,
+    MarkdownObjView             .tpe.typeID -> MarkdownObjView
   )
 
   /** A trait that when mixed in provides `isEditable` and `tryEdit` as non-op methods. */
