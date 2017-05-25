@@ -16,9 +16,10 @@ package gui
 package impl
 
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
+import javax.swing.event.{HyperlinkEvent, HyperlinkListener}
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.desktop.UndoManager
+import de.sciss.desktop.{Desktop, KeyStrokes, UndoManager}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
@@ -32,15 +33,16 @@ import de.sciss.swingplus.Implicits._
 import de.sciss.syntaxpane.SyntaxDocument
 import de.sciss.syntaxpane.syntaxkits.MarkdownSyntaxKit
 import de.sciss.synth.proc.{Markdown, Workspace}
+import org.pegdown.PegDownProcessor
 
 import scala.collection.breakOut
 import scala.collection.immutable.{Seq => ISeq}
-import scala.concurrent.Future
 import scala.swing.Swing._
-import scala.swing.{Action, BorderPanel, Button, Component, EditorPane, FlowPanel}
+import scala.swing.event.Key
+import scala.swing.{Action, BorderPanel, Button, Component, EditorPane, FlowPanel, ScrollPane, Swing, TabbedPane}
 
 object MarkdownViewImpl {
-  def apply[S <: Sys[S]](obj: Markdown[S], bottom: ISeq[View[S]])
+  def apply[S <: Sys[S]](obj: Markdown[S], showEditor: Boolean, bottom: ISeq[View[S]])
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undoManager: UndoManager): MarkdownView[S] = {
     val varHOpt = obj match {
@@ -50,7 +52,7 @@ object MarkdownViewImpl {
     }
     val textValue = obj.value
     val res = new Impl[S](varHOpt, textValue, bottom = bottom)
-    res.init()
+    res.init(showEditor = showEditor)
   }
 
   private def createPane(initialText: String): PaneImpl = {
@@ -82,8 +84,11 @@ object MarkdownViewImpl {
       dispatch(MarkdownView.DirtyChange(value))
     }
 
-    private[this] var paneImpl: PaneImpl = _
-    private[this] var actionApply: Action = _
+    private[this] var paneImpl    : PaneImpl    = _
+    private[this] var actionApply : Action      = _
+    private[this] var actionRender: Action      = _
+    private[this] var editorRender: EditorPane  = _
+    private[this] var tabs        : TabbedPane  = _
 
     protected def currentText: String = paneImpl.editor.text
 
@@ -109,24 +114,37 @@ object MarkdownViewImpl {
       paneImpl.editor.peer.getDocument.asInstanceOf[SyntaxDocument].clearUndos()
     }
 
-    def save(): Future[Unit] = {
+    def save(): Unit = {
       requireEDT()
       val newMarkdown = currentText
       val editOpt = cursor.step { implicit tx =>
         saveText(newMarkdown)
       }
       editOpt.foreach(addEditAndClear)
-      Future.successful[Unit] {}
+      render(newMarkdown)
     }
 
-    def init()(implicit tx: S#Tx): this.type = {
-      deferTx(guiInit())
+    private def render(text: String): Unit = {
+      val mdp         = new PegDownProcessor
+      val html        = mdp.markdownToHtml(text)
+      editorRender.text = html
+      editorRender.peer.setCaretPosition(0)
+    }
+
+    private def renderAndShow(): Unit = {
+      render(currentText)
+      tabs.selection.index = 1
+    }
+
+    def init(showEditor: Boolean)(implicit tx: S#Tx): this.type = {
+      deferTx(guiInit(showEditor = showEditor))
       this
     }
 
-    private def guiInit(): Unit = {
+    private def guiInit(showEditor: Boolean): Unit = {
       paneImpl            = createPane(initialText)
       actionApply         = Action("Apply")(save())
+      actionRender        = Action(null   )(renderAndShow())
       actionApply.enabled = false
 
       lazy val doc = paneImpl.editor.peer.getDocument.asInstanceOf[SyntaxDocument]
@@ -135,19 +153,74 @@ object MarkdownViewImpl {
         def propertyChange(e: PropertyChangeEvent): Unit = dirty = doc.canUndo
       })
 
-      lazy val ggApply: Button = GUI.toolButton(actionApply, raphael.Shapes.Check , tooltip = "Save text changes")
+      val ksRender  = KeyStrokes.menu1 + Key.Enter
+      val ttRender  = s"Render (${GUI.keyStrokeText(ksRender)})"
+
+      lazy val ggApply : Button = GUI.toolButton(actionApply , raphael.Shapes.Check       , tooltip = "Save text changes")
+      lazy val ggRender: Button = GUI.toolButton(actionRender, raphael.Shapes.RefreshArrow, tooltip = ttRender)
+
+      GUI.addGlobalKeyWhenVisible(ggRender, ksRender)
 
       val bot1: List[Component] = if (bottom.isEmpty) Nil else bottom.map(_.component)(breakOut)
-      val bot2 = HGlue :: ggApply :: bot1
+      val bot2 = HGlue :: ggApply :: ggRender :: bot1
       val panelBottom = new FlowPanel(FlowPanel.Alignment.Trailing)(bot2: _*)
 
-      val top = new BorderPanel {
+      val paneEdit = new BorderPanel {
         add(paneImpl.component, BorderPanel.Position.Center)
         add(panelBottom       , BorderPanel.Position.South )
       }
 
-      component = top
-      paneImpl.component.requestFocus()
+      editorRender = new EditorPane("text/html", "") {
+        editable      = false
+        border        = Swing.EmptyBorder(8)
+        preferredSize = (500, 500)
+
+        peer.addHyperlinkListener(new HyperlinkListener {
+          def hyperlinkUpdate(e: HyperlinkEvent): Unit = {
+            if (e.getEventType == HyperlinkEvent.EventType.ACTIVATED) {
+              // println(s"description: ${e.getDescription}")
+              // println(s"source elem: ${e.getSourceElement}")
+              // println(s"url        : ${e.getURL}")
+              // val link = e.getDescription
+              // val ident = if (link.startsWith("ugen.")) link.substring(5) else link
+              // lookUpHelp(ident)
+
+              val url = e.getURL
+              if (url != null) {
+                Desktop.browseURI(url.toURI)
+              } else {
+                val desc = e.getDescription
+                println(s"TODO: Navigate to $desc")
+              }
+            }
+          }
+        })
+      }
+
+      val paneRender = new ScrollPane(editorRender)
+      paneRender.peer.putClientProperty("styleId", "undecorated")
+
+      val _tabs = new TabbedPane
+      _tabs.peer.putClientProperty("styleId", "attached")
+      _tabs.focusable  = false
+      val pageEdit    = new TabbedPane.Page("Editor"  , paneEdit  , null)
+      val pageRender  = new TabbedPane.Page("Rendered", paneRender, null)
+      _tabs.pages     += pageEdit
+      _tabs.pages     += pageRender
+//      _tabs.pages     += pageAttr
+      GUI.addTabNavigation(_tabs)
+
+      render(initialText)
+
+      tabs = _tabs
+
+      component = _tabs
+
+      if (showEditor) {
+        paneImpl.component.requestFocus()
+      } else {
+        _tabs.selection.index = 1
+      }
     }
   }
 }

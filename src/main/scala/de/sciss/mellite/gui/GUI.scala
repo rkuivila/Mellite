@@ -14,7 +14,7 @@
 package de.sciss.mellite
 package gui
 
-import java.awt.event.{ActionEvent, ActionListener}
+import java.awt.event.{ActionEvent, ActionListener, KeyEvent}
 import java.awt.geom.{AffineTransform, Area, Path2D}
 import java.awt.{BasicStroke, Graphics, Graphics2D, RenderingHints, Shape}
 import javax.swing.event.{AncestorEvent, AncestorListener}
@@ -33,7 +33,7 @@ import de.sciss.synth.proc.SoundProcesses
 import scala.concurrent.Future
 import scala.swing.Swing._
 import scala.swing.event.{Key, ValueChanged}
-import scala.swing.{AbstractButton, Action, Alignment, Button, Component, Dialog, Dimension, Label, TextField}
+import scala.swing.{AbstractButton, Action, Alignment, Button, Component, Dialog, Dimension, Label, TabbedPane, TextField}
 
 // XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
@@ -156,6 +156,41 @@ object GUI {
     }
     b.peer.getActionMap.put("click", click.peer)
     b.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, "click")
+  }
+
+  /** Adds a global action to a component. The key
+    * is active if the component appears in the focused window.
+    */
+  def addGlobalAction(c: Component, name: String, keyStroke: KeyStroke)(body: => Unit): Unit = {
+    val a = Action(null)(body)
+    c.peer.getActionMap.put(name, a.peer)
+    c.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, name)
+  }
+
+  /** Adds alt-left/right key control to a tabbed pane. */
+  def addTabNavigation(tabs: TabbedPane): Unit = {
+    addGlobalAction(tabs, "prev", KeyStroke.getKeyStroke(Key.Left.id, Key.Modifier.Alt)) {
+      val sel   = tabs.selection
+      val idx   = sel.index - 1
+      sel.index = if (idx >= 0) idx else tabs.pages.size - 1
+    }
+    addGlobalAction(tabs, "next", KeyStroke.getKeyStroke(Key.Right.id, Key.Modifier.Alt)) {
+      val sel   = tabs.selection
+      val idx   = sel.index + 1
+      sel.index = if (idx < tabs.pages.size) idx else 0
+    }
+  }
+
+  /** Human-readable text representation of a key stroke. */
+  def keyStrokeText(stroke: KeyStroke): String = {
+    val mod = stroke.getModifiers
+    val sb  = new StringBuilder
+    if (mod > 0) {
+      sb.append(KeyEvent.getKeyModifiersText(mod))
+      sb.append('+')
+    }
+    sb.append(KeyEvent.getKeyText(stroke.getKeyCode))
+    sb.result()
   }
 
   def viewButton(action: Action, tooltip: String = ""): Button = {

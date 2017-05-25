@@ -15,15 +15,15 @@ lazy val authorEMail                = "contact@sciss.de"
 
 lazy val soundProcessesVersion      = "3.12.1-SNAPSHOT"
 lazy val fscapeVersion              = "2.7.0"
-lazy val nuagesVersion              = "2.14.0"
-lazy val interpreterPaneVersion     = "1.7.6-SNAPSHOT"
+lazy val nuagesVersion              = "2.15.0"
+lazy val interpreterPaneVersion     = "1.8.1"
 lazy val scalaColliderVersion       = "1.22.3"
 lazy val scalaColliderUGenVersion   = "1.16.4"
 lazy val lucreVersion               = "3.4.0"
 lazy val equalVersion               = "0.1.2"
 lazy val freesoundVersion           = "1.2.0"
 lazy val playJSONVersion            = "0.4.0"
-lazy val scalaColliderSwingVersion  = "1.32.2"
+lazy val scalaColliderSwingVersion  = "1.33.0"
 lazy val lucreSwingVersion          = "1.5.0"
 lazy val audioWidgetsVersion        = "1.10.2"
 lazy val desktopVersion             = "0.7.3"
@@ -33,6 +33,7 @@ lazy val pdflitzVersion             = "1.2.2"
 lazy val webLaFVersion              = "2.1.3"
 lazy val subminVersion              = "0.2.1"
 lazy val jlineVersion               = "2.14.3"
+lazy val pegDownVersion             = "1.6.0"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
 
@@ -171,30 +172,31 @@ lazy val root = Project(id = baseName, base = file("."))
     description := appDescription,
     resolvers += "Oracle Repository" at "http://download.oracle.com/maven", // required for sleepycat
     libraryDependencies ++= Seq(
-      "de.sciss" %% "soundprocesses-views"            % soundProcessesVersion,      // computer-music framework
-      "de.sciss" %% "soundprocesses-compiler"         % soundProcessesVersion,      // computer-music framework
-      "jline"    %  "jline"                           % jlineVersion,               // must match scala-compiler
-      "de.sciss" %% "scalainterpreterpane"            % interpreterPaneVersion,     // REPL
-      "de.sciss" %% "scalacollider"                   % scalaColliderVersion,
-      "de.sciss" %  "scalacolliderugens-spec"         % scalaColliderUGenVersion,   // meta data
-      "de.sciss" %% s"lucre-core"                     % lucreVersion,
-      "de.sciss" %% s"lucre-$bdb"                     % lucreVersion,               // database backend
-      "de.sciss" %% "equal"                           % equalVersion,               // type-safe equals
-//      "de.sciss" %% "play-json-sealed"                % playJSONVersion,
-      "de.sciss" %% "wolkenpumpe"                     % nuagesVersion,              // live improv
-      "de.sciss" %% "scalacolliderswing-interpreter"  % scalaColliderSwingVersion,  // REPL view
-      "de.sciss" %% "lucreswing"                      % lucreSwingVersion,          // reactive Swing components
-      "de.sciss" %% "audiowidgets-swing"              % audioWidgetsVersion,        // audio application widgets
-      "de.sciss" %% "audiowidgets-app"                % audioWidgetsVersion,        // audio application widgets
-      "de.sciss" %% "desktop"                         % desktopVersion,
-      "de.sciss" %% "desktop-mac"                     % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
-      "de.sciss" %% "sonogramoverview"                % sonogramVersion,            // sonogram component
-      "de.sciss" %% "raphael-icons"                   % raphaelIconsVersion,        // icon set
-      "de.sciss" %% "fscape"                          % fscapeVersion,              // offline audio rendering
-      "de.sciss" %% "scalafreesound"                  % freesoundVersion,           // Freesound support
-      "de.sciss" %% "pdflitz"                         % pdflitzVersion,             // PDF export
-      "de.sciss" %  "weblaf"                          % webLaFVersion,              // look and feel
-      "de.sciss" %  "submin"                          % subminVersion               // dark skin
+      "de.sciss"    %% "soundprocesses-views"           % soundProcessesVersion,      // computer-music framework
+      "de.sciss"    %% "soundprocesses-compiler"        % soundProcessesVersion,      // computer-music framework
+      "jline"       %  "jline"                          % jlineVersion,               // must match scala-compiler
+      "de.sciss"    %% "scalainterpreterpane"           % interpreterPaneVersion,     // REPL
+      "de.sciss"    %% "scalacollider"                  % scalaColliderVersion,
+      "de.sciss"    %  "scalacolliderugens-spec"        % scalaColliderUGenVersion,   // meta data
+      "de.sciss"    %% s"lucre-core"                    % lucreVersion,
+      "de.sciss"    %% s"lucre-$bdb"                    % lucreVersion,               // database backend
+      "de.sciss"    %% "equal"                          % equalVersion,               // type-safe equals
+      "de.sciss"    %% "wolkenpumpe"                    % nuagesVersion,              // live improv
+      "de.sciss"    %% "scalacolliderswing-core"        % scalaColliderSwingVersion,  // (sbt bug)
+      "de.sciss"    %% "scalacolliderswing-interpreter" % scalaColliderSwingVersion,  // REPL view
+      "de.sciss"    %% "lucreswing"                     % lucreSwingVersion,          // reactive Swing components
+      "de.sciss"    %% "audiowidgets-swing"             % audioWidgetsVersion,        // audio application widgets
+      "de.sciss"    %% "audiowidgets-app"               % audioWidgetsVersion,        // audio application widgets
+      "de.sciss"    %% "desktop"                        % desktopVersion,
+      "de.sciss"    %% "desktop-mac"                    % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
+      "de.sciss"    %% "sonogramoverview"               % sonogramVersion,            // sonogram component
+      "de.sciss"    %% "raphael-icons"                  % raphaelIconsVersion,        // icon set
+      "de.sciss"    %% "fscape"                         % fscapeVersion,              // offline audio rendering
+      "de.sciss"    %% "scalafreesound"                 % freesoundVersion,           // Freesound support
+      "org.pegdown" %  "pegdown"                        % pegDownVersion,             // Markdown renderer
+      "de.sciss"    %% "pdflitz"                        % pdflitzVersion,             // PDF export
+      "de.sciss"    %  "weblaf"                         % webLaFVersion,              // look and feel
+      "de.sciss"    %  "submin"                         % subminVersion               // dark skin
     ),
     mimaPreviousArtifacts := Set("de.sciss" %% baseNameL % mimaVersion),
     mainClass in (Compile,run) := appMainClass,

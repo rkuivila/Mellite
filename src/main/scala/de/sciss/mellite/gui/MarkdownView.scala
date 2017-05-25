@@ -23,14 +23,13 @@ import de.sciss.model.Model
 import de.sciss.synth.proc.{Markdown, Workspace}
 
 import scala.collection.immutable.{Seq => ISeq}
-import scala.concurrent.Future
 import scala.swing.Action
 
 object MarkdownView {
-  def apply[S <: Sys[S]](obj: Markdown[S], bottom: ISeq[View[S]] = Nil)
+  def apply[S <: Sys[S]](obj: Markdown[S], showEditor: Boolean = true, bottom: ISeq[View[S]] = Nil)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          undoManager: UndoManager): MarkdownView[S] =
-    Impl[S](obj, bottom = bottom)
+    Impl[S](obj, showEditor = showEditor, bottom = bottom)
 
   sealed trait Update
   final case class DirtyChange(value: Boolean) extends Update
@@ -38,7 +37,7 @@ object MarkdownView {
 trait MarkdownView[S <: Sys[S]] extends ViewHasWorkspace[S] with Model[MarkdownView.Update] {
   def dirty: Boolean
 
-  def save(): Future[Unit]
+  def save(): Unit
 
   def undoAction: Action
   def redoAction: Action
