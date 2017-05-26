@@ -27,6 +27,7 @@ import de.sciss.lucre.stm.TxnLike.peer
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{View, Window, deferTx, requireEDT}
 import de.sciss.lucre.synth.{Sys => SSys}
+import de.sciss.mellite.gui.impl.component.NavigationHistory
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{Markdown, Workspace}
 import org.pegdown.PegDownProcessor
@@ -52,14 +53,27 @@ object MarkdownRenderViewImpl {
 
     private[this] val mdRef = Ref.make[(stm.Source[S#Tx, Markdown[S]], Disposable[S#Tx])]
     private[this] var _editor: EditorPane = _
+    private[this] val nav   = NavigationHistory.empty[S, stm.Source[S#Tx, Markdown[S]]]
+    private[this] var actionBwd: Action = _
+    private[this] var actionFwd: Action = _
+    private[this] var obsNav: Disposable[S#Tx] = _
 
-    def dispose()(implicit tx: S#Tx): Unit = mdRef()._2.dispose()
+    def dispose()(implicit tx: S#Tx): Unit = {
+      mdRef()._2.dispose()
+      obsNav    .dispose()
+    }
 
     def markdown(implicit tx: S#Tx): Markdown[S] = mdRef()._1.apply()
 
     def init(obj: Markdown[S])(implicit tx: S#Tx): this.type = {
       deferTx(guiInit())
       markdown = obj
+      obsNav = nav.react { implicit tx => upd =>
+        deferTx {
+          actionBwd.enabled = upd.canGoBack
+          actionFwd.enabled = upd.canGoForward
+        }
+      }
       this
     }
 
@@ -74,8 +88,19 @@ object MarkdownRenderViewImpl {
       deferTx(setText(value))
     }
 
-    def markdown_=(md: Markdown[S])(implicit tx: S#Tx): Unit = {
+    def markdown_=(md: Markdown[S])(implicit tx: S#Tx): Unit =
+      setMarkdown(md, reset = true)
+
+    private def setMarkdownFromNav()(implicit tx: S#Tx): Unit =
+      nav.current.foreach { mdH =>
+        val md = mdH()
+        setInProgress(md, md.value)
+      }
+
+    private def setMarkdown(md: Markdown[S], reset: Boolean)(implicit tx: S#Tx): Unit = {
       setInProgress(md, md.value)
+      val mdH = tx.newHandle(md)
+      if (reset) nav.resetTo(mdH) else nav.push(mdH)
     }
 
     private def setText(text: String): Unit = {
@@ -114,7 +139,8 @@ object MarkdownRenderViewImpl {
                     Left(s"Attribute '$key' not found in Markdown object '${obj.name}'")
                   } {
                     case md: Markdown[S] =>
-                      markdown = md
+                      nav.push(tx.newHandle(md))
+                      setMarkdownFromNav()
                       fire(MarkdownRenderView.FollowedLink(impl, md))
                       Right(())
 
@@ -140,13 +166,25 @@ object MarkdownRenderViewImpl {
         })
       }
 
-      val actionBwd = Action(null) {
-        println("BACK")
+      actionBwd = Action(null) {
+        cursor.step { implicit tx =>
+          if (nav.canGoBack) {
+            nav.backward()
+            setMarkdownFromNav()
+          }
+        }
       }
+      actionBwd.enabled = false
 
-      val actionFwd = Action(null) {
-        println("FORWARD")
+      actionFwd = Action(null) {
+        cursor.step { implicit tx =>
+          if (nav.canGoForward) {
+            nav.forward()
+            setMarkdownFromNav()
+          }
+        }
       }
+      actionFwd.enabled = false
 
       val ggBwd = GUI.toolButton(actionBwd, raphael.Shapes.Backward)
       val ggFwd = GUI.toolButton(actionFwd, raphael.Shapes.Forward )
@@ -160,7 +198,9 @@ object MarkdownRenderViewImpl {
       val bot1: List[Component] = if (bottom.isEmpty) Nil else bottom.map(_.component)(breakOut)
       val bot2 = if (embedded) bot1 else {
         val actionEdit = Action(null) {
-          println("EDIT")
+          cursor.step { implicit tx =>
+            MarkdownEditorFrame(markdown)
+          }
         }
         val ggEdit = GUI.toolButton(actionEdit, raphael.Shapes.Edit)
         ggEdit :: bot1
