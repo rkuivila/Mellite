@@ -93,7 +93,7 @@ object MarkdownObjView extends ListObjView.Factory {
 
     override def openView(parent: Option[Window[S]])(implicit tx: S#Tx, workspace: Workspace[S],
                                                      cursor: Cursor[S]): Option[Window[S]] = {
-      val frame = MarkdownFrame(obj)
+      val frame = MarkdownEditorFrame(obj)
       Some(frame)
     }
   }

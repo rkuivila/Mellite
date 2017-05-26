@@ -20,9 +20,11 @@ import de.sciss.desktop.WindowHandler
 import de.sciss.file._
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
+import de.sciss.lucre.stm.TxnLike.peer
 import de.sciss.lucre.swing.{CellView, View, Window, deferTx, requireEDT}
 import de.sciss.synth.proc.SoundProcesses
 
+import scala.concurrent.stm.Ref
 import scala.swing.Action
 
 object WindowImpl {
@@ -71,10 +73,6 @@ object WindowImpl {
   }
 }
 
-//abstract class WindowImpl0[S <: Sys[S], S1 <: Sys[S1]](title0: Optional[String] = None)
-//  extends Window[S] with WindowHolder[desktop.Window] {
-//}
-
 abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx, String]])
   extends Window[S] with WindowHolder[desktop.Window] {
   impl =>
@@ -84,22 +82,32 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
 
   protected def style: desktop.Window.Style = desktop.Window.Regular
 
-  // final def window: desktop.Window = component
-  private var windowImpl: WindowImpl.Peer[S] = _
-  private var titleObserver = Option.empty[stm.Disposable[S#Tx]]
+  private[this] var windowImpl: WindowImpl.Peer[S] = _
+  private[this] val titleObserver = Ref(stm.Disposable.empty[S#Tx])
 
-  final protected def title        : String        = windowImpl.title
-  final protected def title_=(value: String): Unit = windowImpl.title = value
+  final def title        : String        = windowImpl.title
+  final def title_=(value: String): Unit = windowImpl.title = value
 
-  final protected def dirty        : Boolean        = windowImpl.dirty
-  final protected def dirty_=(value: Boolean): Unit = windowImpl.dirty = value
+  final def dirty        : Boolean        = windowImpl.dirty
+  final def dirty_=(value: Boolean): Unit = windowImpl.dirty = value
 
   protected def undecorated: Boolean = false
 
-  final protected def windowFile        : Option[File]        = windowImpl.file
-  final protected def windowFile_=(value: Option[File]): Unit = windowImpl.file = value
+  final def windowFile        : Option[File]        = windowImpl.file
+  final def windowFile_=(value: Option[File]): Unit = windowImpl.file = value
 
   final protected def bindMenus(entries: (String, Action)*): Unit = windowImpl.bindMenus(entries: _*)
+
+  def setTitleExpr(exprOpt: Option[CellView[S#Tx, String]])(implicit tx: S#Tx): Unit = {
+    titleObserver.swap(stm.Disposable.empty).dispose()
+    exprOpt.foreach { ex =>
+      def update(s: String)(implicit tx: S#Tx): Unit = deferTx { title = s }
+
+      val obs = ex.react { implicit tx => now => update(now) }
+      titleObserver() = obs
+      update(ex())
+    }
+  }
 
   final def init()(implicit tx: S#Tx): this.type = {
     view match {
@@ -108,22 +116,15 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
     }
 
     deferTx(initGUI0())
-
-    titleExpr.foreach { ex =>
-      def update(s: String)(implicit tx: S#Tx): Unit = deferTx { title = s }
-
-      val obs = ex.react { implicit tx => now => update(now) }
-      titleObserver = Some(obs)
-      update(ex())
-    }
-
+    setTitleExpr(titleExpr)
     this
   }
 
   private def initGUI0(): Unit = {
-    val f = new WindowImpl.Peer(view, impl, undoRedoActions, style, undecorated = undecorated)
+    val f       = new WindowImpl.Peer(view, impl, undoRedoActions, style, undecorated = undecorated)
     window      = f
     windowImpl  = f
+    Window.attach(f, this)
     val (ph, pv, pp) = placement
     desktop.Util.placeWindow(f, ph, pv, pp)
     f.front()
@@ -151,7 +152,8 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
       case _ => None
     }
 
-  private var didClose = false
+  private[this] var didClose = false
+
   private def disposeFromGUI(): Unit = if (!didClose) {
     requireEDT()
     performClose()
@@ -176,7 +178,7 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
   def pack(): Unit = windowImpl.pack()
 
   def dispose()(implicit tx: S#Tx): Unit = {
-    titleObserver.foreach(_.dispose())
+    titleObserver().dispose()
 
     view match {
       case wv: ViewHasWorkspace[S] => wv.workspace.removeDependent(this)

@@ -15,11 +15,11 @@ package de.sciss.mellite
 package gui
 package impl
 
-import de.sciss.desktop.Window
+import de.sciss.desktop
 import de.sciss.lucre.swing.requireEDT
 
-trait WindowHolder[W <: Window] {
-  private var _window: W = _
+trait WindowHolder[W <: desktop.Window] {
+  private[this] var _window: W = _
 
   def window: W = {
     requireEDT()

@@ -23,12 +23,22 @@ import de.sciss.synth.proc.{Markdown, Workspace}
 
 import scala.collection.immutable.{Seq => ISeq}
 
-object MarkdownFrame {
+object MarkdownEditorFrame {
   def apply[S <: Sys[S]](obj: Markdown[S], bottom: ISeq[View[S]] = Nil)
-                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): MarkdownFrame[S] =
-    Impl(obj, bottom = bottom)
+                        (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): MarkdownEditorFrame[S] =
+    Impl.editor(obj, bottom = bottom)
 }
 
-trait MarkdownFrame[S <: stm.Sys[S]] extends lucre.swing.Window[S] {
-  def codeView: MarkdownView[S]
+trait MarkdownEditorFrame[S <: stm.Sys[S]] extends lucre.swing.Window[S] {
+  override def view: MarkdownEditorView[S]
+}
+
+object MarkdownRenderFrame {
+  def apply[S <: Sys[S]](obj: Markdown[S])(implicit tx: S#Tx, workspace: Workspace[S],
+                                           cursor: stm.Cursor[S]): MarkdownRenderFrame[S] =
+    Impl.render(obj)
+}
+
+trait MarkdownRenderFrame[S <: stm.Sys[S]] extends lucre.swing.Window[S] {
+  override def view: MarkdownRenderView[S]
 }
