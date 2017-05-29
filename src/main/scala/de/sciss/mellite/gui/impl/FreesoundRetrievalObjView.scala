@@ -19,6 +19,7 @@ import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.net.URI
 import java.util.Date
+import javax.swing.undo.UndoableEdit
 import javax.swing.{Icon, KeyStroke}
 
 import de.sciss.desktop.impl.UndoManagerImpl
@@ -27,24 +28,25 @@ import de.sciss.equal.Implicits._
 import de.sciss.file._
 import de.sciss.freesound.lucre.{PreviewsCache, Retrieval, RetrievalView, SoundObj, TextSearchObj}
 import de.sciss.freesound.swing.SoundTableView
-import de.sciss.freesound.{Auth, Client, Codec, Freesound, Sound, TextSearch}
+import de.sciss.freesound.{Auth, Client, Codec, Freesound, License, Sound, TextSearch}
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.expr.{DoubleObj, LongObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{Obj, TxnLike}
 import de.sciss.lucre.swing._
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.mellite.gui.impl.ListObjViewImpl.NonEditable
 import de.sciss.mellite.gui.impl.document.FolderFrameImpl
 import de.sciss.processor.Processor
 import de.sciss.swingplus.GroupPanel
 import de.sciss.synth.io.AudioFile
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{AudioCue, Folder, Workspace}
+import de.sciss.synth.proc.{AudioCue, Ensemble, Folder, Markdown, Timeline, Workspace}
 import de.sciss.{desktop, freesound}
 
-import scala.collection.breakOut
-import scala.concurrent.{blocking, Future}
+import scala.collection.{breakOut, mutable}
+import scala.concurrent.{Future, blocking}
 import scala.concurrent.stm.Ref
 import scala.swing.event.Key
 import scala.swing.{Action, Alignment, Button, Component, Label, ProgressBar, SequentialContainer, Swing, TabbedPane, TextField}
@@ -109,6 +111,82 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
     }
   }
 
+  /** Collects licensing information across objects, beginning at a root object.
+    *
+    * @param root   the root object. The method will try to traverse it, e.g. in
+    *               the case of folder, ensemble, and timeline.
+    * @return a map from license to a map from user-names to sounds, published
+    *         under that license
+    */
+  def collectLegal[S <: Sys[S]](root: Obj[S])(implicit tx: S#Tx): Map[License, Map[String, Set[Sound]]] = {
+    val seen  = mutable.Set.empty[Obj[S]]
+    var res   = Map.empty[License, Map[String, Set[Sound]]]
+
+    def loop(obj: Obj[S]): Unit = if (seen.add(obj)) {
+      obj.attr.$[SoundObj](Retrieval.attrFreesound).foreach { sound =>
+        val soundV    = sound.value
+        import soundV.{license, userName}
+        val userMap0  = res     .getOrElse(license , Map.empty)
+        val soundSet0 = userMap0.getOrElse(userName, Set.empty)
+        val soundSet1 = soundSet0 + soundV
+        val userMap1  = userMap0 + (userName -> soundSet1)
+        res          += soundV.license -> userMap1
+      }
+
+      obj match {
+        case f: Folder  [S] => f       .iterator.foreach(loop)
+        case e: Ensemble[S] => e.folder.iterator.foreach(loop)
+        case t: Timeline[S] => t.iterator.foreach { case (_, xs) => xs.foreach(e => loop(e.value)) }
+        case _ =>
+      }
+      obj.attr.iterator.foreach { case (_, value) => loop(value) }
+    }
+
+    loop(root)
+    res
+  }
+
+  private def escapeURL(url: String): String = {
+    val i       = url.indexOf("://")
+    val j       = i + 3
+    val scheme  = url.substring(0, i)
+    val k       = url.indexOf("/", j)
+    val host    = url.substring(j, k)
+    val path    = url.substring(k)
+    val uri     = new URI(scheme, host, path, null)
+    uri.toASCIIString
+  }
+
+  def formatLegal[S <: Sys[S]](rootName: String,
+                               map: Map[License, Map[String, Set[Sound]]])(implicit tx: S#Tx): Markdown.Var[S] = {
+    val sb = new StringBuilder
+    val title = s"License Report for $rootName"
+    sb.append(s"# $title\n")
+    val byLic = map.toList.sortBy { case (lic, _) => lic.toString }
+    byLic.foreach { case (lic, userMap) =>
+      val licName = lic match {
+        case licCC: License.CC => licCC.name
+        case _ => "Unknown"
+      }
+      sb.append(s"\n## License: $licName\n\n[License text](${lic.uri})\n")
+      val byUser = userMap.toList.sortBy(_._1.toLowerCase)
+      byUser.foreach { case (userName, set) =>
+        sb.append(s"\n### User: $userName\n\n")
+        val sounds = set.toList.sortBy(_.id)
+        sounds.foreach { sound =>
+          val url   = Freesound.urlSoundBrowse.format(userName, sound.id)
+          val urlE  = escapeURL(url)
+          sb.append(s" - [`${sound.fileName}`]($urlE)\n")
+        }
+      }
+    }
+    val mdVal   = sb.result()
+    val mdConst = Markdown.newConst[S](mdVal)
+    val mdVar   = Markdown.newVar  [S](mdConst)
+    mdVar.name  = title
+    mdVar
+  }
+
   private final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, E[S]])
     extends FreesoundRetrievalObjView   [S]
       with ListObjView                  [S]
@@ -149,16 +227,37 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
         }
       }
 
+      val name    = AttrCellView.name[S](r)
+      val locH    = tx.newHandle(r.downloadLocation)
+      val folderH = tx.newHandle(r.downloads)
+
+      def mkLegalFor(f: Folder[S], root: Obj[S])(implicit tx: S#Tx): UndoableEdit = {
+        val map   = collectLegal(root)
+        val title = "Freesound Sounds" // "used in ${root.name}"
+        val md    = formatLegal[S](title, map)
+        MarkdownRenderFrame(md)
+        EditFolderInsertObj(md.name, parent = f, index = f.size, child = md)
+      }
+
+      def mkLegal(): Unit = {
+        val edit = cursor.step { implicit tx =>
+          val root = folderH()
+          mkLegalFor(root, root)
+        }
+        undo.add(edit)
+      }
+
       deferTx {
-        val ggInfo  = GUI.toolButton(Action(null)(viewInfo()), freesound.swing.Shapes.SoundInfo, tooltip = "View Sound Information")
+        val ggInfo  = GUI.toolButton(Action(null)(viewInfo()), freesound.swing.Shapes.SoundInfo,
+          tooltip = "View sound information")
+        val ggLegal = GUI.toolButton(Action(null)(mkLegal()), Shapes.Justice,
+          tooltip = "Collect license information")
         val menu1   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
         GUI.addGlobalKeyWhenVisible(ggInfo, KeyStroke.getKeyStroke(Key.I.id, menu1))
         val cont    = downloadsView.bottomComponent.contents
-        cont.insert(0, ggInfo, Swing.HStrut(4))
+        cont.insert(0, ggInfo, ggLegal, Swing.HStrut(4))
       }
-      val name          = AttrCellView.name[S](r)
-      val locH          = tx.newHandle(r.downloadLocation)
-      val folderH       = tx.newHandle(r.downloads)
+
       val w = new WindowImpl[S](name) {
         val view: View[S] = new EditorImpl[S](rv, downloadsView, locH, folderH).init()
       }
