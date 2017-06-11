@@ -11,7 +11,9 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite.gui.impl
+package de.sciss.mellite
+package gui
+package impl
 
 import javax.swing.Icon
 import javax.swing.undo.UndoableEdit
@@ -27,9 +29,8 @@ import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.ListObjViewImpl.NonEditable
-import de.sciss.mellite.gui.{CodeFrame, CodeView, FScapeOutputsView, GUI, ListObjView, ObjView, Shapes}
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{Code, GenContext, Workspace}
+import de.sciss.synth.proc.{Code, Workspace}
 
 import scala.concurrent.stm.Ref
 import scala.swing.{Button, ProgressBar}
@@ -171,7 +172,7 @@ object FScapeObjView extends ListObjView.Factory {
               }
             }
 
-            implicit val context = GenContext[S]
+            implicit val gen = WorkspaceGenContext[S] // why the f*** can't we just import .apply?
             val rendering = obj.run(config)
             deferTx {
               actionCancel.enabled = true
