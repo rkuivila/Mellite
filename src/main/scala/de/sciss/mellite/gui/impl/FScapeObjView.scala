@@ -113,7 +113,6 @@ object FScapeObjView extends ListObjView.Factory {
 
     import de.sciss.fscape.Graph
     import de.sciss.fscape.lucre.GraphObj
-    import de.sciss.fscape.stream.Control
 
     val handler = new CodeView.Handler[S, Unit, Graph] {
       def in(): Unit = ()
