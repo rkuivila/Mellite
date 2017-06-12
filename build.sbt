@@ -13,7 +13,7 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.12.2-SNAPSHOT"
+lazy val soundProcessesVersion      = "3.12.2"
 lazy val fscapeVersion              = "2.7.1-SNAPSHOT"
 lazy val nuagesVersion              = "2.15.0"
 lazy val interpreterPaneVersion     = "1.8.1"
@@ -23,16 +23,17 @@ lazy val lucreVersion               = "3.4.0"
 lazy val equalVersion               = "0.1.2"
 lazy val freesoundVersion           = "1.2.0"
 lazy val playJSONVersion            = "0.4.0"
-lazy val scalaColliderSwingVersion  = "1.33.0"
+lazy val scalaColliderSwingVersion  = "1.33.1"
 lazy val lucreSwingVersion          = "1.5.1"
 lazy val audioWidgetsVersion        = "1.10.2"
 lazy val desktopVersion             = "0.7.3"
 lazy val sonogramVersion            = "1.9.1"
 lazy val raphaelIconsVersion        = "1.0.4"
+lazy val modelVersion               = "0.3.4"
 lazy val pdflitzVersion             = "1.2.2"
 lazy val webLaFVersion              = "2.1.3"
 lazy val subminVersion              = "0.2.1"
-lazy val jlineVersion               = "2.14.3"
+lazy val jlineVersion               = "2.14.4"
 lazy val pegDownVersion             = "1.6.0"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"
@@ -191,6 +192,7 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss"    %% "desktop-mac"                    % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss"    %% "sonogramoverview"               % sonogramVersion,            // sonogram component
       "de.sciss"    %% "raphael-icons"                  % raphaelIconsVersion,        // icon set
+      "de.sciss"    %% "model"                          % modelVersion,               // non-txn MVC
       "de.sciss"    %% "fscape"                         % fscapeVersion,              // offline audio rendering
       "de.sciss"    %% "scalafreesound"                 % freesoundVersion,           // Freesound support
       "org.pegdown" %  "pegdown"                        % pegDownVersion,             // Markdown renderer

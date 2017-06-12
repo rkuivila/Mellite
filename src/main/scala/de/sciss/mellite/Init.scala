@@ -44,9 +44,10 @@ trait Init {
     val cacheLim  = Limit(count = 8192, space = 2L << 10 << 100)  // 2 GB; XXX TODO --- through user preferences
     FScCache.init(folder = cacheDir, capacity = cacheLim)
 
-    val ctlConf = Control.Config()
-    ctlConf.terminateActors = false
-    val fscapeF = FScape.genViewFactory(ctlConf)
+//    val ctlConf = Control.Config()
+//    ctlConf.terminateActors = false
+    // we have sane default config now!
+    val fscapeF = FScape.genViewFactory()
     GenView.tryAddFactory(fscapeF)
   }
 }

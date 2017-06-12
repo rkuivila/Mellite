@@ -152,7 +152,7 @@ object FScapeObjView extends ListObjView.Factory {
         def apply(): Unit = cursor.step { implicit tx =>
           if (renderRef.get(tx.peer).isEmpty) {
             val obj       = objH()
-            val config    = Control.Config()
+            val config    = FScape.defaultConfig.toBuilder
             config.progressReporter = { report =>
               defer {
                 ggProgress.value = (report.total * ggProgress.max).toInt
