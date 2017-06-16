@@ -52,8 +52,8 @@ final class ViewJ(sono: sonogram.Overview, val timelineModel: TimelineModel)
   }
 
   object canvasComponent extends Component with sonogram.PaintController {
-    private var paintFun: Graphics2D => Unit = paintChecker("Calculating...")
-    private val srRatio = sono.inputSpec.sampleRate / TimeRef.SampleRate
+    private[this] var paintFun: Graphics2D => Unit = paintChecker("Calculating...")
+    private[this] val srRatio = sono.inputSpec.sampleRate / TimeRef.SampleRate
 
     private[ViewJ] var sonogramBoost: Float = 1f
 

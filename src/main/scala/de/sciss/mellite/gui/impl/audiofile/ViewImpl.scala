@@ -62,10 +62,10 @@ object ViewImpl {
      val iLoc          = ArtifactLocation.newVar[I](artifDir)
      val iArtifact     = Artifact(iLoc, artifact) // iLoc.add(artifact.value)
 
-    val iGrapheme     = AudioCue.Obj[I](iArtifact, audioCueV.spec, audioCueV.offset, audioCueV.gain)
+    val audioCueI     = AudioCue.Obj[I](iArtifact, audioCueV.spec, audioCueV.offset, audioCueV.gain)
 
     val (_, proc)     = ProcActions.insertAudioRegion[I](timeline, time = Span(0L, numFramesTL),
-      /* track = 0, */ audioCue = iGrapheme, gOffset = 0L /* , bus = None */)
+      /* track = 0, */ audioCue = audioCueI, gOffset = 0L /* , bus = None */)
 
     val diff = Proc[I]
     val diffGr = SynthGraph {
@@ -178,46 +178,4 @@ object ViewImpl {
 
     def obj(implicit tx: S#Tx): AudioCue.Obj[S] = holder()
   }
-
-  //  private final class BusSinkButton[S <: Sys[S]](view: AudioFileView[S], export: Button)
-  //    extends Button("Drop bus") {
-  //
-  //    icon        = new ImageIcon(Mellite.getClass.getResource("dropicon16.png"))
-  //    // this doesn't have any effect?
-  //    // GUI.fixWidth(this)
-  //    foreground  = Color.gray
-  //    focusable   = false
-  //
-  //    // private var item = Option.empty[stm.Source[S#Tx, Element.Int[S]]]
-  //
-  //    private val trns = new TransferHandler {
-  //      // how to enforce a drop action: https://weblogs.java.net/blog/shan_man/archive/2006/02/choosing_the_dr.html
-  //      override def canImport(support: TransferSupport): Boolean =
-  //        if (support.isDataFlavorSupported(FolderView.SelectionFlavor) &&
-  //           ((support.getSourceDropActions & TransferHandler.COPY) != 0)) {
-  //          support.setDropAction(TransferHandler.COPY)
-  //          true
-  //        } else false
-  //
-  //      override def importData(support: TransferSupport): Boolean = {
-  //        val t     = support.getTransferable
-  //        val data  = t.getTransferData(FolderView.SelectionFlavor).asInstanceOf[FolderView.SelectionDnDData[S]]
-  //        (data.workspace == view.workspace) && {
-  //          data.selection.exists { nodeView =>
-  //            nodeView.renderData match {
-  //              case ev: ObjView.Int[S] =>
-  //                // export.bus  = Some(ev.obj)
-  //                text        = ev.name
-  //                foreground  = null
-  //                repaint()
-  //                true
-  //
-  //              case _ => false
-  //            }
-  //          }
-  //        }
-  //      }
-  //    }
-  //    peer.setTransferHandler(trns)
-  //  }
 }

@@ -11,19 +11,20 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite.gui.impl.component
+package de.sciss.mellite
+package gui
+package impl.component
 
 import de.sciss.lucre.stm.Sys
-import de.sciss.mellite.gui.SelectionModel
 import de.sciss.model.impl.ModelImpl
 
 final class SelectionModelImpl[S <: Sys[S], Repr]
   extends SelectionModel[S, Repr] with ModelImpl[SelectionModel.Update[S, Repr]] {
 
-  import de.sciss.mellite.gui.SelectionModel.Update
+  import SelectionModel.Update
 
   // no sync because we assume the model is only used on the event thread
-  private var set = Set.empty[Repr]
+  private[this] var set = Set.empty[Repr]
 
   def contains(view: Repr): Boolean = set.contains(view)
 
