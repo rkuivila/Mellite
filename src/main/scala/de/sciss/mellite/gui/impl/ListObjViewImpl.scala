@@ -70,7 +70,8 @@ object ListObjViewImpl {
     ObjViewImpl.Ensemble        .tpe.typeID -> ObjViewImpl.Ensemble,
     ObjViewImpl.Nuages          .tpe.typeID -> ObjViewImpl.Nuages,
     OutputObjView               .tpe.typeID -> OutputObjView,
-    MarkdownObjView             .tpe.typeID -> MarkdownObjView
+    MarkdownObjView             .tpe.typeID -> MarkdownObjView,
+    ParamSpecObjView            .tpe.typeID -> ParamSpecObjView
   )
 
   /** A trait that when mixed in provides `isEditable` and `tryEdit` as non-op methods. */
@@ -165,7 +166,7 @@ object ListObjViewImpl {
     with ListObjView[S] with ObjViewImpl.Impl[S] {
     // _: ObjView[S] =>
 
-    override def value: A
+    override  def value: A
     protected def value_=(x: A): Unit
 
     protected def exprValue: A = value

@@ -63,6 +63,7 @@ object MarkdownObjView extends ListObjView.Factory {
     obj :: Nil
   }
 
+  // XXX TODO make private
   final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, Markdown[S]], var value: String)
     extends MarkdownObjView[S]
       with ListObjView[S]
@@ -86,10 +87,7 @@ object MarkdownObjView extends ListObjView.Factory {
 
     def convertEditValue(v: Any): Option[String] = None
 
-    def testValue(v: Any): Option[Int] = v match {
-      case i: Int  => Some(i)
-      case _        => None
-    }
+    def testValue(v: Any): Option[Int] = ???  // XXX TODO --- remove method in major version
 
     override def openView(parent: Option[Window[S]])(implicit tx: S#Tx, workspace: Workspace[S],
                                                      cursor: Cursor[S]): Option[Window[S]] = {

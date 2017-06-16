@@ -1,22 +1,36 @@
 # New features
 
-- [ ] views: regions (high pri now)
-- [ ] views: markers (low  pri now)
-
 Regions works like markers in EisK, but with extending objects.
 Markers should be implemented with BiPin, regions with Timeline
 or BiGroup{?}. For viewing audio-cue objects, these would be
 stored with a conventional key in the attr-map.
 
+## High priority
+
+- [ ] views: regions
+
+## Medium priority
+
+- [ ] views: markers
+- [ ] timeline-model: super-type with open-ended span-like
+
+## Low priority
+
+- [ ] views: store state (e.g. window position, zoom levels)
+- [ ] undo-manager: add non-significant edits (scroll, zoom)
+
 # Old features in EisK not in Mllt
 
 ## High priority
 
+- [X] keyboard control: ffwd, rewind
+- [ ] op: timeline insertion follows playback
+
+## Medium priority
+
 - [ ] scroll-with-playhead
 - [ ] tools: pointer tool
-- [X] keyboard control: ffwd, rewind
 - [ ] keyboard control: ctrl-space play selection
-- [ ] op: timeline insertion follows playback
 
 ## Low priority
 

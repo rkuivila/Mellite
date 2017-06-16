@@ -91,6 +91,9 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
   final def dirty        : Boolean        = windowImpl.dirty
   final def dirty_=(value: Boolean): Unit = windowImpl.dirty = value
 
+//  final def resizable        : Boolean        = windowImpl.resizable
+//  final def resizable_=(value: Boolean): Unit = windowImpl.resizable = value
+
   protected def undecorated: Boolean = false
 
   final def windowFile        : Option[File]        = windowImpl.file
