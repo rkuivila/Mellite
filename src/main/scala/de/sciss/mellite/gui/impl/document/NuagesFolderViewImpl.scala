@@ -16,7 +16,8 @@ package gui
 package impl
 package document
 
-import de.sciss.desktop.UndoManager
+import de.sciss.desktop.{OptionPane, UndoManager}
+import de.sciss.equal
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.impl.ComponentHolder
@@ -38,7 +39,7 @@ object NuagesFolderViewImpl {
     val folder  = FolderView(nuages.folder)
     val folder1 = new FolderFrameImpl.ViewImpl[S](folder)
     folder1.init()
-    val nCfg    = Nuages.Config()
+    val nCfg    = Nuages    .Config()
     val sCfg    = ScissProcs.Config()
     de.sciss.tallin.Settings(nCfg, sCfg)
     val res     = new Impl(tx.newHandle(nuagesObj), folder1, nCfg, sCfg)
@@ -66,17 +67,22 @@ object NuagesFolderViewImpl {
       ggPower.icon          = GUI.iconNormal  (shpPower)
       ggPower.disabledIcon  = GUI.iconDisabled(shpPower)
 
-      val ggClearTL = Button("Clear") {
-        cursor.step { implicit tx =>
-          nuagesH().surface match {
-            case Nuages.Surface.Timeline(tl) =>
-              tl.modifiableOption.foreach { tlMod =>
-                tlMod.clear() // XXX TODO -- use undo manager?
-              }
-            case Nuages.Surface.Folder(f) =>
-              f.clear() // XXX TODO -- use undo manager?
+      val ggClearTL = Button("Clear…") {
+        val opt = OptionPane("Clearing the timeline cannot be undone!\nAre you sure?", OptionPane.Options.YesNo,
+          OptionPane.Message.Warning)
+        val res = opt.show(Window.find(this).map(_.window), title = "Clear Nuages Timeline")
+        import equal.Implicits._
+        if (res === OptionPane.Result.Yes)
+          cursor.step { implicit tx =>
+            nuagesH().surface match {
+              case Nuages.Surface.Timeline(tl) =>
+                tl.modifiableOption.foreach { tlMod =>
+                  tlMod.clear() // XXX TODO -- use undo manager?
+                }
+              case Nuages.Surface.Folder(f) =>
+                f.clear() // XXX TODO -- use undo manager?
+            }
           }
-        }
       }
 
       val ggViewTL = Button("View") {
@@ -93,8 +99,26 @@ object NuagesFolderViewImpl {
       }
 
       val ggPopulate = Button("Populate") {
-        cursor.step { implicit tx =>
-          de.sciss.tallin.Populate(nuagesH(), nConfig, sConfig)
+        val isEmpty = cursor.step { implicit tx =>
+          val n = nuagesH()
+          n.generators.forall(_.isEmpty) &&
+          n.filters   .forall(_.isEmpty) &&
+          n.collectors.forall(_.isEmpty)
+        }
+
+        def perform(): Unit = cursor.step { implicit tx =>
+          val n = nuagesH()
+          Nuages.mkCategoryFolders(n)
+          de.sciss.tallin.Populate(n, nConfig, sConfig)
+        }
+
+        if (isEmpty) perform()
+        else {
+          val opt = OptionPane("Folders seem to be populated already.!\nAre you sure?", OptionPane.Options.YesNo,
+            OptionPane.Message.Warning)
+          val res = opt.show(Window.find(this).map(_.window), title = "Populate Nuages Timeline")
+          import equal.Implicits._
+          if (res === OptionPane.Result.Yes) perform()
         }
       }
 

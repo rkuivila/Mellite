@@ -9,13 +9,13 @@ object Settings {
     sConfig.generatorChannels = 2 // 4 // 0
     sConfig.micInputs         = Vector(
       // NamedBusConfig("m-at" , 0, 2),
-      NamedBusConfig("m-dpa" , 0, 2)
+      NamedBusConfig("m-dpa" , 0 until 2)
       // NamedBusConfig("m-hole",  0, 1),
       // NamedBusConfig("m-keys",  1, 1)
     )
     sConfig.lineInputs      = Vector(
-      NamedBusConfig("pirro", 4, 2),
-      NamedBusConfig("beat" , 6, 1)
+      NamedBusConfig("pirro", 4 until 6),
+      NamedBusConfig("beat" , 6 until 7)
     )
     sConfig.lineOutputs     = Vector(
       // NamedBusConfig("sum", 6, 2)

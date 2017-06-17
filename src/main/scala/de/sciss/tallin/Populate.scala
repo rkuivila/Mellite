@@ -321,7 +321,8 @@ object Populate {
         val pFeed     = pAudio("feed", ParamSpec(0, 1), default = 0.0)
 
         val boost     = pBoost
-        val pureIn    = In.ar(NumOutputBuses.ir + cfg.offset, cfg.numChannels) * boost
+//        val pureIn    = In.ar(NumOutputBuses.ir + cfg.offset, cfg.numChannels) * boost
+        val pureIn    = PhysicalIn.ar(cfg.indices) * boost
         val bandFrequencies = List(150, 800, 3000)
         val ins       = HPZ1.ar(pureIn) // .outputs
         var outs: GE = 0
@@ -362,7 +363,8 @@ object Populate {
         val pBoost = pAudio("gain", ParamSpec(0.1, 10, ExpWarp), default = 1.0)
 
         val boost   = pBoost
-        val sig     = In.ar(NumOutputBuses.ir + cfg.offset, cfg.numChannels) * boost
+//        val sig     = In.ar(NumOutputBuses.ir + cfg.offset, cfg.numChannels) * boost
+        val sig     = PhysicalIn.ar(cfg.indices) * boost
         // val numOut  = masterChansOption.fold(2)(_.size)
         val numOut  = if (sConfig.generatorChannels <= 0) masterChansOption.fold(2)(_.size) else sConfig.generatorChannels
 
@@ -905,16 +907,26 @@ object Populate {
 
     masterChansOption.foreach { masterChans =>
       val numChans          = masterChans.size
-      val masterCfg         = NamedBusConfig("", 0, numChans)
+      val masterCfg         = NamedBusConfig("", 0 until numChans)
       val masterGroupsCfg   = masterCfg +: sConfig.masterGroups
 
       masterGroupsCfg.zipWithIndex.foreach { case (cfg, _ /* idx */) =>
         def placeChannels(sig: GE): GE = {
           if (cfg.numChannels == numChans) sig
           else {
-            Seq(Silent.ar(cfg.offset),
-              Flatten(sig),
-              Silent.ar(numChans - (cfg.offset + cfg.numChannels))): GE
+            val flatSig = Flatten(sig)
+            Flatten(
+//            Seq(Silent.ar(cfg.offset),
+//              Flatten(sig),
+//              Silent.ar(numChans - (cfg.offset + cfg.numChannels))): GE
+              Seq.tabulate[GE](numChans) { ch =>
+                val inIdx = cfg.indices.indexOf(ch)
+                if (inIdx < 0)
+                  DC.ar(0)
+                else
+                  flatSig \ inIdx
+              }
+            )
           }
         }
 
@@ -1092,11 +1104,12 @@ object Populate {
           mix(in, flt, pMix)
         }
     */
+
     sConfig.lineInputs.find(c => c.name == "i-mkv" || c.name == "beat").foreach { cfg =>
       generator("a~beat") {
-        val off     = cfg.offset
+//        val off     = cfg.offset
         val pThresh = pAudio("thresh", ParamSpec(0.01, 1, ExpWarp), default = 0.1)
-        val in      = Trig1.ar(PhysicalIn.ar(off) - pThresh, 0.02)
+        val in      = Trig1.ar(PhysicalIn.ar(cfg.indices) - pThresh, 0.02)
         val pDiv    = pAudio("div", ParamSpec(1, 16, IntWarp), default = 1.0)
         val pulse   = PulseDivider.ar(in, pDiv)
         val pTime   = pAudio("time", ParamSpec(0.0 , 1.0), default = 0.0)
@@ -1105,29 +1118,29 @@ object Populate {
       }
     }
 
-    sConfig.micInputs.find(c => c.name == "m-hole").foreach { cfg =>
-      generator("m-feat") {
-        val off         = cfg.offset
-        val in0         = PhysicalIn.ar(off)
-        val gain        = pAudio("gain", ParamSpec(-20, 20), default = 0.0).dbamp
-        val in          = in0 * gain
-        val pThresh     = pControl("thresh", ParamSpec(0, 1), default = 0.5)
-        val buf         = LocalBuf(numFrames = 1024, numChannels = 1)
-        val chain1      = FFT(buf, in)
-        val onsets      = Onsets.kr(chain1, pThresh)
-        val loud        = Loudness.kr(chain1)
-        val cent        = SpecCentroid.kr(chain1)
-        val flat        = SpecFlatness.kr(chain1)
-        val loudN       = (loud / 64).clip(0, 1)
-        val centN       = cent.clip(100, 10000).explin(100, 10000, 0, 1)
-        val flatN       = flat.clip(0, 1)
-
-        pAudioOut("loud", loudN)
-        pAudioOut("cent", centN)
-        pAudioOut("flat", flatN)
-        onsets
-      }
-    }
+//    sConfig.micInputs.find(c => c.name == "m-hole").foreach { cfg =>
+//      generator("m-feat") {
+//        val off         = cfg.offset
+//        val in0         = PhysicalIn.ar(off)
+//        val gain        = pAudio("gain", ParamSpec(-20, 20), default = 0.0).dbamp
+//        val in          = in0 * gain
+//        val pThresh     = pControl("thresh", ParamSpec(0, 1), default = 0.5)
+//        val buf         = LocalBuf(numFrames = 1024, numChannels = 1)
+//        val chain1      = FFT(buf, in)
+//        val onsets      = Onsets.kr(chain1, pThresh)
+//        val loud        = Loudness.kr(chain1)
+//        val cent        = SpecCentroid.kr(chain1)
+//        val flat        = SpecFlatness.kr(chain1)
+//        val loudN       = (loud / 64).clip(0, 1)
+//        val centN       = cent.clip(100, 10000).explin(100, 10000, 0, 1)
+//        val flatN       = flat.clip(0, 1)
+//
+//        pAudioOut("loud", loudN)
+//        pAudioOut("cent", centN)
+//        pAudioOut("flat", flatN)
+//        onsets
+//      }
+//    }
 
     generator("a~step8") {
       val vals    = Vector.tabulate(8)(i => pAudio(s"v${i+1}", ParamSpec(0, 1), default = 0.0))
@@ -1173,8 +1186,8 @@ object Populate {
 
     sConfig.micInputs.find(_.name == "m-dpa").foreach { cfg =>
       generator("a~dpa") {
-        val off = cfg.offset
-        val in  = PhysicalIn.ar(off)
+//        val off = cfg.offset
+        val in  = PhysicalIn.ar(cfg.indices)
         val gain = pAudio("gain", ParamSpec(-20, 20), default = 0.0).dbamp
         val sig  = in * gain
         sig

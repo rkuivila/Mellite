@@ -21,6 +21,7 @@ import javax.swing.{DefaultBoundedRangeModel, Icon, SpinnerModel, SpinnerNumberM
 
 import de.sciss.audiowidgets.RotaryKnob
 import de.sciss.desktop
+import de.sciss.numbers
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{OptionPane, UndoManager}
 import de.sciss.icons.raphael
@@ -116,9 +117,12 @@ object ParamSpecObjView extends ListObjView.Factory {
       updateExampleAndCurve()
     }
 
-    private[this] val ggRot = new RotaryKnob(new DefaultBoundedRangeModel(500, 0, 0, 1000))
-    private[this] val ggIn  = new TextField(8)
-    private[this] val ggOut = new TextField(8)
+    private[this] val ggRotIn   = new RotaryKnob(new DefaultBoundedRangeModel(500, 0, 0, 1000))
+    private[this] val ggRotOut  = new RotaryKnob(new DefaultBoundedRangeModel(500, 0, 0, 1000))
+    private[this] var rotIsIn   = true
+    private[this] var rotIsSet  = false
+    private[this] val ggIn      = new TextField(8)
+    private[this] val ggOut     = new TextField(8)
     ggOut.editable  = false
     ggIn .editable  = false
 
@@ -127,9 +131,21 @@ object ParamSpecObjView extends ListObjView.Factory {
     private[this] val fmtInt  = NumberFormat.getIntegerInstance(Locale.US)
 
     private def updateExample(fire: Boolean = true): ParamSpec = {
-      val in      = ggRot.value * 0.001
+      rotIsSet = true
+      try {
+        if (rotIsIn) updateExampleFromIn (fire = fire)
+        else         updateExampleFromOut(fire = fire)
+      } finally {
+        rotIsSet = false
+      }
+    }
+
+    private def updateExampleFromIn(fire: Boolean = true): ParamSpec = {
+      import numbers.Implicits._
       val spc     = spec
+      val in      = ggRotIn.value * 0.001
       val out     = spc.map(in)
+      ggRotOut.value = out.linlin(spc.lo, spc.hi, 0, 1000).toInt
       val inS     = fmtDec.format(in)
       val fmt     = if (spc.warp == IntWarp) fmtInt else fmtDec
       val outS    = fmt.format(out)
@@ -139,9 +155,33 @@ object ParamSpecObjView extends ListObjView.Factory {
       spc
     }
 
-    ggRot.listenTo(ggRot)
-    ggRot.reactions += {
-      case ValueChanged(_) => updateExample()
+    private def updateExampleFromOut(fire: Boolean = true): ParamSpec = {
+      import numbers.Implicits._
+      val spc     = spec
+      val out     = ggRotOut.value.linlin(0, 1000, spc.lo, spc.hi)
+      val in      = spc.inverseMap(out)
+      ggRotIn.value = (in * 1000).toInt
+      val inS     = fmtDec.format(in)
+      val fmt     = if (spc.warp == IntWarp) fmtInt else fmtDec
+      val outS    = fmt.format(out)
+      ggIn  .text = inS
+      ggOut .text = outS
+      if (fire) dispatch(())
+      spc
+    }
+
+    ggRotIn.listenTo(ggRotIn)
+    ggRotIn.reactions += {
+      case ValueChanged(_) if !rotIsSet =>
+        rotIsIn = true
+        updateExample()
+    }
+
+    ggRotOut.listenTo(ggRotOut)
+    ggRotOut.reactions += {
+      case ValueChanged(_) if !rotIsSet =>
+        rotIsIn = false
+        updateExample()
     }
 
     private def mkSpinner(m: SpinnerModel): Spinner = {
@@ -179,7 +219,7 @@ object ParamSpecObjView extends ListObjView.Factory {
 
     updateExampleAndCurve(fire = false)
 
-    private[this] val boxDemo = new FlowPanel(ggRot, new Label("In:"), ggIn, new Label("Out:"), ggOut)
+    private[this] val boxDemo = new FlowPanel(ggRotIn, new Label("In:"), ggIn, new Label("Out:"), ggOut, ggRotOut)
 
     private[this] val boxParams = new GroupPanel {
       horizontal= Seq(

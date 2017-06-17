@@ -3,7 +3,7 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.13.2-SNAPSHOT"
+lazy val projectVersion             = "2.14.0-SNAPSHOT"
 lazy val mimaVersion                = "2.13.0"
 
 lazy val loggingEnabled             = true
@@ -13,11 +13,11 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.12.3-SNAPSHOT"
+lazy val soundProcessesVersion      = "3.12.3"
 lazy val fscapeVersion              = "2.7.1"
-lazy val nuagesVersion              = "2.15.0"
+lazy val nuagesVersion              = "2.16.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.8.1"
-lazy val scalaColliderVersion       = "1.22.3"
+lazy val scalaColliderVersion       = "1.22.4-SNAPSHOT"
 lazy val scalaColliderUGenVersion   = "1.16.4"
 lazy val lucreVersion               = "3.4.0"
 lazy val equalVersion               = "0.1.2"
