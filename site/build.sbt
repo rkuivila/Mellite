@@ -1,19 +1,19 @@
-lazy val melliteVersion        = "2.11.0"
+lazy val melliteVersion        = "2.14.0"
 lazy val PROJECT_VERSION       = melliteVersion
 lazy val baseName              = "Mellite"
 
-lazy val soundProcessesVersion = "3.11.0"
+lazy val soundProcessesVersion = "3.12.4"
 lazy val oscVersion            = "1.1.5"
 lazy val audioFileVersion      = "1.4.6"
-lazy val scalaColliderVersion  = "1.22.3"
+lazy val scalaColliderVersion  = "1.22.4"
 lazy val ugensVersion          = "1.16.4"
-lazy val fscapeVersion         = "2.6.1"
-lazy val lucreVersion          = "3.3.3"
+lazy val fscapeVersion         = "2.7.1"
+lazy val lucreVersion          = "3.4.1"
 
 val commonSettings = Seq(
   organization := "de.sciss",
   version      := PROJECT_VERSION,
-  scalaVersion := "2.12.1"
+  scalaVersion := "2.12.2"
 )
 
 val lScalaOSC           = RootProject(uri(s"git://github.com/Sciss/ScalaOSC.git#v${oscVersion}"))

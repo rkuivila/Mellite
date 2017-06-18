@@ -49,7 +49,33 @@ This tutorial introduces the freesound.org sound file retrieval object:
  - authorizing the application to download sounds
  - downloading sounds and using them within Mellite
 
-## Tutorial 4...
+## Tutorial 4 - Wolkenpumpe
+
+[Video Link](https://vimeo.com/222107666) (33 min)
+
+This tutorial introduces the Wolkenpumpe live interface object:
+
+ - creating a new Wolkenpumpe object
+ - components and signal flow: generators > filters > collectors
+ - populating with default sound processes; generator channels and audio file players
+ - opening the Live view, transport
+ - inserting generators and collectors
+ - changing parameters with rotary controls
+ - inserting filters
+ - modulating signals with other signals
+ - deleting connections and modules
+ - pinning object positions
+ - parameter keyboard control, multi-channel parameters
+ - inspecting the resulting timeline
+ - defining your own sound processes
+ - `ScanIn`, `ScanOut` and output objects for creating patchable processes
+ - `Param` UGen for parameters, parameter specs
+ - clearing the timeline
+ - modulator signal range 0 to 1 vs. audio signal range -1 to 1
+ - defining a custom filter
+ - copying an empty template setup
+
+## Tutorial 5...
 
 More tutorials that cover the API and ways of actually programming the system will appear soon (hopefully)...
 
