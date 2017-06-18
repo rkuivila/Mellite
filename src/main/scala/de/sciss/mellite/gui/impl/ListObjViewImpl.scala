@@ -53,6 +53,7 @@ object ListObjViewImpl {
     IntObjView                  .tpe.typeID -> IntObjView,
     ObjViewImpl.Long            .tpe.typeID -> ObjViewImpl.Long,
     ObjViewImpl.Double          .tpe.typeID -> ObjViewImpl.Double,
+    ObjViewImpl.IntVector       .tpe.typeID -> ObjViewImpl.IntVector,
     ObjViewImpl.DoubleVector    .tpe.typeID -> ObjViewImpl.DoubleVector,
     ObjViewImpl.Boolean         .tpe.typeID -> ObjViewImpl.Boolean,
     ObjViewImpl.Color           .tpe.typeID -> ObjViewImpl.Color,

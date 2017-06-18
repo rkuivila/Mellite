@@ -3,8 +3,8 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.14.0-SNAPSHOT"
-lazy val mimaVersion                = "2.13.0"
+lazy val projectVersion             = "2.14.0"
+lazy val mimaVersion                = "2.14.0"
 
 lazy val loggingEnabled             = true
 
@@ -13,13 +13,13 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.12.3"
+lazy val soundProcessesVersion      = "3.12.4"
 lazy val fscapeVersion              = "2.7.1"
-lazy val nuagesVersion              = "2.16.0-SNAPSHOT"
+lazy val nuagesVersion              = "2.16.0"
 lazy val interpreterPaneVersion     = "1.8.1"
-lazy val scalaColliderVersion       = "1.22.4-SNAPSHOT"
+lazy val scalaColliderVersion       = "1.22.4"
 lazy val scalaColliderUGenVersion   = "1.16.4"
-lazy val lucreVersion               = "3.4.0"
+lazy val lucreVersion               = "3.4.1"
 lazy val equalVersion               = "0.1.2"
 lazy val freesoundVersion           = "1.2.0"
 lazy val playJSONVersion            = "0.4.0"
@@ -179,8 +179,9 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss"    %% "scalainterpreterpane"           % interpreterPaneVersion,     // REPL
       "de.sciss"    %% "scalacollider"                  % scalaColliderVersion,
       "de.sciss"    %  "scalacolliderugens-spec"        % scalaColliderUGenVersion,   // meta data
-      "de.sciss"    %% s"lucre-core"                    % lucreVersion,
+      "de.sciss"    %% "lucre-core"                     % lucreVersion,
       "de.sciss"    %% s"lucre-$bdb"                    % lucreVersion,               // database backend
+      "de.sciss"    %% "lucre-expr"                     % lucreVersion,
       "de.sciss"    %% "equal"                          % equalVersion,               // type-safe equals
       "de.sciss"    %% "wolkenpumpe"                    % nuagesVersion,              // live improv
       "de.sciss"    %% "scalacolliderswing-core"        % scalaColliderSwingVersion,  // (sbt bug)

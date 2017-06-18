@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="32"
+   height="32"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.92.1 r15371"
+   sodipodi:docname="icon_int_vector.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="11.2"
+     inkscape:cx="9.8928571"
+     inkscape:cy="1.9320097"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,0)">
+    <g
+       aria-label="["
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'Liberation Sans';-inkscape-font-specification:Sans;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
+       id="text2984" />
+    <g
+       aria-label="]"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:0%;font-family:'Liberation Sans';-inkscape-font-specification:Sans;text-align:start;letter-spacing:0px;word-spacing:0px;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none"
+       id="text2988" />
+    <g
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;line-height:125%;font-family:'TeX Gyre Heros';-inkscape-font-specification:'TeX Gyre Heros';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.25"
+       id="text2989"
+       transform="matrix(0.8,0,0,0.8,3.5295999,2.6783199)" />
+    <path
+       id="path871"
+       style="fill:#1a1a1a;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 30,1.9999998 h -6.726257 v 0.9072625 c 4.317318,0.3441341 4.598882,0.8134079 4.598882,3.5351955 V 25.557541 c 0,2.721788 -0.312849,3.191062 -4.598882,3.503911 V 30 H 30 Z M 1.9999999,30 h 6.726257 V 29.092737 C 4.4089385,28.748603 4.1273742,28.279329 4.1273742,25.557541 V 6.4424578 c 0,-2.7217876 0.3128492,-3.1910614 4.5988827,-3.5039105 V 1.9999998 h -6.726257 z"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccsscccccccsscccc" />
+    <g
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:16px;line-height:125%;font-family:'TeX Gyre Heros';-inkscape-font-specification:'TeX Gyre Heros';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.25"
+       id="text2989-7"
+       transform="matrix(0.8,0,0,0.8,3.5295999,2.6783199)" />
+    <path
+       id="path1443"
+       style="fill:#1a1a1a;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 24.8704,7.7631999 v -1.6416 H 8.0799999 l 0.4896,5.8176001 1.2672,-0.0864 -0.0288,-0.5472 C 9.7791999,10.384 11.248003,7.3887999 14.3008,7.3887999 h 4.752 C 18.6496,8.5119999 17.727999,10.0096 16.9216,11.0176 l -6.8256,9.7632 c -0.6048001,0.864 -2.9664001,3.3984 -2.9664001,3.3984 v 1.6992 H 24.7552 V 19.2256 H 23.488 v 0.4896 c 0,1.6992 -1.468804,4.896 -5.3856,4.896 H 13.3792 L 24.8704,7.7631999 m -13.824,-0.4608 c -0.662399,0.5472 -1.0656009,1.0368 -1.5264001,1.6416 l -0.144,-1.6416 H 11.0464 m 12.5568,0.0864 L 11.8816,24.6112 H 8.4831999 C 8.7999991,24.2656 10.5568,22.336 11.1328,21.5296 l 6.7968,-9.7344 C 18.764799,10.6144 19.744,9.0015999 20.32,7.3887999 h 3.2832 M 23.5744,24.6976 h -1.6416 c 0.719999,-0.5184 1.152,-0.9792 1.6416,-1.6704 v 1.6704"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccccccsccccccccssccccccccccccccccc" />
+  </g>
+</svg>

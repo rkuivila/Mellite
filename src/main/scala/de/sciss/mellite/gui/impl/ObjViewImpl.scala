@@ -33,7 +33,7 @@ import de.sciss.lucre.swing.{View, Window, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.mellite.gui.impl.component.PaintIcon
-import de.sciss.mellite.gui.impl.document.NuagesFolderFrameImpl
+import de.sciss.mellite.gui.impl.document.NuagesEditorFrameImpl
 import de.sciss.swingplus.{ColorChooser, GroupPanel, Spinner}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.Implicits._
@@ -48,7 +48,7 @@ import scala.util.Try
 object ObjViewImpl {
   import java.lang.{String => _String}
 
-  import de.sciss.lucre.expr.{DoubleVector => _DoubleVector}
+  import de.sciss.lucre.expr.{DoubleVector => _DoubleVector, IntVector => _IntVector}
   import de.sciss.nuages.{Nuages => _Nuages}
   import de.sciss.synth.proc.{Ensemble => _Ensemble, FadeSpec => _FadeSpec, Folder => _Folder, Grapheme => _Grapheme, Timeline => _Timeline}
 
@@ -295,6 +295,77 @@ object ObjViewImpl {
       def factory = Boolean
 
       def expr(implicit tx: S#Tx): BooleanObj[S] = objH()
+    }
+  }
+
+  // -------- IntVector --------
+
+  object IntVector extends ListObjView.Factory {
+    type E[S <: stm.Sys[S]] = _IntVector[S]
+    val icon: Icon          = raphaelIcon(Shapes.IntegerNumberVector)
+    val prefix              = "IntVector"
+    def humanName: _String  = prefix
+    def tpe: Obj.Type       = _IntVector
+    def category: _String   = ObjView.categPrimitives
+    def hasMakeDialog       = true
+
+    def mkListView[S <: Sys[S]](obj: _IntVector[S])(implicit tx: S#Tx): ListObjView[S] = {
+      val ex          = obj
+      val value       = ex.value
+      val isEditable  = ex match {
+        case _IntVector.Var(_)  => true
+        case _            => false
+      }
+      val isViewable  = tx.isInstanceOf[Confluent.Txn]
+      new IntVector.Impl[S](tx.newHandle(obj), value, isEditable = isEditable, isViewable = isViewable).init(obj)
+    }
+
+    type Config[S <: stm.Sys[S]] = PrimitiveConfig[Vec[Int]]
+
+    private def parseString(s: String): Option[Vec[Int]] =
+      Try(s.split(" ").map(x => x.trim().toInt)(breakOut): Vec[Int]).toOption
+
+    def initMakeDialog[S <: Sys[S]](workspace: Workspace[S], window: Option[desktop.Window])
+                                   (ok: Config[S] => Unit)
+                                   (implicit cursor: stm.Cursor[S]): Unit = {
+      val ggValue = new TextField("0 0")
+      val res = primitiveConfig(window, tpe = prefix, ggValue = ggValue, prepare = parseString(ggValue.text))
+      res.foreach(ok(_))
+    }
+
+    def makeObj[S <: Sys[S]](config: (String, Vec[Int]))(implicit tx: S#Tx): List[Obj[S]] = {
+      val (name, value) = config
+      val obj = _IntVector.newVar(_IntVector.newConst[S](value))
+      if (!name.isEmpty) obj.name = name
+      obj :: Nil
+    }
+
+    final class Impl[S <: Sys[S]](val objH: stm.Source[S#Tx, _IntVector[S]], var value: Vec[Int],
+                                  override val isEditable: _Boolean, val isViewable: _Boolean)
+      extends ListObjView[S]
+        with ObjViewImpl.Impl[S]
+        with ListObjViewImpl.SimpleExpr[S, Vec[Int], _IntVector] {
+
+      type E[~ <: stm.Sys[~]] = _IntVector[~]
+
+      def factory = IntVector
+
+      val exprType: Type.Expr[Vec[Int], _IntVector] = _IntVector
+
+      def expr(implicit tx: S#Tx): _IntVector[S] = objH()
+
+      def convertEditValue(v: Any): Option[Vec[Int]] = v match {
+        case num: Vec[_] => (Option(Vec.empty[Int]) /: num) {
+          case (Some(prev), d: Int) => Some(prev :+ d)
+          case _ => None
+        }
+        case s: _String  => IntVector.parseString(s)
+      }
+
+      def configureRenderer(label: Label): Component = {
+        label.text = value.mkString(" ")
+        label
+      }
     }
   }
 
@@ -910,7 +981,7 @@ object ObjViewImpl {
 
       def openView(parent: Option[Window[S]])
                   (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S]): Option[Window[S]] = {
-        val frame = NuagesFolderFrameImpl(objH())
+        val frame = NuagesEditorFrameImpl(objH())
         Some(frame)
       }
     }
