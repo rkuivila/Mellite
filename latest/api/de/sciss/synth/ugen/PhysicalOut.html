@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.11.0 API  - de.sciss.synth.ugen.PhysicalOut</title>
-          <meta name="description" content="Mellite 2.11.0 API - de.sciss.synth.ugen.PhysicalOut" />
-          <meta name="keywords" content="Mellite 2.11.0 API de.sciss.synth.ugen.PhysicalOut" />
+          <title>Mellite 2.14.0 API  - de.sciss.synth.ugen.PhysicalOut</title>
+          <meta name="description" content="Mellite 2.14.0 API - de.sciss.synth.ugen.PhysicalOut" />
+          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.synth.ugen.PhysicalOut" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.11.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -3061,7 +3061,8 @@ signal.">
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A graph element which writes to a connected sound driver output. This is a convenience
 element for <code>Out</code> with the ability to provide a set of discrete indices to which
 corresponding channels of the input signal are mapped, whereas multichannel expansion
-with respect to the index argument of <code>Out</code> typically do not achieve what you expect.
+with respect to the index argument of <code>Out</code> typically do not achieve what you expect.</p><p>If SuperCollider runs with less physical outputs than requested by this UGen,
+the output is muted.
 </p></div><dl class="paramcmts block"><dt class="param">indices</dt><dd class="cmt"><p>the physical index to write to (beginning at zero which corresponds to
                      the first channel of the audio interface or sound driver). may be a
                      multichannel argument to specify discrete channels. In this case, any

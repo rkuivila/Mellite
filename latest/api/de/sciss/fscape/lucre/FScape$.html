@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.11.0 API  - de.sciss.fscape.lucre.FScape</title>
-          <meta name="description" content="Mellite 2.11.0 API - de.sciss.fscape.lucre.FScape" />
-          <meta name="keywords" content="Mellite 2.11.0 API de.sciss.fscape.lucre.FScape" />
+          <title>Mellite 2.14.0 API  - de.sciss.fscape.lucre.FScape</title>
+          <meta name="description" content="Mellite 2.14.0 API - de.sciss.fscape.lucre.FScape" />
+          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.fscape.lucre.FScape" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.11.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -586,6 +586,44 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="de.sciss.fscape.lucre.FScape#defaultConfig" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="defaultConfig:de.sciss.fscape.stream.Control.Config"></a><a id="defaultConfig:Config"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#defaultConfig:de.sciss.fscape.stream.Control.Config" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">defaultConfig</span><span class="result">: <span class="extype" name="de.sciss.fscape.stream.Control.Config">Config</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">There is currently a problem with building <code>Config().build</code> multiple times,
+in that we create new actor systems and materializers that will not be shut down,
+unless an actual rendering is performed.</p><div class="fullcomment"><div class="comment cmt"><p>There is currently a problem with building <code>Config().build</code> multiple times,
+in that we create new actor systems and materializers that will not be shut down,
+unless an actual rendering is performed. As a work around, use this single
+instance which will reuse one and the same actor system.
+</p></div></div>
+    </li><li name="de.sciss.fscape.lucre.FScape#defaultConfig_=" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="defaultConfig_=(value:de.sciss.fscape.stream.Control.Config):Unit"></a><a id="defaultConfig_=(Config):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/lucre/FScape$.html#defaultConfig_=(value:de.sciss.fscape.stream.Control.Config):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: defaultConfig_$eq" class="name">defaultConfig_=</span><span class="params">(<span name="value">value: <span class="extype" name="de.sciss.fscape.stream.Control.Config">Config</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -652,7 +690,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">genViewFactory</span><span class="params">(<span name="config">config: <span class="extype" name="de.sciss.fscape.stream.Control.Config">Config</span> = <span class="symbol"><span class="name"><a href="../../../index.html">Control.Config()</a></span></span></span>)</span><span class="result">: <a href="../../synth/proc/GenView$$Factory.html" class="extype" name="de.sciss.synth.proc.GenView.Factory">Factory</a></span>
+        <span class="name">genViewFactory</span><span class="params">(<span name="config">config: <span class="extype" name="de.sciss.fscape.stream.Control.Config">Config</span> = <span class="symbol"><span class="name"><a href="#defaultConfig:de.sciss.fscape.stream.Control.Config">defaultConfig</a></span></span></span>)</span><span class="result">: <a href="../../synth/proc/GenView$$Factory.html" class="extype" name="de.sciss.synth.proc.GenView.Factory">Factory</a></span>
       </span>
       
       

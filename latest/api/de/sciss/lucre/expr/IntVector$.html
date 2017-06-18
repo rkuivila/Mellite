@@ -1,0 +1,1220 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <title>Mellite 2.14.0 API  - de.sciss.lucre.expr.IntVector</title>
+          <meta name="description" content="Mellite 2.14.0 API - de.sciss.lucre.expr.IntVector" />
+          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.lucre.expr.IntVector" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.panzoom.min.js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery.mousewheel.min.js"></script>
+      <script type="text/javascript" src="../../../../lib/index.js"></script>
+      <script type="text/javascript" src="../../../../index.js"></script>
+      <script type="text/javascript" src="../../../../lib/scheduler.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+        /* this variable can be used by the JS to determine the path to the root document */
+        var toRoot = '../../../../';
+      </script>
+    
+        </head>
+        <body>
+      <div id="search">
+        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
+        <span class="close-results"><span class="left">&lt;</span> Back</span>
+        <div id="textfilter">
+          <span class="input">
+            <input autocapitalize="none" placeholder="Search" id="index-input" type="text" accesskey="/" />
+            <i class="clear material-icons"></i>
+            <i id="search-icon" class="material-icons"></i>
+          </span>
+        </div>
+    </div>
+      <div id="search-results">
+        <div id="search-progress">
+          <div id="progress-fill"></div>
+        </div>
+        <div id="results-content">
+          <div id="entity-results"></div>
+          <div id="member-results"></div>
+        </div>
+      </div>
+      <div id="content-scroll-container" style="-webkit-overflow-scrolling: touch;">
+        <div id="content-container" style="-webkit-overflow-scrolling: touch;">
+          <div id="subpackage-spacer">
+            <div id="packages">
+              <h1>Packages</h1>
+              <ul>
+                <li name="_root_.root" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="_root_"></a><a id="root:_root_"></a>
+      <span class="permalink">
+      <a href="index.html#_root_" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../../../index.html">
+              <span class="name">root</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="_root_.de" visbl="pub" class="indented1 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="de"></a><a id="de:de"></a>
+      <span class="permalink">
+      <a href="index.html#de" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../../../index.html">
+              <span class="name">de</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
+    </li><li name="de.sciss" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="sciss"></a><a id="sciss:sciss"></a>
+      <span class="permalink">
+      <a href="../de/index.html#sciss" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="The interfaces are grouped into the following packages:" href="../../index.html">
+              <span class="name">sciss</span>
+            </a>
+      </span>
+      
+      <p class="shortcomment cmt">The interfaces are grouped into the following packages:</p><div class="fullcomment"><div class="comment cmt"><h3>Welcome to the Mellite API documentation.</h3><p>The interfaces are grouped into the following packages:</p><ul><li><a href="../../synth/index.html" class="extype" name="de.sciss.synth">de.sciss.synth</a> is the <b>ScalaCollider</b> base package, with things like computation <a href="../../synth/Rate.html" class="extype" name="de.sciss.synth.Rate">Rate</a>, <a href="../../synth/AddAction.html" class="extype" name="de.sciss.synth.AddAction">AddAction</a>,
+   and <a href="../../synth/DoneAction.html" class="extype" name="de.sciss.synth.DoneAction">DoneAction</a>.</li><li><a href="../../synth/ugen/index.html" class="extype" name="de.sciss.synth.ugen">de.sciss.synth.ugen</a> contains the <b>ScalaCollider UGen</b> documentation</li><li><a href="../synth/index.html" class="extype" name="de.sciss.lucre.synth">de.sciss.lucre.synth</a> is the base package for the <i>transactional</i> layer for ScalaCollider, with things
+   like <a href="../synth/Bus.html" class="extype" name="de.sciss.lucre.synth.Bus">de.sciss.lucre.synth.Bus</a>, <a href="../synth/Buffer.html" class="extype" name="de.sciss.lucre.synth.Buffer">Buffer</a>, <a href="../synth/Node.html" class="extype" name="de.sciss.lucre.synth.Node">Node</a>, and <a href="../synth/Server.html" class="extype" name="de.sciss.lucre.synth.Server">Server</a>.</li><li><a href="../../synth/proc/index.html" class="extype" name="de.sciss.synth.proc">de.sciss.synth.proc</a> is the <b>SoundProcesses</b> base package, with things
+   like <a href="../../synth/proc/Proc.html" class="extype" name="de.sciss.synth.proc.Proc">Proc</a>, <a href="../../synth/proc/Timeline.html" class="extype" name="de.sciss.synth.proc.Timeline">Timeline</a>, <a href="../../synth/proc/Folder.html" class="extype" name="de.sciss.synth.proc.Folder">Folder</a>, <a href="../../synth/proc/AuralSystem.html" class="extype" name="de.sciss.synth.proc.AuralSystem">AuralSystem</a>,
+   <a href="../../synth/proc/Scheduler.html" class="extype" name="de.sciss.synth.proc.Scheduler">Scheduler</a>, <a href="../../synth/proc/Transport.html" class="extype" name="de.sciss.synth.proc.Transport">Transport</a>, and <a href="../../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a></li><li><a href="../../synth/proc/graph/index.html" class="extype" name="de.sciss.synth.proc.graph">de.sciss.synth.proc.graph</a> are UGen abstractions added by SoundProcesses, such as <a href="../../synth/proc/graph/ScanIn.html" class="extype" name="de.sciss.synth.proc.graph.ScanIn">ScanIn</a> and <a href="../../synth/proc/graph/ScanOut.html" class="extype" name="de.sciss.synth.proc.graph.ScanOut">ScanOut</a>.</li><li><a href="../../mellite/gui/index.html" class="extype" name="de.sciss.mellite.gui">de.sciss.mellite.gui</a> is the base package for the <b>Mellite</b> graphical user interface.</li><li><a href="../../fscape/index.html" class="extype" name="de.sciss.fscape">de.sciss.fscape</a> is the <b>FScape</b> base package</li><li><a href="../../fscape/graph/index.html" class="extype" name="de.sciss.fscape.graph">de.sciss.fscape.graph</a> contains the <b>FScape UGen</b> documentation</li><li><a href="../../fscape/lucre/index.html" class="extype" name="de.sciss.fscape.lucre">de.sciss.fscape.lucre</a> is the base package for the <i>transactional</i> layer for FScape, with things
+   like <a href="../../fscape/lucre/FScape.html" class="extype" name="de.sciss.fscape.lucre.FScape">FScape</a> and additional <a href="../../fscape/lucre/graph/index.html" class="extype" name="de.sciss.fscape.lucre.graph">UGens</a>.</li></ul><p>The <b>Lucre</b> transactional object model:</p><ul><li><a href="../stm/index.html" class="extype" name="de.sciss.lucre.stm">de.sciss.lucre.stm</a> is the base package for transactions, with things
+   like <a href="../stm/Obj.html" class="extype" name="de.sciss.lucre.stm.Obj">Obj</a>, <a href="../stm/Txn.html" class="extype" name="de.sciss.lucre.stm.Txn">Txn</a>, <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>, and <a href="../stm/Cursor.html" class="extype" name="de.sciss.lucre.stm.Cursor">Cursor</a></li><li><a href="../artifact/index.html" class="extype" name="de.sciss.lucre.artifact">de.sciss.lucre.artifact</a> is the base package for file system <b>artifacts</b>, with
+   classes <a href="../artifact/Artifact.html" class="extype" name="de.sciss.lucre.artifact.Artifact">Artifact</a> and <a href="../artifact/ArtifactLocation.html" class="extype" name="de.sciss.lucre.artifact.ArtifactLocation">ArtifactLocation</a></li><li><a href="index.html" class="extype" name="de.sciss.lucre.expr">de.sciss.lucre.expr</a> is the base package for expression types such as <a href="IntObj.html" class="extype" name="de.sciss.lucre.expr.IntObj">IntObj</a>, <a href="DoubleObj.html" class="extype" name="de.sciss.lucre.expr.DoubleObj">DoubleObj</a>, etc.</li></ul><p>Other useful packages:</p><ul><li><a href="../../synth/io/index.html" class="extype" name="de.sciss.synth.io">de.sciss.synth.io</a> for reading and writing <b>audio files</b></li><li><a href="../../osc/index.html" class="extype" name="de.sciss.osc">de.sciss.osc</a> for general <b>Open Sound Control</b> interfaces</li></ul></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../index.html" class="extype" name="de">de</a></dd></dl></div>
+    </li><li name="de.sciss.lucre" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="lucre"></a><a id="lucre:lucre"></a>
+      <span class="permalink">
+      <a href="../../de/sciss/index.html#lucre" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../index.html">
+              <span class="name">lucre</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="de.sciss">sciss</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr" visbl="pub" class="indented4 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="expr"></a><a id="expr:expr"></a>
+      <span class="permalink">
+      <a href="../../../de/sciss/lucre/index.html#expr" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="index.html">
+              <span class="name">expr</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="de.sciss.lucre">lucre</a></dd></dl></div>
+    </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="BooleanExtensions$.html" title=""></a>
+                        <a href="BooleanExtensions$.html" title="">
+                          BooleanExtensions
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="BooleanObj$.html" title=""></a>
+                        <a class="trait" href="BooleanObj.html" title=""></a>
+                        <a href="BooleanObj.html" title="">
+                          BooleanObj
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="DoubleExtensions$.html" title=""></a>
+                        <a href="DoubleExtensions$.html" title="">
+                          DoubleExtensions
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="DoubleObj$.html" title=""></a>
+                        <a class="trait" href="DoubleObj.html" title=""></a>
+                        <a href="DoubleObj.html" title="">
+                          DoubleObj
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="DoubleVector$.html" title=""></a>
+                        <a class="trait" href="DoubleVector.html" title=""></a>
+                        <a href="DoubleVector.html" title="">
+                          DoubleVector
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="Expr$.html" title=""></a>
+                        <a class="trait" href="Expr.html" title="An expression is a computation that reduces to a single value of type A."></a>
+                        <a href="Expr.html" title="An expression is a computation that reduces to a single value of type A.">
+                          Expr
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="IntExtensions$.html" title=""></a>
+                        <a href="IntExtensions$.html" title="">
+                          IntExtensions
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="IntObj$.html" title=""></a>
+                        <a class="trait" href="IntObj.html" title=""></a>
+                        <a href="IntObj.html" title="">
+                          IntObj
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="" title=""></a>
+                        <a class="trait" href="IntVector.html" title=""></a>
+                        <a href="IntVector.html" title="">
+                          IntVector
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="List$.html" title=""></a>
+                        <a class="trait" href="List.html" title="An observable linked list with fast head and last operations."></a>
+                        <a href="List.html" title="An observable linked list with fast head and last operations.">
+                          List
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="LongExtensions$.html" title=""></a>
+                        <a href="LongExtensions$.html" title="">
+                          LongExtensions
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="LongObj$.html" title=""></a>
+                        <a class="trait" href="LongObj.html" title=""></a>
+                        <a href="LongObj.html" title="">
+                          LongObj
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="Ops$.html" title=""></a>
+                        <a class="trait" href="Ops.html" title=""></a>
+                        <a href="Ops.html" title="">
+                          Ops
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="SpanExtensions$.html" title=""></a>
+                        <a href="SpanExtensions$.html" title="">
+                          SpanExtensions
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="SpanLikeExtensions$.html" title=""></a>
+                        <a href="SpanLikeExtensions$.html" title="">
+                          SpanLikeExtensions
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="SpanLikeObj$.html" title=""></a>
+                        <a class="trait" href="SpanLikeObj.html" title=""></a>
+                        <a href="SpanLikeObj.html" title="">
+                          SpanLikeObj
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="SpanObj$.html" title=""></a>
+                        <a class="trait" href="SpanObj.html" title=""></a>
+                        <a href="SpanObj.html" title="">
+                          SpanObj
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="StringExtensions$.html" title=""></a>
+                        <a href="StringExtensions$.html" title="">
+                          StringExtensions
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="StringObj$.html" title=""></a>
+                        <a class="trait" href="StringObj.html" title=""></a>
+                        <a href="StringObj.html" title="">
+                          StringObj
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="Type$.html" title=""></a>
+                        <a href="Type$.html" title="">
+                          Type
+                        </a>
+                      </li>
+              </ul>
+            </div>
+          </div>
+          <div id="content">
+            <body class="object value">
+      <div id="definition">
+        <a href="IntVector.html" title="See companion trait"><div class="big-circle object-companion-trait">o</div></a>
+        <p id="owner"><a href="../../../index.html" class="extype" name="de">de</a>.<a href="../../index.html" class="extype" name="de.sciss">sciss</a>.<a href="../index.html" class="extype" name="de.sciss.lucre">lucre</a>.<a href="index.html" class="extype" name="de.sciss.lucre.expr">expr</a></p>
+        <h1><a href="IntVector.html" title="See companion trait">IntVector</a><span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span></h1>
+        <h3><span class="morelinks"><div>
+            Companion <a href="IntVector.html" title="See companion trait">trait IntVector</a>
+          </div></span></h3>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <span class="name">IntVector</span><span class="result"> extends <span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl">ExprTypeImpl</span>[<span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Int">Int</span>], <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]</span>
+      </span>
+      </h4>
+
+      
+          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <span class="toggle">
+            Linear Supertypes
+          </span>
+          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl">ExprTypeImpl</span>[<span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Int">Int</span>], <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>], <span class="extype" name="de.sciss.lucre.expr.impl.TypeImpl1">TypeImpl1</span>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>], <a href="Type$$_1.html" class="extype" name="de.sciss.lucre.expr.Type._1">_1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>], <span class="extype" name="de.sciss.lucre.expr.impl.TypeImpl">TypeImpl</span>[<a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]], <span class="extype" name="de.sciss.lucre.expr.impl.TypeImplLike">TypeImplLike</span>[<a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]], <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Type.Expr</a>[<span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Int">Int</span>], <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>], <a href="../stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">stm.Obj.Type</a>, <a href="../stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">stm.Elem.Type</a>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div class="toggle"></div>
+        <div id="memberfilter">
+          <i class="material-icons arrow"></i>
+          <span class="input">
+            <input id="mbrsel-input" placeholder="Filter all members" type="text" accesskey="/" />
+          </span>
+          <i class="clear material-icons"></i>
+        </div>
+        <div id="filterby">
+          <div id="order">
+            <span class="filtertype">Ordering</span>
+            <ol>
+              
+              <li class="alpha in"><span>Alphabetic</span></li>
+              <li class="inherit out"><span>By Inheritance</span></li>
+            </ol>
+          </div>
+          <div class="ancestors">
+                  <span class="filtertype">Inherited<br />
+                  </span>
+                  <ol id="linearization">
+                    <li class="in" name="de.sciss.lucre.expr.IntVector"><span>IntVector</span></li><li class="in" name="de.sciss.lucre.expr.impl.ExprTypeImpl"><span>ExprTypeImpl</span></li><li class="in" name="de.sciss.lucre.expr.impl.TypeImpl1"><span>TypeImpl1</span></li><li class="in" name="de.sciss.lucre.expr.Type._1"><span>_1</span></li><li class="in" name="de.sciss.lucre.expr.impl.TypeImpl"><span>TypeImpl</span></li><li class="in" name="de.sciss.lucre.expr.impl.TypeImplLike"><span>TypeImplLike</span></li><li class="in" name="de.sciss.lucre.expr.Type.Expr"><span>Expr</span></li><li class="in" name="de.sciss.lucre.stm.Obj.Type"><span>Type</span></li><li class="in" name="de.sciss.lucre.stm.Elem.Type"><span>Type</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                  </ol>
+                </div><div class="ancestors">
+              <span class="filtertype"></span>
+              <ol>
+                <li class="hideall out"><span>Hide All</span></li>
+                <li class="showall in"><span>Show All</span></li>
+              </ol>
+            </div>
+          <div id="visbl">
+              <span class="filtertype">Visibility</span>
+              <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+            </div>
+        </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="de.sciss.lucre.expr.Type.Expr.A" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="A=A1"></a><a id="A:A"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#A=A1" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">A</span><span class="result alias"> = <span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Int">Int</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.Type.Expr.Const" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Const[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.expr.Expr.Const[S,Expr.this.A]"></a><a id="Const[S&lt;:Sys[S]]:Const[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#Const[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.expr.Expr.Const[S,Expr.this.A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Const</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.Type.Expr.Const.S">S</span>]</span>]</span><span class="result alias"> = <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>[<span class="extype" name="de.sciss.lucre.expr.Type.Expr.Const.S">S</span>] with <a href="Expr$$Const.html" class="extype" name="de.sciss.lucre.expr.Expr.Const">Expr.Const</a>[<span class="extype" name="de.sciss.lucre.expr.Type.Expr.Const.S">S</span>, <a href="#A=A1" class="extmbr" name="de.sciss.lucre.expr.IntVector.A">A</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl.ConstImpl" visbl="prt" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="ConstImpl[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsConstImpl[S,ExprTypeImpl.this.A]"></a><a id="ConstImpl[S&lt;:Sys[S]]:ConstImpl[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#ConstImpl[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsConstImpl[S,ExprTypeImpl.this.A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ConstImpl</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.ConstImpl.S">S</span>]</span>]</span><span class="result"> extends <span class="extype" name="de.sciss.lucre.expr.impl.ConstImpl">impl.ConstImpl</span>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.ConstImpl.S">S</span>, <span class="extype" name="de.sciss.lucre.expr.Type.Expr.A">impl.ExprTypeImpl.A</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>ExprTypeImpl</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.Type.Expr.Ex" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Ex[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]"></a><a id="Ex[S&lt;:Sys[S]]:Ex[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#Ex[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Ex</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.Type.Expr.Ex.S">S</span>]</span>]</span><span class="result alias"> = <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>[<span class="extype" name="de.sciss.lucre.expr.Type.Expr.Ex.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.Type.Expr.Var" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Var[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.stm.Var[S#Tx,Repr[S]]"></a><a id="Var[S&lt;:Sys[S]]:Var[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#Var[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.stm.Var[S#Tx,Repr[S]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">type</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Var</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.Type.Expr.Var.S">S</span>]</span>]</span><span class="result alias"> = <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>[<span class="extype" name="de.sciss.lucre.expr.Type.Expr.Var.S">S</span>] with <a href="../stm/Var.html" class="extype" name="de.sciss.lucre.stm.Var">stm.Var</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Type.Expr.Var.S.Tx</span>, <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>[<span class="extype" name="de.sciss.lucre.expr.Type.Expr.Var.S">S</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl.VarImpl" visbl="prt" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="VarImpl[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsVarImpl[S,ExprTypeImpl.this.A,ExprTypeImpl.this.Ex[S]]"></a><a id="VarImpl[S&lt;:Sys[S]]:VarImpl[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#VarImpl[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsVarImpl[S,ExprTypeImpl.this.A,ExprTypeImpl.this.Ex[S]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <span class="name">VarImpl</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.VarImpl.S">S</span>]</span>]</span><span class="result"> extends <span class="extype" name="de.sciss.lucre.expr.impl.VarImpl">impl.VarImpl</span>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.VarImpl.S">S</span>, <span class="extype" name="de.sciss.lucre.expr.Type.Expr.A">impl.ExprTypeImpl.A</span>, <span class="extype" name="de.sciss.lucre.expr.Type.Expr.Ex">impl.ExprTypeImpl.Ex</span>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.VarImpl.S">S</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>ExprTypeImpl</dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        <div class="values members">
+              <h3>Value Members</h3>
+              <ol>
+                <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#!=(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html###():Int" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#==(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.TypeImplLike#addExtension" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="addExtension(exts:Array[Ext],ext:Ext):Array[Ext]"></a><a id="addExtension(Array[Extension1[IntVector]],Extension1[IntVector]):Array[Extension1[IntVector]]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#addExtension(exts:Array[Ext],ext:Ext):Array[Ext]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">addExtension</span><span class="params">(<span name="exts">exts: <span class="extype" name="scala.Array">Array</span>[<a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]]</span>, <span name="ext">ext: <a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]</span>)</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>TypeImplLike</dd></dl></div>
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#asInstanceOf[T0]:T0" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a><a id="clone():AnyRef"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#clone():Object" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#equals(x$1:Any):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#finalize():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.TypeImpl#findExt" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="findExt(op:Int):Ext"></a><a id="findExt(Int):Extension1[IntVector]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#findExt(op:Int):Ext" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">findExt</span><span class="params">(<span name="op">op: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>TypeImpl</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.TypeImplLike#findExt" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="findExt(exts:Array[Ext],op:Int):Ext"></a><a id="findExt(Array[Extension1[IntVector]],Int):Extension1[IntVector]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#findExt(exts:Array[Ext],op:Int):Ext" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">findExt</span><span class="params">(<span name="exts">exts: <span class="extype" name="scala.Array">Array</span>[<a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]]</span>, <span name="op">op: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>TypeImplLike</dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#getClass():Class[_]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#hashCode():Int" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="de.sciss.lucre.stm.Obj.Type#init" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="init():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#init():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">init</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a> → <a href="../stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#isInstanceOf[T0]:Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.IntVector#mkConst" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="mkConst[S&lt;:de.sciss.lucre.stm.Sys[S]](id:S#ID,value:de.sciss.lucre.expr.IntVector.A)(implicittx:S#Tx):de.sciss.lucre.expr.IntVector.Const[S]"></a><a id="mkConst[S&lt;:Sys[S]](IntVector.mkConst.S.ID,A)(IntVector.mkConst.S.Tx):Const[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#mkConst[S&lt;:de.sciss.lucre.stm.Sys[S]](id:S#ID,value:de.sciss.lucre.expr.IntVector.A)(implicittx:S#Tx):de.sciss.lucre.expr.IntVector.Const[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">mkConst</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.IntVector.mkConst.S">S</span>]</span>]</span><span class="params">(<span name="id">id: <span class="extype" name="de.sciss.lucre.stm.Sys.ID">IntVector.mkConst.S.ID</span></span>, <span name="value">value: <a href="#A=A1" class="extmbr" name="de.sciss.lucre.expr.IntVector.A">A</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">IntVector.mkConst.S.Tx</span></span>)</span><span class="result">: <a href="#Const[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.expr.Expr.Const[S,Expr.this.A]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Const">Const</a>[<span class="extype" name="de.sciss.lucre.expr.IntVector.mkConst.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a> → ExprTypeImpl</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.TypeImpl1#mkExtArray" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="mkExtArray(size:Int):Array[de.sciss.lucre.expr.Type.Extension1[Repr]]"></a><a id="mkExtArray(Int):Array[Extension1[IntVector]]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#mkExtArray(size:Int):Array[de.sciss.lucre.expr.Type.Extension1[Repr]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">mkExtArray</span><span class="params">(<span name="size">size: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Array">Array</span>[<a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>TypeImpl1 → TypeImplLike</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.IntVector#mkVar" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="mkVar[S&lt;:de.sciss.lucre.stm.Sys[S]](targets:de.sciss.lucre.event.Targets[S],vr:S#Var[de.sciss.lucre.expr.IntVector.Ex[S]],connect:Boolean)(implicittx:S#Tx):de.sciss.lucre.expr.IntVector.Var[S]"></a><a id="mkVar[S&lt;:Sys[S]](Targets[S],IntVector.mkVar.S.Var[Ex[S]],Boolean)(IntVector.mkVar.S.Tx):Var[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#mkVar[S&lt;:de.sciss.lucre.stm.Sys[S]](targets:de.sciss.lucre.event.Targets[S],vr:S#Var[de.sciss.lucre.expr.IntVector.Ex[S]],connect:Boolean)(implicittx:S#Tx):de.sciss.lucre.expr.IntVector.Var[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">mkVar</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.IntVector.mkVar.S">S</span>]</span>]</span><span class="params">(<span name="targets">targets: <a href="../event/Targets.html" class="extype" name="de.sciss.lucre.event.Targets">Targets</a>[<span class="extype" name="de.sciss.lucre.expr.IntVector.mkVar.S">S</span>]</span>, <span name="vr">vr: <span class="extype" name="de.sciss.lucre.stm.Sys.Var">IntVector.mkVar.S.Var</span>[<a href="#Ex[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Ex">Ex</a>[<span class="extype" name="de.sciss.lucre.expr.IntVector.mkVar.S">S</span>]]</span>, <span name="connect">connect: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">IntVector.mkVar.S.Tx</span></span>)</span><span class="result">: <a href="#Var[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.stm.Var[S#Tx,Repr[S]]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Var">Var</a>[<span class="extype" name="de.sciss.lucre.expr.IntVector.mkVar.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a> → ExprTypeImpl</dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#newConst" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="newConst[S&lt;:de.sciss.lucre.stm.Sys[S]](value:ExprTypeImpl.this.A)(implicittx:S#Tx):ExprTypeImpl.this.Const[S]"></a><a id="newConst[S&lt;:Sys[S]](A)(impl.ExprTypeImpl.newConst.S.Tx):Const[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#newConst[S&lt;:de.sciss.lucre.stm.Sys[S]](value:ExprTypeImpl.this.A)(implicittx:S#Tx):ExprTypeImpl.this.Const[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">newConst</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.newConst.S">S</span>]</span>]</span><span class="params">(<span name="value">value: <a href="#A=A1" class="extmbr" name="de.sciss.lucre.expr.IntVector.A">A</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.newConst.S.Tx</span></span>)</span><span class="result">: <a href="#Const[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.expr.Expr.Const[S,Expr.this.A]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Const">Const</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.newConst.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ExprTypeImpl → <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#newVar" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="newVar[S&lt;:de.sciss.lucre.stm.Sys[S]](init:ExprTypeImpl.this.Ex[S])(implicittx:S#Tx):ExprTypeImpl.this.Var[S]"></a><a id="newVar[S&lt;:Sys[S]](Ex[S])(impl.ExprTypeImpl.newVar.S.Tx):Var[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#newVar[S&lt;:de.sciss.lucre.stm.Sys[S]](init:ExprTypeImpl.this.Ex[S])(implicittx:S#Tx):ExprTypeImpl.this.Var[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">newVar</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.newVar.S">S</span>]</span>]</span><span class="params">(<span name="init">init: <a href="#Ex[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Ex">Ex</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.newVar.S">S</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.newVar.S.Tx</span></span>)</span><span class="result">: <a href="#Var[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.stm.Var[S#Tx,Repr[S]]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Var">Var</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.newVar.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ExprTypeImpl → <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#notify():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#notifyAll():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#read" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="read[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):ExprTypeImpl.this.Ex[S]"></a><a id="read[S&lt;:Sys[S]](DataInput,impl.ExprTypeImpl.read.S.Acc)(impl.ExprTypeImpl.read.S.Tx):Ex[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#read[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):ExprTypeImpl.this.Ex[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">read</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.read.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">impl.ExprTypeImpl.read.S.Acc</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.read.S.Tx</span></span>)</span><span class="result">: <a href="#Ex[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Ex">Ex</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.read.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ExprTypeImpl → <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#readConst" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="readConst[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):ExprTypeImpl.this.Const[S]"></a><a id="readConst[S&lt;:Sys[S]](DataInput,impl.ExprTypeImpl.readConst.S.Acc)(impl.ExprTypeImpl.readConst.S.Tx):Const[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#readConst[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):ExprTypeImpl.this.Const[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">readConst</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readConst.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">impl.ExprTypeImpl.readConst.S.Acc</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.readConst.S.Tx</span></span>)</span><span class="result">: <a href="#Const[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.expr.Expr.Const[S,Expr.this.A]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Const">Const</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readConst.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ExprTypeImpl → <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#readCookie" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="readCookie[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc,cookie:Byte)(implicittx:S#Tx):ExprTypeImpl.this.Ex[S]"></a><a id="readCookie[S&lt;:Sys[S]](DataInput,impl.ExprTypeImpl.readCookie.S.Acc,Byte)(impl.ExprTypeImpl.readCookie.S.Tx):Ex[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#readCookie[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc,cookie:Byte)(implicittx:S#Tx):ExprTypeImpl.this.Ex[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">readCookie</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readCookie.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">impl.ExprTypeImpl.readCookie.S.Acc</span></span>, <span name="cookie">cookie: <span class="extype" name="scala.Byte">Byte</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.readCookie.S.Tx</span></span>)</span><span class="result">: <a href="#Ex[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Ex">Ex</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readCookie.S">S</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Reads an identified object whose cookie is neither <code>3</code> (constant) nor <code>0</code> (node).</p><div class="fullcomment"><div class="comment cmt"><p>Reads an identified object whose cookie is neither <code>3</code> (constant) nor <code>0</code> (node).
+By default this throws an exception. Sub-classes may use a cookie greater
+than <code>3</code> for other constant types.
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>ExprTypeImpl</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.TypeImpl1#readExtension" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="readExtension[S&lt;:de.sciss.lucre.stm.Sys[S]](op:Int,in:de.sciss.serial.DataInput,access:S#Acc,targets:de.sciss.lucre.event.Targets[S])(implicittx:S#Tx):Repr[S]"></a><a id="readExtension[S&lt;:Sys[S]](Int,DataInput,impl.TypeImpl1.readExtension.S.Acc,Targets[S])(impl.TypeImpl1.readExtension.S.Tx):IntVector[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#readExtension[S&lt;:de.sciss.lucre.stm.Sys[S]](op:Int,in:de.sciss.serial.DataInput,access:S#Acc,targets:de.sciss.lucre.event.Targets[S])(implicittx:S#Tx):Repr[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">readExtension</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.TypeImpl1.readExtension.S">S</span>]</span>]</span><span class="params">(<span name="op">op: <span class="extype" name="scala.Int">Int</span></span>, <span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">impl.TypeImpl1.readExtension.S.Acc</span></span>, <span name="targets">targets: <a href="../event/Targets.html" class="extype" name="de.sciss.lucre.event.Targets">Targets</a>[<span class="extype" name="de.sciss.lucre.expr.impl.TypeImpl1.readExtension.S">S</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.TypeImpl1.readExtension.S.Tx</span></span>)</span><span class="result">: <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>[<span class="extype" name="de.sciss.lucre.expr.impl.TypeImpl1.readExtension.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>TypeImpl1</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#readIdentifiedObj" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="readIdentifiedObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):ExprTypeImpl.this.Ex[S]"></a><a id="readIdentifiedObj[S&lt;:Sys[S]](DataInput,impl.ExprTypeImpl.readIdentifiedObj.S.Acc)(impl.ExprTypeImpl.readIdentifiedObj.S.Tx):Ex[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#readIdentifiedObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):ExprTypeImpl.this.Ex[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">readIdentifiedObj</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readIdentifiedObj.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">impl.ExprTypeImpl.readIdentifiedObj.S.Acc</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.readIdentifiedObj.S.Tx</span></span>)</span><span class="result">: <a href="#Ex[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Ex">Ex</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readIdentifiedObj.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ExprTypeImpl → <a href="../stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a> → <a href="../stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#readNode" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="readNode[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc,targets:de.sciss.lucre.event.Targets[S])(implicittx:S#Tx):ExprTypeImpl.this.Ex[S]"></a><a id="readNode[S&lt;:Sys[S]](DataInput,impl.ExprTypeImpl.readNode.S.Acc,Targets[S])(impl.ExprTypeImpl.readNode.S.Tx):Ex[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#readNode[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc,targets:de.sciss.lucre.event.Targets[S])(implicittx:S#Tx):ExprTypeImpl.this.Ex[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">readNode</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readNode.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">impl.ExprTypeImpl.readNode.S.Acc</span></span>, <span name="targets">targets: <a href="../event/Targets.html" class="extype" name="de.sciss.lucre.event.Targets">Targets</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readNode.S">S</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.readNode.S.Tx</span></span>)</span><span class="result">: <a href="#Ex[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Ex">Ex</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readNode.S">S</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">The default implementation reads a type <code>Int</code> as operator id <code>Int</code>
+which will be resolved using <code>readOpExtension</code>.</p><div class="fullcomment"><div class="comment cmt"><p>The default implementation reads a type <code>Int</code> as operator id <code>Int</code>
+which will be resolved using <code>readOpExtension</code>.
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>ExprTypeImpl</dd></dl></div>
+    </li><li name="de.sciss.lucre.stm.Obj.Type#readObj" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="readObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]"></a><a id="readObj[S&lt;:Sys[S]](DataInput,stm.Obj.Type.readObj.S.Acc)(stm.Obj.Type.readObj.S.Tx):Obj[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#readObj[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):de.sciss.lucre.stm.Obj[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">readObj</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.stm.Obj.Type.readObj.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">stm.Obj.Type.readObj.S.Acc</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">stm.Obj.Type.readObj.S.Tx</span></span>)</span><span class="result">: <a href="../stm/Obj.html" class="extype" name="de.sciss.lucre.stm.Obj">Obj</a>[<span class="extype" name="de.sciss.lucre.stm.Obj.Type.readObj.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">Type</a> → <a href="../stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#readVar" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="readVar[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):ExprTypeImpl.this.Var[S]"></a><a id="readVar[S&lt;:Sys[S]](DataInput,impl.ExprTypeImpl.readVar.S.Acc)(impl.ExprTypeImpl.readVar.S.Tx):Var[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#readVar[S&lt;:de.sciss.lucre.stm.Sys[S]](in:de.sciss.serial.DataInput,access:S#Acc)(implicittx:S#Tx):ExprTypeImpl.this.Var[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">readVar</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readVar.S">S</span>]</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">impl.ExprTypeImpl.readVar.S.Acc</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.readVar.S.Tx</span></span>)</span><span class="result">: <a href="#Var[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.stm.Var[S#Tx,Repr[S]]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Var">Var</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.readVar.S">S</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ExprTypeImpl → <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.TypeImpl#registerExtension" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="registerExtension(ext:Ext):Unit"></a><a id="registerExtension(Extension1[IntVector]):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#registerExtension(ext:Ext):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">registerExtension</span><span class="params">(<span name="ext">ext: <a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>TypeImpl</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#serializer" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="serializer[S&lt;:de.sciss.lucre.stm.Sys[S]]:de.sciss.serial.Serializer[S#Tx,S#Acc,ExprTypeImpl.this.Ex[S]]"></a><a id="serializer[S&lt;:Sys[S]]:Serializer[impl.ExprTypeImpl.serializer.S.Tx,impl.ExprTypeImpl.serializer.S.Acc,Ex[S]]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#serializer[S&lt;:de.sciss.lucre.stm.Sys[S]]:de.sciss.serial.Serializer[S#Tx,S#Acc,ExprTypeImpl.this.Ex[S]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">serializer</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.serializer.S">S</span>]</span>]</span><span class="result">: <span class="extype" name="de.sciss.serial.Serializer">Serializer</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.serializer.S.Tx</span>, <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">impl.ExprTypeImpl.serializer.S.Acc</span>, <a href="#Ex[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Ex">Ex</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.serializer.S">S</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ExprTypeImpl → <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#toString():String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.IntVector#typeID" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="typeID:Int(8194)"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#typeID:Int(8194)" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">typeID</span><span class="result">: Int(8194)</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a> → <a href="../stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">Type</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.IntVector#valueSerializer" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="valueSerializer:de.sciss.serial.ImmutableSerializer[scala.collection.immutable.IndexedSeq[Int]]"></a><a id="valueSerializer:ImmutableSerializer[IndexedSeq[Int]]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#valueSerializer:de.sciss.serial.ImmutableSerializer[scala.collection.immutable.IndexedSeq[Int]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">valueSerializer</span><span class="result">: <span class="extype" name="de.sciss.serial.ImmutableSerializer">ImmutableSerializer</span>[<span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Int">Int</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a> → <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.impl.ExprTypeImpl#varSerializer" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="varSerializer[S&lt;:de.sciss.lucre.stm.Sys[S]]:de.sciss.serial.Serializer[S#Tx,S#Acc,ExprTypeImpl.this.Var[S]]"></a><a id="varSerializer[S&lt;:Sys[S]]:Serializer[impl.ExprTypeImpl.varSerializer.S.Tx,impl.ExprTypeImpl.varSerializer.S.Acc,Var[S]]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#varSerializer[S&lt;:de.sciss.lucre.stm.Sys[S]]:de.sciss.serial.Serializer[S#Tx,S#Acc,ExprTypeImpl.this.Var[S]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">varSerializer</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.varSerializer.S">S</span>]</span>]</span><span class="result">: <span class="extype" name="de.sciss.serial.Serializer">Serializer</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">impl.ExprTypeImpl.varSerializer.S.Tx</span>, <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">impl.ExprTypeImpl.varSerializer.S.Acc</span>, <a href="#Var[S&lt;:de.sciss.lucre.stm.Sys[S]]=Repr[S]withde.sciss.lucre.stm.Var[S#Tx,Repr[S]]" class="extmbr" name="de.sciss.lucre.expr.IntVector.Var">Var</a>[<span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl.varSerializer.S">S</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ExprTypeImpl → <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#wait():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/IntVector$.html#wait(x$1:Long):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="de.sciss.lucre.expr.Type.Expr.Var" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="Var"></a><a id="Var:Var"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/expr/Type$$Expr.html#Var" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Type$$Expr$Var$.html">
+              <span class="name">Var</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Expr</a></dd></dl></div>
+    </li>
+              </ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="de.sciss.lucre.expr.impl.ExprTypeImpl">
+              <h3>Inherited from <span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl">ExprTypeImpl</span>[<span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Int">Int</span>], <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]</h3>
+            </div><div class="parent" name="de.sciss.lucre.expr.impl.TypeImpl1">
+              <h3>Inherited from <span class="extype" name="de.sciss.lucre.expr.impl.TypeImpl1">TypeImpl1</span>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]</h3>
+            </div><div class="parent" name="de.sciss.lucre.expr.Type._1">
+              <h3>Inherited from <a href="Type$$_1.html" class="extype" name="de.sciss.lucre.expr.Type._1">_1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]</h3>
+            </div><div class="parent" name="de.sciss.lucre.expr.impl.TypeImpl">
+              <h3>Inherited from <span class="extype" name="de.sciss.lucre.expr.impl.TypeImpl">TypeImpl</span>[<a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]]</h3>
+            </div><div class="parent" name="de.sciss.lucre.expr.impl.TypeImplLike">
+              <h3>Inherited from <span class="extype" name="de.sciss.lucre.expr.impl.TypeImplLike">TypeImplLike</span>[<a href="Type$$Extension1.html" class="extype" name="de.sciss.lucre.expr.Type.Extension1">Extension1</a>[<a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]]</h3>
+            </div><div class="parent" name="de.sciss.lucre.expr.Type.Expr">
+              <h3>Inherited from <a href="Type$$Expr.html" class="extype" name="de.sciss.lucre.expr.Type.Expr">Type.Expr</a>[<span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Int">Int</span>], <a href="IntVector.html" class="extype" name="de.sciss.lucre.expr.IntVector">IntVector</a>]</h3>
+            </div><div class="parent" name="de.sciss.lucre.stm.Obj.Type">
+              <h3>Inherited from <a href="../stm/Obj$$Type.html" class="extype" name="de.sciss.lucre.stm.Obj.Type">stm.Obj.Type</a></h3>
+            </div><div class="parent" name="de.sciss.lucre.stm.Elem.Type">
+              <h3>Inherited from <a href="../stm/Elem$$Type.html" class="extype" name="de.sciss.lucre.stm.Elem.Type">stm.Elem.Type</a></h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+    </body>
+          </div>
+        </div>
+      </div>
+    </body>
+      </html>

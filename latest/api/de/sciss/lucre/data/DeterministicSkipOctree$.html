@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.11.0 API  - de.sciss.lucre.data.DeterministicSkipOctree</title>
-          <meta name="description" content="Mellite 2.11.0 API - de.sciss.lucre.data.DeterministicSkipOctree" />
-          <meta name="keywords" content="Mellite 2.11.0 API de.sciss.lucre.data.DeterministicSkipOctree" />
+          <title>Mellite 2.14.0 API  - de.sciss.lucre.data.DeterministicSkipOctree</title>
+          <meta name="description" content="Mellite 2.14.0 API - de.sciss.lucre.data.DeterministicSkipOctree" />
+          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.lucre.data.DeterministicSkipOctree" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.11.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -291,7 +291,399 @@ this is <code>IntSquare( 0x40000000, 0x40000000, 0x40000000 )</code>.
         <div id="allMembers">
         
 
-        
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="de.sciss.lucre.data.DeterministicSkipOctree.Branch" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Branch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Child[S,D,A]withDeterministicSkipOctree.NonEmpty[S,D]"></a><a id="Branch[S&lt;:Sys[S],D&lt;:Space[D],A]:Branch[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#Branch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Child[S,D,A]withDeterministicSkipOctree.NonEmpty[S,D]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$Branch.html">
+              <span class="name">Branch</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Child.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Child">Child</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch.A">A</span>] with <a href="DeterministicSkipOctree$$NonEmpty.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmpty">NonEmpty</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch.D">D</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.Child" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Child[+S,+D,+A]extendsWritable"></a><a id="Child[+S,+D,+A]:Child[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#Child[+S,+D,+A]extendsWritable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$Child.html">
+              <span class="name">Child</span>
+            </a><span class="tparams">[<span name="S">+S</span>, <span name="D">+D</span>, <span name="A">+A</span>]</span><span class="result"> extends <span class="extype" name="de.sciss.serial.Writable">Writable</span></span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ChildBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Branch[S,D,A]withDeterministicSkipOctree.NonEmptyChild[S,D,A]"></a><a id="ChildBranch[S&lt;:Sys[S],D&lt;:Space[D],A]:ChildBranch[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#ChildBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Branch[S,D,A]withDeterministicSkipOctree.NonEmptyChild[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title=" Utility trait which elements the rightward search findPN." href="DeterministicSkipOctree$$ChildBranch.html">
+              <span class="name">ChildBranch</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Branch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch">Branch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch.A">A</span>] with <a href="DeterministicSkipOctree$$NonEmptyChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild">NonEmptyChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch.A">A</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt"> Utility trait which elements the rightward search <code>findPN</code>.</p>
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Leaf[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Child[S,D,A]withDeterministicSkipOctree.LeftNonEmptyChild[S,D,A]withDeterministicSkipOctree.RightNonEmptyChild[S,D,A]withDeterministicSkipOctree.LeafOrEmpty[S,D,A]"></a><a id="Leaf[S&lt;:Sys[S],D&lt;:Space[D],A]:Leaf[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#Leaf[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Child[S,D,A]withDeterministicSkipOctree.LeftNonEmptyChild[S,D,A]withDeterministicSkipOctree.RightNonEmptyChild[S,D,A]withDeterministicSkipOctree.LeafOrEmpty[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$Leaf.html">
+              <span class="name">Leaf</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Child.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Child">Child</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.A">A</span>] with <a href="DeterministicSkipOctree$$LeftNonEmptyChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild">LeftNonEmptyChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.A">A</span>] with <a href="DeterministicSkipOctree$$RightNonEmptyChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild">RightNonEmptyChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.A">A</span>] with <a href="DeterministicSkipOctree$$LeafOrEmpty.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeafOrEmpty">LeafOrEmpty</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Leaf.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.LeafOrEmpty" visbl="prt" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="LeafOrEmpty[+S,+D,+A]extendsDeterministicSkipOctree.LeftChild[S,D,A]"></a><a id="LeafOrEmpty[+S,+D,+A]:LeafOrEmpty[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#LeafOrEmpty[+S,+D,+A]extendsDeterministicSkipOctree.LeftChild[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$LeafOrEmpty.html">
+              <span class="name">LeafOrEmpty</span>
+            </a><span class="tparams">[<span name="S">+S</span>, <span name="D">+D</span>, <span name="A">+A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$LeftChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChild">LeftChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeafOrEmpty.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeafOrEmpty.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeafOrEmpty.A">A</span>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.Left" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LeftextendsAnyRef"></a><a id="Left:Left"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#LeftextendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$Left.html">
+              <span class="name">Left</span>
+            </a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="LeftBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Branch[S,D,A]withDeterministicSkipOctree.LeftNonEmpty[S,D]"></a><a id="LeftBranch[S&lt;:Sys[S],D&lt;:Space[D],A]:LeftBranch[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#LeftBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Branch[S,D,A]withDeterministicSkipOctree.LeftNonEmpty[S,D]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="A left tree node implementation provides more specialized child nodes
+of type LeftChild." href="DeterministicSkipOctree$$LeftBranch.html">
+              <span class="name">LeftBranch</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Branch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch">Branch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch.A">A</span>] with <a href="DeterministicSkipOctree$$LeftNonEmpty.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmpty">LeftNonEmpty</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch.D">D</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">A left tree node implementation provides more specialized child nodes
+of type <code>LeftChild</code>.</p><div class="fullcomment"><div class="comment cmt"><p>A left tree node implementation provides more specialized child nodes
+of type <code>LeftChild</code>. It furthermore defines a resolution method
+<code>findImmediateLeaf</code> which is typically called after arriving here
+from a <code>findP0</code> call.
+</p></div></div>
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChild" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LeftChild[+S,+D,+A]extendsDeterministicSkipOctree.LeftwithDeterministicSkipOctree.Child[S,D,A]"></a><a id="LeftChild[+S,+D,+A]:LeftChild[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#LeftChild[+S,+D,+A]extendsDeterministicSkipOctree.LeftwithDeterministicSkipOctree.Child[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$LeftChild.html">
+              <span class="name">LeftChild</span>
+            </a><span class="tparams">[<span name="S">+S</span>, <span name="D">+D</span>, <span name="A">+A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Left.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Left">Left</a> with <a href="DeterministicSkipOctree$$Child.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Child">Child</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChild.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChild.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChild.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LeftChildBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.LeftBranch[S,D,A]withDeterministicSkipOctree.ChildBranch[S,D,A]withDeterministicSkipOctree.LeftNonEmptyChild[S,D,A]"></a><a id="LeftChildBranch[S&lt;:Sys[S],D&lt;:Space[D],A]:LeftChildBranch[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#LeftChildBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.LeftBranch[S,D,A]withDeterministicSkipOctree.ChildBranch[S,D,A]withDeterministicSkipOctree.LeftNonEmptyChild[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$LeftChildBranch.html">
+              <span class="name">LeftChildBranch</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$LeftBranch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch">LeftBranch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.A">A</span>] with <a href="DeterministicSkipOctree$$ChildBranch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch">ChildBranch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.A">A</span>] with <a href="DeterministicSkipOctree$$LeftNonEmptyChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild">LeftNonEmptyChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChildBranch.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmpty" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LeftNonEmpty[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D]]extendsDeterministicSkipOctree.LeftwithDeterministicSkipOctree.NonEmpty[S,D]"></a><a id="LeftNonEmpty[S&lt;:Sys[S],D&lt;:Space[D]]:LeftNonEmpty[S,D]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#LeftNonEmpty[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D]]extendsDeterministicSkipOctree.LeftwithDeterministicSkipOctree.NonEmpty[S,D]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$LeftNonEmpty.html">
+              <span class="name">LeftNonEmpty</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmpty.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmpty.D">D</span>]</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Left.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Left">Left</a> with <a href="DeterministicSkipOctree$$NonEmpty.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmpty">NonEmpty</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmpty.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmpty.D">D</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LeftNonEmptyChild[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.LeftNonEmpty[S,D]withDeterministicSkipOctree.NonEmptyChild[S,D,A]withDeterministicSkipOctree.LeftChild[S,D,A]withWritable"></a><a id="LeftNonEmptyChild[S&lt;:Sys[S],D&lt;:Space[D],A]:LeftNonEmptyChild[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#LeftNonEmptyChild[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.LeftNonEmpty[S,D]withDeterministicSkipOctree.NonEmptyChild[S,D,A]withDeterministicSkipOctree.LeftChild[S,D,A]withWritable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="A common trait used in pattern matching, comprised of Leaf and LeftChildBranch." href="DeterministicSkipOctree$$LeftNonEmptyChild.html">
+              <span class="name">LeftNonEmptyChild</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$LeftNonEmpty.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmpty">LeftNonEmpty</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.D">D</span>] with <a href="DeterministicSkipOctree$$NonEmptyChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild">NonEmptyChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.A">A</span>] with <a href="DeterministicSkipOctree$$LeftChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChild">LeftChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftNonEmptyChild.A">A</span>] with <span class="extype" name="de.sciss.serial.Writable">Writable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">A common trait used in pattern matching, comprised of <code>Leaf</code> and <code>LeftChildBranch</code>.</p>
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.LeftTopBranch" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="LeftTopBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.LeftBranch[S,D,A]withDeterministicSkipOctree.TopBranch[S,D,A]withDisposable[S#Tx]"></a><a id="LeftTopBranch[S&lt;:Sys[S],D&lt;:Space[D],A]:LeftTopBranch[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#LeftTopBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.LeftBranch[S,D,A]withDeterministicSkipOctree.TopBranch[S,D,A]withDisposable[S#Tx]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$LeftTopBranch.html">
+              <span class="name">LeftTopBranch</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftTopBranch.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftTopBranch.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$LeftBranch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftBranch">LeftBranch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftTopBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftTopBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftTopBranch.A">A</span>] with <a href="DeterministicSkipOctree$$TopBranch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.TopBranch">TopBranch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftTopBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftTopBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftTopBranch.A">A</span>] with <a href="../stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">DeterministicSkipOctree.LeftTopBranch.S.Tx</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.Next" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="Next[+S,+D,+A]extendsDeterministicSkipOctree.Child[S,D,A]"></a><a id="Next[+S,+D,+A]:Next[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#Next[+S,+D,+A]extendsDeterministicSkipOctree.Child[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$Next.html">
+              <span class="name">Next</span>
+            </a><span class="tparams">[<span name="S">+S</span>, <span name="D">+D</span>, <span name="A">+A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Child.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Child">Child</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Next.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Next.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Next.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmpty" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="NonEmpty[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D]]extendsIdentifiable[S#ID]"></a><a id="NonEmpty[S&lt;:Sys[S],D&lt;:Space[D]]:NonEmpty[S,D]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#NonEmpty[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D]]extendsIdentifiable[S#ID]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="A node is an object that can be stored in a orthant of a branch." href="DeterministicSkipOctree$$NonEmpty.html">
+              <span class="name">NonEmpty</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmpty.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmpty.D">D</span>]</span>]</span><span class="result"> extends <a href="../stm/Identifiable.html" class="extype" name="de.sciss.lucre.stm.Identifiable">Identifiable</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.ID">DeterministicSkipOctree.NonEmpty.S.ID</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">A node is an object that can be stored in a orthant of a branch.</p>
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="NonEmptyChild[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.NonEmpty[S,D]withDeterministicSkipOctree.Child[S,D,A]"></a><a id="NonEmptyChild[S&lt;:Sys[S],D&lt;:Space[D],A]:NonEmptyChild[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#NonEmptyChild[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.NonEmpty[S,D]withDeterministicSkipOctree.Child[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="An inner non empty tree element has a mutable parent node." href="DeterministicSkipOctree$$NonEmptyChild.html">
+              <span class="name">NonEmptyChild</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$NonEmpty.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmpty">NonEmpty</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild.D">D</span>] with <a href="DeterministicSkipOctree$$Child.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Child">Child</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild.A">A</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">An inner non empty tree element has a mutable parent node.</p>
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="RightBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Next[S,D,A]withDeterministicSkipOctree.Branch[S,D,A]"></a><a id="RightBranch[S&lt;:Sys[S],D&lt;:Space[D],A]:RightBranch[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#RightBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Next[S,D,A]withDeterministicSkipOctree.Branch[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="A right tree node implementation provides more specialized child nodes
+of type RightChild." href="DeterministicSkipOctree$$RightBranch.html">
+              <span class="name">RightBranch</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Next.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Next">Next</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch.A">A</span>] with <a href="DeterministicSkipOctree$$Branch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch">Branch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch.A">A</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">A right tree node implementation provides more specialized child nodes
+of type <code>RightChild</code>.</p><div class="fullcomment"><div class="comment cmt"><p>A right tree node implementation provides more specialized child nodes
+of type <code>RightChild</code>. It furthermore defines the node in Qi-1 via the
+<code>prev</code> method.
+</p></div></div>
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.RightChild" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RightChild[+S,+D,+A]extendsDeterministicSkipOctree.Child[S,D,A]"></a><a id="RightChild[+S,+D,+A]:RightChild[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#RightChild[+S,+D,+A]extendsDeterministicSkipOctree.Child[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$RightChild.html">
+              <span class="name">RightChild</span>
+            </a><span class="tparams">[<span name="S">+S</span>, <span name="D">+D</span>, <span name="A">+A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Child.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Child">Child</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChild.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChild.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChild.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RightChildBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.RightBranch[S,D,A]withDeterministicSkipOctree.ChildBranch[S,D,A]withDeterministicSkipOctree.RightNonEmptyChild[S,D,A]"></a><a id="RightChildBranch[S&lt;:Sys[S],D&lt;:Space[D],A]:RightChildBranch[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#RightChildBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.RightBranch[S,D,A]withDeterministicSkipOctree.ChildBranch[S,D,A]withDeterministicSkipOctree.RightNonEmptyChild[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$RightChildBranch.html">
+              <span class="name">RightChildBranch</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$RightBranch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch">RightBranch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.A">A</span>] with <a href="DeterministicSkipOctree$$ChildBranch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.ChildBranch">ChildBranch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.A">A</span>] with <a href="DeterministicSkipOctree$$RightNonEmptyChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild">RightNonEmptyChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChildBranch.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RightNonEmptyChild[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.RightChild[S,D,A]withDeterministicSkipOctree.NonEmptyChild[S,D,A]withWritable"></a><a id="RightNonEmptyChild[S&lt;:Sys[S],D&lt;:Space[D],A]:RightNonEmptyChild[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#RightNonEmptyChild[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.RightChild[S,D,A]withDeterministicSkipOctree.NonEmptyChild[S,D,A]withWritable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="A common trait used in pattern matching, comprised of Leaf and RightChildBranch." href="DeterministicSkipOctree$$RightNonEmptyChild.html">
+              <span class="name">RightNonEmptyChild</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$RightChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChild">RightChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild.A">A</span>] with <a href="DeterministicSkipOctree$$NonEmptyChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.NonEmptyChild">NonEmptyChild</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightNonEmptyChild.A">A</span>] with <span class="extype" name="de.sciss.serial.Writable">Writable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">A common trait used in pattern matching, comprised of <code>Leaf</code> and <code>RightChildBranch</code>.</p>
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.RightTopBranch" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RightTopBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.RightBranch[S,D,A]withDeterministicSkipOctree.TopBranch[S,D,A]"></a><a id="RightTopBranch[S&lt;:Sys[S],D&lt;:Space[D],A]:RightTopBranch[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#RightTopBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.RightBranch[S,D,A]withDeterministicSkipOctree.TopBranch[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$RightTopBranch.html">
+              <span class="name">RightTopBranch</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightTopBranch.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightTopBranch.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$RightBranch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightBranch">RightBranch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightTopBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightTopBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightTopBranch.A">A</span>] with <a href="DeterministicSkipOctree$$TopBranch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.TopBranch">TopBranch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightTopBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightTopBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightTopBranch.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.TopBranch" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TopBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Branch[S,D,A]"></a><a id="TopBranch[S&lt;:Sys[S],D&lt;:Space[D],A]:TopBranch[S,D,A]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#TopBranch[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A]extendsDeterministicSkipOctree.Branch[S,D,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$TopBranch.html">
+              <span class="name">TopBranch</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.TopBranch.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.TopBranch.D">D</span>]</span>, <span name="A">A</span>]</span><span class="result"> extends <a href="DeterministicSkipOctree$$Branch.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Branch">Branch</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.TopBranch.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.TopBranch.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.TopBranch.A">A</span>]</span>
+      </span>
+      
+      
+    </li></ol>
+            </div>
 
         
 
@@ -614,23 +1006,6 @@ this is <code>IntSquare( 0x40000000, 0x40000000, 0x40000000 )</code>.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree#verifyConsistency" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="verifyConsistency[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A](tree:de.sciss.lucre.data.DeterministicSkipOctree[S,D,A],reportOnly:Boolean)(implicittx:S#Tx):scala.collection.immutable.IndexedSeq[String]"></a><a id="verifyConsistency[S&lt;:Sys[S],D&lt;:Space[D],A](DeterministicSkipOctree[S,D,A],Boolean)(DeterministicSkipOctree.verifyConsistency.S.Tx):IndexedSeq[String]"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#verifyConsistency[S&lt;:de.sciss.lucre.stm.Sys[S],D&lt;:de.sciss.lucre.geom.Space[D],A](tree:de.sciss.lucre.data.DeterministicSkipOctree[S,D,A],reportOnly:Boolean)(implicittx:S#Tx):scala.collection.immutable.IndexedSeq[String]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">verifyConsistency</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.verifyConsistency.S">S</span>]</span>, <span name="D">D &lt;: <a href="../geom/Space.html" class="extype" name="de.sciss.lucre.geom.Space">Space</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.verifyConsistency.D">D</span>]</span>, <span name="A">A</span>]</span><span class="params">(<span name="tree">tree: <a href="DeterministicSkipOctree.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree">DeterministicSkipOctree</a>[<span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.verifyConsistency.S">S</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.verifyConsistency.D">D</span>, <span class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.verifyConsistency.A">A</span>]</span>, <span name="reportOnly">reportOnly: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">DeterministicSkipOctree.verifyConsistency.S.Tx</span></span>)</span><span class="result">: <span class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Checks the tree for correctness.</p><div class="fullcomment"><div class="comment cmt"><p>Checks the tree for correctness.
-</p></div><dl class="paramcmts block"><dt class="param">reportOnly</dt><dd class="cmt"><p>if <code>true</code> simply scans the tree, if <code>false</code> it will apply corrections if necessary</p></dd><dt>returns</dt><dd class="cmt"><p>empty if no problems were found, otherwise a list of strings describing the problems found</p></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
@@ -697,6 +1072,24 @@ this is <code>IntSquare( 0x40000000, 0x40000000, 0x40000000 )</code>.
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="de.sciss.lucre.data.DeterministicSkipOctree.Empty" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Empty"></a><a id="Empty:Empty"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/DeterministicSkipOctree$.html#Empty" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="DeterministicSkipOctree$$Empty$.html">
+              <span class="name">Empty</span>
+            </a><span class="result"> extends <a href="DeterministicSkipOctree$$LeftChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeftChild">LeftChild</a>[<span class="extype" name="scala.Nothing">Nothing</span>, <span class="extype" name="scala.Nothing">Nothing</span>, <span class="extype" name="scala.Nothing">Nothing</span>] with <a href="DeterministicSkipOctree$$RightChild.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.RightChild">RightChild</a>[<span class="extype" name="scala.Nothing">Nothing</span>, <span class="extype" name="scala.Nothing">Nothing</span>, <span class="extype" name="scala.Nothing">Nothing</span>] with <a href="DeterministicSkipOctree$$Next.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.Next">Next</a>[<span class="extype" name="scala.Nothing">Nothing</span>, <span class="extype" name="scala.Nothing">Nothing</span>, <span class="extype" name="scala.Nothing">Nothing</span>] with <a href="DeterministicSkipOctree$$LeafOrEmpty.html" class="extype" name="de.sciss.lucre.data.DeterministicSkipOctree.LeafOrEmpty">LeafOrEmpty</a>[<span class="extype" name="scala.Nothing">Nothing</span>, <span class="extype" name="scala.Nothing">Nothing</span>, <span class="extype" name="scala.Nothing">Nothing</span>] with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
     </li>
               </ol>
             </div>

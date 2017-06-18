@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.11.0 API  - de.sciss.fscape.graph</title>
-          <meta name="description" content="Mellite 2.11.0 API - de.sciss.fscape.graph" />
-          <meta name="keywords" content="Mellite 2.11.0 API de.sciss.fscape.graph" />
+          <title>Mellite 2.14.0 API  - de.sciss.fscape.graph</title>
+          <meta name="description" content="Mellite 2.14.0 API - de.sciss.fscape.graph" />
+          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.fscape.graph" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.11.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -148,6 +148,24 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="de.sciss.fscape">fscape</a></dd></dl></div>
+    </li><li name="de.sciss.fscape.graph.cdp" visbl="pub" class="indented5 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="cdp"></a><a id="cdp:cdp"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/graph/index.html#cdp" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="cdp/index.html">
+              <span class="name">cdp</span>
+            </a>
+      </span>
+      
+      
     </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="ARCWindow.html" title="Automatic range control UGen."></a>
@@ -732,12 +750,6 @@ random access fashion.">
                         </a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="ThresholdConvolution.html" title=""></a>
-                        <a href="ThresholdConvolution.html" title="">
-                          ThresholdConvolution
-                        </a>
-                      </li><li class="current-entities indented4">
-                        <span class="separator"></span>
                         <a class="class" href="Timer.html" title="A UGen that outputs the number of sample frames passed since last triggered."></a>
                         <a href="Timer.html" title="A UGen that outputs the number of sample frames passed since last triggered.">
                           Timer
@@ -795,6 +807,12 @@ random access fashion.">
                         <a class="class" href="ZipWindow.html" title=""></a>
                         <a href="ZipWindow.html" title="">
                           ZipWindow
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="ZipWindowN.html" title=""></a>
+                        <a href="ZipWindowN.html" title="">
+                          ZipWindowN
                         </a>
                       </li><li name="de.sciss.fscape.gui" visbl="pub" class="indented4 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="gui"></a><a id="gui:gui"></a>
@@ -2834,30 +2852,6 @@ input to disk.
       </span>
       
       
-    </li><li name="de.sciss.fscape.graph.ThresholdConvolution" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ThresholdConvolutionextendsUGenSource.SingleOutwithProductwithSerializable"></a><a id="ThresholdConvolution:ThresholdConvolution"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/fscape/graph/index.html#ThresholdConvolutionextendsUGenSource.SingleOutwithProductwithSerializable" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a title="" href="ThresholdConvolution.html">
-              <span class="name">ThresholdConvolution</span>
-            </a><span class="params">(<span name="in">in: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a></span>, <span name="kernel">kernel: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a></span>, <span name="size">size: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a></span>, <span name="thresh">thresh: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.0</a></span></span></span>, <span name="boundary">boundary: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0</a></span></span></span>)</span><span class="result"> extends <a href="../UGenSource$$SingleOut.html" class="extype" name="de.sciss.fscape.UGenSource.SingleOut">SingleOut</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
-      </span>
-      
-      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>input signal to be convolved</p></dd><dt class="param">kernel</dt><dd class="cmt"><p>filter kernel (will be read only once)</p></dd><dt class="param">size</dt><dd class="cmt"><p>length of filter kernel (static)</p></dd><dt class="param">thresh</dt><dd class="cmt"><p>threshold for input samples within kernel range.
-                convolution is only applied to those frames
-                whose absolute difference to the centre inter</p></dd><dt class="param">boundary</dt><dd class="cmt"><p>a trigger signal that determines logical
-                &quot;boundaries&quot; in the input signal. The convolution
-                is truncated to the left and right of the boundary
-                positions, making it possible to perform
-                convolutions on windowed signals.</p></dd></dl></div>
     </li><li name="de.sciss.fscape.graph.Timer" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="TimerextendsUGenSource.SingleOutwithProductwithSerializable"></a><a id="Timer:Timer"></a>
       <span class="permalink">
@@ -3055,6 +3049,24 @@ UGen.
         <a title="" href="ZipWindow.html">
               <span class="name">ZipWindow</span>
             </a><span class="params">(<span name="a">a: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a></span>, <span name="b">b: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a></span>, <span name="size">size: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">1</a></span></span></span>)</span><span class="result"> extends <a href="../UGenSource$$SingleOut.html" class="extype" name="de.sciss.fscape.UGenSource.SingleOut">SingleOut</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="de.sciss.fscape.graph.ZipWindowN" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="ZipWindowNextendsUGenSource.SingleOutwithProductwithSerializable"></a><a id="ZipWindowN:ZipWindowN"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/fscape/graph/index.html#ZipWindowNextendsUGenSource.SingleOutwithProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="ZipWindowN.html">
+              <span class="name">ZipWindowN</span>
+            </a><span class="params">(<span name="in">in: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a></span>, <span name="size">size: <a href="../GE.html" class="extype" name="de.sciss.fscape.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">1</a></span></span></span>)</span><span class="result"> extends <a href="../UGenSource$$SingleOut.html" class="extype" name="de.sciss.fscape.UGenSource.SingleOut">SingleOut</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       
       

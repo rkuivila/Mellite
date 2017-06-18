@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.11.0 API  - de.sciss.lucre.data.SkipList.Set</title>
-          <meta name="description" content="Mellite 2.11.0 API - de.sciss.lucre.data.SkipList.Set" />
-          <meta name="keywords" content="Mellite 2.11.0 API de.sciss.lucre.data.SkipList.Set" />
+          <title>Mellite 2.14.0 API  - de.sciss.lucre.data.SkipList.Set</title>
+          <meta name="description" content="Mellite 2.14.0 API - de.sciss.lucre.data.SkipList.Set" />
+          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.lucre.data.SkipList.Set" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.11.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -564,6 +564,22 @@ in the skip list's level hierarchy
       </span>
       <span class="symbol">
         <span class="name">read</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.SkipList.Set.read.S">S</span>]</span>, <span name="A">A</span>]</span><span class="params">(<span name="in">in: <span class="extype" name="de.sciss.serial.DataInput">DataInput</span></span>, <span name="access">access: <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">Set.read.S.Acc</span></span>, <span name="keyObserver">keyObserver: <a href="SkipList$$KeyObserver.html" class="extype" name="de.sciss.lucre.data.SkipList.KeyObserver">KeyObserver</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Set.read.S.Tx</span>, <span class="extype" name="de.sciss.lucre.data.SkipList.Set.read.A">A</span>] = <span class="symbol"><span class="name"><a href="SkipList$$NoKeyObserver$.html">NoKeyObserver</a></span></span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Set.read.S.Tx</span></span>, <span name="ordering">ordering: <a href="Ordering.html" class="extype" name="de.sciss.lucre.data.Ordering">Ordering</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Set.read.S.Tx</span>, <span class="extype" name="de.sciss.lucre.data.SkipList.Set.read.A">A</span>]</span>, <span name="keySerializer">keySerializer: <span class="extype" name="de.sciss.serial.Serializer">Serializer</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Set.read.S.Tx</span>, <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">Set.read.S.Acc</span>, <span class="extype" name="de.sciss.lucre.data.SkipList.Set.read.A">A</span>]</span>)</span><span class="result">: <a href="SkipList$$Set.html" class="extype" name="de.sciss.lucre.data.SkipList.Set">Set</a>[<span class="extype" name="de.sciss.lucre.data.SkipList.Set.read.S">S</span>, <span class="extype" name="de.sciss.lucre.data.SkipList.Set.read.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.lucre.data.SkipList.Set#serializer" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="serializer[S&lt;:de.sciss.lucre.stm.Sys[S],A](keyObserver:de.sciss.lucre.data.SkipList.KeyObserver[S#Tx,A])(implicitordering:de.sciss.lucre.data.Ordering[S#Tx,A],implicitkeySerializer:de.sciss.serial.Serializer[S#Tx,S#Acc,A]):de.sciss.serial.Serializer[S#Tx,S#Acc,de.sciss.lucre.data.SkipList.Set[S,A]]"></a><a id="serializer[S&lt;:Sys[S],A](KeyObserver[Set.serializer.S.Tx,A])(Ordering[Set.serializer.S.Tx,A],Serializer[Set.serializer.S.Tx,Set.serializer.S.Acc,A]):Serializer[Set.serializer.S.Tx,Set.serializer.S.Acc,Set[S,A]]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/lucre/data/SkipList$$Set$.html#serializer[S&lt;:de.sciss.lucre.stm.Sys[S],A](keyObserver:de.sciss.lucre.data.SkipList.KeyObserver[S#Tx,A])(implicitordering:de.sciss.lucre.data.Ordering[S#Tx,A],implicitkeySerializer:de.sciss.serial.Serializer[S#Tx,S#Acc,A]):de.sciss.serial.Serializer[S#Tx,S#Acc,de.sciss.lucre.data.SkipList.Set[S,A]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">serializer</span><span class="tparams">[<span name="S">S &lt;: <a href="../stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.lucre.data.SkipList.Set.serializer.S">S</span>]</span>, <span name="A">A</span>]</span><span class="params">(<span name="keyObserver">keyObserver: <a href="SkipList$$KeyObserver.html" class="extype" name="de.sciss.lucre.data.SkipList.KeyObserver">KeyObserver</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Set.serializer.S.Tx</span>, <span class="extype" name="de.sciss.lucre.data.SkipList.Set.serializer.A">A</span>] = <span class="symbol"><span class="name"><a href="SkipList$.html">SkipList.NoKeyObserver</a></span></span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="ordering">ordering: <a href="Ordering.html" class="extype" name="de.sciss.lucre.data.Ordering">Ordering</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Set.serializer.S.Tx</span>, <span class="extype" name="de.sciss.lucre.data.SkipList.Set.serializer.A">A</span>]</span>, <span name="keySerializer">keySerializer: <span class="extype" name="de.sciss.serial.Serializer">Serializer</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Set.serializer.S.Tx</span>, <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">Set.serializer.S.Acc</span>, <span class="extype" name="de.sciss.lucre.data.SkipList.Set.serializer.A">A</span>]</span>)</span><span class="result">: <span class="extype" name="de.sciss.serial.Serializer">Serializer</span>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Set.serializer.S.Tx</span>, <span class="extype" name="de.sciss.lucre.stm.Sys.Acc">Set.serializer.S.Acc</span>, <a href="SkipList$$Set.html" class="extype" name="de.sciss.lucre.data.SkipList.Set">Set</a>[<span class="extype" name="de.sciss.lucre.data.SkipList.Set.serializer.S">S</span>, <span class="extype" name="de.sciss.lucre.data.SkipList.Set.serializer.A">A</span>]]</span>
       </span>
       
       

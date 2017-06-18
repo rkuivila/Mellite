@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.11.0 API  - de.sciss.synth.ugen</title>
-          <meta name="description" content="Mellite 2.11.0 API - de.sciss.synth.ugen" />
-          <meta name="keywords" content="Mellite 2.11.0 API de.sciss.synth.ugen" />
+          <title>Mellite 2.14.0 API  - de.sciss.synth.ugen</title>
+          <meta name="description" content="Mellite 2.14.0 API - de.sciss.synth.ugen" />
+          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.synth.ugen" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.11.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -10870,8 +10870,10 @@ element for accessing physical input signals, e.g. from a microphone connected t
 audio interface. It expands to a regular <code>In</code> UGen offset by <code>NumOutputBuses.ir</code>.</p><p>For example, consider an audio interface with channels 1 to 8 being analog line inputs,
 channels 9 and 10 being AES/EBU and channels 11 to 18 being ADAT inputs. To read a combination
 of the analog and ADAT inputs, either of the following statement can be used:</p><pre>PhysicalIn(<span class="std">Seq</span>(<span class="num">0</span>, <span class="num">8</span>), <span class="std">Seq</span>(<span class="num">8</span>, <span class="num">8</span>))
-PhysicalIn(<span class="std">Seq</span>(<span class="num">0</span>, <span class="num">8</span>), <span class="std">Seq</span>(<span class="num">8</span>))      <span class="cmt">// numChannels wraps!</span></pre></div><dl class="paramcmts block"><dt class="param">indices</dt><dd class="cmt"><p>the physical index to read from (beginning at zero which corresponds to
-                     the first channel of the audio interface or sound driver). Maybe be a
+PhysicalIn(<span class="std">Seq</span>(<span class="num">0</span>, <span class="num">8</span>), <span class="std">Seq</span>(<span class="num">8</span>))      <span class="cmt">// numChannels wraps!</span></pre><p>If SuperCollider runs with less physical inputs than requested by this UGen,
+invalid channels are muted.
+</p></div><dl class="paramcmts block"><dt class="param">indices</dt><dd class="cmt"><p>the physical index to read from (beginning at zero which corresponds to
+                     the first channel of the audio interface or sound driver). It may be a
                      multichannel element to specify discrete indices.</p></dd><dt class="param">numChannels</dt><dd class="cmt"><p>the number of consecutive channels to read for each index. Wraps around
                      if the sequence has less elements than indices has channels.</p></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.PhysicalOut" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -10894,7 +10896,8 @@ PhysicalIn(<span class="std">Seq</span>(<span class="num">0</span>, <span class=
       <p class="shortcomment cmt">A graph element which writes to a connected sound driver output.</p><div class="fullcomment"><div class="comment cmt"><p>A graph element which writes to a connected sound driver output. This is a convenience
 element for <code>Out</code> with the ability to provide a set of discrete indices to which
 corresponding channels of the input signal are mapped, whereas multichannel expansion
-with respect to the index argument of <code>Out</code> typically do not achieve what you expect.
+with respect to the index argument of <code>Out</code> typically do not achieve what you expect.</p><p>If SuperCollider runs with less physical outputs than requested by this UGen,
+the output is muted.
 </p></div><dl class="paramcmts block"><dt class="param">indices</dt><dd class="cmt"><p>the physical index to write to (beginning at zero which corresponds to
                      the first channel of the audio interface or sound driver). may be a
                      multichannel argument to specify discrete channels. In this case, any
@@ -21578,7 +21581,9 @@ element for accessing physical input signals, e.g. from a microphone connected t
 audio interface. It expands to a regular <code>In</code> UGen offset by <code>NumOutputBuses.ir</code>.</p><p>For example, consider an audio interface with channels 1 to 8 being analog line inputs,
 channels 9 and 10 being AES/EBU and channels 11 to 18 being ADAT inputs. To read a combination
 of the analog and ADAT inputs, either of the following statement can be used:</p><pre>PhysicalIn(<span class="std">Seq</span>(<span class="num">0</span>, <span class="num">8</span>), <span class="std">Seq</span>(<span class="num">8</span>, <span class="num">8</span>))
-PhysicalIn(<span class="std">Seq</span>(<span class="num">0</span>, <span class="num">8</span>), <span class="std">Seq</span>(<span class="num">8</span>))      <span class="cmt">// numChannels wraps!</span></pre></div></div>
+PhysicalIn(<span class="std">Seq</span>(<span class="num">0</span>, <span class="num">8</span>), <span class="std">Seq</span>(<span class="num">8</span>))      <span class="cmt">// numChannels wraps!</span></pre><p>If SuperCollider runs with less physical inputs than requested by this UGen,
+invalid channels are muted.
+</p></div></div>
     </li><li name="de.sciss.synth.ugen.PhysicalOut" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="PhysicalOut"></a><a id="PhysicalOut:PhysicalOut"></a>
       <span class="permalink">
@@ -21599,7 +21604,8 @@ PhysicalIn(<span class="std">Seq</span>(<span class="num">0</span>, <span class=
       <p class="shortcomment cmt">A graph element which writes to a connected sound driver output.</p><div class="fullcomment"><div class="comment cmt"><p>A graph element which writes to a connected sound driver output. This is a convenience
 element for <code>Out</code> with the ability to provide a set of discrete indices to which
 corresponding channels of the input signal are mapped, whereas multichannel expansion
-with respect to the index argument of <code>Out</code> typically do not achieve what you expect.</p><h5>Examples</h5><pre><span class="cmt">// flip left and right when writing a stereo signal</span>
+with respect to the index argument of <code>Out</code> typically do not achieve what you expect.</p><p>If SuperCollider runs with less physical outputs than requested by this UGen,
+the output is muted.</p><h5>Examples</h5><pre><span class="cmt">// flip left and right when writing a stereo signal</span>
 play {
   <span class="kw">val</span> indices = <span class="std">Seq</span>(<span class="num">1</span>, <span class="num">0</span>)
   <span class="kw">val</span> in:GE   = <span class="std">Seq</span>(SinOsc.ar * LFPulse.ar(<span class="num">4</span>), WhiteNoise.ar)

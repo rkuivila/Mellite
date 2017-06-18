@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.11.0 API  - de.sciss.mellite.gui.GUI</title>
-          <meta name="description" content="Mellite 2.11.0 API - de.sciss.mellite.gui.GUI" />
-          <meta name="keywords" content="Mellite 2.11.0 API de.sciss.mellite.gui.GUI" />
+          <title>Mellite 2.14.0 API  - de.sciss.mellite.gui.GUI</title>
+          <meta name="description" content="Mellite 2.14.0 API - de.sciss.mellite.gui.GUI" />
+          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.mellite.gui.GUI" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.11.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -373,10 +373,46 @@
                           MapView
                         </a>
                       </li><li class="current-entities indented4">
+                        <a class="object" href="MarkdownEditorFrame$.html" title=""></a>
+                        <a class="trait" href="MarkdownEditorFrame.html" title=""></a>
+                        <a href="MarkdownEditorFrame.html" title="">
+                          MarkdownEditorFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="MarkdownEditorView$.html" title=""></a>
+                        <a class="trait" href="MarkdownEditorView.html" title=""></a>
+                        <a href="MarkdownEditorView.html" title="">
+                          MarkdownEditorView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="MarkdownRenderFrame$.html" title=""></a>
+                        <a class="trait" href="MarkdownRenderFrame.html" title=""></a>
+                        <a href="MarkdownRenderFrame.html" title="">
+                          MarkdownRenderFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="MarkdownRenderView$.html" title=""></a>
+                        <a class="trait" href="MarkdownRenderView.html" title=""></a>
+                        <a href="MarkdownRenderView.html" title="">
+                          MarkdownRenderView
+                        </a>
+                      </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="object" href="MenuBar$.html" title=""></a>
                         <a href="MenuBar$.html" title="">
                           MenuBar
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="NuagesEditorFrame$.html" title=""></a>
+                        <a class="trait" href="NuagesEditorFrame.html" title=""></a>
+                        <a href="NuagesEditorFrame.html" title="">
+                          NuagesEditorFrame
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="NuagesEditorView$.html" title=""></a>
+                        <a class="trait" href="NuagesEditorView.html" title=""></a>
+                        <a href="NuagesEditorView.html" title="">
+                          NuagesEditorView
                         </a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="ObjView$.html" title=""></a>
@@ -623,6 +659,24 @@
       </span>
       
       
+    </li><li name="de.sciss.mellite.gui.GUI#addGlobalAction" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="addGlobalAction(c:scala.swing.Component,name:String,keyStroke:javax.swing.KeyStroke)(body:=&gt;Unit):Unit"></a><a id="addGlobalAction(Component,String,KeyStroke)(⇒Unit):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/GUI$.html#addGlobalAction(c:scala.swing.Component,name:String,keyStroke:javax.swing.KeyStroke)(body:=&gt;Unit):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">addGlobalAction</span><span class="params">(<span name="c">c: <span class="extype" name="scala.swing.Component">Component</span></span>, <span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="keyStroke">keyStroke: <span class="extype" name="javax.swing.KeyStroke">KeyStroke</span></span>)</span><span class="params">(<span name="body">body: ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Adds a global action to a component.</p><div class="fullcomment"><div class="comment cmt"><p>Adds a global action to a component. The key
+is active if the component appears in the focused window.
+</p></div></div>
     </li><li name="de.sciss.mellite.gui.GUI#addGlobalKey" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="addGlobalKey(b:scala.swing.AbstractButton,keyStroke:javax.swing.KeyStroke):Unit"></a><a id="addGlobalKey(AbstractButton,KeyStroke):Unit"></a>
       <span class="permalink">
@@ -661,6 +715,22 @@ simulates a button click.
 currently showing (e.g.</p><div class="fullcomment"><div class="comment cmt"><p>Same as <code>addGlobalKey</code>, but only performs action if the button is
 currently showing (e.g. in the currently showing tabbed pane page).
 </p></div></div>
+    </li><li name="de.sciss.mellite.gui.GUI#addTabNavigation" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="addTabNavigation(tabs:scala.swing.TabbedPane):Unit"></a><a id="addTabNavigation(TabbedPane):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/GUI$.html#addTabNavigation(tabs:scala.swing.TabbedPane):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">addTabNavigation</span><span class="params">(<span name="tabs">tabs: <span class="extype" name="scala.swing.TabbedPane">TabbedPane</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Adds alt-left/right key control to a tabbed pane.</p>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
@@ -913,6 +983,22 @@ currently showing (e.g. in the currently showing tabbed pane page).
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="de.sciss.mellite.gui.GUI#keyStrokeText" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="keyStrokeText(stroke:javax.swing.KeyStroke):String"></a><a id="keyStrokeText(KeyStroke):String"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/GUI$.html#keyStrokeText(stroke:javax.swing.KeyStroke):String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">keyStrokeText</span><span class="params">(<span name="stroke">stroke: <span class="extype" name="javax.swing.KeyStroke">KeyStroke</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Human-readable text representation of a key stroke.</p>
     </li><li name="de.sciss.mellite.gui.GUI#keyValueDialog" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="keyValueDialog(value:scala.swing.Component,title:String,defaultName:String,window:Option[de.sciss.desktop.Window]):Option[String]"></a><a id="keyValueDialog(Component,String,String,Option[Window]):Option[String]"></a>
       <span class="permalink">

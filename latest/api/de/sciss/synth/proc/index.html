@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.11.0 API  - de.sciss.synth.proc</title>
-          <meta name="description" content="Mellite 2.11.0 API - de.sciss.synth.proc" />
-          <meta name="keywords" content="Mellite 2.11.0 API de.sciss.synth.proc" />
+          <title>Mellite 2.14.0 API  - de.sciss.synth.proc</title>
+          <meta name="description" content="Mellite 2.14.0 API - de.sciss.synth.proc" />
+          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.synth.proc" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.11.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -386,6 +386,14 @@ the only difference being the Target context type needed for issuing a play.">
                         <a class="object" href="Implicits$.html" title=""></a>
                         <a href="Implicits$.html" title="">
                           Implicits
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="Markdown$.html" title=""></a>
+                        <a class="trait" href="Markdown.html" title="The markdown type is more or less the same
+as a StringObj, but with dedicated type id."></a>
+                        <a href="Markdown.html" title="The markdown type is more or less the same
+as a StringObj, but with dedicated type id.">
+                          Markdown
                         </a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
@@ -1027,6 +1035,32 @@ the &quot;seek&quot; position.
       </span>
       
       
+    </li><li name="de.sciss.synth.proc.Markdown" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="Markdown[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsExpr[S,String]"></a><a id="Markdown[S&lt;:Sys[S]]:Markdown[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/synth/proc/index.html#Markdown[S&lt;:de.sciss.lucre.stm.Sys[S]]extendsExpr[S,String]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="The markdown type is more or less the same
+as a StringObj, but with dedicated type id." href="Markdown.html">
+              <span class="name">Markdown</span>
+            </a><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.synth.proc.Markdown.S">S</span>]</span>]</span><span class="result"> extends <a href="../../lucre/expr/Expr.html" class="extype" name="de.sciss.lucre.expr.Expr">Expr</a>[<span class="extype" name="de.sciss.synth.proc.Markdown.S">S</span>, <span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">The markdown type is more or less the same
+as a <code>StringObj</code>, but with dedicated type id.</p><div class="fullcomment"><div class="comment cmt"><p>The markdown type is more or less the same
+as a <code>StringObj</code>, but with dedicated type id.
+In the future, we will have to evaluate whether
+this makes sense and whether we need bridge
+methods between <code>Markdown &lt;=&gt; StringObj</code>.</p><p>Markdown links and inserted objects are found
+through the object's attribute map.
+</p></div></div>
     </li><li name="de.sciss.synth.proc.Ops" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="OpsextendsOps"></a><a id="Ops:Ops"></a>
       <span class="permalink">
@@ -1806,6 +1840,24 @@ with <code>stm.Source</code>. It can be safely stored in a regular value.
         <a title="" href="Implicits$.html">
               <span class="name">Implicits</span>
             </a>
+      </span>
+      
+      
+    </li><li name="de.sciss.synth.proc.Markdown" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Markdown"></a><a id="Markdown:Markdown"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/synth/proc/index.html#Markdown" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Markdown$.html">
+              <span class="name">Markdown</span>
+            </a><span class="result"> extends <span class="extype" name="de.sciss.lucre.expr.impl.ExprTypeImpl">ExprTypeImpl</span>[<span class="extype" name="scala.Predef.String">String</span>, <a href="Markdown.html" class="extype" name="de.sciss.synth.proc.Markdown">Markdown</a>]</span>
       </span>
       
       
