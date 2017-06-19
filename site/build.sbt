@@ -3,6 +3,7 @@ lazy val PROJECT_VERSION       = melliteVersion
 lazy val baseName              = "Mellite"
 
 lazy val soundProcessesVersion = "3.12.4"
+lazy val nuagesVersion         = "2.16.0"
 lazy val oscVersion            = "1.1.5"
 lazy val audioFileVersion      = "1.4.6"
 lazy val scalaColliderVersion  = "1.22.4"
@@ -22,6 +23,7 @@ val lScalaColliderUGens = RootProject(uri(s"git://github.com/Sciss/ScalaCollider
 val lScalaCollider      = RootProject(uri(s"git://github.com/Sciss/ScalaCollider.git#v${scalaColliderVersion}"))
 val lFScape             = RootProject(uri(s"git://github.com/Sciss/FScape-next.git#v${fscapeVersion}"))
 val lSoundProcesses     = RootProject(uri(s"git://github.com/Sciss/SoundProcesses.git#v${soundProcessesVersion}"))
+val lNuages             = RootProject(uri(s"git://github.com/Sciss/Wolkenpumpe.git#v${nuagesVersion}"))
 val lMellite            = RootProject(uri(s"git://github.com/Sciss/${baseName}.git#v${PROJECT_VERSION}"))
 
 val lucreURI            = uri(s"git://github.com/Sciss/Lucre.git#v${lucreVersion}")
@@ -75,7 +77,7 @@ val root = (project in file("."))
         "de.sciss.synth.proc.gui.impl",
         "de.sciss.synth.proc.impl",
         "de.sciss.synth.ugen.impl",
-        "de.sciss.tallin",
+        "de.sciss.nuages.impl",
         "snippets"
       ).mkString(":"),
       "-doc-title", s"${baseName} ${PROJECT_VERSION} API"
@@ -83,7 +85,7 @@ val root = (project in file("."))
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(lLucreBdb6)
   )
   // XXX TODO --- don't know how to exclude bdb5/6 from lucre
-  .aggregate(lScalaOSC, lScalaAudioFile, lScalaColliderUGens, lScalaCollider, lFScape, lSoundProcesses, lLucreCore, lLucreExpr, lMellite)
+  .aggregate(lScalaOSC, lScalaAudioFile, lScalaColliderUGens, lScalaCollider, lFScape, lSoundProcesses, lNuages, lLucreCore, lLucreExpr, lMellite)
 
 val snippets = (project in file("snippets"))
   // .dependsOn(lMellite)
