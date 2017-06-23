@@ -111,8 +111,11 @@ object TimelineFrameImpl {
         .add(Item("align-obj-start-to-pos", view.actionAlignObjectsToCursor))
         .add(Item("split-objects"         , view.actionSplitObjects))
         .addLine()
-        .add(Item("sel-stop-to-start",     "Flip Selection Backward"))
-        .add(Item("sel-start-to-stop",     "Flip Selection Forward"))
+        .add(Item("sel-stop-to-start"     , "Flip Selection Backward"))
+        .add(Item("sel-start-to-stop"     , "Flip Selection Forward"))
+        .addLine()
+        .add(Item("drop-marker"           , view.actionDropMarker))
+        .add(Item("drop-named-marker"     , view.actionDropNamedMarker))
 
       window.reactions += {
         case Window.Activated(_) => view.canvas.canvasComponent.requestFocusInWindow()

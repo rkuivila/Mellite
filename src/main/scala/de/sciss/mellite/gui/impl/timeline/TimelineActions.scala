@@ -16,8 +16,8 @@ package de.sciss.mellite.gui.impl.timeline
 import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.edit.CompoundEdit
-import de.sciss.desktop.{KeyStrokes, Window}
-import de.sciss.lucre.expr.SpanLikeObj
+import de.sciss.desktop.{KeyStrokes, OptionPane, Window}
+import de.sciss.lucre.expr.{IntObj, SpanLikeObj, StringObj}
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.synth.Sys
@@ -27,7 +27,7 @@ import de.sciss.mellite.gui.{ActionBounceTimeline, TimelineObjView, TimelineView
 import de.sciss.mellite.{Mellite, ProcActions}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
-import de.sciss.synth.proc.{ObjKeys, Timeline}
+import de.sciss.synth.proc.{ObjKeys, TimeRef, Timeline}
 
 import scala.swing.Action
 import scala.swing.event.Key
@@ -163,6 +163,73 @@ trait TimelineActions[S <: Sys[S]] {
       } .getOrElse(Nil)
       val editOpt = CompoundEdit(edits, title)
       editOpt.foreach(undoManager.add)
+    }
+  }
+
+  object actionDropMarker extends Action("Drop Marker") {
+    import KeyStrokes._
+    accelerator = Some(plain + Key.M)
+
+    final val name        = "Mark"
+    final val trackHeight = 2       // marker height
+
+    private def markerSpan(): Span =
+      timelineModel.selection match {
+        case s: Span    => s
+        case Span.Void  =>
+          val start = timelineModel.position
+          val stop  = start + TimeRef.SampleRate.toLong
+          Span(start, stop)
+      }
+
+    private def dropTrack(span: Span): Int = {
+      val spc = 1     // extra vertical spacing
+      val pos = (0 /: canvas.intersect(span).toList.sortBy(_.trackIndex)) { (pos0, view) =>
+        val y1 = view.trackIndex - spc
+        val y2 = view.trackIndex + view.trackHeight + spc
+        if (y1 >= (pos0 + trackHeight) || y2 <= pos0) pos0 else y2
+      }
+      pos
+    }
+
+    def locate(): (Span, Int) = {
+      val span    = markerSpan()
+      val trkIdx  = dropTrack(span)
+      (span, trkIdx)
+    }
+
+    def apply(): Unit =
+      perform(locate(), name = name)
+
+    def perform(location: (Span, Int), name: String): Unit = {
+      val editOpt = cursor.step { implicit tx =>
+        timelineMod.map { tlMod =>
+          val (span, trkIdx) = location
+          val spanObj = SpanLikeObj.newVar[S](span)
+          val elem: Obj[S] = IntObj.newConst[S](0)  // XXX TODO --- we should add a 'generic' Obj?
+          val attr    = elem.attr
+          attr.put(TimelineObjView.attrTrackIndex , IntObj   .newVar[S](trkIdx      ))
+          attr.put(TimelineObjView.attrTrackHeight, IntObj   .newVar[S](trackHeight ))
+          attr.put(ObjKeys.attrName               , StringObj.newVar[S](name        ))
+          EditTimelineInsertObj(name = "Drop Marker", timeline = tlMod, span = spanObj, elem = elem)
+        }
+      }
+      editOpt.foreach(undoManager.add)
+    }
+  }
+
+  object actionDropNamedMarker extends Action("Drop Named Marker") {
+    import KeyStrokes._
+
+    accelerator = Some(shift + Key.M)
+
+    def apply(): Unit = {
+      val loc = actionDropMarker.locate()
+      val opt = OptionPane.textInput("Name:", initial = actionDropMarker.name)
+      opt.title = title
+      Window.showDialog(component, opt).foreach { name =>
+        actionDropMarker.perform(loc, name)
+      }
     }
   }
 

@@ -140,7 +140,7 @@ object ParamSpecObjView extends ListObjView.Factory {
       }
     }
 
-    private def updateExampleFromIn(fire: Boolean = true): ParamSpec = {
+    private def updateExampleFromIn(fire: Boolean): ParamSpec = {
       import numbers.Implicits._
       val spc     = spec
       val in      = ggRotIn.value * 0.001
@@ -155,7 +155,7 @@ object ParamSpecObjView extends ListObjView.Factory {
       spc
     }
 
-    private def updateExampleFromOut(fire: Boolean = true): ParamSpec = {
+    private def updateExampleFromOut(fire: Boolean): ParamSpec = {
       import numbers.Implicits._
       val spc     = spec
       val out     = ggRotOut.value.linlin(0, 1000, spc.lo, spc.hi)

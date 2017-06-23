@@ -58,4 +58,6 @@ trait TimelineView[S <: stm.Sys[S]] extends ViewHasWorkspace[S] with View.Editab
   def actionClearSpan           : Action
   def actionRemoveSpan          : Action
   def actionAlignObjectsToCursor: Action
+  def actionDropMarker          : Action
+  def actionDropNamedMarker     : Action
 }
