@@ -18,70 +18,113 @@ import java.io.{EOFException, File}
 import java.text.ParseException
 import javax.swing.{JFormattedTextField, SpinnerNumberModel, SwingUtilities}
 
-import de.sciss.audiowidgets.{AxisFormat, TimelineModel}
-import de.sciss.desktop
-import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, UndoManager, Window}
-import de.sciss.equal
+import de.sciss.audiowidgets.AxisFormat
+import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, Window}
 import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.expr.{DoubleObj, LongObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
-import de.sciss.lucre.swing.defer
+import de.sciss.lucre.swing.{View, defer}
 import de.sciss.lucre.synth.{Buffer, Server, Synth, Sys}
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
-import de.sciss.numbers
 import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.processor.{Processor, ProcessorLike}
+import de.sciss.span.Span
 import de.sciss.span.Span.SpanOrVoid
-import de.sciss.span.{Span, SpanLike}
 import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{AudioCue, Bounce, Code, Folder, TimeRef, Timeline, Workspace}
-import de.sciss.synth
+import de.sciss.synth.proc.{AudioCue, Bounce, Code, Folder, TimeRef, Workspace}
 import de.sciss.synth.{SynthGraph, addToTail}
+import de.sciss.{desktop, equal, numbers, synth}
 
-import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.collection.immutable.{IndexedSeq => Vec, Iterable => IIterable}
 import scala.concurrent.blocking
 import scala.swing.Swing._
 import scala.swing.event.{ButtonClicked, SelectionChanged}
 import scala.swing.{Alignment, BoxPanel, Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Orientation, ProgressBar, RadioButton, Swing, TextField}
-import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 object ActionBounceTimeline {
-  private val DEBUG = false
+  private[this] val DEBUG = false
+
+  final val title = "Export as Audio File"
+
+  final class Action[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S],
+                                  group: IIterable[stm.Source[S#Tx, Obj[S]]])
+                                 (prepare: QuerySettings[S] => QuerySettings[S] = (s: QuerySettings[S]) => s)
+                                 (autoSpan: => Span = Span(0L, 0L))
+    extends scala.swing.Action(title) {
+
+    private[this] var settings = QuerySettings[S]()
+
+    def apply(): Unit = {
+      val setUpd          = prepare(settings)
+      val (_settings, ok) = query(view, setUpd, SpanSelection)
+      settings            = _settings
+      if (ok) _settings.file.foreach { f =>
+        val span = _settings.span.nonEmptyOption.getOrElse(autoSpan)
+        performGUI(view, _settings, group, f, span)
+      }
+    }
+  }
+
+  object FileFormat {
+    final case class PCM(tpe: AudioFileType = AudioFileType.AIFF, sampleFormat: SampleFormat = SampleFormat.Int24)
+      extends FileFormat
+
+    final case class MP3(kbps: Int = 256, vbr: Boolean = false, title: String = "", artist: String = "",
+                         comment: String = "")
+      extends FileFormat
+  }
+  sealed trait FileFormat
+
+  def mkNumChannels(channels: Vec[Range.Inclusive]): Int = channels.map(_.size).sum
 
   final case class QuerySettings[S <: Sys[S]](
-    file        : Option[File]          = None,
-    spec        : AudioFileSpec         = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
-    gain        : Gain                  = Gain.normalized(-0.2f),
-    span        : SpanOrVoid            = Span.Void,
-    channels    : Vec[Range.Inclusive]  = Vector(0 to 0 /* 1 */),
-    realtime    : Boolean               = false,
-    fineControl : Boolean               = false,
-    importFile  : Boolean               = false,
-    location    : Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None,
-    transform   : Option[stm.Source[S#Tx, Code.Obj[S]]] = None
+                                               file        : Option[File]          = None,
+                                               fileFormat  : FileFormat            = FileFormat.PCM(),
+                                               sampleRate  : Double                = 44100.0,
+                                               gain        : Gain                  = Gain.normalized(-0.2f),
+                                               span        : SpanOrVoid            = Span.Void,
+                                               channels    : Vec[Range.Inclusive]  = Vector(0 to 0 /* 1 */),
+                                               realtime    : Boolean               = false,
+                                               fineControl : Boolean               = false,
+                                               importFile  : Boolean               = false,
+                                               location    : Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   ) {
-    def prepare(group: stm.Source[S#Tx, Timeline[S]], f: File): PerformSettings[S] = {
+    def prepare(group: IIterable[stm.Source[S#Tx, Obj[S]]], f: File)(mkSpan: => Span): PerformSettings[S] = {
       val server        = Server.Config()
       Mellite.applyAudioPrefs(server, useDevice = realtime, pickPort = realtime)
       if (fineControl) server.blockSize = 1
+      val spec = fileFormat match {
+        case FileFormat.PCM(tpe, smp) =>
+          AudioFileSpec(tpe, smp,
+            numChannels = channels.size, sampleRate = sampleRate.toInt)
+        case _: FileFormat.MP3 =>
+          AudioFileSpec(AudioFileType.AIFF, SampleFormat.Float,
+            numChannels = mkNumChannels(channels), sampleRate = sampleRate.toInt)
+      }
       specToServerConfig(f, spec, server)
+      val span1: Span = span match {
+        case s: Span  => s
+        case _        => mkSpan
+      }
       PerformSettings(
-        realtime = realtime, group = group, server = server, gain = gain, span = span, channels = channels
+        realtime = realtime, group = group, server = server, gain = gain, span = span1, channels = channels
       )
     }
   }
 
   final case class PerformSettings[S <: Sys[S]](
-    realtime: Boolean,
-    group: stm.Source[S#Tx, Timeline[S]],
-    server: Server.Config,
-    gain: Gain = Gain.normalized(-0.2f),
-    span: SpanLike, channels: Vec[Range.Inclusive]
+    realtime  : Boolean,
+    group     : IIterable[stm.Source[S#Tx, Obj[S]]],
+    server    : Server.Config,
+    gain      : Gain = Gain.normalized(-0.2f),
+    span      : Span,
+    channels  : Vec[Range.Inclusive]
   )
 
   def specToServerConfig(file: File, spec: AudioFileSpec, config: Server.ConfigBuilder): Unit = {
@@ -121,24 +164,94 @@ object ActionBounceTimeline {
   case object DurationSelection extends Selection
   case object NoSelection       extends Selection
 
-  def query[S <: Sys[S]](init: QuerySettings[S], document: Workspace[S], timelineModel: TimelineModel,
-                         window: Option[Window])
-                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager) : (QuerySettings[S], Boolean) =
-    query1(init, document, timelineModel, window, showSelection = SpanSelection, showTransform = true, showImport = true)
+  private object FileType {
+    final case class PCM(peer: AudioFileType) extends FileType {
+      override def toString: String = peer.toString
 
-  def query1[S <: Sys[S]](init: QuerySettings[S], document: Workspace[S], timelineModel: TimelineModel,
-                         window: Option[Window], showSelection: Selection, showTransform: Boolean,
-                         showImport: Boolean)
-                        (implicit cursor: stm.Cursor[S], undoManager: UndoManager) : (QuerySettings[S], Boolean) = {
+      def extension: String = peer.extension
 
-    val ggFileType      = new ComboBox[AudioFileType](AudioFileType.writable)
-    ggFileType.selection.item = init.spec.fileType // AudioFileType.AIFF
-    val ggSampleFormat  = new ComboBox[SampleFormat](SampleFormat.fromInt16)
-    desktop.Util.fixWidth(ggSampleFormat)
-    // ggSampleFormat.items = fuck you scala no method here
-    ggSampleFormat.selection.item = init.spec.sampleFormat
-    val ggSampleRate    = new SpinnerComboBox(value0 = 44100.0, minimum = 1.0, maximum = TimeRef.SampleRate,
-      step = 100.0, items = Seq(44100.0, 48000.0, 88200.0, 96000.0))
+      def isPCM = true
+    }
+    final case object MP3 extends FileType {
+      override def toString: String = extension
+
+      def extension: String = "mp3"
+
+      def isPCM = false
+    }
+  }
+  private sealed trait FileType {
+    def extension: String
+
+    def isPCM: Boolean
+  }
+
+  private final case class KBPS(value: Int) {
+    override def toString = s"$value kbps"
+  }
+
+  private def mp3BitRates: Vec[KBPS] = Vector(
+    KBPS( 64), KBPS( 80), KBPS( 96), KBPS(112), KBPS(128),
+    KBPS(144), KBPS(160), KBPS(192), KBPS(224), KBPS(256), KBPS(320))
+
+  def query[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S],
+                         init: QuerySettings[S], selectionType: Selection): (QuerySettings[S], Boolean) = {
+
+    import view.{cursor, undoManager, workspace => document}
+    val window          = Window.find(view.component)
+
+    val sqFileType      = AudioFileType.writable.map(FileType.PCM) :+ FileType.MP3
+    val ggFileType      = new ComboBox[FileType](sqFileType)
+    ggFileType.selection.item = init.fileFormat match {
+      case f: FileFormat.PCM => FileType.PCM(f.tpe)
+      case _: FileFormat.MP3 => FileType.MP3
+    }
+
+    val ggPCMSampleFormat = new ComboBox[SampleFormat](SampleFormat.fromInt16)
+    desktop.Util.fixWidth(ggPCMSampleFormat)
+
+    val ggMP3BitRate  = new ComboBox[KBPS](mp3BitRates)
+    val ggMP3VBR      = new CheckBox("VBR")
+
+    val ggImport      = new CheckBox()
+
+    def fileFormatVisibility(pack: Boolean): Unit = {
+      import equal.Implicits._
+      val isMP3 = ggFileType.selection.item === FileType.MP3
+      val isPCM = !isMP3
+      if (!pack || ggPCMSampleFormat.visible != isPCM) {
+        ggPCMSampleFormat .visible = isPCM
+        ggMP3BitRate      .visible = isMP3
+        ggImport          .enabled = isPCM
+        if (!isPCM) ggImport.selected = false
+
+        if (pack) {
+          val w = SwingUtilities.getWindowAncestor(ggFileType.peer)
+          if (w != null) w.pack()
+        }
+      }
+    }
+
+    ggFileType.listenTo(ggFileType.selection)
+    ggFileType.reactions += {
+      case SelectionChanged(_) => fileFormatVisibility(pack = true)
+    }
+
+    fileFormatVisibility(pack = false)
+
+    init.fileFormat match {
+      case f: FileFormat.PCM =>
+        ggPCMSampleFormat .selection.item   = f.sampleFormat
+        ggMP3BitRate      .selection.item   = KBPS(256)
+
+      case f: FileFormat.MP3 =>
+        ggPCMSampleFormat .selection.item   = SampleFormat.Int24
+        ggMP3BitRate      .selection.index  = mp3BitRates.indexWhere(_.value >= f.kbps)
+        ggMP3VBR          .selected         = f.vbr
+    }
+
+    val ggSampleRate = new SpinnerComboBox(value0 = 44100, minimum = 1, maximum = TimeRef.SampleRate.toInt,
+      step = 100, items = Seq(44100, 48000, 88200, 96000))
 
     val ggPathText = new TextField(32)
 
@@ -156,7 +269,7 @@ object ActionBounceTimeline {
     val ggPathDialog    = Button("...") {
       val initT = ggPathText.text
       val init  = if (initT.isEmpty) None else Some(new File(initT))
-      val dlg   = FileDialog.save(init = init, title = "Bounce Audio Output File")
+      val dlg   = FileDialog.save(init = init, title = "Audio Output File")
       dlg.show(window).foreach(setPathText)
     }
     ggPathDialog.peer.putClientProperty("JButton.buttonType", "gradient")
@@ -177,13 +290,14 @@ object ActionBounceTimeline {
     }
 
     val ggSpanAll   = new RadioButton("Automatic")
-    val tlSel       = init.span match {
-      case sp: Span => sp
-      case _        => timelineModel.selection
-    }
+    val tlSel       = init.span
+//    match {
+//      case sp: Span => sp
+//      case _        => timelineModel.selection
+//    }
     val selectionText = tlSel match {
       case Span(start, stop)  =>
-        val sampleRate  = timelineModel.sampleRate
+        val sampleRate  = TimeRef.SampleRate // timelineModel.sampleRate
         val fmt         = AxisFormat.Time()
         s"(${fmt.format(start/sampleRate)} ... ${fmt.format(stop/sampleRate)})"
       case _ =>
@@ -194,48 +308,48 @@ object ActionBounceTimeline {
 
     lazy val mDuration   = new SpinnerNumberModel(tlSel.length / TimeRef.SampleRate, 0.0, 10000.0, 0.1)
 
-    var transformItemsCollected = false
+//    var transformItemsCollected = false
 
     val ggRealtime = new CheckBox()
     ggRealtime.selected = init.realtime
     val ggFineControl = new CheckBox()
     ggFineControl.selected = init.fineControl
 
-    def updateTransformEnabled(): Unit = {
-      val enabled = ggImport.selected
-      checkTransform.enabled = enabled
-      ggTransform   .enabled = enabled && checkTransform.selected
-      if (ggTransform.enabled && !transformItemsCollected) {
-        val transform = cursor.step { implicit tx =>
-          findTransforms(document)
-        }
-        transformItemsCollected =  true
-        ggTransform.items = transform
-        import equal.Implicits._
-        for (t <- init.transform; lb <- transform.find(_.value === t)) {
-          ggTransform.selection.item = lb
-        }
-      }
-    }
+//    def updateTransformEnabled(): Unit = {
+//      val enabled = ggImport.selected
+//      checkTransform.enabled = enabled
+//      ggTransform   .enabled = enabled && checkTransform.selected
+//      if (ggTransform.enabled && !transformItemsCollected) {
+//        val transform = cursor.step { implicit tx =>
+//          findTransforms(document)
+//        }
+//        transformItemsCollected =  true
+//        ggTransform.items = transform
+//        import equal.Implicits._
+//        for (t <- init.transform; lb <- transform.find(_.value === t)) {
+//          ggTransform.selection.item = lb
+//        }
+//      }
+//    }
 
-    lazy val ggImport  = new CheckBox() {
-      listenTo(this)
-      reactions += {
-        case ButtonClicked(_) => updateTransformEnabled()
-      }
-    }
-    if (showTransform) updateTransformEnabled()
+//    {
+//      listenTo(this)
+//      reactions += {
+//        case ButtonClicked(_) => updateTransformEnabled()
+//      }
+//    }
+//    if (showTransform) updateTransformEnabled()
 
-    lazy val checkTransform = new CheckBox() {
-      listenTo(this)
-      reactions += {
-        case ButtonClicked(_) => updateTransformEnabled()
-      }
-    }
-    lazy val ggTransform = new ComboBox[Labeled[stm.Source[S#Tx, Code.Obj[S]]]](Nil) // lazy filling
-    val pTransform  = new BoxPanel(Orientation.Horizontal) {
-      contents ++= Seq(checkTransform, HStrut(4), ggTransform)
-    }
+//    lazy val checkTransform = new CheckBox() {
+//      listenTo(this)
+//      reactions += {
+//        case ButtonClicked(_) => updateTransformEnabled()
+//      }
+//    }
+//    lazy val ggTransform = new ComboBox[Labeled[stm.Source[S#Tx, Code.Obj[S]]]](Nil) // lazy filling
+//    val pTransform  = new BoxPanel(Orientation.Horizontal) {
+//      contents ++= Seq(checkTransform, HStrut(4), ggTransform)
+//    }
 
     // cf. stackoverflow #4310439 - with added spaces after comma
     // val regRanges = """^(\d+(-\d+)?)(,\s*(\d+(-\d+)?))*$""".r
@@ -286,17 +400,18 @@ object ActionBounceTimeline {
     import Alignment.Trailing
     import Swing.EmptyIcon
     val pPath     = new FlowPanel(ggPathText, ggPathDialog)
-    val pFormat   = new FlowPanel(ggFileType, ggSampleFormat, ggSampleRate, ggGainAmt, new Label("dB"), ggGainType)
+    val pFormat   = new FlowPanel(ggFileType, ggPCMSampleFormat, ggMP3BitRate, ggMP3VBR, ggSampleRate, ggGainAmt,
+      new Label("dB"), ggGainType)
     val pSpan     = new GridPanel(0, 2)
     pSpan.hGap    = 4
     pSpan.contents ++= Seq(new Label("Channels:", EmptyIcon, Trailing), ggChannels)
     import equal.Implicits._
-    if (showSelection === SpanSelection) {
+    if (selectionType === SpanSelection) {
       ggSpanGroup.select(if (init.span.isEmpty) ggSpanAll else ggSpanUser)
       ggSpanUser.enabled   = tlSel.nonEmpty
-      pSpan.contents ++= Seq(new Label("Timeline Span:", EmptyIcon, Trailing), ggSpanAll,
+      pSpan.contents ++= Seq(new Label("Time Span:", EmptyIcon, Trailing), ggSpanAll,
                              HStrut(1),                                        ggSpanUser)
-    } else if (showSelection === DurationSelection) {
+    } else if (selectionType === DurationSelection) {
       val ggDuration = new Spinner(mDuration)
       pSpan.contents ++= Seq(new Label("Duration [sec]:", EmptyIcon, Trailing), ggDuration)
     }
@@ -305,20 +420,20 @@ object ActionBounceTimeline {
       new Label("Run in Real-Time:" , EmptyIcon, Trailing), ggRealtime,
       new Label("Fine Control Rate:", EmptyIcon, Trailing), ggFineControl
     )
-    if (showImport) {
+//    if (showImport) {
       ggImport.selected = init.importFile
       pSpan.contents ++= Seq(new Label("Import Output File Into Workspace:", EmptyIcon, Trailing), ggImport)
-    }
-    if (showTransform) {
-      pSpan.contents ++= Seq(new Label("Apply Transformation:", EmptyIcon, Trailing), pTransform)
-    }
+//    }
+
+//    if (showTransform) {
+//      pSpan.contents ++= Seq(new Label("Apply Transformation:", EmptyIcon, Trailing), pTransform)
+//    }
     val box       = new BoxPanel(Orientation.Vertical) {
       contents ++= Seq(pPath, pFormat, pSpan)
     }
 
     val opt = OptionPane.confirmation(message = box, optionType = OptionPane.Options.OkCancel,
       messageType = OptionPane.Message.Plain)
-    val title = "Bounce to Disk"
     opt.title = title
     val ok    = opt.show(window) === OptionPane.Result.Ok
     val file  = if (ggPathText.text === "") None else Some(new File(ggPathText.text))
@@ -329,31 +444,41 @@ object ActionBounceTimeline {
       case _: ParseException => init.channels
     }
 
-    val importFile  = if (showImport) ggImport.selected else init.importFile
-    val numChannels = channels.map(_.size).sum
+    val importFile  = /* if (showImport) */ ggImport.selected // else init.importFile
+//    val numChannels = mkNumChannels(channels)
 
-    val spanOut = showSelection match {
+    val spanOut = selectionType match {
       case SpanSelection      => if (ggSpanUser.selected) tlSel else Span.Void
       case DurationSelection  => Span(0L, (mDuration.getNumber.doubleValue() * TimeRef.SampleRate + 0.5).toLong)
       case NoSelection        => init.span
+    }
+
+    val sampleRate: Int = ggSampleRate.value
+    val fileFormat: FileFormat = ggFileType.selection.item match {
+      case FileType.PCM(tpe) =>
+        FileFormat.PCM(tpe, ggPCMSampleFormat.selection.item)
+      case FileType.MP3 =>
+        FileFormat.MP3(kbps = ggMP3BitRate.selection.item.value,
+          vbr = ???, title = ???, artist = ???, comment = ???)
     }
 
     var settings = QuerySettings(
       realtime    = ggRealtime   .selected,
       fineControl = ggFineControl.selected,
       file        = file,
-      spec        = AudioFileSpec(ggFileType.selection.item, ggSampleFormat.selection.item,
-        numChannels = numChannels, sampleRate = ggSampleRate.value),
+      fileFormat  = fileFormat,
+      sampleRate  = sampleRate,
       gain        = Gain(gainModel.getNumber.floatValue(), if (ggGainType.selection.index == 0) true else false),
       span        = spanOut,
       channels    = channels,
       importFile  = importFile,
-      location    = init.location,
-      transform   = if (checkTransform.selected) Option(ggTransform.selection.item).map(_.value) else None
+      location    = init.location
+//      transform   = if (checkTransform.selected) Option(ggTransform.selection.item).map(_.value) else None
     )
 
     file match {
       case Some(f) if importFile =>
+
         init.location match {
           case Some(source) if cursor.step { implicit tx =>
               val parent = source().directory
@@ -396,7 +521,7 @@ object ActionBounceTimeline {
         (settings, ok1)
 
       case None if ok =>
-        query(settings, document, timelineModel, window)
+        query(view, settings, selectionType)
       case _ =>
         (settings, ok)
     }
@@ -410,41 +535,48 @@ object ActionBounceTimeline {
   //    importFile: Boolean = true, location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   //  )
 
-  def performGUI[S <: Sys[S]](document: Workspace[S],
+  def performGUI[S <: Sys[S]](view: ViewHasWorkspace[S],
                               settings: QuerySettings[S],
-                              group: stm.Source[S#Tx, Timeline[S]], file: File,
-                              window: Option[Window] = None)
-                             (implicit cursor: stm.Cursor[S], compiler: Code.Compiler): Unit = {
+                              group: IIterable[stm.Source[S#Tx, Obj[S]]], file: File, span: Span): Unit = {
 
-    val hasTransform= settings.importFile && settings.transform.isDefined
-    val bounceFile  = if (hasTransform) {
-      File.createTempFile("bounce", s".${settings.spec.fileType.extension}")
-    } else {
-      file
-    }
-    val pSet        = settings.prepare(group, bounceFile)
-    var process: ProcessorLike[Any, Any] = perform(document, pSet)
+    import view.{cursor, workspace => document}
+    val window = Window.find(view.component)
+
+//    val hasTransform= settings.importFile && settings.transform.isDefined
+    val bounceFile  =
+//      if (hasTransform) {
+//        File.createTempFile("bounce", s".${settings.spec.fileType.extension}")
+//      } else {
+        file
+//      }
+
+    val pSet        = settings.prepare(group, bounceFile)(span)
+    val process: ProcessorLike[Any, Any] = perform(document, pSet)
 
     var processCompleted = false
 
     val ggProgress  = new ProgressBar()
-    lazy val ggCancel = Button("Abort") {
-      process.abort()
-      // currently process doesn't seem to abort under certain errors
-      // (e.g. buffer allocator exhausted). XXX TODO
-      val run = new Runnable { def run(): Unit = { Thread.sleep(1000); defer(fDispose()) }}
-      new Thread(run).start()
-    }
+    val ggCancel = new Button("Abort")
     ggCancel.focusable = false
-    lazy val op     = OptionPane(message = ggProgress, messageType = OptionPane.Message.Plain, entries = Seq(ggCancel))
-    lazy val title  = s"Bouncing to ${file.name} ..."
-    op.title  = title
+    lazy val op = OptionPane(message = ggProgress, messageType = OptionPane.Message.Plain, entries = Seq(ggCancel))
+    val title   = s"Exporting to ${file.name} ..."
+    op.title    = title
+
+    ggCancel.listenTo(ggCancel)
+    ggCancel.reactions += {
+      case ButtonClicked(_) =>
+        process.abort()
+        // currently process doesn't seem to abort under certain errors
+        // (e.g. buffer allocator exhausted). XXX TODO
+        val run = new Runnable { def run(): Unit = { Thread.sleep(1000); defer(fDispose()) }}
+        new Thread(run).start()
+    }
 
     def fDispose(): Unit = {
       val w = SwingUtilities.getWindowAncestor(op.peer); if (w != null) w.dispose()
       processCompleted = true
     }
-    val progDiv = if (hasTransform) 2 else 1
+    val progDiv = /* if (hasTransform) 2 else */ 1
     process.addListener {
       case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt / progDiv)
     }
@@ -460,39 +592,39 @@ object ActionBounceTimeline {
     }
 
     def bounceDone(): Unit = {
-      if (DEBUG) println(s"bounceDone(). hasTransform? $hasTransform")
-      if (hasTransform) {
-        val ftOpt = cursor.step { implicit tx =>
-          settings.transform.flatMap(_.apply().value match {
-            case ft: Code.FileTransform => Some(ft)
-            case _ => None
-          })
-        }
-        if (DEBUG) println(s"file transform option = ${ftOpt.isDefined}")
-        ftOpt match {
-          case Some(ft) =>
-            ft.execute((bounceFile, file, { codeProc =>
-              if (DEBUG) println("code code processor")
-              process = codeProc
-              codeProc.addListener {
-                case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt / progDiv + 50)
-              }
-              codeProc.onComplete {
-                case Success(_)   => allDone()
-                case Failure(ex)  => onFailure(ex)
-              }
-//              codeProc.onSuccess { case _ => allDone() }
-//              codeProc.onFailure(onFailure)
-            }))
-          case _ =>
-            println("WARNING: Code does not denote a file transform")
-            defer(fDispose())
-            Desktop.revealFile(file)
-        }
-
-      } else {
+      if (DEBUG) println("bounceDone()")
+//      if (hasTransform) {
+//        val ftOpt = cursor.step { implicit tx =>
+//          settings.transform.flatMap(_.apply().value match {
+//            case ft: Code.FileTransform => Some(ft)
+//            case _ => None
+//          })
+//        }
+//        if (DEBUG) println(s"file transform option = ${ftOpt.isDefined}")
+//        ftOpt match {
+//          case Some(ft) =>
+//            ft.execute((bounceFile, file, { codeProc =>
+//              if (DEBUG) println("code code processor")
+//              process = codeProc
+//              codeProc.addListener {
+//                case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt / progDiv + 50)
+//              }
+//              codeProc.onComplete {
+//                case Success(_)   => allDone()
+//                case Failure(ex)  => onFailure(ex)
+//              }
+////              codeProc.onSuccess { case _ => allDone() }
+////              codeProc.onFailure(onFailure)
+//            }))
+//          case _ =>
+//            println("WARNING: Code does not denote a file transform")
+//            defer(fDispose())
+//            Desktop.revealFile(file)
+//        }
+//
+//      } else {
         allDone()
-      }
+//      }
     }
 
     def allDone(): Unit = {
@@ -553,22 +685,23 @@ object ActionBounceTimeline {
     val needsTemp     = realtime || normalized
     val numChannels   = settings.server.outputBusChannels
 
-    val span = settings.span match {
-      case sp: Span => sp
-      case _ =>
-        cursor.step { implicit tx =>
-          val tl = settings.group()
-          val start = settings.span match {
-            case hs: Span.HasStart => hs.start
-            case _ => tl.firstEvent.getOrElse(0L)
-          }
-          val stop = settings.span match {
-            case hs: Span.HasStop => hs.stop
-            case _ => tl.lastEvent.getOrElse(start)
-          }
-          Span(start, stop)
-        }
-    }
+    val span: Span = settings.span
+//    match {
+//      case sp: Span => sp
+//      case _ =>
+//        cursor.step { implicit tx =>
+//          val tl = settings.group()
+//          val start = settings.span match {
+//            case hs: Span.HasStart => hs.start
+//            case _ => ... //  tl.firstEvent.getOrElse(0L)
+//          }
+//          val stop = settings.span match {
+//            case hs: Span.HasStop => hs.stop
+//            case _ => ... // tl.lastEvent.getOrElse(start)
+//          }
+//          Span(start, stop)
+//        }
+//    }
 
     val fileOut       = file(settings.server.nrtOutputPath)
     val fileType      = settings.server.nrtHeaderFormat
@@ -590,7 +723,7 @@ object ActionBounceTimeline {
 
     val bounce    = Bounce[S, document.I]
     val bnc       = Bounce.Config[S]
-    bnc.group     = settings1.group :: Nil
+    bnc.group     = settings1.group
     bnc.realtime  = realtime
     bnc.server.read(settings1.server)
 
@@ -671,7 +804,7 @@ object ActionBounceTimeline {
 //        if (rem >= afIn.numFrames)
 //          throw new EOFException(s"Bounced file is too short (${afIn.numFrames} -- expected at least $rem)")
         if (afIn.numFrames == 0)
-          throw new EOFException("Bounced file is empty")
+          throw new EOFException("Exported file is empty")
 
         val mul = if (!gain.normalized) gain.linear else {
           var max = 0f

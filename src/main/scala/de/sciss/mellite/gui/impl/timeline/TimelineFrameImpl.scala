@@ -51,7 +51,6 @@ object TimelineFrameImpl {
       val me = Some(window)
 
       bindMenus(
-        "file.bounce"             -> view.actionBounce,
         "edit.delete"             -> view.actionDelete,
         "actions.stop-all-sound"  -> view.actionStopAllSound,
         // "timeline.splitObjects" -> view.splitObjectsAction,

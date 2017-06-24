@@ -218,6 +218,8 @@ object NuagesEditorViewImpl {
 
     def dispose()(implicit tx: S#Tx): Unit = folderView.dispose()
 
+    lazy val actionBounce: Action = new ActionBounceTimeline.Action(this, nuagesH :: Nil)()()
+
     private def openLive()(implicit tx: S#Tx): Option[Window[S]] = {
       import Mellite.auralSystem
       val n     = nuagesH()

@@ -62,6 +62,11 @@ object WindowImpl {
 
     bindMenu("file.close", Action(null)(impl.handleClose()))
 
+    view match {
+      case c: CanBounce => bindMenu("file.bounce", c.actionBounce)
+      case _ =>
+    }
+
     undoRedoActions.foreach { case (undo, redo) =>
       bindMenus(
         "edit.undo" -> undo,
@@ -131,6 +136,7 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
     val (ph, pv, pp) = placement
     desktop.Util.placeWindow(f, ph, pv, pp)
     f.front()
+
     initGUI()
   }
 

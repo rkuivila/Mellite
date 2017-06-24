@@ -66,6 +66,6 @@ object NuagesEditorView {
     */
   final val attrLineOutputs = "line-outputs"
 }
-trait NuagesEditorView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] {
+trait NuagesEditorView[S <: Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] with CanBounce {
   def actionDuplicate: Action
 }

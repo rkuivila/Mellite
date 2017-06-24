@@ -25,7 +25,7 @@ import de.sciss.swingplus.Separator
 import de.sciss.synth.proc.{Ensemble, Transport, Workspace}
 
 import scala.swing.Swing._
-import scala.swing.{BoxPanel, Component, Label, Orientation}
+import scala.swing.{Action, BoxPanel, Component, Label, Orientation}
 
 object EnsembleViewImpl {
   def apply[S <: Sys[S]](ensObj: Ensemble[S])(implicit tx: S#Tx, workspace: Workspace[S],
@@ -78,5 +78,7 @@ object EnsembleViewImpl {
       view      .dispose()
       playing   .dispose()
     }
+
+    lazy val actionBounce: Action = new ActionBounceTimeline.Action(this, ensembleH :: Nil)()()
   }
 }

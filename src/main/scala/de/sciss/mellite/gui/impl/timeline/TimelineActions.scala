@@ -11,7 +11,9 @@
  *  contact@sciss.de
  */
 
-package de.sciss.mellite.gui.impl.timeline
+package de.sciss.mellite
+package gui
+package impl.timeline
 
 import javax.swing.undo.UndoableEdit
 
@@ -23,8 +25,6 @@ import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.edit.{EditAttrMap, EditTimelineInsertObj, Edits}
 import de.sciss.mellite.gui.impl.ProcGUIActions
-import de.sciss.mellite.gui.{ActionBounceTimeline, TimelineObjView, TimelineView}
-import de.sciss.mellite.{Mellite, ProcActions}
 import de.sciss.span.{Span, SpanLike}
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{ObjKeys, TimeRef, Timeline}
@@ -34,7 +34,7 @@ import scala.swing.event.Key
 
 /** Implements the actions defined for the timeline-view. */
 trait TimelineActions[S <: Sys[S]] {
-  _: TimelineView[S] =>
+  view: TimelineView[S] =>
 
   object actionStopAllSound extends Action("StopAllSound") {
     def apply(): Unit =
@@ -44,24 +44,14 @@ trait TimelineActions[S <: Sys[S]] {
       }
   }
 
-  object actionBounce extends Action("Bounce") {
-    private var settings = ActionBounceTimeline.QuerySettings[S]()
-
-    def apply(): Unit = {
-      import ActionBounceTimeline._
-      val window  = Window.find(component)
-      val setUpd  = settings.copy(span = timelineModel.selection)
-      implicit val undo = undoManager
-      val (_settings, ok) = query(setUpd, workspace, timelineModel, window = window)
-      settings = _settings
-      _settings.file match {
-        case Some(file) if ok =>
-          import Mellite.compiler
-          performGUI(workspace, _settings, timelineH, file, window = window)
-        case _ =>
-      }
-    }
-  }
+  lazy val actionBounce: Action = new ActionBounceTimeline.Action(this, timelineH :: Nil)({ set0 =>
+    if (timelineModel.selection.isEmpty) set0 else set0.copy(span = timelineModel.selection)
+  })(cursor.step { implicit tx =>
+    val tl = timeline
+    val start = tl.firstEvent.getOrElse(0L)
+    val stop = tl.lastEvent.getOrElse(start)
+    Span(start, stop)
+  })
 
   object actionDelete extends Action("Delete") {
     def apply(): Unit = {
@@ -149,13 +139,13 @@ trait TimelineActions[S <: Sys[S]] {
       val pos = timelineModel.position
       val edits = withSelection { implicit tx => views =>
         val tl    = timeline
-        val list  = views.flatMap { view =>
-          val span = view.span
+        val list  = views.flatMap { _view =>
+          val span = _view.span
           span.value match {
             case hs: Span.HasStart if hs.start != pos =>
               val delta   = pos - hs.start
               val amount  = ProcActions.Move(deltaTime = delta, deltaTrack = 0, copy = false)
-              Edits.moveOrCopy(span, view.obj, tl, amount = amount, minStart = 0L)
+              Edits.moveOrCopy(span, _view.obj, tl, amount = amount, minStart = 0L)
             case _ => None
           }
         }
@@ -184,9 +174,9 @@ trait TimelineActions[S <: Sys[S]] {
 
     private def dropTrack(span: Span): Int = {
       val spc = 1     // extra vertical spacing
-      val pos = (0 /: canvas.intersect(span).toList.sortBy(_.trackIndex)) { (pos0, view) =>
-        val y1 = view.trackIndex - spc
-        val y2 = view.trackIndex + view.trackHeight + spc
+      val pos = (0 /: canvas.intersect(span).toList.sortBy(_.trackIndex)) { (pos0, _view) =>
+        val y1 = _view.trackIndex - spc
+        val y2 = _view.trackIndex + _view.trackHeight + spc
         if (y1 >= (pos0 + trackHeight) || y2 <= pos0) pos0 else y2
       }
       pos

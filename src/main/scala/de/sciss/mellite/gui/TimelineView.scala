@@ -38,7 +38,7 @@ object TimelineView {
 
   final val DefaultTrackHeight = 8
 }
-trait TimelineView[S <: stm.Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] {
+trait TimelineView[S <: stm.Sys[S]] extends ViewHasWorkspace[S] with View.Editable[S] with CanBounce {
   def timelineModel   : TimelineModel
   def selectionModel  : TimelineObjView.SelectionModel[S]
 
@@ -51,7 +51,6 @@ trait TimelineView[S <: stm.Sys[S]] extends ViewHasWorkspace[S] with View.Editab
   def transportView : TransportView  [S]
 
   // ---- GUI actions ----
-  def actionBounce              : Action
   def actionDelete              : Action
   def actionSplitObjects        : Action
   def actionStopAllSound        : Action
