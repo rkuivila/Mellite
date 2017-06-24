@@ -44,14 +44,19 @@ trait TimelineActions[S <: Sys[S]] {
       }
   }
 
-  lazy val actionBounce: Action = new ActionBounceTimeline.Action(this, timelineH :: Nil)({ set0 =>
-    if (timelineModel.selection.isEmpty) set0 else set0.copy(span = timelineModel.selection)
-  })(cursor.step { implicit tx =>
-    val tl = timeline
-    val start = tl.firstEvent.getOrElse(0L)
-    val stop = tl.lastEvent.getOrElse(start)
-    Span(start, stop)
-  })
+  object actionBounce extends ActionBounceTimeline.Action(this, timelineH) {
+    import ActionBounceTimeline._
+
+    override protected def prepare(set0: QuerySettings[S]): QuerySettings[S] =
+      if (timelineModel.selection.isEmpty) set0 else set0.copy(span = timelineModel.selection)
+
+    override protected def spanPresets(): Presets = {
+      val all = cursor.step { implicit tx =>
+        presetAllTimeline(timeline)
+      }
+      all ::: timelineModel.selection.nonEmptyOption.map("Selection" -> _).toList
+    }
+  }
 
   object actionDelete extends Action("Delete") {
     def apply(): Unit = {

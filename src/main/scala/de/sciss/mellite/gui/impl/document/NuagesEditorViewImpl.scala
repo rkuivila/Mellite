@@ -218,7 +218,22 @@ object NuagesEditorViewImpl {
 
     def dispose()(implicit tx: S#Tx): Unit = folderView.dispose()
 
-    lazy val actionBounce: Action = new ActionBounceTimeline.Action(this, nuagesH :: Nil)()()
+    object actionBounce extends ActionBounceTimeline.Action(this, nuagesH) {
+      import ActionBounceTimeline._
+
+      override protected def spanPresets(): Presets = {
+        cursor.step { implicit tx =>
+          nuagesH().surface match {
+            case Nuages.Surface.Timeline(tl) =>
+              cursor.step { implicit tx =>
+                presetAllTimeline(tl)
+              }
+
+            case Nuages.Surface.Folder(_) => Nil
+          }
+        }
+      }
+    }
 
     private def openLive()(implicit tx: S#Tx): Option[Window[S]] = {
       import Mellite.auralSystem

@@ -207,7 +207,8 @@ object FScapeObjView extends ListObjView.Factory {
 
     implicit val undo = new UndoManagerImpl
     val rightView = FScapeOutputsView[S](obj)
-    make(obj, codeObj, code0, Some(handler), bottom = bottom, rightViewOpt = Some(rightView))
+    make(obj, objH, codeObj, code0, Some(handler), bottom = bottom, rightViewOpt = Some(rightView),
+      canBounce = false)  // XXX TODO --- perhaps a standard bounce option would be useful
   }
 }
 trait FScapeObjView[S <: stm.Sys[S]] extends ObjView[S] {

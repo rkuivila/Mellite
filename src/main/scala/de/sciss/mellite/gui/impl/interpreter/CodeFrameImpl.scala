@@ -73,7 +73,8 @@ object CodeFrameImpl {
     val rightView = ProcOutputsView [S](obj)
     val viewPower = PlayToggleButton[S](obj)
 
-    make(obj, codeObj, code0, Some(handler), bottom = viewPower :: Nil, rightViewOpt = Some(rightView))
+    make(obj, objH, codeObj, code0, Some(handler), bottom = viewPower :: Nil, rightViewOpt = Some(rightView),
+      canBounce = true)
   }
 
   // ---- adapter for editing a Action's source ----
@@ -129,52 +130,69 @@ object CodeFrameImpl {
     val bottom = viewExecute :: Nil
 
     implicit val undo = new UndoManagerImpl
-    make(obj, codeObj, code0, handlerOpt, bottom = bottom, rightViewOpt = None)
+    make(obj, objH, codeObj, code0, handlerOpt, bottom = bottom, rightViewOpt = None, canBounce = false)
   }
 
   // ---- general constructor ----
 
-  def apply[S <: Sys[S]](obj: Code.Obj[S], bottom: ISeq[View[S]])
+  def apply[S <: Sys[S]](obj: Code.Obj[S], bottom: ISeq[View[S]], canBounce: Boolean = false)
                         (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                          compiler: Code.Compiler): CodeFrame[S] = {
     val _codeEx = obj
     val _code   = _codeEx.value
     implicit val undo = new UndoManagerImpl
-    make[S, _code.In, _code.Out](obj, obj, _code, None, bottom = bottom, rightViewOpt = None)
+    val objH    = tx.newHandle(obj)
+    make[S, _code.In, _code.Out](obj, objH, obj, _code, None, bottom = bottom, rightViewOpt = None,
+      canBounce = canBounce)
   }
-  
-  def make[S <: Sys[S], In0, Out0](pObj: Obj[S], obj: Code.Obj[S], code0: Code { type In = In0; type Out = Out0 },
-                                handler: Option[CodeView.Handler[S, In0, Out0]], bottom: ISeq[View[S]],
-                                rightViewOpt: Option[View[S]])
-                               (implicit tx: S#Tx, ws: Workspace[S], csr: stm.Cursor[S],
-                                undoMgr: UndoManager, compiler: Code.Compiler): CodeFrame[S] = {
+
+  private class PlainView[S <: Sys[S]](codeView: View[S], rightViewOpt: Option[View[S]])
+                                      (implicit val workspace: Workspace[S], val cursor: stm.Cursor[S],
+                                       val undoManager: UndoManager)
+    extends View.Editable[S] with ViewHasWorkspace[S] {
+
+    lazy val component: Component = rightViewOpt.fold(codeView.component) { rightView =>
+      val res = new SplitPane(Orientation.Vertical, codeView.component, rightView.component)
+      res.oneTouchExpandable  = true
+      res.resizeWeight        = 1.0
+      // cf. https://stackoverflow.com/questions/4934499
+      res.peer.addAncestorListener(new AncestorListener {
+        def ancestorAdded  (e: AncestorEvent): Unit = res.dividerLocation = 1.0
+        def ancestorRemoved(e: AncestorEvent): Unit = ()
+        def ancestorMoved  (e: AncestorEvent): Unit = ()
+      })
+      res
+    }
+
+    def dispose()(implicit tx: S#Tx): Unit = {
+      codeView               .dispose()
+      rightViewOpt.foreach(_.dispose())
+    }
+  }
+
+  private final class CanBounceView[S <: Sys[S]](objH: stm.Source[S#Tx, Obj[S]], codeView: View[S],
+                                                 rightViewOpt: Option[View[S]])
+                                                (implicit workspace: Workspace[S], cursor: stm.Cursor[S],
+                                                 undoManager: UndoManager)
+    extends PlainView[S](codeView, rightViewOpt) with CanBounce {
+
+    object actionBounce extends ActionBounceTimeline.Action[S](this, objH)
+  }
+
+  def make[S <: Sys[S], In0, Out0](pObj: Obj[S], pObjH: stm.Source[S#Tx, Obj[S]], obj: Code.Obj[S],
+                                   code0: Code { type In = In0; type Out = Out0 },
+                                   handler: Option[CodeView.Handler[S, In0, Out0]], bottom: ISeq[View[S]],
+                                   rightViewOpt: Option[View[S]], canBounce: Boolean)
+                                  (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
+                                   undoManager: UndoManager, compiler: Code.Compiler): CodeFrame[S] = {
     // val _name   = /* title getOrElse */ obj.attr.name
     val codeView  = CodeView(obj, code0, bottom = bottom)(handler)
-    val view      = rightViewOpt.fold[View[S]](codeView) { bottomView =>
-      new View.Editable[S] with ViewHasWorkspace[S] {
-        val undoManager: UndoManager  = undoMgr
-        val cursor: stm.Cursor[S]     = csr
-        val workspace: Workspace[S]   = ws
 
-        lazy val component: Component = {
-          val res = new SplitPane(Orientation.Vertical, codeView.component, bottomView.component)
-          res.oneTouchExpandable  = true
-          res.resizeWeight        = 1.0
-          // cf. https://stackoverflow.com/questions/4934499
-          res.peer.addAncestorListener(new AncestorListener {
-            def ancestorAdded  (e: AncestorEvent): Unit = res.dividerLocation = 1.0
-            def ancestorRemoved(e: AncestorEvent): Unit = ()
-            def ancestorMoved  (e: AncestorEvent): Unit = ()
-          })
-          res
-        }
+    val view      = if (canBounce)
+      new CanBounceView(pObjH, codeView, rightViewOpt)
+    else
+      new PlainView(codeView, rightViewOpt)
 
-        def dispose()(implicit tx: S#Tx): Unit = {
-          codeView  .dispose()
-          bottomView.dispose()
-        }
-      }
-    }
     val _name = AttrCellView.name(pObj)
     val res = new FrameImpl(codeView = codeView, view = view, name = _name, contextName = code0.contextName)
     res.init()

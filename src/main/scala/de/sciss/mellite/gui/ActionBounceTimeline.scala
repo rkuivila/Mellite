@@ -35,7 +35,7 @@ import de.sciss.span.Span.SpanOrVoid
 import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{AudioCue, Bounce, Code, Folder, TimeRef, Workspace}
+import de.sciss.synth.proc.{AudioCue, Bounce, Code, Folder, TimeRef, Timeline, Workspace}
 import de.sciss.synth.{SynthGraph, addToTail}
 import de.sciss.{desktop, equal, numbers, synth}
 
@@ -52,21 +52,40 @@ object ActionBounceTimeline {
 
   final val title = "Export as Audio File"
 
-  final class Action[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S],
-                                  group: IIterable[stm.Source[S#Tx, Obj[S]]])
-                                 (prepare: QuerySettings[S] => QuerySettings[S] = (s: QuerySettings[S]) => s)
-                                 (autoSpan: => Span = Span(0L, 0L))
+  type Presets = List[(String, Span)]
+
+  def presetAllTimeline[S <: Sys[S]](tl: Timeline[S])(implicit tx: S#Tx): Presets = {
+    val opt = for {
+      start <- tl.firstEvent
+      stop  <- tl.lastEvent
+    } yield {
+      "All" -> Span(start, stop)
+    }
+    opt.toList
+  }
+
+  class Action[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S], objH: stm.Source[S#Tx, Obj[S]])
     extends scala.swing.Action(title) {
 
     private[this] var settings = QuerySettings[S]()
 
-    def apply(): Unit = {
+    protected def prepare(settings: QuerySettings[S]): QuerySettings[S] = settings
+
+    protected type Presets = ActionBounceTimeline.Presets
+
+    protected def spanPresets(): Presets = Nil
+
+    final def apply(): Unit = {
       val setUpd          = prepare(settings)
-      val (_settings, ok) = query(view, setUpd, SpanSelection)
+      val presets         = spanPresets()
+      val (_settings, ok) = query(view, setUpd, SpanSelection, presets)
       settings            = _settings
-      if (ok) _settings.file.foreach { f =>
-        val span = _settings.span.nonEmptyOption.getOrElse(autoSpan)
-        performGUI(view, _settings, group, f, span)
+      if (ok) {
+        for {
+          f    <- _settings.file
+          span <- _settings.span.nonEmptyOption
+        }
+          performGUI(view, _settings, objH :: Nil, f, span)
       }
     }
   }
@@ -89,12 +108,14 @@ object ActionBounceTimeline {
                                                sampleRate  : Double                = 44100.0,
                                                gain        : Gain                  = Gain.normalized(-0.2f),
                                                span        : SpanOrVoid            = Span.Void,
-                                               channels    : Vec[Range.Inclusive]  = Vector(0 to 0 /* 1 */),
+                                               channels    : Vec[Range.Inclusive]  = Vector(0 to 1),
                                                realtime    : Boolean               = false,
                                                fineControl : Boolean               = false,
                                                importFile  : Boolean               = false,
                                                location    : Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   ) {
+    def forceSpan: Span = span.nonEmptyOption.getOrElse(Span(0L, (10 * TimeRef.SampleRate).toLong))
+
     def prepare(group: IIterable[stm.Source[S#Tx, Obj[S]]], f: File)(mkSpan: => Span): PerformSettings[S] = {
       val server        = Server.Config()
       Mellite.applyAudioPrefs(server, useDevice = realtime, pickPort = realtime)
@@ -195,7 +216,8 @@ object ActionBounceTimeline {
     KBPS(144), KBPS(160), KBPS(192), KBPS(224), KBPS(256), KBPS(320))
 
   def query[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S],
-                         init: QuerySettings[S], selectionType: Selection): (QuerySettings[S], Boolean) = {
+                         init: QuerySettings[S], selectionType: Selection,
+                         spanPresets: IIterable[(String, Span)]): (QuerySettings[S], Boolean) = {
 
     import view.{cursor, undoManager, workspace => document}
     val window          = Window.find(view.component)
@@ -521,7 +543,7 @@ object ActionBounceTimeline {
         (settings, ok1)
 
       case None if ok =>
-        query(view, settings, selectionType)
+        query(view, settings, selectionType, spanPresets)
       case _ =>
         (settings, ok)
     }
