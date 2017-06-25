@@ -23,7 +23,7 @@ import javax.swing.undo.UndoableEdit
 import javax.swing.{Icon, KeyStroke}
 
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.desktop.{Desktop, FileDialog, OptionPane, PathField, Preferences, UndoManager}
+import de.sciss.desktop.{Desktop, FileDialog, OptionPane, PathField, Preferences, UndoManager, Util}
 import de.sciss.equal.Implicits._
 import de.sciss.file._
 import de.sciss.freesound.lucre.{PreviewsCache, Retrieval, RetrievalView, SoundObj, TextSearchObj}
@@ -253,7 +253,7 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
         val ggLegal = GUI.toolButton(Action(null)(mkLegal()), Shapes.Justice,
           tooltip = "Collect license information")
         val menu1   = Toolkit.getDefaultToolkit.getMenuShortcutKeyMask
-        GUI.addGlobalKeyWhenVisible(ggInfo, KeyStroke.getKeyStroke(Key.I.id, menu1))
+        Util.addGlobalKeyWhenVisible(ggInfo, KeyStroke.getKeyStroke(Key.I.id, menu1))
         val cont    = downloadsView.bottomComponent.contents
         cont.insert(0, ggInfo, ggLegal, Swing.HStrut(4))
       }

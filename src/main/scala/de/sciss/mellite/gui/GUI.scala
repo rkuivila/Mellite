@@ -14,19 +14,18 @@
 package de.sciss.mellite
 package gui
 
-import java.awt.event.{ActionEvent, ActionListener, KeyEvent}
+import java.awt.event.{ActionEvent, ActionListener}
 import java.awt.geom.{AffineTransform, Area, Path2D}
 import java.awt.{BasicStroke, Graphics, Graphics2D, RenderingHints, Shape}
-import javax.swing.event.{AncestorEvent, AncestorListener}
-import javax.swing.{Icon, JComponent, KeyStroke, SwingUtilities}
+import javax.swing.{Icon, SwingUtilities}
 
 import de.sciss.audiowidgets.{ParamField, RotaryKnob, Transport}
-import de.sciss.desktop.{KeyStrokes, OptionPane}
+import de.sciss.desktop.{KeyStrokes, OptionPane, Util}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.{defer, requireEDT}
-import de.sciss.swingplus.{DoClickAction, GroupPanel}
+import de.sciss.swingplus.GroupPanel
 import de.sciss.synth.proc.SoundProcesses
 import de.sciss.{desktop, equal, numbers}
 
@@ -34,35 +33,9 @@ import scala.concurrent.Future
 import scala.swing.Reactions.Reaction
 import scala.swing.Swing._
 import scala.swing.event.{Key, SelectionChanged, ValueChanged}
-import scala.swing.{AbstractButton, Action, Alignment, Button, Component, Dialog, Dimension, Label, TabbedPane, TextField}
+import scala.swing.{Action, Alignment, Button, Component, Dialog, Dimension, Label, TextField}
 
-// XXX TODO: this stuff should go somewhere for re-use.
 object GUI {
-  private def wordWrap(s: String, margin: Int = 80): String = {
-    if (s == null) return "" // fuck java
-    val sz = s.length
-    if (sz <= margin) return s
-    var i = 0
-    val sb = new StringBuilder
-    while (i < sz) {
-      val j = s.lastIndexOf(" ", i + margin)
-      val found = j > i
-      val k = if (found) j else i + margin
-      sb.append(s.substring(i, math.min(sz, k)))
-      i = if (found) k + 1 else k
-      if (i < sz) sb.append('\n')
-    }
-    sb.toString()
-  }
-
-  def formatException(e: Throwable): String = {
-    e.getClass.toString + " :\n" + wordWrap(e.getMessage) + "\n" +
-      e.getStackTrace.take(10).map("   at " + _).mkString("\n")
-  }
-
-  def round(b: AbstractButton*): Unit =
-    b.foreach(_.peer.putClientProperty("JButton.buttonType", "roundRect"))
-
   def keyValueDialog(value: Component, title: String = "New Entry", defaultName: String = "Name",
                      window: Option[desktop.Window] = None): Option[String] = {
     val ggName  = new TextField(10)
@@ -138,133 +111,34 @@ object GUI {
     res
   }
 
-  /** Adds a global key-triggered click action to a button. The key
-    * is active if the action appears in the focused window. The added action
-    * simulates a button click.
-    */
-  def addGlobalKey(b: AbstractButton, keyStroke: KeyStroke): Unit = {
-    val click = DoClickAction(b)
-    b.peer.getActionMap.put("click", click.peer)
-    b.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, "click")
-  }
-
-  /** Same as `addGlobalKey`, but only performs action if the button is
-    * currently showing (e.g. in the currently showing tabbed pane page).
-    */
-  def addGlobalKeyWhenVisible(b: AbstractButton, keyStroke: KeyStroke): Unit = {
-    val click = Action(null) {
-      if (b.showing) b.doClick()
-    }
-    b.peer.getActionMap.put("click", click.peer)
-    b.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, "click")
-  }
-
-  /** Adds a global action to a component. The key
-    * is active if the component appears in the focused window.
-    */
-  def addGlobalAction(c: Component, name: String, keyStroke: KeyStroke)(body: => Unit): Unit = {
-    val a = Action(null)(body)
-    c.peer.getActionMap.put(name, a.peer)
-    c.peer.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, name)
-  }
-
-  /** Adds alt-left/right key control to a tabbed pane. */
-  def addTabNavigation(tabs: TabbedPane): Unit = {
-    addGlobalAction(tabs, "prev", KeyStroke.getKeyStroke(Key.Left.id, Key.Modifier.Alt)) {
-      val sel   = tabs.selection
-      val idx   = sel.index - 1
-      sel.index = if (idx >= 0) idx else tabs.pages.size - 1
-    }
-    addGlobalAction(tabs, "next", KeyStroke.getKeyStroke(Key.Right.id, Key.Modifier.Alt)) {
-      val sel   = tabs.selection
-      val idx   = sel.index + 1
-      sel.index = if (idx < tabs.pages.size) idx else 0
-    }
-  }
-
-  /** Human-readable text representation of a key stroke. */
-  def keyStrokeText(stroke: KeyStroke): String = {
-    val mod = stroke.getModifiers
-    val sb  = new StringBuilder
-    if (mod > 0) {
-      sb.append(KeyEvent.getKeyModifiersText(mod))
-      sb.append('+')
-    }
-    sb.append(KeyEvent.getKeyText(stroke.getKeyCode))
-    sb.result()
-  }
-
   def viewButton(action: Action, tooltip: String = ""): Button = {
     val res = toolButton(action, raphael.Shapes.View, tooltip)
-    addGlobalKey(res, KeyStrokes.menu1 + Key.Enter)
+    Util.addGlobalKey(res, KeyStrokes.menu1 + Key.Enter)
     res
   }
 
   def attrButton(action: Action, tooltip: String = ""): Button = {
     val res = toolButton(action, raphael.Shapes.Wrench, tooltip)
-    addGlobalKey(res, KeyStrokes.menu1 + Key.Semicolon)
+    Util.addGlobalKey(res, KeyStrokes.menu1 + Key.Semicolon)
     res
   }
 
   def addButton(action: Action, tooltip: String = ""): Button = {
     val res = toolButton(action, raphael.Shapes.Plus, tooltip)
-    addGlobalKey(res, KeyStrokes.menu1 + Key.N)
+    Util.addGlobalKey(res, KeyStrokes.menu1 + Key.N)
     res
   }
 
   def removeButton(action: Action, tooltip: String = ""): Button = {
     val res = toolButton(action, raphael.Shapes.Minus, tooltip)
-    addGlobalKey(res, KeyStrokes.menu1 + Key.BackSpace)
+    Util.addGlobalKey(res, KeyStrokes.menu1 + Key.BackSpace)
     res
   }
 
   def duplicateButton(action: Action, tooltip: String = ""): Button = {
     val res = toolButton(action, raphael.Shapes.SplitArrows, tooltip)
-    addGlobalKey(res, KeyStrokes.menu1 + Key.D)
+    Util.addGlobalKey(res, KeyStrokes.menu1 + Key.D)
     res
-  }
-
-  def setInitialFocus(c: Component): Unit = {
-//    val adapter = new ComponentAdapter {
-//      override def componentShown(e: ComponentEvent): Unit = {
-//        c.peer.removeComponentListener(this)
-//        val res = c.requestFocusInWindow()
-//        println(s"requestFocusInWindow(): $res")
-//      }
-//    }
-    val adapter = new AncestorListener {
-      def ancestorAdded(e: AncestorEvent): Unit = {
-        c.peer.removeAncestorListener(this)
-        /* val res = */ c.requestFocusInWindow()
-//        println(s"requestFocusInWindow(): $res")
-      }
-
-      def ancestorMoved  (e: AncestorEvent): Unit = ()
-      def ancestorRemoved(e: AncestorEvent): Unit = ()
-    }
-
-//    c.peer.addComponentListener(adapter)
-    c.peer.addAncestorListener (adapter)
-  }
-
-  def fixWidths(c: Component*): Unit = {
-    var w = 0
-    c.foreach { comp =>
-      val pref = comp.preferredSize
-      w = math.max(w, pref.width)
-    }
-    c.foreach { comp =>
-      import comp._
-      val pref      = preferredSize
-      val min       = minimumSize
-      val max       = maximumSize
-      pref.width    = w
-      min .width    = w
-      max .width    = w
-      preferredSize = pref
-      minimumSize   = min
-      maximumSize   = max
-    }
   }
 
   def linkFormats[A](pf: ParamField[A]*): Unit = {

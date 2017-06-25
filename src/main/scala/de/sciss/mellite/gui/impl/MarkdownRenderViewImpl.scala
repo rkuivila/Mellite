@@ -18,7 +18,7 @@ package impl
 import javax.swing.event.{HyperlinkEvent, HyperlinkListener}
 
 import de.sciss.desktop
-import de.sciss.desktop.{Desktop, KeyStrokes, OptionPane}
+import de.sciss.desktop.{Desktop, KeyStrokes, OptionPane, Util}
 import de.sciss.icons.raphael
 import de.sciss.lucre.event.impl.ObservableImpl
 import de.sciss.lucre.stm
@@ -191,8 +191,8 @@ object MarkdownRenderViewImpl {
 
       if (!embedded) {
         import KeyStrokes._
-        GUI.addGlobalKey(ggBwd, alt + Key.Left)
-        GUI.addGlobalKey(ggFwd, alt + Key.Left)
+        Util.addGlobalKey(ggBwd, alt + Key.Left)
+        Util.addGlobalKey(ggFwd, alt + Key.Left)
       }
 
       val bot1: List[Component] = if (bottom.isEmpty) Nil else bottom.map(_.component)(breakOut)

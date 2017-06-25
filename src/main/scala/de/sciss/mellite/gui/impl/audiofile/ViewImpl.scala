@@ -20,6 +20,7 @@ import java.awt.datatransfer.Transferable
 
 import de.sciss.audiowidgets.TimelineModel
 import de.sciss.audiowidgets.impl.TimelineModelImpl
+import de.sciss.desktop.Util
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
@@ -173,7 +174,7 @@ object ViewImpl {
       }
 
       component = pane
-      GUI.setInitialFocus(sonogramView.canvasComponent)
+      Util.setInitialFocus(sonogramView.canvasComponent)
     }
 
     def obj(implicit tx: S#Tx): AudioCue.Obj[S] = holder()

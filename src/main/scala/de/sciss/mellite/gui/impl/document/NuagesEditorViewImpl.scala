@@ -18,7 +18,7 @@ package document
 
 import javax.swing.SpinnerNumberModel
 
-import de.sciss.desktop.{FileDialog, OptionPane, PathField, UndoManager}
+import de.sciss.desktop.{FileDialog, OptionPane, PathField, UndoManager, Util}
 import de.sciss.{desktop, equal}
 import de.sciss.file.File
 import de.sciss.icons.raphael
@@ -154,7 +154,7 @@ object NuagesEditorViewImpl {
           fut.failed.foreach { ex =>
             defer {
               Dialog.showMessage(
-                message     = s"Unable to compile processes\n\n${GUI.formatException(ex)}",
+                message     = s"Unable to compile processes\n\n${Util.formatException(ex)}",
                 title       = title,
                 messageType = Dialog.Message.Error
               )

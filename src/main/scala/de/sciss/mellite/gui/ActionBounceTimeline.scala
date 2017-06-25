@@ -19,7 +19,7 @@ import java.text.ParseException
 import javax.swing.{JFormattedTextField, SpinnerNumberModel, SwingUtilities}
 
 import de.sciss.audiowidgets.TimeField
-import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, PathField, Window}
+import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, PathField, Util, Window}
 import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.expr.{DoubleObj, LongObj}
@@ -32,13 +32,12 @@ import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.processor.{Processor, ProcessorLike}
 import de.sciss.span.Span
 import de.sciss.span.Span.SpanOrVoid
-import de.sciss.swingplus
 import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
-import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
+import de.sciss.synth.io.{AudioFile, AudioFileType, SampleFormat}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.{AudioCue, Bounce, Code, Folder, TimeRef, Timeline, Workspace}
 import de.sciss.synth.{SynthGraph, addToTail}
-import de.sciss.{desktop, equal, numbers, synth}
+import de.sciss.{desktop, equal, numbers, swingplus, synth}
 
 import scala.collection.immutable.{IndexedSeq => Vec, Iterable => IIterable, Seq => ISeq}
 import scala.concurrent.blocking
@@ -66,13 +65,21 @@ object ActionBounceTimeline {
 
   object FileFormat {
     final case class PCM(tpe: AudioFileType = AudioFileType.AIFF, sampleFormat: SampleFormat = SampleFormat.Int24)
-      extends FileFormat
+      extends FileFormat {
+
+      def isPCM = true
+    }
 
     final case class MP3(kbps: Int = 256, vbr: Boolean = false, title: String = "", artist: String = "",
                          comment: String = "")
-      extends FileFormat
+      extends FileFormat {
+
+      def isPCM = false
+    }
   }
-  sealed trait FileFormat
+  sealed trait FileFormat {
+    def isPCM: Boolean
+  }
 
   def mkNumChannels(channels: Vec[Range.Inclusive]): Int = channels.map(_.size).sum
 
@@ -91,43 +98,50 @@ object ActionBounceTimeline {
     // def forceSpan: Span = span.nonEmptyOption.getOrElse(Span(0L, (10 * TimeRef.SampleRate).toLong))
 
     def prepare(group: IIterable[stm.Source[S#Tx, Obj[S]]], f: File)(mkSpan: => Span): PerformSettings[S] = {
-      val server        = Server.Config()
-      Mellite.applyAudioPrefs(server, useDevice = realtime, pickPort = realtime)
-      if (fineControl) server.blockSize = 1
-      val spec = fileFormat match {
-        case FileFormat.PCM(tpe, smp) =>
-          AudioFileSpec(tpe, smp,
-            numChannels = channels.size, sampleRate = sampleRate.toInt)
-        case _: FileFormat.MP3 =>
-          AudioFileSpec(AudioFileType.AIFF, SampleFormat.Float,
-            numChannels = mkNumChannels(channels), sampleRate = sampleRate.toInt)
-      }
-      specToServerConfig(f, spec, server)
+      val sConfig = Server.Config()
+      Mellite.applyAudioPrefs(sConfig, useDevice = realtime, pickPort = realtime)
+      if (fineControl) sConfig.blockSize = 1
+      val numChannels = mkNumChannels(channels)
+//      val spec = fileFormat match {
+//        case FileFormat.PCM(tpe, smp) =>
+//          AudioFileSpec(tpe, smp, numChannels = numChannels, sampleRate = sampleRate)
+//        case _: FileFormat.MP3 =>
+//          AudioFileSpec(AudioFileType.AIFF, SampleFormat.Float, numChannels = numChannels, sampleRate = sampleRate)
+//      }
+      specToServerConfig(f, fileFormat, numChannels = numChannels, sampleRate = sampleRate, config = sConfig)
       val span1: Span = span match {
         case s: Span  => s
         case _        => mkSpan
       }
       PerformSettings(
-        realtime = realtime, group = group, server = server, gain = gain, span = span1, channels = channels
+        realtime = realtime, fileFormat = fileFormat,
+        group = group, server = sConfig, gain = gain, span = span1, channels = channels
       )
     }
   }
 
   final case class PerformSettings[S <: Sys[S]](
-    realtime  : Boolean,
-    group     : IIterable[stm.Source[S#Tx, Obj[S]]],
-    server    : Server.Config,
-    gain      : Gain = Gain.normalized(-0.2f),
-    span      : Span,
-    channels  : Vec[Range.Inclusive]
+    realtime    : Boolean,
+    fileFormat  : FileFormat,
+    group       : IIterable[stm.Source[S#Tx, Obj[S]]],
+    server      : Server.Config,
+    gain        : Gain = Gain.normalized(-0.2f),
+    span        : Span,
+    channels    : Vec[Range.Inclusive]
   )
 
-  def specToServerConfig(file: File, spec: AudioFileSpec, config: Server.ConfigBuilder): Unit = {
+  /** Note: header format and sample format are left unspecified if file format is not PCM. */
+  def specToServerConfig(file: File, fileFormat: FileFormat, numChannels: Int, sampleRate: Int,
+                         config: Server.ConfigBuilder): Unit = {
     config.nrtOutputPath      = file.path
-    config.nrtHeaderFormat    = spec.fileType
-    config.nrtSampleFormat    = spec.sampleFormat
-    config.sampleRate         = spec.sampleRate.toInt
-    config.outputBusChannels  = spec.numChannels
+    fileFormat match {
+      case pcm: FileFormat.PCM =>
+        config.nrtHeaderFormat    = pcm.tpe
+        config.nrtSampleFormat    = pcm.sampleFormat
+      case _ =>
+    }
+    config.sampleRate         = sampleRate
+    config.outputBusChannels  = numChannels
     val numPrivate = Prefs.audioNumPrivate.getOrElse(Prefs.defaultAudioNumPrivate)
     config.audioBusChannels   = config.outputBusChannels + numPrivate
   }
@@ -230,7 +244,7 @@ object ActionBounceTimeline {
     val ggImport      = new CheckBox()
 
 //    desktop.Util.fixWidth(ggPCMSampleFormat)
-    GUI.fixWidths(pPCMSampleFormat, pMP3Rate)
+    Util.sameWidths(pPCMSampleFormat, pMP3Rate)
 
     def fileFormatVisibility(pack: Boolean): Unit = {
       val isMP3 = ggFileType.selection.item === FileType.MP3
@@ -648,30 +662,14 @@ object ActionBounceTimeline {
     // buffer is not flushed after synth is stopped.
     val realtime      = settings.realtime
     val normalized    = settings.gain.normalized
-    val needsTemp     = realtime || normalized
+    val compressed    = !settings.fileFormat.isPCM
+    val needsTemp     = realtime || normalized || compressed
     val numChannels   = settings.server.outputBusChannels
 
-    val span: Span = settings.span
-//    match {
-//      case sp: Span => sp
-//      case _ =>
-//        cursor.step { implicit tx =>
-//          val tl = settings.group()
-//          val start = settings.span match {
-//            case hs: Span.HasStart => hs.start
-//            case _ => ... //  tl.firstEvent.getOrElse(0L)
-//          }
-//          val stop = settings.span match {
-//            case hs: Span.HasStop => hs.stop
-//            case _ => ... // tl.lastEvent.getOrElse(start)
-//          }
-//          Span(start, stop)
-//        }
-//    }
-
+    val span          = settings.span
     val fileOut       = file(settings.server.nrtOutputPath)
-    val fileType      = settings.server.nrtHeaderFormat
-    val sampleFormat  = settings.server.nrtSampleFormat
+//    val fileType      = settings.server.nrtHeaderFormat
+//    val sampleFormat  = settings.server.nrtSampleFormat
     val sampleRate    = settings.server.sampleRate
     val fileFrames0   = (span.length * sampleRate / TimeRef.SampleRate + 0.5).toLong
     val fileFrames    = fileFrames0 // - (fileFrames0 % settings.server.blockSize)
@@ -732,7 +730,7 @@ object ActionBounceTimeline {
     bProcess.start()
     val process   = if (!needsTemp) bProcess else {
       val nProcess = new Normalizer(bounce = bProcess,
-        fileOut = fileOut, fileType = fileType, sampleFormat = sampleFormat,
+        fileOut = fileOut, fileFormat = settings.fileFormat,
         gain = if (normalized) settings1.gain else Gain.immediate(0f), numFrames = fileFrames)
       nProcess.start()
       nProcess
@@ -743,7 +741,7 @@ object ActionBounceTimeline {
   // XXX TODO --- could use filtered console output via Poll to
   // measure max gain already during bounce
   private final class Normalizer[S <: Sys[S]](bounce: Processor[File],
-                                              fileOut: File, fileType: AudioFileType, sampleFormat: SampleFormat,
+                                              fileOut: File, fileFormat: FileFormat,
                                               gain: Gain, numFrames: Long)
     extends ProcessorImpl[File, Processor[File]] with Processor[File] {
 
@@ -759,7 +757,7 @@ object ActionBounceTimeline {
         blocking(Thread.sleep(500))
       }
 
-      val afIn    = AudioFile.openRead(fileIn)
+      val afIn = AudioFile.openRead(fileIn)
 
       import numbers.Implicits._
       try {
@@ -793,36 +791,72 @@ object ActionBounceTimeline {
           afIn.seek(0L)
           if (max == 0) 1f else gain.linear / max
         }
-        val afOut = AudioFile.openWrite(fileOut,
-          afIn.spec.copy(fileType = fileType, sampleFormat = sampleFormat, byteOrder = None))
-        try {
-          rem = numFrames0
-          while (rem > 0) {
-            val chunk = math.min(bufSz, rem).toInt
-            afIn.read(buf, 0, chunk)
-            if (mul != 1) {
-              var ch = 0; while (ch < buf.length) {
-                val cBuf = buf(ch)
-                var i = 0; while (i < chunk) {
-                  cBuf(i) *= mul
-                  i += 1
+
+        def writePCM(f: File, tpe: AudioFileType, sampleFormat: SampleFormat, maxChannels: Int,
+                     progStop: Double): Unit = {
+          val numCh = if (maxChannels <= 0) afIn.numChannels else math.min(afIn.numChannels, maxChannels)
+          val afOut = AudioFile.openWrite(f,
+            afIn.spec.copy(fileType = tpe, numChannels = numCh, sampleFormat = sampleFormat, byteOrder = None))
+          try {
+            rem = numFrames0
+            while (rem > 0) {
+              val chunk = math.min(bufSz, rem).toInt
+              afIn.read(buf, 0, chunk)
+              if (mul != 1) {
+                var ch = 0; while (ch < numCh) {
+                  val cBuf = buf(ch)
+                  var i = 0; while (i < chunk) {
+                    cBuf(i) *= mul
+                    i += 1
+                  }
+                  ch += 1
                 }
-                ch += 1
               }
+              afOut.write(buf, 0, chunk)
+              rem -= chunk
+              progress = (rem.toDouble / numFrames0).linlin(0, 1, progStop, 0.9)
+              checkAborted()
             }
-            afOut.write(buf, 0, chunk)
-            rem -= chunk
-            progress = (rem.toDouble / numFrames0).linlin(0, 1, 1.0, 0.9)
-            checkAborted()
+            afOut.close()
+            afIn .close()
+          } finally {
+            if (afOut.isOpen) afOut.cleanUp()
           }
-          afOut.close()
-          afIn .close()
-        } finally {
-          if (afOut.isOpen) afOut.cleanUp()
+        }
+
+
+        fileFormat match {
+          case FileFormat.PCM(fileType, sampleFormat) =>
+            writePCM(fileOut, fileType, sampleFormat, maxChannels = 0, progStop = 1.0)
+          case mp3: FileFormat.MP3 =>
+            val fTmp = File.createTempFile("bounce", ".aif")
+            fTmp.deleteOnExit()
+            try {
+              writePCM(fTmp, AudioFileType.AIFF, SampleFormat.Int16, maxChannels = 2, progStop = 0.95)
+              var lameArgs = List[String](fTmp.path, fileOut.path)
+              if (!mp3.comment.isEmpty) lameArgs :::= List("--tc", mp3.comment)
+              if (!mp3.artist .isEmpty) lameArgs :::= List("--ta", mp3.artist )
+              if (!mp3.title  .isEmpty) lameArgs :::= List("--tt", mp3.title  )
+              lameArgs :::= List[String](
+                "-h", "-S", "--noreplaygain",  // high quality, silent, no AGC
+                if (mp3.vbr) "--abr" else "-b", mp3.kbps.toString  // bit rate
+              )
+              blocking {
+                val lame = new de.sciss.jump3r.Main
+                val res  = lame.run(lameArgs.toArray)
+                if (res != 0) throw new Exception(s"LAME mp3 encoder failed with code $res")
+              }
+              progress = 1.0
+              checkAborted()
+
+            } finally {
+              fTmp.delete()
+            }
         }
 
       } finally {
         if (afIn.isOpen) afIn.cleanUp()
+        afIn.file.foreach(_.delete())
       }
 
       fileOut

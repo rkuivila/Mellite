@@ -27,7 +27,7 @@ lazy val scalaColliderSwingVersion  = "1.33.1"
 lazy val lucreSwingVersion          = "1.5.1"
 lazy val audioWidgetsVersion        = "1.10.3"
 lazy val swingPlusVersion           = "0.2.3"
-lazy val desktopVersion             = "0.7.3"
+lazy val desktopVersion             = "0.7.4-SNAPSHOT"
 lazy val sonogramVersion            = "1.9.1"
 lazy val raphaelIconsVersion        = "1.0.4"
 lazy val modelVersion               = "0.3.4"
@@ -192,7 +192,6 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss"    %% "audiowidgets-app"               % audioWidgetsVersion,        // audio application widgets
       "de.sciss"    %% "swingplus"                      % swingPlusVersion,           // Swing extensions
       "de.sciss"    %% "desktop"                        % desktopVersion,
-      "de.sciss"    %% "desktop-mac"                    % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss"    %% "sonogramoverview"               % sonogramVersion,            // sonogram component
       "de.sciss"    %% "raphael-icons"                  % raphaelIconsVersion,        // icon set
       "de.sciss"    %% "model"                          % modelVersion,               // non-txn MVC

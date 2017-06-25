@@ -16,7 +16,7 @@ package gui
 
 import java.util.concurrent.TimeUnit
 
-import de.sciss.desktop.{FileDialog, KeyStrokes, OptionPane}
+import de.sciss.desktop.{FileDialog, KeyStrokes, OptionPane, Util}
 import de.sciss.file._
 import de.sciss.lucre.stm.DataStore
 import de.sciss.lucre.stm.store.BerkeleyDB
@@ -123,7 +123,7 @@ object ActionNewWorkspace extends Action("Workspace...") {
       } catch {
         case NonFatal(e) =>
           Dialog.showMessage(
-            message     = s"Unable to create new document ${folder.path} \n\n${GUI.formatException(e)}",
+            message     = s"Unable to create new document ${folder.path} \n\n${Util.formatException(e)}",
             title       = fullTitle,
             messageType = Dialog.Message.Error
           )

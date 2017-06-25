@@ -11,10 +11,11 @@ lazy val ugensVersion          = "1.16.4"
 lazy val fscapeVersion         = "2.7.1"
 lazy val lucreVersion          = "3.4.1"
 
+scalaVersion in ThisBuild : = "2.12.2"
+
 val commonSettings = Seq(
   organization := "de.sciss",
-  version      := PROJECT_VERSION,
-  scalaVersion := "2.12.2"
+  version      := PROJECT_VERSION
 )
 
 val lScalaOSC           = RootProject(uri(s"git://github.com/Sciss/ScalaOSC.git#v${oscVersion}"))

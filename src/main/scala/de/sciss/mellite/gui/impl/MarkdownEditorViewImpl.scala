@@ -18,7 +18,7 @@ package impl
 import java.beans.{PropertyChangeEvent, PropertyChangeListener}
 import javax.swing.undo.UndoableEdit
 
-import de.sciss.desktop.{KeyStrokes, UndoManager}
+import de.sciss.desktop.{KeyStrokes, UndoManager, Util}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.swing.edit.EditVar
@@ -150,12 +150,12 @@ object MarkdownEditorViewImpl {
       })
 
       val ksRender  = KeyStrokes.menu1 + Key.Enter
-      val ttRender  = s"Render (${GUI.keyStrokeText(ksRender)})"
+      val ttRender  = s"Render (${Util.keyStrokeText(ksRender)})"
 
       lazy val ggApply : Button = GUI.toolButton(actionApply , raphael.Shapes.Check       , tooltip = "Save text changes")
       lazy val ggRender: Button = GUI.toolButton(actionRender, raphael.Shapes.RefreshArrow, tooltip = ttRender)
 
-      GUI.addGlobalKeyWhenVisible(ggRender, ksRender)
+      Util.addGlobalKeyWhenVisible(ggRender, ksRender)
 
       val bot1: List[Component] = if (bottom.isEmpty) Nil else bottom.map(_.component)(breakOut)
       val bot2 = HGlue :: ggApply :: ggRender :: bot1
@@ -174,7 +174,7 @@ object MarkdownEditorViewImpl {
       _tabs.pages     += pageEdit
       _tabs.pages     += pageRender
 //      _tabs.pages     += pageAttr
-      GUI.addTabNavigation(_tabs)
+      Util.addTabNavigation(_tabs)
 
 //      render(initialText)
 

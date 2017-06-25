@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 import javax.swing.SwingUtilities
 
 import de.sciss.desktop
-import de.sciss.desktop.{FileDialog, KeyStrokes, Menu, OptionPane, RecentFiles}
+import de.sciss.desktop.{FileDialog, KeyStrokes, Menu, OptionPane, RecentFiles, Util}
 import de.sciss.file._
 import de.sciss.lucre.stm.store.BerkeleyDB
 import de.sciss.lucre.swing.{CellView, defer}
@@ -118,7 +118,7 @@ object ActionOpenWorkspace extends Action("Open...") {
           case Success(eph: Workspace.InMemory)  => openGUI(eph)
           case Failure(e) =>
             Dialog.showMessage(
-              message     = s"Unable to create new workspace ${folder.path}\n\n${GUI.formatException(e)}",
+              message     = s"Unable to create new workspace ${folder.path}\n\n${Util.formatException(e)}",
               title       = fullTitle,
               messageType = Dialog.Message.Error
             )
