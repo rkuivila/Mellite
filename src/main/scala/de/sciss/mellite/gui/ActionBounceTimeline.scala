@@ -14,7 +14,7 @@
 package de.sciss.mellite
 package gui
 
-import java.io.{EOFException, File}
+import java.io.{EOFException, File, IOException}
 import java.text.ParseException
 import javax.swing.{JFormattedTextField, SpinnerNumberModel, SwingUtilities}
 
@@ -95,19 +95,11 @@ object ActionBounceTimeline {
                                                importFile  : Boolean               = false,
                                                location    : Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   ) {
-    // def forceSpan: Span = span.nonEmptyOption.getOrElse(Span(0L, (10 * TimeRef.SampleRate).toLong))
-
     def prepare(group: IIterable[stm.Source[S#Tx, Obj[S]]], f: File)(mkSpan: => Span): PerformSettings[S] = {
       val sConfig = Server.Config()
       Mellite.applyAudioPrefs(sConfig, useDevice = realtime, pickPort = realtime)
       if (fineControl) sConfig.blockSize = 1
       val numChannels = mkNumChannels(channels)
-//      val spec = fileFormat match {
-//        case FileFormat.PCM(tpe, smp) =>
-//          AudioFileSpec(tpe, smp, numChannels = numChannels, sampleRate = sampleRate)
-//        case _: FileFormat.MP3 =>
-//          AudioFileSpec(AudioFileType.AIFF, SampleFormat.Float, numChannels = numChannels, sampleRate = sampleRate)
-//      }
       specToServerConfig(f, fileFormat, numChannels = numChannels, sampleRate = sampleRate, config = sConfig)
       val span1: Span = span match {
         case s: Span  => s
@@ -203,9 +195,6 @@ object ActionBounceTimeline {
     KBPS( 64), KBPS( 80), KBPS( 96), KBPS(112), KBPS(128),
     KBPS(144), KBPS(160), KBPS(192), KBPS(224), KBPS(256), KBPS(320))
 
-//  object SpanPreset {
-//    implicit def fromTuple(tup: (String, Span)): SpanPreset = SpanPreset(name = tup._1, value = tup._2)
-//  }
   final case class SpanPreset(name: String, value: Span) {
     override def toString: String = name
   }
@@ -243,7 +232,6 @@ object ActionBounceTimeline {
 
     val ggImport      = new CheckBox()
 
-//    desktop.Util.fixWidth(ggPCMSampleFormat)
     Util.sameWidths(pPCMSampleFormat, pMP3Rate)
 
     def fileFormatVisibility(pack: Boolean): Unit = {
@@ -469,10 +457,8 @@ object ActionBounceTimeline {
       new Label("Run in Real-Time:" , EmptyIcon, Trailing), ggRealtime,
       new Label("Fine Control Rate:", EmptyIcon, Trailing), ggFineControl
     )
-//    if (showImport) {
-      ggImport.selected = init.importFile
-      pParams.contents ++= Seq(new Label("Import into Workspace:", EmptyIcon, Trailing), ggImport)
-//    }
+    ggImport.selected = init.importFile
+    pParams.contents ++= Seq(new Label("Import into Workspace:", EmptyIcon, Trailing), ggImport)
 
     val box       = new BoxPanel(Orientation.Vertical) {
       contents ++= Seq(pPath, pFormat, pMP3Meta, pParams)
@@ -490,12 +476,10 @@ object ActionBounceTimeline {
       case _: ParseException => init.channels
     }
 
-    val importFile  = /* if (showImport) */ ggImport.selected // else init.importFile
-//    val numChannels = mkNumChannels(channels)
+    val importFile  = ggImport.selected
+    val spanOut     = mkSpan()
+    val sampleRate  = ggSampleRate.value
 
-    val spanOut = mkSpan()
-
-    val sampleRate = ggSampleRate.value
     val fileFormat: FileFormat = ggFileType.selection.item match {
       case FileType.PCM(tpe) =>
         FileFormat.PCM(tpe, ggPCMSampleFormat.selection.item)
@@ -601,9 +585,8 @@ object ActionBounceTimeline {
       val w = SwingUtilities.getWindowAncestor(op.peer); if (w != null) w.dispose()
       processCompleted = true
     }
-    val progDiv = /* if (hasTransform) 2 else */ 1
     process.addListener {
-      case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt / progDiv)
+      case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt)
     }
 
     val onFailure: PartialFunction[Throwable, Unit] = {
@@ -617,11 +600,6 @@ object ActionBounceTimeline {
     }
 
     def bounceDone(): Unit = {
-//      if (DEBUG) println("bounceDone()")
-//        allDone()
-//    }
-//
-//    def allDone(): Unit = {
       if (DEBUG) println("allDone")
       defer(fDispose())
       (settings.importFile, settings.location) match {
@@ -668,8 +646,6 @@ object ActionBounceTimeline {
 
     val span          = settings.span
     val fileOut       = file(settings.server.nrtOutputPath)
-//    val fileType      = settings.server.nrtHeaderFormat
-//    val sampleFormat  = settings.server.nrtSampleFormat
     val sampleRate    = settings.server.sampleRate
     val fileFrames0   = (span.length * sampleRate / TimeRef.SampleRate + 0.5).toLong
     val fileFrames    = fileFrames0 // - (fileFrames0 % settings.server.blockSize)
@@ -720,6 +696,19 @@ object ActionBounceTimeline {
         }
         ReplaceOut.ar(0, sigOut)
       }
+
+      // on Linux, scsynth in real-time connects to jack,
+      // but the -H switch doesn't seem to work. So we end
+      // up with a sample-rate determined by Jack and not us
+      // (see https://github.com/Sciss/Mellite/issues/30).
+      // As a clumsy work-around, we abort the bounce if we
+      // see that the rate is incorrect.
+      if (s.sampleRate != sampleRate) {
+        throw new IOException(
+          s"Real-time bounce - SuperCollider failed to set requested sample-rate of $sampleRate Hz. " +
+          "Use a matching sample-rate, or try disabling real-time.")
+      }
+
       Synth.play(graph)(s.defaultGroup, addAction = addToTail)
     }
 
