@@ -67,9 +67,9 @@ object ActionBounceTimeline {
     final case class PCM(tpe: AudioFileType = AudioFileType.AIFF, sampleFormat: SampleFormat = SampleFormat.Int24)
       extends FileFormat {
 
-      def isPCM = true
-
-      def id: String = tpe.id
+      def isPCM     : Boolean = true
+      def id        : String  = tpe.id
+      def extension : String  = tpe.extension
     }
 
     final val mp3id = "mp3"
@@ -78,15 +78,17 @@ object ActionBounceTimeline {
                          comment: String = "")
       extends FileFormat {
 
-      def isPCM = false
-
-      def id: String = mp3id
+      def isPCM     : Boolean = false
+      def id        : String  = mp3id
+      def extension : String  = mp3id
     }
   }
   sealed trait FileFormat {
     def isPCM: Boolean
 
     def id: String
+
+    def extension: String
   }
 
   def mkNumChannels(channels: Vec[Range.Inclusive]): Int = channels.map(_.size).sum
@@ -227,7 +229,9 @@ object ActionBounceTimeline {
     }
   }
 
-  def recallSettings[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): QuerySettings[S] = {
+  def recallSettings[S <: Sys[S]](obj: Obj[S], defaultRealtime: Boolean = false,
+                                  defaultFile: File = file(""), defaultChannels: Vec[Range.Inclusive] = Vector(0 to 1))
+                                 (implicit tx: S#Tx): QuerySettings[S] = {
     val attr = obj.attr
     import equal.Implicits._
 
@@ -246,9 +250,6 @@ object ActionBounceTimeline {
     def recallSpanLike(key: String, default: SpanLike = Span.Void): SpanLike =
       attr.$[SpanLikeObj](key).fold(default)(_.value)
 
-    val path = recallString(attrFile)
-    val file = if (path.isEmpty) None else Some(new File(path))
-
     val tpeID = recallString(attrFileType, AudioFileType.AIFF.id)
     val fileFormat = if (tpeID === FileFormat.mp3id) {
       val kbps    = recallInt(attrBitRate, 256)
@@ -265,6 +266,17 @@ object ActionBounceTimeline {
       FileFormat.PCM(tpe, smp)
     }
 
+    val path = recallString(attrFile)
+    val file = if (path.isEmpty) {
+      if (defaultFile.path.isEmpty) None else {
+        val f = defaultFile.replaceExt(fileFormat.extension)
+        Some(f)
+      }
+    } else {
+      Some(new File(path))
+    }
+
+
     val sampleRate  = recallInt     (attrSampleRate , 44100)
     val decibels    = recallDouble  (attrGain       , -0.2)
     val normalized  = recallBoolean (attrNormalize  , default = true)
@@ -274,9 +286,9 @@ object ActionBounceTimeline {
       case sp: Span => sp
       case _ => Span.Void
     }
-    val chansS      = recallString   (attrChannels, "1 to 2")
-    val channels    = Try(stringToChannels(chansS)).toOption.getOrElse(Vector(0 to 1))
-    val realtime    = recallBoolean  (attrRealtime)
+    val chansS      = recallString   (attrChannels)
+    val channels    = Try(stringToChannels(chansS)).toOption.getOrElse(defaultChannels)
+    val realtime    = recallBoolean  (attrRealtime, default = defaultRealtime)
     val fineControl = recallBoolean  (attrFineControl)
     val importFile  = recallBoolean  (attrImport)
 
@@ -462,7 +474,8 @@ object ActionBounceTimeline {
     val ggPath    = new PathField
     ggPath.mode   = FileDialog.Save
     ggPath.title  = "Audio Output File"
-    ggPath.textField.columns = 0    // otherwise doesn't play nicely with group-panel
+    val ggPathT   = ggPath.textField
+    ggPathT.columns = 0    // otherwise doesn't play nicely with group-panel
 
     def setPath(file: File): Unit =
       ggPath.value = file.replaceExt(ggFileType.selection.item.extension)
@@ -620,7 +633,20 @@ object ActionBounceTimeline {
 
     ggImport.selected = init.importFile
 
-//    Util.fixWidth(lbPath)
+    // do this _here_ because the path has already
+    // been set at this point, so we can have
+    // a larger pref-size if the path is long
+    ggPathT.minimumSize = {
+      val d = ggPathT.minimumSize
+      d.width = math.max(320, d.width)
+      d
+    }
+    ggPathT.preferredSize = {
+      val d = ggPathT.preferredSize
+      d.width = math.max(320, d.width)
+      d
+    }
+
     val box = new GroupPanel {
       horizontal = Par(
         Seq(lbPath, ggPath), // Seq(Size.fixed(lbPath, Size.Preferred), Size.fill(ggPath, pref = Size.Infinite)),
@@ -633,7 +659,8 @@ object ActionBounceTimeline {
             Seq(ggGainAmt, ggGainType), ggChannels, ggSpanStartOpt, ggSpanStopOrDur,
             ggRealtime, ggFineControl, ggImport,
             ggMP3Title, ggMP3Artist, ggMP3Comment
-          )
+          ),
+          Gap.Spring()
         )
       )
       vertical = Seq(
@@ -1058,7 +1085,6 @@ abstract class ActionBounceTimeline[S <: Sys[S]](view: ViewHasWorkspace[S] with 
   import view.cursor
 
   private[this] var settings = QuerySettings[S]()
-//  private[this] var recalled = false
 
   protected def prepare(settings: QuerySettings[S]): QuerySettings[S] = settings
 
@@ -1066,17 +1092,23 @@ abstract class ActionBounceTimeline[S <: Sys[S]](view: ViewHasWorkspace[S] with 
 
   protected def spanPresets(): SpanPresets = Nil
 
-  final def apply(): Unit = {
-    if (storeSettings /* && !recalled */) {
+  protected def selectionType: Selection = SpanSelection
+
+  protected def defaultRealtime(implicit tx: S#Tx): Boolean               = false
+  protected def defaultFile    (implicit tx: S#Tx): File                  = file("")
+  protected def defaultChannels(implicit tx: S#Tx): Vec[Range.Inclusive]  = Vector(0 to 1)
+
+  def apply(): Unit = {
+    if (storeSettings) {
       settings = cursor.step { implicit tx =>
-        ActionBounceTimeline.recallSettings(objH())
+        ActionBounceTimeline.recallSettings(objH(),
+          defaultRealtime = defaultRealtime, defaultFile = defaultFile, defaultChannels = defaultChannels)
       }
-//      recalled = true
     }
 
     val setUpd          = prepare(settings)
     val presets         = spanPresets()
-    val (_settings, ok) = query(view, setUpd, SpanSelection, presets)
+    val (_settings, ok) = query(view, setUpd, selectionType, presets)
     settings            = _settings
     if (ok) {
       if (storeSettings) {
