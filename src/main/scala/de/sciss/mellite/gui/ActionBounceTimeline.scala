@@ -19,7 +19,7 @@ import java.text.ParseException
 import javax.swing.{JFormattedTextField, SpinnerNumberModel, SwingUtilities}
 
 import de.sciss.audiowidgets.TimeField
-import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, PathField, Util, Window}
+import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, PathField, Window}
 import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.expr.{BooleanObj, DoubleObj, IntObj, LongObj, SpanLikeObj, StringObj}
@@ -30,12 +30,12 @@ import de.sciss.lucre.synth.{Buffer, Server, Synth, Sys}
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.processor.{Processor, ProcessorLike}
-import de.sciss.span.{Span, SpanLike}
 import de.sciss.span.Span.SpanOrVoid
-import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
+import de.sciss.span.{Span, SpanLike}
+import de.sciss.swingplus.{ComboBox, GroupPanel, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileType, SampleFormat}
 import de.sciss.synth.proc.Implicits._
-import de.sciss.synth.proc.{AudioCue, Bounce, Code, Folder, TimeRef, Timeline, Workspace}
+import de.sciss.synth.proc.{AudioCue, Bounce, TimeRef, Timeline, Workspace}
 import de.sciss.synth.{SynthGraph, addToTail}
 import de.sciss.{desktop, equal, numbers, swingplus, synth}
 
@@ -44,7 +44,7 @@ import scala.concurrent.blocking
 import scala.language.implicitConversions
 import scala.swing.Swing._
 import scala.swing.event.{ButtonClicked, SelectionChanged, ValueChanged}
-import scala.swing.{Alignment, BoxPanel, Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Orientation, ProgressBar, Swing, TextField, ToggleButton}
+import scala.swing.{Button, ButtonGroup, CheckBox, Component, Dialog, Label, ProgressBar, TextField, ToggleButton}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -342,28 +342,6 @@ object ActionBounceTimeline {
     config.audioBusChannels   = config.outputBusChannels + numPrivate
   }
 
-  type CodeSource[S <: Sys[S]] = stm.Source[S#Tx, Code.Obj[S]]
-
-  def findTransforms[S <: Sys[S]](document: Workspace[S])(implicit tx: S#Tx): Vec[Labeled[CodeSource[S]]] = {
-    type Res = Vec[Labeled[CodeSource[S]]]
-    def loop(xs: List[Obj[S]], res: Res): Res =
-      xs match {
-        case (objT: Code.Obj[S]) :: tail =>
-          val res1 = objT.value match {
-            case _: Code.FileTransform => res :+ Labeled(tx.newHandle(objT))(objT.name)
-            case _ => res
-          }
-          loop(tail, res1)
-        case (objT: Folder[S]) :: tail =>
-          val res1 = loop(objT.iterator.toList, res)
-          loop(tail, res1)
-        case _ :: tail  => loop(tail, res)
-        case Nil        => res
-      }
-
-    loop(document.rootH().iterator.toList, Vector.empty)
-  }
-
   sealed trait Selection
   case object SpanSelection     extends Selection
   case object DurationSelection extends Selection
@@ -403,6 +381,8 @@ object ActionBounceTimeline {
     override def toString: String = name
   }
 
+  /////////////////////////////////////////////////////////////////////////////////////////////
+
   def query[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S],
                          init: QuerySettings[S], selectionType: Selection,
                          spanPresets: ISeq[SpanPreset]): (QuerySettings[S], Boolean) = {
@@ -410,8 +390,6 @@ object ActionBounceTimeline {
     import view.{cursor, undoManager, workspace => document}
     val window          = Window.find(view.component)
     import equal.Implicits._
-
-    import FlowPanel.Alignment.Leading
 
     val sqFileType      = AudioFileType.writable.map(FileType.PCM) :+ FileType.MP3
     val ggFileType      = new ComboBox[FileType](sqFileType)
@@ -421,30 +399,31 @@ object ActionBounceTimeline {
     }
 
     val ggPCMSampleFormat = new ComboBox[SampleFormat](SampleFormat.fromInt16)
-    val pPCMSampleFormat  = new FlowPanel(Leading)(ggPCMSampleFormat, Swing.HGlue)
-
     val ggMP3BitRate  = new ComboBox[KBPS](mp3BitRates)
     val ggMP3VBR      = new CheckBox("VBR")
-    val pMP3Rate      = new FlowPanel(Leading)(ggMP3BitRate, ggMP3VBR)
     val ggMP3Title    = new TextField(10)
     val ggMP3Artist   = new TextField(10)
     val ggMP3Comment  = new TextField(10)
-    val pMP3Meta      = new FlowPanel(
-      new Label("Title:"  ), ggMP3Title,
-      new Label("Author:" ), ggMP3Artist,
-      new Label("Comment:"), ggMP3Comment)
+
+    val lbMP3Title    = new Label("Title:")
+    val lbMP3Artist   = new Label("Author:")
+    val lbMP3Comment  = new Label("Comment:")
 
     val ggImport      = new CheckBox()
-
-    Util.sameWidths(pPCMSampleFormat, pMP3Rate)
 
     def fileFormatVisibility(pack: Boolean): Unit = {
       val isMP3 = ggFileType.selection.item === FileType.MP3
       val isPCM = !isMP3
-      if (!pack || pPCMSampleFormat.visible != isPCM) {
-        pPCMSampleFormat  .visible = isPCM
-        pMP3Rate          .visible = isMP3
-        pMP3Meta          .visible = isMP3
+      if (!pack || ggPCMSampleFormat.visible != isPCM) {
+        ggPCMSampleFormat .visible = isPCM
+        ggMP3BitRate      .visible = isMP3
+        ggMP3VBR          .visible = isMP3
+        lbMP3Title        .visible = isMP3
+        ggMP3Title        .visible = isMP3
+        lbMP3Artist       .visible = isMP3
+        ggMP3Artist       .visible = isMP3
+        lbMP3Comment      .visible = isMP3
+        ggMP3Comment      .visible = isMP3
         ggImport          .enabled = isPCM
         if (!isPCM) ggImport.selected = false
 
@@ -483,6 +462,12 @@ object ActionBounceTimeline {
     val ggPath    = new PathField
     ggPath.mode   = FileDialog.Save
     ggPath.title  = "Audio Output File"
+    // XXX TODO --- should have a text-field column access
+//    ggPath.preferredSize = {
+//      val d = ggPath.preferredSize
+//      d.width = math.max(320, d.width)
+//      d
+//    }
 
     def setPath(file: File): Unit =
       ggPath.value = file.replaceExt(ggFileType.selection.item.extension)
@@ -542,18 +527,13 @@ object ActionBounceTimeline {
     ggChannelsJ.setFocusLostBehavior(JFormattedTextField.COMMIT_OR_REVERT)
     val ggChannels  = Component.wrap(ggChannelsJ)
     ggChannels.tooltip = "Ranges of channels to bounce, such as 1-4 or 1,3,5"
+    val lbPath        = new Label("Output File:")
+    val lbFormat      = new Label("Format:")
+    val lbSampleRate  = new Label("Sample Rate [Hz]:")
+    val lbGain        = new Label("Gain [dB]:")
+    val lbChannels    = new Label("Channels:")
 
-    import Alignment.Trailing
-    import Swing.EmptyIcon
-    val pPath     = new FlowPanel(Leading)(new Label("Output File:"), ggPath)
-    val pFormat   = new FlowPanel(Leading)(new Label("Format:"), ggFileType, pPCMSampleFormat, pMP3Rate, ggSampleRate)
-    val pParams   = new GridPanel(0, 2)
-    pParams.hGap  = 4
-    pParams.contents ++= Seq(new Label("Gain:", EmptyIcon, Trailing),
-      new FlowPanel(Leading)(ggGainAmt, new Label("dB"), ggGainType))
-    pParams.contents ++= Seq(new Label("Channels:", EmptyIcon, Trailing), ggChannels)
-
-    val span0F          = init.span.nonEmptyOption.getOrElse {
+    val span0F        = init.span.nonEmptyOption.getOrElse {
       spanPresets.headOption.fold(Span(0L, (10 * TimeRef.SampleRate).toLong))(_.value)
     }
     val ggSpanStart     = new TimeField(span0F.start, Span.Void, sampleRate = TimeRef.SampleRate, viewSampleRate0 = init.sampleRate)
@@ -604,18 +584,22 @@ object ActionBounceTimeline {
         spanPresets.indexWhere(_.value === sp)
       } else if (selectionType === DurationSelection) {
         val len = sp.length
-        spanPresets.indexWhere(_.value.length == len)
+        spanPresets.indexWhere(_.value.length === len)
       } else -1
 
       import swingplus.Implicits._
       if (idx < 0) bgSpanPresets.clearSelection() else bgSpanPresets.select(ggSpanPresets(idx))
     }
 
+    val lbSpanStart     = new Label
+    val lbSpanStopOrDur = new Label
+    val ggSpanStartOpt: Component =
+      if (selectionType === SpanSelection) ggSpanStart else HStrut(4)
+
     if (selectionType === SpanSelection) {
       GUI.linkFormats(ggSpanStart, ggSpanStopOrDur)
-      val pSpan = new FlowPanel(Leading)(ggSpanStart, new Label("–"), ggSpanStopOrDur)
-      pSpan.contents ++= ggSpanPresets
-      pParams.contents ++= Seq(new Label("Time Span:", EmptyIcon, Trailing), pSpan)
+      lbSpanStart     .text = "Start:"
+      lbSpanStopOrDur .text = "Stop:"
       ggSpanStart.listenTo(ggSpanStart)
       ggSpanStart.reactions += {
         case ValueChanged(_) => updatePresetSelection()
@@ -626,9 +610,7 @@ object ActionBounceTimeline {
       }
 
     } else if (selectionType === DurationSelection) {
-      val pDur = new FlowPanel(Leading)(ggSpanStopOrDur)
-      pDur.contents ++= ggSpanPresets
-      pParams.contents ++= Seq(new Label("Duration:", EmptyIcon, Trailing), pDur)
+      lbSpanStopOrDur.text = "Duration:"
       ggSpanStopOrDur.listenTo(ggSpanStopOrDur)
       ggSpanStopOrDur.reactions += {
         case ValueChanged(_) => updatePresetSelection()
@@ -637,21 +619,48 @@ object ActionBounceTimeline {
 
     updatePresetSelection()
 
-    pParams.contents ++= Seq(
-      HStrut(1), VStrut(32),
-      new Label("Run in Real-Time:" , EmptyIcon, Trailing), ggRealtime,
-      new Label("Fine Control Rate:", EmptyIcon, Trailing), ggFineControl
-    )
-    ggImport.selected = init.importFile
-    pParams.contents ++= Seq(new Label("Import into Workspace:", EmptyIcon, Trailing), ggImport)
+    val lbRealtime    = new Label("Run in Real-Time:"       /* , EmptyIcon, Trailing */)
+    val lbFineControl = new Label("Fine Control Rate:"      /* , EmptyIcon, Trailing */)
+    val lbImport      = new Label("Import into Workspace:"  /* , EmptyIcon, Trailing */)
 
-    val box       = new BoxPanel(Orientation.Vertical) {
-      contents ++= Seq(pPath, pFormat, pMP3Meta, pParams)
+    ggImport.selected = init.importFile
+
+    val box = new GroupPanel {
+      horizontal= Seq(
+        Par(Trailing)(
+          lbPath, lbFormat , lbSampleRate, lbGain, lbChannels, lbSpanStart, lbSpanStopOrDur,
+          lbRealtime, lbFineControl, lbImport, lbMP3Title, lbMP3Artist, lbMP3Comment),
+        Par(
+          ggPath, Seq(ggFileType, ggPCMSampleFormat, ggMP3BitRate), ggSampleRate,
+          Seq(ggGainAmt, ggGainType), ggChannels, ggSpanStartOpt, ggSpanStopOrDur,
+          ggRealtime, ggFineControl, ggImport,
+          ggMP3Title, ggMP3Artist, ggMP3Comment
+        ))
+      vertical = Seq(
+        Par(Baseline)(lbPath, ggPath),
+        Par(Baseline)(lbFormat, ggFileType, ggPCMSampleFormat, ggMP3BitRate),
+        Par(Baseline)(lbSampleRate, ggSampleRate),
+        Par(Baseline)(lbGain, ggGainAmt, ggGainType),
+        Par(Baseline)(lbChannels, ggChannels),
+        Par(Baseline)(lbSpanStart, ggSpanStartOpt),
+        Par(Baseline)(lbSpanStopOrDur, ggSpanStopOrDur),
+        Gap.Preferred(Unrelated),
+        Par(Baseline)(lbRealtime, ggRealtime),
+        Par(Baseline)(lbFineControl, ggFineControl),
+        Par(Baseline)(lbImport, ggImport),
+        Gap.Preferred(Unrelated),
+        Par(Baseline)(lbMP3Title  , ggMP3Title  ),
+        Par(Baseline)(lbMP3Artist , ggMP3Artist ),
+        Par(Baseline)(lbMP3Comment, ggMP3Comment)
+      )
     }
 
     val opt = OptionPane.confirmation(message = box, optionType = OptionPane.Options.OkCancel,
       messageType = OptionPane.Message.Plain)
     opt.title = title
+
+    // --------------------------
+
     val ok    = opt.show(window) === OptionPane.Result.Ok
     val file  = ggPath.valueOption
 
@@ -737,6 +746,8 @@ object ActionBounceTimeline {
     }
   }
 
+  /////////////////////////////////////////////////////////////////////////////////////////////
+
   def performGUI[S <: Sys[S]](view: ViewHasWorkspace[S],
                               settings: QuerySettings[S],
                               group: IIterable[stm.Source[S#Tx, Obj[S]]], file: File, span: Span): Unit = {
@@ -816,6 +827,8 @@ object ActionBounceTimeline {
       if (!processCompleted) op.show(window)
     }
   }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////
 
   def perform[S <: Sys[S]](document: Workspace[S], settings: PerformSettings[S])
                           (implicit cursor: stm.Cursor[S]): Processor[File] = {
@@ -903,7 +916,7 @@ object ActionBounceTimeline {
     // }
     bProcess.start()
     val process   = if (!needsTemp) bProcess else {
-      val nProcess = new Normalizer(bounce = bProcess,
+      val nProcess = new PostProcessor(bounce = bProcess,
         fileOut = fileOut, fileFormat = settings.fileFormat,
         gain = if (normalized) settings1.gain else Gain.immediate(0f), numFrames = fileFrames)
       nProcess.start()
@@ -914,7 +927,7 @@ object ActionBounceTimeline {
 
   // XXX TODO --- could use filtered console output via Poll to
   // measure max gain already during bounce
-  private final class Normalizer[S <: Sys[S]](bounce: Processor[File],
+  private final class PostProcessor[S <: Sys[S]](bounce: Processor[File],
                                               fileOut: File, fileFormat: FileFormat,
                                               gain: Gain, numFrames: Long)
     extends ProcessorImpl[File, Processor[File]] with Processor[File] {
@@ -1045,7 +1058,7 @@ abstract class ActionBounceTimeline[S <: Sys[S]](view: ViewHasWorkspace[S] with 
   import view.cursor
 
   private[this] var settings = QuerySettings[S]()
-  private[this] var recalled = false
+//  private[this] var recalled = false
 
   protected def prepare(settings: QuerySettings[S]): QuerySettings[S] = settings
 
@@ -1054,11 +1067,11 @@ abstract class ActionBounceTimeline[S <: Sys[S]](view: ViewHasWorkspace[S] with 
   protected def spanPresets(): SpanPresets = Nil
 
   final def apply(): Unit = {
-    if (storeSettings && !recalled) {
+    if (storeSettings /* && !recalled */) {
       settings = cursor.step { implicit tx =>
         ActionBounceTimeline.recallSettings(objH())
       }
-      recalled = true
+//      recalled = true
     }
 
     val setUpd          = prepare(settings)
