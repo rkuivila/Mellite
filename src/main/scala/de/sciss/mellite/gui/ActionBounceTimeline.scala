@@ -22,7 +22,7 @@ import de.sciss.audiowidgets.TimeField
 import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, PathField, Util, Window}
 import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
-import de.sciss.lucre.expr.{DoubleObj, LongObj}
+import de.sciss.lucre.expr.{BooleanObj, DoubleObj, IntObj, LongObj, SpanLikeObj, StringObj}
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Obj
 import de.sciss.lucre.swing.{View, defer}
@@ -30,7 +30,7 @@ import de.sciss.lucre.synth.{Buffer, Server, Synth, Sys}
 import de.sciss.mellite.gui.edit.EditFolderInsertObj
 import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.processor.{Processor, ProcessorLike}
-import de.sciss.span.Span
+import de.sciss.span.{Span, SpanLike}
 import de.sciss.span.Span.SpanOrVoid
 import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileType, SampleFormat}
@@ -68,20 +68,224 @@ object ActionBounceTimeline {
       extends FileFormat {
 
       def isPCM = true
+
+      def id: String = tpe.id
     }
+
+    final val mp3id = "mp3"
 
     final case class MP3(kbps: Int = 256, vbr: Boolean = false, title: String = "", artist: String = "",
                          comment: String = "")
       extends FileFormat {
 
       def isPCM = false
+
+      def id: String = mp3id
     }
   }
   sealed trait FileFormat {
     def isPCM: Boolean
+
+    def id: String
   }
 
   def mkNumChannels(channels: Vec[Range.Inclusive]): Int = channels.map(_.size).sum
+
+  private[this] val attrFile          = "bounce-file"           // StringObj
+  private[this] val attrFileType      = "bounce-file-type"      // StringObj
+  private[this] val attrSampleFormat  = "bounce-sample-format"  // StringObj
+  private[this] val attrBitRate       = "bounce-bit-rate"       // IntObj
+  private[this] val attrMP3VBR        = "bounce-mp3-vbr"        // BooleanObj
+  private[this] val attrMP3Title      = "bounce-mp3-title"      // StringObj
+  private[this] val attrMP3Artist     = "bounce-mp3-artist"     // StringObj
+  private[this] val attrMP3Comment    = "bounce-mp3-comment"    // StringObj
+  private[this] val attrSampleRate    = "bounce-sample-rate"    // IntObj
+  private[this] val attrGain          = "bounce-gain"           // DoubleObj
+  private[this] val attrSpan          = "bounce-span"           // SpanLikeObj
+  private[this] val attrNormalize     = "bounce-normalize"      // BooleanObj
+  private[this] val attrChannels      = "bounce-channels"       // IntVector
+  private[this] val attrRealtime      = "bounce-realtime"       // BooleanObj
+  private[this] val attrFineControl   = "bounce-fine-control"   // BooleanObj
+  private[this] val attrImport        = "bounce-import"         // BooleanObj
+  private[this] val attrLocation      = "bounce-location"       // ArtifactLocation
+
+
+  // cf. stackoverflow #4310439 - with added spaces after comma
+  // val regRanges = """^(\d+(-\d+)?)(,\s*(\d+(-\d+)?))*$""".r
+
+  // cf. stackoverflow #16532768
+  private val regRanges = """(\d+(-\d+)?)""".r
+
+  private def stringToChannels(text: String): Vec[Range.Inclusive] =
+    regRanges.findAllIn(text).toIndexedSeq match {
+      case list if list.nonEmpty => list.map { s =>
+        val i = s.indexOf('-')
+        if (i < 0) {
+          val a = s.toInt - 1
+          a to a
+        } else {
+          val a = s.substring(0, i).toInt - 1
+          val b = s.substring(i +1).toInt - 1
+          a to b
+        }
+      }
+    }
+
+  private def channelToString(r: Range): String =
+    if (r.start < r.end) s"${r.start + 1}-${r.end + 1}"
+    else s"${r.start + 1}"
+
+  private def channelsToString(r: Vec[Range]): String =
+    r.map(channelToString).mkString(", ")
+
+  /** Saves the query settings in conventional keys of an object's attribute map.
+    * This way, they can be preserved in the workspace.
+    *
+    * @param q    the settings to store
+    * @param obj  the object into whose attribute map the settings are stored
+    */
+  def storeSettings[S <: Sys[S]](q: QuerySettings[S], obj: Obj[S])(implicit tx: S#Tx): Unit = {
+    val attr = obj.attr
+    import equal.Implicits._
+
+    def storeString(key: String, value: String, default: String = ""): Unit =
+      attr.$[StringObj](key) match {
+        case Some(a) if a.value === value =>
+        case Some(StringObj.Var(vr)) => vr() = value
+        case Some(_) if value == default => attr.remove(key)
+        case None    if value != default => attr.put(key, StringObj.newVar[S](value))
+        case _ =>
+      }
+
+    def storeInt(key: String, value: Int, default: Int = 0): Unit =
+      attr.$[IntObj](key) match {
+        case Some(a) if a.value === value =>
+        case Some(IntObj.Var(vr)) => vr() = value
+        case Some(_) if value == default => attr.remove(key)
+        case None    if value != default => attr.put(key, IntObj.newVar[S](value))
+        case _ =>
+      }
+
+    def storeBoolean(key: String, value: Boolean, default: Boolean = false): Unit =
+      attr.$[BooleanObj](key) match {
+        case Some(a) if a.value === value =>
+        case Some(BooleanObj.Var(vr)) => vr() = value
+        case Some(_) if value == default => attr.remove(key)
+        case None    if value != default => attr.put(key, BooleanObj.newVar[S](value))
+        case _ =>
+      }
+
+    def storeDouble(key: String, value: Double, default: Double /* = 0.0 */): Unit =
+      attr.$[DoubleObj](key) match {
+        case Some(a) if a.value === value =>
+        case Some(DoubleObj.Var(vr)) => vr() = value
+        case Some(_) if value == default => attr.remove(key)
+        case None    if value != default => attr.put(key, DoubleObj.newVar[S](value))
+        case _ =>
+      }
+
+    def storeSpanLike(key: String, value: SpanLike, default: SpanLike = Span.Void): Unit =
+      attr.$[SpanLikeObj](key) match {
+        case Some(a) if a.value === value =>
+        case Some(SpanLikeObj.Var(vr)) => vr() = value
+        case Some(_) if value == default => attr.remove(key)
+        case None    if value != default => attr.put(key, SpanLikeObj.newVar[S](value))
+        case _ =>
+      }
+
+    q.file match {
+      case Some(f)  => storeString(attrFile, f.path)
+      case None     => attr.remove(attrFile)
+    }
+
+    storeString(attrFileType, q.fileFormat.id)
+    q.fileFormat match {
+      case pcm: FileFormat.PCM =>
+        storeString (attrFileType     , pcm.tpe.id)
+        storeString (attrSampleFormat , pcm.sampleFormat.id)
+
+      case mp3: FileFormat.MP3 =>
+        storeInt    (attrBitRate      , mp3.kbps   )
+        storeBoolean(attrMP3VBR       , mp3.vbr    )
+        storeString (attrMP3Title     , mp3.title  )
+        storeString (attrMP3Artist    , mp3.artist )
+        storeString (attrMP3Comment   , mp3.comment)
+    }
+    
+    storeInt      (attrSampleRate , q.sampleRate)
+    storeDouble   (attrGain       , q.gain.decibels, default = Double.NaN)
+    storeBoolean  (attrNormalize  , q.gain.normalized, default = true)
+    storeSpanLike (attrSpan       , q.span)
+    storeString   (attrChannels   , channelsToString(q.channels))
+    storeBoolean  (attrRealtime   , q.realtime)
+    storeBoolean  (attrFineControl, q.fineControl)
+    storeBoolean  (attrImport     , q.importFile)
+
+    q.location match {
+      case Some(locH) => attr.put(attrLocation, locH())
+      case None       => attr.remove(attrLocation)
+    }
+  }
+
+  def recallSettings[S <: Sys[S]](obj: Obj[S])(implicit tx: S#Tx): QuerySettings[S] = {
+    val attr = obj.attr
+    import equal.Implicits._
+
+    def recallString(key: String, default: String = ""): String =
+      attr.$[StringObj](key).fold(default)(_.value)
+
+    def recallInt(key: String, default: Int /* = 0 */): Int =
+      attr.$[IntObj](key).fold(default)(_.value)
+
+    def recallBoolean(key: String, default: Boolean = false): Boolean =
+      attr.$[BooleanObj](key).fold(default)(_.value)
+
+    def recallDouble(key: String, default: Double /* = 0.0 */): Double =
+      attr.$[DoubleObj](key).fold(default)(_.value)
+
+    def recallSpanLike(key: String, default: SpanLike = Span.Void): SpanLike =
+      attr.$[SpanLikeObj](key).fold(default)(_.value)
+
+    val path = recallString(attrFile)
+    val file = if (path.isEmpty) None else Some(new File(path))
+
+    val tpeID = recallString(attrFileType, AudioFileType.AIFF.id)
+    val fileFormat = if (tpeID === FileFormat.mp3id) {
+      val kbps    = recallInt(attrBitRate, 256)
+      val vbr     = recallBoolean(attrMP3VBR)
+      val title   = recallString(attrMP3Title)
+      val artist  = recallString(attrMP3Artist)
+      val comment = recallString(attrMP3Comment)
+      FileFormat.MP3(kbps = kbps, vbr = vbr, title = title, artist = artist, comment = comment)
+
+    } else {
+      val tpe   = AudioFileType.writable.find(_.id === tpeID).getOrElse(AudioFileType.AIFF)
+      val smpID = recallString(attrSampleFormat, SampleFormat.Int24.id)
+      val smp   = SampleFormat.fromInt16.find(_.id === smpID).getOrElse(SampleFormat.Int24)
+      FileFormat.PCM(tpe, smp)
+    }
+
+    val sampleRate  = recallInt     (attrSampleRate , 44100)
+    val decibels    = recallDouble  (attrGain       , -0.2)
+    val normalized  = recallBoolean (attrNormalize  , default = true)
+    val gain        = Gain(decibels.toFloat, normalized)
+    val spanLike    = recallSpanLike(attrSpan)
+    val span: SpanOrVoid = spanLike match {
+      case sp: Span => sp
+      case _ => Span.Void
+    }
+    val chansS      = recallString   (attrChannels, "1 to 2")
+    val channels    = Try(stringToChannels(chansS)).toOption.getOrElse(Vector(0 to 1))
+    val realtime    = recallBoolean  (attrRealtime)
+    val fineControl = recallBoolean  (attrFineControl)
+    val importFile  = recallBoolean  (attrImport)
+
+    val location = attr.$[ArtifactLocation](attrLocation).map(tx.newHandle(_))
+
+    QuerySettings(file = file, fileFormat = fileFormat, sampleRate = sampleRate, gain = gain, span = span,
+      channels = channels, realtime = realtime, fineControl = fineControl, importFile = importFile,
+      location = location)
+  }
 
   final case class QuerySettings[S <: Sys[S]](
                                                file        : Option[File]          = None,
@@ -312,27 +516,9 @@ object ActionBounceTimeline {
     val ggFineControl = new CheckBox()
     ggFineControl.selected = init.fineControl
 
-    // cf. stackoverflow #4310439 - with added spaces after comma
-    // val regRanges = """^(\d+(-\d+)?)(,\s*(\d+(-\d+)?))*$""".r
-
-    // cf. stackoverflow #16532768
-    val regRanges = """(\d+(-\d+)?)""".r
-
     val fmtRanges = new JFormattedTextField.AbstractFormatter {
       def stringToValue(text: String): Vec[Range.Inclusive] = try {
-        regRanges.findAllIn(text).toIndexedSeq match {
-          case list if list.nonEmpty => list.map { s =>
-            val i = s.indexOf('-')
-            if (i < 0) {
-              val a = s.toInt - 1
-              a to a
-            } else {
-              val a = s.substring(0, i).toInt - 1
-              val b = s.substring(i +1).toInt - 1
-              a to b
-            }
-          }
-        }
+        stringToChannels(text)
       } catch {
         case e @ NonFatal(_) =>
           e.printStackTrace()
@@ -342,8 +528,7 @@ object ActionBounceTimeline {
       def valueToString(value: Any): String = try {
         value match {
           case sq: Vec[_] => sq.map {
-            case r: Range if r.start < r.end  => s"${r.start + 1}-${r.end + 1}"
-            case r: Range                     => s"${r.start + 1}"
+            case r: Range => channelToString(r)
           } .mkString(", ")
         }
       } catch {
@@ -853,12 +1038,14 @@ object ActionBounceTimeline {
   }
 }
 abstract class ActionBounceTimeline[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S],
-                                              objH: stm.Source[S#Tx, Obj[S]])
+                                                 objH: stm.Source[S#Tx, Obj[S]], storeSettings: Boolean = true)
   extends scala.swing.Action(ActionBounceTimeline.title) {
 
-  import ActionBounceTimeline._
+  import ActionBounceTimeline.{storeSettings => _, _}
+  import view.cursor
 
   private[this] var settings = QuerySettings[S]()
+  private[this] var recalled = false
 
   protected def prepare(settings: QuerySettings[S]): QuerySettings[S] = settings
 
@@ -867,16 +1054,30 @@ abstract class ActionBounceTimeline[S <: Sys[S]](view: ViewHasWorkspace[S] with 
   protected def spanPresets(): SpanPresets = Nil
 
   final def apply(): Unit = {
+    if (storeSettings && !recalled) {
+      settings = cursor.step { implicit tx =>
+        ActionBounceTimeline.recallSettings(objH())
+      }
+      recalled = true
+    }
+
     val setUpd          = prepare(settings)
     val presets         = spanPresets()
     val (_settings, ok) = query(view, setUpd, SpanSelection, presets)
     settings            = _settings
     if (ok) {
+      if (storeSettings) {
+        cursor.step { implicit tx =>
+          ActionBounceTimeline.storeSettings(_settings, objH())
+        }
+      }
+
       for {
         f    <- _settings.file
         span <- _settings.span.nonEmptyOption
-      }
+      } {
         performGUI(view, _settings, objH :: Nil, f, span)
+      }
     }
   }
 }
