@@ -44,7 +44,7 @@ import scala.concurrent.blocking
 import scala.language.implicitConversions
 import scala.swing.Swing._
 import scala.swing.event.{ButtonClicked, SelectionChanged, ValueChanged}
-import scala.swing.{Button, ButtonGroup, CheckBox, Component, Dialog, Label, ProgressBar, TextField, ToggleButton}
+import scala.swing.{Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, Label, ProgressBar, TextField, ToggleButton}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -625,17 +625,23 @@ object ActionBounceTimeline {
 
     ggImport.selected = init.importFile
 
+    val pPath = new FlowPanel(lbPath, ggPath)
+
     val box = new GroupPanel {
-      horizontal= Seq(
-        Par(Trailing)(
-          lbPath, lbFormat , lbSampleRate, lbGain, lbChannels, lbSpanStart, lbSpanStopOrDur,
-          lbRealtime, lbFineControl, lbImport, lbMP3Title, lbMP3Artist, lbMP3Comment),
-        Par(
-          ggPath, Seq(ggFileType, ggPCMSampleFormat, ggMP3BitRate), ggSampleRate,
-          Seq(ggGainAmt, ggGainType), ggChannels, ggSpanStartOpt, ggSpanStopOrDur,
-          ggRealtime, ggFineControl, ggImport,
-          ggMP3Title, ggMP3Artist, ggMP3Comment
-        ))
+      horizontal = Par(
+        Seq(lbPath, ggPath),
+        Seq(
+          Par(Trailing)(
+            lbFormat , lbSampleRate, lbGain, lbChannels, lbSpanStart, lbSpanStopOrDur,
+            lbRealtime, lbFineControl, lbImport, lbMP3Title, lbMP3Artist, lbMP3Comment),
+          Par(
+            Seq(ggFileType, ggPCMSampleFormat, ggMP3BitRate), ggSampleRate,
+            Seq(ggGainAmt, ggGainType), ggChannels, ggSpanStartOpt, ggSpanStopOrDur,
+            ggRealtime, ggFineControl, ggImport,
+            ggMP3Title, ggMP3Artist, ggMP3Comment
+          )
+        )
+      )
       vertical = Seq(
         Par(Baseline)(lbPath, ggPath),
         Par(Baseline)(lbFormat, ggFileType, ggPCMSampleFormat, ggMP3BitRate),
