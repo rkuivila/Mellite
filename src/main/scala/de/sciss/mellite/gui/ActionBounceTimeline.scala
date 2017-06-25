@@ -44,7 +44,7 @@ import scala.concurrent.blocking
 import scala.language.implicitConversions
 import scala.swing.Swing._
 import scala.swing.event.{ButtonClicked, SelectionChanged, ValueChanged}
-import scala.swing.{Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, Label, ProgressBar, TextField, ToggleButton}
+import scala.swing.{Button, ButtonGroup, CheckBox, Component, Dialog, Label, ProgressBar, TextField, ToggleButton}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -462,12 +462,7 @@ object ActionBounceTimeline {
     val ggPath    = new PathField
     ggPath.mode   = FileDialog.Save
     ggPath.title  = "Audio Output File"
-    // XXX TODO --- should have a text-field column access
-//    ggPath.preferredSize = {
-//      val d = ggPath.preferredSize
-//      d.width = math.max(320, d.width)
-//      d
-//    }
+    ggPath.textField.columns = 0    // otherwise doesn't play nicely with group-panel
 
     def setPath(file: File): Unit =
       ggPath.value = file.replaceExt(ggFileType.selection.item.extension)
@@ -625,11 +620,10 @@ object ActionBounceTimeline {
 
     ggImport.selected = init.importFile
 
-    val pPath = new FlowPanel(lbPath, ggPath)
-
+//    Util.fixWidth(lbPath)
     val box = new GroupPanel {
       horizontal = Par(
-        Seq(lbPath, ggPath),
+        Seq(lbPath, ggPath), // Seq(Size.fixed(lbPath, Size.Preferred), Size.fill(ggPath, pref = Size.Infinite)),
         Seq(
           Par(Trailing)(
             lbFormat , lbSampleRate, lbGain, lbChannels, lbSpanStart, lbSpanStopOrDur,
