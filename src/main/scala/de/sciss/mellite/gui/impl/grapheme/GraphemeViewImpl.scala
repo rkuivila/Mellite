@@ -182,15 +182,15 @@ object GraphemeViewImpl {
         case _ =>
           val hasSome = selectionModel.nonEmpty
           actionAttr              .enabled = hasSome
-          actionMoveObjectToCursor.enabled = hasSome
+//          actionMoveObjectToCursor.enabled = hasSome
       }
 
-      timelineModel.addListener {
-        case TimelineModel.Selection(_, span) if span.before.isEmpty != span.now.isEmpty =>
-          val hasSome = span.now.nonEmpty
-          actionClearSpan .enabled = hasSome
-          actionRemoveSpan.enabled = hasSome
-      }
+//      timelineModel.addListener {
+//        case TimelineModel.Selection(_, span) if span.before.isEmpty != span.now.isEmpty =>
+//          val hasSome = span.now.nonEmpty
+//          actionClearSpan .enabled = hasSome
+//          actionRemoveSpan.enabled = hasSome
+//      }
 
       val pane2 = canvasView.component
 //      pane2.dividerSize         = 4

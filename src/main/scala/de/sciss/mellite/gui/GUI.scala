@@ -20,19 +20,20 @@ import java.awt.{BasicStroke, Graphics, Graphics2D, RenderingHints, Shape}
 import javax.swing.event.{AncestorEvent, AncestorListener}
 import javax.swing.{Icon, JComponent, KeyStroke, SwingUtilities}
 
-import de.sciss.audiowidgets.{RotaryKnob, Transport}
+import de.sciss.audiowidgets.{ParamField, RotaryKnob, Transport}
 import de.sciss.desktop.{KeyStrokes, OptionPane}
-import de.sciss.{desktop, equal, numbers}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.swing.{defer, requireEDT}
 import de.sciss.swingplus.{DoClickAction, GroupPanel}
 import de.sciss.synth.proc.SoundProcesses
+import de.sciss.{desktop, equal, numbers}
 
 import scala.concurrent.Future
+import scala.swing.Reactions.Reaction
 import scala.swing.Swing._
-import scala.swing.event.{Key, ValueChanged}
+import scala.swing.event.{Key, SelectionChanged, ValueChanged}
 import scala.swing.{AbstractButton, Action, Alignment, Button, Component, Dialog, Dimension, Label, TabbedPane, TextField}
 
 // XXX TODO: this stuff should go somewhere for re-use.
@@ -244,6 +245,49 @@ object GUI {
 
 //    c.peer.addComponentListener(adapter)
     c.peer.addAncestorListener (adapter)
+  }
+
+  def fixWidths(c: Component*): Unit = {
+    var w = 0
+    c.foreach { comp =>
+      val pref = comp.preferredSize
+      w = math.max(w, pref.width)
+    }
+    c.foreach { comp =>
+      import comp._
+      val pref      = preferredSize
+      val min       = minimumSize
+      val max       = maximumSize
+      pref.width    = w
+      min .width    = w
+      max .width    = w
+      preferredSize = pref
+      minimumSize   = min
+      maximumSize   = max
+    }
+  }
+
+  def linkFormats[A](pf: ParamField[A]*): Unit = {
+    val reaction: Reaction = {
+      case SelectionChanged(f: ParamField[_]) =>
+        val fmt0Opt = f.selectedFormat
+        fmt0Opt.foreach { fmt0 =>
+          val idx = f.formats.indexOf(fmt0)
+          if (idx >= 0) {
+            pf.foreach { f1 =>
+              if (f1 != f) {
+                val fmt1 = f1.formats
+                if (fmt1.size > idx) {
+                  f1.selectedFormat = Some(fmt1(idx))
+                }
+              }
+            }
+          }
+        }
+    }
+    pf.foreach(_.subscribe(reaction))
+    // ! https://github.com/scala/scala-swing/issues/42
+    pf.head.peer.putClientProperty("mellite.reaction", reaction)
   }
 
   def boostRotary(lo: Float = 1, hi: Float = 512, tooltip: String = "Sonogram Brightness")

@@ -48,17 +48,17 @@ object GraphemeFrameImpl {
       val mf = Application.windowHandler.menuFactory
       val me = Some(window)
 
-      bindMenus(
-        "edit.delete" -> view.actionDelete
-      )
+//      bindMenus(
+//        "edit.delete" -> view.actionDelete
+//      )
 
       // --- grapheme menu ---
       import KeyStrokes._
       import Menu.{Group, Item, proxy}
       val mGrapheme = Group("grapheme", "Grapheme")
         .add(Item("insert-span"           , proxy(("Insert Span...",          menu1 + shift + Key.E))))
-        .add(Item("clear-span"            , view.actionClearSpan ))
-        .add(Item("remove-span"           , view.actionRemoveSpan))
+//        .add(Item("clear-span"            , view.actionClearSpan ))
+//        .add(Item("remove-span"           , view.actionRemoveSpan))
         .add(Item("dup-span-to-pos"       , "Duplicate Span to Cursor"))
         .addLine()
         .add(Item("nudge-amount"          , "Nudge Amount..."))
@@ -66,7 +66,7 @@ object GraphemeFrameImpl {
         .add(Item("nudge-right"           , proxy(("Nudge Objects Forward",   plain + Key.Plus))))
         .addLine()
         .add(Item("select-following"      , proxy(("Select Following Objects", menu2 + Key.F))))
-        .add(Item("move-obj-start-to-pos" , view.actionMoveObjectToCursor))
+//        .add(Item("move-obj-start-to-pos" , view.actionMoveObjectToCursor))
         .addLine()
         .add(Item("sel-stop-to-start",     "Flip Selection Backward"))
         .add(Item("sel-start-to-stop",     "Flip Selection Forward"))

@@ -44,17 +44,17 @@ trait TimelineActions[S <: Sys[S]] {
       }
   }
 
-  object actionBounce extends ActionBounceTimeline.Action(this, timelineH) {
+  object actionBounce extends ActionBounceTimeline(this, timelineH) {
     import ActionBounceTimeline._
 
     override protected def prepare(set0: QuerySettings[S]): QuerySettings[S] =
       if (timelineModel.selection.isEmpty) set0 else set0.copy(span = timelineModel.selection)
 
-    override protected def spanPresets(): Presets = {
+    override protected def spanPresets(): SpanPresets = {
       val all = cursor.step { implicit tx =>
         presetAllTimeline(timeline)
       }
-      all ::: timelineModel.selection.nonEmptyOption.map("Selection" -> _).toList
+      all ::: timelineModel.selection.nonEmptyOption.map(value => SpanPreset("Selection", value)).toList
     }
   }
 

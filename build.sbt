@@ -13,7 +13,7 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.12.5-SNAPSHOT"
+lazy val soundProcessesVersion      = "3.12.5"
 lazy val fscapeVersion              = "2.7.1"
 lazy val nuagesVersion              = "2.16.0"
 lazy val interpreterPaneVersion     = "1.8.1"
@@ -25,7 +25,8 @@ lazy val freesoundVersion           = "1.2.0"
 lazy val playJSONVersion            = "0.4.0"
 lazy val scalaColliderSwingVersion  = "1.33.1"
 lazy val lucreSwingVersion          = "1.5.1"
-lazy val audioWidgetsVersion        = "1.10.2"
+lazy val audioWidgetsVersion        = "1.10.3"
+lazy val swingPlusVersion           = "0.2.3"
 lazy val desktopVersion             = "0.7.3"
 lazy val sonogramVersion            = "1.9.1"
 lazy val raphaelIconsVersion        = "1.0.4"
@@ -189,6 +190,7 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss"    %% "lucreswing"                     % lucreSwingVersion,          // reactive Swing components
       "de.sciss"    %% "audiowidgets-swing"             % audioWidgetsVersion,        // audio application widgets
       "de.sciss"    %% "audiowidgets-app"               % audioWidgetsVersion,        // audio application widgets
+      "de.sciss"    %% "swingplus"                      % swingPlusVersion,           // Swing extensions
       "de.sciss"    %% "desktop"                        % desktopVersion,
       "de.sciss"    %% "desktop-mac"                    % desktopVersion,             // desktop framework; TODO: should be only added on OS X platforms
       "de.sciss"    %% "sonogramoverview"               % sonogramVersion,            // sonogram component

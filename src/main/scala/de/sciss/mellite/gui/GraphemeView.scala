@@ -22,7 +22,7 @@ import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.grapheme.{GraphemeViewImpl => Impl}
 import de.sciss.synth.proc.{Grapheme, Workspace}
 
-import scala.swing.{Action, Component}
+import scala.swing.Component
 
 object GraphemeView {
   def apply[S <: Sys[S]](group: Grapheme[S])
@@ -43,8 +43,8 @@ trait GraphemeView[S <: stm.Sys[S]] extends ViewHasWorkspace[S] with View.Editab
   // def transportView: TransportView[S]
 
   // ---- GUI actions ----
-  def actionDelete            : Action
-  def actionClearSpan         : Action
-  def actionRemoveSpan        : Action
-  def actionMoveObjectToCursor: Action
+//  def actionDelete            : Action
+//  def actionClearSpan         : Action
+//  def actionRemoveSpan        : Action
+//  def actionMoveObjectToCursor: Action
 }

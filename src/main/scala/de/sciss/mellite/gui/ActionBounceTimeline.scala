@@ -18,8 +18,8 @@ import java.io.{EOFException, File}
 import java.text.ParseException
 import javax.swing.{JFormattedTextField, SpinnerNumberModel, SwingUtilities}
 
-import de.sciss.audiowidgets.AxisFormat
-import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, Window}
+import de.sciss.audiowidgets.TimeField
+import de.sciss.desktop.{Desktop, DialogSource, FileDialog, OptionPane, PathField, Window}
 import de.sciss.file._
 import de.sciss.lucre.artifact.{Artifact, ArtifactLocation}
 import de.sciss.lucre.expr.{DoubleObj, LongObj}
@@ -32,6 +32,7 @@ import de.sciss.processor.impl.ProcessorImpl
 import de.sciss.processor.{Processor, ProcessorLike}
 import de.sciss.span.Span
 import de.sciss.span.Span.SpanOrVoid
+import de.sciss.swingplus
 import de.sciss.swingplus.{ComboBox, Labeled, Spinner, SpinnerComboBox}
 import de.sciss.synth.io.{AudioFile, AudioFileSpec, AudioFileType, SampleFormat}
 import de.sciss.synth.proc.Implicits._
@@ -39,11 +40,12 @@ import de.sciss.synth.proc.{AudioCue, Bounce, Code, Folder, TimeRef, Timeline, W
 import de.sciss.synth.{SynthGraph, addToTail}
 import de.sciss.{desktop, equal, numbers, synth}
 
-import scala.collection.immutable.{IndexedSeq => Vec, Iterable => IIterable}
+import scala.collection.immutable.{IndexedSeq => Vec, Iterable => IIterable, Seq => ISeq}
 import scala.concurrent.blocking
+import scala.language.implicitConversions
 import scala.swing.Swing._
-import scala.swing.event.{ButtonClicked, SelectionChanged}
-import scala.swing.{Alignment, BoxPanel, Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Orientation, ProgressBar, RadioButton, Swing, TextField}
+import scala.swing.event.{ButtonClicked, SelectionChanged, ValueChanged}
+import scala.swing.{Alignment, BoxPanel, Button, ButtonGroup, CheckBox, Component, Dialog, FlowPanel, GridPanel, Label, Orientation, ProgressBar, Swing, TextField, ToggleButton}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -52,42 +54,14 @@ object ActionBounceTimeline {
 
   final val title = "Export as Audio File"
 
-  type Presets = List[(String, Span)]
-
-  def presetAllTimeline[S <: Sys[S]](tl: Timeline[S])(implicit tx: S#Tx): Presets = {
+  def presetAllTimeline[S <: Sys[S]](tl: Timeline[S])(implicit tx: S#Tx): List[SpanPreset] = {
     val opt = for {
       start <- tl.firstEvent
       stop  <- tl.lastEvent
     } yield {
-      "All" -> Span(start, stop)
+      SpanPreset(" All ", Span(start, stop))
     }
     opt.toList
-  }
-
-  class Action[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S], objH: stm.Source[S#Tx, Obj[S]])
-    extends scala.swing.Action(title) {
-
-    private[this] var settings = QuerySettings[S]()
-
-    protected def prepare(settings: QuerySettings[S]): QuerySettings[S] = settings
-
-    protected type Presets = ActionBounceTimeline.Presets
-
-    protected def spanPresets(): Presets = Nil
-
-    final def apply(): Unit = {
-      val setUpd          = prepare(settings)
-      val presets         = spanPresets()
-      val (_settings, ok) = query(view, setUpd, SpanSelection, presets)
-      settings            = _settings
-      if (ok) {
-        for {
-          f    <- _settings.file
-          span <- _settings.span.nonEmptyOption
-        }
-          performGUI(view, _settings, objH :: Nil, f, span)
-      }
-    }
   }
 
   object FileFormat {
@@ -105,7 +79,7 @@ object ActionBounceTimeline {
   final case class QuerySettings[S <: Sys[S]](
                                                file        : Option[File]          = None,
                                                fileFormat  : FileFormat            = FileFormat.PCM(),
-                                               sampleRate  : Double                = 44100.0,
+                                               sampleRate  : Int                   = 44100,
                                                gain        : Gain                  = Gain.normalized(-0.2f),
                                                span        : SpanOrVoid            = Span.Void,
                                                channels    : Vec[Range.Inclusive]  = Vector(0 to 1),
@@ -114,7 +88,7 @@ object ActionBounceTimeline {
                                                importFile  : Boolean               = false,
                                                location    : Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
   ) {
-    def forceSpan: Span = span.nonEmptyOption.getOrElse(Span(0L, (10 * TimeRef.SampleRate).toLong))
+    // def forceSpan: Span = span.nonEmptyOption.getOrElse(Span(0L, (10 * TimeRef.SampleRate).toLong))
 
     def prepare(group: IIterable[stm.Source[S#Tx, Obj[S]]], f: File)(mkSpan: => Span): PerformSettings[S] = {
       val server        = Server.Config()
@@ -215,12 +189,22 @@ object ActionBounceTimeline {
     KBPS( 64), KBPS( 80), KBPS( 96), KBPS(112), KBPS(128),
     KBPS(144), KBPS(160), KBPS(192), KBPS(224), KBPS(256), KBPS(320))
 
+//  object SpanPreset {
+//    implicit def fromTuple(tup: (String, Span)): SpanPreset = SpanPreset(name = tup._1, value = tup._2)
+//  }
+  final case class SpanPreset(name: String, value: Span) {
+    override def toString: String = name
+  }
+
   def query[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S],
                          init: QuerySettings[S], selectionType: Selection,
-                         spanPresets: IIterable[(String, Span)]): (QuerySettings[S], Boolean) = {
+                         spanPresets: ISeq[SpanPreset]): (QuerySettings[S], Boolean) = {
 
     import view.{cursor, undoManager, workspace => document}
     val window          = Window.find(view.component)
+    import equal.Implicits._
+
+    import FlowPanel.Alignment.Leading
 
     val sqFileType      = AudioFileType.writable.map(FileType.PCM) :+ FileType.MP3
     val ggFileType      = new ComboBox[FileType](sqFileType)
@@ -230,20 +214,31 @@ object ActionBounceTimeline {
     }
 
     val ggPCMSampleFormat = new ComboBox[SampleFormat](SampleFormat.fromInt16)
-    desktop.Util.fixWidth(ggPCMSampleFormat)
+    val pPCMSampleFormat  = new FlowPanel(Leading)(ggPCMSampleFormat, Swing.HGlue)
 
     val ggMP3BitRate  = new ComboBox[KBPS](mp3BitRates)
     val ggMP3VBR      = new CheckBox("VBR")
+    val pMP3Rate      = new FlowPanel(Leading)(ggMP3BitRate, ggMP3VBR)
+    val ggMP3Title    = new TextField(10)
+    val ggMP3Artist   = new TextField(10)
+    val ggMP3Comment  = new TextField(10)
+    val pMP3Meta      = new FlowPanel(
+      new Label("Title:"  ), ggMP3Title,
+      new Label("Author:" ), ggMP3Artist,
+      new Label("Comment:"), ggMP3Comment)
 
     val ggImport      = new CheckBox()
 
+//    desktop.Util.fixWidth(ggPCMSampleFormat)
+    GUI.fixWidths(pPCMSampleFormat, pMP3Rate)
+
     def fileFormatVisibility(pack: Boolean): Unit = {
-      import equal.Implicits._
       val isMP3 = ggFileType.selection.item === FileType.MP3
       val isPCM = !isMP3
-      if (!pack || ggPCMSampleFormat.visible != isPCM) {
-        ggPCMSampleFormat .visible = isPCM
-        ggMP3BitRate      .visible = isMP3
+      if (!pack || pPCMSampleFormat.visible != isPCM) {
+        pPCMSampleFormat  .visible = isPCM
+        pMP3Rate          .visible = isMP3
+        pMP3Meta          .visible = isMP3
         ggImport          .enabled = isPCM
         if (!isPCM) ggImport.selected = false
 
@@ -269,32 +264,31 @@ object ActionBounceTimeline {
       case f: FileFormat.MP3 =>
         ggPCMSampleFormat .selection.item   = SampleFormat.Int24
         ggMP3BitRate      .selection.index  = mp3BitRates.indexWhere(_.value >= f.kbps)
+        ggMP3Title        .text             = f.title
+        ggMP3Artist       .text             = f.artist
+        ggMP3Comment      .text             = f.comment
         ggMP3VBR          .selected         = f.vbr
     }
 
-    val ggSampleRate = new SpinnerComboBox(value0 = 44100, minimum = 1, maximum = TimeRef.SampleRate.toInt,
+    val ggSampleRate = new SpinnerComboBox[Int](value0 = init.sampleRate,
+      minimum = 1, maximum = TimeRef.SampleRate.toInt,
       step = 100, items = Seq(44100, 48000, 88200, 96000))
 
-    val ggPathText = new TextField(32)
+    val ggPath    = new PathField
+    ggPath.mode   = FileDialog.Save
+    ggPath.title  = "Audio Output File"
 
-    def setPathText(file: File): Unit =
-      ggPathText.text = file.replaceExt(ggFileType.selection.item.extension).path
+    def setPath(file: File): Unit =
+      ggPath.value = file.replaceExt(ggFileType.selection.item.extension)
 
     ggFileType.listenTo(ggFileType.selection)
     ggFileType.reactions += {
       case SelectionChanged(_) =>
-        val s = ggPathText.text
-        if (!s.isEmpty) setPathText(new File(s))
+        val p = ggPath.value
+        if (!p.path.isEmpty) setPath(p)
     }
 
-    init.file.foreach(f => ggPathText.text = f.path)
-    val ggPathDialog    = Button("...") {
-      val initT = ggPathText.text
-      val init  = if (initT.isEmpty) None else Some(new File(initT))
-      val dlg   = FileDialog.save(init = init, title = "Audio Output File")
-      dlg.show(window).foreach(setPathText)
-    }
-    ggPathDialog.peer.putClientProperty("JButton.buttonType", "gradient")
+    init.file.foreach(f => ggPath.value = f)
 
     val gainModel   = new SpinnerNumberModel(init.gain.decibels, -160.0, 160.0, 0.1)
     val ggGainAmt   = new Spinner(gainModel)
@@ -311,67 +305,10 @@ object ActionBounceTimeline {
         ggGainAmt.requestFocus()
     }
 
-    val ggSpanAll   = new RadioButton("Automatic")
-    val tlSel       = init.span
-//    match {
-//      case sp: Span => sp
-//      case _        => timelineModel.selection
-//    }
-    val selectionText = tlSel match {
-      case Span(start, stop)  =>
-        val sampleRate  = TimeRef.SampleRate // timelineModel.sampleRate
-        val fmt         = AxisFormat.Time()
-        s"(${fmt.format(start/sampleRate)} ... ${fmt.format(stop/sampleRate)})"
-      case _ =>
-        ""
-    }
-    lazy val ggSpanUser  = new RadioButton(s"Current Selection $selectionText")
-    lazy val ggSpanGroup = new ButtonGroup(ggSpanAll, ggSpanUser)
-
-    lazy val mDuration   = new SpinnerNumberModel(tlSel.length / TimeRef.SampleRate, 0.0, 10000.0, 0.1)
-
-//    var transformItemsCollected = false
-
     val ggRealtime = new CheckBox()
     ggRealtime.selected = init.realtime
     val ggFineControl = new CheckBox()
     ggFineControl.selected = init.fineControl
-
-//    def updateTransformEnabled(): Unit = {
-//      val enabled = ggImport.selected
-//      checkTransform.enabled = enabled
-//      ggTransform   .enabled = enabled && checkTransform.selected
-//      if (ggTransform.enabled && !transformItemsCollected) {
-//        val transform = cursor.step { implicit tx =>
-//          findTransforms(document)
-//        }
-//        transformItemsCollected =  true
-//        ggTransform.items = transform
-//        import equal.Implicits._
-//        for (t <- init.transform; lb <- transform.find(_.value === t)) {
-//          ggTransform.selection.item = lb
-//        }
-//      }
-//    }
-
-//    {
-//      listenTo(this)
-//      reactions += {
-//        case ButtonClicked(_) => updateTransformEnabled()
-//      }
-//    }
-//    if (showTransform) updateTransformEnabled()
-
-//    lazy val checkTransform = new CheckBox() {
-//      listenTo(this)
-//      reactions += {
-//        case ButtonClicked(_) => updateTransformEnabled()
-//      }
-//    }
-//    lazy val ggTransform = new ComboBox[Labeled[stm.Source[S#Tx, Code.Obj[S]]]](Nil) // lazy filling
-//    val pTransform  = new BoxPanel(Orientation.Horizontal) {
-//      contents ++= Seq(checkTransform, HStrut(4), ggTransform)
-//    }
 
     // cf. stackoverflow #4310439 - with added spaces after comma
     // val regRanges = """^(\d+(-\d+)?)(,\s*(\d+(-\d+)?))*$""".r
@@ -421,44 +358,117 @@ object ActionBounceTimeline {
 
     import Alignment.Trailing
     import Swing.EmptyIcon
-    val pPath     = new FlowPanel(ggPathText, ggPathDialog)
-    val pFormat   = new FlowPanel(ggFileType, ggPCMSampleFormat, ggMP3BitRate, ggMP3VBR, ggSampleRate, ggGainAmt,
-      new Label("dB"), ggGainType)
-    val pSpan     = new GridPanel(0, 2)
-    pSpan.hGap    = 4
-    pSpan.contents ++= Seq(new Label("Channels:", EmptyIcon, Trailing), ggChannels)
-    import equal.Implicits._
-    if (selectionType === SpanSelection) {
-      ggSpanGroup.select(if (init.span.isEmpty) ggSpanAll else ggSpanUser)
-      ggSpanUser.enabled   = tlSel.nonEmpty
-      pSpan.contents ++= Seq(new Label("Time Span:", EmptyIcon, Trailing), ggSpanAll,
-                             HStrut(1),                                        ggSpanUser)
-    } else if (selectionType === DurationSelection) {
-      val ggDuration = new Spinner(mDuration)
-      pSpan.contents ++= Seq(new Label("Duration [sec]:", EmptyIcon, Trailing), ggDuration)
+    val pPath     = new FlowPanel(Leading)(new Label("Output File:"), ggPath)
+    val pFormat   = new FlowPanel(Leading)(new Label("Format:"), ggFileType, pPCMSampleFormat, pMP3Rate, ggSampleRate)
+    val pParams   = new GridPanel(0, 2)
+    pParams.hGap  = 4
+    pParams.contents ++= Seq(new Label("Gain:", EmptyIcon, Trailing),
+      new FlowPanel(Leading)(ggGainAmt, new Label("dB"), ggGainType))
+    pParams.contents ++= Seq(new Label("Channels:", EmptyIcon, Trailing), ggChannels)
+
+    val span0F          = init.span.nonEmptyOption.getOrElse {
+      spanPresets.headOption.fold(Span(0L, (10 * TimeRef.SampleRate).toLong))(_.value)
     }
-    pSpan.contents ++= Seq(
+    val ggSpanStart     = new TimeField(span0F.start, Span.Void, sampleRate = TimeRef.SampleRate, viewSampleRate0 = init.sampleRate)
+    val ggSpanStopOrDur = new TimeField(span0F.stop , Span.Void, sampleRate = TimeRef.SampleRate, viewSampleRate0 = init.sampleRate)
+    val ggSpanPresets   = spanPresets.map { pst =>
+      new ToggleButton(pst.name) {
+        listenTo(this)
+        reactions += {
+          case ButtonClicked(_) if selected =>
+            if (selectionType === SpanSelection) {
+              ggSpanStart     .value = pst.value.start
+              ggSpanStopOrDur .value = pst.value.stop
+            } else {
+              ggSpanStopOrDur .value = pst.value.length
+            }
+            ggSpanStopOrDur.requestFocus()
+        }
+      }
+    }
+    val bgSpanPresets = new ButtonGroup(ggSpanPresets: _*)
+
+    def mkSpan(): SpanOrVoid = selectionType match {
+      case SpanSelection =>
+        val a = ggSpanStart     .value
+        val b = ggSpanStopOrDur .value
+        Span(math.min(a, b), math.max(a, b))
+
+      case DurationSelection =>
+        val a = 0L
+        val b = ggSpanStopOrDur.value
+        Span(math.min(a, b), math.max(a, b))
+
+      case NoSelection =>
+        init.span
+    }
+
+    ggSampleRate.listenTo(ggSampleRate.spinner)
+    ggSampleRate.reactions += {
+      case ValueChanged(_) =>
+        val sr = ggSampleRate.value
+        ggSpanStart     .viewSampleRate = sr
+        ggSpanStopOrDur .viewSampleRate = sr
+    }
+
+    def updatePresetSelection(): Unit = {
+      val sp  = mkSpan()
+      val idx = if (selectionType === SpanSelection) {
+        spanPresets.indexWhere(_.value === sp)
+      } else if (selectionType === DurationSelection) {
+        val len = sp.length
+        spanPresets.indexWhere(_.value.length == len)
+      } else -1
+
+      import swingplus.Implicits._
+      if (idx < 0) bgSpanPresets.clearSelection() else bgSpanPresets.select(ggSpanPresets(idx))
+    }
+
+    if (selectionType === SpanSelection) {
+      GUI.linkFormats(ggSpanStart, ggSpanStopOrDur)
+      val pSpan = new FlowPanel(Leading)(ggSpanStart, new Label("–"), ggSpanStopOrDur)
+      pSpan.contents ++= ggSpanPresets
+      pParams.contents ++= Seq(new Label("Time Span:", EmptyIcon, Trailing), pSpan)
+      ggSpanStart.listenTo(ggSpanStart)
+      ggSpanStart.reactions += {
+        case ValueChanged(_) => updatePresetSelection()
+      }
+      ggSpanStopOrDur.listenTo(ggSpanStopOrDur)
+      ggSpanStopOrDur.reactions += {
+        case ValueChanged(_) => updatePresetSelection()
+      }
+
+    } else if (selectionType === DurationSelection) {
+      val pDur = new FlowPanel(Leading)(ggSpanStopOrDur)
+      pDur.contents ++= ggSpanPresets
+      pParams.contents ++= Seq(new Label("Duration:", EmptyIcon, Trailing), pDur)
+      ggSpanStopOrDur.listenTo(ggSpanStopOrDur)
+      ggSpanStopOrDur.reactions += {
+        case ValueChanged(_) => updatePresetSelection()
+      }
+    }
+
+    updatePresetSelection()
+
+    pParams.contents ++= Seq(
       HStrut(1), VStrut(32),
       new Label("Run in Real-Time:" , EmptyIcon, Trailing), ggRealtime,
       new Label("Fine Control Rate:", EmptyIcon, Trailing), ggFineControl
     )
 //    if (showImport) {
       ggImport.selected = init.importFile
-      pSpan.contents ++= Seq(new Label("Import Output File Into Workspace:", EmptyIcon, Trailing), ggImport)
+      pParams.contents ++= Seq(new Label("Import into Workspace:", EmptyIcon, Trailing), ggImport)
 //    }
 
-//    if (showTransform) {
-//      pSpan.contents ++= Seq(new Label("Apply Transformation:", EmptyIcon, Trailing), pTransform)
-//    }
     val box       = new BoxPanel(Orientation.Vertical) {
-      contents ++= Seq(pPath, pFormat, pSpan)
+      contents ++= Seq(pPath, pFormat, pMP3Meta, pParams)
     }
 
     val opt = OptionPane.confirmation(message = box, optionType = OptionPane.Options.OkCancel,
       messageType = OptionPane.Message.Plain)
     opt.title = title
     val ok    = opt.show(window) === OptionPane.Result.Ok
-    val file  = if (ggPathText.text === "") None else Some(new File(ggPathText.text))
+    val file  = ggPath.valueOption
 
     val channels: Vec[Range.Inclusive] = try {
       fmtRanges.stringToValue(ggChannelsJ.getText)
@@ -469,19 +479,15 @@ object ActionBounceTimeline {
     val importFile  = /* if (showImport) */ ggImport.selected // else init.importFile
 //    val numChannels = mkNumChannels(channels)
 
-    val spanOut = selectionType match {
-      case SpanSelection      => if (ggSpanUser.selected) tlSel else Span.Void
-      case DurationSelection  => Span(0L, (mDuration.getNumber.doubleValue() * TimeRef.SampleRate + 0.5).toLong)
-      case NoSelection        => init.span
-    }
+    val spanOut = mkSpan()
 
-    val sampleRate: Int = ggSampleRate.value
+    val sampleRate = ggSampleRate.value
     val fileFormat: FileFormat = ggFileType.selection.item match {
       case FileType.PCM(tpe) =>
         FileFormat.PCM(tpe, ggPCMSampleFormat.selection.item)
       case FileType.MP3 =>
         FileFormat.MP3(kbps = ggMP3BitRate.selection.item.value,
-          vbr = ???, title = ???, artist = ???, comment = ???)
+          vbr = ggMP3VBR.selected, title = ggMP3Title.text, artist = ggMP3Artist.text, comment = ggMP3Comment.text)
     }
 
     var settings = QuerySettings(
@@ -495,7 +501,6 @@ object ActionBounceTimeline {
       channels    = channels,
       importFile  = importFile,
       location    = init.location
-//      transform   = if (checkTransform.selected) Option(ggTransform.selection.item).map(_.value) else None
     )
 
     file match {
@@ -549,29 +554,13 @@ object ActionBounceTimeline {
     }
   }
 
-  //  final case class QuerySettings[S <: Sys[S]](
-  //    file: Option[File] = None,
-  //    spec: AudioFileSpec = AudioFileSpec(AudioFileType.AIFF, SampleFormat.Int24, numChannels = 2, sampleRate = 44100.0),
-  //    gainAmount: Double = -0.2, gainType: Gain = Normalized,
-  //    span: SpanOrVoid = Span.Void, channels: Vec[Range.Inclusive] = Vector(0 to 1),
-  //    importFile: Boolean = true, location: Option[stm.Source[S#Tx, ArtifactLocation[S]]] = None
-  //  )
-
   def performGUI[S <: Sys[S]](view: ViewHasWorkspace[S],
                               settings: QuerySettings[S],
                               group: IIterable[stm.Source[S#Tx, Obj[S]]], file: File, span: Span): Unit = {
 
     import view.{cursor, workspace => document}
-    val window = Window.find(view.component)
-
-//    val hasTransform= settings.importFile && settings.transform.isDefined
-    val bounceFile  =
-//      if (hasTransform) {
-//        File.createTempFile("bounce", s".${settings.spec.fileType.extension}")
-//      } else {
-        file
-//      }
-
+    val window      = Window.find(view.component)
+    val bounceFile  = file
     val pSet        = settings.prepare(group, bounceFile)(span)
     val process: ProcessorLike[Any, Any] = perform(document, pSet)
 
@@ -614,69 +603,24 @@ object ActionBounceTimeline {
     }
 
     def bounceDone(): Unit = {
-      if (DEBUG) println("bounceDone()")
-//      if (hasTransform) {
-//        val ftOpt = cursor.step { implicit tx =>
-//          settings.transform.flatMap(_.apply().value match {
-//            case ft: Code.FileTransform => Some(ft)
-//            case _ => None
-//          })
-//        }
-//        if (DEBUG) println(s"file transform option = ${ftOpt.isDefined}")
-//        ftOpt match {
-//          case Some(ft) =>
-//            ft.execute((bounceFile, file, { codeProc =>
-//              if (DEBUG) println("code code processor")
-//              process = codeProc
-//              codeProc.addListener {
-//                case prog @ Processor.Progress(_, _) => defer(ggProgress.value = prog.toInt / progDiv + 50)
-//              }
-//              codeProc.onComplete {
-//                case Success(_)   => allDone()
-//                case Failure(ex)  => onFailure(ex)
-//              }
-////              codeProc.onSuccess { case _ => allDone() }
-////              codeProc.onFailure(onFailure)
-//            }))
-//          case _ =>
-//            println("WARNING: Code does not denote a file transform")
-//            defer(fDispose())
-//            Desktop.revealFile(file)
-//        }
+//      if (DEBUG) println("bounceDone()")
+//        allDone()
+//    }
 //
-//      } else {
-        allDone()
-//      }
-    }
-
-    def allDone(): Unit = {
+//    def allDone(): Unit = {
       if (DEBUG) println("allDone")
       defer(fDispose())
       (settings.importFile, settings.location) match {
         case (true, Some(locSource)) =>
-          // val elemName  = file.base
           val spec      = AudioFile.readSpec(file)
           cursor.step { implicit tx =>
             val loc       = locSource()
-            // loc.modifiableOption.foreach { locM =>
-              // val fileR     = Artifact.relativize(locM.directory, file)
-              // val artifact  = locM.add(file)
-              // val depArtif  = Artifact.Modifiable(artifact)
-              val depArtif  = Artifact(loc, file) // locM.add(file)
-              val depOffset = LongObj  .newVar[S](0L)
-              val depGain   = DoubleObj.newVar[S](1.0)
-              val deployed  = AudioCue.Obj[S](depArtif, spec, depOffset, depGain)
-              val depElem   = deployed // Grapheme.Expr.Audio(deployed)
-              val depObj    = depElem // Obj(depElem)
-              depObj.name = file.base
-              // val transformOpt = settings.transform.map(_.apply())
-//              val recursion = Recursion(group(), settings.span, depObj, settings.gain, settings.channels, transformOpt)
-//              val recElem   = Recursion.Elem(recursion)
-//              val recObj    = Obj(recElem)
-//              recObj.name = elemName
-              document.rootH().addLast(depObj)
-//              document.rootH().addLast(recObj)
-            // }
+            val depArtif  = Artifact(loc, file)
+            val depOffset = LongObj  .newVar[S](0L)
+            val depGain   = DoubleObj.newVar[S](1.0)
+            val deployed  = AudioCue.Obj[S](depArtif, spec, depOffset, depGain)
+            deployed.name = file.base
+            document.rootH().addLast(deployed)
           }
 
         case _ =>
@@ -882,6 +826,34 @@ object ActionBounceTimeline {
       }
 
       fileOut
+    }
+  }
+}
+abstract class ActionBounceTimeline[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S],
+                                              objH: stm.Source[S#Tx, Obj[S]])
+  extends scala.swing.Action(ActionBounceTimeline.title) {
+
+  import ActionBounceTimeline._
+
+  private[this] var settings = QuerySettings[S]()
+
+  protected def prepare(settings: QuerySettings[S]): QuerySettings[S] = settings
+
+  protected type SpanPresets = ISeq[SpanPreset]
+
+  protected def spanPresets(): SpanPresets = Nil
+
+  final def apply(): Unit = {
+    val setUpd          = prepare(settings)
+    val presets         = spanPresets()
+    val (_settings, ok) = query(view, setUpd, SpanSelection, presets)
+    settings            = _settings
+    if (ok) {
+      for {
+        f    <- _settings.file
+        span <- _settings.span.nonEmptyOption
+      }
+        performGUI(view, _settings, objH :: Nil, f, span)
     }
   }
 }

@@ -176,7 +176,7 @@ object CodeFrameImpl {
                                                  undoManager: UndoManager)
     extends PlainView[S](codeView, rightViewOpt) with CanBounce {
 
-    object actionBounce extends ActionBounceTimeline.Action[S](this, objH)
+    object actionBounce extends ActionBounceTimeline[S](this, objH)
   }
 
   def make[S <: Sys[S], In0, Out0](pObj: Obj[S], pObjH: stm.Source[S#Tx, Obj[S]], obj: Code.Obj[S],

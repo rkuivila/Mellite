@@ -218,18 +218,14 @@ object NuagesEditorViewImpl {
 
     def dispose()(implicit tx: S#Tx): Unit = folderView.dispose()
 
-    object actionBounce extends ActionBounceTimeline.Action(this, nuagesH) {
+    object actionBounce extends ActionBounceTimeline(this, nuagesH) {
       import ActionBounceTimeline._
 
-      override protected def spanPresets(): Presets = {
+      override protected def spanPresets(): SpanPresets = {
         cursor.step { implicit tx =>
           nuagesH().surface match {
-            case Nuages.Surface.Timeline(tl) =>
-              cursor.step { implicit tx =>
-                presetAllTimeline(tl)
-              }
-
-            case Nuages.Surface.Folder(_) => Nil
+            case Nuages.Surface.Timeline(tl)  => presetAllTimeline(tl)
+            case Nuages.Surface.Folder(_)     => Nil
           }
         }
       }

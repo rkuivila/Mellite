@@ -294,13 +294,13 @@ object GlobalProcsViewImpl {
                       true
                     }
 
-                  case iv: CodeObjView[S] =>
-                    atomic { implicit tx =>
-                      val objT = iv.obj
-                      import Mellite.compiler
-                      ProcActions.setSynthGraph(pv.obj :: Nil, objT)
-                      true
-                    }
+//                  case iv: CodeObjView[S] =>
+//                    atomic { implicit tx =>
+//                      val objT = iv.obj
+//                      import Mellite.compiler
+//                      ProcActions.setSynthGraph(pv.obj :: Nil, objT)
+//                      true
+//                    }
 
                   case _ => false
                 }
