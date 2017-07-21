@@ -104,7 +104,7 @@ object CursorsFrameImpl {
 
     override protected def performClose(): Future[Unit] = {
       log(s"Closing workspace ${workspace.folder}")
-      ??? // ActionCloseAllWorkspaces.checkAndClose(workspace, Some(window))
+      ActionCloseAllWorkspaces.tryClose(workspace, Some(window))
     }
 
     override protected def placement = WindowPlacement(1f, 0f)

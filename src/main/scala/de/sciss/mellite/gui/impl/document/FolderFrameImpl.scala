@@ -22,10 +22,10 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop
 import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.impl.UndoManagerImpl
-import de.sciss.desktop.{Desktop, KeyStrokes, Menu, UndoManager, Window}
+import de.sciss.desktop.{KeyStrokes, Menu, UndoManager, Window}
 import de.sciss.lucre.expr.StringObj
 import de.sciss.lucre.stm.Obj
-import de.sciss.lucre.swing.{CellView, deferTx}
+import de.sciss.lucre.swing.CellView
 import de.sciss.lucre.synth.Sys
 import de.sciss.lucre.{expr, stm}
 import de.sciss.mellite.gui.edit.{EditFolderInsertObj, EditFolderRemoveObj}
@@ -34,6 +34,7 @@ import de.sciss.swingplus.{GroupPanel, Spinner}
 import de.sciss.synth.proc.{Folder, ObjKeys, Workspace}
 
 import scala.collection.breakOut
+import scala.concurrent.Future
 import scala.swing.Swing.EmptyIcon
 import scala.swing.event.Key
 import scala.swing.{Action, Alignment, CheckBox, Component, Dialog, Label, SequentialContainer, Swing, TextField}
@@ -45,11 +46,11 @@ object FolderFrameImpl {
                          workspace: Workspace[S], cursor: stm.Cursor[S]): FolderFrame[S] = {
     implicit val undoMgr  = new UndoManagerImpl
     val folderView      = FolderView(folder)
-    val interceptQuit   = isWorkspaceRoot && workspace.folder.isEmpty // i.e. an in-memory workspace
+//    val interceptQuit   = isWorkspaceRoot && workspace.folder.isEmpty // i.e. an in-memory workspace
     val view            = new ViewImpl[S](folderView)
     view.init()
 
-    val res = new FrameImpl[S](view, name = name, isWorkspaceRoot = isWorkspaceRoot, interceptQuit = interceptQuit)
+    val res = new FrameImpl[S](view, name = name, isWorkspaceRoot = isWorkspaceRoot /* , interceptQuit = interceptQuit */)
     res.init()
     res
   }
@@ -71,7 +72,7 @@ object FolderFrameImpl {
 //    }
 
   private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: CellView[S#Tx, String],
-                                             isWorkspaceRoot: Boolean, interceptQuit: Boolean)
+                                             isWorkspaceRoot: Boolean /* , interceptQuit: Boolean */)
     extends WindowImpl[S](name) with FolderFrame[S] /* with Veto[S#Tx] */ {
 
     def workspace : Workspace [S] = view.workspace
@@ -79,12 +80,12 @@ object FolderFrameImpl {
 
     def bottomComponent: Component with SequentialContainer = view.bottomComponent
 
-    private[this] var quitAcceptor = Option.empty[() => Boolean]
+//    private[this] var quitAcceptor = Option.empty[() => Boolean]
 
     override protected def initGUI(): Unit = {
       addDuplicateAction (this, view.actionDuplicate)
       // addImportJSONAction(this, view.actionImportJSON)
-      if (interceptQuit) quitAcceptor = ??? // Some(Desktop.addQuitAcceptor(checkClose()))
+      // if (interceptQuit) quitAcceptor = ... // Some(Desktop.addQuitAcceptor(checkClose()))
     }
 
     override protected def placement = WindowPlacement(0.5f, 0.0f)
@@ -99,10 +100,15 @@ object FolderFrameImpl {
 //        super.performClose()
 //      }
 
-    override def prepareDisposal()(implicit tx: S#Tx): Option[Veto[S#Tx]] =
-      if      (!isWorkspaceRoot ) None
-//      else if (interceptQuit    ) Some(this)
-      else ??? // collectVetos()
+//    override def prepareDisposal()(implicit tx: S#Tx): Option[Veto[S#Tx]] =
+//      if      (!isWorkspaceRoot ) None
+////      else if (interceptQuit    ) Some(this)
+//      else ... // collectVetos()
+
+    override protected def performClose(): Future[Unit] = if (!isWorkspaceRoot) super.performClose() else {
+      log(s"Closing workspace ${workspace.folder}")
+      ActionCloseAllWorkspaces.tryClose(workspace, Some(window))
+    }
 
 //    private def collectVetos()(implicit tx: S#Tx): Option[Veto[S#Tx]] = {
 //      val list: List[Veto[S#Tx]] = workspace.dependents.flatMap {
@@ -139,14 +145,14 @@ object FolderFrameImpl {
 //      *         the caller should abort the operation.
 //      */
 //    def tryResolveVeto()(implicit tx: S#Tx): Future[Unit] = ...
-
-    override def dispose()(implicit tx: S#Tx): Unit = if (!wasDisposed) {
-      super.dispose()
-//      if (isWorkspaceRoot) ActionCloseAllWorkspaces.close(workspace)
-      deferTx {
-        quitAcceptor.foreach(Desktop.removeQuitAcceptor)
-      }
-    }
+//
+//    override def dispose()(implicit tx: S#Tx): Unit = if (!wasDisposed) {
+//      super.dispose()
+////      if (isWorkspaceRoot) ActionCloseAllWorkspaces.close(workspace)
+//      deferTx {
+//        quitAcceptor.foreach(Desktop.removeQuitAcceptor)
+//      }
+//    }
   }
 
   final class ViewImpl[S <: Sys[S]](val peer: FolderView[S])
