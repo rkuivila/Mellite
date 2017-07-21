@@ -18,9 +18,11 @@ import de.sciss.desktop
 import de.sciss.desktop.KeyStrokes._
 import de.sciss.desktop.Window
 import de.sciss.lucre.stm.Sys
-import de.sciss.lucre.swing.requireEDT
+import de.sciss.lucre.swing.{requireEDT, deferTx}
+import de.sciss.processor.Processor.Aborted
 import de.sciss.synth.proc.Workspace
 
+import scala.concurrent.{Future, Promise}
 import scala.language.existentials
 import scala.swing.Action
 import scala.swing.event.Key
@@ -43,9 +45,11 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
     val docs = dh.documents.toList  // iterator wil be exhausted!
 
     // cf. http://stackoverflow.com/questions/20982681/existential-type-or-type-parameter-bound-failure
-    val allOk = docs.forall(doc => check(doc.asInstanceOf[Workspace[~] forSome { type ~ <: Sys[~] }], None))
+    val allOk = ??? : Boolean // docs.forall(doc => check(doc.asInstanceOf[Workspace[~] forSome { type ~ <: Sys[~] }], None))
     if (allOk) docs.foreach(doc => close(doc.asInstanceOf[Workspace[~] forSome { type ~ <: Sys[~] }]))
   }
+
+  def messageClosingInMemory: String = "Closing an in-memory workspace."
 
   /** Checks if the workspace can be safely closed. This is the case
     * for durable and confluent workspaces. For an in-memory workspace,
@@ -56,19 +60,24 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
     *
     * @return `true` if it is ok to close the workspace, `false` if the request was denied
     */
-  def check[S <: Sys[S]](doc: Workspace[S], window: Option[Window]): Boolean = {
-    requireEDT()
+  def check[S <: Sys[S]](doc: Workspace[S], window: Option[Window])(implicit tx: S#Tx): Future[Unit] = {
     doc match {
       case _: Workspace.InMemory =>
-        val msg = "<html><body>Closing an in-memory workspace means<br>" +
-          "all contents will be <b>irrevocably lost</b>.<br>" +
-          "<p>Ok to proceed?</body></html>"
-        val opt = desktop.OptionPane.confirmation(message = msg, messageType = desktop.OptionPane.Message.Warning,
-          optionType = desktop.OptionPane.Options.OkCancel)
-        import de.sciss.equal.Implicits._
-        opt.show(window, "Close Workspace") === desktop.OptionPane.Result.Ok
+        val p = Promise[Unit]()
+        deferTx {
+          val msg = s"<html><body>$messageClosingInMemory That means<br>" +
+            "all contents will be <b>irrevocably lost</b>.<br>" +
+            "<p>Ok to proceed?</body></html>"
+          val opt = desktop.OptionPane.confirmation(message = msg, messageType = desktop.OptionPane.Message.Warning,
+            optionType = desktop.OptionPane.Options.OkCancel)
+          import de.sciss.equal.Implicits._
+          val ok = opt.show(window, "Close Workspace") === desktop.OptionPane.Result.Ok
+          if (ok) p.success(()) else p.failure(Aborted())
+        }
+        p.future
 
-      case _=> true
+      case _=>
+        Future.successful(())
     }
   }
 
@@ -79,11 +88,11 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
     *
     * @return `true` if the space was closed
     */
-  def checkAndClose[S <: Sys[S]](doc: Workspace[S], window: Option[Window]): Boolean =
-    check(doc, window) && {
-      close(doc)
-      true
-    }
+  def checkAndClose[S <: Sys[S]](doc: Workspace[S], window: Option[Window]): Boolean = ???
+//    check(doc, window) && {
+//      close(doc)
+//      true
+//    }
 
   /** Closes the provided workspace without checking. */
   def close[S <: Sys[S]](doc: Workspace[S]): Unit = {

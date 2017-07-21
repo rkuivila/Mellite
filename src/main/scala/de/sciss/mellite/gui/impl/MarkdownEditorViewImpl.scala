@@ -35,6 +35,7 @@ import de.sciss.synth.proc.{Markdown, Workspace}
 
 import scala.collection.breakOut
 import scala.collection.immutable.{Seq => ISeq}
+import scala.concurrent.stm.Ref
 import scala.swing.Swing._
 import scala.swing.event.Key
 import scala.swing.{Action, BorderPanel, Button, Component, EditorPane, FlowPanel, TabbedPane}
@@ -75,13 +76,16 @@ object MarkdownEditorViewImpl {
                                          val cursor: stm.Cursor[S])
     extends ComponentHolder[Component] with MarkdownEditorView[S] with ModelImpl[MarkdownEditorView.Update] { impl =>
 
-    private[this] var _dirty = false
-    def dirty: Boolean = _dirty
-    def dirty_=(value: Boolean): Unit = if (_dirty != value) {
-      _dirty = value
-      actionApply.enabled = value
-      dispatch(MarkdownEditorView.DirtyChange(value))
-    }
+    private[this] val _dirty = Ref(false)
+
+    def dirty(implicit tx: S#Tx): Boolean = _dirty.get(tx.peer)
+
+    def dirty_=(value: Boolean): Unit = ???
+//      if (_dirty != value) {
+//      _dirty = value
+//      actionApply.enabled = value
+//      dispatch(MarkdownEditorView.DirtyChange(value))
+//    }
 
     private[this] var paneImpl    : PaneImpl    = _
     private[this] var actionApply : Action      = _

@@ -38,7 +38,7 @@ object MarkdownEditorView {
 trait MarkdownEditorView[S <: Sys[S]] extends ViewHasWorkspace[S] with Model[MarkdownEditorView.Update] {
   def renderer: MarkdownRenderView[S]
 
-  def dirty: Boolean
+  def dirty(implicit tx: S#Tx): Boolean
 
   def save(): Unit
 

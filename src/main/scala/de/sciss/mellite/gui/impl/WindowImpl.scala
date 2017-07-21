@@ -24,8 +24,10 @@ import de.sciss.lucre.stm.TxnLike.peer
 import de.sciss.lucre.swing.{CellView, View, Window, deferTx, requireEDT}
 import de.sciss.synth.proc.SoundProcesses
 
+import scala.concurrent.Future
 import scala.concurrent.stm.Ref
 import scala.swing.Action
+import scala.util.Success
 
 object WindowImpl {
   private final class Peer[S <: Sys[S]](view: View[S], impl: WindowImpl[S],
@@ -79,7 +81,7 @@ object WindowImpl {
 }
 
 abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx, String]])
-  extends Window[S] with WindowHolder[desktop.Window] {
+  extends Window[S] with WindowHolder[desktop.Window] with DependentMayVeto[S#Tx] {
   impl =>
 
   def this() = this(None)
@@ -93,8 +95,8 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
   final def title        : String        = windowImpl.title
   final def title_=(value: String): Unit = windowImpl.title = value
 
-  final def dirty        : Boolean        = windowImpl.dirty
-  final def dirty_=(value: Boolean): Unit = windowImpl.dirty = value
+//  final def dirty        : Boolean        = windowImpl.dirty
+//  final def dirty_=(value: Boolean): Unit = windowImpl.dirty = value
 
 //  final def resizable        : Boolean        = windowImpl.resizable
 //  final def resizable_=(value: Boolean): Unit = windowImpl.resizable = value
@@ -150,7 +152,11 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
   /** Subclasses may override this. If this method returns `true`, the window may be closed,
     * otherwise a closure is aborted. By default this always returns `true`.
     */
-  protected def checkClose(): Boolean = true
+  protected final def checkClose(): Boolean = ???
+
+  /** Subclasses may override this. By default this always returns `None`.
+    */
+  def prepareDisposal()(implicit tx: S#Tx): Option[Veto[S#Tx]] = None
 
   /** Subclasses may override this. */
   protected def undoRedoActions: Option[(Action, Action)] =
@@ -161,30 +167,57 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
       case _ => None
     }
 
-  private[this] var didClose = false
+  private[this] val _wasDisposed = Ref(false)
 
-  private def disposeFromGUI(): Unit = if (!didClose) {
-    requireEDT()
-    performClose()
-    didClose = true
-  }
-
-  protected def performClose(): Unit =
+  protected def performClose(): Future[Unit] =
     view match {
       case cv: View.Cursor[S] =>
-        windowImpl.visible = false
-        SoundProcesses.atomic[S, Unit] { implicit tx =>
+        import cv.cursor
+
+        def complete()(implicit tx: S#Tx): Unit = {
+          deferTx(windowImpl.visible = false)
           dispose()
-        } (cv.cursor)
+        }
+
+        def succeed()(implicit tx: S#Tx): Future[Unit] = {
+          complete()
+          Future.successful(())
+        }
+
+        SoundProcesses.atomic[S, Unit] { implicit tx =>
+          val vetoOpt = prepareDisposal()
+          vetoOpt.fold[Future[Unit]] {
+            succeed()
+          } { veto =>
+            val futVeto = veto.tryResolveVeto()
+            futVeto.value match {
+              case Some(Success(())) =>
+                succeed()
+              case _ =>
+                futVeto.map { _ =>
+                  SoundProcesses.atomic[S, Unit] { implicit tx =>
+                    complete()
+                  }
+                }
+            }
+          }
+        }
+
       case _ =>
+        throw new IllegalArgumentException("Cannot close a window whose view has no cursor")
     }
 
   final def handleClose(): Unit = {
     requireEDT()
-    if (checkClose()) disposeFromGUI()
+    if (!_wasDisposed.single.get) {
+      val fut = performClose()
+      fut.foreach(_ => _wasDisposed.single.set(true))
+    }
   }
 
   def pack(): Unit = windowImpl.pack()
+
+  protected final def wasDisposed(implicit tx: S#Tx): Boolean = _wasDisposed.get(tx.peer)
 
   def dispose()(implicit tx: S#Tx): Unit = {
     titleObserver().dispose()
@@ -195,9 +228,11 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
     }
 
     view.dispose()
+
     deferTx {
       window.dispose()
-      didClose = true
     }
+
+    _wasDisposed() = true
   }
 }

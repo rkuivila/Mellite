@@ -46,9 +46,9 @@ object CodeView {
   case class DirtyChange(value: Boolean) extends Update
 }
 trait CodeView[S <: Sys[S]] extends ViewHasWorkspace[S] with Model[CodeView.Update] {
-  def isCompiling: Boolean
+  def isCompiling(implicit tx: S#Tx): Boolean
 
-  def dirty: Boolean
+  def dirty(implicit tx: S#Tx): Boolean
 
   def save(): Future[Unit]
 

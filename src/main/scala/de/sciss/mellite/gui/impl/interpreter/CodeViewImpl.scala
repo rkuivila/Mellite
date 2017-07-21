@@ -40,6 +40,7 @@ import de.sciss.synth.proc.{Code, Workspace}
 import scala.collection.immutable.{Seq => ISeq}
 import scala.collection.mutable
 import scala.concurrent.Future
+import scala.concurrent.stm.Ref
 import scala.swing.Swing._
 import scala.swing.event.Key
 import scala.swing.{Action, BorderPanel, Button, Component, FlowPanel}
@@ -89,13 +90,16 @@ object CodeViewImpl {
                                         val cursor: stm.Cursor[S], compiler: Code.Compiler)
     extends ComponentHolder[Component] with CodeView[S] with ModelImpl[CodeView.Update] {
 
-    private[this] var _dirty = false
-    def dirty: Boolean = _dirty
-    def dirty_=(value: Boolean): Unit = if (_dirty != value) {
-      _dirty = value
-      actionApply.enabled = value
-      dispatch(CodeView.DirtyChange(value))
-    }
+    private[this] val _dirty = Ref(false)
+
+    def dirty(implicit tx: S#Tx): Boolean = _dirty.get(tx.peer)
+
+    def dirty_=(value: Boolean): Unit = ???
+//      if (_dirty != value) {
+//      _dirty = value
+//      actionApply.enabled = value
+//      dispatch(CodeView.DirtyChange(value))
+//    }
 
 //    private type CodeT = Code { type In = In0; type Out = Out0 }
 
@@ -127,10 +131,12 @@ object CodeViewImpl {
     private[this] var futCompile = Option.empty[Future[Any]]
     private[this] var actionApply: Action = _
 
-    def isCompiling: Boolean = {
-      requireEDT()
-      futCompile.isDefined
-    }
+    def isCompiling(implicit tx: S#Tx): Boolean = ???
+    
+//    {
+//      requireEDT()
+//      futCompile.isDefined
+//    }
 
     protected def currentText: String = codePane.editor.text
 

@@ -33,10 +33,13 @@ import de.sciss.lucre.swing.{CellView, View, Window, deferTx, requireEDT}
 import de.sciss.lucre.synth.Sys
 import de.sciss.model.impl.ModelImpl
 import de.sciss.nuages.{CosineWarp, DbFaderWarp, ExponentialWarp, FaderWarp, IntWarp, LinearWarp, ParamSpec, ParametricWarp, SineWarp, Warp}
+import de.sciss.processor.Processor.Aborted
 import de.sciss.swingplus.{ComboBox, GroupPanel, Spinner}
 import de.sciss.synth.proc.Implicits._
 import de.sciss.synth.proc.Workspace
 
+import scala.concurrent.{Future, Promise}
+import scala.concurrent.stm.Ref
 import scala.swing.Swing.EmptyIcon
 import scala.swing.event.{SelectionChanged, ValueChanged}
 import scala.swing.{Action, Alignment, BorderPanel, BoxPanel, Component, Dialog, FlowPanel, Label, Orientation, Swing, TextField}
@@ -277,7 +280,7 @@ object ParamSpecObjView extends ListObjView.Factory {
 
     private[this] var specValue   : ParamSpec         = _
     private[this] var panel       : PanelImpl         = _
-    private[this] var _dirty      : Boolean           = false
+    private[this] val _dirty      : Ref[Boolean]      = Ref(false)
     private[this] var actionApply : Action            = _
     private[this] var observer    : Disposable[S#Tx]  = _
 
@@ -321,12 +324,13 @@ object ParamSpecObjView extends ListObjView.Factory {
       }
     }
 
-    def dirty: Boolean = _dirty
+    def dirty(implicit tx: S#Tx): Boolean = _dirty.get(tx.peer)
 
     private def updateDirty(): Unit = {
       val specNowV = panel.spec
-      _dirty = specValue != specNowV
-      actionApply.enabled = _dirty
+      val isDirty   = specValue != specNowV
+      val wasDirty  = _dirty.single.swap(isDirty)
+      if (isDirty != wasDirty) actionApply.enabled = isDirty
     }
 
     def save(): Unit = {
@@ -354,25 +358,37 @@ object ParamSpecObjView extends ListObjView.Factory {
 
   private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S],
                                              name: CellView[S#Tx, String])
-    extends WindowImpl[S](name) {
+    extends WindowImpl[S](name) with Veto[S#Tx] {
 
 //    resizable = false
 
-    override protected def checkClose(): Boolean = !view.editable || {
-      !view.dirty || {
-        val message = "The spec has been edited.\nDo you want to save the changes?"
+    override def prepareDisposal()(implicit tx: S#Tx): Option[Veto[S#Tx]] =
+      if (!view.editable && !view.dirty) None else Some(this)
+
+    private def _vetoMessage = "The spec has been edited."
+
+    def vetoMessage(implicit tx: S#Tx): String = _vetoMessage
+
+    def tryResolveVeto()(implicit tx: S#Tx): Future[Unit] = {
+      val p = Promise[Unit]()
+      deferTx {
+        val message = s"${_vetoMessage}\nDo you want to save the changes?"
         val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
           messageType = OptionPane.Message.Warning)
         opt.title = s"Close - $title"
         opt.show(Some(window)) match {
-          case OptionPane.Result.No => true
+          case OptionPane.Result.No =>
+            p.success(())
+
           case OptionPane.Result.Yes =>
             /* val fut = */ view.save()
-            true
+            p.success(())
 
-          case OptionPane.Result.Cancel | OptionPane.Result.Closed => false
+          case OptionPane.Result.Cancel | OptionPane.Result.Closed =>
+            p.failure(Aborted())
         }
       }
+      p.future
     }
   }
 

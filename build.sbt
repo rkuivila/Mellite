@@ -3,8 +3,8 @@ import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
-lazy val projectVersion             = "2.15.0"
-lazy val mimaVersion                = "2.14.0"
+lazy val projectVersion             = "2.16.0-SNAPSHOT"
+lazy val mimaVersion                = "2.15.0"
 
 lazy val loggingEnabled             = true
 
@@ -13,15 +13,15 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.12.5"
-lazy val fscapeVersion              = "2.7.1"
-lazy val nuagesVersion              = "2.16.0"
+lazy val soundProcessesVersion      = "3.13.0-SNAPSHOT"
+lazy val fscapeVersion              = "2.8.0-SNAPSHOT"
+lazy val nuagesVersion              = "2.17.0-SNAPSHOT"
 lazy val interpreterPaneVersion     = "1.8.1"
 lazy val scalaColliderVersion       = "1.22.4"
 lazy val scalaColliderUGenVersion   = "1.16.4"
 lazy val lucreVersion               = "3.4.1"
 lazy val equalVersion               = "0.1.2"
-lazy val freesoundVersion           = "1.2.0"
+lazy val freesoundVersion           = "1.3.0-SNAPSHOT"
 lazy val playJSONVersion            = "0.4.0"
 lazy val scalaColliderSwingVersion  = "1.33.1"
 lazy val lucreSwingVersion          = "1.5.1"
@@ -34,7 +34,7 @@ lazy val modelVersion               = "0.3.4"
 lazy val pdflitzVersion             = "1.2.2"
 lazy val webLaFVersion              = "2.1.3"
 lazy val subminVersion              = "0.2.1"
-lazy val jlineVersion               = "2.14.4"
+lazy val jlineVersion               = "2.14.5"
 lazy val pegDownVersion             = "1.6.0"
 
 lazy val bdb = "bdb" // either "bdb" or "bdb6"

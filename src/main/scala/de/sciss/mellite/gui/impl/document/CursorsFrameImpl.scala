@@ -32,6 +32,7 @@ import de.sciss.synth.proc.{Cursors, Workspace}
 import de.sciss.treetable.{AbstractTreeModel, TreeColumnModel, TreeTable, TreeTableCellRenderer, TreeTableSelectionChanged}
 
 import scala.collection.immutable.{IndexedSeq => Vec}
+import scala.concurrent.Future
 import scala.swing.{Action, BorderPanel, Button, Component, FlowPanel, FormattedTextField, ScrollPane}
 
 object CursorsFrameImpl {
@@ -101,11 +102,9 @@ object CursorsFrameImpl {
       super.dispose()
     }
 
-    override protected def checkClose(): Boolean = ActionCloseAllWorkspaces.check(workspace, Some(window))
-
-    override protected def performClose(): Unit = {
+    override protected def performClose(): Future[Unit] = {
       log(s"Closing workspace ${workspace.folder}")
-      ActionCloseAllWorkspaces.close(workspace)
+      ??? // ActionCloseAllWorkspaces.checkAndClose(workspace, Some(window))
     }
 
     override protected def placement: (Float, Float, Int) = (1f, 0f, 24)

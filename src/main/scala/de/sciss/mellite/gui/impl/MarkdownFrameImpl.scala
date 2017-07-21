@@ -18,11 +18,13 @@ package impl
 import de.sciss.desktop.OptionPane
 import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.lucre.stm
-import de.sciss.lucre.swing.View
+import de.sciss.lucre.swing.{View, deferTx}
 import de.sciss.lucre.synth.Sys
+import de.sciss.processor.Processor.Aborted
 import de.sciss.synth.proc.{Markdown, Workspace}
 
 import scala.collection.immutable.{Seq => ISeq}
+import scala.concurrent.{Future, Promise}
 
 object MarkdownFrameImpl {
   def editor[S <: Sys[S]](obj: Markdown[S], bottom: ISeq[View[S]])
@@ -60,23 +62,42 @@ object MarkdownFrameImpl {
   }
 
   private final class EditorFrameImpl[S <: Sys[S]](val view: MarkdownEditorView[S])
-    extends WindowImpl[S] with MarkdownEditorFrame[S] {
+    extends WindowImpl[S] with MarkdownEditorFrame[S] with Veto[S#Tx] {
 
-    override protected def checkClose(): Boolean =
-      !view.dirty || {
-        val message = "The text has been edited.\nDo you want to save the changes?"
+    override def prepareDisposal()(implicit tx: S#Tx): Option[Veto[S#Tx]] =
+      if (!view.dirty) None else Some(this)
+
+
+    private[this] def _vetoMessage = "The text has been edited."
+
+    def vetoMessage(implicit tx: S#Tx): String = _vetoMessage
+
+    /** Attempts to resolve the veto condition by consulting the user.
+      *
+      * @return successful future if the situation is resolved, e.g. the user agrees to
+      *         proceed with the operation. failed future if the veto is upheld, and
+      *         the caller should abort the operation.
+      */
+    def tryResolveVeto()(implicit tx: S#Tx): Future[Unit] = {
+      val p = Promise[Unit]()
+      deferTx {
+        val message = s"${_vetoMessage}\nDo you want to save the changes?"
         val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
           messageType = OptionPane.Message.Warning)
         opt.title = s"Close - $title"
         opt.show(Some(window)) match {
-          case OptionPane.Result.No => true
+          case OptionPane.Result.No =>
+            p.success(())
+
           case OptionPane.Result.Yes =>
             /* val fut = */ view.save()
-            true
+            p.success(())
 
           case OptionPane.Result.Cancel | OptionPane.Result.Closed =>
-            false
+            p.failure(Aborted())
         }
       }
+      p.future
+    }
   }
 }

@@ -25,13 +25,15 @@ import de.sciss.icons.raphael
 import de.sciss.lucre.stm
 import de.sciss.lucre.stm.{IDPeek, Obj}
 import de.sciss.lucre.swing.edit.EditVar
-import de.sciss.lucre.swing.{CellView, View}
+import de.sciss.lucre.swing.{CellView, View, deferTx}
 import de.sciss.lucre.synth.Sys
+import de.sciss.processor.Processor.Aborted
 import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.impl.ActionImpl
 import de.sciss.synth.proc.{Action, Code, Proc, SynthGraphObj, Workspace}
 
 import scala.collection.immutable.{Seq => ISeq}
+import scala.concurrent.{Future, Promise}
 import scala.swing.{Component, Orientation, SplitPane}
 
 object CodeFrameImpl {
@@ -222,31 +224,37 @@ object CodeFrameImpl {
 
   private final class FrameImpl[S <: Sys[S]](val codeView: CodeView[S], val view: View[S],
                                              name: CellView[S#Tx, String], contextName: String)
-    extends WindowImpl[S](name.map(n => s"$n : $contextName Code")) with CodeFrame[S] {
+    extends WindowImpl[S](name.map(n => s"$n : $contextName Code")) with CodeFrame[S] with Veto[S#Tx] {
 
-    override protected def checkClose(): Boolean = {
-      if (codeView.isCompiling) {
-        // ggStatus.text = "busy!"
-        return false
-      }
+    override def prepareDisposal()(implicit tx: S#Tx): Option[Veto[S#Tx]] =
+      if (!codeView.isCompiling && !codeView.dirty) None else Some(this)
 
-      !codeView.dirty || {
-        val message = "The code has been edited.\nDo you want to save the changes?"
-        val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
-          messageType = OptionPane.Message.Warning)
-        opt.title = s"Close - $title"
-        opt.show(Some(window)) match {
-          case OptionPane.Result.No => true
-          case OptionPane.Result.Yes =>
-            /* val fut = */ codeView.save()
-            true
+    private def _vetoMessage = "The code has been edited."
 
-          case OptionPane.Result.Cancel | OptionPane.Result.Closed =>
-            false
+    def vetoMessage(implicit tx: S#Tx): String =
+      if (codeView.isCompiling) "Ongoing compilation." else _vetoMessage
+
+    def tryResolveVeto()(implicit tx: S#Tx): Future[Unit] =
+      if (codeView.isCompiling) Future.failed(Aborted())
+      else {
+        val p = Promise[Unit]()
+        deferTx {
+          val message = "The code has been edited.\nDo you want to save the changes?"
+          val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
+            messageType = OptionPane.Message.Warning)
+          opt.title = s"Close - $title"
+          opt.show(Some(window)) match {
+            case OptionPane.Result.No =>
+              p.success(())
+            case OptionPane.Result.Yes =>
+              /* val fut = */ codeView.save()
+              p.success(())
+
+            case OptionPane.Result.Cancel | OptionPane.Result.Closed =>
+              p.failure(Aborted())
+          }
         }
+        p.future
       }
-    }
-
-    // override def style = Window.Auxiliary
   }
 }

@@ -29,10 +29,12 @@ import de.sciss.lucre.swing.{Window, defer, deferTx}
 import de.sciss.lucre.synth.Sys
 import de.sciss.synth.proc
 import de.sciss.nuages.{NamedBusConfig, Nuages, NuagesView, ScissProcs}
+import de.sciss.processor.Processor.Aborted
 import de.sciss.swingplus.{GroupPanel, Separator, Spinner}
 import de.sciss.synth.UGenSource.Vec
 import de.sciss.synth.proc.{Folder, Workspace}
 
+import scala.concurrent.Future
 import scala.swing.Swing._
 import scala.swing.{Action, BoxPanel, Button, Component, Dialog, Label, Orientation}
 
@@ -235,7 +237,7 @@ object NuagesEditorViewImpl {
       import Mellite.auralSystem
       val n     = nuagesH()
       val nCfg  = buildConfiguration()
-      val frame = new WindowImpl[S] {
+      val frame: WindowImpl[S] = new WindowImpl[S] with Veto[S#Tx] {
         val view = NuagesView(n, nCfg)
         override val undecorated = true
 
@@ -244,8 +246,13 @@ object NuagesEditorViewImpl {
           case _ =>
         }
 
-        override protected def checkClose(): Boolean =
-          cursor.step { implicit tx => !view.panel.transport.isPlaying }
+        override def prepareDisposal()(implicit tx: S#Tx): Option[Veto[S#Tx]] =
+          if (!view.panel.transport.isPlaying) None else Some(this)
+
+        def vetoMessage(implicit tx: S#Tx): String = "Cannot close a running performance."
+
+        def tryResolveVeto()(implicit tx: S#Tx): Future[Unit] =
+          Future.failed(Aborted())
       }
       frame.init()
       Some(frame)
