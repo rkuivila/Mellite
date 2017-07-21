@@ -101,8 +101,4 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
     dh.removeDocument(doc)
     // doc.close()
   }
-
-//    doc.cursor.step { implicit tx =>
-//      doc.dispose()
-//    }
 }

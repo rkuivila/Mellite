@@ -18,7 +18,7 @@ import javax.swing.undo.UndoableEdit
 
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.{Disposable, Sys}
+import de.sciss.lucre.stm.{Disposable, Sys, TxnLike}
 import de.sciss.lucre.swing.View
 import de.sciss.mellite.gui.impl.interpreter.{CodeViewImpl => Impl}
 import de.sciss.model.Model
@@ -46,10 +46,11 @@ object CodeView {
   case class DirtyChange(value: Boolean) extends Update
 }
 trait CodeView[S <: Sys[S]] extends ViewHasWorkspace[S] with Model[CodeView.Update] {
-  def isCompiling(implicit tx: S#Tx): Boolean
+  def isCompiling(implicit tx: TxnLike): Boolean
 
-  def dirty(implicit tx: S#Tx): Boolean
+  def dirty(implicit tx: TxnLike): Boolean
 
+  /** Call on EDT outside Txn */
   def save(): Future[Unit]
 
   // def updateSource(text: String)(implicit tx: S#Tx): Unit

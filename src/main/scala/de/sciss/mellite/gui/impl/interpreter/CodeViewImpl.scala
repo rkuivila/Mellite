@@ -26,7 +26,7 @@ import de.sciss.desktop.edit.CompoundEdit
 import de.sciss.desktop.{KeyStrokes, UndoManager}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Sys
+import de.sciss.lucre.stm.{Sys, TxnLike}
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{View, defer, deferTx, requireEDT}
@@ -92,14 +92,18 @@ object CodeViewImpl {
 
     private[this] val _dirty = Ref(false)
 
-    def dirty(implicit tx: S#Tx): Boolean = _dirty.get(tx.peer)
+    def dirty(implicit tx: TxnLike): Boolean = _dirty.get(tx.peer)
 
-    def dirty_=(value: Boolean): Unit = ???
-//      if (_dirty != value) {
-//      _dirty = value
-//      actionApply.enabled = value
-//      dispatch(CodeView.DirtyChange(value))
-//    }
+    private def dirty_=(value: Boolean): Unit = {
+      requireEDT()
+      val wasDirty = _dirty.single.swap(value)
+      if (wasDirty != value) {
+//        deferTx {
+          actionApply.enabled = value
+          dispatch(CodeView.DirtyChange(value))
+//        }
+      }
+    }
 
 //    private type CodeT = Code { type In = In0; type Out = Out0 }
 
@@ -128,15 +132,10 @@ object CodeViewImpl {
     // import code.{id => codeID}
 
     private[this] var codePane: CodePane = _
-    private[this] var futCompile = Option.empty[Future[Any]]
+    private[this] val futCompile = Ref(Option.empty[Future[Any]])
     private[this] var actionApply: Action = _
 
-    def isCompiling(implicit tx: S#Tx): Boolean = ???
-    
-//    {
-//      requireEDT()
-//      futCompile.isDefined
-//    }
+    def isCompiling(implicit tx: TxnLike): Boolean = futCompile.get(tx.peer).isDefined
 
     protected def currentText: String = codePane.editor.text
 
@@ -193,12 +192,13 @@ object CodeViewImpl {
     private def compile(): Unit = compileSource(currentText, save = false)
 
     private def compileSource(newCode: String, save: Boolean): Future[Unit] = {
+      requireEDT()
       val saveObject = handlerOpt.isDefined && save
-      if (futCompile.isDefined && !saveObject) return Future.successful[Unit] {}
+      if (futCompile.single.get.isDefined && !saveObject) return Future.successful[Unit] {}
 
-      ggProgress          .spinning = true
-      actionCompile       .enabled  = false
-      if (saveObject) actionApply.enabled = false
+      ggProgress                  .spinning = true
+      actionCompile               .enabled  = false
+      if (saveObject) actionApply .enabled  = false
 
       code = code.updateSource(newCode)
 
@@ -223,10 +223,11 @@ object CodeViewImpl {
           code.compileBody()
       }
 
-      futCompile = Some(fut)
+      futCompile.single.set(Some(fut))
       fut.onComplete { res =>
+        futCompile.single.set(None)
         defer {
-          futCompile                    = None
+          // futCompile                    = None
           ggProgress          .spinning = false
           actionCompile       .enabled  = true
           if (saveObject) actionApply.enabled = true
@@ -247,18 +248,18 @@ object CodeViewImpl {
       fut.map(_ => ())
     }
 
-    private lazy val ggProgress = new SpinningProgressBar
+    private[this] lazy val ggProgress = new SpinningProgressBar
 
-    private lazy val actionCompile = Action("Compile")(compile())
+    private[this] lazy val actionCompile = Action("Compile")(compile())
 
-    private lazy val ggCompile: Button = GUI.toolButton(actionCompile, raphael.Shapes.Hammer,
+    private[this] lazy val ggCompile: Button = GUI.toolButton(actionCompile, raphael.Shapes.Hammer,
       tooltip = "Verify that current buffer compiles")
 
     private def compileIcon(colr: Option[Color]): Icon =
       raphael.Icon(extent = 20, fill = colr.getOrElse(raphael.TexturePaint(24)),
         shadow = raphael.WhiteShadow)(raphael.Shapes.Hammer)
 
-    private var clearGreen = false
+    private[this] var clearGreen = false
 
     def init()(implicit tx: S#Tx): this.type = {
       deferTx(guiInit())

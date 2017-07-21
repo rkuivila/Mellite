@@ -87,8 +87,6 @@ object MarkdownObjView extends ListObjView.Factory {
 
     def convertEditValue(v: Any): Option[String] = None
 
-    def testValue(v: Any): Option[Int] = ???  // XXX TODO --- remove method in major version
-
     override def openView(parent: Option[Window[S]])(implicit tx: S#Tx, workspace: Workspace[S],
                                                      cursor: Cursor[S]): Option[Window[S]] = {
       val frame = MarkdownEditorFrame(obj)

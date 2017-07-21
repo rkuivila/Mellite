@@ -21,6 +21,7 @@ import javax.swing.undo.UndoableEdit
 import de.sciss.desktop.{KeyStrokes, UndoManager, Util}
 import de.sciss.icons.raphael
 import de.sciss.lucre.stm
+import de.sciss.lucre.stm.TxnLike
 import de.sciss.lucre.swing.edit.EditVar
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{View, deferTx, requireEDT}
@@ -78,14 +79,18 @@ object MarkdownEditorViewImpl {
 
     private[this] val _dirty = Ref(false)
 
-    def dirty(implicit tx: S#Tx): Boolean = _dirty.get(tx.peer)
+    def dirty(implicit tx: TxnLike): Boolean = _dirty.get(tx.peer)
 
-    def dirty_=(value: Boolean): Unit = ???
-//      if (_dirty != value) {
-//      _dirty = value
-//      actionApply.enabled = value
-//      dispatch(MarkdownEditorView.DirtyChange(value))
-//    }
+    private def dirty_=(value: Boolean): Unit = {
+      requireEDT()
+      val wasDirty = _dirty.single.swap(value)
+      if (wasDirty != value) {
+//        deferTx {
+          actionApply.enabled = value
+          dispatch(MarkdownEditorView.DirtyChange(value))
+        }
+//      }
+    }
 
     private[this] var paneImpl    : PaneImpl    = _
     private[this] var actionApply : Action      = _
@@ -150,7 +155,8 @@ object MarkdownEditorViewImpl {
       lazy val doc = paneImpl.editor.peer.getDocument.asInstanceOf[SyntaxDocument]
 
       doc.addPropertyChangeListener(SyntaxDocument.CAN_UNDO, new PropertyChangeListener {
-        def propertyChange(e: PropertyChangeEvent): Unit = dirty = doc.canUndo
+        def propertyChange(e: PropertyChangeEvent): Unit =
+          dirty = doc.canUndo
       })
 
       val ksRender  = KeyStrokes.menu1 + Key.Enter

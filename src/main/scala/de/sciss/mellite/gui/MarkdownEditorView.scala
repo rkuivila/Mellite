@@ -16,7 +16,7 @@ package gui
 
 import de.sciss.desktop.UndoManager
 import de.sciss.lucre.stm
-import de.sciss.lucre.stm.Sys
+import de.sciss.lucre.stm.{Sys, TxnLike}
 import de.sciss.lucre.swing.View
 import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.mellite.gui.impl.{MarkdownEditorViewImpl => Impl}
@@ -38,7 +38,7 @@ object MarkdownEditorView {
 trait MarkdownEditorView[S <: Sys[S]] extends ViewHasWorkspace[S] with Model[MarkdownEditorView.Update] {
   def renderer: MarkdownRenderView[S]
 
-  def dirty(implicit tx: S#Tx): Boolean
+  def dirty(implicit tx: TxnLike): Boolean
 
   def save(): Unit
 

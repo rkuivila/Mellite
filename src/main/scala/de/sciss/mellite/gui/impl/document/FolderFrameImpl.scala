@@ -85,7 +85,7 @@ object FolderFrameImpl {
     override protected def initGUI(): Unit = {
       addDuplicateAction (this, view.actionDuplicate)
       // addImportJSONAction(this, view.actionImportJSON)
-      if (interceptQuit) quitAcceptor = Some(Desktop.addQuitAcceptor(checkClose()))
+      if (interceptQuit) quitAcceptor = ??? // Some(Desktop.addQuitAcceptor(checkClose()))
     }
 
     override protected def placement: (Float, Float, Int) = (0.5f, 0.0f, 20)

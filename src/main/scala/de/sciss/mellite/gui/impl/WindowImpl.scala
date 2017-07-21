@@ -149,11 +149,6 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
     */
   protected def placement: (Float, Float, Int) = (0.5f, 0.5f, 20)
 
-  /** Subclasses may override this. If this method returns `true`, the window may be closed,
-    * otherwise a closure is aborted. By default this always returns `true`.
-    */
-  protected final def checkClose(): Boolean = ???
-
   /** Subclasses may override this. By default this always returns `None`.
     */
   def prepareDisposal()(implicit tx: S#Tx): Option[Veto[S#Tx]] = None
