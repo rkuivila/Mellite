@@ -34,7 +34,6 @@ import de.sciss.swingplus.{GroupPanel, Spinner}
 import de.sciss.synth.proc.{Folder, ObjKeys, Workspace}
 
 import scala.collection.breakOut
-import scala.concurrent.Future
 import scala.swing.Swing.EmptyIcon
 import scala.swing.event.Key
 import scala.swing.{Action, Alignment, CheckBox, Component, Dialog, Label, SequentialContainer, Swing, TextField}
@@ -73,7 +72,7 @@ object FolderFrameImpl {
 
   private final class FrameImpl[S <: Sys[S]](val view: ViewImpl[S], name: CellView[S#Tx, String],
                                              isWorkspaceRoot: Boolean, interceptQuit: Boolean)
-    extends WindowImpl[S](name) with FolderFrame[S] with Veto[S#Tx] { self =>
+    extends WindowImpl[S](name) with FolderFrame[S] /* with Veto[S#Tx] */ {
 
     def workspace : Workspace [S] = view.workspace
     def folderView: FolderView[S] = view.peer
@@ -102,48 +101,48 @@ object FolderFrameImpl {
 
     override def prepareDisposal()(implicit tx: S#Tx): Option[Veto[S#Tx]] =
       if      (!isWorkspaceRoot ) None
-      else if (interceptQuit    ) Some(this)
-      else collectVetos()
+//      else if (interceptQuit    ) Some(this)
+      else ??? // collectVetos()
 
-    private def collectVetos()(implicit tx: S#Tx): Option[Veto[S#Tx]] = {
-      val list: List[Veto[S#Tx]] = workspace.dependents.flatMap {
-        case mv: DependentMayVeto[S#Tx] if mv != self => mv.prepareDisposal()
-      } (breakOut)
+//    private def collectVetos()(implicit tx: S#Tx): Option[Veto[S#Tx]] = {
+//      val list: List[Veto[S#Tx]] = workspace.dependents.flatMap {
+//        case mv: DependentMayVeto[S#Tx] if mv != self => mv.prepareDisposal()
+//      } (breakOut)
+//
+//      list match {
+//        case Nil => None
+//        case _ =>
+//          val res = new Veto[S#Tx] {
+//            def vetoMessage(implicit tx: S#Tx): String =
+//              list.map(_.vetoMessage).mkString("\n")
+//
+//            def tryResolveVeto()(implicit tx: S#Tx): Future[Unit] = ...
+//          }
+//          Some(res)
+//      }
+//    }
 
-      list match {
-        case Nil => None
-        case _ =>
-          val res = new Veto[S#Tx] {
-            def vetoMessage(implicit tx: S#Tx): String =
-              list.map(_.vetoMessage).mkString("\n")
-
-            def tryResolveVeto()(implicit tx: S#Tx): Future[Unit] = ???
-          }
-          Some(res)
-      }
-    }
-
-    private def vetoMessageNothing = "Nothing to veto."
-
-    def vetoMessage(implicit tx: S#Tx): String =
-      if      (!isWorkspaceRoot ) vetoMessageNothing
-      else if (interceptQuit    ) ActionCloseAllWorkspaces.messageClosingInMemory
-      else collectVetos() match {
-        case None     => vetoMessageNothing
-        case Some(v)  => v.vetoMessage
-      }
-
-    /** Attempts to resolve the veto condition by consulting the user.
-      *
-      * @return successful future if the situation is resolved, e.g. the user agrees to
-      *         proceed with the operation. failed future if the veto is upheld, and
-      *         the caller should abort the operation.
-      */
-    def tryResolveVeto()(implicit tx: S#Tx): Future[Unit] = ???
+//    private def vetoMessageNothing = "Nothing to veto."
+//
+//    def vetoMessage(implicit tx: S#Tx): String =
+//      if      (!isWorkspaceRoot ) vetoMessageNothing
+//      else if (interceptQuit    ) ActionCloseAllWorkspaces.messageClosingInMemory
+//      else collectVetos() match {
+//        case None     => vetoMessageNothing
+//        case Some(v)  => v.vetoMessage
+//      }
+//
+//    /** Attempts to resolve the veto condition by consulting the user.
+//      *
+//      * @return successful future if the situation is resolved, e.g. the user agrees to
+//      *         proceed with the operation. failed future if the veto is upheld, and
+//      *         the caller should abort the operation.
+//      */
+//    def tryResolveVeto()(implicit tx: S#Tx): Future[Unit] = ...
 
     override def dispose()(implicit tx: S#Tx): Unit = if (!wasDisposed) {
       super.dispose()
-      if (isWorkspaceRoot) ActionCloseAllWorkspaces.close(workspace)
+//      if (isWorkspaceRoot) ActionCloseAllWorkspaces.close(workspace)
       deferTx {
         quitAcceptor.foreach(Desktop.removeQuitAcceptor)
       }
