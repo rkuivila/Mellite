@@ -87,7 +87,7 @@ object FolderFrameImpl {
       if (interceptQuit) quitAcceptor = ??? // Some(Desktop.addQuitAcceptor(checkClose()))
     }
 
-    override protected def placement: (Float, Float, Int) = (0.5f, 0.0f, 20)
+    override protected def placement = WindowPlacement(0.5f, 0.0f)
 
 //    override protected def checkClose(): Boolean = !interceptQuit ||
 //      ActionCloseAllWorkspaces.check(workspace, Some(window))

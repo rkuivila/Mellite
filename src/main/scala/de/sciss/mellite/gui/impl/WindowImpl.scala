@@ -135,8 +135,8 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
     window      = f
     windowImpl  = f
     Window.attach(f, this)
-    val (ph, pv, pp) = placement
-    desktop.Util.placeWindow(f, ph, pv, pp)
+    val p = placement
+    desktop.Util.placeWindow(f, p.horizontal, p.vertical, p.padding)
     f.front()
 
     initGUI()
@@ -147,7 +147,7 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
   /** Subclasses may override this. The tuple is (horizontal, vertical, padding) position.
     * By default it centers the window, i.e. `(0.5f, 0.5f, 20)`.
     */
-  protected def placement: (Float, Float, Int) = (0.5f, 0.5f, 20)
+  protected def placement: WindowPlacement = WindowPlacement.default
 
   /** Subclasses may override this. By default this always returns `None`.
     */

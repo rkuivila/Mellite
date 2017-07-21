@@ -107,7 +107,7 @@ object CursorsFrameImpl {
       ??? // ActionCloseAllWorkspaces.checkAndClose(workspace, Some(window))
     }
 
-    override protected def placement: (Float, Float, Int) = (1f, 0f, 24)
+    override protected def placement = WindowPlacement(1f, 0f)
   }
 
   private abstract class ViewImpl(val _root: CursorView)
