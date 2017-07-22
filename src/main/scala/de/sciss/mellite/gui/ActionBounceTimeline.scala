@@ -663,7 +663,7 @@ object ActionBounceTimeline {
             lbFormat , lbSampleRate, lbGain, lbChannels, lbSpanStart, lbSpanStopOrDur,
             lbRealtime, lbFineControl, lbImport, lbMP3Title, lbMP3Artist, lbMP3Comment),
           Par(
-            Seq(ggFileType, ggPCMSampleFormat, ggMP3BitRate), ggSampleRate,
+            Seq(ggFileType, ggPCMSampleFormat, ggMP3BitRate, ggMP3VBR), ggSampleRate,
             Seq(ggGainAmt, ggGainType), ggChannels, ggSpanStartOpt, ggSpanStopOrDur,
             ggRealtime, ggFineControl, ggImport,
             ggMP3Title, ggMP3Artist, ggMP3Comment
@@ -673,7 +673,7 @@ object ActionBounceTimeline {
       )
       vertical = Seq(
         Par(Baseline)(lbPath, ggPath),
-        Par(Baseline)(lbFormat, ggFileType, ggPCMSampleFormat, ggMP3BitRate),
+        Par(Baseline)(lbFormat, ggFileType, ggPCMSampleFormat, ggMP3BitRate, ggMP3VBR),
         Par(Baseline)(lbSampleRate, ggSampleRate),
         Par(Baseline)(lbGain, ggGainAmt, ggGainType),
         Par(Baseline)(lbChannels, ggChannels),
