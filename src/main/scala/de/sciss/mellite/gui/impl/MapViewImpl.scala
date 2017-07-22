@@ -30,7 +30,7 @@ import de.sciss.lucre.swing._
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.synth.Sys
 import de.sciss.model.impl.ModelImpl
-import de.sciss.swingplus.DropMode
+import de.sciss.swingplus.{DropMode, Table}
 import de.sciss.synth.proc.Workspace
 
 import scala.annotation.switch
@@ -39,7 +39,7 @@ import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.concurrent.stm.TMap
 import scala.swing.Swing._
 import scala.swing.event.TableRowsSelected
-import scala.swing.{Component, Label, ScrollPane, Table, TextField}
+import scala.swing.{Component, Label, ScrollPane, TextField}
 
 abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S])])
                               (implicit val cursor: stm.Cursor[S],
@@ -188,11 +188,10 @@ abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S]
   }
 
   final protected def guiInit(): Unit = {
-    _table = new Table {
-      // Table default has idiotic renderer/editor handling
+    _table = new Table(tableModel) {
+      // Table default has bad renderer/editor handling
       override lazy val peer: JTable = new JTable /* with Table.JTableMixin */ with SuperMixin
     }
-    _table.model     = tableModel
     val jt        = _table.peer
     jt.setAutoCreateRowSorter(true)
     val tcm       = jt.getColumnModel
@@ -254,7 +253,6 @@ abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S]
 
     jt.setPreferredScrollableViewportSize((if (showKeyOnly) 130 else 390) -> 160)
 
-    import de.sciss.swingplus.Implicits._
     _table.sort(0)
 
     jt.setDragEnabled(true)
@@ -299,7 +297,7 @@ abstract class MapViewImpl[S <: Sys[S], Repr](list0: Vec[(String, ListObjView[S]
           val view      = data.view.asInstanceOf[ObjView[S]]
 
           val keyOpt = if (isInsert) { // ---- create new entry with key via dialog ----
-            queryKey("key")
+            queryKey()
           } else {          // ---- update value of existing entry with key via dialog ----
             val rowV  = dl.getRow
             val row   = jt.convertRowIndexToModel(rowV)

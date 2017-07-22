@@ -20,9 +20,8 @@ import de.sciss.lucre.swing.View
 import de.sciss.lucre.synth.Sys
 import de.sciss.mellite.gui.impl.ProcObjView
 import de.sciss.mellite.gui.impl.timeline.{GlobalProcsViewImpl => Impl}
+import de.sciss.swingplus.Table
 import de.sciss.synth.proc.{Timeline, Workspace}
-
-import scala.swing.Table
 
 object GlobalProcsView {
   def apply[S <: Sys[S]](group: Timeline[S], selectionModel: SelectionModel[S, TimelineObjView[S]])

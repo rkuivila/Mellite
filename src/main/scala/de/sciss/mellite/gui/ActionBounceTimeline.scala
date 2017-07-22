@@ -14,6 +14,8 @@
 package de.sciss.mellite
 package gui
 
+import java.awt
+import java.awt.event.{ComponentAdapter, ComponentEvent, WindowAdapter, WindowEvent}
 import java.io.{EOFException, File, IOException}
 import java.text.ParseException
 import javax.swing.{JFormattedTextField, SpinnerNumberModel, SwingUtilities}
@@ -397,11 +399,14 @@ object ActionBounceTimeline {
 
   def query[S <: Sys[S]](view: ViewHasWorkspace[S] with View.Editable[S],
                          init: QuerySettings[S], selectionType: Selection,
-                         spanPresets: ISeq[SpanPreset]): (QuerySettings[S], Boolean) = {
+                         spanPresets: ISeq[SpanPreset])(callback: (QuerySettings[S], Boolean) => Unit): Unit = {
 
     import view.{cursor, undoManager, workspace => document}
     val window          = Window.find(view.component)
     import equal.Implicits._
+
+    val ggOk      = new Button(" Ok ")
+    val ggCancel  = new Button("Cancel")
 
     val sqFileType      = AudioFileType.writable.map(FileType.PCM) :+ FileType.MP3
     val ggFileType      = new ComboBox[FileType](sqFileType)
@@ -476,6 +481,9 @@ object ActionBounceTimeline {
     ggPath.title  = "Audio Output File"
     val ggPathT   = ggPath.textField
     ggPathT.columns = 0    // otherwise doesn't play nicely with group-panel
+    ggPath.reactions += {
+      case ValueChanged(_) => ggOk.enabled = ggPath.valueOption.isDefined
+    }
 
     def setPath(file: File): Unit =
       ggPath.value = file.replaceExt(ggFileType.selection.item.extension)
@@ -682,94 +690,134 @@ object ActionBounceTimeline {
       )
     }
 
-    val opt = OptionPane.confirmation(message = box, optionType = OptionPane.Options.OkCancel,
-      messageType = OptionPane.Message.Plain)
-    opt.title = title
+//    val opt = OptionPane.confirmation(message = box, optionType = OptionPane.Options.OkCancel,
+//      messageType = OptionPane.Message.Plain)
+
+    def findWindow(): Option[awt.Window] = Option(SwingUtilities.getWindowAncestor(box.peer))
 
     // --------------------------
 
-    val ok    = opt.show(window) === OptionPane.Result.Ok
-    val file  = ggPath.valueOption
+//    val ok      = optRes === OptionPane.Result.Ok
 
-    val channels: Vec[Range.Inclusive] = try {
-      fmtRanges.stringToValue(ggChannelsJ.getText)
-    } catch {
-      case _: ParseException => init.channels
+    var wasCompleted = false
+
+    def dialogComplete(ok: Boolean): Unit = if (!wasCompleted) {
+      wasCompleted = true
+      findWindow().foreach(_.dispose())
+      val file    = ggPath.valueOption
+
+      val channels: Vec[Range.Inclusive] = try {
+        fmtRanges.stringToValue(ggChannelsJ.getText)
+      } catch {
+        case _: ParseException => init.channels
+      }
+
+      val importFile  = ggImport.selected
+      val spanOut     = mkSpan()
+      val sampleRate  = ggSampleRate.value
+
+      val fileFormat: FileFormat = ggFileType.selection.item match {
+        case FileType.PCM(tpe) =>
+          FileFormat.PCM(tpe, ggPCMSampleFormat.selection.item)
+        case FileType.MP3 =>
+          FileFormat.MP3(kbps = ggMP3BitRate.selection.item.value,
+            vbr = ggMP3VBR.selected, title = ggMP3Title.text, artist = ggMP3Artist.text, comment = ggMP3Comment.text)
+      }
+
+      var settings = QuerySettings(
+        realtime    = ggRealtime   .selected,
+        fineControl = ggFineControl.selected,
+        file        = file,
+        fileFormat  = fileFormat,
+        sampleRate  = sampleRate,
+        gain        = Gain(gainModel.getNumber.floatValue(), if (ggGainType.selection.index == 0) true else false),
+        span        = spanOut,
+        channels    = channels,
+        importFile  = importFile,
+        location    = init.location
+      )
+
+      val ok2: Boolean = file match {
+        case Some(f) if importFile =>
+          init.location match {
+            case Some(source) if cursor.step { implicit tx =>
+                val parent = source().directory
+                Try(Artifact.relativize(parent, f)).isSuccess
+              } =>  // ok, keep previous location
+              ok
+
+            case _ => // either no location was set, or it's not parent of the file
+              ActionArtifactLocation.query[S](document.rootH, f) match {
+                case Some(either) =>
+                  either match {
+                    case Left(source) =>
+                      settings = settings.copy(location = Some(source))
+                      ok
+
+                    case Right((name, directory)) =>
+                      val (edit, source) = cursor.step { implicit tx =>
+                        val locObj  = ActionArtifactLocation.create(name = name, directory = directory)
+                        val folder  = document.rootH()
+                        val index   = folder.size
+                        val _edit   = EditFolderInsertObj("Location", folder, index, locObj)
+                        (_edit, tx.newHandle(locObj))
+                      }
+                      undoManager.add(edit)
+                      settings = settings.copy(location = Some(source))
+                      ok
+                  }
+
+                case _ => false // return (settings, false)
+              }
+          }
+        case _ => ok
+      }
+
+      file match {
+        case Some(f) if ok2 && f.exists() =>
+          val ok3 = Dialog.showConfirmation(
+            message     = s"<HTML><BODY>File<BR><B>${f.path}</B><BR>already exists.<P>Are you sure you want to overwrite it?</BODY>",
+            title       = title,
+            optionType  = Dialog.Options.OkCancel,
+            messageType = Dialog.Message.Warning
+          ) === Dialog.Result.Ok
+          callback(settings, ok3)
+
+        case None if ok2 =>
+          query(view, settings, selectionType, spanPresets)(callback)
+
+        case _ =>
+          callback(settings, ok2)
+      }
     }
 
-    val importFile  = ggImport.selected
-    val spanOut     = mkSpan()
-    val sampleRate  = ggSampleRate.value
-
-    val fileFormat: FileFormat = ggFileType.selection.item match {
-      case FileType.PCM(tpe) =>
-        FileFormat.PCM(tpe, ggPCMSampleFormat.selection.item)
-      case FileType.MP3 =>
-        FileFormat.MP3(kbps = ggMP3BitRate.selection.item.value,
-          vbr = ggMP3VBR.selected, title = ggMP3Title.text, artist = ggMP3Artist.text, comment = ggMP3Comment.text)
+    ggOk.listenTo(ggOk)
+    ggOk.reactions += {
+      case ButtonClicked(_) => dialogComplete(ok = true)
     }
-
-    var settings = QuerySettings(
-      realtime    = ggRealtime   .selected,
-      fineControl = ggFineControl.selected,
-      file        = file,
-      fileFormat  = fileFormat,
-      sampleRate  = sampleRate,
-      gain        = Gain(gainModel.getNumber.floatValue(), if (ggGainType.selection.index == 0) true else false),
-      span        = spanOut,
-      channels    = channels,
-      importFile  = importFile,
-      location    = init.location
-    )
-
-    file match {
-      case Some(f) if importFile =>
-
-        init.location match {
-          case Some(source) if cursor.step { implicit tx =>
-              val parent = source().directory
-              Try(Artifact.relativize(parent, f)).isSuccess
-            } =>  // ok, keep previous location
-
-          case _ => // either no location was set, or it's not parent of the file
-            ActionArtifactLocation.query[S](document.rootH, f) match {
-              case Some(either) =>
-                either match {
-                  case Left(source) =>
-                    settings = settings.copy(location = Some(source))
-
-                  case Right((name, directory)) =>
-                    val (edit, source) = cursor.step { implicit tx =>
-                      val locObj  = ActionArtifactLocation.create(name = name, directory = directory)
-                      val folder  = document.rootH()
-                      val index   = folder.size
-                      val _edit   = EditFolderInsertObj("Location", folder, index, locObj)
-                      (_edit, tx.newHandle(locObj))
-                    }
-                    undoManager.add(edit)
-                    settings = settings.copy(location = Some(source))
-                }
-
-              case _ => return (settings, false)
-            }
-        }
-      case _ =>
+    ggOk.enabled = ggPath.valueOption.isDefined
+    ggCancel.listenTo(ggCancel)
+    ggCancel.reactions += {
+      case ButtonClicked(_) => dialogComplete(ok = false)
     }
+    val optEntries = Seq(ggOk, ggCancel)
+    val opt = OptionPane(message = box, optionType = OptionPane.Options.OkCancel,
+      messageType = OptionPane.Message.Plain, entries = optEntries)
+    opt.title = title
+    opt.modal = false
+    opt.show(window)
 
-    file match {
-      case Some(f) if ok && f.exists() =>
-        val ok1 = Dialog.showConfirmation(
-          message     = s"<HTML><BODY>File<BR><B>${f.path}</B><BR>already exists.<P>Are you sure you want to overwrite it?</BODY>",
-          title       = title,
-          optionType  = Dialog.Options.OkCancel,
-          messageType = Dialog.Message.Warning
-        ) === Dialog.Result.Ok
-        (settings, ok1)
-
-      case None if ok =>
-        query(view, settings, selectionType, spanPresets)
-      case _ =>
-        (settings, ok)
+    // XXX TODO --- the price for non-modality
+    findWindow().foreach { w =>
+      w.addWindowListener(new WindowAdapter {
+        // this happens when window bar's close button is pressed
+        override def windowClosed (e: WindowEvent): Unit = dialogComplete(ok = false)
+        override def windowClosing(e: WindowEvent): Unit = dialogComplete(ok = false)
+      })
+      w.addComponentListener(new ComponentAdapter {
+        // this happens when 'escape' is pressed
+        override def componentHidden(e: ComponentEvent): Unit = dialogComplete(ok = false)
+      })
     }
   }
 
@@ -1106,22 +1154,24 @@ abstract class ActionBounceTimeline[S <: Sys[S]](view: ViewHasWorkspace[S] with 
       }
     }
 
-    val setUpd          = prepare(settings)
-    val presets         = spanPresets()
-    val (_settings, ok) = query(view, setUpd, selectionType, presets)
-    settings            = _settings
-    if (ok) {
-      if (storeSettings) {
-        cursor.step { implicit tx =>
-          ActionBounceTimeline.storeSettings(_settings, objH())
-        }
-      }
+    val setUpd  = prepare(settings)
+    val presets = spanPresets()
 
-      for {
-        f    <- _settings.file
-        span <- _settings.span.nonEmptyOption
-      } {
-        performGUI(view, _settings, objH :: Nil, f, span)
+    query(view, setUpd, selectionType, presets) { (_settings, ok) =>
+      settings = _settings
+      if (ok) {
+        if (storeSettings) {
+          cursor.step { implicit tx =>
+            ActionBounceTimeline.storeSettings(_settings, objH())
+          }
+        }
+
+        for {
+          f    <- _settings.file
+          span <- _settings.span.nonEmptyOption
+        } {
+          performGUI(view, _settings, objH :: Nil, f, span)
+        }
       }
     }
   }

@@ -28,6 +28,7 @@ import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{View, Window, deferTx, requireEDT}
 import de.sciss.lucre.synth.{Sys => SSys}
 import de.sciss.mellite.gui.impl.component.NavigationHistory
+import de.sciss.swingplus.EditorPane
 import de.sciss.synth.proc
 import de.sciss.synth.proc.{Markdown, Workspace}
 import org.pegdown.PegDownProcessor
@@ -37,7 +38,7 @@ import scala.collection.immutable.{Seq => ISeq}
 import scala.concurrent.stm.Ref
 import scala.swing.Swing._
 import scala.swing.event.Key
-import scala.swing.{Action, BorderPanel, Component, EditorPane, FlowPanel, ScrollPane, Swing}
+import scala.swing.{Action, BorderPanel, Component, FlowPanel, ScrollPane, Swing}
 
 object MarkdownRenderViewImpl {
   def apply[S <: SSys[S]](init: Markdown[S], bottom: ISeq[View[S]], embedded: Boolean)
