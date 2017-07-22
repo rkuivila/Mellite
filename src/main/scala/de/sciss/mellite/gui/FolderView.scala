@@ -35,12 +35,17 @@ object FolderView {
                          (implicit tx: S#Tx, workspace: Workspace[S], cursor: stm.Cursor[S],
                           undoManager: UndoManager): FolderView[S] = Impl(root)
 
+  type NodeView[S <: Sys[S]] = TreeTableView.NodeView[S, Obj[S], Folder[S], ListObjView[S]]
+
   /** A selection is a sequence of paths, where a path is a prefix of folders and a trailing element.
     * The prefix is guaranteed to be non-empty.
     */
   // type Selection[S <: Sys[S]] = Vec[(Vec[ObjView.FolderLike[S]], ObjView[S])]
-  type Selection[S <: Sys[S]] = List[TreeTableView.NodeView[S, Obj[S], Folder[S], ListObjView[S]]]
+  type Selection[S <: Sys[S]] = List[NodeView[S]]
   // type Selection[S <: Sys[S]] = Vec[stm.Source[S#Tx, Obj[S]]]
+
+  /** Removes children from the selection whose parents are already included. */
+  def cleanSelection[S <: Sys[S]](in: Selection[S]): Selection[S] = Impl.cleanSelection(in)
 
   final case class SelectionDnDData[S <: Sys[S]](workspace: Workspace[S], cursor: stm.Cursor[S], selection: Selection[S]) {
     type S1 = S

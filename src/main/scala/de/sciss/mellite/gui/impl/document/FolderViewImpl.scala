@@ -30,12 +30,14 @@ import de.sciss.lucre.swing.TreeTableView.ModelUpdate
 import de.sciss.lucre.swing.impl.ComponentHolder
 import de.sciss.lucre.swing.{TreeTableView, deferTx}
 import de.sciss.lucre.synth.Sys
+import de.sciss.mellite.gui.FolderView.Selection
 import de.sciss.mellite.gui.edit.EditAttrMap
 import de.sciss.model.impl.ModelImpl
 import de.sciss.synth.proc.{Folder, ObjKeys, Workspace}
 import de.sciss.treetable.j.{DefaultTreeTableCellEditor, TreeTableCellEditor}
 import de.sciss.treetable.{TreeTableCellRenderer, TreeTableSelectionChanged}
 
+import scala.annotation.tailrec
 import scala.collection.breakOut
 import scala.collection.immutable.{IndexedSeq => Vec}
 import scala.swing.Component
@@ -57,6 +59,31 @@ object FolderViewImpl {
     }
   }
 
+  def cleanSelection[S <: stm.Sys[S]](in: Selection[S]): Selection[S] = {
+    type NodeView = FolderView.NodeView[S]
+    type Sel      = Selection[S]
+
+    @tailrec
+    def loop(set: Set[NodeView], rem: Sel, res: Sel): Sel = rem match {
+      case Nil => res
+      case head :: tail =>
+        head.parentView match {
+          case Some(p) if set.contains(p) => loop(set = set       , rem = tail, res =         res)
+          case _                          => loop(set = set + head, rem = tail, res = head :: res)
+        }
+    }
+
+    @tailrec
+    def countParents(n: NodeView, res: Int = 0): Int = n.parentView match {
+      case None     => res
+      case Some(p)  => countParents(p, res = res + 1)
+    }
+
+    val inS = in.sortBy(countParents(_))
+    val resRev = loop(Set.empty, rem = inS, res = Nil)
+    resRev.reverse
+  }
+
   private abstract class Impl[S <: Sys[S]](implicit val undoManager: UndoManager, val workspace: Workspace[S],
                                            val cursor: stm.Cursor[S])
     extends ComponentHolder[Component]
@@ -67,7 +94,7 @@ object FolderViewImpl {
     view =>
 
     private type Data     = ListObjView[S]
-    private type NodeView = TreeTableView.NodeView[S, Obj[S], Folder[S], Data]
+    private type NodeView = FolderView.NodeView[S]
 
     protected object TTHandler
       extends TreeTableView.Handler[S, Obj[S], Folder[S], ListObjView[S]] {
@@ -254,7 +281,7 @@ object FolderViewImpl {
 
     }
 
-    def selection: FolderView.Selection[S] = treeView.selection
+    def selection: Selection[S] = treeView.selection
 
     def insertionPoint(implicit tx: S#Tx): (Folder[S], Int) = treeView.insertionPoint
 

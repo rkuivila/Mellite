@@ -118,7 +118,7 @@ trait CollectionViewImpl[S <: Sys[S]]
     }
   }
 
-  private lazy val addPopup: PopupMenu = {
+  private[this] lazy val addPopup: PopupMenu = {
     import de.sciss.desktop.Menu._
     val pop     = Popup()
     val tlP     = Application.topLevelObjects

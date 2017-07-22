@@ -149,9 +149,11 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
     }
 
     // XXX TODO: not sure whether removal should be in exportDone or something
-    private def insertFolderData1(sel: FolderView.Selection[S], newParent: Folder[S], idx: Int, dropAction: Int)
+    private def insertFolderData1(sel0: FolderView.Selection[S], newParent: Folder[S], idx: Int, dropAction: Int)
                           (implicit tx: S#Tx): Option[UndoableEdit] = {
       // println(s"insert into $parent at index $idx")
+
+      val sel = FolderView.cleanSelection(sel0)
 
       import de.sciss.equal.Implicits._
       def isNested(c: Obj[S]): Boolean = c match {
@@ -229,7 +231,9 @@ trait FolderViewTransferHandler[S <: Sys[S]] { fv =>
     private def copyFolderData1[In <: Sys[In]](data: FolderView.SelectionDnDData[In]): Option[UndoableEdit] =
       Txn.copy[In, S, Option[UndoableEdit]] { (txIn: In#Tx, tx: S#Tx) => {
         parentOption(tx).flatMap { case (parent, idx) =>
-          copyFolderData2(data.selection, parent, idx)(txIn, tx)
+          val sel0  = data.selection
+          val sel   = FolderView.cleanSelection(sel0)
+          copyFolderData2(sel, parent, idx)(txIn, tx)
         }
       }} (data.cursor, fv.cursor)
 
