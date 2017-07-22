@@ -25,7 +25,7 @@ import scala.concurrent.ExecutionContext
 package object mellite {
   type Cf = Confluent
 
-  private lazy val logHeader = new SimpleDateFormat("[d MMM yyyy, HH:mm''ss.SSS] 'Mellite' - ", Locale.US)
+  private lazy val logHeader = new SimpleDateFormat("[d MMM yyyy, HH:mm''ss.SSS] 'mllt' - ", Locale.US)
   var showLog         = false
   var showTimelineLog = false
 

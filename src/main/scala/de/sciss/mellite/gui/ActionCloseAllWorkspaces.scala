@@ -136,6 +136,7 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
                                        (implicit tx: S#Tx): Option[Veto[S#Tx]] = {
     val list0: List[Veto[S#Tx]] = workspace.dependents.flatMap {
       case mv: DependentMayVeto[S#Tx] /* if mv != self */ => mv.prepareDisposal()
+      case _ => None
     } (breakOut)
 
     val list = preOpt.fold(list0)(_ :: list0)
@@ -151,8 +152,17 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
             def loop(in: Future[Unit], rem: List[Veto[S#Tx]]): Future[Unit] = rem match {
               case Nil => in
               case head :: tail =>
-                val andThen = in.flatMap(_ => head.tryResolveVeto())
-                loop(andThen, tail)
+                in.value match {
+                  case Some(Success(())) =>
+                    val andThen = head.tryResolveVeto()
+                    loop(andThen, tail)
+                  case _ => in.flatMap { _ =>
+                    workspace.cursor.step { implicit tx =>
+                      val andThen = head.tryResolveVeto()
+                      loop(andThen, tail)
+                    }
+                  }
+                }
             }
 
             loop(Future.successful(()), list)

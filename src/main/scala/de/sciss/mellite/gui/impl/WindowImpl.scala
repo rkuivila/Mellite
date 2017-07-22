@@ -22,7 +22,6 @@ import de.sciss.lucre.stm
 import de.sciss.lucre.stm.Sys
 import de.sciss.lucre.stm.TxnLike.peer
 import de.sciss.lucre.swing.{CellView, View, Window, deferTx, requireEDT}
-import de.sciss.synth.proc.SoundProcesses
 
 import scala.concurrent.Future
 import scala.concurrent.stm.Ref
@@ -53,7 +52,8 @@ object WindowImpl {
     contents  = view.component
     closeOperation = desktop.Window.CloseIgnore
     reactions += {
-      case desktop.Window.Closing  (_) => impl.handleClose()
+      case desktop.Window.Closing  (_) =>
+        impl.handleClose()
       case desktop.Window.Activated(_) =>
         view match {
           case wv: ViewHasWorkspace[S] =>
@@ -179,7 +179,7 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
           Future.successful(())
         }
 
-        SoundProcesses.atomic[S, Unit] { implicit tx =>
+        cursor.step { implicit tx =>
           val vetoOpt = prepareDisposal()
           vetoOpt.fold[Future[Unit]] {
             succeed()
@@ -190,7 +190,7 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
                 succeed()
               case _ =>
                 futVeto.map { _ =>
-                  SoundProcesses.atomic[S, Unit] { implicit tx =>
+                  cursor.step { implicit tx =>
                     complete()
                   }
                 }
@@ -206,7 +206,9 @@ abstract class WindowImpl[S <: Sys[S]] private (titleExpr: Option[CellView[S#Tx,
     requireEDT()
     if (!_wasDisposed.single.get) {
       val fut = performClose()
-      fut.foreach(_ => _wasDisposed.single.set(true))
+      fut.foreach { _ =>
+        _wasDisposed.single.set(true)
+      }
     }
   }
 

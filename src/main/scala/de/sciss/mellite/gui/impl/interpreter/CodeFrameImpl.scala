@@ -243,7 +243,8 @@ object CodeFrameImpl {
           val opt = OptionPane.confirmation(message = message, optionType = OptionPane.Options.YesNoCancel,
             messageType = OptionPane.Message.Warning)
           opt.title = s"Close - $title"
-          opt.show(Some(window)) match {
+          val res = opt.show(Some(window))
+          res match {
             case OptionPane.Result.No =>
               p.success(())
             case OptionPane.Result.Yes =>

@@ -29,7 +29,10 @@ import scala.language.existentials
   * should be fine to call into either, as this bridge is backed up by the peer
   * `mellite.DocumentHandler.instance`.
   */
-class DocumentHandlerImpl extends desktop.DocumentHandler with ModelImpl[DH.Update[Mellite.Document]] {
+class DocumentHandlerImpl
+  extends desktop.DocumentHandler[Mellite.Document]
+  with ModelImpl[DH.Update[Mellite.Document]] {
+
   type Document = Mellite.Document
 
   private def peer = DocumentHandler.instance

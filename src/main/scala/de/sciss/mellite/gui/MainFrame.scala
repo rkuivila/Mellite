@@ -457,7 +457,7 @@ final class MainFrame extends desktop.impl.WindowImpl { me =>
   closeOperation  = Window.CloseIgnore
 
   reactions += {
-    case Window.Closing(_) => if (Desktop.mayQuit()) Application.quit()
+    case Window.Closing(_) => Desktop.mayQuit().foreach(_ => Application.quit())
   }
 
   pack()
