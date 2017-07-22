@@ -17,6 +17,7 @@ package gui
 import java.util.concurrent.TimeUnit
 
 import de.sciss.desktop.{FileDialog, KeyStrokes, OptionPane, Util}
+import de.sciss.equal.Implicits._
 import de.sciss.file._
 import de.sciss.lucre.stm.DataStore
 import de.sciss.lucre.stm.store.BerkeleyDB
@@ -25,7 +26,7 @@ import de.sciss.synth.proc.Workspace
 
 import scala.concurrent.duration.Duration
 import scala.swing.event.Key
-import scala.swing.{Action, Dialog, Label}
+import scala.swing.{Action, Label}
 import scala.util.control.NonFatal
 
 object ActionNewWorkspace extends Action("Workspace...") {
@@ -45,7 +46,7 @@ object ActionNewWorkspace extends Action("Workspace...") {
   private def fullTitle = "New Workspace"
 
   def apply(): Unit = {
-    val tpeMessage = new Label( """<HTML><BODY><B>Workspaces can be confluent or ephemeral.</B><P><br>
+    val tpeMessage = new Label("""<HTML><BODY><B>Workspaces can be confluent or ephemeral.</B><P><br>
         |A <I>confluent</I> workspace keeps a trace of its history.<P><br>
         |An <I>ephemeral</I> workspace does not remember its history.<br>
         |An ephemeral workspace can either <I>durable</I> (stored on disk) or purely <I>in-memory</I>.
@@ -89,20 +90,35 @@ object ActionNewWorkspace extends Action("Workspace...") {
       else
         folder0.parent / s"$name.${Workspace.ext}"
 
-      if (!folder.exists()) Some(folder) else {
-        val isOk = Dialog.showConfirmation(
-          message     = s"Document ${folder.path} already exists.\nAre you sure you want to overwrite it?",
-          title       = fullTitle,
-          optionType  = Dialog.Options.OkCancel,
-          messageType = Dialog.Message.Warning
-        ) != Dialog.Result.Ok
+      val folderOpt = Some(folder)
+      val isOpen = Application.documentHandler.documents.exists(_.folder === folderOpt)
+
+      if (isOpen) {
+        val optOvr = OptionPane.message(
+          message     = s"Workspace ${folder.path} already exists and is currently open.",
+          messageType = OptionPane.Message.Error
+        )
+        optOvr.title = fullTitle
+        optOvr.show()
+        None
+
+      } else if (!folder.exists()) Some(folder) else {
+        val optOvr = OptionPane.confirmation(
+          message     = s"Workspace ${folder.path} already exists.\nAre you sure you want to overwrite it?",
+          optionType  = OptionPane.Options.OkCancel,
+          messageType = OptionPane.Message.Warning
+        )
+        optOvr.title = fullTitle
+        val resOvr = optOvr.show()
+        val isOk = resOvr === OptionPane.Result.Ok
 
         if (!isOk) None else if (deleteRecursive(folder)) Some(folder) else {
-          Dialog.showMessage(
-            message     = s"Unable to delete existing document ${folder.path}",
-            title       = fullTitle,
-            messageType = Dialog.Message.Error
+          val optUnable = OptionPane.message(
+            message     = s"Unable to delete existing workspace ${folder.path}",
+            messageType = OptionPane.Message.Error
           )
+          optUnable.title = fullTitle
+          optUnable.show()
           None
         }
       }
@@ -122,11 +138,12 @@ object ActionNewWorkspace extends Action("Workspace...") {
 
       } catch {
         case NonFatal(e) =>
-          Dialog.showMessage(
-            message     = s"Unable to create new document ${folder.path} \n\n${Util.formatException(e)}",
-            title       = fullTitle,
-            messageType = Dialog.Message.Error
+          val optUnable = OptionPane.message(
+            message     = s"Unable to create new workspace ${folder.path} \n\n${Util.formatException(e)}",
+            messageType = OptionPane.Message.Error
           )
+          optUnable.title = fullTitle
+          optUnable.show()
           None
       }
     }
