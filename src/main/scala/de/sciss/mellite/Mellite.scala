@@ -33,12 +33,12 @@ import scala.util.control.NonFatal
 object Mellite extends SwingApplicationImpl[Application.Document]("Mellite") with Application with Init {
 
   import de.sciss.synth.proc
+//  proc.showLog            = true
+//  showLog                 = true
 //  //  lucre.event    .showLog = true
 //  //  lucre.confluent.showLog = true
-  proc.showLog            = true
 //  proc.showAuralLog       = true
 //  proc.showTransportLog   = true
-  showLog                 = true
 //  showTimelineLog         = true
 //  de.sciss.lucre.bitemp.impl.BiGroupImpl.showLog = true
 //  // gui.impl.timeline.TimelineViewImpl.DEBUG = true

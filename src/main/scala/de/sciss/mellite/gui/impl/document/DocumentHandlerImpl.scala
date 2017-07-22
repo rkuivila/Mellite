@@ -16,7 +16,7 @@ package gui
 package impl.document
 
 import de.sciss.desktop
-import de.sciss.desktop.{DocumentHandler => DH}
+import de.sciss.desktop.{Desktop, DocumentHandler => DH}
 import de.sciss.lucre.swing.defer
 import de.sciss.lucre.synth.Sys
 import de.sciss.model.impl.ModelImpl
@@ -46,7 +46,7 @@ class DocumentHandlerImpl
 
   def documents: Iterator[Document] = peer.allDocuments
 
-  private var _active = Option.empty[Document]
+  private[this] var _active = Option.empty[Document]
 
   def activeDocument: Option[Document] = _active
 
@@ -67,4 +67,6 @@ class DocumentHandlerImpl
       dispatch(DH.Removed(docC))
     }
   }
+
+  Desktop.addQuitAcceptor(ActionCloseAllWorkspaces.tryCloseAll())
 }

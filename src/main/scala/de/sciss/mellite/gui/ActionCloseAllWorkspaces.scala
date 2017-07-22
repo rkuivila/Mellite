@@ -43,18 +43,29 @@ object ActionCloseAllWorkspaces extends Action("Close All") {
     case desktop.DocumentHandler.Removed(_) => checkCloseAll()
   }
 
-  def apply(): Unit = {
+  def apply(): Unit = tryCloseAll()
+
+  def tryCloseAll(): Future[Unit] = {
     val docs = dh.documents.toList  // iterator wil be exhausted!
 
-    def loop(rem: List[Workspace[_ <: Sys[_]]]): Unit = rem match {
-      case Nil =>
+    def loop(in: Future[Unit], rem: List[Workspace[_ <: Sys[_]]]): Future[Unit] = rem match {
+      case Nil => in
       case head :: tail =>
         val headT = head.asInstanceOf[Workspace[~] forSome { type ~ <: Sys[~] }]
-        val fut = tryClose(headT, None)
-        fut.foreach(_ => loop(tail))
+        in.value match {
+          case Some(Success(())) =>
+            val fut = tryClose(headT, None)
+            loop(fut, tail)
+
+          case _ =>
+            in.flatMap { _ =>
+              val fut = tryClose(headT, None)
+              loop(fut, tail)
+            }
+        }
     }
 
-    loop(docs)
+    loop(Future.successful(()), docs)
 
 //    // cf. http://stackoverflow.com/questions/20982681/existential-type-or-type-parameter-bound-failure
 //    val allOk = docs.forall(doc => check(doc.asInstanceOf[Workspace[~] forSome { type ~ <: Sys[~] }], None))
