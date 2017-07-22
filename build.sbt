@@ -4,7 +4,7 @@ lazy val baseName                   = "Mellite"
 lazy val baseNameL                  = baseName.toLowerCase
 lazy val appDescription             = "A computer music application based on SoundProcesses"
 lazy val projectVersion             = "2.16.0-SNAPSHOT"
-lazy val mimaVersion                = "2.15.0"
+lazy val mimaVersion                = "2.16.0"
 
 lazy val loggingEnabled             = true
 
@@ -13,21 +13,21 @@ lazy val authorEMail                = "contact@sciss.de"
 
 // ---- dependencies ----
 
-lazy val soundProcessesVersion      = "3.13.0-SNAPSHOT"
-lazy val fscapeVersion              = "2.8.0-SNAPSHOT"
-lazy val nuagesVersion              = "2.17.0-SNAPSHOT"
+lazy val soundProcessesVersion      = "3.13.0"
+lazy val fscapeVersion              = "2.8.0"
+lazy val nuagesVersion              = "2.17.0"
 lazy val interpreterPaneVersion     = "1.8.1"
 lazy val scalaColliderVersion       = "1.22.4"
 lazy val scalaColliderUGenVersion   = "1.16.4"
 lazy val lucreVersion               = "3.4.1"
 lazy val equalVersion               = "0.1.2"
-lazy val freesoundVersion           = "1.3.0-SNAPSHOT"
+lazy val freesoundVersion           = "1.3.0"
 lazy val playJSONVersion            = "0.4.0"
-lazy val scalaColliderSwingVersion  = "1.34.0-SNAPSHOT"
-lazy val lucreSwingVersion          = "1.6.0-SNAPSHOT"
-lazy val audioWidgetsVersion        = "1.11.0-SNAPSHOT"
+lazy val scalaColliderSwingVersion  = "1.34.0"
+lazy val lucreSwingVersion          = "1.6.0"
+lazy val audioWidgetsVersion        = "1.11.0"
 lazy val swingPlusVersion           = "0.2.3"
-lazy val desktopVersion             = "0.8.0-SNAPSHOT"
+lazy val desktopVersion             = "0.8.0"
 lazy val sonogramVersion            = "1.9.1"
 lazy val raphaelIconsVersion        = "1.0.4"
 lazy val modelVersion               = "0.3.4"
