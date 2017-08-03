@@ -401,7 +401,7 @@ object TimelineViewImpl {
         val tlSpan = Span(drop.frame, drop.frame + drag.selection.length)
         val (span, obj) = ProcActions.mkAudioRegion(time = tlSpan,
           audioCue = audioCue, gOffset = drag.selection.start /*, bus = None */) // , bus = ad.bus.map(_.apply().entity))
-      val track = canvas.screenToTrack(drop.y)
+        val track = canvas.screenToTrack(drop.y)
         obj.attr.put(TimelineObjView.attrTrackIndex, IntObj.newVar(IntObj.newConst(track)))
         val edit = EditTimelineInsertObj("Insert Audio Region", groupM, span, obj)
         edit
