@@ -14,14 +14,15 @@ lazy val authorEMail                = "contact@sciss.de"
 // ---- dependencies ----
 
 lazy val soundProcessesVersion      = "3.13.0"
-lazy val fscapeVersion              = "2.8.1-SNAPSHOT"
+lazy val fscapeVersion              = "2.8.1"
 lazy val nuagesVersion              = "2.17.0"
+lazy val fileUtilVersion            = "1.1.3"
 lazy val interpreterPaneVersion     = "1.8.1"
 lazy val scalaColliderVersion       = "1.22.4"
 lazy val scalaColliderUGenVersion   = "1.16.4"
 lazy val lucreVersion               = "3.4.1"
 lazy val equalVersion               = "0.1.2"
-lazy val freesoundVersion           = "1.3.0"
+lazy val freesoundVersion           = "1.3.1"
 lazy val playJSONVersion            = "0.4.0"
 lazy val scalaColliderSwingVersion  = "1.34.0"
 lazy val lucreSwingVersion          = "1.6.0"
@@ -52,8 +53,8 @@ lazy val commonSettings = Seq(
   organization       := "de.sciss",
   homepage           := Some(url(s"https://github.com/Sciss/$baseName")),
   licenses           := Seq("GNU General Public License v3+" -> url("http://www.gnu.org/licenses/gpl-3.0.txt")),
-  scalaVersion       := "2.12.2",
-  crossScalaVersions := Seq("2.12.2", "2.11.11"),
+  scalaVersion       := "2.12.3",
+  crossScalaVersions := Seq("2.12.3", "2.11.11"),
   scalacOptions ++= {
     val xs = Seq("-deprecation", "-unchecked", "-feature", "-encoding", "utf8", "-Xfuture", "-Xlint:-stars-align,_")
     if (loggingEnabled || isSnapshot.value) xs else xs ++ Seq("-Xelide-below", "INFO")
@@ -184,6 +185,7 @@ lazy val root = Project(id = baseName, base = file("."))
       "de.sciss"    %% s"lucre-$bdb"                    % lucreVersion,               // database backend
       "de.sciss"    %% "lucre-expr"                     % lucreVersion,
       "de.sciss"    %% "equal"                          % equalVersion,               // type-safe equals
+      "de.sciss"    %% "fileutil"                       % fileUtilVersion,            // (sbt bug)
       "de.sciss"    %% "wolkenpumpe"                    % nuagesVersion,              // live improv
       "de.sciss"    %% "scalacolliderswing-core"        % scalaColliderSwingVersion,  // (sbt bug)
       "de.sciss"    %% "scalacolliderswing-interpreter" % scalaColliderSwingVersion,  // REPL view
