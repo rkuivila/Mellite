@@ -22,7 +22,6 @@ import java.util.Date
 import javax.swing.undo.UndoableEdit
 import javax.swing.{Icon, KeyStroke}
 
-import de.sciss.desktop.impl.UndoManagerImpl
 import de.sciss.desktop.{Desktop, FileDialog, OptionPane, PathField, Preferences, UndoManager, Util}
 import de.sciss.equal.Implicits._
 import de.sciss.file._
@@ -46,8 +45,8 @@ import de.sciss.synth.proc.{AudioCue, Ensemble, Folder, Markdown, Timeline, Work
 import de.sciss.{desktop, freesound}
 
 import scala.collection.{breakOut, mutable}
-import scala.concurrent.{Future, blocking}
 import scala.concurrent.stm.Ref
+import scala.concurrent.{Future, blocking}
 import scala.swing.event.Key
 import scala.swing.{Action, Alignment, Button, Component, Label, ProgressBar, SequentialContainer, Swing, TabbedPane, TextField}
 import scala.util.control.NonFatal
@@ -58,7 +57,7 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
   val icon: Icon        = ObjViewImpl.raphaelIcon(freesound.swing.Shapes.Retrieval)
   val prefix            = "Retrieval"
   def humanName: String = s"Freesound $prefix"
-  def tpe               = Retrieval
+  def tpe: Obj.Type     = Retrieval
   def category: String  = ObjView.categComposition
   def hasMakeDialog     = true
 
@@ -196,7 +195,7 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
 
     override def obj(implicit tx: S#Tx): E[S] = objH()
 
-    def factory = FreesoundRetrievalObjView
+    def factory: ObjView.Factory = FreesoundRetrievalObjView
 
     def isViewable = true
 
@@ -208,7 +207,7 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
       val tsInit        = r.textSearch.value
       import Mellite.auralSystem
       val rv            = RetrievalView[S](searchInit = tsInit, soundInit = Nil)
-      implicit val undo = new UndoManagerImpl
+      implicit val undo: UndoManager = UndoManager()
       val fv            = FolderView[S](r.downloads)
       val downloadsView = new FolderFrameImpl.ViewImpl[S](fv).init()
 
@@ -312,7 +311,7 @@ object FreesoundRetrievalObjView extends ListObjView.Factory {
         val inHalfAnHour  = new Date(System.currentTimeMillis() + (30L * 60 * 1000))
         val willExpire    = oldAuth.expires.compareTo(inHalfAnHour) < 0
         if (willExpire) {
-          implicit val _oldAuth = oldAuth
+          implicit val _oldAuth: Auth = oldAuth
           val fut = Freesound.refreshAuth()
           andStore(fut)
 
