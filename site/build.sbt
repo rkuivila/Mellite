@@ -1,23 +1,25 @@
-lazy val melliteVersion        = "2.14.0"
+lazy val melliteVersion        = "2.16.0"
 lazy val PROJECT_VERSION       = melliteVersion
 lazy val baseName              = "Mellite"
 
-lazy val soundProcessesVersion = "3.12.4"
-lazy val nuagesVersion         = "2.16.0"
+lazy val soundProcessesVersion = "3.13.0"
+lazy val nuagesVersion         = "2.17.0"
 lazy val oscVersion            = "1.1.5"
 lazy val audioFileVersion      = "1.4.6"
 lazy val scalaColliderVersion  = "1.22.4"
 lazy val ugensVersion          = "1.16.4"
-lazy val fscapeVersion         = "2.7.1"
+lazy val fscapeVersion         = "2.8.0"
 lazy val lucreVersion          = "3.4.1"
+lazy val spanVersion           = "1.3.2"
 
-scalaVersion in ThisBuild : = "2.12.2"
+scalaVersion in ThisBuild := "2.12.3"
 
 val commonSettings = Seq(
   organization := "de.sciss",
   version      := PROJECT_VERSION
 )
 
+val lSpan               = RootProject(uri(s"git://github.com/Sciss/Span.git#v${spanVersion}"))
 val lScalaOSC           = RootProject(uri(s"git://github.com/Sciss/ScalaOSC.git#v${oscVersion}"))
 val lScalaAudioFile     = RootProject(uri(s"git://github.com/Sciss/ScalaAudioFile.git#v${audioFileVersion}"))
 val lScalaColliderUGens = RootProject(uri(s"git://github.com/Sciss/ScalaColliderUGens.git#v${ugensVersion}"))
@@ -46,8 +48,8 @@ val root = (project in file("."))
     git.gitCurrentBranch := "master",
     paradoxTheme         := Some(builtinParadoxTheme("generic")),
     paradoxProperties in Paradox ++= Map(
-      "image.base_url"          -> "assets/images",
-      "snippet.base_dir"        -> s"${baseDirectory.value}/snippets/src/main"
+      "image.base_url"       -> "assets/images",
+      "snip.sp_tut.base_dir" -> s"${baseDirectory.value}/snippets/src/main/scala/de/sciss/soundprocesses/tutorial"
       // "swingversion"            -> scalaColliderSwingVersion,
       // "extref.swingdl.base_url" -> s"https://github.com/Sciss/ScalaColliderSwing/releases/download/v${scalaColliderSwingVersion}/ScalaColliderSwing_${scalaColliderSwingVersion}%s"
     ),
@@ -86,7 +88,19 @@ val root = (project in file("."))
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(lLucreBdb6)
   )
   // XXX TODO --- don't know how to exclude bdb5/6 from lucre
-  .aggregate(lScalaOSC, lScalaAudioFile, lScalaColliderUGens, lScalaCollider, lFScape, lSoundProcesses, lNuages, lLucreCore, lLucreExpr, lMellite)
+  .aggregate(
+    /* currently uses Scala 2.11 and incompatible site plugin: lSpan, */
+    lScalaOSC, 
+    lScalaAudioFile, 
+    lScalaColliderUGens, 
+    lScalaCollider, 
+    lFScape, 
+    lSoundProcesses, 
+    lNuages, 
+    lLucreCore, 
+    lLucreExpr, 
+    lMellite
+  )
 
 val snippets = (project in file("snippets"))
   // .dependsOn(lMellite)

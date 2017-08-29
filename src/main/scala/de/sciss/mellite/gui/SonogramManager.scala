@@ -40,6 +40,8 @@ object SonogramManager {
     val cq    = ConstQ.Config()
     cq.bandsPerOct  = 18
     cq.maxTimeRes   = 18
+//    cq.bandsPerOct  = 18 * 4
+//    cq.maxTimeRes   = 18 / 4.0f
     cq.threading    = Threading.Single
     val job   = sonogram.OverviewManager.Job(file, cq)
     _instance.acquire(job)
