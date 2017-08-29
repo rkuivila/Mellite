@@ -1,4 +1,4 @@
-# Getting Started with SoundProcesses
+# Intro to SoundProcesses
 
 If you have gone through the video tutorials of Mellite, you may wonder if there is more to it than the limited GUI interaction.
 In fact, Mellite is, properly speaking, only the graphical user interface layer on top of a system of computer music abstractions
@@ -8,17 +8,29 @@ necessary to dive a bit deeper and learn about the application programming inter
 still access this API through Mellite, but you may also choose to write your sound programs directly in a general code editor
 or integrated development environment (IDE), such as IntelliJ IDEA.
 
-In the following tutorial, we will write code as such an independent project, not making any references to Mellite. We will try
+In the following tutorial, we will write code as such an independent project, not making any references to Mellite. I will try
 to assume that you have not much experience with either Scala, ScalaCollider (the sound synthesis library used by SoundProcesses)
-or IntelliJ IDEA. It will thus be a quite long trip, introducing you to all of these things step by step. Instead of giving a
-separate Scala tutorial (there are many resources [out on the Internet](http://scala-lang.org/documentation/learn.html)), we will
+or IntelliJ IDEA. However, I will also assume that you have some programming experience, perhaps in Java or SuperCollider, so
+that some concepts may be familiar, although you know them from a different language.
+
+This tutorial will thus be a quite long trip, introducing you to all of these things step by step. Instead of giving a
+separate Scala tutorial (there are many resources [out on the Internet](http://scala-lang.org/documentation/learn.html)), I will
 introduce Scala concepts as we encounter them.
+
+@@@ note
+
+This tutorial is a living document. Please help improve it by reporting problems in understanding, errors, or by making suggestions
+on how to improve it. The best way is to pass by the [Gitter chat room](https://gitter.im/Sciss/Mellite), or if you can nail it down to a particular typo,
+problem or suggestion, by filing a ticket in the [issue tracker](https://github.com/Sciss/Mellite/issues).
+
+@@@
+
 
 ## Preparations
 
-We assume that you have [SuperCollider](http://supercollider.github.io/), [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html), 
+I assume that you have [SuperCollider](http://supercollider.github.io/), [Java](http://www.oracle.com/technetwork/java/javase/downloads/index.html), 
 and [git](https://git-scm.com/) already installed on your system, and proceed from there. You can either copy and paste the code
-snippets from this page, or clone the Mellite repository. Let's do the latter. In the following, a dollar sign `$` indicates the
+snippets from this page, or clone the Mellite [repository](https://github.com/Sciss/Mellite/). Let's do the latter. In the following, a dollar sign `$` indicates the
 terminal or shell prompt.
 
     $ cd ~/Documents  # or any place where you would like to download the repository to
@@ -56,7 +68,7 @@ and locate `Snippet1`, the source code of which you can open by double-clicking 
 
 ![IC Project Browser](.../tut_sp_idea_project.png)
 
-You can build (compile) the project by clicking the green downward arrow button in the top-right of the window or <kbd>Ctrl</kbd>-<kbd>F9</kbd> on the keyboard.
+You can build (compile) the project by clicking the green downward arrow button in the top-right of the window or typing <kbd>Ctrl</kbd>-<kbd>F9</kbd> on the keyboard.
 If all goes fine, the status bar at the bottom should say something like
 
 > Compilation completed successfully in 5s 388ms (moments ago)
@@ -73,7 +85,7 @@ A few observations until here:
   build files are. Basically, they define which libraries and Scala version your project uses.
 - By convention, source code in Scala projects resides in the directory `src/main/scala` (there could be other locations, for 
   example `src/test/scala` for unit test source code, or `src/main/java` if you mix with Java source code, etc.)
-- By another convention, we use packages for code, which are nested namespaces. That avoid clashes when multiple projects
+- By another convention, we use packages for code, which are nested namespaces. That avoids clashes when multiple projects
   and libraries would otherwise use the same names for classes and objects. Following Java's tradition, packages are broken
   up into 'reverse URL components', so for example all my projects begin with package `de.sciss`, typically followed by
   further components clarifying the project, in this case `soundprocesses.tutorial`. You don't have to follow this pattern,
@@ -82,18 +94,20 @@ A few observations until here:
 IntelliJ IDEA can do a lot more things, like help you with versioning control (git), run a step debugger, and so forth. For now, we
 use it as a code editor, compiler and runner. The code editor is very powerful, giving you things such as auto-completion, offering
 intentions, easy navigation and look-up of methods and symbols you are using, showing you instantly errors and warnings, etc.
-If you've worked with SuperCollider IDE, you'll notice that it much more advanced; however, you will notice one big difference:
+If you've worked with SuperCollider IDE, you'll notice that it is much more advanced; however, you will notice one big difference:
 IntelliJ doesn't directly give you an interpreter where you can live-code. There are possibilities so drop into an interpreter,
 but the focus is really to program a statically typed program. Mellite, in turn, has a much weaker IDE, but better access to
 a live-code interpreter.
 
-Now let's run the first snippet. Select `Snippet1` in the project browser (tree view) and select 'Run' from the context menu or
+Now let's run the first snippet. Select `Snippet1` in the project browser (tree view) and choose 'Run' from the context menu or
 press <kbd>Ctrl</kbd>-<kbd>Shift</kbd>-<kbd>F10</kbd>:
 
 ![IC Project Browser](.../tut_sp_idea_project.png)
 
-There are two possible outcomes now. Either it works, and you hear the famous 'Analog Bubbles' example sound of SuperCollider. In this
-case you have completed the preparations. Or, most likely on macOS and Windows, 
+There are (at least) three possible outcomes now. Either it works, and you hear the famous 'Analog Bubbles' example sound of SuperCollider. In this
+case you have completed the preparations. Or, most likely on Linux, it seems to run without error but there is no sound&mdash;probably Jack is
+not well connected, we'll discuss that below.
+Or, most likely on macOS and Windows, 
 you'll see a runtime exception, complaining that 'scsynth' was not found, like this:
 
     Exception in thread "Thread-2" java.io.IOException: Cannot run program "scsynth": error=2, No such file or directory
@@ -109,6 +123,10 @@ This is great on Linux, because here it will usually find `scsynth` automaticall
 either specify that environment variable, or provide an explicit path in your code.
 
 @@@
+
+The next subsection will address this problem.
+
+### Making SoundProcesses find SuperCollider
 
 There are different ways to set environment variables, including the possibility to set them globally on your system. The ScalaCollider
 read-me has a [section](https://github.com/Sciss/ScalaCollider/blob/6c1758f480f3641b853de04d51d95a3da1c97f43/README.md#specifying-sc_home)
@@ -132,6 +150,40 @@ like `/Applications/SuperCollider.app/Contents/Resources/`. Here I have entered 
 After confirming all the dialogs, make sure you stop the hanging program with <kbd>Ctrl</kbd>-<kbd>F2</kbd> or by pressing the red stop button, and try to run
 it again using <kbd>Ctrl</kbd>-<kbd>F10</kbd> or the green play button. If you didn't make a typo, SuperCollider should boot now and play the familiar analog
 bubbles tune for about ten seconds before stopping automatically.
+
+### Fixing Jack Audio Routing
+
+On Linux, SuperCollider talks to your sound card through the [Jack Audio Connection Kit](http://www.jackaudio.org/) (Jack). When you start
+the SuperCollider server and Jack doesn't run, SuperCollider will launch an instance itself. If this is the case you might see a message like this:
+
+> JACK server starting in realtime mode with priority 10<br>
+> ...<br>
+> Acquire audio card Audio0<br>
+> creating alsa driver ... hw:0|hw:0|1024|2|48000|0|0|nomon|swmeter|-|32bit
+
+The problem with not hearing sound then
+is due to the fact, that you also to specify which output channels of SuperCollider should be wired to which channels of your sound card.
+There is one tinkering way to do that, and that is to set environment variables `SC_JACK_DEFAULT_INPUTS` and `SC_JACK_DEFAULT_OUTPUTS`.
+You can look at the previous subsection to learn how to add environment variables to a run configuration in IntelliJ. Here's an example value
+for `SC_JACK_DEFAULT_OUTPUTS` that would work in my case: `system:playback_1,system:playback_2`.
+
+An, in my opinion, better approach however is to make use of a small tool that can manage all your jack connections through a patchbay.
+This tool is [QJackCtl](https://qjackctl.sourceforge.io/), and on Debian and Ubuntu the installation should be as simple as running `sudo apt install qjackctl`.
+You can create different presets for different sound cards in QJackCtl, patchbays that wire up clients such as SuperCollider with sound cards
+or other applications, and you start the Jack server from QJackCtl. When QJackCtl is running and you started Jack through it, as soon as
+SuperCollider boots, QJackCtl will notice it and make activate the appropriate patchbay wiring if you have defined one. Here is a screenshot
+of my default patchbay:
+
+![QJackCtl Patchbay](.../tut_sp_qjackctl_patchbay.png)
+
+You can see that I populated it over time with many different clients. You can configure the client name of SoundProcesses, but by default
+it will be 'SuperCollider'. From QJackCtl's main window, you can use the 'connect' button to see which clients are currently running and how
+they are wired up. In this case, launching the example snippet, I have this situation:
+
+![QJackCtl Connections](.../tut_sp_qjackctl_connect.png)
+
+Again by default, SuperCollider will boot with eight channels of in- and output. I have only wired the first two outputs to the stereo output
+of my internal sound card here. That's fine.
 
 ## Hello World
 
@@ -241,6 +293,10 @@ in the previous example of the class `java.util.Date`. In SuperCollider, the `ne
 conveniently one can also drop the `.new` call and just write `Date()`. Scala has a similar feature called case-class, which we will learn about later, but in
 general, classes have be instantiated by writing `new ClassName`.
 
-## Launching the Sound System and Playing a Sound
+## Playing a Sound
+
+After this extremely quick intro, let us look at content of the first snippet that launches SuperCollider and plays a sound. Here is the full code:
 
 @@snip [Snippet1.scala]($sp_tut$/Snippet1.scala) { #snippet1 }
+
+

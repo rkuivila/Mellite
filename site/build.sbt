@@ -36,22 +36,24 @@ val lLucreBdb6          = ProjectRef(lucreURI, "lucre-bdb6")
 
 git.gitCurrentBranch in ThisBuild := "master"
 
+lazy val unidocSettings = Seq(
+  // site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api"),
+  mappings in packageDoc in Compile := (mappings  in (ScalaUnidoc, packageDoc)).value,
+  unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(lLucreBdb6)
+)
+
 val root = (project in file("."))
   .settings(commonSettings: _*)
-  .enablePlugins(ScalaUnidocPlugin, GhpagesPlugin, ParadoxSitePlugin, SiteScaladocPlugin)
+  .enablePlugins(/* ScalaUnidocPlugin, */ GhpagesPlugin, ParadoxSitePlugin, SiteScaladocPlugin)
   .settings(
-    name := baseName,
+    name                           := baseName,
     siteSubdirName in SiteScaladoc := "latest/api",
-    // site.addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), "latest/api"),
-    mappings in packageDoc in Compile := (mappings  in (ScalaUnidoc, packageDoc)).value,
-    git.remoteRepo := s"git@github.com:Sciss/${baseName}.git",
-    git.gitCurrentBranch := "master",
-    paradoxTheme         := Some(builtinParadoxTheme("generic")),
+    git.remoteRepo                 := s"git@github.com:Sciss/${baseName}.git",
+    git.gitCurrentBranch           := "master",
+    paradoxTheme                   := Some(builtinParadoxTheme("generic")),
     paradoxProperties in Paradox ++= Map(
       "image.base_url"       -> "assets/images",
       "snip.sp_tut.base_dir" -> s"${baseDirectory.value}/snippets/src/main/scala/de/sciss/soundprocesses/tutorial"
-      // "swingversion"            -> scalaColliderSwingVersion,
-      // "extref.swingdl.base_url" -> s"https://github.com/Sciss/ScalaColliderSwing/releases/download/v${scalaColliderSwingVersion}/ScalaColliderSwing_${scalaColliderSwingVersion}%s"
     ),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided" // this is needed for sbt-unidoc to work with macros used by Mellite!
@@ -84,9 +86,9 @@ val root = (project in file("."))
         "snippets"
       ).mkString(":"),
       "-doc-title", s"${baseName} ${PROJECT_VERSION} API"
-    ),
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(lLucreBdb6)
+    )
   )
+  // .settings(unidocSettings)
   // XXX TODO --- don't know how to exclude bdb5/6 from lucre
   .aggregate(
     /* currently uses Scala 2.11 and incompatible site plugin: lSpan, */
