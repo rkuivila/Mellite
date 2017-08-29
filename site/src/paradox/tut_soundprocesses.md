@@ -51,12 +51,12 @@ If you have not set up a 'Project SDK' yet, you'll first have to press 'New...' 
 probably guess it right).
 
 Next, IntelliJ will build the project information, download all the necessary libraries for this project, and finally give you a project browser.
-If you don't see the browser, `Alt-1` will toggle it. Open the tree to `src` &gt; `main` &gt; `scala` &gt; `de.sciss.soundprocesses.tutorial`,
+If you don't see the browser, <kbd>Alt</kbd>-<kbd>1</kbd> will toggle it. Open the tree to `src` &gt; `main` &gt; `scala` &gt; `de.sciss.soundprocesses.tutorial`,
 and locate `Snippet1`, the source code of which you can open by double-clicking on it:
 
 ![IC Project Browser](.../tut_sp_idea_project.png)
 
-You can build (compile) the project by clicking the green downward arrow button in the top-right of the window or `Ctrl-F9` on the keyboard.
+You can build (compile) the project by clicking the green downward arrow button in the top-right of the window or <kbd>Ctrl</kbd>-<kbd>F9</kbd> on the keyboard.
 If all goes fine, the status bar at the bottom should say something like
 
 > Compilation completed successfully in 5s 388ms (moments ago)
@@ -88,7 +88,7 @@ but the focus is really to program a statically typed program. Mellite, in turn,
 a live-code interpreter.
 
 Now let's run the first snippet. Select `Snippet1` in the project browser (tree view) and select 'Run' from the context menu or
-press `Ctrl-Shift-F10`:
+press <kbd>Ctrl</kbd>-<kbd>Shift</kbd>-<kbd>F10</kbd>:
 
 ![IC Project Browser](.../tut_sp_idea_project.png)
 
@@ -129,13 +129,117 @@ like `/Applications/SuperCollider.app/Contents/Resources/`. Here I have entered 
 
 ![IC Environment_Variables](.../tut_sp_idea_env_var.png)
 
-After confirming all the dialogs, make sure you stop the hanging program with `Ctrl-F2` or by pressing the red stop button, and try to run
-it again using `Ctrl-F10` or the green play button. If you didn't make a typo, SuperCollider should boot now and play the familiar analog
+After confirming all the dialogs, make sure you stop the hanging program with <kbd>Ctrl</kbd>-<kbd>F2</kbd> or by pressing the red stop button, and try to run
+it again using <kbd>Ctrl</kbd>-<kbd>F10</kbd> or the green play button. If you didn't make a typo, SuperCollider should boot now and play the familiar analog
 bubbles tune for about ten seconds before stopping automatically.
 
 ## Hello World
 
-...
+Before we go through the code of `Snippet1`, let us go one step back and see how the most basic Scala program can be created. The following
+snippet is from `HelloWorld.scala`:
+
+@@snip [HelloWorld]($sp_tut$/HelloWorld.scala) { #helloworld }
+
+This is more or less the shortest Scala program one can write. Let's take a moment to understand what happens here. Scala has two basic entities:
+__values__ and __types__. A value can be a constant literal such as an integer number `123` or a double floating point number `1.234`, a boolean
+`true` or `false`, a string `"Hello"`, etc. Or a value can be more complex `object`, i.e. something comprised of members (values, types, methods),
+possibly with some body of initialising statements. A type can be either some abstract type variable, or a specific class or trait. Classes and traits
+are very similar in Scala, the main difference being that classes can take constructor parameters, and a type or object can only be derived from
+exactly one class, whereas they can be derived from multiple traits. We'll come to this later. What we see in the hello-world example is that one
+`object` is defined which is given the name `HelloWorld` and the `extends App` clause means it derived from the trait `App` which is defined by
+the standard Scala library that is always available. The `App` trait is a shortcut for conveniently defining executable programs, so we thereby
+mark the object as a possible starting point for executing our program. When an `object` is evaluated, all the statements in its body, which is
+everything between the curly braces `{` and `}`, are executed sequentially. Here we have only a single statement, `println("Hello world")`.
+
+When you right-click on `HelloWorld` in the project browser of IntelliJ and select 'run', IntelliJ will, like it did before with `Snippet1`, create
+a corresponding run configuration, if it doesn't exist yet, then launch that configuration. If we edit the configuration, we can see that `HelloWorld`
+is selected as the 'main class':
+
+![IC Hello_World_Main](.../tut_sp_idea_hello_world_config.png)
+
+What you can see here also is that the fully qualified name is `de.sciss.soundprocesses.tutorial.HelloWorld`. This is because if you look into the
+file, we declared `package de.sciss.soundprocesses.tutorial` at the top of the file. As mentioned before, package allow us to put symbols (such as
+the name `HelloWorld`) in places so we can later import them easily as we make use of them, and we avoid name clashes.
+
+It may appear confusing that `HelloWorld` is the main _class_, because I just said there are values and objects on one side and types and classes on the other side. It so happens that
+an `object`, sometimes called singleton in Scala, also represents a class, however a very particular one, in that it cannot be explicitly instantiated,
+instead the object, once referred to, always represents the one singleton instance of its class.
+
+The way we enter the main class is actually a pecularity of the Java Virtual Machine on which Scala runs. If we remove the `App` trait, we can
+be more explicit about this entry point:
+
+@@snip [HelloWorldExplicit]($sp_tut$/HelloWorldExplicit.scala) { #helloworldexp }
+
+What we have to do here explicitly for `HelloWorldExplicit` to work as an entry point to executing the program, is to define a method `main` as shown.
+Methods are defined with the `def` keyword, followed by the method's name, then optionally one or several groups of parentheses in which the method's
+arguments are specified. In Scala, values and arguments are specified as `name: Type`, contrary to some other languages such as Java, where the
+order is reversed as `Type name`. Once you get used to Scala's order, it actually makes a lot of sense, especially when considering that the `: Type` annotation
+can be left out for local values, where the compiler will then automatically infer the type. Of course, if you come from a dynamically typed language such as
+SuperCollider, this may all appear odd, as in those languages you typically do not state the (expected) type of arguments at all, but rely on the caller
+knowing what type to pass. Having to explicitly specify types may appear cumbersome in the beginning, but the huge advantage is that the compiler will
+check all invocations of your method at compile time and prevent calling a method with the wrong types of arguments before you even attempt to run the program.
+
+If you are familiar with Java, here is the corresponding Java variant of `HelloWorldExplicit`:
+
+```java
+public class HelloWorldJava {
+    public static void main(String[] args) {
+        System.out.println("Hello world!");
+    }
+}
+```
+
+In SuperCollider, there is no concept of a 'main class', so it doesn't really translate. But the code would be roughly as follows:
+
+```supercollider
+HelloWorldSuperCollider {
+    *main { |args|
+      "Hello world!".postln;
+    }
+}
+```
+
+In other words, methods in singleton objects in Scala can be compared with `static` methods in Java or _class methods_ (with asterisk `*`) in SuperCollider.
+The argument passed to a main class in Scala is of type `Array[String]`. An array in Scala is very much like an array in SuperCollider, a mutable constant access
+sequence of elements, with the distinctiveness that have to specify the element type, so we cannot mix heterogenous elements within the same array, unless we
+give a very generic element type, e.g. `Array[Any]`, `Any` being the top type in Scala of which all other types are sub-types.
+
+The `main` method is annotated with a _return type_ `: Unit`, which roughly corresponds to `void` in Java. In SuperCollider, one would have `nil` instead.
+The body of a method is written on the right-hand-side of the equals symbol, so in general the shape of a method definition in Scala is
+
+```scala
+def methodName(arg1: ArgType1, arg2: ArgType2, ...): ReturnType = Body`
+```
+
+By convention, method, argument and variable names begin with a lower case letter, and object names, types, class and trait names begin with a upper case letter, 
+but there are circumstances when one would probably deviate from this convention. The body of a method can be written "plain" without extra ceremony, but if
+the body is formed of more than one statements, one has to group them together with curly braces `{`, `}`. It is never forbidden to place those braces even if
+they are not necessary. I have done that in the `main` method of `HelloWorldExplicit`. I could as well have written
+
+```scala
+def main(args: Array[String]): Unit = println("Hello world!")
+```
+
+or
+
+```scala
+def main(args: Array[String]): Unit = 
+  println("Hello world!")
+```
+
+Here is a snippet where the braces are needed because we have multiple statements:
+
+@@snip [HelloWorldMultiple]($sp_tut$/HelloWorldMultiple.scala) { #helloworldmultiple }
+
+You may have noticed that we don't use semicolons between the statements. They are automatically inferred by Scala, and only rarely one needs to use semicolons
+(for example if one wants to place multiple statements on a single line). The last example also shows a `val` declaration. `val` stands for `value` and binds
+the right hand side to a "variable" on the left hand side, although this "variable" is immutable, i.e. its value cannot be replaced. It's similar to a `let`
+statement in Lisp. Although Scala also has a `var` keyword for defining mutable variables, it is good practice to stick to `val`s whenever possible, as it
+greatly reduces the risk of cluttered code. Unlike SuperCollider where `var`s can only be defined at the very beginning of a method, in Scala we can liberally
+define the `val`s at the point where we actually create them. Like Java and SuperCollider, Scala has a `new` keyword to create an instance (value) of a class,
+in the previous example of the class `java.util.Date`. In SuperCollider, the `new` keyword is written as as a class method, so it would be `Date.new`, and
+conveniently one can also drop the `.new` call and just write `Date()`. Scala has a similar feature called case-class, which we will learn about later, but in
+general, classes have be instantiated by writing `new ClassName`.
 
 ## Launching the Sound System and Playing a Sound
 
