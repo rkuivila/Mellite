@@ -30,6 +30,8 @@ object Snippet1 extends App {
       def auralStopped()(implicit tx: Txn): Unit = ()
     })
 
+//    val cfg = Server.Config()
+//    cfg.program = "/path/to/scsynth"
     aural.start()
   }
 }
