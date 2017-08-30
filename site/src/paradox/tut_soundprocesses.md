@@ -258,7 +258,7 @@ of elements with constant access performance, with the distinctiveness that one 
 give a very generic element type, e.g. `Array[Any]`, `Any` being the top type in Scala of which all other types are sub-types.
 
 The `main` method is annotated with a _return type_ `: Unit`, which roughly corresponds to `void` in Java. In SuperCollider, one would have `Nil` instead.
-The body of a method is written on the right-hand-side of the equals symbol, so in general the shape of a method definition in Scala is
+The body of a method is written on the right-hand side of the equals symbol, so in general the shape of a method definition in Scala is
 
 ```scala
 def methodName(arg1: ArgType1, arg2: ArgType2, ...): ReturnType = Body`
@@ -286,7 +286,7 @@ Here is a snippet where the braces are needed because we have multiple statement
 
 You may have noticed that we don't use semicolons between the statements. They are automatically inferred by Scala, and only rarely one needs to use semicolons
 (for example if one wants to place multiple statements on a single line). The last example also shows a `val` declaration. `val` stands for 'value' and binds
-the right hand side to a "variable" (symbol) on the left hand side, although this "variable" is immutable, i.e. its value cannot be replaced. It's similar to a `let`
+the right-hand side to a "variable" (symbol) on the left-hand side, although this "variable" is immutable, i.e. its value cannot be replaced. It's similar to a `let`
 statement in Lisp. Although Scala also has a `var` keyword for defining mutable variables, it is good practice to stick to `val`s whenever possible, as it
 greatly reduces the risk of cluttered code. Unlike SuperCollider where `var`s can only be defined at the very beginning of a method, in Scala we
 define the `val`s at the point where we actually assign their content. Like Java and SuperCollider, Scala has a `new` keyword to create an instance (value) of a class,
@@ -314,13 +314,13 @@ distinguish them at the place where they are used without having to look up whic
 using `Set` to indicate the immutable set, and `mutable.Set` to flag the use of the mutable variant. Actually, the fully qualified name is `scala.collection.mutable.Set`, so
 for this to work, one still needs an `import scala.collection.mutable`&mdash;that brings the package `mutable` into scope, just as you would bring
 a class into scope! This may be surprising, but you will see that Scala is designed around a principle of regularity, which means that it tries to apply the same principle
-to all things equally. A package is just a symbol as a class is a symbol, so if you can import a class, you should be able to import a package as well. Indeed, you can also
-import values.
+to all things equally. A package is just a symbol as a class is a symbol, so if you can import a class, you should be able to import a package as well. In fact, you can also
+import values, e.g. `import math.Pi` to use the symbol `Pi`.
 
 In the same spirit, Scala also tries to avoid arbitrary constraints for where you can write these things. Import statements can be written anywhere you like, at
 any nesting level. This is why I could write `import de.sciss.synth._` further down in the code, inside the `SynthGraph { ... }` block. It is intuitively clear that the imported
 symbols are now only visible within this particular block. Here the underscore `_` selects
-all symbols inside the package `synth`, this is a nice and short way of quickly getting hold of all the main types in ScalaCollider, the sound synthesis library used by
+all symbols inside the package `synth`, this is a nice and short way of quickly getting hold of all the main types in [ScalaCollider](sciss.github.io/ScalaCollider/), the sound synthesis library used by
 SoundProcesses. Such "wildcard import" may have the disadvantage of bringing unwanted symbols into scope that could, for example, result in a name clash. That's the reason
 why I prefer here to place that import right where I will make use of it, but it would also have been possible to add it to the top of the file. Take a look at the line
 below, `import ugen._`. This could be called a recursive import, perhaps, because `ugen` is a sub-package inside `synth`, so I'm abbreviating `import de.sciss.synth.ugen._`
@@ -328,23 +328,24 @@ to `import ugen._` because it's less to type, and this is simply possible becaus
 
 @@@ note
 
-How would we possibly know which classes and types are hidden in which packages? There are two answers to this: First, make use of IntelliJ's autocompletion and import helper,
+How would we possibly know which classes and types are hidden in which packages? There are two answers to this: First, make use of IntelliJ's auto-completion and import helper,
 and second, consult the API docs. The API docs for Scala's standard library are [here](http://www.scala-lang.org/api/current/), and those of Mellite and SoundProcesses are
 [here](http://sciss.github.io/Mellite/latest/api/de/sciss/index.html).
 
 @@@
 
 The API docs are the products of an automatic process called scala-doc, and these pages list the packages on the
-right-hand-side, and at the top of the screen you have a search field. For example, let's say we want to know about `SynthGraph`, let's type that into the
+right-hand side, and at the top of the screen you have a search field. Say we want to know about `SynthGraph`, let's type that into the
 [search box](http://sciss.github.io/Mellite/latest/api/de/sciss/index.html?search=SynthGraph):
 
 ![API Search for SynthGraph](.../tut_sp_api_docs_synthgraph.png)
 
-The left hand side shows objects and types containing the search term, whereas he right hand side tries to find methods and nested values and classes containing the search
+The left-hand side shows objects and types containing the search term, whereas the right-hand side tries to find methods and nested values and classes containing the search
 term. In 'entity results', we can spot the type `SynthGraph` as being part of package `de.sciss.synth` (this is the base package of ScalaCollider), there is another thing
 called `SynthGraphObj` in package `de.sciss.synth.proc`&mdash;that's the base package of SoundProcesses. We were looking for the former. You can see two small icons to the
-left of the name, a blue 'O' and a green 'C'. The 'O' stands for singleton object, the 'C' stands for class. Often in Scala, a class has a corresponding object of the same
-name, that is called the _companion object_. Often static members and constructor methods of a class are found on the companion object, that's why they are grouped together
+left of the name, a dark blue 'O' and a green 'C'. The 'O' stands for singleton object, the 'C' stands for class. A light blue 'T' stands for trait, remember that traits are like classes
+but without constructor arguments. Often in Scala, a class or trait has a corresponding object of the same
+name, that is called the _companion object_. Often static members and constructor methods of a class or trait are found on the companion object, that's why they are grouped together
 in the API docs.
 
 In IntelliJ if a symbol is not in scope, for example if we removed the import statements from the snippet source, the editor renders them in red, with a tool-tip indicating that
@@ -354,18 +355,56 @@ In IntelliJ if a symbol is not in scope, for example if we removed the import st
 
 The import helper will show you all classes matching the name within all libraries of your project, highlighting the most likely candidate (`de.sciss.synth.SynthGraph` here).
 When you confirm this dialog, IntelliJ will automatically add the import to the top portion of your source code. Auto-completion works while you type. For example, imagine that
-`SynthGraph` wasn't imported yet, and you begin typing `val bubbles = SynthG`, then you'll notice that below your cursor IntelliJ lists the possible candidates to complete the
+`SynthGraph` wasn't imported yet, and you begin typing `val bubbles = SynthG`…, then you'll notice that below your cursor IntelliJ lists the possible candidates to complete the
 name you are writing:
 
 ![IntelliJ Import Completer](.../tut_sp_idea_import_completer.png)
 
 Here, for some reason, the symbol we want is the second row; we can use the cursor keys and then press <kbd>Enter</kbd> to select and import it. IntelliJ is very smart with the
-auto-completion, it suffices to give some hints in the ["camel-case"](https://en.wikipedia.org/wiki/Camel_case#Programming_and_coding) way, for example writing `val bubbles = SG` will also find the `SynthGraph` symbol we are looking for.
+auto-completion, it suffices to give some hints in the ["camel-case"](https://en.wikipedia.org/wiki/Camel_case#Programming_and_coding) way, for example writing `val bubbles = SG`… will also find the `SynthGraph` symbol we are looking for.
 
 ### Defining a SynthGraph
 
-@@@ warning
+The sound we are hearing is mainly defined by the `SynthGraph { ... }` block, so let's dive into that. I'm reproducing it here again:
 
-the tutorial is incomplete; we have to continue here
+@@snip [Snippet1 - SynthGraph]($sp_tut$/Snippet1Parts.scala) { #snippet1graph }
+
+You may know that in SuperCollider, sound synthesis functions are defined within a `SynthDef`. This type also exists in ScalaCollider, but you will rarely deal with it directly.
+Instead, the `SynthGraph` is a slightly higher level abstraction that will be eventually translated into a `SynthDef` by the system. The main two differences are:
+
+- a `SynthGraph` does not have a name. Names are assigned automatically by the system, although you can give a name-hint when creating a synth, which might be helpful for
+  debugging purposes
+- a `SynthGraph` preserves the graph elements in their "unexpanded" way. When the system translates the `SynthGraph` into a `SynthDef`, it enforces things like multi-channel-expansion
+  and thereby translates each graph element in one or several UGens or constants, optimises away dead branches, etc. To give an example, there are graph elements which expand to other
+  graph elements and do not have a direct correspondance with one UGen. In SuperCollider, these are sometimes called pseudo-UGens. A typical pseudo-UGen is `Mix`. In SuperCollider, when
+  you write `Mix([ PinkNoise.ar(0.1), FSinOsc.ar(801, 0.1), LFSaw.ar(40, 0.1)])]`, you immediately get the expanded `Sum3` UGen, whereas in ScalaCollider, an instance of the `Mix` class
+  will actually be stored in the `SynthGraph`. Or if you write `SinOsc.ar([400, 600])` in SuperCollider, you immediately get an array of two `SinOsc` UGens, whereas in ScalaCollider the
+  graph element `SinOsc` is one object with the multi-channel input. This behaviour enables a number of interesting ways in which synth graphs can be manipulated and extended.
+  For SoundProcesses it means, you will have a great number of graph elements which bridge the `Synth` to its environment such as control inputs, even if those inputs are not yet
+  defined or determined at the moment the graph function is written.
+
+Other than that, creating a `SynthGraph` looks exactly like creating a `SynthDef` (minus the naming). The graph elements corresponding with UGens are written almost identical to their
+SuperCollider counterparts. The analog bubbles graph in SuperCollider would be written like this:
+
+```supercollider
+b = SynthDef(\bubbles, {
+  var o = LFSaw.kr([8, 7.23]).madd(3, 80);
+  var f = LFSaw.kr(0.4).madd(24, o);
+  var s = SinOsc.ar(f.midicps) * 0.04;
+  var c = CombN.ar(s, 0.2, 0.2, 4);
+  var l = Line.kr(1, 0, 10, doneAction: 2);
+  Out.ar(0, c * l)
+});
+```
+
+@@@ note
+
+Using `.madd` calls in SuperCollider is not very common. Most UGens do have artificial trailing inputs for multiplication and addition, which are then rewritten as `.madd` calls that
+produce the according binary-op or `MulAdd` UGen. I didn't adopt this approach in ScalaCollider, so here you have to explicitly use `.madd` to scale the output of UGens.
 
 @@@
+
+The syntactic differences are minimal&mdash;you would prefer `val` over `var`, dispense with the semicolons, and named arguments are filled with an equals character instead of a period, so it's
+`doneAction = freeSelf` instead of `doneAction: freeSelf` (in newest SuperCollider, you can write `doneAction: \freeSelf`, whereas in older versions you have to use the integer code `doneAction: 2`).
+Perhaps the greatest difference here is how multi-channel-expansion arguments are written. In SuperCollider, array literals are written using brackets `[`, `]`. In Scala, the brackets are reserved
+for type parameters, so there is no direct way of writing an array literal. One could write `Array(8, 7.23)`.

@@ -44,7 +44,8 @@ lazy val unidocSettings = Seq(
 
 val root = (project in file("."))
   .settings(commonSettings: _*)
-  .enablePlugins(/* ScalaUnidocPlugin, */ GhpagesPlugin, ParadoxSitePlugin, SiteScaladocPlugin)
+  // .enablePlugins(ScalaUnidocPlugin).settings(unidocSettings)
+  .enablePlugins(GhpagesPlugin, ParadoxSitePlugin, SiteScaladocPlugin)
   .settings(
     name                           := baseName,
     siteSubdirName in SiteScaladoc := "latest/api",
@@ -88,7 +89,6 @@ val root = (project in file("."))
       "-doc-title", s"${baseName} ${PROJECT_VERSION} API"
     )
   )
-  // .settings(unidocSettings)
   // XXX TODO --- don't know how to exclude bdb5/6 from lucre
   .aggregate(
     /* currently uses Scala 2.11 and incompatible site plugin: lSpan, */
