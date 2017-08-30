@@ -2,11 +2,11 @@
 
 @@@ index
 
-* [Getting Started with SoundProcesses](tut_soundprocesses.md)
+* [Getting Started with SoundProcesses](tut_soundprocesses1.md)
 
 @@@
 
-@@toc { depth=2 }
+@@toc { depth=1 }
 
 Video tutorials for version 2.10 are available from a [Vimeo album](https://vimeo.com/album/4473871).
 

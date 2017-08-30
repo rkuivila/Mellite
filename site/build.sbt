@@ -44,7 +44,7 @@ lazy val unidocSettings = Seq(
 
 val root = (project in file("."))
   .settings(commonSettings: _*)
-  // .enablePlugins(ScalaUnidocPlugin).settings(unidocSettings)
+  .enablePlugins(ScalaUnidocPlugin).settings(unidocSettings)
   .enablePlugins(GhpagesPlugin, ParadoxSitePlugin, SiteScaladocPlugin)
   .settings(
     name                           := baseName,
