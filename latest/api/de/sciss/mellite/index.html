@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.14.0 API  - de.sciss.mellite</title>
-          <meta name="description" content="Mellite 2.14.0 API - de.sciss.mellite" />
-          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.mellite" />
+          <title>Mellite 2.16.0 API  - de.sciss.mellite</title>
+          <meta name="description" content="Mellite 2.16.0 API - de.sciss.mellite" />
+          <meta name="keywords" content="Mellite 2.16.0 API de.sciss.mellite" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.16.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -197,6 +197,12 @@
                           BuildInfo
                         </a>
                       </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="trait" href="DependentMayVeto.html" title="A dependent that should be consulted first before calling dispose."></a>
+                        <a href="DependentMayVeto.html" title="A dependent that should be consulted first before calling dispose.">
+                          DependentMayVeto
+                        </a>
+                      </li><li class="current-entities indented3">
                         <a class="object" href="DocumentHandler$.html" title=""></a>
                         <a class="trait" href="DocumentHandler.html" title="Note: the model dispatches not on the EDT."></a>
                         <a href="DocumentHandler.html" title="Note: the model dispatches not on the EDT.">
@@ -250,6 +256,12 @@
                         <a href="Transform.html" title="">
                           Transform
                         </a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="trait" href="Veto.html" title="A trait representing an object that has an objection to a particular action."></a>
+                        <a href="Veto.html" title="A trait representing an object that has an objection to a particular action.">
+                          Veto
+                        </a>
                       </li><li name="de.sciss.nuages" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="nuages"></a><a id="nuages:nuages"></a>
       <span class="permalink">
@@ -282,6 +294,24 @@
       <span class="symbol">
         <a title="" href="../osc/index.html">
               <span class="name">osc</span>
+            </a>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="de.sciss">sciss</a></dd></dl></div>
+    </li><li name="de.sciss.soundprocesses" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="soundprocesses"></a><a id="soundprocesses:soundprocesses"></a>
+      <span class="permalink">
+      <a href="../../de/sciss/index.html#soundprocesses" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="../soundprocesses/index.html">
+              <span class="name">soundprocesses</span>
             </a>
       </span>
       
@@ -388,9 +418,9 @@ Furthermore, it contains the <code>play</code> function to quickly test graph fu
         <div id="types" class="types members">
               <h3>Type Members</h3>
               <ol><li name="de.sciss.mellite.Application" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="ApplicationextendsSwingApplication"></a><a id="Application:Application"></a>
+      <a id="ApplicationextendsSwingApplication[de.sciss.mellite.Application.Document]"></a><a id="Application:Application"></a>
       <span class="permalink">
-      <a href="../../../de/sciss/mellite/index.html#ApplicationextendsSwingApplication" title="Permalink">
+      <a href="../../../de/sciss/mellite/index.html#ApplicationextendsSwingApplication[de.sciss.mellite.Application.Document]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -401,7 +431,7 @@ Furthermore, it contains the <code>play</code> function to quickly test graph fu
       <span class="symbol">
         <a title="" href="Application.html">
               <span class="name">Application</span>
-            </a><span class="result"> extends <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span></span>
+            </a><span class="result"> extends <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span>[<a href="Application$.html#Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]" class="extmbr" name="de.sciss.mellite.Application.Document">Document</a>]</span>
       </span>
       
       
@@ -421,6 +451,24 @@ Furthermore, it contains the <code>play</code> function to quickly test graph fu
       </span>
       
       
+    </li><li name="de.sciss.mellite.DependentMayVeto" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="DependentMayVeto[-Tx]extendsDisposable[Tx]"></a><a id="DependentMayVeto[-Tx]:DependentMayVeto[Tx]"></a>
+      <span class="permalink">
+      <a href="../../../de/sciss/mellite/index.html#DependentMayVeto[-Tx]extendsDisposable[Tx]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="A dependent that should be consulted first before calling dispose." href="DependentMayVeto.html">
+              <span class="name">DependentMayVeto</span>
+            </a><span class="tparams">[<span name="Tx">-Tx</span>]</span><span class="result"> extends <a href="../lucre/stm/Disposable.html" class="extype" name="de.sciss.lucre.stm.Disposable">Disposable</a>[<span class="extype" name="de.sciss.mellite.DependentMayVeto.Tx">Tx</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">A dependent that should be consulted first before calling <code>dispose</code>.</p>
     </li><li name="de.sciss.mellite.DocumentHandler" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="DocumentHandlerextendsModel[de.sciss.mellite.DocumentHandler.Update]"></a><a id="DocumentHandler:DocumentHandler"></a>
       <span class="permalink">
@@ -496,6 +544,30 @@ wrapper like <code>defer</code> (LucreSwing).
       </span>
       
       
+    </li><li name="de.sciss.mellite.Veto" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="Veto[-Tx]extendsAnyRef"></a><a id="Veto[-Tx]:Veto[Tx]"></a>
+      <span class="permalink">
+      <a href="../../../de/sciss/mellite/index.html#Veto[-Tx]extendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="A trait representing an object that has an objection to a particular action." href="Veto.html">
+              <span class="name">Veto</span>
+            </a><span class="tparams">[<span name="Tx">-Tx</span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">A trait representing an object that has an objection to a particular action.</p><div class="fullcomment"><div class="comment cmt"><p>A trait representing an object that has an objection to a particular action.
+This objection is manifested through a human readable <code>vetoMessage</code> which
+would generally also be displayed in the GUI when calling <code>tryResolveVeto</code>.</p><p>For example, if trying to close a window that is in dirty state,
+calling <code>tryResolveVeto</code> will display the veto message in a dialog to the user,
+and the user can confirm the closure, which would result in a <code>true</code> return
+value, or abort the closure, which would result in a <code>false</code> return type.
+</p></div></div>
     </li></ol>
             </div>
 
@@ -582,7 +654,7 @@ wrapper like <code>defer</code> (LucreSwing).
       <span class="symbol">
         <a title="A proxy for a swing application." href="Application$.html">
               <span class="name">Application</span>
-            </a><span class="result"> extends <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span></span>
+            </a><span class="result"> extends <span class="extype" name="de.sciss.desktop.SwingApplicationProxy">SwingApplicationProxy</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]], <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A proxy for a swing application.</p>
@@ -672,7 +744,7 @@ wrapper like <code>defer</code> (LucreSwing).
       <span class="symbol">
         <a title="" href="Mellite$.html">
               <span class="name">Mellite</span>
-            </a><span class="result"> extends <span class="extype" name="de.sciss.desktop.impl.SwingApplicationImpl">SwingApplicationImpl</span> with <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a> with <a href="Init.html" class="extype" name="de.sciss.mellite.Init">Init</a></span>
+            </a><span class="result"> extends <span class="extype" name="de.sciss.desktop.impl.SwingApplicationImpl">SwingApplicationImpl</span>[<a href="Application$.html#Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]" class="extmbr" name="de.sciss.mellite.Application.Document">Document</a>] with <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a> with <a href="Init.html" class="extype" name="de.sciss.mellite.Init">Init</a></span>
       </span>
       
       

@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.14.0 API  - de.sciss.mellite.Application</title>
-          <meta name="description" content="Mellite 2.14.0 API - de.sciss.mellite.Application" />
-          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.mellite.Application" />
+          <title>Mellite 2.16.0 API  - de.sciss.mellite.Application</title>
+          <meta name="description" content="Mellite 2.16.0 API - de.sciss.mellite.Application" />
+          <meta name="keywords" content="Mellite 2.16.0 API de.sciss.mellite.Application" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.16.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -163,6 +163,12 @@
                           BuildInfo
                         </a>
                       </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="trait" href="DependentMayVeto.html" title="A dependent that should be consulted first before calling dispose."></a>
+                        <a href="DependentMayVeto.html" title="A dependent that should be consulted first before calling dispose.">
+                          DependentMayVeto
+                        </a>
+                      </li><li class="current-entities indented3">
                         <a class="object" href="DocumentHandler$.html" title=""></a>
                         <a class="trait" href="DocumentHandler.html" title="Note: the model dispatches not on the EDT."></a>
                         <a href="DocumentHandler.html" title="Note: the model dispatches not on the EDT.">
@@ -216,6 +222,12 @@
                         <a href="Transform.html" title="">
                           Transform
                         </a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="trait" href="Veto.html" title="A trait representing an object that has an objection to a particular action."></a>
+                        <a href="Veto.html" title="A trait representing an object that has an objection to a particular action.">
+                          Veto
+                        </a>
                       </li>
               </ul>
             </div>
@@ -241,7 +253,7 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">Application</span><span class="result"> extends <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span></span>
+        <span class="name">Application</span><span class="result"> extends <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span>[<a href="Application$.html#Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]" class="extmbr" name="de.sciss.mellite.Application.Document">Document</a>]</span>
       </span>
       </h4>
 
@@ -250,7 +262,7 @@
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span>, <span class="extype" name="de.sciss.desktop.Application">desktop.Application</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span>[<a href="Application$.html#Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]" class="extmbr" name="de.sciss.mellite.Application.Document">Application.Document</a>], <span class="extype" name="de.sciss.desktop.Application">desktop.Application</span>[<a href="Application$.html#Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]" class="extmbr" name="de.sciss.mellite.Application.Document">Application.Document</a>], <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div><div class="toggleContainer block">
             <span class="toggle">
               Known Subclasses
@@ -303,7 +315,7 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="de.sciss.mellite.Application.Document" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+              <ol><li name="de.sciss.mellite.Application.Document" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Document=de.sciss.mellite.Application.Document"></a><a id="Document:Document"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application.html#Document=de.sciss.mellite.Application.Document" title="Permalink">
@@ -318,11 +330,11 @@
         <span class="name">Document</span><span class="result alias"> = <a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]]</span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
+      
     </li><li name="de.sciss.desktop.Application.DocumentHandler" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="DocumentHandler=de.sciss.desktop.DocumentHandler{typeDocument=Application.this.Document}"></a><a id="DocumentHandler:DocumentHandler"></a>
+      <a id="DocumentHandler=de.sciss.desktop.DocumentHandler[Document]"></a><a id="DocumentHandler:DocumentHandler"></a>
       <span class="permalink">
-      <a href="../../../de/sciss/mellite/Application.html#DocumentHandler=de.sciss.desktop.DocumentHandler{typeDocument=Application.this.Document}" title="Permalink">
+      <a href="../../../de/sciss/mellite/Application.html#DocumentHandler=de.sciss.desktop.DocumentHandler[Document]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -331,7 +343,7 @@
         <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <span class="name">DocumentHandler</span><span class="result alias"> = <span class="extype" name="de.sciss.desktop.DocumentHandler">desktop.DocumentHandler</span> { type Document = Application.this.Document }</span>
+        <span class="name">DocumentHandler</span><span class="result alias"> = <span class="extype" name="de.sciss.desktop.DocumentHandler">desktop.DocumentHandler</span>[<a href="Application$.html#Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]" class="extmbr" name="de.sciss.mellite.Application.Document">Application.Document</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Application</dd></dl></div>
@@ -368,7 +380,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">documentHandler</span><span class="result">: <a href="#DocumentHandler=de.sciss.desktop.DocumentHandler{typeDocument=Application.this.Document}" class="extmbr" name="de.sciss.mellite.Application.DocumentHandler">DocumentHandler</a></span>
+        <span class="name">documentHandler</span><span class="result">: <a href="#DocumentHandler=de.sciss.desktop.DocumentHandler[Document]" class="extmbr" name="de.sciss.mellite.Application.DocumentHandler">DocumentHandler</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Application</dd></dl></div>
@@ -610,7 +622,7 @@ in the top level menu of the GUI.</p><p>The string indicates the <code>prefix</c
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
@@ -664,7 +676,7 @@ in the top level menu of the GUI.</p><p>The string indicates the <code>prefix</c
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="symbol">classOf[java.lang.Throwable]</span>
@@ -876,9 +888,9 @@ in the top level menu of the GUI.</p><p>The string indicates the <code>prefix</c
 
         <div id="inheritedMembers">
         <div class="parent" name="de.sciss.desktop.SwingApplication">
-              <h3>Inherited from <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span></h3>
+              <h3>Inherited from <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span>[<a href="Application$.html#Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]" class="extmbr" name="de.sciss.mellite.Application.Document">Application.Document</a>]</h3>
             </div><div class="parent" name="de.sciss.desktop.Application">
-              <h3>Inherited from <span class="extype" name="de.sciss.desktop.Application">desktop.Application</span></h3>
+              <h3>Inherited from <span class="extype" name="de.sciss.desktop.Application">desktop.Application</span>[<a href="Application$.html#Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]" class="extmbr" name="de.sciss.mellite.Application.Document">Application.Document</a>]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
             </div><div class="parent" name="scala.Any">

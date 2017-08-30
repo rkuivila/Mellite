@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.14.0 API  - de.sciss.mellite.Application</title>
-          <meta name="description" content="Mellite 2.14.0 API - de.sciss.mellite.Application" />
-          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.mellite.Application" />
+          <title>Mellite 2.16.0 API  - de.sciss.mellite.Application</title>
+          <meta name="description" content="Mellite 2.16.0 API - de.sciss.mellite.Application" />
+          <meta name="keywords" content="Mellite 2.16.0 API de.sciss.mellite.Application" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.16.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -163,6 +163,12 @@
                           BuildInfo
                         </a>
                       </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="trait" href="DependentMayVeto.html" title="A dependent that should be consulted first before calling dispose."></a>
+                        <a href="DependentMayVeto.html" title="A dependent that should be consulted first before calling dispose.">
+                          DependentMayVeto
+                        </a>
+                      </li><li class="current-entities indented3">
                         <a class="object" href="DocumentHandler$.html" title=""></a>
                         <a class="trait" href="DocumentHandler.html" title="Note: the model dispatches not on the EDT."></a>
                         <a href="DocumentHandler.html" title="Note: the model dispatches not on the EDT.">
@@ -216,6 +222,12 @@
                         <a href="Transform.html" title="">
                           Transform
                         </a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="trait" href="Veto.html" title="A trait representing an object that has an objection to a particular action."></a>
+                        <a href="Veto.html" title="A trait representing an object that has an objection to a particular action.">
+                          Veto
+                        </a>
                       </li>
               </ul>
             </div>
@@ -241,7 +253,7 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">Application</span><span class="result"> extends <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span></span>
+        <span class="name">Application</span><span class="result"> extends <span class="extype" name="de.sciss.desktop.SwingApplicationProxy">SwingApplicationProxy</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]], <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a>]</span>
       </span>
       </h4>
 
@@ -250,7 +262,7 @@
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span>, <span class="extype" name="de.sciss.desktop.Application">desktop.Application</span>, <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="de.sciss.desktop.SwingApplicationProxy">SwingApplicationProxy</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]], <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a>], <span class="extype" name="de.sciss.desktop.ApplicationProxy">ApplicationProxy</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]], <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a>], <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]]], <span class="extype" name="de.sciss.desktop.Application">desktop.Application</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]]], <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
         </div></div>
         
 
@@ -276,7 +288,7 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="de.sciss.mellite.Application"><span>Application</span></li><li class="in" name="de.sciss.desktop.SwingApplication"><span>SwingApplication</span></li><li class="in" name="de.sciss.desktop.Application"><span>Application</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="de.sciss.mellite.Application"><span>Application</span></li><li class="in" name="de.sciss.desktop.SwingApplicationProxy"><span>SwingApplicationProxy</span></li><li class="in" name="de.sciss.desktop.ApplicationProxy"><span>ApplicationProxy</span></li><li class="in" name="de.sciss.desktop.SwingApplication"><span>SwingApplication</span></li><li class="in" name="de.sciss.desktop.Application"><span>Application</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -298,7 +310,7 @@
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="de.sciss.mellite.Application.Document" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+              <ol><li name="de.sciss.mellite.Application.Document" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]"></a><a id="Document:Document"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application$.html#Document=de.sciss.synth.proc.Workspace[_&lt;:de.sciss.lucre.stm.Sys[_]]" title="Permalink">
@@ -313,11 +325,11 @@
         <span class="name">Document</span><span class="result alias"> = <a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]]</span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
+      
     </li><li name="de.sciss.desktop.Application.DocumentHandler" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="DocumentHandler=de.sciss.desktop.DocumentHandler{typeDocument=Application.this.Document}"></a><a id="DocumentHandler:DocumentHandler"></a>
+      <a id="DocumentHandler=de.sciss.desktop.DocumentHandler[Document]"></a><a id="DocumentHandler:DocumentHandler"></a>
       <span class="permalink">
-      <a href="../../../de/sciss/mellite/Application$.html#DocumentHandler=de.sciss.desktop.DocumentHandler{typeDocument=Application.this.Document}" title="Permalink">
+      <a href="../../../de/sciss/mellite/Application$.html#DocumentHandler=de.sciss.desktop.DocumentHandler[Document]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -326,7 +338,7 @@
         <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <span class="name">DocumentHandler</span><span class="result alias"> = <span class="extype" name="de.sciss.desktop.DocumentHandler">desktop.DocumentHandler</span> { type Document = de.sciss.mellite.Application.Document }</span>
+        <span class="name">DocumentHandler</span><span class="result alias"> = <span class="extype" name="de.sciss.desktop.DocumentHandler">desktop.DocumentHandler</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]]]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Application</dd></dl></div>
@@ -386,7 +398,7 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.mellite.Application#addComponent" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="de.sciss.desktop.ApplicationProxy#addComponent" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="addComponent(key:String,component:Any):Unit"></a><a id="addComponent(String,Any):Unit"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application$.html#addComponent(key:String,component:Any):Unit" title="Permalink">
@@ -394,14 +406,14 @@
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
         <span class="name">addComponent</span><span class="params">(<span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="component">component: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ApplicationProxy → Application</dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
@@ -433,29 +445,29 @@
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="de.sciss.mellite.Application#documentHandler" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="documentHandler:de.sciss.mellite.Application.DocumentHandler"></a><a id="documentHandler:DocumentHandler"></a>
+    </li><li name="de.sciss.desktop.ApplicationProxy#documentHandler" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="documentHandler:ApplicationProxy.this.DocumentHandler"></a><a id="documentHandler:DocumentHandler"></a>
       <span class="permalink">
-      <a href="../../../de/sciss/mellite/Application$.html#documentHandler:de.sciss.mellite.Application.DocumentHandler" title="Permalink">
+      <a href="../../../de/sciss/mellite/Application$.html#documentHandler:ApplicationProxy.this.DocumentHandler" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">documentHandler</span><span class="result">: <a href="#DocumentHandler=de.sciss.desktop.DocumentHandler{typeDocument=Application.this.Document}" class="extmbr" name="de.sciss.mellite.Application.DocumentHandler">DocumentHandler</a></span>
+        <span class="name">documentHandler</span><span class="result">: <a href="#DocumentHandler=de.sciss.desktop.DocumentHandler[Document]" class="extmbr" name="de.sciss.mellite.Application.DocumentHandler">DocumentHandler</a></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ApplicationProxy → Application</dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -503,7 +515,7 @@
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="symbol">classOf[java.lang.Throwable]</span>
@@ -526,7 +538,7 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.mellite.Application#getComponent" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="de.sciss.desktop.ApplicationProxy#getComponent" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getComponent[A](key:String):Option[A]"></a><a id="getComponent[A](String):Option[A]"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application$.html#getComponent[A](key:String):Option[A]" title="Permalink">
@@ -534,14 +546,14 @@
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">getComponent</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="de.sciss.mellite.Application.getComponent.A">A</span>]</span>
+        <span class="name">getComponent</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="de.sciss.desktop.ApplicationProxy.getComponent.A">A</span>]</span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ApplicationProxy → Application</dd></dl></div>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <span class="permalink">
@@ -558,22 +570,22 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.mellite.Application#init" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="init(peer:de.sciss.mellite.Application):Unit"></a><a id="init(Application):Unit"></a>
+    </li><li name="de.sciss.desktop.ApplicationProxy#init" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="init(peer:Repr):Unit"></a><a id="init(Application):Unit"></a>
       <span class="permalink">
-      <a href="../../../de/sciss/mellite/Application$.html#init(peer:de.sciss.mellite.Application):Unit" title="Permalink">
+      <a href="../../../de/sciss/mellite/Application$.html#init(peer:Repr):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
         <span class="name">init</span><span class="params">(<span name="peer">peer: <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ApplicationProxy</dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
@@ -590,7 +602,7 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="de.sciss.mellite.Application#name" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="de.sciss.desktop.ApplicationProxy#name" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="name:String"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application$.html#name:String" title="Permalink">
@@ -598,14 +610,14 @@
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
         <span class="name">name</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ApplicationProxy → Application</dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -670,7 +682,23 @@
       </span>
       
       
-    </li><li name="de.sciss.mellite.Application#quit" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="de.sciss.desktop.ApplicationProxy#peer" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="peer:Repr"></a><a id="peer:Application"></a>
+      <span class="permalink">
+      <a href="../../../de/sciss/mellite/Application$.html#peer:Repr" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">peer</span><span class="result">: <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>ApplicationProxy</dd></dl></div>
+    </li><li name="de.sciss.desktop.ApplicationProxy#quit" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="quit():Unit"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application$.html#quit():Unit" title="Permalink">
@@ -678,15 +706,15 @@
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
         <span class="name">quit</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
-    </li><li name="de.sciss.mellite.Application#removeComponent" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ApplicationProxy → Application</dd></dl></div>
+    </li><li name="de.sciss.desktop.ApplicationProxy#removeComponent" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="removeComponent(key:String):Unit"></a><a id="removeComponent(String):Unit"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application$.html#removeComponent(key:String):Unit" title="Permalink">
@@ -694,14 +722,30 @@
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
         <span class="name">removeComponent</span><span class="params">(<span name="key">key: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ApplicationProxy → Application</dd></dl></div>
+    </li><li name="de.sciss.desktop.ApplicationProxy#requireInitialized" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="requireInitialized():Unit"></a>
+      <span class="permalink">
+      <a href="../../../de/sciss/mellite/Application$.html#requireInitialized():Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">requireInitialized</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>ApplicationProxy</dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
@@ -718,7 +762,7 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="de.sciss.mellite.Application#systemPrefs" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="de.sciss.desktop.ApplicationProxy#systemPrefs" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="systemPrefs:de.sciss.desktop.Preferences"></a><a id="systemPrefs:Preferences"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application$.html#systemPrefs:de.sciss.desktop.Preferences" title="Permalink">
@@ -726,14 +770,14 @@
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
         <span class="name">systemPrefs</span><span class="result">: <span class="extype" name="de.sciss.desktop.Preferences">Preferences</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ApplicationProxy → Application</dd></dl></div>
     </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
@@ -766,7 +810,7 @@
       </span>
       
       
-    </li><li name="de.sciss.mellite.Application#userPrefs" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="de.sciss.desktop.ApplicationProxy#userPrefs" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="userPrefs:de.sciss.desktop.Preferences"></a><a id="userPrefs:Preferences"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application$.html#userPrefs:de.sciss.desktop.Preferences" title="Permalink">
@@ -774,14 +818,14 @@
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
         <span class="name">userPrefs</span><span class="result">: <span class="extype" name="de.sciss.desktop.Preferences">Preferences</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → Application</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ApplicationProxy → Application</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
@@ -848,7 +892,7 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="de.sciss.mellite.Application#windowHandler" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="de.sciss.desktop.SwingApplicationProxy#windowHandler" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="windowHandler:de.sciss.desktop.WindowHandler"></a><a id="windowHandler:WindowHandler"></a>
       <span class="permalink">
       <a href="../../../de/sciss/mellite/Application$.html#windowHandler:de.sciss.desktop.WindowHandler" title="Permalink">
@@ -856,14 +900,14 @@
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">final </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
         <span class="name">windowHandler</span><span class="result">: <span class="extype" name="de.sciss.desktop.WindowHandler">WindowHandler</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="de.sciss.mellite.Application">Application</a> → SwingApplication</dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>SwingApplicationProxy → SwingApplication</dd></dl></div>
     </li>
               </ol>
             </div>
@@ -874,10 +918,14 @@
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="de.sciss.desktop.SwingApplication">
-              <h3>Inherited from <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span></h3>
+        <div class="parent" name="de.sciss.desktop.SwingApplicationProxy">
+              <h3>Inherited from <span class="extype" name="de.sciss.desktop.SwingApplicationProxy">SwingApplicationProxy</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]], <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a>]</h3>
+            </div><div class="parent" name="de.sciss.desktop.ApplicationProxy">
+              <h3>Inherited from <span class="extype" name="de.sciss.desktop.ApplicationProxy">ApplicationProxy</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]], <a href="Application.html" class="extype" name="de.sciss.mellite.Application">Application</a>]</h3>
+            </div><div class="parent" name="de.sciss.desktop.SwingApplication">
+              <h3>Inherited from <span class="extype" name="de.sciss.desktop.SwingApplication">SwingApplication</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]]]</h3>
             </div><div class="parent" name="de.sciss.desktop.Application">
-              <h3>Inherited from <span class="extype" name="de.sciss.desktop.Application">desktop.Application</span></h3>
+              <h3>Inherited from <span class="extype" name="de.sciss.desktop.Application">desktop.Application</span>[<a href="../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[_ &lt;: <a href="../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[_]]]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
             </div><div class="parent" name="scala.Any">

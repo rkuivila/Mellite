@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css?family=Roboto:100normal,100italic,300normal,300italic,400normal,400italic,500normal,500italic,700normal,700italic,900normal,900italicc" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="lib/jquery/jquery.min.js"></script>
 <script type="text/javascript" src="js/page.js"></script>
+<script type="text/javascript" src="js/groups.js"></script>
 <link rel="stylesheet" type="text/css" href="lib/normalize.css/normalize.css"/>
 <link rel="stylesheet" type="text/css" href="lib/foundation/dist/foundation.min.css"/>
 <link rel="stylesheet" type="text/css" href="css/page.css"/>
@@ -29,13 +30,16 @@
 <span class="home-icon">⌂</span>Mellite
 </a>
 <div class="version-number">
-2.14.0
+2.16.0
 </div>
 </div>
 <div class="nav-toc">
 <ul>
-  <li><a href="tutorials.html" class="active">Tutorials</a></li>
-  <li><a href="links.html">Links</a></li>
+  <li><a href="tutorials.html" class="active page">Tutorials</a>
+  <ul>
+    <li><a href="tut_soundprocesses.html" class="page">Intro to SoundProcesses</a></li>
+  </ul></li>
+  <li><a href="links.html" class="page">Links</a></li>
 </ul>
 </div>
 
@@ -67,13 +71,16 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <span class="home-icon">⌂</span>Mellite
 </a>
 <div class="version-number">
-2.14.0
+2.16.0
 </div>
 </div>
 <div class="nav-toc">
 <ul>
-  <li><a href="tutorials.html" class="active">Tutorials</a></li>
-  <li><a href="links.html">Links</a></li>
+  <li><a href="tutorials.html" class="active page">Tutorials</a>
+  <ul>
+    <li><a href="tut_soundprocesses.html" class="page">Intro to SoundProcesses</a></li>
+  </ul></li>
+  <li><a href="links.html" class="page">Links</a></li>
 </ul>
 </div>
 
@@ -97,6 +104,21 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <div class="page-content row">
 <div class="small-12 large-9 column" id="docs">
 <h1><a href="#tutorials" name="tutorials" class="anchor"><span class="anchor-link"></span></a>Tutorials</h1>
+<div class="toc ">
+<ul>
+  <li><a href="tutorials.html#tutorial-1-getting-started" class="header">Tutorial 1 - Getting Started</a></li>
+  <li><a href="tutorials.html#tutorial-2-timeline-and-audio-files" class="header">Tutorial 2 - Timeline and Audio Files</a></li>
+  <li><a href="tutorials.html#tutorial-3-freesound-org" class="header">Tutorial 3 - Freesound.org</a></li>
+  <li><a href="tutorials.html#tutorial-4-wolkenpumpe" class="header">Tutorial 4 - Wolkenpumpe</a></li>
+  <li><a href="tutorials.html#tutorial-5" class="header">Tutorial 5&hellip;</a></li>
+  <li><a href="tut_soundprocesses.html" class="page">Intro to SoundProcesses</a>
+  <ul>
+    <li><a href="tut_soundprocesses.html#preparations" class="header">Preparations</a></li>
+    <li><a href="tut_soundprocesses.html#hello-world" class="header">Hello World</a></li>
+    <li><a href="tut_soundprocesses.html#playing-a-sound" class="header">Playing a Sound</a></li>
+  </ul></li>
+</ul>
+</div>
 <p>Video tutorials for version 2.10 are available from a <a href="https://vimeo.com/album/4473871">Vimeo album</a>.</p>
 <h2><a href="#tutorial-1-getting-started" name="tutorial-1-getting-started" class="anchor"><span class="anchor-link"></span></a>Tutorial 1 - Getting Started</h2>
 <p><a href="https://vimeo.com/208302767">Video Link</a> (14 min)</p>
@@ -166,8 +188,12 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <h2><a href="#tutorial-5" name="tutorial-5" class="anchor"><span class="anchor-link"></span></a>Tutorial 5&hellip;</h2>
 <p>More tutorials that cover the API and ways of actually programming the system will appear soon (hopefully)&hellip;</p>
 <p>If you are interested in the confluent versioning workspace, there is <a href="https://vimeo.com/86202332">a quite old video</a>. I&rsquo;m planning to cover this topic in updated tutorials.</p>
+<div class="source-github">
+The source code for this page can be found <a href="https://github.com/Sciss/Mellite/tree/master/src/paradox/tutorials.md">here</a>.
+</div>
+
 <div class="nav-next">
-<p><strong>Next:</strong> <a href="links.html">Links</a></p>
+<p><strong>Next:</strong> <a href="tut_soundprocesses.html">Intro to SoundProcesses</a></p>
 </div>
 </div>
 <div class="large-3 show-for-large column" data-sticky-container>
@@ -176,13 +202,13 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <div class="nav-title">On this page:</div>
 <div class="nav-toc">
 <ul>
-  <li><a href="tutorials.html#tutorials">Tutorials</a>
+  <li><a href="tutorials.html#tutorials" class="header">Tutorials</a>
   <ul>
-    <li><a href="tutorials.html#tutorial-1-getting-started">Tutorial 1 - Getting Started</a></li>
-    <li><a href="tutorials.html#tutorial-2-timeline-and-audio-files">Tutorial 2 - Timeline and Audio Files</a></li>
-    <li><a href="tutorials.html#tutorial-3-freesound-org">Tutorial 3 - Freesound.org</a></li>
-    <li><a href="tutorials.html#tutorial-4-wolkenpumpe">Tutorial 4 - Wolkenpumpe</a></li>
-    <li><a href="tutorials.html#tutorial-5">Tutorial 5&hellip;</a></li>
+    <li><a href="tutorials.html#tutorial-1-getting-started" class="header">Tutorial 1 - Getting Started</a></li>
+    <li><a href="tutorials.html#tutorial-2-timeline-and-audio-files" class="header">Tutorial 2 - Timeline and Audio Files</a></li>
+    <li><a href="tutorials.html#tutorial-3-freesound-org" class="header">Tutorial 3 - Freesound.org</a></li>
+    <li><a href="tutorials.html#tutorial-4-wolkenpumpe" class="header">Tutorial 4 - Wolkenpumpe</a></li>
+    <li><a href="tutorials.html#tutorial-5" class="header">Tutorial 5&hellip;</a></li>
   </ul></li>
 </ul>
 </div>

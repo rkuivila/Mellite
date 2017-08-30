@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.14.0 API  - de.sciss.mellite.gui.ActionCloseAllWorkspaces</title>
-          <meta name="description" content="Mellite 2.14.0 API - de.sciss.mellite.gui.ActionCloseAllWorkspaces" />
-          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.mellite.gui.ActionCloseAllWorkspaces" />
+          <title>Mellite 2.16.0 API  - de.sciss.mellite.gui.ActionCloseAllWorkspaces</title>
+          <meta name="description" content="Mellite 2.16.0 API - de.sciss.mellite.gui.ActionCloseAllWorkspaces" />
+          <meta name="keywords" content="Mellite 2.16.0 API de.sciss.mellite.gui.ActionCloseAllWorkspaces" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.16.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -175,9 +175,9 @@
                           ActionArtifactLocation
                         </a>
                       </li><li class="current-entities indented4">
-                        <span class="separator"></span>
                         <a class="object" href="ActionBounceTimeline$.html" title=""></a>
-                        <a href="ActionBounceTimeline$.html" title="">
+                        <a class="class" href="ActionBounceTimeline.html" title=""></a>
+                        <a href="ActionBounceTimeline.html" title="">
                           ActionBounceTimeline
                         </a>
                       </li><li class="current-entities indented4">
@@ -233,6 +233,12 @@
                         <a class="trait" href="AudioFileView.html" title=""></a>
                         <a href="AudioFileView.html" title="">
                           AudioFileView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="CanBounce.html" title=""></a>
+                        <a href="CanBounce.html" title="">
+                          CanBounce
                         </a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="CodeFrame$.html" title=""></a>
@@ -510,6 +516,12 @@
                         <a href="ViewHasWorkspace.html" title="">
                           ViewHasWorkspace
                         </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="WindowPlacement$.html" title=""></a>
+                        <a class="class" href="WindowPlacement.html" title=""></a>
+                        <a href="WindowPlacement.html" title="">
+                          WindowPlacement
+                        </a>
                       </li>
               </ul>
             </div>
@@ -707,42 +719,6 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="de.sciss.mellite.gui.ActionCloseAllWorkspaces#check" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="check[S&lt;:de.sciss.lucre.stm.Sys[S]](doc:de.sciss.synth.proc.Workspace[S],window:Option[de.sciss.desktop.Window]):Boolean"></a><a id="check[S&lt;:Sys[S]](Workspace[S],Option[Window]):Boolean"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/ActionCloseAllWorkspaces$.html#check[S&lt;:de.sciss.lucre.stm.Sys[S]](doc:de.sciss.synth.proc.Workspace[S],window:Option[de.sciss.desktop.Window]):Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">check</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.check.S">S</span>]</span>]</span><span class="params">(<span name="doc">doc: <a href="../../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.check.S">S</span>]</span>, <span name="window">window: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="de.sciss.desktop.Window">Window</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Checks if the workspace can be safely closed.</p><div class="fullcomment"><div class="comment cmt"><p>Checks if the workspace can be safely closed. This is the case
-for durable and confluent workspaces. For an in-memory workspace,
-the user is presented with a confirmation dialog.
-</p></div><dl class="paramcmts block"><dt class="param">doc</dt><dd class="cmt"><p>the workspace to check</p></dd><dt class="param">window</dt><dd class="cmt"><p>a reference window if a dialog is presented</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if it is ok to close the workspace, <code>false</code> if the request was denied</p></dd></dl></div>
-    </li><li name="de.sciss.mellite.gui.ActionCloseAllWorkspaces#checkAndClose" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="checkAndClose[S&lt;:de.sciss.lucre.stm.Sys[S]](doc:de.sciss.synth.proc.Workspace[S],window:Option[de.sciss.desktop.Window]):Boolean"></a><a id="checkAndClose[S&lt;:Sys[S]](Workspace[S],Option[Window]):Boolean"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/ActionCloseAllWorkspaces$.html#checkAndClose[S&lt;:de.sciss.lucre.stm.Sys[S]](doc:de.sciss.synth.proc.Workspace[S],window:Option[de.sciss.desktop.Window]):Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">checkAndClose</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.checkAndClose.S">S</span>]</span>]</span><span class="params">(<span name="doc">doc: <a href="../../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.checkAndClose.S">S</span>]</span>, <span name="window">window: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="de.sciss.desktop.Window">Window</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Checks if the workspace may be closed (calling <code>check</code>) and if so, disposes the workspace.</p><div class="fullcomment"><div class="comment cmt"><p>Checks if the workspace may be closed (calling <code>check</code>) and if so, disposes the workspace.
-</p></div><dl class="paramcmts block"><dt class="param">doc</dt><dd class="cmt"><p>the workspace to check</p></dd><dt class="param">window</dt><dd class="cmt"><p>a reference window if a dialog is presented</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if the space was closed</p></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
@@ -758,29 +734,13 @@ the user is presented with a confirmation dialog.
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="de.sciss.mellite.gui.ActionCloseAllWorkspaces#close" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="close[S&lt;:de.sciss.lucre.stm.Sys[S]](doc:de.sciss.synth.proc.Workspace[S]):Unit"></a><a id="close[S&lt;:Sys[S]](Workspace[S]):Unit"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/ActionCloseAllWorkspaces$.html#close[S&lt;:de.sciss.lucre.stm.Sys[S]](doc:de.sciss.synth.proc.Workspace[S]):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">close</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.close.S">S</span>]</span>]</span><span class="params">(<span name="doc">doc: <a href="../../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.close.S">S</span>]</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Closes the provided workspace without checking.</p>
     </li><li name="scala.swing.Action#enabled" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="enabled:Boolean"></a>
       <span class="permalink">
@@ -860,7 +820,7 @@ the user is presented with a confirmation dialog.
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="symbol">classOf[java.lang.Throwable]</span>
@@ -1075,6 +1035,25 @@ the user is presented with a confirmation dialog.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Action</dd></dl></div>
+    </li><li name="de.sciss.mellite.gui.ActionCloseAllWorkspaces#prepareDisposal" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="prepareDisposal[S&lt;:de.sciss.lucre.stm.Sys[S]](workspace:de.sciss.synth.proc.Workspace[S],window:Option[de.sciss.desktop.Window])(implicittx:S#Tx):Option[de.sciss.mellite.Veto[S#Tx]]"></a><a id="prepareDisposal[S&lt;:Sys[S]](Workspace[S],Option[Window])(ActionCloseAllWorkspaces.prepareDisposal.S.Tx):Option[Veto[ActionCloseAllWorkspaces.prepareDisposal.S.Tx]]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/ActionCloseAllWorkspaces$.html#prepareDisposal[S&lt;:de.sciss.lucre.stm.Sys[S]](workspace:de.sciss.synth.proc.Workspace[S],window:Option[de.sciss.desktop.Window])(implicittx:S#Tx):Option[de.sciss.mellite.Veto[S#Tx]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">prepareDisposal</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.prepareDisposal.S">S</span>]</span>]</span><span class="params">(<span name="workspace">workspace: <a href="../../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.prepareDisposal.S">S</span>]</span>, <span name="window">window: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="de.sciss.desktop.Window">Window</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">ActionCloseAllWorkspaces.prepareDisposal.S.Tx</span></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<a href="../Veto.html" class="extype" name="de.sciss.mellite.Veto">Veto</a>[<span class="extype" name="de.sciss.lucre.stm.Sys.Tx">ActionCloseAllWorkspaces.prepareDisposal.S.Tx</span>]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Checks if the workspace can be safely closed.</p><div class="fullcomment"><div class="comment cmt"><p>Checks if the workspace can be safely closed. This is the case
+for durable and confluent workspaces. For an in-memory workspace,
+the user is presented with a confirmation dialog.
+</p></div><dl class="paramcmts block"><dt class="param">workspace</dt><dd class="cmt"><p>the workspace to check</p></dd><dt class="param">window</dt><dd class="cmt"><p>a reference window if a dialog is presented</p></dd><dt>returns</dt><dd class="cmt"><p><code>true</code> if it is ok to close the workspace, <code>false</code> if the request was denied</p></dd></dl></div>
     </li><li name="scala.swing.Action#smallIcon" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="smallIcon:javax.swing.Icon"></a><a id="smallIcon:Icon"></a>
       <span class="permalink">
@@ -1203,6 +1182,38 @@ the user is presented with a confirmation dialog.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Action</dd></dl></div>
+    </li><li name="de.sciss.mellite.gui.ActionCloseAllWorkspaces#tryClose" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="tryClose[S&lt;:de.sciss.lucre.stm.Sys[S]](workspace:de.sciss.synth.proc.Workspace[S],window:Option[de.sciss.desktop.Window]):scala.concurrent.Future[Unit]"></a><a id="tryClose[S&lt;:Sys[S]](Workspace[S],Option[Window]):Future[Unit]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/ActionCloseAllWorkspaces$.html#tryClose[S&lt;:de.sciss.lucre.stm.Sys[S]](workspace:de.sciss.synth.proc.Workspace[S],window:Option[de.sciss.desktop.Window]):scala.concurrent.Future[Unit]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">tryClose</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.tryClose.S">S</span>]</span>]</span><span class="params">(<span name="workspace">workspace: <a href="../../synth/proc/Workspace.html" class="extype" name="de.sciss.synth.proc.Workspace">Workspace</a>[<span class="extype" name="de.sciss.mellite.gui.ActionCloseAllWorkspaces.tryClose.S">S</span>]</span>, <span name="window">window: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="de.sciss.desktop.Window">Window</span>]</span>)</span><span class="result">: <span class="extype" name="scala.concurrent.Future">Future</span>[<span class="extype" name="scala.Unit">Unit</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.mellite.gui.ActionCloseAllWorkspaces#tryCloseAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="tryCloseAll():scala.concurrent.Future[Unit]"></a><a id="tryCloseAll():Future[Unit]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/ActionCloseAllWorkspaces$.html#tryCloseAll():scala.concurrent.Future[Unit]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">tryCloseAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.concurrent.Future">Future</span>[<span class="extype" name="scala.Unit">Unit</span>]</span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">

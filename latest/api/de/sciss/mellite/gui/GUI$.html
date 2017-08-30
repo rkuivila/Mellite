@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.14.0 API  - de.sciss.mellite.gui.GUI</title>
-          <meta name="description" content="Mellite 2.14.0 API - de.sciss.mellite.gui.GUI" />
-          <meta name="keywords" content="Mellite 2.14.0 API de.sciss.mellite.gui.GUI" />
+          <title>Mellite 2.16.0 API  - de.sciss.mellite.gui.GUI</title>
+          <meta name="description" content="Mellite 2.16.0 API - de.sciss.mellite.gui.GUI" />
+          <meta name="keywords" content="Mellite 2.16.0 API de.sciss.mellite.gui.GUI" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.14.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.16.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -175,9 +175,9 @@
                           ActionArtifactLocation
                         </a>
                       </li><li class="current-entities indented4">
-                        <span class="separator"></span>
                         <a class="object" href="ActionBounceTimeline$.html" title=""></a>
-                        <a href="ActionBounceTimeline$.html" title="">
+                        <a class="class" href="ActionBounceTimeline.html" title=""></a>
+                        <a href="ActionBounceTimeline.html" title="">
                           ActionBounceTimeline
                         </a>
                       </li><li class="current-entities indented4">
@@ -233,6 +233,12 @@
                         <a class="trait" href="AudioFileView.html" title=""></a>
                         <a href="AudioFileView.html" title="">
                           AudioFileView
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="CanBounce.html" title=""></a>
+                        <a href="CanBounce.html" title="">
+                          CanBounce
                         </a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="CodeFrame$.html" title=""></a>
@@ -510,6 +516,12 @@
                         <a href="ViewHasWorkspace.html" title="">
                           ViewHasWorkspace
                         </a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="WindowPlacement$.html" title=""></a>
+                        <a class="class" href="WindowPlacement.html" title=""></a>
+                        <a href="WindowPlacement.html" title="">
+                          WindowPlacement
+                        </a>
                       </li>
               </ul>
             </div>
@@ -659,78 +671,6 @@
       </span>
       
       
-    </li><li name="de.sciss.mellite.gui.GUI#addGlobalAction" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="addGlobalAction(c:scala.swing.Component,name:String,keyStroke:javax.swing.KeyStroke)(body:=&gt;Unit):Unit"></a><a id="addGlobalAction(Component,String,KeyStroke)(⇒Unit):Unit"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/GUI$.html#addGlobalAction(c:scala.swing.Component,name:String,keyStroke:javax.swing.KeyStroke)(body:=&gt;Unit):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">addGlobalAction</span><span class="params">(<span name="c">c: <span class="extype" name="scala.swing.Component">Component</span></span>, <span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="keyStroke">keyStroke: <span class="extype" name="javax.swing.KeyStroke">KeyStroke</span></span>)</span><span class="params">(<span name="body">body: ⇒ <span class="extype" name="scala.Unit">Unit</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Adds a global action to a component.</p><div class="fullcomment"><div class="comment cmt"><p>Adds a global action to a component. The key
-is active if the component appears in the focused window.
-</p></div></div>
-    </li><li name="de.sciss.mellite.gui.GUI#addGlobalKey" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="addGlobalKey(b:scala.swing.AbstractButton,keyStroke:javax.swing.KeyStroke):Unit"></a><a id="addGlobalKey(AbstractButton,KeyStroke):Unit"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/GUI$.html#addGlobalKey(b:scala.swing.AbstractButton,keyStroke:javax.swing.KeyStroke):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">addGlobalKey</span><span class="params">(<span name="b">b: <span class="extype" name="scala.swing.AbstractButton">AbstractButton</span></span>, <span name="keyStroke">keyStroke: <span class="extype" name="javax.swing.KeyStroke">KeyStroke</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Adds a global key-triggered click action to a button.</p><div class="fullcomment"><div class="comment cmt"><p>Adds a global key-triggered click action to a button. The key
-is active if the action appears in the focused window. The added action
-simulates a button click.
-</p></div></div>
-    </li><li name="de.sciss.mellite.gui.GUI#addGlobalKeyWhenVisible" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="addGlobalKeyWhenVisible(b:scala.swing.AbstractButton,keyStroke:javax.swing.KeyStroke):Unit"></a><a id="addGlobalKeyWhenVisible(AbstractButton,KeyStroke):Unit"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/GUI$.html#addGlobalKeyWhenVisible(b:scala.swing.AbstractButton,keyStroke:javax.swing.KeyStroke):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">addGlobalKeyWhenVisible</span><span class="params">(<span name="b">b: <span class="extype" name="scala.swing.AbstractButton">AbstractButton</span></span>, <span name="keyStroke">keyStroke: <span class="extype" name="javax.swing.KeyStroke">KeyStroke</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Same as <code>addGlobalKey</code>, but only performs action if the button is
-currently showing (e.g.</p><div class="fullcomment"><div class="comment cmt"><p>Same as <code>addGlobalKey</code>, but only performs action if the button is
-currently showing (e.g. in the currently showing tabbed pane page).
-</p></div></div>
-    </li><li name="de.sciss.mellite.gui.GUI#addTabNavigation" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="addTabNavigation(tabs:scala.swing.TabbedPane):Unit"></a><a id="addTabNavigation(TabbedPane):Unit"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/GUI$.html#addTabNavigation(tabs:scala.swing.TabbedPane):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">addTabNavigation</span><span class="params">(<span name="tabs">tabs: <span class="extype" name="scala.swing.TabbedPane">TabbedPane</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Adds alt-left/right key control to a tabbed pane.</p>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
@@ -810,7 +750,7 @@ currently showing (e.g. in the currently showing tabbed pane page).
         <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
@@ -880,29 +820,13 @@ currently showing (e.g. in the currently showing tabbed pane page).
         <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="symbol">classOf[java.lang.Throwable]</span>
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="de.sciss.mellite.gui.GUI#formatException" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="formatException(e:Throwable):String"></a><a id="formatException(Throwable):String"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/GUI$.html#formatException(e:Throwable):String" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">formatException</span><span class="params">(<span name="e">e: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      
-      
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
@@ -983,22 +907,6 @@ currently showing (e.g. in the currently showing tabbed pane page).
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="de.sciss.mellite.gui.GUI#keyStrokeText" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="keyStrokeText(stroke:javax.swing.KeyStroke):String"></a><a id="keyStrokeText(KeyStroke):String"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/GUI$.html#keyStrokeText(stroke:javax.swing.KeyStroke):String" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">keyStrokeText</span><span class="params">(<span name="stroke">stroke: <span class="extype" name="javax.swing.KeyStroke">KeyStroke</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Human-readable text representation of a key stroke.</p>
     </li><li name="de.sciss.mellite.gui.GUI#keyValueDialog" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="keyValueDialog(value:scala.swing.Component,title:String,defaultName:String,window:Option[de.sciss.desktop.Window]):Option[String]"></a><a id="keyValueDialog(Component,String,String,Option[Window]):Option[String]"></a>
       <span class="permalink">
@@ -1012,6 +920,22 @@ currently showing (e.g. in the currently showing tabbed pane page).
       </span>
       <span class="symbol">
         <span class="name">keyValueDialog</span><span class="params">(<span name="value">value: <span class="extype" name="scala.swing.Component">Component</span></span>, <span name="title">title: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;New Entry&quot;</span></span>, <span name="defaultName">defaultName: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;Name&quot;</span></span>, <span name="window">window: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="de.sciss.desktop.Window">Window</span>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      
+      
+    </li><li name="de.sciss.mellite.gui.GUI#linkFormats" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="linkFormats[A](pf:de.sciss.audiowidgets.ParamField[A]*):Unit"></a><a id="linkFormats[A](ParamField[A]*):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/mellite/gui/GUI$.html#linkFormats[A](pf:de.sciss.audiowidgets.ParamField[A]*):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">linkFormats</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="pf">pf: <span class="extype" name="de.sciss.audiowidgets.ParamField">ParamField</span>[<span class="extype" name="de.sciss.mellite.gui.GUI.linkFormats.A">A</span>]*</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
       
@@ -1076,38 +1000,6 @@ currently showing (e.g. in the currently showing tabbed pane page).
       </span>
       <span class="symbol">
         <span class="name">removeButton</span><span class="params">(<span name="action">action: <span class="extype" name="scala.swing.Action">Action</span></span>, <span name="tooltip">tooltip: <span class="extype" name="scala.Predef.String">String</span> = <span class="symbol">&quot;&quot;</span></span>)</span><span class="result">: <span class="extype" name="scala.swing.Button">Button</span></span>
-      </span>
-      
-      
-    </li><li name="de.sciss.mellite.gui.GUI#round" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="round(b:scala.swing.AbstractButton*):Unit"></a><a id="round(AbstractButton*):Unit"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/GUI$.html#round(b:scala.swing.AbstractButton*):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">round</span><span class="params">(<span name="b">b: <span class="extype" name="scala.swing.AbstractButton">AbstractButton</span>*</span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
-      </span>
-      
-      
-    </li><li name="de.sciss.mellite.gui.GUI#setInitialFocus" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="setInitialFocus(c:scala.swing.Component):Unit"></a><a id="setInitialFocus(Component):Unit"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/mellite/gui/GUI$.html#setInitialFocus(c:scala.swing.Component):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">setInitialFocus</span><span class="params">(<span name="c">c: <span class="extype" name="scala.swing.Component">Component</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
       </span>
       
       
