@@ -8,6 +8,10 @@ necessary to dive a bit deeper and learn about the application programming inter
 still access this API through Mellite, but you may also choose to write your sound programs directly in a general code editor
 or integrated development environment (IDE), such as IntelliJ IDEA.
 
+The following figure illustrates the layers of the SoundProcesses and Mellite architecture:
+
+<img src="assets/images/tut_sp_architecture.png" alt="SoundProcesses Architecture" style="width:100%;max-width:520px;margin-bottom:1ex">
+
 In the following tutorial, we will write code as such an independent project, not making any references to Mellite. I will try
 to assume that you have not much experience with either Scala, ScalaCollider (the sound synthesis library used by SoundProcesses)
 or IntelliJ IDEA. However, I will also assume that you have some programming experience, perhaps in Java or SuperCollider, so
@@ -300,31 +304,31 @@ After this dense prelude, let us look at the content of the first snippet that l
 
 @@snip [Snippet1.scala]($sp_tut$/Snippet1.scala) { #snippet1 }
 
-So the `object Snippet1 extends App` bit should be familiar now&mdash;it means we define an executable program in the body of this object. But almost everything else
-will be new, so let's go through it from top to bottom:
+The `object Snippet1 extends App` bit should be familiar now&mdash;it means we define an executable program in the body of this object. But almost everything else
+will be new, so let's go through it piece by piece:
 
 ### Importing Symbols
 
 The first lines are comprised of `import` statements. Since values and types reside in packages, they are not automatically visible in a Scala program. There are a few
-exception such as everything that's in the `scala.` and `java.lang.` namespaces, for example we could write `String` although the fully qualified type is `java.lang.String`,
+exceptions such as everything that's in the `scala.` and `java.lang.` namespaces, for example we can write `String` although the fully qualified type is `java.lang.String`,
 and we can write `extends App` instead of `extends scala.App`. Typically, one imports the types one wishes to use at the top of a source code file, although it is not
 mandatory. At any point we can write the fully qualified name with the packages separated by dots, and there are even some conventions to do so in certain cases to make the
-intent more clear, for example Scala's standard library contains both immutable and mutable collections, so you could write `immutable.Set` and `mutable.Set` to visually
+intent more clear: For example Scala's standard library contains both immutable and mutable collections, so you could write `immutable.Set` and `mutable.Set` to visually
 distinguish them at the place where they are used without having to look up which one was imported. Since immutable is the recommended standard, it boils down to people
 using `Set` to indicate the immutable set, and `mutable.Set` to flag the use of the mutable variant. Actually, the fully qualified name is `scala.collection.mutable.Set`, so
 for this to work, one still needs an `import scala.collection.mutable`&mdash;that brings the package `mutable` into scope, just as you would bring
 a class into scope! This may be surprising, but you will see that Scala is designed around a principle of regularity, which means that it tries to apply the same principle
-to all things equally. A package is just a symbol as a class is a symbol, so if you can import a class, you should be able to import a package as well. In fact, you can also
+to all things equally. A package is just a symbol as much as a class is a symbol, so if you can import a class, you should be able to import a package as well. In fact, you can also
 import values, e.g. `import math.Pi` to use the symbol `Pi`.
 
 In the same spirit, Scala also tries to avoid arbitrary constraints for where you can write these things. Import statements can be written anywhere you like, at
 any nesting level. This is why I could write `import de.sciss.synth._` further down in the code, inside the `SynthGraph { ... }` block. It is intuitively clear that the imported
 symbols are now only visible within this particular block. Here the underscore `_` selects
-all symbols inside the package `synth`, this is a nice and short way of quickly getting hold of all the main types in [ScalaCollider](sciss.github.io/ScalaCollider/), the sound synthesis library used by
+all symbols inside the package `synth`. This is a nice and short way of quickly getting hold of all the main types in [ScalaCollider](sciss.github.io/ScalaCollider/), the sound synthesis library used by
 SoundProcesses. Such "wildcard import" may have the disadvantage of bringing unwanted symbols into scope that could, for example, result in a name clash. That's the reason
-why I prefer here to place that import right where I will make use of it, but it would also have been possible to add it to the top of the file. Take a look at the line
-below, `import ugen._`. This could be called a recursive import, perhaps, because `ugen` is a sub-package inside `synth`, so I'm abbreviating `import de.sciss.synth.ugen._`
-to `import ugen._` because it's less to type, and this is simply possible because the previous line imported everything that's inside `synth`, including the `ugen` sub-package.
+why I prefer here to place that import right where I will make use of it, but it would also have been possible to add it to the top of the file. Take a look at the next line,
+`import ugen._`. This could be called a recursive import, perhaps, because `ugen` is a sub-package inside `synth`, so I'm abbreviating `import de.sciss.synth.ugen._`
+to `import ugen._` because it's less to type, and this is possible because the previous line imported everything that's inside `synth`, including the `ugen` sub-package.
 
 @@@ note
 
@@ -348,13 +352,13 @@ but without constructor arguments. Often in Scala, a class or trait has a corres
 name, that is called the _companion object_. Often static members and constructor methods of a class or trait are found on the companion object, that's why they are grouped together
 in the API docs.
 
-In IntelliJ if a symbol is not in scope, for example if we removed the import statements from the snippet source, the editor renders them in red, with a tool-tip indicating that
+In IntelliJ, if a symbol is not in scope, for example if we removed the import statements from the snippet source, the editor renders them in red, with a tool-tip indicating that
 <kbd>Alt</kbd>-<kbd>Enter</kbd> would bring up an import helper dialog:
 
 ![IntelliJ Import Helper](.../tut_sp_idea_import_helper.png)
 
 The import helper will show you all classes matching the name within all libraries of your project, highlighting the most likely candidate (`de.sciss.synth.SynthGraph` here).
-When you confirm this dialog, IntelliJ will automatically add the import to the top portion of your source code. Auto-completion works while you type. For example, imagine that
+When you confirm this dialog, IntelliJ will add the import to the top portion of your source code. Auto-completion works while you type. For example, imagine that
 `SynthGraph` wasn't imported yet, and you begin typing `val bubbles = SynthG`…, then you'll notice that below your cursor IntelliJ lists the possible candidates to complete the
 name you are writing:
 
@@ -380,8 +384,8 @@ Instead, the `SynthGraph` is a slightly higher level abstraction that will be ev
   you write `Mix([ PinkNoise.ar(0.1), FSinOsc.ar(801, 0.1), LFSaw.ar(40, 0.1)])]`, you immediately get the expanded `Sum3` UGen, whereas in ScalaCollider, an instance of the `Mix` class
   will actually be stored in the `SynthGraph`. Or if you write `SinOsc.ar([400, 600])` in SuperCollider, you immediately get an array of two `SinOsc` UGens, whereas in ScalaCollider the
   graph element `SinOsc` is one object with the multi-channel input. This behaviour enables a number of interesting ways in which synth graphs can be manipulated and extended.
-  For SoundProcesses it means, you will have a great number of graph elements which bridge the `Synth` to its environment such as control inputs, even if those inputs are not yet
-  defined or determined at the moment the graph function is written.
+  For SoundProcesses, it means you will have a great number of graph elements which bridge the `Synth` to its environment such as control inputs, even if those inputs are not yet
+  defined or determined at the moment the graph function is written. This makes the `SynthGraph` in SoundProcesses more akin to the functions in SuperCollider's JITLib.
 
 Other than that, creating a `SynthGraph` looks exactly like creating a `SynthDef` (minus the naming). The graph elements corresponding with UGens are written almost identical to their
 SuperCollider counterparts. The analog bubbles graph in SuperCollider would be written like this:
@@ -419,26 +423,192 @@ If you are completely unfamiliar with SuperCollider, here are the core concepts 
 - the UGens are implemented as classes with constructor methods on their companion objects that are usually called `.ar`, `.kr` and `.ir`. These indicate the calculation rate of the UGen.
   In the SuperCollider server, UGens can either run at full audio rate (`ar`) or at a reduced control rate (`kr`). `ir` is a special case of control rate, called scalar or init rate,
   where the UGen's value is calculated only once when the synthesis process is started.
-- so we can read the function from top to bottom: `LFSaw.kr` creates a low-frequency (LF) sawtooth oscillator with a frequency given by its argument. Like many oscillators, the output of
+- so we can read the function from top to bottom: `LFSaw.kr` creates a low-frequency (LF) sawtooth oscillator with a frequency in Hertz given by its argument. Like many oscillators, the output of
   this sawtooth runs between -1 to +1, so the subsequent `.madd` wraps this UGen in a second UGen that scales this value range to the range (-1 * 3 + 80 = 77) to (+1 * 3 + 80 = 83).
-- the next like produces another sawtooth oscillator at 0.4 cycles per second, mixing its output with the previous sawtooth oscillator, 
+- the next line produces another sawtooth oscillator at 0.4 cycles per second, mixing its output with the previous sawtooth oscillator, 
   producing the nominal range (-1 * 24 + 77 = 53) to (+1 * 24 + 83 = 107).
-- the next line creates a sine oscillator at audio rate, the frequency between the summed sawtooth oscillators fed through the `.midicps` unary operator function, translating from midi
-  pitch values to Hertz. The sine oscillator frequency thus moves in the range (53.midicps = 174.6) to (107.midicps = 3951.1). The amplitude of the sine's nominal -1 to +1 is scaled by
+- the next line creates a sine oscillator at audio rate, the frequency between the summed sawtooth oscillators fed through the `.midicps` unary operator function, translating from
+  [midi pitch](https://en.wikipedia.org/wiki/MIDI_tuning_standard#Frequency_values) values to Hertz. The sine oscillator frequency thus moves in the range (53.midicps = 174.6) to (107.midicps = 3951.1). The amplitude of the sine's nominal -1 to +1 is scaled by
   the factor 0.04 or -28 dB.
 - the `CombN` UGen is a non-interpolating comb filter, the input here being the sine oscillator, using a fixed delay time of 0.2 seconds and a 60 dB decay time of 4 seconds. It reverberates
   the sine oscillator.
-- the `Line` UGen defines a ramp going down from 1 to 0 in 10 seconds, with the `doneAction` argument specifying that the synthesis should stop the entire graph once the target value has
-  been reached. We multiply the comb filter with this ramp, thereby fading the sound slowly out.
-- the `Out` UGen sends the multiplied comb to the audio interface's first channel (bus index 0 corresponds with the first output channel).
+- the `Line` UGen defines a ramp going down from 1 to 0 in 10 seconds, with the `doneAction` argument specifying that the entire synthesis graph should be stopped once the target value has
+  been reached. We multiply the comb filter with this ramp, thereby slowly fading the sound out.
+- the `Out` UGen sends the faded comb to the audio interface's first channel (bus index 0 corresponds with the first output channel).
 
-Since the first sawtooth oscillator takes a sequence of two values as its frequency argument, this essentially creates a two-channel signal here in the graph, which will automatically
+Since the first sawtooth oscillator takes a sequence of two values, `Seq(8, 7.23)`, as its frequency argument, this essentially creates a two-channel signal here in the graph, which will automatically
 propagate through the entire graph, as this oscillator becomes the argument of other oscillators. The `Out` UGen then correctly "consumes" the two-channel signal, meaning that it writes
-the first channel to bus 0, and the second channel to the adjacent channel 1, sending thus a stereo signal to the sound card.
+the first channel to bus index 0, and the second channel to the adjacent bus index 1, sending thus a stereo signal to the sound card.
 If we looked at the expanded UGen graph, it would look like this:
 
 <img src="assets/images/tut_sp_bubbles-graph.svg" alt="Bubbles UGen Graph" style="width:100%;max-width:760px;margin-bottom:1ex">
 
 ### Transactional and Aural System
 
+We now return to the beginning of the snippet, with the following two lines:
+
+@@snip [Snippet1 - Systems]($sp_tut$/Snippet1Parts.scala) { #snippet1systems }
+
+Here is where SoundProcesses for the first time diverges from "plain" ScalaCollider. ScalaCollider is written with a simple mutable and imperative model in mind. For example, when you
+write `Synth.play` in ScalaCollider, that action directly sends out OSC messages to the sound synthesis server. When a buffer information is updated, it mutates information fields in the client side
+`Buffer` representation. In contrast, SoundProcesses is designed on top of a [software transactional memory](https://en.wikipedia.org/wiki/Software_transactional_memory) (STM). This is a kind of
+compromise between the imperative model and the purely functional model, where model updates would never be destructive but create new trees that replace the old trees. STM gives us good things
+from both imperative and functional models: We can still run commands as if they were imperative, and we don't need to "thread state" throughout our program, something that works for small scale
+applications, but becomes very difficult in larger and interactive scenarios. On the other hand, destructive changes are deferred to the moment, where a so-called transaction is successfully
+completed (committed). If at any point "inside" the transaction a problem occurs, all pending changes to the system are rolled back, and no destructive actions, such as sending OSC messages, are
+performed. Theoretically, this also allows the program to run fully concurrently (remember that SuperCollider uses cooperative multi-tasking and is essentially single-threaded, thereby avoiding the
+problem of concurrent mutable state, while introducing the problem of not being able to run processes in parallel). In practice, transactions can become quite big and thus chances are high that
+concurrent transactions collide and will be rolled back and retried at the cost of additional running time. Most of the time, this is not an issue, however, as most programs can indeed be dispatched on a
+single thread and no concurrent transactions.
+
+When I said that SoundProcesses is based on STM, this is only half of the truth. In fact, we use an abstraction from STM that allows us at the same time to move objects from memory to the harddisk.
+If you have worked with Mellite, you'll know that editing things in the workspace are automatically persisted in the workspace database on disk. This happens automatically, because when a
+"durable" workspace is used, instead of just an in-memory STM, the transactions of the STM are coupled to [ACID](https://en.wikipedia.org/wiki/ACID) database transactions.
+In SoundProcesses speak, the memory model used is a "system".
+The system, embodied by trait `de.sciss.lucre.Sys` and the extension `de.sciss.lucre.synth.Sys` that adds sound synthesis abstractions, can be one of `InMemory`, `Durable` and `Confluent`.
+The first is essentially a plain STM with no storage on a secondary memory. This is the system we use in our example snippet. The call `InMemory()` creates such a system. `Durable` would
+be the variant that stores all objects on the disk, and `Confluent` would extend the durable case by adding confluent persistence, which means the history of the changes to objects is preserved
+as well. In the example snippet, there aren't actually any objects that could be persisted, so changing to `Durable` wouldn't make any difference. We will see in later tutorials how specific
+objects are created in SoundProcesses. Here, we simply provide a system that is necessary to interoperate with the sound synthesis related types such as `AuralSystem` and `Synth`. These only
+use the STM part of the system, so they wouldn't interact with the persistence layer.
+
+`AuralSystem` in SoundProcesses embodies the object that can boot a SuperCollider server. It's methods are transactional, and that's why we have to create a system such as `InMemory` first.
+Let's look at the code that uses the aural system:
+
+@@snip [Snippet1 - Transactions]($sp_tut$/Snippet1Parts.scala) { #snippet1txn }
+
+The value `cursor` holds our instance of `InMemory`. Most systems are at the same time "cursors" which means they provide a means to issue a transaction through the `step` method. When we write
+`cursor.step { implicit tx => ... }` we encapsulate everything that is inside the curly braces in a transaction. When that method returns, the transaction has been closed and committed.
+The basic definition of [Cursor](http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/stm/Cursor.html) is
+
+```scala
+trait Cursor[S <: Sys[S]] {
+  def step[A](fun: S#Tx => A): A
+}
+```
+
+For somebody familiar with Scala, this is straight forward, and in this case you can skip the next paragraphs; but otherwise this needs extensive explanation. The `Cursor` trait has a type
+constructor argument `S` which is constrained by the recursive formulation `<: Sys[S]`. Technically, this means the type `S` is F-bounded. Practically, it means that `S` must be a sub-type
+of `Sys`. In our example, `S` would be equal to `InMemory`. Almost all abstractions in SoundProcesses exhibit this `S <: Sys[S]` type parameter. It means that an object is always configured
+with a particular type of transactional system&mdash;in-memory, durable, etc.&mdash;and that in order to use it you must provide a matching transaction. This prevents for example that a
+durable object could be manipulated with an in-memory transaction for which no database handle exists. If we replace `S` by `InMemory`, the `step` method becomes
+
+```scala
+def step[A](fun: InMemory#Tx => A): A
+```
+
+The strange looking type `InMemory#Tx` is called a type-projection in Scala, and you can simply think of it here as a type member provided by `InMemory`. All transactions share a common
+interface [Txn](http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/stm/Txn.html) which is capable, among other things, of creating primitive transactional variables. The argument to `step` is
+a _function_ of arity 1, that is a function that takes a single argument of type `InMemory#Tx` and returns a value of type `A`. In Scala, `A => B` is shorthand for `Function1[A, B]`.
+Often we provide functions as [lambdas](https://en.wikipedia.org/wiki/Anonymous_function), also called anonymous functions or function literals. Let's take a simpler example, using a
+collection, say `List(1, 2, 3, 4)`. A list, formally `List[A]` where `A` is the type of the elements in the list, has a method `filter` defined as follows:
+
+```scala
+def filter(pred: A => Boolean): List[A]
+```
+
+In other words, `filter` takes a predicate, a function returning a boolean, and applies it to all of its elements, collecting in a resulting new list of the same element type only those
+elements for which the predicate holds (yields `true`).
+
+```scala
+List(1, 2, 3, 4).filter({ x => x > 2 })
+```
+
+The result will be `List(3, 4)`. The filter function in SuperCollider's collections is called `select` and acts very similarly:
+
+```supercollider
+List[1, 2, 3, 4].select({ |x| x > 2 })
+```
+
+Very similar to SuperCollider, when the sole argument of a method is a function, we can drop the parentheses and just use the curly braces:
+
+```scala
+List(1, 2, 3, 4).filter { x => x > 2 }
+```
+
+On the other hand, if the lambda only occupies a single line, we can also do the opposite&mdash;keep the method invocation parentheses and drop the curly braces:
+
+```scala
+List(1, 2, 3, 4).filter(x => x > 2)
+```
+
+Sometimes you'll also see this shortcut (again, something similar exists in SuperCollider):
+
+```scala
+List(1, 2, 3, 4).filter(_ > 2)
+```
+
+So back to the `step` method. When invoked, it calls the function argument, passing it a fresh transaction, then returns the function's result to the caller.
+A distinctive feature of Scala is that both an argument list of a method definition and the argument list of a function literal can be qualified with the modifier
+`implicit`. To understand this, let's look at the `start` method of `aural` that is invoked at the end of the cursor-step block. Its definition is:
+
+```
+trait AuralSystem {
+  def start(config: Config = Server.Config(), connect: Boolean = false)(implicit tx: Txn): Unit
+}
+```
+
+First of all, we can see _default arguments_ provided for `config` and `connect`. These are used when no arguments are specified in the invocation. Since we call `aural.start()`
+the default arguments for `config` and `connect` are both filled in automatically. If we wanted to customise the SuperCollider server, we would provide a `config` argument, like so:
+
+@@snip [Snippet1 - Server Config]($sp_tut$/Snippet1Parts.scala) { #snippet1config }
+
+More importantly, `start` has a _second_ argument list given as `(implicit tx: Txn)`, but in our call `aural.start()` there is no sign of this argument list. This is exactly
+because it is marked as `implicit`. We can call methods without providing arguments for an implicit argument list in Scala, and in that case the compiler will look for us in
+the current scope for implicit values matching the expected argument type(s). Because the lambda `implicit tx => ...` has indeed marked the transaction argument as `implicit`,
+it will now be automatically passed into the second, implicit argument list of `start`. Scala also allows us to specify this argument explicitly, so we could also have written:
+
+@@snip [Snippet1 - Explicit Arguments]($sp_tut$/Snippet1Parts.scala) { #snippet1explicit }
+
+Since the entire interface of SoundProcesses uses transactions, it would be extremely annoying and impeding for the eye if we had to pass the `tx` transaction values everywhere.
+Thanks to implicits in Scala, the compiler can do this job for us. Implicits are a great way to pass contexts along in an API. There are other ways in which implicits are used,
+for example in ScalaCollider, when you use a constant number as a UGen input, say `SinOsc.ar(440)`, this number `440` of type `Int` is implicitly lifted to another type
+`Constant(440)` which is part of
+the graph element API of ScalaCollider. This is called _implicit conversion_ and is a bit more complex than just _implicit arguments_ and _implicit values_.
+And there are more cases. For now, it suffices to understand that the transactional interface in SoundProcesses always uses an
+implicit argument of type `Txn` or `S#Tx`. The former is a "generic" transaction that only gives STM information, and it is used by the sound synthesis level that has no
+business with persisting objects. The latter, `S#Tx`, is the particular transaction type of a system `S` (such as `InMemory#Tx` or `Durable#Tx`), and it is used wherever an
+object may participate in the storage of a workspace.
+
+Before we start the aural system&mdash;which means that the SuperCollider server will be booted when the transaction is committed&mdash;we register a callback
+of type `AuralSystem.Client` which will be invoked when the server has completed booting or was quit. Using `new Type { ...definitions }` is an ad-hoc way to implement a
+trait such as `AuralSystem.Client`. That trait says there are two abstract methods `auralStarted` and `auralStopped` which must be implemented by us. We don't care
+about the server quitting, so we simply say `def auralStopped()(implicit tx: Txn): Unit = ()` where `()` is an empty value meaning "do nothing". We _do_ want to react to the
+server having booted, though, so we define the behaviour of `auralStarted`:
+
+@@snip [Snippet1 - auralStarted]($sp_tut$/Snippet1Parts.scala) { #snippet1started }
+
+The method is invoked with the `Server` as first argument, and again there is a second implicit argument list that gives us a transaction. That transaction is necessary to
+be able to use `Synth.play`, as this call requires an implicit transaction. You may be tempted to think that `Server` is ScalaCollider's
+`de.sciss.synth.Server` and that `Synth` is `de.sciss.synth.Synth`, but if you look at the imports, they are actually in a different package:
+[`de.sciss.lucre.synth.Server`](http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/synth/Server.html) and [`de.sciss.lucre.synth.Synth`](http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/synth/Synth.html). There are, in other words, classes mirroring the familiar ScalaCollider classes, but now, inside SoundProcesses, they are changed to transactional semantics.
+If we call `Synth.play`, that `/s_new` OSC message is not fired straight away, but only after the transaction is successfully completed will such a message be sent
+to the server. Moreover, the methods are enhanced, because SoundProcesses does a lot more work to manage synthesis instances, including the automatic registration
+of a synth-def, preparing buffers, and so on. SoundProcesses takes care to correctly package the OSC bundles when there are asynchronous preparations, such as
+allocating and filling a buffer. Here is the definition of the `Synth.play` method:
+
+```scala
+object Synth {
+  def play(graph: SynthGraph, nameHint: Option[String] = None)
+          (target: Node, args: ISeq[ControlSet] = Nil, addAction: AddAction = addToHead, dependencies: List[Resource] = Nil)
+          (implicit tx: Txn): Synth = ...
+}
+```
+
+So it is quite different from ScalaCollider:
+
+- instead of the name of a `SynthDef` that we had to take care to have sent to the server, here we directly give a `SynthGraph` along with
+  an optional name-hint.
+- there is a new argument `dependencies` that is used when the system must ensure that those dependencies are met before the synth can be
+  actually started. The most common `Resource` type is [`Buffer`](http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/synth/Buffer.html).
+- again an implicit transaction `Txn` is needed
+
+Similar to ScalaCollider, we can pass the server `s` for the `target` argument, because it will be implicitly converted to `s.defaultGroup`
+to provide the required `Node` type. Here,
+the system will automatically cache synth-defs, so if we start multiple synths with the same synth-graph, only in the first iteration will
+a synth-def be created and sent to the server.
+
+It remains to look at the second statement: `syn.onEnd(sys.exit())`. This registers a non-transactional callback invoked when the synth has been
+removed from the server. There is also a variant `onEndTxn` that can be used when we need a transactional context. Here we simply exit the virtual
+machine and thus quit the program execution.
 

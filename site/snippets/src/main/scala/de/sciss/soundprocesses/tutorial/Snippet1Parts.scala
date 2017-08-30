@@ -1,8 +1,15 @@
 package de.sciss.soundprocesses.tutorial
 
+import de.sciss.lucre.synth.{InMemory, Server, Synth, Txn}
 import de.sciss.synth.SynthGraph
+import de.sciss.synth.proc.AuralSystem
 
 trait Snippet1Parts {
+  // #snippet1systems
+  val cursor  = InMemory()
+  val aural   = AuralSystem()
+  // #snippet1systems
+
   // #snippet1graph
   val bubbles = SynthGraph {
     import de.sciss.synth._
@@ -15,4 +22,44 @@ trait Snippet1Parts {
     Out.ar(0, c * l)
   }
   // #snippet1graph
+
+  // #snippet1txn
+  cursor.step { implicit tx =>
+    aural.addClient(new AuralSystem.Client {
+      def auralStarted(s: Server)(implicit tx: Txn): Unit = {
+        val syn = Synth.play(bubbles)(s)
+        syn.onEnd(sys.exit())
+      }
+
+      def auralStopped()(implicit tx: Txn): Unit = ()
+    })
+
+    aural.start()
+  }
+  // #snippet1txn
+
+  cursor.step { implicit tx =>
+    // #snippet1config
+    val config = Server.Config()
+    config.outputBusChannels = 4
+    aural.start(config)
+    // #snippet1config
+  }
+
+  // #snippet1explicit
+  cursor.step { tx =>
+    aural.start()(tx)
+  }
+  // #snippet1explicit
+
+  new AuralSystem.Client {
+    // #snippet1started
+    def auralStarted(s: Server)(implicit tx: Txn): Unit = {
+      val syn = Synth.play(bubbles)(s)
+      syn.onEnd(sys.exit())
+    }
+    // #snippet1started
+
+    def auralStopped()(implicit tx: Txn): Unit = ()
+  }
 }
