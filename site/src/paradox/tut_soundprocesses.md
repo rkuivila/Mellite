@@ -407,4 +407,38 @@ produce the according binary-op or `MulAdd` UGen. I didn't adopt this approach i
 The syntactic differences are minimal&mdash;you would prefer `val` over `var`, dispense with the semicolons, and named arguments are filled with an equals character instead of a period, so it's
 `doneAction = freeSelf` instead of `doneAction: freeSelf` (in newest SuperCollider, you can write `doneAction: \freeSelf`, whereas in older versions you have to use the integer code `doneAction: 2`).
 Perhaps the greatest difference here is how multi-channel-expansion arguments are written. In SuperCollider, array literals are written using brackets `[`, `]`. In Scala, the brackets are reserved
-for type parameters, so there is no direct way of writing an array literal. One could write `Array(8, 7.23)`.
+for type parameters, so there is no direct way of writing an array literal. One could write `Array(8, 7.23)` to create an array, but ScalaCollider requires that you use one of Scala's standard
+sequential collection types instead. [Here](http://docs.scala-lang.org/overviews/collections/overview.html) is an overview of Scala's collections types. We will mostly write `Seq(...)` or `List(...)`
+to create multi-element arguments for UGens to produce multi-channel-expansion. `Seq` is the shortest, and an abstract trait, whereas `List` is a concrete implementation,
+an immutable singly-linked-list similar to a [cons-list](https://en.wikipedia.org/wiki/Cons#Lists) in Lisp languages.
+
+If you are completely unfamiliar with SuperCollider, here are the core concepts of UGen graphs:
+
+- a sound signal processing graph is created by "plugging" a number of so-called Unit Generators (UGens) into one another. A UGen is a building block of a DSP function that takes a number
+  of inputs (or zero, if it is a pure generator) and produces a number of outputs (or zero, if it is a pure sink with side effects, e.g. sending a signal to the sound hardware).
+- the UGens are implemented as classes with constructor methods on their companion objects that are usually called `.ar`, `.kr` and `.ir`. These indicate the calculation rate of the UGen.
+  In the SuperCollider server, UGens can either run at full audio rate (`ar`) or at a reduced control rate (`kr`). `ir` is a special case of control rate, called scalar or init rate,
+  where the UGen's value is calculated only once when the synthesis process is started.
+- so we can read the function from top to bottom: `LFSaw.kr` creates a low-frequency (LF) sawtooth oscillator with a frequency given by its argument. Like many oscillators, the output of
+  this sawtooth runs between -1 to +1, so the subsequent `.madd` wraps this UGen in a second UGen that scales this value range to the range (-1 * 3 + 80 = 77) to (+1 * 3 + 80 = 83).
+- the next like produces another sawtooth oscillator at 0.4 cycles per second, mixing its output with the previous sawtooth oscillator, 
+  producing the nominal range (-1 * 24 + 77 = 53) to (+1 * 24 + 83 = 107).
+- the next line creates a sine oscillator at audio rate, the frequency between the summed sawtooth oscillators fed through the `.midicps` unary operator function, translating from midi
+  pitch values to Hertz. The sine oscillator frequency thus moves in the range (53.midicps = 174.6) to (107.midicps = 3951.1). The amplitude of the sine's nominal -1 to +1 is scaled by
+  the factor 0.04 or -28 dB.
+- the `CombN` UGen is a non-interpolating comb filter, the input here being the sine oscillator, using a fixed delay time of 0.2 seconds and a 60 dB decay time of 4 seconds. It reverberates
+  the sine oscillator.
+- the `Line` UGen defines a ramp going down from 1 to 0 in 10 seconds, with the `doneAction` argument specifying that the synthesis should stop the entire graph once the target value has
+  been reached. We multiply the comb filter with this ramp, thereby fading the sound slowly out.
+- the `Out` UGen sends the multiplied comb to the audio interface's first channel (bus index 0 corresponds with the first output channel).
+
+Since the first sawtooth oscillator takes a sequence of two values as its frequency argument, this essentially creates a two-channel signal here in the graph, which will automatically
+propagate through the entire graph, as this oscillator becomes the argument of other oscillators. The `Out` UGen then correctly "consumes" the two-channel signal, meaning that it writes
+the first channel to bus 0, and the second channel to the adjacent channel 1, sending thus a stereo signal to the sound card.
+If we looked at the expanded UGen graph, it would look like this:
+
+<img src="assets/images/tut_sp_bubbles-graph.svg" alt="Bubbles UGen Graph" style="width:100%;max-width:760px;margin-bottom:1ex">
+
+### Transactional and Aural System
+
+

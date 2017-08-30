@@ -11,7 +11,7 @@ Mellite is an environment for creating experimental computer-based music and sou
 This system has been developed since 2012 by its author, Hanns Holger Rutz, and is made
 available under the GNU GPL open source license.
 
-![Sequence of configurations](.../screenshot.png)
+![Mellite Screenshot](.../screenshot.png)
 
 ## Download
 
