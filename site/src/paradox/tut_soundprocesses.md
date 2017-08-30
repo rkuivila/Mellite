@@ -194,12 +194,12 @@ snippet is from `HelloWorld.scala`:
 
 This is more or less the shortest Scala program one can write. Let's take a moment to understand what happens here. Scala has two basic entities:
 __values__ and __types__. A value can be a constant literal such as an integer number `123` or a double floating point number `1.234`, a boolean
-`true` or `false`, a string `"Hello"`, etc. Or a value can be more complex `object`, i.e. something comprised of members (values, types, methods),
+`true` or `false`, a string `"Hello"`, etc. Or a value can be a more complex `object`, i.e. something comprised of members (values, types, methods),
 possibly with some body of initialising statements. A type can be either some abstract type variable, or a specific class or trait. Classes and traits
-are very similar in Scala, the main difference being that classes can take constructor parameters, and a type or object can only be derived from
-exactly one class, whereas they can be derived from multiple traits. We'll come to this later. What we see in the hello-world example is that one
-`object` is defined which is given the name `HelloWorld` and the `extends App` clause means it derived from the trait `App` which is defined by
-the standard Scala library that is always available. The `App` trait is a shortcut for conveniently defining executable programs, so we thereby
+are very similar in Scala, the main difference being that classes can take constructor parameters, and a sub-class or object can only be derived from
+exactly one (super-)class, whereas they can be derived from multiple traits. We'll come to this later. What we see in the hello-world example is that one
+`object` is defined which is given the name `HelloWorld`, and the `extends App` clause means it derives from the trait `App` which is defined by
+the [standard Scala library](http://www.scala-lang.org/api/current/) that is always available. The `App` trait is a shortcut for conveniently defining executable programs, so we thereby
 mark the object as a possible starting point for executing our program. When an `object` is evaluated, all the statements in its body, which is
 everything between the curly braces `{` and `}`, are executed sequentially. Here we have only a single statement, `println("Hello world")`.
 
@@ -210,11 +210,12 @@ is selected as the 'main class':
 ![IC Hello_World_Main](.../tut_sp_idea_hello_world_config.png)
 
 What you can see here also is that the fully qualified name is `de.sciss.soundprocesses.tutorial.HelloWorld`. This is because if you look into the
-file, we declared `package de.sciss.soundprocesses.tutorial` at the top of the file. As mentioned before, package allow us to put symbols (such as
-the name `HelloWorld`) in places so we can later import them easily as we make use of them, and we avoid name clashes.
+file, we declared `package de.sciss.soundprocesses.tutorial` at the top of the file. As mentioned before, packages allow us to put symbols (such as
+the name `HelloWorld`) in places so we can later import them easily as we make use of them, and we avoid name clashes. Scala's packages are similar
+to Java's, but SuperCollider does not have any corresponding concept.
 
 It may appear confusing that `HelloWorld` is the main _class_, because I just said there are values and objects on one side and types and classes on the other side. It so happens that
-an `object`, sometimes called singleton in Scala, also represents a class, however a very particular one, in that it cannot be explicitly instantiated,
+an `object`, sometimes called _singleton_ in Scala, also represents a class, however a very particular one, in that it cannot be explicitly instantiated,
 instead the object, once referred to, always represents the one singleton instance of its class.
 
 The way we enter the main class is actually a pecularity of the Java Virtual Machine on which Scala runs. If we remove the `App` trait, we can
@@ -252,20 +253,20 @@ HelloWorldSuperCollider {
 ```
 
 In other words, methods in singleton objects in Scala can be compared with `static` methods in Java or _class methods_ (with asterisk `*`) in SuperCollider.
-The argument passed to a main class in Scala is of type `Array[String]`. An array in Scala is very much like an array in SuperCollider, a mutable constant access
-sequence of elements, with the distinctiveness that have to specify the element type, so we cannot mix heterogenous elements within the same array, unless we
+The argument passed to a main class in Scala is of type `Array[String]`. An array in Scala is very much like an array in SuperCollider, a mutable sequence
+of elements with constant access performance, with the distinctiveness that one has to specify the element type, so we cannot mix heterogenous elements within the same array, unless we
 give a very generic element type, e.g. `Array[Any]`, `Any` being the top type in Scala of which all other types are sub-types.
 
-The `main` method is annotated with a _return type_ `: Unit`, which roughly corresponds to `void` in Java. In SuperCollider, one would have `nil` instead.
+The `main` method is annotated with a _return type_ `: Unit`, which roughly corresponds to `void` in Java. In SuperCollider, one would have `Nil` instead.
 The body of a method is written on the right-hand-side of the equals symbol, so in general the shape of a method definition in Scala is
 
 ```scala
 def methodName(arg1: ArgType1, arg2: ArgType2, ...): ReturnType = Body`
 ```
 
-By convention, method, argument and variable names begin with a lower case letter, and object names, types, class and trait names begin with a upper case letter, 
+By convention, method, argument and variable names begin with a lower case letter, and object names, types, class and trait names begin with an upper case letter, 
 but there are circumstances when one would probably deviate from this convention. The body of a method can be written "plain" without extra ceremony, but if
-the body is formed of more than one statements, one has to group them together with curly braces `{`, `}`. It is never forbidden to place those braces even if
+the body is formed of more than one statement, one has to group them together with curly braces `{`, `}`. It is never forbidden to place those braces even if
 they are not necessary. I have done that in the `main` method of `HelloWorldExplicit`. I could as well have written
 
 ```scala
@@ -284,19 +285,87 @@ Here is a snippet where the braces are needed because we have multiple statement
 @@snip [HelloWorldMultiple]($sp_tut$/HelloWorldMultiple.scala) { #helloworldmultiple }
 
 You may have noticed that we don't use semicolons between the statements. They are automatically inferred by Scala, and only rarely one needs to use semicolons
-(for example if one wants to place multiple statements on a single line). The last example also shows a `val` declaration. `val` stands for `value` and binds
-the right hand side to a "variable" on the left hand side, although this "variable" is immutable, i.e. its value cannot be replaced. It's similar to a `let`
+(for example if one wants to place multiple statements on a single line). The last example also shows a `val` declaration. `val` stands for 'value' and binds
+the right hand side to a "variable" (symbol) on the left hand side, although this "variable" is immutable, i.e. its value cannot be replaced. It's similar to a `let`
 statement in Lisp. Although Scala also has a `var` keyword for defining mutable variables, it is good practice to stick to `val`s whenever possible, as it
-greatly reduces the risk of cluttered code. Unlike SuperCollider where `var`s can only be defined at the very beginning of a method, in Scala we can liberally
-define the `val`s at the point where we actually create them. Like Java and SuperCollider, Scala has a `new` keyword to create an instance (value) of a class,
-in the previous example of the class `java.util.Date`. In SuperCollider, the `new` keyword is written as as a class method, so it would be `Date.new`, and
+greatly reduces the risk of cluttered code. Unlike SuperCollider where `var`s can only be defined at the very beginning of a method, in Scala we
+define the `val`s at the point where we actually assign their content. Like Java and SuperCollider, Scala has a `new` keyword to create an instance (value) of a class,
+in the previous example of the class `java.util.Date`. In SuperCollider, the `new` keyword is written as a class method, so it would be `Date.new`, and
 conveniently one can also drop the `.new` call and just write `Date()`. Scala has a similar feature called case-class, which we will learn about later, but in
 general, classes have be instantiated by writing `new ClassName`.
 
 ## Playing a Sound
 
-After this extremely quick intro, let us look at content of the first snippet that launches SuperCollider and plays a sound. Here is the full code:
+After this dense prelude, let us look at the content of the first snippet that launches SuperCollider and plays a sound. Here is the full code:
 
 @@snip [Snippet1.scala]($sp_tut$/Snippet1.scala) { #snippet1 }
 
+So the `object Snippet1 extends App` bit should be familiar now&mdash;it means we define an executable program in the body of this object. But almost everything else
+will be new, so let's go through it from top to bottom:
 
+### Importing Symbols
+
+The first lines are comprised of `import` statements. Since values and types reside in packages, they are not automatically visible in a Scala program. There are a few
+exception such as everything that's in the `scala.` and `java.lang.` namespaces, for example we could write `String` although the fully qualified type is `java.lang.String`,
+and we can write `extends App` instead of `extends scala.App`. Typically, one imports the types one wishes to use at the top of a source code file, although it is not
+mandatory. At any point we can write the fully qualified name with the packages separated by dots, and there are even some conventions to do so in certain cases to make the
+intent more clear, for example Scala's standard library contains both immutable and mutable collections, so you could write `immutable.Set` and `mutable.Set` to visually
+distinguish them at the place where they are used without having to look up which one was imported. Since immutable is the recommended standard, it boils down to people
+using `Set` to indicate the immutable set, and `mutable.Set` to flag the use of the mutable variant. Actually, the fully qualified name is `scala.collection.mutable.Set`, so
+for this to work, one still needs an `import scala.collection.mutable`&mdash;that brings the package `mutable` into scope, just as you would bring
+a class into scope! This may be surprising, but you will see that Scala is designed around a principle of regularity, which means that it tries to apply the same principle
+to all things equally. A package is just a symbol as a class is a symbol, so if you can import a class, you should be able to import a package as well. Indeed, you can also
+import values.
+
+In the same spirit, Scala also tries to avoid arbitrary constraints for where you can write these things. Import statements can be written anywhere you like, at
+any nesting level. This is why I could write `import de.sciss.synth._` further down in the code, inside the `SynthGraph { ... }` block. It is intuitively clear that the imported
+symbols are now only visible within this particular block. Here the underscore `_` selects
+all symbols inside the package `synth`, this is a nice and short way of quickly getting hold of all the main types in ScalaCollider, the sound synthesis library used by
+SoundProcesses. Such "wildcard import" may have the disadvantage of bringing unwanted symbols into scope that could, for example, result in a name clash. That's the reason
+why I prefer here to place that import right where I will make use of it, but it would also have been possible to add it to the top of the file. Take a look at the line
+below, `import ugen._`. This could be called a recursive import, perhaps, because `ugen` is a sub-package inside `synth`, so I'm abbreviating `import de.sciss.synth.ugen._`
+to `import ugen._` because it's less to type, and this is simply possible because the previous line imported everything that's inside `synth`, including the `ugen` sub-package.
+
+@@@ note
+
+How would we possibly know which classes and types are hidden in which packages? There are two answers to this: First, make use of IntelliJ's autocompletion and import helper,
+and second, consult the API docs. The API docs for Scala's standard library are [here](http://www.scala-lang.org/api/current/), and those of Mellite and SoundProcesses are
+[here](http://sciss.github.io/Mellite/latest/api/de/sciss/index.html).
+
+@@@
+
+The API docs are the products of an automatic process called scala-doc, and these pages list the packages on the
+right-hand-side, and at the top of the screen you have a search field. For example, let's say we want to know about `SynthGraph`, let's type that into the
+[search box](http://sciss.github.io/Mellite/latest/api/de/sciss/index.html?search=SynthGraph):
+
+![API Search for SynthGraph](.../tut_sp_api_docs_synthgraph.png)
+
+The left hand side shows objects and types containing the search term, whereas he right hand side tries to find methods and nested values and classes containing the search
+term. In 'entity results', we can spot the type `SynthGraph` as being part of package `de.sciss.synth` (this is the base package of ScalaCollider), there is another thing
+called `SynthGraphObj` in package `de.sciss.synth.proc`&mdash;that's the base package of SoundProcesses. We were looking for the former. You can see two small icons to the
+left of the name, a blue 'O' and a green 'C'. The 'O' stands for singleton object, the 'C' stands for class. Often in Scala, a class has a corresponding object of the same
+name, that is called the _companion object_. Often static members and constructor methods of a class are found on the companion object, that's why they are grouped together
+in the API docs.
+
+In IntelliJ if a symbol is not in scope, for example if we removed the import statements from the snippet source, the editor renders them in red, with a tool-tip indicating that
+<kbd>Alt</kbd>-<kbd>Enter</kbd> would bring up an import helper dialog:
+
+![IntelliJ Import Helper](.../tut_sp_idea_import_helper.png)
+
+The import helper will show you all classes matching the name within all libraries of your project, highlighting the most likely candidate (`de.sciss.synth.SynthGraph` here).
+When you confirm this dialog, IntelliJ will automatically add the import to the top portion of your source code. Auto-completion works while you type. For example, imagine that
+`SynthGraph` wasn't imported yet, and you begin typing `val bubbles = SynthG`, then you'll notice that below your cursor IntelliJ lists the possible candidates to complete the
+name you are writing:
+
+![IntelliJ Import Completer](.../tut_sp_idea_import_completer.png)
+
+Here, for some reason, the symbol we want is the second row; we can use the cursor keys and then press <kbd>Enter</kbd> to select and import it. IntelliJ is very smart with the
+auto-completion, it suffices to give some hints in the ["camel-case"](https://en.wikipedia.org/wiki/Camel_case#Programming_and_coding) way, for example writing `val bubbles = SG` will also find the `SynthGraph` symbol we are looking for.
+
+### Defining a SynthGraph
+
+@@@ warning
+
+the tutorial is incomplete; we have to continue here
+
+@@@

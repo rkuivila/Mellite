@@ -6,7 +6,7 @@ import de.sciss.synth.SynthGraph
 import de.sciss.synth.proc.AuralSystem
 
 object Snippet1 extends App {
-  val system  = InMemory()
+  val cursor  = InMemory()
   val aural   = AuralSystem()
 
   val bubbles = SynthGraph {
@@ -20,7 +20,7 @@ object Snippet1 extends App {
     Out.ar(0, c * l)
   }
 
-  system.step { implicit tx =>
+  cursor.step { implicit tx =>
     aural.addClient(new AuralSystem.Client {
       def auralStarted(s: Server)(implicit tx: Txn): Unit = {
         val syn = Synth.play(bubbles)(s)
