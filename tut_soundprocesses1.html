@@ -2,7 +2,7 @@
 <html class="no-js" lang="en">
 
 <head>
-<title>Intro to SoundProcesses · Mellite</title>
+<title>SP1 - Intro to SoundProcesses · Mellite</title>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta name="description" content='Mellite'/>
@@ -37,7 +37,9 @@
 <ul>
   <li><a href="tutorials.html" class="page">Tutorials</a>
   <ul>
-    <li><a href="tut_soundprocesses1.html" class="active page">Intro to SoundProcesses</a></li>
+    <li><a href="tut_mellite_videos.html" class="page">Mellite Video Tutorials</a></li>
+    <li><a href="tut_soundprocesses1.html" class="active page">SP1 - Intro to SoundProcesses</a></li>
+    <li><a href="tut_soundprocesses2.html" class="page">SP2 - Understanding Objects</a></li>
   </ul></li>
   <li><a href="links.html" class="page">Links</a></li>
 </ul>
@@ -78,7 +80,9 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <ul>
   <li><a href="tutorials.html" class="page">Tutorials</a>
   <ul>
-    <li><a href="tut_soundprocesses1.html" class="active page">Intro to SoundProcesses</a></li>
+    <li><a href="tut_mellite_videos.html" class="page">Mellite Video Tutorials</a></li>
+    <li><a href="tut_soundprocesses1.html" class="active page">SP1 - Intro to SoundProcesses</a></li>
+    <li><a href="tut_soundprocesses2.html" class="page">SP2 - Understanding Objects</a></li>
   </ul></li>
   <li><a href="links.html" class="page">Links</a></li>
 </ul>
@@ -96,7 +100,7 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <ul>
   <li><a href="index.html">Mellite</a></li>
   <li><a href="tutorials.html">Tutorials</a></li>
-  <li>Intro to SoundProcesses</li>
+  <li>SP1 - Intro to SoundProcesses</li>
 </ul>
 </div>
 </div>
@@ -104,7 +108,7 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 
 <div class="page-content row">
 <div class="small-12 large-9 column" id="docs">
-<h1><a href="#intro-to-soundprocesses" name="intro-to-soundprocesses" class="anchor"><span class="anchor-link"></span></a>Intro to SoundProcesses</h1>
+<h1><a href="#sp1-intro-to-soundprocesses" name="sp1-intro-to-soundprocesses" class="anchor"><span class="anchor-link"></span></a>SP1 - Intro to SoundProcesses</h1>
 <p>If you have gone through the video tutorials of Mellite, you may wonder if there is more to it than the limited GUI interaction. In fact, Mellite is, properly speaking, only the graphical user interface layer on top of a system of computer music abstractions that is called <em>SoundProcesses</em>. When you create and manipulate objects in Mellite, you are actually creating and manipulating objects in SoundProcesses, through the GUI provided by Mellite. In order to make use of the power of the system, it is thus necessary to dive a bit deeper and learn about the application programming interface (API) provided by SoundProcesses. You may still access this API through Mellite, but you may also choose to write your sound programs directly in a general code editor or integrated development environment (IDE), such as IntelliJ IDEA.</p>
 <p>The following figure illustrates the layers of the SoundProcesses and Mellite architecture:</p>
 <img src="assets/images/tut_sp_architecture.png" alt="SoundProcesses Architecture" style="width:100%;max-width:520px;margin-bottom:1ex">
@@ -112,11 +116,11 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <p>This tutorial will thus be a quite long trip, introducing you to all of these things step by step. Instead of giving a separate Scala tutorial (there are many resources <a href="http://scala-lang.org/documentation/learn.html">out on the Internet</a>), I will introduce Scala concepts as we encounter them.</p><div class="callout note "><div class="callout-title">Note</div>
 <p>This tutorial is a living document. Please help improve it by reporting problems in understanding, errors, or by making suggestions on how to improve it. The best way is to pass by the <a href="https://gitter.im/Sciss/Mellite">Gitter chat room</a>, or if you can nail it down to a particular typo, problem or suggestion, by filing a ticket in the <a href="https://github.com/Sciss/Mellite/issues">issue tracker</a>.</p></div>
 <h2><a href="#preparations" name="preparations" class="anchor"><span class="anchor-link"></span></a>Preparations</h2>
-<p>I assume that you have <a href="http://supercollider.github.io/">SuperCollider</a>, <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Java</a>, and <a href="https://git-scm.com/">git</a> already installed on your system, and proceed from there. You can either copy and paste the code snippets from this page, or clone the Mellite <a href="https://github.com/Sciss/Mellite/">repository</a>. Let&rsquo;s do the latter. In the following, a dollar sign <code>$</code> indicates the terminal or shell prompt.</p>
+<p>I assume that you have <a href="http://supercollider.github.io/">SuperCollider</a>, <a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Java</a>, and <a href="https://git-scm.com/">git</a> already installed on your system, and proceed from there. You can either copy and paste the code snippets from this page, or clone the Mellite <a href="https://github.com/Sciss/Mellite/">website repository</a>. Let&rsquo;s do the latter. In the following, a dollar sign <code>$</code> indicates the terminal or shell prompt.</p>
 <pre><code>$ cd ~/Documents  # or any place where you would like to download the repository to
-$ git clone https://github.com/Sciss/Mellite.git
+$ git clone https://github.com/Sciss/Mellite-website.git
 </code></pre>
-<p>This will take a while, then you will find the snippets project in <code>Mellite/site/snippets</code>. You can see that directory <a href="https://github.com/Sciss/Mellite/tree/master/site/snippets">online</a>. This project uses <a href="http://www.scala-sbt.org/">sbt</a> as a build tool, however we&rsquo;ll just build and run from IntelliJ IDEA, so you don&rsquo;t actually have to install sbt at this point.</p>
+<p>This will take a while, then you will find the snippets project in <code>Mellite-website/snippets</code>. You can see that directory <a href="https://github.com/Sciss/Mellite-website/tree/master/snippets">online</a>. This project uses <a href="http://www.scala-sbt.org/">sbt</a> as a build tool, however we&rsquo;ll just build and run from IntelliJ IDEA, so you don&rsquo;t actually have to install sbt at this point.</p>
 <p>You can download IntelliJ IDEA <a href="https://www.jetbrains.com/idea/download/">here</a>. It is a development environment made by JetBrains, and it comes in two flavours&mdash;&lsquo;ultimate&rsquo; and &lsquo;community&rsquo;. The latter is free and open source, so we&rsquo;ll use that one. As of this writing, on Linux this will download <code>ideaIC-2017.2.2.tar.gz</code>. The archive can be unpacked anywhere, and the application can be launched with the shell script <code>bin/idea.sh</code>. If you have never run IntelliJ, it will ask you a few questions, among others it offers you to install some plugins. Make sure that you choose to install the &lsquo;Scala&rsquo; plugin. If you missed to do so, you can install plugins from within IntelliJ by going to Settings &gt; Plugins and looking for &lsquo;Scala&rsquo;.</p>
 <p>Once IntelliJ has started, you should see its welcome screen:</p>
 <p><img src="assets/images/tut_sp_idea_welcome.png" alt="IC Welcome" /></p>
@@ -256,7 +260,7 @@ object Snippet1 extends App {
 <p>The first lines are comprised of <code>import</code> statements. Since values and types reside in packages, they are not automatically visible in a Scala program. There are a few exceptions such as everything that&rsquo;s in the <code>scala.</code> and <code>java.lang.</code> namespaces, for example we can write <code>String</code> although the fully qualified type is <code>java.lang.String</code>, and we can write <code>extends App</code> instead of <code>extends scala.App</code>. Typically, one imports the types one wishes to use at the top of a source code file, although it is not mandatory. At any point we can write the fully qualified name with the packages separated by dots, and there are even some conventions to do so in certain cases to make the intent more clear: For example Scala&rsquo;s standard library contains both immutable and mutable collections, so you could write <code>immutable.Set</code> and <code>mutable.Set</code> to visually distinguish them at the place where they are used without having to look up which one was imported. Since immutable is the recommended standard, it boils down to people using <code>Set</code> to indicate the immutable set, and <code>mutable.Set</code> to flag the use of the mutable variant. Actually, the fully qualified name is <code>scala.collection.mutable.Set</code>, so for this to work, one still needs an <code>import scala.collection.mutable</code>&mdash;that brings the package <code>mutable</code> into scope, just as you would bring a class into scope! This may be surprising, but you will see that Scala is designed around a principle of regularity, which means that it tries to apply the same principle to all things equally. A package is just a symbol as much as a class is a symbol, so if you can import a class, you should be able to import a package as well. In fact, you can also import values, e.g. <code>import math.Pi</code> to use the symbol <code>Pi</code>.</p>
 <p>In the same spirit, Scala also tries to avoid arbitrary constraints for where you can write these things. Import statements can be written anywhere you like, at any nesting level. This is why I could write <code>import de.sciss.synth._</code> further down in the code, inside the <code>SynthGraph { ... }</code> block. It is intuitively clear that the imported symbols are now only visible within this particular block. Here the underscore <code>_</code> selects all symbols inside the package <code>synth</code>. This is a nice and short way of quickly getting hold of all the main types in <a href="sciss.github.io/ScalaCollider/">ScalaCollider</a>, the sound synthesis library used by SoundProcesses. Such &ldquo;wildcard import&rdquo; may have the disadvantage of bringing unwanted symbols into scope that could, for example, result in a name clash. That&rsquo;s the reason why I prefer here to place that import right where I will make use of it, but it would also have been possible to add it to the top of the file. Take a look at the next line, <code>import ugen._</code>. This could be called a recursive import, perhaps, because <code>ugen</code> is a sub-package inside <code>synth</code>, so I&rsquo;m abbreviating <code>import de.sciss.synth.ugen._</code> to <code>import ugen._</code> because it&rsquo;s less to type, and this is possible because the previous line imported everything that&rsquo;s inside <code>synth</code>, including the <code>ugen</code> sub-package.</p><div class="callout note "><div class="callout-title">Note</div>
 <p>How would we possibly know which classes and types are hidden in which packages? There are two answers to this: First, make use of IntelliJ&rsquo;s auto-completion and import helper, and second, consult the API docs. The API docs for Scala&rsquo;s standard library are <a href="http://www.scala-lang.org/api/current/">here</a>, and those of Mellite and SoundProcesses are <a href="http://sciss.github.io/Mellite/latest/api/de/sciss/index.html">here</a>.</p></div>
-<p>The API docs are the products of an automatic process called scala-doc, and these pages list the packages on the right-hand side, and at the top of the screen you have a search field. Say we want to know about <code>SynthGraph</code>, let&rsquo;s type that into the <a href="http://sciss.github.io/Mellite/latest/api/de/sciss/index.html?search=SynthGraph">search box</a>:</p>
+<p>The API docs are the products of an automatic process called scala-doc, and these pages list the packages on the right-hand side, and at the top of the screen you have a search field. Say we want to know about <code>SynthGraph</code>, let&rsquo;s type that into the <a href="latest/api/de/sciss/index.html?search=SynthGraph">search box</a>:</p>
 <p><img src="assets/images/tut_sp_api_docs_synthgraph.png" alt="API Search for SynthGraph" /></p>
 <p>The left-hand side shows objects and types containing the search term, whereas the right-hand side tries to find methods and nested values and classes containing the search term. In &lsquo;entity results&rsquo;, we can spot the type <code>SynthGraph</code> as being part of package <code>de.sciss.synth</code> (this is the base package of ScalaCollider), there is another thing called <code>SynthGraphObj</code> in package <code>de.sciss.synth.proc</code>&mdash;that&rsquo;s the base package of SoundProcesses. We were looking for the former. You can see two small icons to the left of the name, a dark blue &lsquo;O&rsquo; and a green &lsquo;C&rsquo;. The &lsquo;O&rsquo; stands for singleton object, the &lsquo;C&rsquo; stands for class. A light blue &lsquo;T&rsquo; stands for trait, remember that traits are like classes but without constructor arguments. Often in Scala, a class or trait has a corresponding object of the same name, that is called the <em>companion object</em>. Often static members and constructor methods of a class or trait are found on the companion object, that&rsquo;s why they are grouped together in the API docs.</p>
 <p>In IntelliJ, if a symbol is not in scope, for example if we removed the import statements from the snippet source, the editor renders them in red, with a tool-tip indicating that <kbd>Alt</kbd>-<kbd>Enter</kbd> would bring up an import helper dialog:</p>
@@ -325,7 +329,7 @@ val aural   = AuralSystem()</code></pre>
 
   aural.start()
 }</code></pre>
-<p>The value <code>cursor</code> holds our instance of <code>InMemory</code>. Most systems are at the same time &ldquo;cursors&rdquo; which means they provide a means to issue a transaction through the <code>step</code> method. When we write <code>cursor.step { implicit tx =&gt; ... }</code> we encapsulate everything that is inside the curly braces in a transaction. When that method returns, the transaction has been closed and committed. The basic definition of <a href="http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/stm/Cursor.html">Cursor</a> is</p>
+<p>The value <code>cursor</code> holds our instance of <code>InMemory</code>. Most systems are at the same time &ldquo;cursors&rdquo; which means they provide a means to issue a transaction through the <code>step</code> method. When we write <code>cursor.step { implicit tx =&gt; ... }</code> we encapsulate everything that is inside the curly braces in a transaction. When that method returns, the transaction has been closed and committed. The basic definition of <a href="latest/api/de/sciss/lucre/stm/Cursor.html">Cursor</a> is</p>
 <pre class="prettyprint"><code class="language-scala">trait Cursor[S &lt;: Sys[S]] {
   def step[A](fun: S#Tx =&gt; A): A
 }
@@ -333,7 +337,7 @@ val aural   = AuralSystem()</code></pre>
 <p>For somebody familiar with Scala, this is straight forward, and in this case you can skip the next paragraphs; but otherwise this needs extensive explanation. The <code>Cursor</code> trait has a type constructor argument <code>S</code> which is constrained by the recursive formulation <code>&lt;: Sys[S]</code>. Technically, this means the type <code>S</code> is F-bounded. Practically, it means that <code>S</code> must be a sub-type of <code>Sys</code>. In our example, <code>S</code> would be equal to <code>InMemory</code>. Almost all abstractions in SoundProcesses exhibit this <code>S &lt;: Sys[S]</code> type parameter. It means that an object is always configured with a particular type of transactional system&mdash;in-memory, durable, etc.&mdash;and that in order to use it you must provide a matching transaction. This prevents for example that a durable object could be manipulated with an in-memory transaction for which no database handle exists. If we replace <code>S</code> by <code>InMemory</code>, the <code>step</code> method becomes</p>
 <pre class="prettyprint"><code class="language-scala">def step[A](fun: InMemory#Tx =&gt; A): A
 </code></pre>
-<p>The strange looking type <code>InMemory#Tx</code> is called a type-projection in Scala, and you can simply think of it here as a type member provided by <code>InMemory</code>. All transactions share a common interface <a href="http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/stm/Txn.html">Txn</a> which is capable, among other things, of creating primitive transactional variables. The argument to <code>step</code> is a <em>function</em> of arity 1, that is a function that takes a single argument of type <code>InMemory#Tx</code> and returns a value of type <code>A</code>. In Scala, <code>A =&gt; B</code> is shorthand for <code>Function1[A, B]</code>. Often we provide functions as <a href="https://en.wikipedia.org/wiki/Anonymous_function">lambdas</a>, also called anonymous functions or function literals. Let&rsquo;s take a simpler example, using a collection, say <code>List(1, 2, 3, 4)</code>. A list, formally <code>List[A]</code> where <code>A</code> is the type of the elements in the list, has a method <code>filter</code> defined as follows:</p>
+<p>The strange looking type <code>InMemory#Tx</code> is called a type-projection in Scala, and you can simply think of it here as a type member provided by <code>InMemory</code>. All transactions share a common interface <a href="latest/api/de/sciss/lucre/stm/Txn.html">Txn</a> which is capable, among other things, of creating primitive transactional variables. The argument to <code>step</code> is a <em>function</em> of arity 1, that is a function that takes a single argument of type <code>InMemory#Tx</code> and returns a value of type <code>A</code>. In Scala, <code>A =&gt; B</code> is shorthand for <code>Function1[A, B]</code>. Often we provide functions as <a href="https://en.wikipedia.org/wiki/Anonymous_function">lambdas</a>, also called anonymous functions or function literals. Let&rsquo;s take a simpler example, using a collection, say <code>List(1, 2, 3, 4)</code>. A list, formally <code>List[A]</code> where <code>A</code> is the type of the elements in the list, has a method <code>filter</code> defined as follows:</p>
 <pre class="prettyprint"><code class="language-scala">def filter(pred: A =&gt; Boolean): List[A]
 </code></pre>
 <p>In other words, <code>filter</code> takes a predicate, a function returning a boolean, and applies it to all of its elements, collecting in a resulting new list of the same element type only those elements for which the predicate holds (yields <code>true</code>).</p>
@@ -370,7 +374,7 @@ aural.start(config)</code></pre>
   val syn = Synth.play(bubbles)(s)
   syn.onEnd(sys.exit())
 }</code></pre>
-<p>The method is invoked with the <code>Server</code> as first argument, and again there is a second implicit argument list that gives us a transaction. That transaction is necessary to be able to use <code>Synth.play</code>, as this call requires an implicit transaction. You may be tempted to think that <code>Server</code> is ScalaCollider&rsquo;s <code>de.sciss.synth.Server</code> and that <code>Synth</code> is <code>de.sciss.synth.Synth</code>, but if you look at the imports, they are actually in a different package: <a href="http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/synth/Server.html"><code>de.sciss.lucre.synth.Server</code></a> and <a href="http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/synth/Synth.html"><code>de.sciss.lucre.synth.Synth</code></a>. There are, in other words, classes mirroring the familiar ScalaCollider classes, but now, inside SoundProcesses, they are changed to transactional semantics. If we call <code>Synth.play</code>, that <code>/s_new</code> OSC message is not fired straight away, but only after the transaction is successfully completed will such a message be sent to the server. Moreover, the methods are enhanced, because SoundProcesses does a lot more work to manage synthesis instances, including the automatic registration of a synth-def, preparing buffers, and so on. SoundProcesses takes care to correctly package the OSC bundles when there are asynchronous preparations, such as allocating and filling a buffer. Here is the definition of the <code>Synth.play</code> method:</p>
+<p>The method is invoked with the <code>Server</code> as first argument, and again there is a second implicit argument list that gives us a transaction. That transaction is necessary to be able to use <code>Synth.play</code>, as this call requires an implicit transaction. You may be tempted to think that <code>Server</code> is ScalaCollider&rsquo;s <code>de.sciss.synth.Server</code> and that <code>Synth</code> is <code>de.sciss.synth.Synth</code>, but if you look at the imports, they are actually in a different package: <a href="latest/api/de/sciss/lucre/synth/Server.html"><code>de.sciss.lucre.synth.Server</code></a> and <a href="latest/api/de/sciss/lucre/synth/Synth.html"><code>de.sciss.lucre.synth.Synth</code></a>. There are, in other words, classes mirroring the familiar ScalaCollider classes, but now, inside SoundProcesses, they are changed to transactional semantics. If we call <code>Synth.play</code>, that <code>/s_new</code> OSC message is not fired straight away, but only after the transaction is successfully completed will such a message be sent to the server. Moreover, the methods are enhanced, because SoundProcesses does a lot more work to manage synthesis instances, including the automatic registration of a synth-def, preparing buffers, and so on. SoundProcesses takes care to correctly package the OSC bundles when there are asynchronous preparations, such as allocating and filling a buffer. Here is the definition of the <code>Synth.play</code> method:</p>
 <pre class="prettyprint"><code class="language-scala">object Synth {
   def play(graph: SynthGraph, nameHint: Option[String] = None)
           (target: Node, args: ISeq[ControlSet] = Nil, addAction: AddAction = addToHead, dependencies: List[Resource] = Nil)
@@ -380,7 +384,7 @@ aural.start(config)</code></pre>
 <p>So it is quite different from ScalaCollider:</p>
 <ul>
   <li>instead of the name of a <code>SynthDef</code> that we had to take care to have sent to the server, here we directly give a <code>SynthGraph</code> along with  an optional name-hint.</li>
-  <li>there is a new argument <code>dependencies</code> that is used when the system must ensure that those dependencies are met before the synth can be  actually started. The most common <code>Resource</code> type is <a href="http://sciss.github.io/Mellite/latest/api/de/sciss/lucre/synth/Buffer.html"><code>Buffer</code></a>.</li>
+  <li>there is a new argument <code>dependencies</code> that is used when the system must ensure that those dependencies are met before the synth can be  actually started. The most common <code>Resource</code> type is <a href="latest/api/de/sciss/lucre/synth/Buffer.html"><code>Buffer</code></a>.</li>
   <li>again an implicit transaction <code>Txn</code> is needed</li>
 </ul>
 <p>Similar to ScalaCollider, we can pass the server <code>s</code> for the <code>target</code> argument, because it will be implicitly converted to <code>s.defaultGroup</code> to provide the required <code>Node</code> type. Here, the system will automatically cache synth-defs, so if we start multiple synths with the same synth-graph, only in the first iteration will a synth-def be created and sent to the server.</p>
@@ -390,7 +394,7 @@ The source code for this page can be found <a href="https://github.com/Sciss/Mel
 </div>
 
 <div class="nav-next">
-<p><strong>Next:</strong> <a href="links.html">Links</a></p>
+<p><strong>Next:</strong> <a href="tut_soundprocesses2.html">SP2 - Understanding Objects</a></p>
 </div>
 </div>
 <div class="large-3 show-for-large column" data-sticky-container>
@@ -399,7 +403,7 @@ The source code for this page can be found <a href="https://github.com/Sciss/Mel
 <div class="nav-title">On this page:</div>
 <div class="nav-toc">
 <ul>
-  <li><a href="tut_soundprocesses1.html#intro-to-soundprocesses" class="header">Intro to SoundProcesses</a>
+  <li><a href="tut_soundprocesses1.html#sp1-intro-to-soundprocesses" class="header">SP1 - Intro to SoundProcesses</a>
   <ul>
     <li><a href="tut_soundprocesses1.html#preparations" class="header">Preparations</a></li>
     <li><a href="tut_soundprocesses1.html#hello-world" class="header">Hello World</a></li>

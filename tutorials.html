@@ -37,7 +37,9 @@
 <ul>
   <li><a href="tutorials.html" class="active page">Tutorials</a>
   <ul>
-    <li><a href="tut_soundprocesses1.html" class="page">Intro to SoundProcesses</a></li>
+    <li><a href="tut_mellite_videos.html" class="page">Mellite Video Tutorials</a></li>
+    <li><a href="tut_soundprocesses1.html" class="page">SP1 - Intro to SoundProcesses</a></li>
+    <li><a href="tut_soundprocesses2.html" class="page">SP2 - Understanding Objects</a></li>
   </ul></li>
   <li><a href="links.html" class="page">Links</a></li>
 </ul>
@@ -78,7 +80,9 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <ul>
   <li><a href="tutorials.html" class="active page">Tutorials</a>
   <ul>
-    <li><a href="tut_soundprocesses1.html" class="page">Intro to SoundProcesses</a></li>
+    <li><a href="tut_mellite_videos.html" class="page">Mellite Video Tutorials</a></li>
+    <li><a href="tut_soundprocesses1.html" class="page">SP1 - Intro to SoundProcesses</a></li>
+    <li><a href="tut_soundprocesses2.html" class="page">SP2 - Understanding Objects</a></li>
   </ul></li>
   <li><a href="links.html" class="page">Links</a></li>
 </ul>
@@ -104,111 +108,23 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <div class="page-content row">
 <div class="small-12 large-9 column" id="docs">
 <h1><a href="#tutorials" name="tutorials" class="anchor"><span class="anchor-link"></span></a>Tutorials</h1>
+<p>Currently, Mellite to documented through a series of video tutorials. The programming API below the GUI is called SoundProcesses, and there are text based tutorials for this layer.</p>
 <div class="toc ">
 <ul>
-  <li><a href="tutorials.html#tutorial-1-getting-started" class="header">Tutorial 1 - Getting Started</a></li>
-  <li><a href="tutorials.html#tutorial-2-timeline-and-audio-files" class="header">Tutorial 2 - Timeline and Audio Files</a></li>
-  <li><a href="tutorials.html#tutorial-3-freesound-org" class="header">Tutorial 3 - Freesound.org</a></li>
-  <li><a href="tutorials.html#tutorial-4-wolkenpumpe" class="header">Tutorial 4 - Wolkenpumpe</a></li>
-  <li><a href="tutorials.html#tutorial-5" class="header">Tutorial 5&hellip;</a></li>
-  <li><a href="tut_soundprocesses1.html" class="page">Intro to SoundProcesses</a></li>
+  <li><a href="tut_mellite_videos.html" class="page">Mellite Video Tutorials</a></li>
+  <li><a href="tut_soundprocesses1.html" class="page">SP1 - Intro to SoundProcesses</a></li>
+  <li><a href="tut_soundprocesses2.html" class="page">SP2 - Understanding Objects</a></li>
 </ul>
 </div>
-<p>Video tutorials for version 2.10 are available from a <a href="https://vimeo.com/album/4473871">Vimeo album</a>.</p>
-<h2><a href="#tutorial-1-getting-started" name="tutorial-1-getting-started" class="anchor"><span class="anchor-link"></span></a>Tutorial 1 - Getting Started</h2>
-<p><a href="https://vimeo.com/208302767">Video Link</a> (14 min)</p>
-<p>This is a basic introduction from scratch:</p>
-<ul>
-  <li>installing the downloaded application</li>
-  <li>checking dependencies</li>
-  <li>setting up basic preferences</li>
-  <li>creating a new workspace</li>
-  <li>creating objects in the workspace</li>
-  <li>defining a sound process</li>
-  <li>listening to sound</li>
-  <li>attribute map and sound synthesis controls</li>
-  <li>copying objects between workspaces</li>
-</ul>
-<h2><a href="#tutorial-2-timeline-and-audio-files" name="tutorial-2-timeline-and-audio-files" class="anchor"><span class="anchor-link"></span></a>Tutorial 2 - Timeline and Audio Files</h2>
-<p><a href="https://vimeo.com/208354987">Video Link</a> (19 min)</p>
-<p>This tutorial introduces the timeline object and shows how to arrange sound file regions:</p>
-<ul>
-  <li>importing an audio file</li>
-  <li>artifact base locations</li>
-  <li>using the audio file player</li>
-  <li>creating a timeline object</li>
-  <li>dragging audio file regions</li>
-  <li>&ldquo;global processes&rdquo; in a timeline</li>
-  <li>routing from an audio region to a global process</li>
-  <li>predefined controls for gain, fade, mute</li>
-  <li>creating a programmed filtering process on the timeline</li>
-  <li>process outputs</li>
-  <li>using the mute state to control filter bypass</li>
-  <li>bouncing to disk</li>
-</ul>
-<h2><a href="#tutorial-3-freesound-org" name="tutorial-3-freesound-org" class="anchor"><span class="anchor-link"></span></a>Tutorial 3 - Freesound.org</h2>
-<p><a href="https://vimeo.com/216298165">Video Link</a> (16 min)</p>
-<p>This tutorial introduces the freesound.org sound file retrieval object:</p>
-<ul>
-  <li>creating a retrieval object</li>
-  <li>specifying query terms and search filter</li>
-  <li>reviewing the search results and previewing sounds</li>
-  <li>authorizing the application to download sounds</li>
-  <li>downloading sounds and using them within Mellite</li>
-</ul>
-<h2><a href="#tutorial-4-wolkenpumpe" name="tutorial-4-wolkenpumpe" class="anchor"><span class="anchor-link"></span></a>Tutorial 4 - Wolkenpumpe</h2>
-<p><a href="https://vimeo.com/222107666">Video Link</a> (33 min)</p>
-<p>This tutorial introduces the Wolkenpumpe live interface object:</p>
-<ul>
-  <li>creating a new Wolkenpumpe object</li>
-  <li>components and signal flow: generators &gt; filters &gt; collectors</li>
-  <li>populating with default sound processes; generator channels and audio file players</li>
-  <li>opening the Live view, transport</li>
-  <li>inserting generators and collectors</li>
-  <li>changing parameters with rotary controls</li>
-  <li>inserting filters</li>
-  <li>modulating signals with other signals</li>
-  <li>deleting connections and modules</li>
-  <li>pinning object positions</li>
-  <li>parameter keyboard control, multi-channel parameters</li>
-  <li>inspecting the resulting timeline</li>
-  <li>defining your own sound processes</li>
-  <li><code>ScanIn</code>, <code>ScanOut</code> and output objects for creating patchable processes</li>
-  <li><code>Param</code> UGen for parameters, parameter specs</li>
-  <li>clearing the timeline</li>
-  <li>modulator signal range 0 to 1 vs. audio signal range -1 to 1</li>
-  <li>defining a custom filter</li>
-  <li>copying an empty template setup</li>
-</ul>
-<h2><a href="#tutorial-5" name="tutorial-5" class="anchor"><span class="anchor-link"></span></a>Tutorial 5&hellip;</h2>
-<p>More tutorials that cover the API and ways of actually programming the system will appear soon (hopefully)&hellip;</p>
-<p>If you are interested in the confluent versioning workspace, there is <a href="https://vimeo.com/86202332">a quite old video</a>. I&rsquo;m planning to cover this topic in updated tutorials.</p>
 <div class="source-github">
 The source code for this page can be found <a href="https://github.com/Sciss/Mellite-website/tree/master/src/paradox/tutorials.md">here</a>.
 </div>
 
 <div class="nav-next">
-<p><strong>Next:</strong> <a href="tut_soundprocesses1.html">Intro to SoundProcesses</a></p>
+<p><strong>Next:</strong> <a href="tut_mellite_videos.html">Mellite Video Tutorials</a></p>
 </div>
 </div>
 <div class="large-3 show-for-large column" data-sticky-container>
-<nav class="sidebar sticky" data-sticky data-anchor="docs" data-sticky-on="large">
-<div class="page-nav">
-<div class="nav-title">On this page:</div>
-<div class="nav-toc">
-<ul>
-  <li><a href="tutorials.html#tutorials" class="header">Tutorials</a>
-  <ul>
-    <li><a href="tutorials.html#tutorial-1-getting-started" class="header">Tutorial 1 - Getting Started</a></li>
-    <li><a href="tutorials.html#tutorial-2-timeline-and-audio-files" class="header">Tutorial 2 - Timeline and Audio Files</a></li>
-    <li><a href="tutorials.html#tutorial-3-freesound-org" class="header">Tutorial 3 - Freesound.org</a></li>
-    <li><a href="tutorials.html#tutorial-4-wolkenpumpe" class="header">Tutorial 4 - Wolkenpumpe</a></li>
-    <li><a href="tutorials.html#tutorial-5" class="header">Tutorial 5&hellip;</a></li>
-  </ul></li>
-</ul>
-</div>
-</div>
-</nav>
 </div>
 </div>
 
