@@ -118,9 +118,52 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
   <li>it implements the <a href="latest/api/de/sciss/lucre/stm/Obj.html"><code>Obj</code></a> trait or &ldquo;protocol&rdquo;, a uniform  way all sorts of objects are modelled in SoundProcesses</li>
 </ul>
 <p>Before I explain what this means, let us look at another example snippet that shows the usage of <code>Proc</code>:</p>
-<pre class="prettyprint"><code class="language-scala">object HelloWorld extends App {
-  println(&quot;Hello world!&quot;)
-}</code></pre><div class="callout warning "><div class="callout-title">Warning</div>
+<pre class="prettyprint"><code class="language-scala">import de.sciss.lucre.stm
+import de.sciss.lucre.synth.InMemory
+import de.sciss.synth._
+import de.sciss.synth.proc.{AuralSystem, Proc, Transport, WorkspaceHandle}
+import de.sciss.synth.ugen._
+
+object Snippet2 extends App {
+  type S = InMemory
+  implicit val cursor: stm.Cursor[S] = InMemory()
+  import WorkspaceHandle.Implicits._
+
+  val aural = AuralSystem()
+
+  val bubbles = SynthGraph {
+    val o   = LFSaw.kr(Seq(8.0, 7.23)).madd(3, 80)
+    val f   = LFSaw.kr(0.4).madd(24, o)
+    val s   = SinOsc.ar(f.midicps) * 0.04
+    val c   = CombN.ar(s, 0.2, 0.2, 4)
+    Out.ar(0, c)
+  }
+
+  cursor.step { implicit tx =&gt;
+    val p = Proc[S]
+    p.graph() = bubbles
+
+    val t = Transport[S](aural)
+    t.addObject(p)
+    t.play()
+
+    aural.start()
+  }
+
+  Thread.sleep(10000)
+  sys.exit()
+}</code></pre>
+<p>If you run this snippet, you should see SuperCollider booting, then hear the familiar &lsquo;analog bubbles&rsquo; sound again. Also a significant portion of the code is identical to the first version we&rsquo;ve seen in the previous tutorial. The main difference here is that instead of waiting for aural system to have booted and then create a <code>Synth</code> instance, an instance of <code>Proc</code> is created and added to a <code>Transport</code>. I will discuss the changes step by step, beginning with the initialisation:</p>
+<pre class="prettyprint"><code class="language-scala">type S = InMemory
+implicit val cursor: stm.Cursor[S] = InMemory()
+import WorkspaceHandle.Implicits._</code></pre>
+<p>The first line contains a so-called <em>type-alias</em>. In Scala, a type-alias does not create a new type, but simply introduces a new name for an existing type. In SoundProcesses, many objects require as type parameter the type of system&mdash;in-memory, durable, confluent&mdash;and we can avoid having to insert the particular system type we choose, here <code>InMemory</code>, in many places. So in the following lines, whenever you see <code>[S]</code>, this is just aliased to <code>[InMemory]</code>. However, should we eventually decide to change the system type, for example to <code>Durable</code>, the only change that needs to be made to the program is to rewrite the type-alias as <code>type S = Durable</code>.</p>
+<p>The next line adds an <code>implicit</code> modifier to the cursor, and we also annotate the value type explicitly with <code>stm.Cursor[S]</code> (note that <code>stm</code> was imported in the very beginning through <code>import de.sciss.lucre.stm</code>). The reason for marking this value implicit is that when the <code>Transport</code> object is created further down, it requires an implicit parameter of type <code>Cursor[S]</code>, and we therefore make it visible here. The type annotation <code>: stm.Cursor[S]</code> is not necessary, strictly speaking, because Scala will otherwise infer the type automatically. But it is good practice to always specify the types of implicit values, because it avoids surprises and ambiguities in the compiler&rsquo;s search for implicit values. We could also have choosen to use the more precise type <code>: InMemory</code> here, but we never need to refer to this value as this particular system, so the more general type is sufficient and therefore better indicates the use case.</p>
+<p>The third line imports an implicit method that provides a <a href="latest/api/de/sciss/synth/proc/WorkspaceHandle.html"><code>WorkspaceHandle</code></a>. This is a &ldquo;dummy&rdquo; workspace that we can use in the absence of a real workspace which we have not dealt with yet. A workspace handle allows objects to register callbacks for when the workspace closes. For example, the transport registers itself with a workspace in order to ensure that it stops and frees resources if the corresponding workspace closes. Other than that, it is not of any importance here.</p>
+<h3><a href="#instantiating-and-configuring-proc" name="instantiating-and-configuring-proc" class="anchor"><span class="anchor-link"></span></a>Instantiating and Configuring <code>Proc</code></h3>
+<p>Next, let&rsquo;s see the creation of the <code>Proc</code> instance:</p>
+<pre class="prettyprint"><code class="language-scala">val p = Proc[S]
+p.graph() = bubbles</code></pre><div class="callout warning "><div class="callout-title">Warning</div>
 <p><strong>TODO:</strong> The tutorial is in the making and will continue here</p></div>
 <div class="source-github">
 The source code for this page can be found <a href="https://github.com/Sciss/Mellite-website/tree/master/src/paradox/tut_soundprocesses2.md">here</a>.
