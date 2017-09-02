@@ -3,9 +3,9 @@
         <head>
           <meta http-equiv="X-UA-Compatible" content="IE=edge" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <title>Mellite 2.16.0 API  - de.sciss.synth.proc.Action</title>
-          <meta name="description" content="Mellite 2.16.0 API - de.sciss.synth.proc.Action" />
-          <meta name="keywords" content="Mellite 2.16.0 API de.sciss.synth.proc.Action" />
+          <title>Mellite 2.17.0 API  - de.sciss.synth.proc.Action</title>
+          <meta name="description" content="Mellite 2.17.0 API - de.sciss.synth.proc.Action" />
+          <meta name="keywords" content="Mellite 2.17.0 API de.sciss.synth.proc.Action" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="../../../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
@@ -28,7 +28,7 @@
         </head>
         <body>
       <div id="search">
-        <span id="doc-title">Mellite 2.16.0 API<span id="doc-version"></span></span>
+        <span id="doc-title">Mellite 2.17.0 API<span id="doc-version"></span></span>
         <span class="close-results"><span class="left">&lt;</span> Back</span>
         <div id="textfilter">
           <span class="input">
@@ -352,6 +352,20 @@ the only difference being the Target context type needed for issuing a play.">
                         <a class="object" href="Implicits$.html" title=""></a>
                         <a href="Implicits$.html" title="">
                           Implicits
+                        </a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="MacroImplicits$.html" title="Enables implicits extensions
+to assign SynthGraphs to a Proc and to create
+instances of Action from a standard IDE,
+compiling these objects correctly for storage in the workspace,
+and preserving the corresponding source code."></a>
+                        <a href="MacroImplicits$.html" title="Enables implicits extensions
+to assign SynthGraphs to a Proc and to create
+instances of Action from a standard IDE,
+compiling these objects correctly for storage in the workspace,
+and preserving the corresponding source code.">
+                          MacroImplicits
                         </a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Markdown$.html" title=""></a>
@@ -687,22 +701,6 @@ at specific times.">
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="de.sciss.synth.proc.Action#apply" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="apply[S&lt;:de.sciss.lucre.stm.Sys[S]](name:String,jar:Array[Byte])(implicittx:S#Tx):de.sciss.synth.proc.Action[S]"></a><a id="apply[S&lt;:Sys[S]](String,Array[Byte])(Action.apply.S.Tx):Action[S]"></a>
-      <span class="permalink">
-      <a href="../../../../de/sciss/synth/proc/Action$.html#apply[S&lt;:de.sciss.lucre.stm.Sys[S]](name:String,jar:Array[Byte])(implicittx:S#Tx):de.sciss.synth.proc.Action[S]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">apply</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.synth.proc.Action.apply.S">S</span>]</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="jar">jar: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Byte">Byte</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Action.apply.S.Tx</span></span>)</span><span class="result">: <a href="Action.html" class="extype" name="de.sciss.synth.proc.Action">Action</a>[<span class="extype" name="de.sciss.synth.proc.Action.apply.S">S</span>]</span>
-      </span>
-      
-      
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
@@ -907,6 +905,22 @@ at specific times.">
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="de.sciss.synth.proc.Action#mkName" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="mkName[S&lt;:de.sciss.lucre.stm.Sys[S]]()(implicittx:S#Tx):String"></a><a id="mkName[S&lt;:Sys[S]]()(Action.mkName.S.Tx):String"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/synth/proc/Action$.html#mkName[S&lt;:de.sciss.lucre.stm.Sys[S]]()(implicittx:S#Tx):String" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">mkName</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.synth.proc.Action.mkName.S">S</span>]</span>]</span><span class="params">()</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Action.mkName.S.Tx</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -923,6 +937,22 @@ at specific times.">
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="de.sciss.synth.proc.Action#newConst" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="newConst[S&lt;:de.sciss.lucre.stm.Sys[S]](name:String,jar:Array[Byte])(implicittx:S#Tx):de.sciss.synth.proc.Action[S]"></a><a id="newConst[S&lt;:Sys[S]](String,Array[Byte])(Action.newConst.S.Tx):Action[S]"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/synth/proc/Action$.html#newConst[S&lt;:de.sciss.lucre.stm.Sys[S]](name:String,jar:Array[Byte])(implicittx:S#Tx):de.sciss.synth.proc.Action[S]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">newConst</span><span class="tparams">[<span name="S">S &lt;: <a href="../../lucre/stm/Sys.html" class="extype" name="de.sciss.lucre.stm.Sys">Sys</a>[<span class="extype" name="de.sciss.synth.proc.Action.newConst.S">S</span>]</span>]</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="jar">jar: <span class="extype" name="scala.Array">Array</span>[<span class="extype" name="scala.Byte">Byte</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="tx">tx: <span class="extype" name="de.sciss.lucre.stm.Sys.Tx">Action.newConst.S.Tx</span></span>)</span><span class="result">: <a href="Action.html" class="extype" name="de.sciss.synth.proc.Action">Action</a>[<span class="extype" name="de.sciss.synth.proc.Action.newConst.S">S</span>]</span>
+      </span>
+      
+      
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">

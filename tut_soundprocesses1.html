@@ -30,7 +30,7 @@
 <span class="home-icon">⌂</span>Mellite
 </a>
 <div class="version-number">
-2.16.0
+2.17.0
 </div>
 </div>
 <div class="nav-toc">
@@ -71,7 +71,7 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <span class="home-icon">⌂</span>Mellite
 </a>
 <div class="version-number">
-2.16.0
+2.17.0
 </div>
 </div>
 <div class="nav-toc">
@@ -386,7 +386,7 @@ aural.start(config)</code></pre>
 <p>Similar to ScalaCollider, we can pass the server <code>s</code> for the <code>target</code> argument, because it will be implicitly converted to <code>s.defaultGroup</code> to provide the required <code>Node</code> type. Here, the system will automatically cache synth-defs, so if we start multiple synths with the same synth-graph, only in the first iteration will a synth-def be created and sent to the server.</p>
 <p>It remains to look at the second statement: <code>syn.onEnd(sys.exit())</code>. This registers a non-transactional callback invoked when the synth has been removed from the server. There is also a variant <code>onEndTxn</code> that can be used when we need a transactional context. Here we simply exit the virtual machine and thus quit the program execution.</p>
 <div class="source-github">
-The source code for this page can be found <a href="https://github.com/Sciss/Mellite/tree/master/src/paradox/tut_soundprocesses1.md">here</a>.
+The source code for this page can be found <a href="https://github.com/Sciss/Mellite-website/tree/master/src/paradox/tut_soundprocesses1.md">here</a>.
 </div>
 
 <div class="nav-next">
