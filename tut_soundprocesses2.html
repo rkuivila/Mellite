@@ -110,14 +110,14 @@ C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.
 <div class="small-12 large-9 column" id="docs">
 <h1><a href="#sp2-understanding-objects" name="sp2-understanding-objects" class="anchor"><span class="anchor-link"></span></a>SP2 - Understanding Objects</h1>
 <p>The introductory tutorial stopped short of going into the <em>customary</em> way SoundProcesses is used, and instead showed the transactional variant of ScalaCollider to play a synth. Most of the time, instead of creating instances of <code>Synth</code> yourself, you will instead manipulate other objects that automatically spawn synths when the server is running and some other conditions are met. In this second tutorial I will introduce this approach to creating sounding objects.</p>
-<h2><a href="#the-core-object-proc" name="the-core-object-proc" class="anchor"><span class="anchor-link"></span></a>The Core Object: <code>Proc</code></h2>
+<h2><a href="#the-core-object-proc" name="the-core-object-proc" class="anchor"><span class="anchor-link"></span></a>The Core Object: Proc</h2>
 <p>The SoundProcesses way of referring to a synth is an object of type <a href="latest/api/de/sciss/synth/proc/Proc.html"><code>Proc</code></a>. The function of <code>Proc</code> is threefold:</p>
 <ul>
   <li>it&rsquo;s method <code>graph</code> points to the <code>SynthGraph</code>, a variable that can be updated</li>
   <li>it&rsquo;s method <code>outputs</code> points to an interface for creating outlets that can be patched into other objects</li>
   <li>it implements the <a href="latest/api/de/sciss/lucre/stm/Obj.html"><code>Obj</code></a> trait or &ldquo;protocol&rdquo;, a uniform  way all sorts of objects are modelled in SoundProcesses</li>
 </ul>
-<p>Before I explain what this means, let us look at another example snippet that shows the usage of <code>Proc</code>:</p>
+<p>Before I explain what this means, let us look at another example snippet <code>Snippet2</code> that shows the usage of <code>Proc</code>:</p>
 <pre class="prettyprint"><code class="language-scala">import de.sciss.lucre.stm
 import de.sciss.lucre.synth.InMemory
 import de.sciss.synth._
@@ -160,10 +160,199 @@ import WorkspaceHandle.Implicits._</code></pre>
 <p>The first line contains a so-called <em>type-alias</em>. In Scala, a type-alias does not create a new type, but simply introduces a new name for an existing type. In SoundProcesses, many objects require as type parameter the type of system&mdash;in-memory, durable, confluent&mdash;and we can avoid having to insert the particular system type we choose, here <code>InMemory</code>, in many places. So in the following lines, whenever you see <code>[S]</code>, this is just aliased to <code>[InMemory]</code>. However, should we eventually decide to change the system type, for example to <code>Durable</code>, the only change that needs to be made to the program is to rewrite the type-alias as <code>type S = Durable</code>.</p>
 <p>The next line adds an <code>implicit</code> modifier to the cursor, and we also annotate the value type explicitly with <code>stm.Cursor[S]</code> (note that <code>stm</code> was imported in the very beginning through <code>import de.sciss.lucre.stm</code>). The reason for marking this value implicit is that when the <code>Transport</code> object is created further down, it requires an implicit parameter of type <code>Cursor[S]</code>, and we therefore make it visible here. The type annotation <code>: stm.Cursor[S]</code> is not necessary, strictly speaking, because Scala will otherwise infer the type automatically. But it is good practice to always specify the types of implicit values, because it avoids surprises and ambiguities in the compiler&rsquo;s search for implicit values. We could also have choosen to use the more precise type <code>: InMemory</code> here, but we never need to refer to this value as this particular system, so the more general type is sufficient and therefore better indicates the use case.</p>
 <p>The third line imports an implicit method that provides a <a href="latest/api/de/sciss/synth/proc/WorkspaceHandle.html"><code>WorkspaceHandle</code></a>. This is a &ldquo;dummy&rdquo; workspace that we can use in the absence of a real workspace which we have not dealt with yet. A workspace handle allows objects to register callbacks for when the workspace closes. For example, the transport registers itself with a workspace in order to ensure that it stops and frees resources if the corresponding workspace closes. Other than that, it is not of any importance here.</p>
-<h3><a href="#instantiating-and-configuring-proc" name="instantiating-and-configuring-proc" class="anchor"><span class="anchor-link"></span></a>Instantiating and Configuring <code>Proc</code></h3>
+<h3><a href="#instantiating-and-configuring-proc" name="instantiating-and-configuring-proc" class="anchor"><span class="anchor-link"></span></a>Instantiating and Configuring Proc</h3>
 <p>Next, let&rsquo;s see the creation of the <code>Proc</code> instance:</p>
 <pre class="prettyprint"><code class="language-scala">val p = Proc[S]
-p.graph() = bubbles</code></pre><div class="callout warning "><div class="callout-title">Warning</div>
+p.graph() = bubbles</code></pre>
+<p>It may not be obvious that <code>Proc[S]</code> <em>instantiates</em> a class, so let&rsquo;s look at the signature of what&rsquo;s being called here:</p>
+<pre class="prettyprint"><code class="language-scala">object Proc {
+  def apply[S &lt;: Sys[S]](implicit tx: S#Tx): Proc[S] = ...
+}
+</code></pre>
+<p>This is the companion object of the trait (type) <code>Proc</code>. Often we create instances of classes and traits not through <code>new ClassName</code> but through a method on their companion object. This is the case here. But shouldn&rsquo;t that call then have been <code>Proc.apply[S]</code>?</p><div class="callout note "><div class="callout-title">Note</div>
+<p>Scala offers a very convenient shortcut: When a method is called <code>apply</code>, we can remove that method selection in the invocation and jump right to the type parameters and arguments. So instead of <code>Proc.apply[S]</code>, we can just write <code>Proc[S]</code> and Scala will fill in the <code>.apply</code>.</p></div>
+<p>We had used this before with other types: Creating the in-memory system via <code>InMemory()</code> is nothing but <code>InMemory.apply()</code>, a call of the <code>apply</code> method in <code>InMemory</code>&rsquo;s companion object. The same with <code>AuralSystem()</code>, and also with <code>SynthGraph {}</code> (we can drop the parentheses here, because the argument is a function, although parameterless). Note that in the case of <code>Proc</code> there is no argument list except the implicit argument list containing the current transaction, therefore we do not have empty parentheses such as <code>Proc[S]()</code>. The decision whether to add an empty argument list or not, is a design decision of our API. Since we almost always have to provide the type parameter <code>S</code>, I decided for <code>Proc</code> that an empty argument list was not needed.</p>
+<p>Next is <code>p.graph() = bubbles</code>. The <code>graph</code> method is defined as follows:</p>
+<pre class="prettyprint"><code class="language-scala">def graph: SynthGraphObj.Var[S] 
+</code></pre>
+<p>There is another, related shortcut here in Scala. The call we&rsquo;re making is actually <code>p.graph.update(bubbles)</code>, where <code>update</code> is a method on the <code>SynthGraphObj.Var</code> type, which I will talk about in a second. So when a method on <code>x</code> is <code>def update(v: A): Unit</code>, we can use the alternative syntax <code>x() = v</code>. This is really cool, because we can define mutable cells or variables that way:</p>
+<pre class="prettyprint"><code class="language-scala">trait Cell[A] {  // fictitious type
+  def apply(): A
+  def update(v: A): Unit
+}
+</code></pre>
+<p>With such definition, we could write:</p>
+<pre class="prettyprint"><code class="language-scala">val cell: Cell[Int] = ???   // imagine we had such cell
+val oldValue = cell()       // aka cell.apply()
+val newValue = oldValue + 1
+cell() = newValue           // aka cell.update(newValue)
+</code></pre>
+<p>Scala uses this principle in many cases. Take for example arrays:</p>
+<pre class="prettyprint"><code class="language-scala">val xs = Array(3, 5, 8, 0)
+xs(3) = x(1) + x(2)  // aka xs.update(3, x.apply(1) + x.apply(2))
+assert(x(3) == 13)
+</code></pre>
+<p>This also works when we have an additional implicit argument list. This is the case for <code>SynthGraphObj.Var</code> which is an extension of <a href="latest/api/de/sciss/lucre/stm/Var.html">stm.Var</a>:</p>
+<pre class="prettyprint"><code class="language-scala">trait Var[Tx, A] {
+  def apply()(implicit tx: Tx): A
+  def update(v: A)(implicit tx: Tx): Unit
+}
+</code></pre>
+<p>What is the element type <code>A</code> in the case of <code>SynthGraphObj.Var</code>? It is <code>SynthGraphObj</code>. It is defined as <a href="latest/api/de/sciss/synth/proc/SynthGraphObj.html">follows</a>:</p>
+<pre class="prettyprint"><code class="language-scala">trait SynthGraphObj[S &lt;: Sys[S]] extends Expr[S, SynthGraph]
+</code></pre>
+<p>The type <code>Expr[S, A]</code> is ubiquitous in SoundProcesses.</p><div class="callout note "><div class="callout-title">Note</div>
+<p>An expression <code>Expr[S, A]</code> is an object that &ldquo;evaluates&rdquo; to a primitive or immutable value of type <code>A</code> when calling the <code>value</code> method inside a transaction of type <code>S#Tx</code>.</p></div>
+<p>There are many types of expressions in SoundProcesses, for example <code>IntObj[S]</code> which is an <code>Expr[S, Int]</code>, <code>StringObj[S]</code> which is an <code>Expr[S, String]</code>, <code>BooleanObj[S]</code> which is an <code>Expr[S, Boolean]</code>, and so on. Expressions usually include a <em>constant</em> sub-type that simply wraps the primitive value, a <em>variable</em> type that holds another expression of the same type that can be exchanged, and often also <em>unary</em> and <em>binary</em> operations&mdash;for example, in the case of <code>IntObj</code>, the unary negation or the binary addition of two integer expressions. Expressions are <em>reactive</em> in that they participate in SoundProcesses&rsquo; event dispatch system. If the value of an expression changes, that information propagates along all objects that observe the expression. So when we write <code>p.graph() = bubbles</code>&mdash;i.e. we call the <code>update</code> method of the expression variable <code>graph</code> of type <code>SynthGraphObj.Var</code>&mdash;the new value stored in that expression will be detected by any other object in the system watching that expression. If the process was playing on the sound synthesis server, the layer that is responsible for this playback would be notified that the graph changed and thus replace the synth with a new synth.</p>
+<p>There is only one last bit to explain in the synth-graph assignment: An expression variable must be updated with an expression of the same type, so <code>SynthGraphObj</code> here. But it seems as if we can put a primitive value of type <code>SynthGraph</code> here directly, namely <code>bubbles</code>. In order to avoid ceremony, SoundProcesses permits this by <strong>automatically lifting primitive values to their respective expressions.</strong> So the call performed really is</p>
+<pre class="prettyprint"><code class="language-scala">p.graph.update(SynthGraphObj.newConst[S](bubbles))
+</code></pre>
+<p>Obviously, writing <code>p.graph() = bubbles</code> is much nicer. The next snippet will make this mechanism perhaps more obvious, as we update numeric expressions controlling a synthesis parameter.</p>
+<h2><a href="#attribute-map-of-an-obj" name="attribute-map-of-an-obj" class="anchor"><span class="anchor-link"></span></a>Attribute Map of an Obj</h2>
+<p>Both <code>Expr</code> and <code>Proc</code> are sub-types of <a href="latest/api/de/sciss/lucre/stm/Obj.html"><code>Obj</code></a>, the basic unit of (possibly stateful) objects in SoundProcesses. <code>Obj</code> defines the following properties:</p>
+<ul>
+  <li>an <code>id</code> method that gives a unique value, the format of which depends on the system <code>S</code> chosen. This identifier is used for example in the  database persistence, when the system is durable.</li>
+  <li>it can be persisted, i.e. written to and read from a workspace database</li>
+  <li>a <code>dispose</code> method allows us to remove an object from our system, freeing observers and resources associated with it.</li>
+  <li>the <code>changed</code> method gives access to an event bus system for monitoring changes to the object</li>
+  <li>most relevant to us, the <code>attr</code> method gives access to a dictionary associated with the object, the so-called  attribute map with type <code>AttrMap</code>.</li>
+</ul>
+<p>Using the attribute map, it is easy to annotate objects with additional information. It&rsquo;s SoundProcesses&rsquo; way of contextualising objects and linking them together. The concept of a heterogenous dictionary is well known from dynamically typed languages. It is a simple way to extend the otherwise determined interface (methods) of an object. On the downside, attribute maps work by means of convention: The keys into this dictionary are ordinary strings, so we lose a bit of type safety by using the dictionary, as we must be sure ourselves that we use the correct keys for retrieving a particular type of information. If we mistyped the attribute&rsquo;s key or name, the map would not return the value we were looking for.</p>
+<p>Before explaining this concept in more detail, we shall first look at an example <code>Snippet3</code> of using the attribute map of a <code>Proc</code>. The most common case is to store control values here for use within the synth-graph function:</p>
+<pre class="prettyprint"><code class="language-scala">import de.sciss.lucre.expr.DoubleObj
+import de.sciss.lucre.stm
+import de.sciss.lucre.synth.InMemory
+import de.sciss.synth._
+import de.sciss.synth.proc.{AuralSystem, Proc, Transport, WorkspaceHandle}
+import de.sciss.synth.ugen._
+
+object Snippet3 extends App {
+  type S = InMemory
+  implicit val cursor: stm.Cursor[S] = InMemory()
+  import WorkspaceHandle.Implicits._
+
+  val aural = AuralSystem()
+
+  val bubbles = SynthGraph {
+    import de.sciss.synth.proc.graph.Ops._
+    val f0  = &quot;freq&quot;.kr
+    val o   = LFSaw.kr(Seq(f0, f0 * 8/7.23)).madd(3, 80)
+    val f   = LFSaw.kr(0.4).madd(24, o)
+    val s   = SinOsc.ar(f.midicps) * 0.04
+    val c   = CombN.ar(s, 0.2, 0.2, 4)
+    Out.ar(0, c)
+  }
+
+  val pH = cursor.step { implicit tx =&gt;
+    val p = Proc[S]
+    p.graph() = bubbles
+    p.attr.put(&quot;freq&quot;, DoubleObj.newConst(8.0))
+
+    val t = Transport[S](aural)
+    t.addObject(p)
+    t.play()
+
+    aural.start()
+    tx.newHandle(p)
+  }
+
+  Thread.sleep(8000)
+
+  cursor.step { implicit tx =&gt;
+    val p = pH()
+    p.attr.put(&quot;freq&quot;, DoubleObj.newConst(0.1))
+  }
+
+  Thread.sleep(6000)
+
+  sys.exit()
+}</code></pre>
+<p>If you run this, you will hear the familiar analog bubbles, but after a few seconds, the frequency modulation frequency changes from <code>8.0</code> to a very low value of <code>0.1</code>. The following changes have been applied in the transition from <code>Snippet2</code> to <code>Snippet3</code>. Inside the synth-graph definition:</p>
+<pre class="prettyprint"><code class="language-scala">import de.sciss.synth.proc.graph.Ops._
+val f0  = &quot;freq&quot;.kr</code></pre>
+<p>The syntax <code>&quot;freq&quot;.kr</code> might be familiar from ScalaCollider. There, it was enabled by importing <code>de.sciss.synth.Ops.stringToControl</code>, creating control proxies for setting and updating synth parameters from the client. In SoundProcesses, we use a different import that enables the <em>same syntax, but different implementation</em>. Here, the layer that creates the synth from the <code>Proc</code> looks up control values in the <code>Proc</code>&rsquo;s attribute map. Different types of values are supported, the most basic one being an <code>IntObj</code> or <code>DoubleObj</code> for numeric scalar values. Here we set the initial value that will be picked up by the synth:</p>
+<pre class="prettyprint"><code class="language-scala">p.attr.put(&quot;freq&quot;, DoubleObj.newConst(8.0))</code></pre>
+<p>The attribute key <code>&quot;freq&quot;</code> is purely by convention, we could have used a different name, but we must ensure that we refer to the same key inside the synth-graph function, otherwise the value would not be found. Here, the automatic lifting from the primitive <code>8.0</code> to a <code>DoubleObj</code> does not kick in, because the Scala compiler has no idea what kind of <code>Obj</code> we want to create. That is the reason, we have to explicitly contruct that object through <code>DoubleObj.newConst</code>. The type parameter <code>S</code> is inferred however, as it is required by a <code>Proc[S]</code>, so we do not have to repeat it.</p>
+<p>We use a &ldquo;poor man&rsquo;s procedure&rdquo; to update the attribute eight seconds (8000 milliseconds) later. We must be careful not to block the transaction, so <code>Thread.sleep</code> is placed between two separate calls to <code>cursor.step</code>. We can overwrite the previous attribute value by simply using another <code>p.attr.put</code> with the same key. Alternatively, we could have placed a <code>DoubleObj.Var</code> inside, and then update that variable. One thing looks very odd, and that&rsquo;s this at the periphery:</p>
+<pre class="prettyprint"><code class="language-scala">val pH = cursor.step { implicit tx =&gt;
+  val p = Proc[S]
+  // ...
+  tx.newHandle(p)
+}
+
+// ...
+
+cursor.step { implicit tx =&gt;
+  val p = pH()
+  p.attr.put(&quot;freq&quot;, DoubleObj.newConst(0.1))
+}
+</code></pre>
+<p>Note how the original assignment <code>val p = Proc[S]</code> is inside the first <code>cursor.step</code> block, so that local variable would not be visible in the next <code>cursor.step</code> block. We therefore return something from the first block to the <em>outer scope</em>, so we can use it again in the next nested scope. Why didn&rsquo;t we just write:</p>
+<pre class="prettyprint"><code class="language-scala">val p = cursor.step { implicit tx =&gt;
+  val p0 = Proc[S]
+  // ...
+}
+
+// ...
+
+cursor.step { implicit tx =&gt;
+  p.attr.put(&quot;freq&quot;, DoubleObj.newConst(0.1))
+}
+</code></pre>
+<p>? To be clear, this would have worked in this case as well! There is however one system, <code>Confluent</code>, where we have to &ldquo;refresh&rdquo; transactional objects if we use them across different transactions. The mechanism by which that is done is to return from the transaction where an object was created a special handle obtained through <code>tx.newHandle(obj)</code>. Then, in successive transaction, we can get a refreshed version of that object by calling <code>apply()</code> on that handle.</p><div class="callout note "><div class="callout-title">Note</div>
+<p>Transactional handles via <code>tx.newHandle</code> are, strictly speaking, only required when you use the <code>Confluent</code> system. When you just work with <code>InMemory</code> or <code>Durable</code>, you can spare the ceremony. However, it is considered good style to always use the handles, as it allows the program to correctly work when the type of system is changed at a later point. If you never intend to do that, don&rsquo;t worry about passing around the objects directly without wrapping them with <code>tx.newHandle</code>!</p></div>
+<h2><a href="#using-a-scheduler" name="using-a-scheduler" class="anchor"><span class="anchor-link"></span></a>Using a Scheduler</h2>
+<p>As a final exercise of this tutorial, another more lengthy <code>Snippet4</code> will shows us how to replace the &ldquo;poor man&rsquo;s&rdquo; approach with a &ldquo;proper&rdquo; way of scheduling temporal events. To begin with, here is the full code:</p>
+<pre class="prettyprint"><code class="language-scala">import de.sciss.lucre.expr.DoubleObj
+import de.sciss.lucre.stm
+import de.sciss.lucre.synth.InMemory
+import de.sciss.synth._
+import de.sciss.synth.proc.{AuralSystem, Proc, Scheduler, TimeRef, Transport, WorkspaceHandle}
+import de.sciss.synth.ugen._
+
+object Snippet4 extends App {
+  type S = InMemory
+  implicit val cursor: stm.Cursor[S] = InMemory()
+  import WorkspaceHandle.Implicits._
+
+  val aural = AuralSystem()
+
+  val bubbles = SynthGraph {
+    import de.sciss.synth.proc.graph.Ops._
+    val p0  = &quot;pitch&quot;.kr(80.0)
+    val o   = LFSaw.kr(Seq(1.0, 7.23/8)).madd(3, p0)
+    val f   = LFSaw.kr(0.4).madd(4, o)
+    val s   = SinOsc.ar(f.midicps) * 0.04
+    val c   = CombN.ar(s, 0.2, 0.2, 2)
+    Out.ar(0, c)
+  }
+
+  class PitchMod(sch: Scheduler[S], pchH: stm.Source[S#Tx, DoubleObj.Var[S]]) {
+    def iterate()(implicit tx: S#Tx): Unit = {
+      val pch = pchH()
+      pch() = math.random() * 40 + 60
+      sch.schedule(sch.time + TimeRef.SampleRate.toLong) { implicit tx =&gt;
+        iterate()
+      }
+    }
+  }
+
+  cursor.step { implicit tx =&gt;
+    val p = Proc[S]
+    p.graph() = bubbles
+    val pch = DoubleObj.newVar[S](0.0)
+    p.attr.put(&quot;pitch&quot;, pch)
+
+    val t   = Transport[S](aural)
+    val sch = t.scheduler
+    val mod = new PitchMod(sch, tx.newHandle(pch))
+    mod.iterate()
+    t.addObject(p)
+    t.play()
+
+    aural.start()
+  }
+}</code></pre><div class="callout warning "><div class="callout-title">Warning</div>
 <p><strong>TODO:</strong> The tutorial is in the making and will continue here</p></div>
 <div class="source-github">
 The source code for this page can be found <a href="https://github.com/Sciss/Mellite-website/tree/master/src/paradox/tut_soundprocesses2.md">here</a>.
@@ -181,7 +370,9 @@ The source code for this page can be found <a href="https://github.com/Sciss/Mel
 <ul>
   <li><a href="tut_soundprocesses2.html#sp2-understanding-objects" class="header">SP2 - Understanding Objects</a>
   <ul>
-    <li><a href="tut_soundprocesses2.html#the-core-object-proc" class="header">The Core Object: <code>Proc</code></a></li>
+    <li><a href="tut_soundprocesses2.html#the-core-object-proc" class="header">The Core Object: Proc</a></li>
+    <li><a href="tut_soundprocesses2.html#attribute-map-of-an-obj" class="header">Attribute Map of an Obj</a></li>
+    <li><a href="tut_soundprocesses2.html#using-a-scheduler" class="header">Using a Scheduler</a></li>
   </ul></li>
 </ul>
 </div>
