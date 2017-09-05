@@ -1852,6 +1852,12 @@ duration.">
                           MantissaMask
                         </a>
                       </li><li class="current-entities indented4">
+                        <a class="object" href="MdaPiano$.html" title="A piano synthesiser UGen."></a>
+                        <a class="class" href="MdaPiano.html" title="A piano synthesiser UGen."></a>
+                        <a href="MdaPiano.html" title="A piano synthesiser UGen.">
+                          MdaPiano
+                        </a>
+                      </li><li class="current-entities indented4">
                         <a class="object" href="Median$.html" title="A filter UGen that calculates the median of a running window over its input
 signal."></a>
                         <a class="class" href="Median.html" title="A filter UGen that calculates the median of a running window over its input
@@ -3360,7 +3366,7 @@ providing both the value and the index." href="ArrayMax.html">
       
       <p class="shortcomment cmt">A UGen that finds the largest value across the channels of its input signal,
 providing both the value and the index.</p><div class="fullcomment"><div class="comment cmt"><p>A UGen that finds the largest value across the channels of its input signal,
-providing both the value and the index.
+providing both the value and the index.</p><p>This is a third-party UGen (MCLDUGens).
 </p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>multi-channel signal to analyze</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="BufMax$.html" class="extype" name="de.sciss.synth.ugen.BufMax">BufMax</a></p></span><span class="cmt"><p><a href="ArrayMin$.html" class="extype" name="de.sciss.synth.ugen.ArrayMin">ArrayMin</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.ArrayMin" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ArrayMinextendsUGenSource.MultiOutwithProductwithSerializable"></a><a id="ArrayMin:ArrayMin"></a>
@@ -3382,7 +3388,7 @@ providing both the value and the index." href="ArrayMin.html">
       
       <p class="shortcomment cmt">A UGen that finds the smallest value across the channels of its input signal,
 providing both the value and the index.</p><div class="fullcomment"><div class="comment cmt"><p>A UGen that finds the smallest value across the channels of its input signal,
-providing both the value and the index.
+providing both the value and the index.</p><p>This is a third-party UGen (MCLDUGens).
 </p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>multi-channel signal to analyze</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="BufMin$.html" class="extype" name="de.sciss.synth.ugen.BufMin">BufMin</a></p></span><span class="cmt"><p><a href="ArrayMax$.html" class="extype" name="de.sciss.synth.ugen.ArrayMax">ArrayMax</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.AudioControl" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AudioControlextendsUGenSource.MultiOutwithAudioRatedwithProductwithSerializable"></a><a id="AudioControl:AudioControl"></a>
@@ -4259,7 +4265,7 @@ the index." href="BufMax.html">
       
       <p class="shortcomment cmt">A UGen that finds the largest value in a buffer, providing both the value and
 the index.</p><div class="fullcomment"><div class="comment cmt"><p>A UGen that finds the largest value in a buffer, providing both the value and
-the index.
+the index.</p><p>This is a third-party UGen (MCLDUGens).
 </p></div><dl class="paramcmts block"><dt class="param">buf</dt><dd class="cmt"><p>identifier of the buffer containing the values to
                         analyze. It treats multi-channel buffers as monophonic,
                         and indices will refer to the de-interleaved frames and
@@ -4284,7 +4290,7 @@ the index." href="BufMin.html">
       
       <p class="shortcomment cmt">A UGen that finds the smallest value in a buffer, providing both the value and
 the index.</p><div class="fullcomment"><div class="comment cmt"><p>A UGen that finds the smallest value in a buffer, providing both the value and
-the index.
+the index.</p><p>This is a third-party UGen (MCLDUGens).
 </p></div><dl class="paramcmts block"><dt class="param">buf</dt><dd class="cmt"><p>identifier of the buffer containing the values to
                         analyze. It treats multi-channel buffers as monophonic,
                         and indices will refer to the de-interleaved frames and
@@ -4577,7 +4583,7 @@ defined circle, wrapping values where appropriate." href="CircleRamp.html">
 defined circle, wrapping values where appropriate.</p><div class="fullcomment"><div class="comment cmt"><p>This is a UGen like <code>Ramp</code> , but it always takes the shortest way around a
 defined circle, wrapping values where appropriate. This can be useful when
 smoothing panning signals for speaker rings, for instance in Vector Base
-Amplitude Panning.
+Amplitude Panning.</p><p>This is a third-party UGen (VBAPUGens).
 </p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The signal to be smoothed.</p></dd><dt class="param">dur</dt><dd class="cmt"><p>Ramp duration in seconds</p></dd><dt class="param">lo</dt><dd class="cmt"><p>The lower wrap value</p></dd><dt class="param">hi</dt><dd class="cmt"><p>The upper wrap value</p></dd></dl><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="Lag$.html" class="extype" name="de.sciss.synth.ugen.Lag">Lag</a></p></span><span class="cmt"><p><a href="Ramp$.html" class="extype" name="de.sciss.synth.ugen.Ramp">Ramp</a></p></span><span class="cmt"><p><a href="VBAP$.html" class="extype" name="de.sciss.synth.ugen.VBAP">VBAP</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.ClassGenerator" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="ClassGeneratorextendsAnyRef"></a><a id="ClassGenerator:ClassGenerator"></a>
@@ -5236,7 +5242,7 @@ zero and one. Although this is a deterministic process, it is randomly seeded.
       
       <p class="shortcomment cmt">A digital filter UGen which aims at accurately modeling an analog filter.</p><div class="fullcomment"><div class="comment cmt"><p>A digital filter UGen which aims at accurately modeling an analog filter. It
 provides low-pass and high-pass modes, and the filter can be overdriven and will
-self-oscillate at high resonances.
+self-oscillate at high resonances.</p><p>This is a third-party UGen (TJUGens).
 </p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>Input signal to filter.</p></dd><dt class="param">freq</dt><dd class="cmt"><p>Cutoff frequency in Hertz.</p></dd><dt class="param">res</dt><dd class="cmt"><p>Resonance of the filter. Resonance is minimal at <code>0.0</code>
                         and high at <code>1.0</code> , above which the filter starts
                         overdrive and sound saturated (e.g. <code>1.2</code> ).</p></dd><dt class="param">gain</dt><dd class="cmt"><p>Linear gain applied to the input signal.</p></dd><dt class="param">mode</dt><dd class="cmt"><p>The filter can be used in low-pass ( <code>0</code> ) or high-pass
@@ -8678,7 +8684,7 @@ duration.
       <p class="shortcomment cmt">A UGen that produces a scheduled sequences of trigger impulses.</p><div class="fullcomment"><div class="comment cmt"><p>A UGen that produces a scheduled sequences of trigger impulses. Trigger times
 are provided as a list (buffer) of absolute offsets from time zero. A trigger is
 output as a single control period of value <code>1</code> , after which output returns to
-zero.
+zero.</p><p>This is a third-party UGen (MCLDUGens).
 </p></div><dl class="paramcmts block"><dt class="param">buf</dt><dd class="cmt"><p>identifier of the buffer containing the offsets for the
                         triggers in seconds. The offsets are taken against the
                         start time of the synth or the last time a <code>reset</code> was
@@ -8710,7 +8716,7 @@ zero.
       <p class="shortcomment cmt">A UGen that produces a scheduled sequences of trigger impulses.</p><div class="fullcomment"><div class="comment cmt"><p>A UGen that produces a scheduled sequences of trigger impulses. Trigger times
 are provided as a list (buffer) of relative durations between consecutive
 events. A trigger is output as a single control period of value <code>1</code> , after
-which output returns to zero.
+which output returns to zero.</p><p>This is a third-party UGen (MCLDUGens).
 </p></div><dl class="paramcmts block"><dt class="param">buf</dt><dd class="cmt"><p>identifier of the buffer containing the durations for
                         the triggers in seconds. A value represents a relative
                         offsets with respect to its predecessor. The first value
@@ -8819,7 +8825,7 @@ happens, the current input values are sampled and stored as the next consecutive
 frame of the buffer.</p><p>Storage starts at the buffer beginning and increments the write position until
 the buffer is full. While the buffer is not yet full, the UGen outputs <code>1</code> ,
 then it outputs <code>0</code> . The buffer position can be reset using the <code>reset</code> input.</p><p>Note that the UGen zeroes the buffer upon first instantiation, to ensure that
-out-of-date data is not confused with new data.
+out-of-date data is not confused with new data.</p><p>This is a third-party UGen (MCLDUGens).
 </p></div><dl class="paramcmts block"><dt class="param">buf</dt><dd class="cmt"><p>identifier of the buffer to write to. Its number of
                         channels should match those of <code>in</code> .</p></dd><dt class="param">in</dt><dd class="cmt"><p>(multi-channel) signal to write to the buffer. Its
                         number of channels should match those of <code>buf</code> .</p></dd><dt class="param">trig</dt><dd class="cmt"><p>a non-positive to positive transition causes the UGen
@@ -8971,6 +8977,33 @@ blocks.
 This introduces a quantization noise, but is less severe than linearly
 quantizing the signal.
 </p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>input signal to quantize</p></dd><dt class="param">bits</dt><dd class="cmt"><p>The number of mantissa bits to preserve, from 0 to 23.</p></dd></dl></div>
+    </li><li name="de.sciss.synth.ugen.MdaPiano" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MdaPianoextendsUGenSource.MultiOutwithProductwithSerializable"></a><a id="MdaPiano:MdaPiano"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/synth/ugen/index.html#MdaPianoextendsUGenSource.MultiOutwithProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="A piano synthesiser UGen." href="MdaPiano.html">
+              <span class="name">MdaPiano</span>
+            </a><span class="params">(<span name="rate">rate: <a href="../Rate.html" class="extype" name="de.sciss.synth.Rate">Rate</a></span>, <span name="freq">freq: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">440</a></span></span></span>, <span name="gate">gate: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">1</a></span></span></span>, <span name="velocity">velocity: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">100</a></span></span></span>, <span name="decay">decay: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.8f</a></span></span></span>, <span name="release">release: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.8f</a></span></span></span>, <span name="hardness">hardness: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.8f</a></span></span></span>, <span name="velHard">velHard: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.8f</a></span></span></span>, <span name="muffle">muffle: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.8f</a></span></span></span>, <span name="velMuff">velMuff: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.8f</a></span></span></span>, <span name="velCurve">velCurve: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.8f</a></span></span></span>, <span name="stereo">stereo: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.2f</a></span></span></span>, <span name="tune">tune: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.5f</a></span></span></span>, <span name="random">random: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.1f</a></span></span></span>, <span name="stretch">stretch: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0.1f</a></span></span></span>, <span name="sustain">sustain: <a href="../GE.html" class="extype" name="de.sciss.synth.GE">GE</a> = <span class="symbol"><span class="name"><a href="../GE$.html">0</a></span></span></span>)</span><span class="result"> extends <a href="../UGenSource$$MultiOut.html" class="extype" name="de.sciss.synth.UGenSource.MultiOut">MultiOut</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">A piano synthesiser UGen.</p><div class="fullcomment"><div class="comment cmt"><p>A piano synthesiser UGen. It is not polyphonic, but it can be retriggered to
+play notes in sequence.</p><p>The original VST plugin by Paul Kellett was ported to SuperCollider by Dan
+Stowell. Most likely the arguments are in the normalized range 0 to 1.</p><p>This is a third-party UGen (MdaUGens).
+</p></div><dl class="paramcmts block"><dt class="param">freq</dt><dd class="cmt"><p>Frequency of the note in Hz.</p></dd><dt class="param">gate</dt><dd class="cmt"><p>note-on occurs when gate goes from non-positive to
+                        positive; note-off occurs when it goes from positive to
+                        non-positive. Most of the other controls are only
+                        updated when a new note-on occurs.</p></dd><dt class="param">velocity</dt><dd class="cmt"><p>velocity (range is 0 to 127)</p></dd><dt class="param">decay</dt><dd class="cmt"><p>The time for notes to decay after the initial strike.</p></dd><dt class="param">release</dt><dd class="cmt"><p>The time for notes to decay after the key is released.</p></dd><dt class="param">hardness</dt><dd class="cmt"><p>adjusts sample key-ranges up or down to change the
+                        &quot;size&quot; and brightness of the piano.</p></dd><dt class="param">muffle</dt><dd class="cmt"><p>gentle low pass filter.</p></dd><dt class="param">stereo</dt><dd class="cmt"><p>Width of the stereo effect (which makes low notes sound
+                        towards the left, high notes towards the right). 0 to 1.</p></dd><dt class="param">tune</dt><dd class="cmt"><p>Overall tuning.</p></dd><dt class="param">random</dt><dd class="cmt"><p>Randomness in note tuning.</p></dd><dt class="param">stretch</dt><dd class="cmt"><p>Stretches the tuning out (higher notes pushed higher).</p></dd><dt class="param">sustain</dt><dd class="cmt"><p>if positive, act as if the piano's sustain pedal is
+                        pressed.</p></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.Median" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="MedianextendsUGenSource.SingleOutwithProductwithSerializable"></a><a id="Median:Median"></a>
       <span class="permalink">
@@ -13005,7 +13038,7 @@ UGen.
 panning of a source over an arbitrary array of equidistant speakers. Normally
 this would be a ring, a dome, or partial dome.</p><p>VBAP was created by Ville Pulkki. For more information on VBAP see
 http://www.acoustics.hut.fi/research/cat/vbap/ This version of VBAP for SC was
-ported from the ver. 0.99 PD code by Scott Wilson.
+ported from the ver. 0.99 PD code by Scott Wilson.</p><p>This is a third-party UGen (VBAPUGens).
 </p></div><dl class="paramcmts block"><dt class="param">numChannels</dt><dd class="cmt"><p>the number of output channels</p></dd><dt class="param">in</dt><dd class="cmt"><p>the signal to be panned</p></dd><dt class="param">buf</dt><dd class="cmt"><p>id of a buffer containing data calculated by
                         <code>VBAPSetup</code> . Its number of channels must correspond to
                         <code>numChannels</code></p></dd><dt class="param">azimuth</dt><dd class="cmt"><p>+/- 180° from the median plane (i.e. straight ahead)</p></dd><dt class="param">elevation</dt><dd class="cmt"><p>+/- 90° from the azimuth plane</p></dd><dt class="param">spread</dt><dd class="cmt"><p>A value from 0-100. When 0, if the signal is panned
@@ -13651,7 +13684,8 @@ play {
   m.value.poll(tr, <span class="lit">"max-value"</span>)
   m.index.poll(tr, <span class="lit">"max-index"</span>)
   ()
-}</pre></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="BufMax$.html" class="extype" name="de.sciss.synth.ugen.BufMax">BufMax</a></p></span><span class="cmt"><p><a href="ArrayMin$.html" class="extype" name="de.sciss.synth.ugen.ArrayMin">ArrayMin</a></p></span></dd></dl></div>
+}</pre><p>This is a third-party UGen (MCLDUGens).
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="BufMax$.html" class="extype" name="de.sciss.synth.ugen.BufMax">BufMax</a></p></span><span class="cmt"><p><a href="ArrayMin$.html" class="extype" name="de.sciss.synth.ugen.ArrayMin">ArrayMin</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.ArrayMin" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ArrayMin"></a><a id="ArrayMin:ArrayMin"></a>
       <span class="permalink">
@@ -13681,7 +13715,8 @@ play {
   m.value.poll(tr, <span class="lit">"min-value"</span>)
   m.index.poll(tr, <span class="lit">"min-index"</span>)
   ()
-}</pre></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="BufMin$.html" class="extype" name="de.sciss.synth.ugen.BufMin">BufMin</a></p></span><span class="cmt"><p><a href="ArrayMax$.html" class="extype" name="de.sciss.synth.ugen.ArrayMax">ArrayMax</a></p></span></dd></dl></div>
+}</pre><p>This is a third-party UGen (MCLDUGens).
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="BufMin$.html" class="extype" name="de.sciss.synth.ugen.BufMin">BufMin</a></p></span><span class="cmt"><p><a href="ArrayMax$.html" class="extype" name="de.sciss.synth.ugen.ArrayMax">ArrayMax</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.AudioControl" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="AudioControl"></a><a id="AudioControl:AudioControl"></a>
       <span class="permalink">
@@ -14693,7 +14728,8 @@ b.set(<span class="num">33</span> -&gt; <span class="num">1.034</span>)
 <span class="cmt">// ...until we set a new maximum...</span>
 b.set(<span class="num">74</span> -&gt; <span class="num">1.038</span>); x.set(<span class="lit">"poll"</span> -&gt; <span class="num">1</span>)
 
-x.free(); b.free()</pre></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="ArrayMax$.html" class="extype" name="de.sciss.synth.ugen.ArrayMax">ArrayMax</a></p></span><span class="cmt"><p><a href="BufMin$.html" class="extype" name="de.sciss.synth.ugen.BufMin">BufMin</a></p></span></dd></dl></div>
+x.free(); b.free()</pre><p>This is a third-party UGen (MCLDUGens).
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="ArrayMax$.html" class="extype" name="de.sciss.synth.ugen.ArrayMax">ArrayMax</a></p></span><span class="cmt"><p><a href="BufMin$.html" class="extype" name="de.sciss.synth.ugen.BufMin">BufMin</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.BufMin" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="BufMin"></a><a id="BufMin:BufMin"></a>
       <span class="permalink">
@@ -14732,7 +14768,8 @@ b.set(<span class="num">33</span> -&gt; -<span class="num">1.034</span>)
 <span class="cmt">// ...until we set a new minimum...</span>
 b.set(<span class="num">74</span> -&gt; -<span class="num">1.038</span>); x.set(<span class="lit">"poll"</span> -&gt; <span class="num">1</span>)
 
-x.free(); b.free()</pre></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="ArrayMin$.html" class="extype" name="de.sciss.synth.ugen.ArrayMin">ArrayMin</a></p></span><span class="cmt"><p><a href="BufMax$.html" class="extype" name="de.sciss.synth.ugen.BufMax">BufMax</a></p></span></dd></dl></div>
+x.free(); b.free()</pre><p>This is a third-party UGen (MCLDUGens).
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="ArrayMin$.html" class="extype" name="de.sciss.synth.ugen.ArrayMin">ArrayMin</a></p></span><span class="cmt"><p><a href="BufMax$.html" class="extype" name="de.sciss.synth.ugen.BufMax">BufMax</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.BufRateScale" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="BufRateScale"></a><a id="BufRateScale:BufRateScale"></a>
       <span class="permalink">
@@ -14974,7 +15011,7 @@ defined circle, wrapping values where appropriate." href="CircleRamp$.html">
 defined circle, wrapping values where appropriate.</p><div class="fullcomment"><div class="comment cmt"><p>This is a UGen like <code>Ramp</code> , but it always takes the shortest way around a
 defined circle, wrapping values where appropriate. This can be useful when
 smoothing panning signals for speaker rings, for instance in Vector Base
-Amplitude Panning.
+Amplitude Panning.</p><p>This is a third-party UGen (VBAPUGens).
 </p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="Lag$.html" class="extype" name="de.sciss.synth.ugen.Lag">Lag</a></p></span><span class="cmt"><p><a href="Ramp$.html" class="extype" name="de.sciss.synth.ugen.Ramp">Ramp</a></p></span><span class="cmt"><p><a href="VBAP$.html" class="extype" name="de.sciss.synth.ugen.VBAP">VBAP</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.ClearBuf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ClearBuf"></a><a id="ClearBuf:ClearBuf"></a>
@@ -15523,7 +15560,7 @@ play {
       
       <p class="shortcomment cmt">A digital filter UGen which aims at accurately modeling an analog filter.</p><div class="fullcomment"><div class="comment cmt"><p>A digital filter UGen which aims at accurately modeling an analog filter. It
 provides low-pass and high-pass modes, and the filter can be overdriven and will
-self-oscillate at high resonances.
+self-oscillate at high resonances.</p><p>This is a third-party UGen (TJUGens).
 </p></div></div>
     </li><li name="de.sciss.synth.ugen.Dbrown" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="Dbrown"></a><a id="Dbrown:Dbrown"></a>
@@ -19374,7 +19411,8 @@ b.setData(Vector(<span class="num">1</span>, <span class="num">2</span>, <span c
 }
 
 x.set(<span class="lit">"reset"</span> -&gt; <span class="num">1</span>)  <span class="cmt">// start anew</span>
-x.free(); b.free()</pre></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>The argument order is different from its sclang counterpart.</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="Timer$.html" class="extype" name="de.sciss.synth.ugen.Timer">Timer</a></p></span><span class="cmt"><p><a href="Dbufrd$.html" class="extype" name="de.sciss.synth.ugen.Dbufrd">Dbufrd</a></p></span><span class="cmt"><p><a href="DemandEnvGen$.html" class="extype" name="de.sciss.synth.ugen.DemandEnvGen">DemandEnvGen</a></p></span><span class="cmt"><p><a href="Logger$.html" class="extype" name="de.sciss.synth.ugen.Logger">Logger</a></p></span><span class="cmt"><p><a href="ListTrig2$.html" class="extype" name="de.sciss.synth.ugen.ListTrig2">ListTrig2</a></p></span></dd></dl></div>
+x.free(); b.free()</pre><p>This is a third-party UGen (MCLDUGens).
+</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>The argument order is different from its sclang counterpart.</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="Timer$.html" class="extype" name="de.sciss.synth.ugen.Timer">Timer</a></p></span><span class="cmt"><p><a href="Dbufrd$.html" class="extype" name="de.sciss.synth.ugen.Dbufrd">Dbufrd</a></p></span><span class="cmt"><p><a href="DemandEnvGen$.html" class="extype" name="de.sciss.synth.ugen.DemandEnvGen">DemandEnvGen</a></p></span><span class="cmt"><p><a href="Logger$.html" class="extype" name="de.sciss.synth.ugen.Logger">Logger</a></p></span><span class="cmt"><p><a href="ListTrig2$.html" class="extype" name="de.sciss.synth.ugen.ListTrig2">ListTrig2</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.ListTrig2" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ListTrig2"></a><a id="ListTrig2:ListTrig2"></a>
       <span class="permalink">
@@ -19409,7 +19447,8 @@ b.setData(Vector(<span class="num">1</span>, <span class="num">1</span>, <span c
 }
 
 x.set(<span class="lit">"reset"</span> -&gt; <span class="num">1</span>)  <span class="cmt">// start anew</span>
-x.free(); b.free()</pre></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>The argument order is different from its sclang counterpart.</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="ListTrig2$.html" class="extype" name="de.sciss.synth.ugen.ListTrig2">ListTrig2</a></p></span><span class="cmt"><p><a href="Dbufrd$.html" class="extype" name="de.sciss.synth.ugen.Dbufrd">Dbufrd</a></p></span><span class="cmt"><p><a href="DemandEnvGen$.html" class="extype" name="de.sciss.synth.ugen.DemandEnvGen">DemandEnvGen</a></p></span><span class="cmt"><p><a href="Logger$.html" class="extype" name="de.sciss.synth.ugen.Logger">Logger</a></p></span><span class="cmt"><p><a href="ListTrig$.html" class="extype" name="de.sciss.synth.ugen.ListTrig">ListTrig</a></p></span></dd></dl></div>
+x.free(); b.free()</pre><p>This is a third-party UGen (MCLDUGens).
+</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>The argument order is different from its sclang counterpart.</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="ListTrig2$.html" class="extype" name="de.sciss.synth.ugen.ListTrig2">ListTrig2</a></p></span><span class="cmt"><p><a href="Dbufrd$.html" class="extype" name="de.sciss.synth.ugen.Dbufrd">Dbufrd</a></p></span><span class="cmt"><p><a href="DemandEnvGen$.html" class="extype" name="de.sciss.synth.ugen.DemandEnvGen">DemandEnvGen</a></p></span><span class="cmt"><p><a href="Logger$.html" class="extype" name="de.sciss.synth.ugen.Logger">Logger</a></p></span><span class="cmt"><p><a href="ListTrig$.html" class="extype" name="de.sciss.synth.ugen.ListTrig">ListTrig</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.LocalBuf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="LocalBuf"></a><a id="LocalBuf:LocalBuf"></a>
       <span class="permalink">
@@ -19575,7 +19614,8 @@ b.alloc(<span class="num">100</span>)
 <span class="cmt">// after synth has completed:</span>
 b.getData(num = <span class="num">100</span>).foreach(_.plot())
 
-x.free(); b.free()</pre></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>The argument order is different from its sclang counterpart.</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="ListTrig$.html" class="extype" name="de.sciss.synth.ugen.ListTrig">ListTrig</a></p></span></dd></dl></div>
+x.free(); b.free()</pre><p>This is a third-party UGen (MCLDUGens).
+</p></div><dl class="attributes block"> <dt>Note</dt><dd><span class="cmt"><p>The argument order is different from its sclang counterpart.</p></span></dd><dt>See also</dt><dd><span class="cmt"><p><a href="ListTrig$.html" class="extype" name="de.sciss.synth.ugen.ListTrig">ListTrig</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.Logistic" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="Logistic"></a><a id="Logistic:Logistic"></a>
       <span class="permalink">
@@ -19714,6 +19754,27 @@ play {
   <span class="kw">val</span> bits = MouseX.kr(<span class="num">0</span>, <span class="num">12</span>)
   MantissaMask.ar(SinOsc.ar(SinOsc.kr(<span class="num">0.2</span>).madd(<span class="num">400</span>, <span class="num">500</span>)) * <span class="num">0.4</span>, bits)
 }</pre></div></div>
+    </li><li name="de.sciss.synth.ugen.MdaPiano" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="MdaPiano"></a><a id="MdaPiano:MdaPiano"></a>
+      <span class="permalink">
+      <a href="../../../../de/sciss/synth/ugen/index.html#MdaPiano" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="A piano synthesiser UGen." href="MdaPiano$.html">
+              <span class="name">MdaPiano</span>
+            </a><span class="result"> extends <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">A piano synthesiser UGen.</p><div class="fullcomment"><div class="comment cmt"><p>A piano synthesiser UGen. It is not polyphonic, but it can be retriggered to
+play notes in sequence.</p><p>The original VST plugin by Paul Kellett was ported to SuperCollider by Dan
+Stowell. Most likely the arguments are in the normalized range 0 to 1.</p><p>This is a third-party UGen (MdaUGens).
+</p></div></div>
     </li><li name="de.sciss.synth.ugen.Median" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="Median"></a><a id="Median:Median"></a>
       <span class="permalink">
@@ -23707,7 +23768,8 @@ x.set(<span class="lit">"azi"</span> -&gt; a.directions(<span class="num">0</spa
 x.set(<span class="lit">"spr"</span> -&gt;  <span class="num">20</span>)
 x.set(<span class="lit">"spr"</span> -&gt; <span class="num">100</span>) <span class="cmt">// all speakers</span>
 
-x.free(); b.free();</pre></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="CircleRamp$.html" class="extype" name="de.sciss.synth.ugen.CircleRamp">CircleRamp</a></p></span></dd></dl></div>
+x.free(); b.free();</pre><p>This is a third-party UGen (VBAPUGens).
+</p></div><dl class="attributes block"> <dt>See also</dt><dd><span class="cmt"><p><a href="CircleRamp$.html" class="extype" name="de.sciss.synth.ugen.CircleRamp">CircleRamp</a></p></span></dd></dl></div>
     </li><li name="de.sciss.synth.ugen.VBAPSetup" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="VBAPSetup"></a><a id="VBAPSetup:VBAPSetup"></a>
       <span class="permalink">

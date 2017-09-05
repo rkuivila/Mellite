@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+
+<head>
+<title>SP3 - Linking and Interacting · Mellite</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content='Mellite'/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:100normal,100italic,300normal,300italic,400normal,400italic,500normal,500italic,700normal,700italic,900normal,900italicc" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="lib/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="js/page.js"></script>
+<script type="text/javascript" src="js/groups.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/normalize.css/normalize.css"/>
+<link rel="stylesheet" type="text/css" href="lib/foundation/dist/foundation.min.css"/>
+<link rel="stylesheet" type="text/css" href="css/page.css"/>
+
+<!--
+<link rel="shortcut icon" href="images/favicon.ico" />
+-->
+</head>
+
+<body>
+<div class="off-canvas-wrapper">
+<div class="off-canvas-wrapper-inner" data-off-canvas-wrapper>
+
+<div class="off-canvas position-left" id="off-canvas-menu" data-off-canvas>
+<nav class="off-canvas-nav">
+<div class="nav-home">
+<a href="index.html" >
+<span class="home-icon">⌂</span>Mellite
+</a>
+<div class="version-number">
+2.17.0
+</div>
+</div>
+<div class="nav-toc">
+<ul>
+  <li><a href="tutorials.html" class="page">Tutorials</a>
+  <ul>
+    <li><a href="tut_mellite_videos.html" class="page">Mellite Video Tutorials</a></li>
+    <li><a href="tut_soundprocesses1.html" class="page">SP1 - Intro to SoundProcesses</a></li>
+    <li><a href="tut_soundprocesses2.html" class="page">SP2 - Understanding Objects</a></li>
+    <li><a href="tut_soundprocesses3.html" class="active page">SP3 - Linking and Interacting</a></li>
+  </ul></li>
+  <li><a href="links.html" class="page">Links</a></li>
+</ul>
+</div>
+
+</nav>
+</div>
+
+<div class="off-canvas-content" data-off-canvas-content>
+
+<header class="site-header expanded row">
+<div class="small-12 column">
+<a href="#" class="off-canvas-toggle hide-for-medium" data-toggle="off-canvas-menu"><svg class="svg-icon svg-icon-menu" version="1.1" id="Menu" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" xml:space="preserve"> <path class="svg-icon-menu-path" fill="#53CDEC" d="M16.4,9H3.6C3.048,9,3,9.447,3,10c0,0.553,0.048,1,0.6,1H16.4c0.552,0,0.6-0.447,0.6-1C17,9.447,16.952,9,16.4,9z M16.4,13
+H3.6C3.048,13,3,13.447,3,14c0,0.553,0.048,1,0.6,1H16.4c0.552,0,0.6-0.447,0.6-1C17,13.447,16.952,13,16.4,13z M3.6,7H16.4
+C16.952,7,17,6.553,17,6c0-0.553-0.048-1-0.6-1H3.6C3.048,5,3,5.447,3,6C3,6.553,3.048,7,3.6,7z"/></svg>
+</a>
+<div class="title"><a href="index.html">Mellite</a></div>
+
+<!--
+<a href="https://www.example.com" class="logo show-for-medium">logo</a>
+-->
+</div>
+</header>
+
+<div class="expanded row">
+
+<div class="medium-3 large-2 show-for-medium column">
+<nav class="site-nav">
+<div class="nav-home">
+<a href="index.html" >
+<span class="home-icon">⌂</span>Mellite
+</a>
+<div class="version-number">
+2.17.0
+</div>
+</div>
+<div class="nav-toc">
+<ul>
+  <li><a href="tutorials.html" class="page">Tutorials</a>
+  <ul>
+    <li><a href="tut_mellite_videos.html" class="page">Mellite Video Tutorials</a></li>
+    <li><a href="tut_soundprocesses1.html" class="page">SP1 - Intro to SoundProcesses</a></li>
+    <li><a href="tut_soundprocesses2.html" class="page">SP2 - Understanding Objects</a></li>
+    <li><a href="tut_soundprocesses3.html" class="active page">SP3 - Linking and Interacting</a></li>
+  </ul></li>
+  <li><a href="links.html" class="page">Links</a></li>
+</ul>
+</div>
+
+</nav>
+</div>
+
+<div class="small-12 medium-9 large-10 column">
+<section class="site-content">
+
+<div class="page-header row">
+<div class="medium-12 show-for-medium column">
+<div class="nav-breadcrumbs">
+<ul>
+  <li><a href="index.html">Mellite</a></li>
+  <li><a href="tutorials.html">Tutorials</a></li>
+  <li>SP3 - Linking and Interacting</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div class="page-content row">
+<div class="small-12 large-9 column" id="docs">
+<h1><a href="#sp3-linking-and-interacting" name="sp3-linking-and-interacting" class="anchor"><span class="anchor-link"></span></a>SP3 - Linking and Interacting</h1>
+<p>So far we have only looked at a singular sound producing <code>Proc</code>. This tutorial will address the question of how multiple processes can be connected together, and how temporal developments and interactions may happen beyond the rather low-level scheduler shown in the previous tutorial. We start off with (determined) temporal arrangments that do not contain interactions.</p>
+<h2><a href="#graphemes-and-timelines" name="graphemes-and-timelines" class="anchor"><span class="anchor-link"></span></a>Graphemes and Timelines</h2>
+<p>There are two objects in SoundProcesses that associate other objects with temporal positions: <a href="latest/api/de/sciss/synth/proc/Grapheme.html"><code>Grapheme</code></a> and <a href="latest/api/de/sciss/synth/proc/Timeline.html"><code>Timeline</code></a>. If you look up the API docs, you&rsquo;ll see that <code>Grapheme</code> derives from a type <code>BiPin</code> where the stored element type is fixed to <code>Obj</code>, and likewise <code>Timeline</code> dervies from <code>BiGroup</code> with a fixed element type of <code>Obj</code>. A current limitation of the <code>Obj</code> type system is that type parameters can not represented, and therefore we need particular sub-types to fix type parameters, in this case the most generic type <code>Obj</code>. The difference between the two is as follows:</p>
+<ul>
+  <li>a <code>Grapheme</code> is similar to a breakpoint function, such that at any point in time, if the function has been defined in the past,  there exists exactly one value. In a <code>Grapheme</code>, elements are associated with a <em>point in time</em>, specified as a <code>LongObj</code>. As outlined  in the previous example, temporal value are given as sample frames with respect to <code>TimeRef.SampleRate</code>. You can think of a grapheme  as a sorted list, so it allows efficent queries by time.</li>
+  <li>a <code>Timeline</code> is similar to a timeline in a multi-track editor, such that its elements are associated with <em>time spans</em>, and at any  time there may be zero, one, or multiple overlapping elements. The time spans are specified as <code>SpanLikeObj</code>, which is an  <code>Expr[S, SpanLike]</code>, and the primitive type <a href="latest/api/de/sciss/span/SpanLike.html"><code>SpanLike</code></a> can be either a bounded <code>Span(start, stop)</code>, or an open  interval such as <code>Span.From(start)</code> or <code>Span.Until(stop)</code>. There are also special cases <code>Span.Void</code> (empty) and <code>Span.All</code> (infinite duration).  A timeline allows efficient query by point in time or time interval.</li>
+</ul><div class="callout note "><div class="callout-title">Note</div>
+<p>If you have used the timeline editor in Mellite, you have basically edited a <code>Timeline</code> object. On the other hand, editors for <code>Grapheme</code> breakpoint functions are, as of this writing, not yet fully implemented in the Mellite GUI.</p></div>
+<p>The last example of the previous tutorial showed how a scheduler can be used to update an attribute value and thereby modulate the sound of a <code>Proc</code>. The grapheme allows us to do something similar, but decoupled from the real-time scheduling. We can place designated breakpoints in a grapheme, and this grapheme can then be used instead of the scalar <code>DoubleObj</code> in the proc&rsquo;s attribute map.</p>
+<h3><a href="#putting-the-startup-ceremony-in-a-trait" name="putting-the-startup-ceremony-in-a-trait" class="anchor"><span class="anchor-link"></span></a>Putting the Startup Ceremony in a Trait</h3>
+<p>Before we kick off, here is an example trait we can &ldquo;mix in&rdquo; to our next snippets to avoid having to type the same thing over and over again:</p>
+<pre class="prettyprint"><code class="language-scala">import de.sciss.lucre.stm
+import de.sciss.lucre.synth.InMemory
+import de.sciss.synth.proc.{AuralSystem, Transport, WorkspaceHandle}
+
+trait InMemorySoundApp {
+  type S = InMemory
+  implicit val cursor: stm.Cursor[S] = InMemory()
+  implicit val ws: WorkspaceHandle[S] = WorkspaceHandle.Implicits.dummy
+  val aural = AuralSystem()
+
+  cursor.step { implicit tx =&gt;
+    aural.whenStarted { _ =&gt;
+      cursor.step { implicit tx =&gt;
+        val t = Transport[S](aural)
+        run(t)
+      }
+    }
+    aural.start()
+  }
+
+  def main(args: Array[String]): Unit = ()
+
+  def run(t: Transport[S])(implicit tx: S#Tx): Unit
+}</code></pre>
+<p>This starts up the system like we did before, with a small change - we wait until the server is booted before doing anything else, so we can be sure that when we create a transport and play it, it will sound immediately. The <code>def main</code> line ensures that the program can be executed, it doesn&rsquo;t do anything special, but it so happens that the body of the object containing this trait will also be initialised, so all the other statements will be automatically executed when the program is started. The last line <code>def run</code> is <strong>abstract</strong>; it does not end with a <code>=</code> and a right-hand side defining the body of the method. Traits can contain abstract methods, and when we use the trait, we have to define that method. This is a standard object-oriented mechanism, so you have probably encountered it in other languages. But otherwise, the following example should make clear how this works:</p>
+<pre class="prettyprint"><code class="language-scala">import de.sciss.synth.proc.Transport
+
+object Snippet5 extends InMemorySoundApp {
+  def run(t: Transport[S])(implicit tx: S#Tx): Unit = {
+    println(&quot;Ok, we&#39;ve booted.&quot;)
+    sys.exit()  // well, this is just an example, so quit
+  }
+}</code></pre>
+<p>If we hadn&rsquo;t defined <code>def run</code>, the compiler would refuse to compile this. You see that implementing or &ldquo;mixing in&rdquo; a trait is done by writing <code>extends TraitName</code>. Before we had always implemented the <code>App</code> trait, now we implementing our battries-included trait. Scala allows multiple trait mixin which is very powerful. It&rsquo;s syntax would be <code>object MyObject extends Trait1 with Trait2</code> or <code>class MyClass extends Trait1 with Trait2</code>. The object or class can then use any members defined in those traits&mdash;here for example type <code>S</code> and value <code>cursor</code>&mdash;unless they are marked <code>private</code>.</p>
+<h3><a href="#a-grapheme-for-frequency-values" name="a-grapheme-for-frequency-values" class="anchor"><span class="anchor-link"></span></a>A Grapheme for Frequency Values</h3>
+<pre class="prettyprint"><code class="language-scala">import de.sciss.lucre.expr.IntObj
+import de.sciss.lucre.synth.InMemory
+import de.sciss.synth.SynthGraph
+import de.sciss.synth.proc.{Grapheme, Proc, TimeRef, Transport}
+
+object Snippet6 extends InMemorySoundApp {
+  def run(t: Transport[S])(implicit tx: InMemory.Txn): Unit = {
+    val piano = SynthGraph {
+      import de.sciss.synth._
+      import de.sciss.synth.proc.graph.Ops._
+      import de.sciss.synth.ugen._
+
+      val pitch     = &quot;pitch&quot;.ar
+      val strike    = (pitch sig_!= Delay2.ar(pitch)) * 0.05
+      pitch.poll(strike, &quot;note&quot;)
+      val hammerEnv = Decay2.ar(strike, 0.008, 0.04)    // excitation envelope
+      val sig       = Pan2.ar(
+        // array of 3 strings
+        Mix.tabulate(3) { i =&gt;
+          // detune strings, calculate delay time :
+          val detune = Array(-0.05, 0, 0.04)(i)
+          val delayTime = 1 / (pitch + detune).midicps
+          // each string gets own exciter :
+          val hammer = LFNoise2.ar(3000) * hammerEnv   // 3000 Hz was chosen by ear
+          CombL.ar(hammer, // used as a string resonator
+            delayTime,     // max delay time
+            delayTime,     // actual delay time
+            6              // decay time of string
+          )
+        },
+        (pitch - 36) / 27 - 1    // pan position: lo notes left, hi notes right
+      )
+      Out.ar(0, sig)
+    }
+
+    val p = Proc[S]
+    p.graph() = piano
+    val pitches = Seq(
+      ( 0,78), ( 1,81), ( 2,79), ( 3,78), ( 4,73), ( 5,71), ( 6,73), ( 7,74), ( 8,69),
+      (11,66), (14,66), (17,66), (20,66),
+      (24,78), (25,81), (26,79), (27,78), (28,73), (29,71), (30,73), (31,74), (32,69),
+      (35,73), (38,78), (41,64),
+      (50,69), (51,71), (52,72), (53,76), (54,74), (55,71), (56,74), (57,72), (58,71), (59,74),
+      (64,74), (65,76), (66,77), (67,79), (68,81), (69,72), (70,74), (71,76), (72,74), (73,71), (74,74) // ...
+    )
+
+    val g = Grapheme[S]
+    pitches.foreach { case (beat, pch) =&gt;
+      val time = (beat * 0.511 * TimeRef.SampleRate).toLong
+      g.add(time, IntObj.newConst(pch))
+    }
+    p.attr.put(&quot;pitch&quot;, g)
+
+    t.addObject(p)
+    t.play()
+  }
+}</code></pre><div class="callout warning "><div class="callout-title">Warning</div>
+<p>This tutorial is in the making and incomplete</p></div>
+<div class="source-github">
+The source code for this page can be found <a href="https://github.com/Sciss/Mellite-website/tree/master/src/paradox/tut_soundprocesses3.md">here</a>.
+</div>
+
+<div class="nav-next">
+<p><strong>Next:</strong> <a href="links.html">Links</a></p>
+</div>
+</div>
+<div class="large-3 show-for-large column" data-sticky-container>
+<nav class="sidebar sticky" data-sticky data-anchor="docs" data-sticky-on="large">
+<div class="page-nav">
+<div class="nav-title">On this page:</div>
+<div class="nav-toc">
+<ul>
+  <li><a href="tut_soundprocesses3.html#sp3-linking-and-interacting" class="header">SP3 - Linking and Interacting</a>
+  <ul>
+    <li><a href="tut_soundprocesses3.html#graphemes-and-timelines" class="header">Graphemes and Timelines</a></li>
+  </ul></li>
+</ul>
+</div>
+</div>
+</nav>
+</div>
+</div>
+
+</section>
+</div>
+
+</div>
+
+<footer class="site-footer">
+
+<section class="site-footer-nav">
+<div class="expanded row">
+<div class="small-12 large-offset-2 large-10 column">
+<div class="row site-footer-content">
+
+<div class="small-12 medium-4 large-3 text-center column">
+<div class="nav-links">
+<ul>
+<!-- <li><a href="https://www.example.com/products/">Products</a> -->
+</ul>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+</section>
+
+<section class="site-footer-base">
+<div class="expanded row">
+<div class="small-12 large-offset-2 large-10 column">
+<div class="row site-footer-content">
+
+<div class="small-12 text-center large-9 column">
+
+<!--
+<div class="copyright">
+<span class="text">&copy; 2017</span>
+<a href="https://www.example.com" class="logo">logo</a>
+</div>
+-->
+</div>
+
+</div>
+</div>
+</div>
+</section>
+</footer>
+
+</div>
+</div>
+</div>
+</body>
+
+<script type="text/javascript" src="lib/foundation/dist/foundation.min.js"></script>
+<script type="text/javascript">jQuery(document).foundation();</script>
+<script type="text/javascript" src="js/magellan.js"></script>
+
+<style type="text/css">@import "lib/prettify/prettify.css";</style>
+<script type="text/javascript" src="lib/prettify/prettify.js"></script>
+<script type="text/javascript" src="lib/prettify/lang-scala.js"></script>
+<script type="text/javascript">jQuery(function(){window.prettyPrint && prettyPrint()});</script>
+
+</html>
